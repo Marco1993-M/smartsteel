@@ -1,12 +1,9 @@
 'use client';
-import Navbar from '../../components/Navbar';
 import Image from 'next/image';
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
 export default function CompanyPage() {
   return (
-    <>
-      <Navbar />
       <main className="font-sans text-gray-800">
         {/* About Section */}
         <section className="py-20 px-6 bg-white">
@@ -76,6 +73,5 @@ export default function CompanyPage() {
           </div>
         </section>
       </main>
-    </>
   );
 }
