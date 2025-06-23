@@ -1,14 +1,11 @@
 'use client';
 
-import Navbar from '../../components/Navbar';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
 export default function Sustainability() {
   return (
-    <>
-      <Navbar />
 
       <main className="font-sans text-gray-800">
         {/* Product Sustainability Info */}
@@ -129,6 +126,5 @@ export default function Sustainability() {
                 </section>
 
       </main>
-    </>
   );
 }
