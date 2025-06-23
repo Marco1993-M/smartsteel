@@ -38,8 +38,8 @@ export default function ContactPage() {
         <div>
           <h1 className="text-4xl font-bold mb-4 text-left">Need to get in touch?</h1>
           <p className="text-lg text-left max-w-md">
-            We're here to help! Simply fill out the form, and one of our team will get back to you soon.
-          </p>
+  We&apos;re here to help! Simply fill out the form, and one of our team will get back to you soon.
+</p>
         </div>
 
         <form className="bg-gray-50 border rounded-lg p-6 space-y-4 w-full">
