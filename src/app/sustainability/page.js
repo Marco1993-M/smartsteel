@@ -40,7 +40,7 @@ export default function Sustainability() {
           <div className="max-w-5xl mx-auto">
             <h2 className="text-3xl font-bold mb-6 text-left">Our Commitment</h2>
             <p className="text-lg text-left text-gray-700">
-              We're committed to creating steel products that positively impact our communities and the built environment.
+              We are committed to creating steel products that positively impact our communities and the built environment.
             </p>
           </div>
 
