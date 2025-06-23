@@ -10,7 +10,7 @@ export default function Footer() {
         {/* Logo and About */}
         <div className="md:col-span-1">
           <Link href="/" className="inline-block mb-4">
-            <Image src="/logoWhite.png" alt="Smart Steel Logo" width={100} height={100} />
+            <Image src="/LogoWhite.png" alt="Smart Steel Logo" width={100} height={100} />
           </Link>
           <p className="text-sm text-gray-300">
             Smart Steel is redefining alternative building with lightweight, modular steel frames built for durability and design freedom.
