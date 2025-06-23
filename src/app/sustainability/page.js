@@ -47,27 +47,27 @@ export default function Sustainability() {
               {
                 title: 'Enduring by Design',
                 text: 'Framing made from lightweight steel is strong, durable, and versatile, making it a good choice for homes and buildings designed for long life.',
-                icon: '/icons/design.svg',
+                icon: '/icons/design.png',
               },
               {
                 title: 'Suitable for Reuse',
                 text: 'Frames made from lightweight steel can support circular design strategies, including designing for disassembly and reuse. They can be screw-assembled and are highly suitable for modular design.',
-                icon: '/icons/reuse.svg',
+                icon: '/icons/reuse.png',
               },
               {
                 title: 'Long Lasting',
                 text: 'Our lightweight steel incorporates industry-leading coating technologies that enhance corrosion resistance, providing longer-lasting protection for your steel frame.',
-                icon: '/icons/durability.svg',
+                icon: '/icons/durability.png',
               },
               {
                 title: 'Resource Efficiency',
                 text: 'Steel frames are fabricated to exact specs using software, minimizing onsite waste. Any steel waste generated is recyclable and returns to the production loop.',
-                icon: '/icons/efficiency.svg',
+                icon: '/icons/efficiency.png',
               },
               {
                 title: '100% Recyclable Steel',
                 text: 'Our lightweight steel contains recycled content and is 100% recyclable without loss of quality. Magnetic separation makes recovery easy and efficient.',
-                icon: '/icons/recycle.svg',
+                icon: '/icons/recycle.png',
               },
             ].map((item, index) => (
               <div key={index} className="flex items-start gap-4 bg-white p-6 rounded-lg shadow-md">
