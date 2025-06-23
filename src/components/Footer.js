@@ -40,11 +40,11 @@ export default function Footer() {
         <div>
           <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
           <p className="text-sm text-gray-300 mb-2">Email: <a href="mailto:info@smartsteel.co.za" className="hover:text-[#da1a33]">info@smartsteel.co.za</a></p>
-          <p className="text-sm text-gray-300 mb-6">Phone: <a href="tel:+27211234567" className="hover:text-[#da1a33]">+27 21 123 4567</a></p>
+          <p className="text-sm text-gray-300 mb-6">Phone: <a href="tel:+27828464555" className="hover:text-[#da1a33]">+27 21 123 4567</a></p>
 
           <div className="flex space-x-4 text-xl">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaFacebookF /></a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaInstagram /></a>
+            <a href="https://www.facebook.com/profile.php?id=100091390116080" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaFacebookF /></a>
+            <a href="https://www.instagram.com/pequeno_homes/" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaInstagram /></a>
             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaLinkedinIn /></a>
           </div>
         </div>
