@@ -65,7 +65,7 @@ export default function ResourcesPage() {
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold mb-4 text-left">Technical Resources and Brochures</h1>
           <p className="text-lg mb-12 text-left max-w-2xl">
-            Our free technical resources, brochures and guides can help you learn more about TRUECORE® steel and maximise its benefits in your next project.
+            Our free technical resources, brochures and guides can help you learn more about lightweight steel and maximise its benefits in your next project.
           </p>
 
           <div className="grid md:grid-cols-3 gap-12">
