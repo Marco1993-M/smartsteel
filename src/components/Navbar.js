@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -10,28 +10,56 @@ export default function Navbar() {
   const [showAboutBanner, setShowAboutBanner] = useState(false);
   const [showProfessionalsBanner, setShowProfessionalsBanner] = useState(false);
 
+  const timeoutRef = useRef(null);
+
   function handleForHomeHover(state) {
-    setShowForHomeBanner(state);
+    clearTimeout(timeoutRef.current);
     if (state) {
+      setShowForHomeBanner(true);
       setShowAboutBanner(false);
       setShowProfessionalsBanner(false);
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        setShowForHomeBanner(false);
+      }, 200); 
     }
   }
 
   function handleAboutHover(state) {
-    setShowAboutBanner(state);
+    clearTimeout(timeoutRef.current);
     if (state) {
+      setShowAboutBanner(true);
       setShowForHomeBanner(false);
       setShowProfessionalsBanner(false);
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        setShowAboutBanner(false);
+      }, 200); 
     }
   }
 
   function handleProfessionalsHover(state) {
-    setShowProfessionalsBanner(state);
+    clearTimeout(timeoutRef.current);
     if (state) {
+      setShowProfessionalsBanner(true);
       setShowAboutBanner(false);
       setShowForHomeBanner(false);
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        setShowProfessionalsBanner(false);
+      }, 200); 
     }
+  }
+
+  function handleBannerHover(bannerSetter) {
+    clearTimeout(timeoutRef.current);
+    bannerSetter(true);
+  }
+
+  function handleBannerLeave(bannerSetter) {
+    timeoutRef.current = setTimeout(() => {
+      bannerSetter(false);
+    }, 200); 
   }
 
   return (
@@ -135,8 +163,8 @@ export default function Navbar() {
 
       {showProfessionalsBanner && (
         <div
-          onMouseEnter={() => handleProfessionalsHover(true)}
-          onMouseLeave={() => handleProfessionalsHover(false)}
+          onMouseEnter={() => handleBannerHover(setShowProfessionalsBanner)}
+          onMouseLeave={() => handleBannerLeave(setShowProfessionalsBanner)}
           className="absolute top-full left-0 w-full bg-white text-black shadow-lg border-t border-gray-300"
           style={{ minHeight: '200px', zIndex: 1000 }}
         >
@@ -169,8 +197,8 @@ export default function Navbar() {
 
       {showAboutBanner && (
         <div
-          onMouseEnter={() => handleAboutHover(true)}
-          onMouseLeave={() => handleAboutHover(false)}
+          onMouseEnter={() => handleBannerHover(setShowAboutBanner)}
+          onMouseLeave={() => handleBannerLeave(setShowAboutBanner)}
           className="absolute top-full left-0 w-full bg-white text-black shadow-lg border-t border-gray-300"
           style={{ minHeight: '200px', zIndex: 1000 }}
         >
@@ -184,8 +212,8 @@ export default function Navbar() {
 
       {showForHomeBanner && (
         <div
-          onMouseEnter={() => handleForHomeHover(true)}
-          onMouseLeave={() => handleForHomeHover(false)}
+          onMouseEnter={() => handleBannerHover(setShowForHomeBanner)}
+          onMouseLeave={() => handleBannerLeave(setShowForHomeBanner)}
           className="absolute top-full left-0 w-full bg-white text-black shadow-lg border-t border-gray-300"
           style={{ minHeight: '200px', zIndex: 1000 }}
         >
