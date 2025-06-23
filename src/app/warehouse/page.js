@@ -66,7 +66,7 @@ export default function WarehousePage() {
         <section className="max-w-5xl mx-auto my-20 px-4 py-10 border rounded-lg bg-gray-50">
   <h2 className="text-3xl font-bold mb-6 text-center">Build Your Custom Quote</h2>
   <p className="text-center max-w-2xl mx-auto mb-8">
-    Select your preferred options below, and we'll compile a custom quote. Once submitted, our team will get back to you shortly.
+    Select your preferred options below, and we will compile a custom quote. Once submitted, our team will get back to you shortly.
   </p>
 
   <form
