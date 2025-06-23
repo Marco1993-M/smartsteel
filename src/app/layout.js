@@ -16,6 +16,28 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Smart Steel",
   description: "Smarter, modular steel construction.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "Smart Steel",
+    description: "Explore our lightweight steel structures and prefab kits.",
+    images: [
+      {
+        url: "/logo-512x512.png", // Place this in your /public folder
+        width: 1200,
+        height: 630,
+        alt: "Smart Steel Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Smart Steel",
+    description: "Explore our lightweight steel structures and prefab kits.",
+    images: ["/logo-512x512.png"],
+  },
 };
 
 export default function RootLayout({ children }) {
