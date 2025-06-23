@@ -54,7 +54,7 @@ export default function WarehousePage() {
               height={400} 
               className="rounded mb-4"
             />
-            <h3 className="text-xl font-semibold mb-2">13m Wide Structure</h3>
+            <h3 className="text-xl font-semibold mb-2">12m Wide Structure</h3>
             <p className="text-gray-700">
               Designed for larger operations requiring significant covered space. Suitable for warehousing, workshops, and commercial use.
             </p>
