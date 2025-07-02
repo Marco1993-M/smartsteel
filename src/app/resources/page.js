@@ -14,9 +14,9 @@ export default function ResourcesPage() {
   const brochures = [
     {
       title: 'Lightweight Steel Brochure',
-      description: 'An overview of Lightweight steel, its benefits, and applications in construction.',
+      description: 'An overview of Lightweight steel, its benefits, and applications in solar construction.',
       image: '/Brochure A.jpg',
-      pdf: '/pdfs/truecore-brochure.pdf',
+      pdf: '/pdfs/solar.pdf',
       roles: ['Architect', 'Builder', 'Fabricator'],
       types: ['Brochure'],
     },
