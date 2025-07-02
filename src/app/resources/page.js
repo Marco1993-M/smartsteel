@@ -24,7 +24,16 @@ export default function ResourcesPage() {
       title: 'Soil Screw Spec Sheet',
       description: 'Step-by-step guide for installing lightweight steel frames safely and efficiently.',
       image: '/Brochure B.jpg',
-      pdf: '/pdfs/installation-guide.pdf',
+      pdf: '/pdfs/anchor.pdf',
+      roles: ['Builder', 'Fabricator'],
+      types: ['Installation guide'],
+    },
+
+    {
+      title: 'Lightweight Steel Toolkit',
+      description: 'Toolkit guide for installing lightweight steel frames safely and efficiently.',
+      image: '/Brochure C.jpg',
+      pdf: '/pdfs/toolkit.pdf',
       roles: ['Builder', 'Fabricator'],
       types: ['Installation guide'],
     },
