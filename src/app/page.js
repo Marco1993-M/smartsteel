@@ -142,7 +142,7 @@ export default function Home() {
             </div>
             <div className="bg-white p-6 rounded shadow text-center">
               <h3 className="text-xl font-bold mb-2">Precision Engineering</h3>
-              <p>We design with CAD and laser-cut for accuracy and strength.</p>
+              <p>We design with CAD and die-cut for accuracy and strength.</p>
             </div>
           </div>
         </section>
