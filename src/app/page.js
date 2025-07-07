@@ -335,7 +335,7 @@ export default function Home() {
 <section className="py-20 px-6 bg-white text-center">
   <h2 className="text-3xl font-bold mb-6">Solar-Ready Steel Solutions</h2>
   <p className="text-lg max-w-3xl mx-auto mb-12">
-    Smart Steel’s lightweight steel frames are the ideal foundation for modern solar installations. From carports to ground-mounted systems and integrated solar roofs, our structures are engineered for strength, longevity, and effortless solar compatibility.
+    Our lightweight steel frames are the ideal foundation for modern solar installations. From carports to ground-mounted systems and integrated solar roofs, our structures are engineered for strength, longevity, and effortless solar compatibility.
   </p>
 
   <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 text-left">
