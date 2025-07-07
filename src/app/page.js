@@ -331,52 +331,6 @@ export default function Home() {
           </div>
         </section>
 
-{/* Solar Solutions */}
-<section className="py-20 px-6 bg-white text-center">
-  <h2 className="text-3xl font-bold mb-6">Solar-Ready Steel Solutions</h2>
-  <p className="text-lg max-w-3xl mx-auto mb-12">
-    Smart Steel’s lightweight steel frames are the ideal foundation for modern solar installations. From carports to ground-mounted systems and integrated solar roofs, our structures are engineered for strength, longevity, and effortless solar compatibility.
-  </p>
-
-  <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 text-left">
-    <div className="bg-gray-50 p-6 rounded-lg shadow hover:shadow-lg transition">
-      <h3 className="text-xl font-semibold mb-2">Solar Carports</h3>
-      <p className="text-gray-700 mb-4">
-        Create covered parking that works double-time — our steel carport systems provide reliable shelter while supporting solar panels for on-site energy generation.
-      </p>
-      <img src="/solar-carport.jpg" alt="Solar Carports" className="w-full h-48 object-cover rounded" />
-    </div>
-
-    <div className="bg-gray-50 p-6 rounded-lg shadow hover:shadow-lg transition">
-      <h3 className="text-xl font-semibold mb-2">Ground Mount Systems</h3>
-      <p className="text-gray-700 mb-4">
-        Lightweight steel ground mounts designed for durability, fast assembly, and precise alignment — ideal for solar farms, rural sites, and residential arrays.
-      </p>
-      <img src="/solar-ground.jpg" alt="Solar Ground Mounts" className="w-full h-48 object-cover rounded" />
-    </div>
-
-    <div className="bg-gray-50 p-6 rounded-lg shadow hover:shadow-lg transition">
-      <h3 className="text-xl font-semibold mb-2">Solar Roof Structures</h3>
-      <p className="text-gray-700 mb-4">
-        Whether retrofitting an existing building or designing from the ground up, our precision-engineered steel frames provide the perfect base for integrated solar roofing.
-      </p>
-      <img src="/solar-roof.jpg" alt="Solar Roof Structures" className="w-full h-48 object-cover rounded" />
-    </div>
-  </div>
-
-  <div className="mt-12">
-    <Link
-      href="/solar"
-      className="inline-block bg-[#da1a33] text-white px-6 py-3 rounded-full hover:bg-[#bf172d] transition"
-    >
-      Discuss Solar Solutions
-    </Link>
-  </div>
-</section>
-
-
-
-
        {/* CTA */}
         <section id="contact" className="bg-[#000000] text-white py-20 px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-semibold mb-4">Ready to build with steel?</h2>
