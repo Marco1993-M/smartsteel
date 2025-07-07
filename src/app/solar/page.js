@@ -14,7 +14,7 @@ export default function Solar() {
             <div className="md:col-span-2">
               <h1 className="text-3xl font-bold mb-4 text-left">Solar-Ready Steel Solutions</h1>
               <h2 className="text-xl font-medium text-gray-700 text-left">
-                Engineered for strength, precision, and seamless solar integration — Smart Steel is the foundation for energy-efficient structures.
+                Engineered for strength, precision, and seamless solar integration. Smart Steel is the foundation for energy efficient structures.
               </h2>
             </div>
 
@@ -36,7 +36,7 @@ export default function Solar() {
           <div className="max-w-5xl mx-auto">
             <h2 className="text-3xl font-bold mb-6 text-left">Built for Solar Applications</h2>
             <p className="text-lg text-left text-gray-700 mb-8">
-              Our lightweight steel solutions provide the ideal framework for reliable solar infrastructure — designed to handle the loads, exposure, and durability demands of modern solar systems.
+              Our lightweight steel solutions provide the ideal framework for reliable solar infrastructure, designed to handle the loads, exposure, and durability demands of modern solar systems.
             </p>
           </div>
 
@@ -44,12 +44,12 @@ export default function Solar() {
             {[
               {
                 title: 'Solar Carports',
-                text: 'Shelter vehicles while generating renewable energy. Our steel carports are engineered for strength, quick installation, and long-lasting performance.',
+                text: 'Shelter vehicles while generating renewable energy. Our steel carports are engineered for strength, quick installation, and long lasting performance.',
                 icon: '/icon/carport.png',
               },
               {
                 title: 'Ground Mount Systems',
-                text: 'Precision-fabricated steel ground mounts designed for solar farms and rural installations. Lightweight, durable, and built to exact specifications.',
+                text: 'Precision fabricated steel ground mounts designed for solar farms and rural installations. Lightweight, durable, and built to exact specifications.',
                 icon: '/icon/groundmount.png',
               },
               {
@@ -80,10 +80,10 @@ export default function Solar() {
           <div className="max-w-5xl mx-auto">
             <h2 className="text-3xl font-bold mb-6 text-left">Why Choose Smart Steel for Solar?</h2>
             <ul className="list-disc list-inside text-lg text-gray-700 space-y-4">
-              <li>Lightweight, corrosion-resistant steel ideal for long-term outdoor exposure</li>
+              <li>Lightweight, corrosion resistant steel ideal for long term outdoor exposure</li>
               <li>Engineered for quick assembly and modular installation</li>
               <li>Dimensional accuracy ensures proper solar panel alignment</li>
-              <li>Fire-resistant and termite-proof — built for South African conditions</li>
+              <li>Fire resistant and termite proof, built for South African conditions</li>
               <li>Fully recyclable steel frames support sustainable construction</li>
             </ul>
           </div>
@@ -94,7 +94,7 @@ export default function Solar() {
           <div className="max-w-5xl mx-auto text-left">
             <h2 className="text-3xl font-bold mb-4">Follow us on our socials!</h2>
             <p className="text-lg mb-8">
-              See how our steel frames are powering solar projects across South Africa. Follow us for real-world examples and inspiration.
+              See how our steel frames are powering solar projects across South Africa. Follow us for real world examples and inspiration.
             </p>
 
             {/* Social Icons */}
