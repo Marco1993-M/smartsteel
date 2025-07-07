@@ -380,7 +380,7 @@ export default function Home() {
        {/* CTA */}
         <section id="contact" className="bg-[#000000] text-white py-20 px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-semibold mb-4">Ready to build with steel?</h2>
-          <p className="text-lg mb-6">Get in touch today and let's bring your vision to life.</p>
+          <p className="text-lg mb-6">Get in touch today and let us bring your vision to life.</p>
           <a
             href="mailto:info@smartsteel.co.za"
             className="bg-white text-gray-900 px-6 py-3 rounded-full font-semibold hover:bg-gray-200 transition"
