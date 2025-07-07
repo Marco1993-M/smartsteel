@@ -46,7 +46,7 @@ const brochures = {
       link: '/warranty.pdf',
     },
   ],
-  Fabricator: [
+  'Fabricator': [
     {
       title: 'Fabrication Standards Guide',
       desc: 'Guidelines and tolerances for fabrication.',
