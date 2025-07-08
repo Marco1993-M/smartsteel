@@ -116,7 +116,7 @@ export default function Solar() {
         <div className="max-w-5xl mx-auto text-left">
           <h2 className="text-3xl font-bold mb-4">Follow Our Work</h2>
           <p className="text-lg mb-8">
-            See how steel + solar is shaping South Africa's energy future. Follow us for builds, tips and updates.
+            See how steel + solar is shaping South Africa and the energy future. Follow us for builds, tips and updates.
           </p>
           <div className="flex space-x-6 text-2xl">
             <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33] transition">
