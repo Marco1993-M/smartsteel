@@ -33,7 +33,7 @@ export default function Solar() {
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold mb-6">Tailored for Every Sector</h2>
           <p className="text-lg text-gray-700 mb-8">
-            Our solar-ready steel structures serve diverse industries with strength and simplicity — see what's possible in your space.
+            Our solar-ready steel structures serve diverse industries with strength and simplicity — see what is possible in your space.
           </p>
         </div>
 
@@ -58,7 +58,7 @@ export default function Solar() {
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold mb-6 text-left">Smart Applications</h2>
           <p className="text-lg text-left text-gray-700 mb-8">
-            Our lightweight steel solutions provide the ideal framework for solar installations — precision-fabricated for modern requirements.
+            Our lightweight steel solutions provide the ideal framework for solar installations, precision fabricated for modern requirements.
           </p>
         </div>
 
@@ -102,11 +102,11 @@ export default function Solar() {
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold mb-6 text-left">Why Choose Smart Steel?</h2>
           <ul className="list-disc list-inside text-lg text-gray-700 space-y-4">
-            <li>Corrosion-resistant steel — ideal for long-term outdoor exposure</li>
+            <li>Corrosion-resistant steel, ideal for long-term outdoor exposure</li>
             <li>Quick assembly, accurate fit, minimal on-site waste</li>
             <li>Supports solar loads with precision and safety</li>
-            <li>Fireproof, termite-resistant, South Africa-ready</li>
-            <li>Fully recyclable — built for sustainability goals</li>
+            <li>Fireproof, termite resistant, South Africa-ready</li>
+            <li>Fully recyclable built for sustainability goals</li>
           </ul>
         </div>
       </section>
