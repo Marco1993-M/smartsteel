@@ -13,7 +13,7 @@ export default function Solar() {
           <div className="md:col-span-2">
             <h1 className="text-3xl font-bold mb-4 text-left">Solar-Ready Steel Solutions</h1>
             <h2 className="text-xl font-medium text-gray-700 text-left">
-              Engineered for strength, precision, and seamless solar integration — Smart Steel is the foundation for energy-efficient structures.
+              Engineered for strength, precision, and seamless solar integration — Smart Steel is the foundation for energy efficient structures.
             </h2>
           </div>
           <div className="md:col-span-1">
@@ -33,7 +33,7 @@ export default function Solar() {
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold mb-6">Tailored for Every Sector</h2>
           <p className="text-lg text-gray-700 mb-8">
-            Our solar-ready steel structures serve diverse industries with strength and simplicity — see what is possible in your space.
+            Our solar ready steel structures serve diverse industries with strength and simplicity — see what is possible in your space.
           </p>
         </div>
 
