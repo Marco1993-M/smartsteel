@@ -46,6 +46,8 @@ export const metadata = {
   },
 };
 
+import AnnouncementBanner from "../components/AnnouncementBanner";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
