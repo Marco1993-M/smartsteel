@@ -25,7 +25,7 @@ export default function SalePopup() {
         <div className="relative p-6 md:p-8 flex flex-col justify-center md:w-1/2 text-center md:text-left space-y-4">
           <button
             onClick={() => setShow(false)}
-            className="absolute top-4 right-4 text-gray-500 hover:text-black text-3xl font-bold"
+            className="absolute top-4 right-4 text-white hover:text-black text-3xl font-bold"
             aria-label="Close sale popup"
           >
             &times;
