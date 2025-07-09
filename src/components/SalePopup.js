@@ -53,7 +53,7 @@ export default function SalePopup() {
         {/* Right side: Image */}
         <div className="md:w-1/2 w-full h-48 md:h-auto">
           <img
-            src="/sale-banner.jpg"
+            src="/sale-banner.png"
             alt="Sale Banner"
             className="w-full h-full object-cover"
           />
