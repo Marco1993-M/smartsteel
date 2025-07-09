@@ -8,7 +8,7 @@ export default function AnnouncementBanner() {
   if (!show) return null;
 
   return (
-    <div className="fixed top-0 z-51 w-full bg-black text-white text-sm md:text-base py-3 px-4 shadow-md">
+    <div className="fixed top-0 z-52 w-full bg-black text-white text-sm md:text-base py-3 px-4 shadow-md">
       <div className="max-w-screen-xl mx-auto relative flex items-center justify-center">
         {/* Text & link container */}
         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center">
