@@ -3,6 +3,8 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import SalePopup from "../components/SalePopup";
+import AnnouncementBanner from "../components/AnnouncementBanner";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,7 +48,6 @@ export const metadata = {
   },
 };
 
-import AnnouncementBanner from "../components/AnnouncementBanner";
 
 export default function RootLayout({ children }) {
   return (
