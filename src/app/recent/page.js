@@ -68,6 +68,7 @@ export default function RecentProjects() {
 
   return (
     <main className="font-sans text-gray-800 px-4 py-12 bg-white">
+      {/* Header */}
       <section className="max-w-6xl mx-auto mb-10">
         <h1 className="text-4xl font-bold mb-4 text-left">Project Gallery</h1>
         <p className="text-lg text-gray-700 text-left">
@@ -77,6 +78,7 @@ export default function RecentProjects() {
         </p>
       </section>
 
+      {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-10 border-b border-gray-300 max-w-6xl mx-auto">
         {filters.map((filter) => (
           <button
@@ -93,6 +95,7 @@ export default function RecentProjects() {
         ))}
       </div>
 
+      {/* Project Cards */}
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
         {filteredProjects.map((project, idx) => (
           <div key={idx} className="shadow rounded-lg overflow-hidden bg-white">
@@ -133,10 +136,19 @@ export default function RecentProjects() {
           onClick={() => setModalProject(null)}
         >
           <div
-            className="bg-white rounded-lg w-full max-w-6xl overflow-hidden relative"
+            className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto relative"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Main Image */}
+            {/* Close Button */}
+            <button
+              onClick={() => setModalProject(null)}
+              className="absolute top-2 right-2 text-3xl text-gray-600 hover:text-red-600 z-50"
+              aria-label="Close modal"
+            >
+              &times;
+            </button>
+
+            {/* Image Viewer */}
             <div className="relative w-full h-[60vh] sm:h-[400px]">
               <Image
                 src={modalProject.gallery[currentImageIdx]}
@@ -158,7 +170,7 @@ export default function RecentProjects() {
               </button>
             </div>
 
-            {/* Thumbnails - scrollable on mobile */}
+            {/* Thumbnails - Horizontal scroll on small screens */}
             <div className="flex gap-2 px-4 py-3 overflow-x-auto">
               {modalProject.gallery.map((thumb, i) => (
                 <div
@@ -176,7 +188,7 @@ export default function RecentProjects() {
             </div>
 
             {/* Project Info */}
-            <div className="grid md:grid-cols-2 gap-6 px-6 py-4 text-sm text-gray-700">
+            <div className="grid md:grid-cols-2 gap-6 px-6 py-6 text-sm text-gray-700">
               <div className="space-y-2">
                 <p><strong>Project:</strong> {modalProject.title}</p>
                 <p><strong>Segment:</strong> {modalProject.tag}</p>
@@ -189,14 +201,6 @@ export default function RecentProjects() {
                 <p>{modalProject.description}</p>
               </div>
             </div>
-
-            {/* Close */}
-            <button
-              onClick={() => setModalProject(null)}
-              className="absolute top-2 right-2 text-2xl text-gray-700 hover:text-red-600"
-            >
-              &times;
-            </button>
           </div>
         </div>
       )}
