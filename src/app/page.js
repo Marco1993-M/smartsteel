@@ -84,13 +84,13 @@ export default function Home() {
     },
     {
       title: 'Renowned durability',
-      description: 'TRUECORE® steel is made to last, with corrosion-resistant coatings for long-term performance.',
-      image: '/durability.jpg',
+      description: 'Light Weight steel is made to last, with corrosion-resistant coatings for long-term performance.',
+      image: '/D.jpg',
     },
     {
       title: 'Won’t catch fire',
       description: 'Steel is non-combustible, adding fire resistance to your home’s framework.',
-      image: '/fireproof.jpg',
+      image: '/E.jpg',
     },
   ];
 
