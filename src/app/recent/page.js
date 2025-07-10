@@ -20,7 +20,7 @@ const projects = [
     builder: 'Pequeño',
     fabricator: 'LSF Steel Supply',
     description:
-      'Nestled in the heart of urban tranquility, Spa & Coffee redefines relaxation with its innovative fusion of wellness and café culture, delivered through cutting-edge modular construction. This pioneering commercial project, led by Pequeño’s visionary architectural and building expertise, seamlessly integrates a serene spa experience with a vibrant coffee hub. LSF Steel Supply’s advanced light gauge steel (LGS) framing solution, crafted from high-tensile materials, enabled rapid assembly while meeting stringent structural and aesthetic demands. The modular design eliminated traditional construction constraints, ensuring flexibility for bespoke interior layouts and seamless integration of sophisticated mechanical systems, creating an inviting oasis for rejuvenation and connection.'
+      'Nestled in the heart of urban tranquility, Spa & Coffee redefines relaxation with its innovative fusion of wellness and café culture, delivered through cutting-edge modular construction. This pioneering commercial project, led by Pequeño and their visionary architectural and building expertise, seamlessly integrates a serene spa experience with a vibrant coffee hub. LSF Steel Supply with their advanced light gauge steel (LSF) framing solution, crafted from high-tensile materials, enabled rapid assembly while meeting stringent structural and aesthetic demands. The modular design eliminated traditional construction constraints, ensuring flexibility for bespoke interior layouts and seamless integration of sophisticated mechanical systems, creating an inviting oasis for rejuvenation and connection.'
   },
 
     {
