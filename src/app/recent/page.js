@@ -39,7 +39,7 @@ const projects = [
     builder: 'Smart Steel',
     fabricator: 'LSF Steel Supply',
     description:
-      'Elevating an existing flat roof into a roof that won’t be moved, the Project Brummeria Roof Enhancement project showcases innovative lightweight steel construction, delivering both strength and elegance. Designed and built by Smart Steel, with LSF Steel Supply providing high-tensile light gauge steel (LSF) framing, this residential retrofit boasts an impressive load capacity of 1.3kN per square meter. The modular LSF structure, crafted for rapid installation, eliminated the need for extensive modifications to the existing building while meeting rigorous structural and seismic standards. This sleek, durable roofing solution seamlessly supports integrated mechanical systems, enhancing the client’s space with a blend of functionality and contemporary design.'
+      'Elevating an existing flat roof into a roof that will not be moved, the Project Brummeria Roof Enhancement project showcases innovative lightweight steel construction, delivering both strength and elegance. Designed and built by Smart Steel, with LSF Steel Supply providing high-tensile light gauge steel (LSF) framing, this residential retrofit boasts an impressive load capacity of 1.3kN per square meter. The modular LSF structure, crafted for rapid installation, eliminated the need for extensive modifications to the existing building while meeting rigorous structural and seismic standards. This sleek, durable roofing solution seamlessly supports integrated mechanical systems, enhancing the client’s space with a blend of functionality and contemporary design.'
   },
   // Add more project objects similarly...
 ];
@@ -73,7 +73,7 @@ export default function RecentProjects() {
       <section className="max-w-6xl mx-auto mb-12">
         <h1 className="text-4xl font-bold mb-4 text-left">Project Gallery</h1>
         <p className="text-lg text-gray-700 text-left">
-          Lightweight steel has been used across residential and commercial buildings across South Africa. Whether you're
+          Lightweight steel has been used across residential and commercial buildings across South Africa. Whether you are
           building your home or a large-scale commercial project, explore and be inspired by projects that showcase the use
           of lightweight steel.
         </p>
