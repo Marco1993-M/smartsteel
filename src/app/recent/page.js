@@ -20,10 +20,9 @@ const projects = [
     builder: 'Pequeño',
     fabricator: 'LSF Steel Supply',
     description:
-      'Nestled in the heart of urban tranquility, Spa & Coffee redefines relaxation with its innovative fusion of wellness and café culture, delivered through cutting-edge modular construction. This pioneering commercial project, led by Pequeño and their visionary architectural and building expertise, seamlessly integrates a serene spa experience with a vibrant coffee hub. LSF Steel Supply with their advanced light gauge steel (LSF) framing solution, crafted from high-tensile materials, enabled rapid assembly while meeting stringent structural and aesthetic demands. The modular design eliminated traditional construction constraints, ensuring flexibility for bespoke interior layouts and seamless integration of sophisticated mechanical systems, creating an inviting oasis for rejuvenation and connection.'
+      'Nestled in the heart of urban tranquility, Spa & Coffee redefines relaxation with its innovative fusion of wellness and café culture, delivered through cutting-edge modular construction...'
   },
-
-    {
+  {
     image: '/projects/residential1.jpg',
     gallery: [
       '/projects/residential1.jpg',
@@ -39,9 +38,8 @@ const projects = [
     builder: 'Smart Steel',
     fabricator: 'LSF Steel Supply',
     description:
-      'Elevating an existing flat roof into a roof that will not be moved, the Project Brummeria Roof Enhancement project showcases innovative lightweight steel construction, delivering both strength and elegance. Designed and built by Smart Steel, with LSF Steel Supply providing high-tensile light gauge steel (LSF) framing, this residential retrofit boasts an impressive load capacity of 1.3kN per square meter. The modular LSF structure, crafted for rapid installation, eliminated the need for extensive modifications to the existing building while meeting rigorous structural and seismic standards. This sleek, durable roofing solution seamlessly supports integrated mechanical systems, enhancing the client’s space with a blend of functionality and contemporary design.'
+      'Elevating an existing flat roof into a roof that won’t be moved, this residential retrofit showcases innovative lightweight steel construction...'
   },
-  // Add more project objects similarly...
 ];
 
 const filters = ['All', 'Commercial', 'Residential', 'Industrial'];
@@ -69,23 +67,25 @@ export default function RecentProjects() {
   };
 
   return (
-    <main className="font-sans text-gray-800 px-6 py-16 bg-white">
-      <section className="max-w-6xl mx-auto mb-12">
+    <main className="font-sans text-gray-800 px-4 py-12 bg-white">
+      <section className="max-w-6xl mx-auto mb-10">
         <h1 className="text-4xl font-bold mb-4 text-left">Project Gallery</h1>
         <p className="text-lg text-gray-700 text-left">
-          Lightweight steel has been used across residential and commercial buildings across South Africa. Whether you are
+          Lightweight steel has been used across residential and commercial buildings across South Africa. Whether you're
           building your home or a large-scale commercial project, explore and be inspired by projects that showcase the use
           of lightweight steel.
         </p>
       </section>
 
-      <div className="flex space-x-6 mb-10 border-b border-gray-300 max-w-6xl mx-auto">
+      <div className="flex flex-wrap gap-4 mb-10 border-b border-gray-300 max-w-6xl mx-auto">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => setActiveFilter(filter)}
             className={`pb-2 text-lg font-medium transition border-b-4 ${
-              activeFilter === filter ? 'border-[#da1a33] text-[#da1a33]' : 'border-transparent text-gray-600 hover:text-black'
+              activeFilter === filter
+                ? 'border-[#da1a33] text-[#da1a33]'
+                : 'border-transparent text-gray-600 hover:text-black'
             }`}
           >
             {filter}
@@ -126,17 +126,18 @@ export default function RecentProjects() {
         ))}
       </div>
 
+      {/* MODAL */}
       {modalProject && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-2 sm:p-4"
           onClick={() => setModalProject(null)}
         >
           <div
-            className="bg-white rounded-lg max-w-5xl w-full overflow-hidden relative"
+            className="bg-white rounded-lg w-full max-w-6xl overflow-hidden relative"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Main Image with Arrows */}
-            <div className="relative h-[400px] w-full">
+            {/* Main Image */}
+            <div className="relative w-full h-[60vh] sm:h-[400px]">
               <Image
                 src={modalProject.gallery[currentImageIdx]}
                 alt={modalProject.title}
@@ -157,12 +158,16 @@ export default function RecentProjects() {
               </button>
             </div>
 
-            {/* Thumbnails */}
-            <div className="flex justify-center gap-2 p-4">
+            {/* Thumbnails - scrollable on mobile */}
+            <div className="flex gap-2 px-4 py-3 overflow-x-auto">
               {modalProject.gallery.map((thumb, i) => (
                 <div
                   key={i}
-                  className={`relative w-20 h-16 border-2 ${i === currentImageIdx ? 'border-[#da1a33]' : 'border-transparent'} cursor-pointer`}
+                  className={`relative w-20 h-16 border-2 ${
+                    i === currentImageIdx
+                      ? 'border-[#da1a33]'
+                      : 'border-transparent'
+                  } cursor-pointer flex-shrink-0`}
                   onClick={() => setCurrentImageIdx(i)}
                 >
                   <Image src={thumb} alt={`thumb-${i}`} layout="fill" objectFit="cover" />
@@ -170,9 +175,9 @@ export default function RecentProjects() {
               ))}
             </div>
 
-            {/* Metadata and Description */}
-            <div className="grid md:grid-cols-2 gap-6 p-6">
-              <div className="text-sm text-gray-700 space-y-2">
+            {/* Project Info */}
+            <div className="grid md:grid-cols-2 gap-6 px-6 py-4 text-sm text-gray-700">
+              <div className="space-y-2">
                 <p><strong>Project:</strong> {modalProject.title}</p>
                 <p><strong>Segment:</strong> {modalProject.tag}</p>
                 <p><strong>Application type:</strong> {modalProject.keywords.join(', ')}</p>
@@ -180,15 +185,15 @@ export default function RecentProjects() {
                 <p><strong>Builder:</strong> {modalProject.builder}</p>
                 <p><strong>Fabricator:</strong> {modalProject.fabricator}</p>
               </div>
-              <div className="text-sm text-gray-700">
+              <div>
                 <p>{modalProject.description}</p>
               </div>
             </div>
 
-            {/* Close Button */}
+            {/* Close */}
             <button
               onClick={() => setModalProject(null)}
-              className="absolute top-2 right-2 text-xl text-gray-700 hover:text-red-600"
+              className="absolute top-2 right-2 text-2xl text-gray-700 hover:text-red-600"
             >
               &times;
             </button>
