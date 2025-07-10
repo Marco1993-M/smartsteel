@@ -249,11 +249,11 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[{
-            image: '/B.jpg',
-            title: 'Modern Farm Shed, Free State',
+            image: '/D.jpg',
+            title: 'Coffee & Spa Building, Pretoria',
             description: 'Custom agricultural shed using galvanised lightweight steel — fast to erect, built to last.'
           }, {
-            image: '/C.jpg',
+            image: '/B.jpg',
             title: 'Lightweight Roof Retrofit, Pretoria',
             description: 'Steel trusses were used to replace aging timber in a school roof retrofit project.'
           }].map((project, index) => (
