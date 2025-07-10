@@ -71,7 +71,7 @@ export default function RecentProjects() {
       <section className="max-w-6xl mx-auto mb-10">
         <h1 className="text-4xl font-bold mb-4 text-left">Project Gallery</h1>
         <p className="text-lg text-gray-700 text-left">
-          Lightweight steel has been used across residential and commercial buildings across South Africa. Whether you're
+          Lightweight steel has been used across residential and commercial buildings across South Africa. Whether you are
           building your home or a large-scale commercial project, explore and be inspired by projects that showcase the use
           of lightweight steel.
         </p>
