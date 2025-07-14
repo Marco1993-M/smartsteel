@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import emailjs from 'emailjs-com';
+import emailjs from '@emailjs/browser';
 
 const SERVICE_ID = 'service_h817nk1';
 const TEMPLATE_ID = 'template_vilvxrl';
