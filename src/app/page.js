@@ -97,7 +97,7 @@ export default function Home() {
   const faqs = [
     {
       q: 'How long does it take to build?',
-      a: 'Most warehouse kits can be installed in just a few weeks using small local teams — no cranes required.',
+      a: 'Smart Steel empowers you to build world-class warehouse facilities faster and more cost-effectively than traditional construction methods. Our lightweight steel warehouse solutions can be shipped anywhere across South Africa and beyond, designed for easy self-assembly or professional erection by the Smart Steel team.',
     },
     {
       q: 'Can I customize or expand later?',
