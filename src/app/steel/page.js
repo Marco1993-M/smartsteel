@@ -98,7 +98,7 @@ export default function LightweightSteelFramingPage() {
 <section className="py-20 px-6 bg-white text-center" id="contact">
   <h2 className="text-3xl font-semibold mb-4">Contact Us for Your Lightweight Steel Project</h2>
   <p className="mb-6">Ready to build your warehouse, shed, or building with steel? Request a quote today.</p>
-  <Link href="/company">
+  <Link href="/warehouse">
     <span className="inline-block bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#bf172d] transition cursor-pointer">
       Request a Quote
     </span>
