@@ -200,11 +200,11 @@ export default function Home() {
               <li>🔥 Fire-rated, pest-proof, rot-resistant & low maintenance</li>
             </ul>
             <Link
-              href="/warehouse"
+              href="/steel"
               className="inline-block bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold 
                 hover:bg-[#bf172d] transition mb-10"
             >
-              Get a Free Estimate
+              Learn more 
             </Link>
 
             {/* Collapsible FAQ Section */}
