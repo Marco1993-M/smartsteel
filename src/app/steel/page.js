@@ -15,21 +15,62 @@ export default function LightweightSteelFramingPage() {
       </section>
 
       {/* Intro */}
-      <section className="py-20 px-6 bg-gray-50 text-center">
-        <h2 className="text-3xl font-semibold mb-6">Why Choose Lightweight Steel Structures?</h2>
-        <div className="max-w-6xl mx-auto text-left space-y-6">
-          <p>
-            Lightweight Steel Framing (LSF), also known as Light Gauge Steel Framing (LGSF), is revolutionizing sustainable construction. It’s ideal for warehouses, sheds, and both residential and commercial buildings, offering unmatched speed, cost-efficiency, and durability.
-          </p>
-          <ul className="list-disc pl-5 space-y-2">
-            <li><strong>High Strength-to-Weight Ratio:</strong> Robust yet lightweight structures reduce load on foundations.</li>
-            <li><strong>Earthquake Resistance:</strong> LSF performs excellently in seismic zones due to its flexible and lightweight properties.</li>
-            <li><strong>Fire Resistance:</strong> Non-combustible steel ensures enhanced safety standards.</li>
-            <li><strong>Fast Construction:</strong> Prefabricated components enable builds 50–60% faster than traditional methods.</li>
-            <li><strong>Sustainability:</strong> Made from recyclable materials, steel framing supports eco-conscious construction.</li>
-          </ul>
+   {/* Why Choose Lightweight Steel Structures */}
+<section className="bg-gray-50 py-20 px-6">
+  <div className="max-w-5xl mx-auto">
+    <h2 className="text-3xl font-bold mb-6 text-left">Why Choose Lightweight Steel Structures?</h2>
+    <p className="text-lg text-left text-gray-700">
+      Lightweight Steel Framing (LSF), also known as Light Gauge Steel Framing (LGSF), is revolutionizing sustainable construction.
+      It’s ideal for warehouses, sheds, and both residential and commercial buildings, offering unmatched speed, cost-efficiency, and durability.
+    </p>
+  </div>
+
+  {/* Feature Icons Grid */}
+  <div className="max-w-6xl mx-auto mt-12 grid md:grid-cols-2 gap-10">
+    {[
+      {
+        title: 'High Strength-to-Weight Ratio',
+        text: 'Robust yet lightweight structures reduce load on foundations and improve structural performance.',
+        icon: '/icon/strength.png',
+      },
+      {
+        title: 'Earthquake Resistance',
+        text: 'LSF performs excellently in seismic zones thanks to its flexible and low-weight properties.',
+        icon: '/icon/earthquake.png',
+      },
+      {
+        title: 'Fire Resistance',
+        text: 'Non-combustible steel framing enhances safety and meets high fire rating standards.',
+        icon: '/icon/fire.png',
+      },
+      {
+        title: 'Fast Construction',
+        text: 'Prefabricated steel components enable builds 50–60% faster than traditional methods.',
+        icon: '/icon/speed.png',
+      },
+      {
+        title: 'Sustainability',
+        text: 'Steel is 100% recyclable and supports eco-conscious building practices with reduced site waste.',
+        icon: '/icon/sustainability.png',
+      },
+    ].map((item, index) => (
+      <div key={index} className="flex items-start gap-4 bg-white p-6 rounded-lg shadow-md">
+        <Image
+          src={item.icon}
+          alt={item.title}
+          width={40}
+          height={40}
+          className="flex-shrink-0"
+        />
+        <div>
+          <h4 className="text-xl font-semibold mb-2">{item.title}</h4>
+          <p className="text-gray-600 text-sm">{item.text}</p>
         </div>
-      </section>
+      </div>
+    ))}
+  </div>
+</section>
+
 
       {/* Applications */}
       <section className="py-20 px-6 bg-white text-center">
@@ -54,25 +95,7 @@ export default function LightweightSteelFramingPage() {
         </div>
       </section>
 
-      {/* Benefits */}
-      <section className="py-20 px-6 bg-gray-100 text-center">
-        <h2 className="text-3xl font-semibold mb-6">Benefits of LSF for Your Project</h2>
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 text-left">
-          <div>
-            <ul className="list-disc pl-5 space-y-2">
-              <li>Reduced foundation costs due to lighter loads</li>
-              <li>Precision manufacturing with minimal onsite waste</li>
-              <li>Low maintenance over the building lifecycle</li>
-              <li>Excellent thermal and sound insulation properties</li>
-            </ul>
-          </div>
-          <div>
-            <Image src="/lsf-benefits.jpg" alt="Lightweight Steel Framing Benefits" width={600} height={400} className="rounded-lg" />
-          </div>
-        </div>
-      </section>
-
-      {/* Our Services */}
+          {/* Our Services */}
       <section className="py-20 px-6 bg-white text-center">
         <h2 className="text-3xl font-semibold mb-6">Our Lightweight Steel Framing Services</h2>
         <p className="max-w-3xl mx-auto mb-8">
@@ -83,28 +106,70 @@ export default function LightweightSteelFramingPage() {
         </Link>
       </section>
 
+{/* Benefits of LSF for Your Project */}
+<section className="py-20 px-6 bg-gray-100 text-center">
+  <h2 className="text-3xl font-semibold mb-12">Benefits of LSF for Your Project</h2>
+
+  <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-left">
+    {[
+      {
+        title: 'Reduced Foundation Costs',
+        text: 'LSF systems are lighter than traditional materials, lowering foundation and transport costs.',
+        image: '/images/benefit-foundation.jpg',
+      },
+      {
+        title: 'Precision Manufacturing',
+        text: 'Components are factory-made to spec, reducing onsite waste and speeding up assembly.',
+        image: '/images/benefit-precision.jpg',
+      },
+      {
+        title: 'Low Maintenance',
+        text: 'Galvanized steel resists rot, pests, and corrosion — lowering maintenance over time.',
+        image: '/images/benefit-maintenance.jpg',
+      },
+      {
+        title: 'Thermal & Sound Insulation',
+        text: 'Engineered to support high-performing insulation systems for comfort and efficiency.',
+        image: '/images/benefit-insulation.jpg',
+      },
+    ].map((item, index) => (
+      <div key={index} className="bg-white rounded-lg shadow p-4 text-center">
+        <Image
+          src={item.image}
+          alt={item.title}
+          width={300}
+          height={200}
+          className="w-full h-40 object-cover rounded mb-4"
+        />
+        <h4 className="text-lg font-semibold mb-2">{item.title}</h4>
+        <p className="text-sm text-gray-600">{item.text}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+
+  
+
       {/* Why Work With Us */}
       <section className="py-20 px-6 bg-gray-50 text-center">
         <h2 className="text-3xl font-semibold mb-6">Why Work With Us?</h2>
         <p className="max-w-3xl mx-auto mb-8">
           With a commitment to high-quality builds, reliable supply chains, and sustainable construction practices, our team is trusted across South Africa. Certified, experienced, and client-focused.
         </p>
-        <Link href="/company" className="inline-block bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition">
+        <Link href="/about" className="inline-block bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition">
           Learn More About Us
         </Link>
       </section>
 
-     {/* Contact Section */}
-<section className="py-20 px-6 bg-white text-center" id="contact">
-  <h2 className="text-3xl font-semibold mb-4">Contact Us for Your Lightweight Steel Project</h2>
-  <p className="mb-6">Ready to build your warehouse, shed, or building with steel? Request a quote today.</p>
-  <Link href="/warehouse">
-    <span className="inline-block bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#bf172d] transition cursor-pointer">
-      Request a Quote
-    </span>
-  </Link>
-</section>
-
+      {/* Contact Section */}
+      <section className="py-20 px-6 bg-white text-center" id="contact">
+        <h2 className="text-3xl font-semibold mb-4">Contact Us for Your Lightweight Steel Project</h2>
+        <p className="mb-6">Ready to build your warehouse, shed, or building with steel? Request a quote today.</p>
+        <a href="mailto:info@smartsteel.co.za" className="bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#bf172d] transition">
+          Request a Quote
+        </a>
+      </section>
     </main>
   );
 }
