@@ -89,19 +89,22 @@ export default function LightweightSteelFramingPage() {
         <p className="max-w-3xl mx-auto mb-8">
           With a commitment to high-quality builds, reliable supply chains, and sustainable construction practices, our team is trusted across South Africa. Certified, experienced, and client-focused.
         </p>
-        <Link href="/about" className="inline-block bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition">
+        <Link href="/company" className="inline-block bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition">
           Learn More About Us
         </Link>
       </section>
 
-      {/* Contact Section */}
-      <section className="py-20 px-6 bg-white text-center" id="contact">
-        <h2 className="text-3xl font-semibold mb-4">Contact Us for Your Lightweight Steel Project</h2>
-        <p className="mb-6">Ready to build your warehouse, shed, or building with steel? Request a quote today.</p>
-        <a href="mailto:info@smartsteel.co.za" className="bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#bf172d] transition">
-          Request a Quote
-        </a>
-      </section>
+     {/* Contact Section */}
+<section className="py-20 px-6 bg-white text-center" id="contact">
+  <h2 className="text-3xl font-semibold mb-4">Contact Us for Your Lightweight Steel Project</h2>
+  <p className="mb-6">Ready to build your warehouse, shed, or building with steel? Request a quote today.</p>
+  <Link href="/company">
+    <span className="inline-block bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#bf172d] transition cursor-pointer">
+      Request a Quote
+    </span>
+  </Link>
+</section>
+
     </main>
   );
 }
