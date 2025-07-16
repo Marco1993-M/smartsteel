@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-
 const brochures = {
   'Home Owner': [
     {
@@ -65,6 +64,7 @@ const brochures = {
 export default function Home() {
   const [selectedRole, setSelectedRole] = useState('Home Owner');
   const [hoveredFeature, setHoveredFeature] = useState(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
   const features = [
     {
@@ -91,6 +91,21 @@ export default function Home() {
       title: 'Won’t catch fire',
       description: 'Steel is non-combustible, adding fire resistance to your home’s framework.',
       image: '/fireproof.jpg',
+    },
+  ];
+
+  const faqs = [
+    {
+      q: 'How long does it take to build?',
+      a: 'Most warehouse kits can be installed in just a few weeks using small local teams — no cranes required.',
+    },
+    {
+      q: 'Can I customize or expand later?',
+      a: 'Yes! The modular design allows for easy expansion, relocation, or layout changes over time.',
+    },
+    {
+      q: 'How durable are these structures?',
+      a: 'Our steel is galvanized, fire-rated, and built to last over 50 years in South African conditions.',
     },
   ];
 
@@ -167,76 +182,61 @@ export default function Home() {
   </div>
 </section>
 
-{/* Lightweight Steel Warehousing Section */}
-<section id="warehousing" className="bg-white py-20 px-6">
-  <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
-    {/* Text Column */}
-    <div>
-      <h2 className="text-3xl md:text-4xl font-bold mb-6 text-left">
-        Lightweight Steel Warehousing in South Africa
-      </h2>
-      <p className="text-lg text-gray-700 mb-6 text-left">
-        Fast, modular, and energy-efficient. Our cold-formed steel warehouses are engineered for South African conditions and tailored to your industry.
-      </p>
-      <ul className="space-y-3 text-gray-800 font-medium mb-8 text-left">
-        <li>⚡ <strong>50% faster</strong> to build than brick-and-mortar</li>
-        <li>🏗️ Clear spans up to <strong>20–40 m</strong> — no interior columns needed</li>
-        <li>🌿 <strong>Eco-friendly</strong> materials that are fully recyclable</li>
-        <li>🔧 <strong>Modular, customizable</strong>, and future-ready</li>
-        <li>🔥 Fire-rated, pest-proof, rot-resistant & low maintenance</li>
-      </ul>
-     <Link
-  href="/warehouse"
-  className="inline-block bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold 
-    hover:bg-[#bf172d] transition mb-10"
->
-  Get a Free Estimate
-</Link>
+ {/* Lightweight Steel Warehousing Section */}
+      <section id="warehousing" className="bg-white py-20 px-6">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-left">
+              Lightweight Steel Warehousing in South Africa
+            </h2>
+            <p className="text-lg text-gray-700 mb-6 text-left">
+              Fast, modular, and energy-efficient — our cold-formed steel warehouses are engineered for South African conditions and tailored to your industry.
+            </p>
+            <ul className="space-y-3 text-gray-800 font-medium mb-8 text-left">
+              <li>⚡ <strong>50% faster</strong> to build than brick-and-mortar</li>
+              <li>🏗️ Clear spans up to <strong>20–40 m</strong> — no interior columns needed</li>
+              <li>🌿 <strong>Eco-friendly</strong> materials that are fully recyclable</li>
+              <li>🔧 <strong>Modular, customizable</strong>, and future-ready</li>
+              <li>🔥 Fire-rated, pest-proof, rot-resistant & low maintenance</li>
+            </ul>
+            <Link
+              href="/warehouse"
+              className="inline-block bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold 
+                hover:bg-[#bf172d] transition mb-10"
+            >
+              Get a Free Estimate
+            </Link>
 
-      {/* Collapsible FAQ Section */}
-      <div className="space-y-4">
-        <h3 className="text-2xl font-semibold mb-4">FAQs</h3>
-        {[
-          {
-            q: 'How long does it take to build?',
-            a: 'Most warehouse kits can be installed in just a few weeks using small local teams — no cranes required.',
-          },
-          {
-            q: 'Can I customize or expand later?',
-            a: 'Yes! The modular design allows for easy expansion, relocation, or layout changes over time.',
-          },
-          {
-            q: 'How durable are these structures?',
-            a: 'Our steel is galvanized, fire-rated, and built to last over 50 years in South African conditions.',
-          },
-        ].map(({ q, a }, index) => {
-          const [open, setOpen] = useState(false);
-          return (
-            <div key={index} className="border-b pb-3">
-              <button
-                onClick={() => setOpen(!open)}
-                className="w-full text-left text-lg font-medium flex justify-between items-center focus:outline-none"
-              >
-                {q}
-                <span className="text-xl">{open ? '−' : '+'}</span>
-              </button>
-              {open && <p className="mt-2 text-gray-600 text-sm">{a}</p>}
+            {/* Collapsible FAQ Section */}
+            <div className="space-y-4">
+              <h3 className="text-2xl font-semibold mb-4">FAQs</h3>
+              {faqs.map(({ q, a }, index) => (
+                <div key={index} className="border-b pb-3">
+                  <button
+                    onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                    className="w-full text-left text-lg font-medium flex justify-between items-center focus:outline-none"
+                  >
+                    {q}
+                    <span className="text-xl">{openFaqIndex === index ? '−' : '+'}</span>
+                  </button>
+                  {openFaqIndex === index && (
+                    <p className="mt-2 text-gray-600 text-sm">{a}</p>
+                  )}
+                </div>
+              ))}
             </div>
-          );
-        })}
-      </div>
-    </div>
+          </div>
 
-    {/* Image Column */}
-    <div>
-      <img
-        src="/sale-banner.png"
-        alt="Lightweight Steel Warehouse in South Africa"
-        className="rounded-2xl shadow-xl w-full h-auto object-cover"
-      />
-    </div>
-  </div>
-</section>
+          <div>
+            <img
+              src="/sale-banner.png"
+              alt="Lightweight Steel Warehouse in South Africa"
+              className="rounded-2xl shadow-xl w-full h-auto object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
 
 
 
