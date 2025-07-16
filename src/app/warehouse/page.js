@@ -82,9 +82,9 @@ export default function WarehousePage() {
               title: '8m Wide Structure',
               description: 'Ideal for agricultural, workshop, or small-scale storage use. Fully customizable with optional cladding, doors, and colors.'
             }, {
-              value: '13m Wide Structure',
+              value: '12m Wide Structure',
               src: '/warehouse-13m.jpg',
-              title: '13m Wide Structure',
+              title: '12m Wide Structure',
               description: 'Designed for larger operations requiring significant covered space. Suitable for warehousing, workshops, and commercial use.'
             }].map((item, idx) => (
               <label key={idx} className="border rounded-lg p-4 flex flex-col items-center text-center cursor-pointer relative hover:shadow-md transition">
