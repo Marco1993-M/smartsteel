@@ -176,7 +176,7 @@ export default function Home() {
         Lightweight Steel Warehousing in South Africa
       </h2>
       <p className="text-lg text-gray-700 mb-6 text-left">
-        Fast, modular, and energy-efficient — our cold-formed steel warehouses are engineered for South African conditions and tailored to your industry.
+        Fast, modular, and energy-efficient. Our cold-formed steel warehouses are engineered for South African conditions and tailored to your industry.
       </p>
       <ul className="space-y-3 text-gray-800 font-medium mb-8 text-left">
         <li>⚡ <strong>50% faster</strong> to build than brick-and-mortar</li>
