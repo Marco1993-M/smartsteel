@@ -84,13 +84,13 @@ export default function Home() {
     },
     {
       title: 'Renowned durability',
-      description: 'Light Weight steel is made to last, with corrosion-resistant coatings for long-term performance.',
-      image: '/D.jpg',
+      description: 'TRUECORE® steel is made to last, with corrosion-resistant coatings for long-term performance.',
+      image: '/durability.jpg',
     },
     {
       title: 'Won’t catch fire',
       description: 'Steel is non-combustible, adding fire resistance to your home’s framework.',
-      image: '/E.jpg',
+      image: '/fireproof.jpg',
     },
   ];
 
@@ -167,6 +167,78 @@ export default function Home() {
   </div>
 </section>
 
+{/* Lightweight Steel Warehousing Section */}
+<section id="warehousing" className="bg-white py-20 px-6">
+  <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
+    {/* Text Column */}
+    <div>
+      <h2 className="text-3xl md:text-4xl font-bold mb-6 text-left">
+        Lightweight Steel Warehousing in South Africa
+      </h2>
+      <p className="text-lg text-gray-700 mb-6 text-left">
+        Fast, modular, and energy-efficient — our cold-formed steel warehouses are engineered for South African conditions and tailored to your industry.
+      </p>
+      <ul className="space-y-3 text-gray-800 font-medium mb-8 text-left">
+        <li>⚡ <strong>50% faster</strong> to build than brick-and-mortar</li>
+        <li>🏗️ Clear spans up to <strong>20–40 m</strong> — no interior columns needed</li>
+        <li>🌿 <strong>Eco-friendly</strong> materials that are fully recyclable</li>
+        <li>🔧 <strong>Modular, customizable</strong>, and future-ready</li>
+        <li>🔥 Fire-rated, pest-proof, rot-resistant & low maintenance</li>
+      </ul>
+     <Link
+  href="/warehouse"
+  className="inline-block bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold 
+    hover:bg-[#bf172d] transition mb-10"
+>
+  Get a Free Estimate
+</Link>
+
+      {/* Collapsible FAQ Section */}
+      <div className="space-y-4">
+        <h3 className="text-2xl font-semibold mb-4">FAQs</h3>
+        {[
+          {
+            q: 'How long does it take to build?',
+            a: 'Most warehouse kits can be installed in just a few weeks using small local teams — no cranes required.',
+          },
+          {
+            q: 'Can I customize or expand later?',
+            a: 'Yes! The modular design allows for easy expansion, relocation, or layout changes over time.',
+          },
+          {
+            q: 'How durable are these structures?',
+            a: 'Our steel is galvanized, fire-rated, and built to last over 50 years in South African conditions.',
+          },
+        ].map(({ q, a }, index) => {
+          const [open, setOpen] = useState(false);
+          return (
+            <div key={index} className="border-b pb-3">
+              <button
+                onClick={() => setOpen(!open)}
+                className="w-full text-left text-lg font-medium flex justify-between items-center focus:outline-none"
+              >
+                {q}
+                <span className="text-xl">{open ? '−' : '+'}</span>
+              </button>
+              {open && <p className="mt-2 text-gray-600 text-sm">{a}</p>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* Image Column */}
+    <div>
+      <img
+        src="/sale-banner.png"
+        alt="Lightweight Steel Warehouse in South Africa"
+        className="rounded-2xl shadow-xl w-full h-auto object-cover"
+      />
+    </div>
+  </div>
+</section>
+
+
 
 
 
@@ -230,7 +302,7 @@ export default function Home() {
           </div>
         </section>
 
-          {/* Homepage Recent Projects Preview Section */}
+       {/* Homepage Recent Projects Preview Section */}
       <section className="bg-white py-20 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between mb-12">
           <div>
@@ -249,11 +321,11 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[{
-            image: '/D.jpg',
-            title: 'Coffee & Spa Building, Pretoria',
+            image: '/B.jpg',
+            title: 'Modern Farm Shed, Free State',
             description: 'Custom agricultural shed using galvanised lightweight steel — fast to erect, built to last.'
           }, {
-            image: '/B.jpg',
+            image: '/C.jpg',
             title: 'Lightweight Roof Retrofit, Pretoria',
             description: 'Steel trusses were used to replace aging timber in a school roof retrofit project.'
           }].map((project, index) => (
@@ -317,16 +389,16 @@ export default function Home() {
 
 {/* Solar Solutions */}
 <section className="py-20 px-6 bg-white text-center">
-  <h2 className="text-3xl font-bold mb-6">Solar Ready Steel Solutions</h2>
+  <h2 className="text-3xl font-bold mb-6">Solar-Ready Steel Solutions</h2>
   <p className="text-lg max-w-3xl mx-auto mb-12">
-    Our lightweight steel frames are the ideal foundation for modern solar installations. From carports to ground mounted systems and integrated solar roofs, our structures are engineered for strength, longevity, and effortless solar compatibility.
+    Smart Steel’s lightweight steel frames are the ideal foundation for modern solar installations. From carports to ground-mounted systems and integrated solar roofs, our structures are engineered for strength, longevity, and effortless solar compatibility.
   </p>
 
   <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 text-left">
     <div className="bg-gray-50 p-6 rounded-lg shadow hover:shadow-lg transition">
       <h3 className="text-xl font-semibold mb-2">Solar Carports</h3>
       <p className="text-gray-700 mb-4">
-        Create covered parking that works double time, our steel carport systems provide reliable shelter while supporting solar panels for on site energy generation.
+        Create covered parking that works double-time — our steel carport systems provide reliable shelter while supporting solar panels for on-site energy generation.
       </p>
       <img src="/solar-carport.jpg" alt="Solar Carports" className="w-full h-48 object-cover rounded" />
     </div>
@@ -334,7 +406,7 @@ export default function Home() {
     <div className="bg-gray-50 p-6 rounded-lg shadow hover:shadow-lg transition">
       <h3 className="text-xl font-semibold mb-2">Ground Mount Systems</h3>
       <p className="text-gray-700 mb-4">
-        Lightweight steel ground mounts designed for durability, fast assembly, and precise alignment, ideal for solar farms, rural sites, and residential arrays.
+        Lightweight steel ground mounts designed for durability, fast assembly, and precise alignment — ideal for solar farms, rural sites, and residential arrays.
       </p>
       <img src="/solar-ground.jpg" alt="Solar Ground Mounts" className="w-full h-48 object-cover rounded" />
     </div>
@@ -342,7 +414,7 @@ export default function Home() {
     <div className="bg-gray-50 p-6 rounded-lg shadow hover:shadow-lg transition">
       <h3 className="text-xl font-semibold mb-2">Solar Roof Structures</h3>
       <p className="text-gray-700 mb-4">
-        Whether retrofitting an existing building or designing from the ground up, our precision engineered steel frames provide the perfect base for integrated solar roofing.
+        Whether retrofitting an existing building or designing from the ground up, our precision-engineered steel frames provide the perfect base for integrated solar roofing.
       </p>
       <img src="/solar-roof.jpg" alt="Solar Roof Structures" className="w-full h-48 object-cover rounded" />
     </div>
@@ -358,8 +430,7 @@ export default function Home() {
   </div>
 </section>
 
-
-
+  
 
        {/* CTA */}
         <section id="contact" className="bg-[#000000] text-white py-20 px-6 text-center">
