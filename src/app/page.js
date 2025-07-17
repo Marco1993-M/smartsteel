@@ -115,20 +115,19 @@ export default function Home() {
 
         {/* Hero Section */}
         <section className="bg-white text-black py-40 px-6 text-center">
-          <h5 className="text-lg md:text-xl font-thin mb-2">Metal Roofing Solutions</h5>
+          <h5 className="text-lg md:text-xl font-thin mb-2"><p>South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions</p></h5>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Custom, Affordable Steel Solutions for Every Project
+            Fast, Affordable & Durable Steel Warehouses
           </h1>
           <p className="text-lg md:text-xl mb-6 max-w-2xl mx-auto">
-            A structure that won’t twist, warp, or shrink — ever. Our steel is fire-resistant, termite and borer proof,
-            100% recyclable, and engineered for strength and longevity in any climate.
+            Lightweight steel framing and metal roofing systems that are engineered for rapid construction, long-term durability, and low maintenance. 100% recyclable, fire-resistant, and termite-proof.
           </p>
           <a
             href="#contact"
             className="bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold 
               hover:bg-gray-200 transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
           >
-            Request a Quote
+            Request a Warehouse Quote
           </a>
         </section>
 
