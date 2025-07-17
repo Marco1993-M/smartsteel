@@ -123,7 +123,7 @@ export default function Home() {
             Lightweight steel framing and metal roofing systems that are engineered for rapid construction, long-term durability, and low maintenance. 100% recyclable, fire-resistant, and termite-proof.
           </p>
           <a
-            href="#contact"
+            href="#warehouse"
             className="bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold 
               hover:bg-gray-200 transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
           >
