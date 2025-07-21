@@ -124,8 +124,8 @@ export default function Home() {
           </p>
           <a
             href="#warehouse"
-            className="bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold 
-              hover:bg-gray-200 transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
+            className="bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold
+              hover:bg-white border border-solid border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
           >
             Request a Warehouse Quote
           </a>
