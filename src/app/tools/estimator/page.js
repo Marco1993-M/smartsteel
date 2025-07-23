@@ -4,7 +4,6 @@ import { useState } from 'react';
 import emailjs from '@emailjs/browser';
 import Head from 'next/head';
 
-
 const MATERIALS = {
   columns: { length: 3, rate: 467 },
   trusses: {
@@ -33,10 +32,7 @@ export default function EstimatorPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [estimate, setEstimate] = useState(null);
-  const [showTooltip, setShowTooltip] = useState(false);
   const [isSending, setIsSending] = useState(false);
-
-  // Calculation logic (same as before)...
 
   // Calculate bays:
   const bayLength = 2.5;
@@ -91,6 +87,25 @@ export default function EstimatorPage() {
   const savingLow = competitorLow - finalEstimate;
   const savingHigh = competitorHigh - finalEstimate;
 
+  // JSON-LD structured data for SEO
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Smart Steel Warehouse Estimator",
+    "url": "https://www.smartsteel.co.za/tools/estimator", 
+    "description": "Calculate your lightweight steel warehouse or shed cost instantly with our free Smart Steel Estimator. Get accurate pricing & save on durable steel structures in South Africa.",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "browserRequirements": "Requires JavaScript",
+    "softwareVersion": "1.0",
+    "featureList": [
+      "Estimate warehouse shed costs based on width, length, and materials",
+      "Calculate costs for columns, trusses, sheeting, and fittings",
+      "Compare prices with competitors",
+      "Email estimate to your inbox"
+    ]
+  };
+
   const handleEstimate = () => {
     setEstimate(finalEstimate);
   };
@@ -141,146 +156,146 @@ export default function EstimatorPage() {
         />
         <meta name="robots" content="index, follow" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* Optional: Open Graph tags for social sharing */}
-        <meta property="og:title" content="Smart Steel Warehouse Estimator | Lightweight Shed Cost Calculator South Africa" />
-        <meta property="og:description" content="Calculate your lightweight steel warehouse or shed cost instantly with our free Smart Steel Estimator. Get accurate pricing & save on durable steel structures in SA!" />
-        <meta property="og:type" content="website" />
+        {/* Structured Data for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
       </Head>
 
-    <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 p-6 font-sans flex flex-col items-center">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 relative">
-        <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
-          Smart Steel Warehouse Estimator
-        </h1>
-        <h4 className="text-1xl font-regular mb-6 text-center text-gray-900">
-          Lightweight Warehouse Structure
-        </h4>
+      <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 p-6 font-sans flex flex-col items-center">
+        <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 relative">
+          <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
+            Smart Steel Warehouse Estimator
+          </h1>
+          <h4 className="text-1xl font-regular mb-6 text-center text-gray-900">
+            Lightweight Warehouse Structure
+          </h4>
 
-        <div className="space-y-5">
-          {/* Inputs Card */}
-          <section className="space-y-4">
-            <label className="block font-semibold text-gray-700">
-              Width (m)
-              <select
-                className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                value={width}
-                onChange={(e) => setWidth(parseInt(e.target.value))}
-              >
-                <option value={8}>8m</option>
-                <option value={10}>10m</option>
-                <option value={12}>12m</option>
-              </select>
-            </label>
+          <div className="space-y-5">
+            {/* Inputs Card */}
+            <section className="space-y-4">
+              <label className="block font-semibold text-gray-700">
+                Width (m)
+                <select
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                  value={width}
+                  onChange={(e) => setWidth(parseInt(e.target.value))}
+                >
+                  <option value={8}>8m</option>
+                  <option value={10}>10m</option>
+                  <option value={12}>12m</option>
+                </select>
+              </label>
 
-            <label className="block font-semibold text-gray-700">
-              Length (m)
-              <input
-                type="number"
-                min={2.5}
-                className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                value={length}
-                onChange={(e) => setLength(parseFloat(e.target.value))}
-              />
-            </label>
-
-            <label className="block font-semibold text-gray-700">
-              Sheeting
-              <select
-                className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                value={sheeting}
-                onChange={(e) => setSheeting(e.target.value)}
-              >
-                <option value="None">None</option>
-                <option value="IBR">IBR</option>
-                <option value="Chromadek">Chromadek</option>
-              </select>
-            </label>
-
-            <label className="block font-semibold text-gray-700">
-              Delivery Distance (km)
-              <input
-                type="number"
-                min={0}
-                className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                value={distance}
-                onChange={(e) => setDistance(parseFloat(e.target.value))}
-              />
-            </label>
-
-            <button
-              onClick={handleEstimate}
-              className="w-full mt-4 rounded bg-black py-3 text-white font-semibold shadow hover:bg-gray-900 transition"
-            >
-              Calculate Estimate
-            </button>
-          </section>
-
-          {/* Estimate Result Card */}
-          {estimate !== null && (
-            <section className="bg-gray-50 rounded-lg p-5 shadow-inner text-center">
-              <h2 className="text-xl font-semibold mb-1 text-gray-800">Estimated Cost (Materials Only)</h2>
-              <p className="text-4xl font-extrabold text-green-600">R {estimate.toLocaleString()}</p>
-
-              <div className="mt-3 text-gray-700 text-sm relative inline-block">
-                <span>
-                  Compare with Hot-Rolled Steel (Material Only, R1,100–R1,400/m²):<br />
-                  ~R{competitorLow.toLocaleString()}–R{competitorHigh.toLocaleString()}
-                </span>
-                {/* Tooltip code omitted for brevity */}
-              </div>
-
-              <p className="mt-2 font-semibold text-gray-800">
-                You save up to R{Math.max(savingLow, savingHigh).toLocaleString()} with Smart Steel!
-              </p>
-            </section>
-          )}
-
-          {/* Lead Capture Form Card */}
-          {estimate !== null && (
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white rounded-lg p-5 shadow-md space-y-4"
-            >
-              <h2 className="text-lg font-semibold text-gray-900">Get Your Estimate</h2>
-
-              <label className="block text-gray-700 font-medium">
-                Name
+              <label className="block font-semibold text-gray-700">
+                Length (m)
                 <input
-                  type="text"
-                  required
-                  className="mt-1 w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your full name"
-                  disabled={isSending}
+                  type="number"
+                  min={2.5}
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                  value={length}
+                  onChange={(e) => setLength(parseFloat(e.target.value))}
                 />
               </label>
 
-              <label className="block text-gray-700 font-medium">
-                Email
+              <label className="block font-semibold text-gray-700">
+                Sheeting
+                <select
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                  value={sheeting}
+                  onChange={(e) => setSheeting(e.target.value)}
+                >
+                  <option value="None">None</option>
+                  <option value="IBR">IBR</option>
+                  <option value="Chromadek">Chromadek</option>
+                </select>
+              </label>
+
+              <label className="block font-semibold text-gray-700">
+                Delivery Distance (km)
                 <input
-                  type="email"
-                  required
-                  className="mt-1 w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  disabled={isSending}
+                  type="number"
+                  min={0}
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                  value={distance}
+                  onChange={(e) => setDistance(parseFloat(e.target.value))}
                 />
               </label>
 
               <button
-                type="submit"
-                disabled={isSending}
-                className="w-full rounded bg-black py-2 text-white font-semibold shadow hover:bg-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleEstimate}
+                className="w-full mt-4 rounded bg-black py-3 text-white font-semibold shadow hover:bg-gray-900 transition"
               >
-                {isSending ? 'Sending...' : 'Submit Estimate'}
+                Calculate Estimate
               </button>
-            </form>
-          )}
+            </section>
+
+            {/* Estimate Result Card */}
+            {estimate !== null && (
+              <section className="bg-gray-50 rounded-lg p-5 shadow-inner text-center">
+                <h2 className="text-xl font-semibold mb-1 text-gray-800">Estimated Cost (Materials Only)</h2>
+                <p className="text-4xl font-extrabold text-green-600">R {estimate.toLocaleString()}</p>
+
+                <div className="mt-3 text-gray-700 text-sm relative inline-block">
+                  <span>
+                    Compare with Hot-Rolled Steel (Material Only, R1,100–R1,400/m²):<br />
+                    ~R{competitorLow.toLocaleString()}–R{competitorHigh.toLocaleString()}
+                  </span>
+                </div>
+
+                <p className="mt-2 font-semibold text-gray-800">
+                  You save up to R{Math.max(savingLow, savingHigh).toLocaleString()} with Smart Steel!
+                </p>
+              </section>
+            )}
+
+            {/* Lead Capture Form Card */}
+            {estimate !== null && (
+              <form
+                onSubmit={handleSubmit}
+                className="bg-white rounded-lg p-5 shadow-md space-y-4"
+              >
+                <h2 className="text-lg font-semibold text-gray-900">Get Your Estimate</h2>
+
+                <label className="block text-gray-700 font-medium">
+                  Name
+                  <input
+                    type="text"
+                    required
+                    className="mt-1 w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your full name"
+                    disabled={isSending}
+                  />
+                </label>
+
+                <label className="block text-gray-700 font-medium">
+                  Email
+                  <input
+                    type="email"
+                    required
+                    className="mt-1 w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    disabled={isSending}
+                  />
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={isSending}
+                  className="w-full rounded bg-black py-2 text-white font-semibold shadow hover:bg-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSending ? 'Sending...' : 'Submit Estimate'}
+                </button>
+              </form>
+            )}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
     </>
   );
 }
