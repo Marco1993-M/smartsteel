@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import emailjs from '@emailjs/browser';
+import Head from 'next/head';
+
 
 const MATERIALS = {
   columns: { length: 3, rate: 467 },
@@ -130,6 +132,21 @@ export default function EstimatorPage() {
   };
 
   return (
+    <>
+      <Head>
+        <title>Smart Steel Warehouse Estimator | Lightweight Shed Cost Calculator South Africa</title>
+        <meta
+          name="description"
+          content="Calculate your lightweight steel warehouse or shed cost instantly with our free Smart Steel Estimator. Get accurate pricing & save on durable steel structures in SA!"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Optional: Open Graph tags for social sharing */}
+        <meta property="og:title" content="Smart Steel Warehouse Estimator | Lightweight Shed Cost Calculator South Africa" />
+        <meta property="og:description" content="Calculate your lightweight steel warehouse or shed cost instantly with our free Smart Steel Estimator. Get accurate pricing & save on durable steel structures in SA!" />
+        <meta property="og:type" content="website" />
+      </Head>
+
     <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 p-6 font-sans flex flex-col items-center">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 relative">
         <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
@@ -264,5 +281,6 @@ export default function EstimatorPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }
