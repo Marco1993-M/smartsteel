@@ -429,6 +429,21 @@ export default function Home() {
   </div>
 </section>
 
+<section className="bg-gray-100 py-16">
+  <div className="max-w-7xl mx-auto px-6 text-center">
+    <h2 className="text-3xl md:text-4xl font-bold mb-4">Estimate Your Steel Structure Instantly</h2>
+    <p className="text-lg text-gray-700 mb-8">
+      Use our free tool to get a quick cost estimate for your shed, warehouse, or home shell based on your specifications.
+    </p>
+    <a
+      href="/tools/estimator"
+      className="inline-block bg-black text-white px-6 py-3 rounded-xl text-lg hover:bg-gray-800 transition"
+    >
+      Try the Cost Estimator
+    </a>
+  </div>
+</section>
+
   
 
        {/* CTA */}
