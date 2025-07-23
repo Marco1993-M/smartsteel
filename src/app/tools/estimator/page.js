@@ -260,6 +260,44 @@ export default function EstimatorPage() {
           )}
         </div>
       </div>
+
+           {/* Follow Us Section */}
+                <section className="bg-gray-100 py-20 px-6">
+                  <div className="max-w-5xl mx-auto text-left">
+                    <h2 className="text-3xl font-bold mb-4">Follow us on our socials!</h2>
+                    <p className="text-lg mb-8">
+                      Discover the latest projects featuring frames made from lightweight steel. Follow us for examples and inspiration on how lightweight steel is helping bring designs to life.
+                    </p>
+        
+                    {/* Social Icons */}
+                    <div className="flex space-x-6 text-2xl">
+                      <a
+                        href="https://facebook.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-[#da1a33] transition"
+                      >
+                        <FaFacebookF />
+                      </a>
+                      <a
+                        href="https://instagram.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-[#da1a33] transition"
+                      >
+                        <FaInstagram />
+                      </a>
+                      <a
+                        href="https://linkedin.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-[#da1a33] transition"
+                      >
+                        <FaLinkedinIn />
+                      </a>
+                    </div>
+                  </div>
+                </section>
     </main>
   );
 }
