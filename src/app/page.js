@@ -433,7 +433,7 @@ export default function Home() {
   <div className="max-w-7xl mx-auto px-6 text-center">
     <h2 className="text-3xl md:text-4xl font-bold mb-4">Estimate Your Steel Structure Instantly</h2>
     <p className="text-lg text-gray-700 mb-8">
-      Use our free tool to get a quick cost estimate for your shed, warehouse, or home shell based on your specifications.
+      Use our free tool to get a quick cost estimate for your warehouse, based on your specifications. Unbeatable prices.
     </p>
     <a
       href="/tools/estimator"
