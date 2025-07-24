@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Smart Steel",
-  description: "Smarter, modular steel construction.",
+  title: "Smart Steel | Premium Light Weight Steel Structures & Warehousing Solutions",
+  description: "Smart Steel specializes in lightweight steel structures, warehouses, solar solutions and sustainable building solutions across South Africa. Get a fast, durable, and cost-effective build.",
   icons: {
     icon: [
       { url: "/favicon/favicon.ico", sizes: "any" },
