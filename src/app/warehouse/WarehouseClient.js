@@ -30,7 +30,7 @@ const warehouseProductSchema = {
       url: "https://smartsteel.co.za/warehouse#8m-wide",
       priceSpecification: {
         "@type": "PriceSpecification",
-        price: "Contact for quote",
+        price: "69000.00",
       },
     },
     {
@@ -41,7 +41,7 @@ const warehouseProductSchema = {
       url: "https://smartsteel.co.za/warehouse#12m-wide",
       priceSpecification: {
         "@type": "PriceSpecification",
-        price: "Contact for quote",
+        price: "79000.00",
       },
     },
   ],
