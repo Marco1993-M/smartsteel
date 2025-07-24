@@ -1,10 +1,11 @@
+// app/layout.js
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import SalePopup from "../components/SalePopup";
 import AnnouncementBanner from "../components/AnnouncementBanner";
-import Head from "next/head";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,38 +18,82 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Smart Steel | Premium Light Weight Steel Structures & Warehousing Solutions",
-  description: "Smart Steel specializes in lightweight steel structures, warehouses, solar solutions and sustainable building solutions across South Africa. Get a fast, durable, and cost-effective build.",
+  metadataBase: new URL("https://smartsteel.co.za"),
+  title: {
+    default:
+      "Smart Steel | Premium Light Weight Steel Structures & Warehousing Solutions",
+    template: "%s | Smart Steel",
+  },
+  description:
+    "Smart Steel specializes in lightweight steel structures, warehouses, solar solutions and sustainable building solutions across South Africa. Get a fast, durable, and cost-effective build.",
+  keywords: [
+    "steel structures",
+    "lightweight steel",
+    "modular buildings",
+    "warehouse kits",
+    "steel sheds",
+    "solar panel mounting structures",
+    "prefab steel buildings",
+    "South Africa",
+    "Smart Steel",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  openGraph: {
+    title:
+      "Smart Steel | Premium Light Weight Steel Structures & Warehousing Solutions",
+    description:
+      "High-quality lightweight steel structures, modular sheds, and warehouse kits across South Africa.",
+    url: "https://smartsteel.co.za",
+    siteName: "Smart Steel",
+    images: [
+      {
+        url: "/favicon.png", // swap to your proper OG image
+        width: 1200,
+        height: 630,
+        alt: "Smart Steel – Lightweight Steel Structures",
+      },
+    ],
+    locale: "en_ZA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title:
+      "Smart Steel | Premium Light Weight Steel Structures & Warehousing Solutions",
+    description:
+      "High-quality lightweight steel structures, modular sheds, and warehouse kits across South Africa.",
+    images: ["/og-image.jpg"],
+    // site: "@yourhandle", // add if you have it
+    // creator: "@yourhandle",
+  },
   icons: {
     icon: [
       { url: "/favicon/favicon.ico", sizes: "any" },
-      { url: "/favicon/favicon-96x96.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
     ],
     apple: "/favicon/apple-touch-icon.png",
   },
   manifest: "/favicon/site.webmanifest",
-  openGraph: {
-    title: "Smart Steel",
-    description: "Explore our lightweight steel structures and prefab kits.",
-    images: [
-      {
-        url: "/logo-512x512.png",
-        width: 1200,
-        height: 630,
-        alt: "Smart Steel Logo",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Smart Steel",
-    description: "Explore our lightweight steel structures and prefab kits.",
-    images: ["/logo-512x512.png"],
-  },
+  // verification: {
+  //   google: "PHZurmEVfVH4LcziY1ERgqZNLYs4EtmktPLXB5tPdB0", // if you use Search Console
+  // },
 };
 
-const structuredData = {
+const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Smart Steel",
@@ -56,56 +101,40 @@ const structuredData = {
   logo: "https://www.smartsteel.co.za/logo.png",
   sameAs: [
     "https://www.facebook.com/smartsteelsa",
-    "https://www.instagram.com/smartsteelsa"
+    "https://www.instagram.com/smartsteelsa",
   ],
-  description: "Smart Steel designs and supplies modular steel structures in South Africa. Fast, affordable, and high quality.",
+  description:
+    "Smart Steel designs and supplies modular steel structures in South Africa. Fast, affordable, and high quality.",
   address: {
     "@type": "PostalAddress",
     streetAddress: "123 Industrial Ave",
     addressLocality: "Pretoria",
     addressRegion: "Gauteng",
     postalCode: "0181",
-    addressCountry: "ZA"
+    addressCountry: "ZA",
   },
   contactPoint: {
     "@type": "ContactPoint",
     telephone: "+27-82-123-4567",
     contactType: "Customer Service",
     areaServed: "ZA",
-    availableLanguage: ["en", "af"]
+    availableLanguage: ["en", "af"],
   },
-  makesOffer: [
-    {
-      "@type": "Product",
-      name: "8m Wide Warehouse",
-      description: "Modular warehouse 8m wide, customizable length.",
-      brand: "Smart Steel"
-    },
-    {
-      "@type": "Product",
-      name: "10m Wide Warehouse",
-      description: "Modular warehouse 10m wide, customizable length.",
-      brand: "Smart Steel"
-    },
-    {
-      "@type": "Product",
-      name: "12m Wide Warehouse",
-      description: "Modular warehouse 12m wide, customizable length.",
-      brand: "Smart Steel"
-    }
-  ]
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <Head>
-        <script
+    <html lang="en" className="h-full">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full flex flex-col`}
+      >
+        {/* Global JSON-LD */}
+        <Script
+          id="ld-org"
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-      </Head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+
         <AnnouncementBanner />
         <Navbar />
         {children}
