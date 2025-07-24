@@ -36,6 +36,7 @@ export default function LightweightSteelFramingClient() {
     <main className="font-sans text-gray-800">
       {/* JSON-LD for BlogPosting */}
       <Script
+        id="ld-blog-lsf"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
       />
