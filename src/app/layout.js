@@ -60,7 +60,7 @@ export const metadata = {
     siteName: "Smart Steel",
     images: [
       {
-        url: "/og-image.jpg", // Replace with your real OG image
+        url: "/smartsteel.jpg", // Replace with your real OG image
         width: 1200,
         height: 630,
         alt: "Smart Steel – Lightweight Steel Structures",
