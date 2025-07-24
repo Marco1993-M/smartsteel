@@ -1,6 +1,7 @@
 // app/solar/page.js
 import SolarClient from "./SolarClient";
 
+
 export const metadata = {
   title: "Solar Panel Mounting Structures & Steel Solar Carports | Smart Steel",
   description:
