@@ -17,6 +17,10 @@ const warehouseProductSchema = {
   name: "Customizable Steel Warehouse",
   description:
     "Modular steel sheds and warehouses available in 8m and 12m widths, customizable length and color options, with optional features.",
+  image: [
+    "https://smartsteel.co.za/warehouse-8m.jpg",
+    "https://smartsteel.co.za/warehouse-13m.jpg"
+  ],
   brand: {
     "@type": "Brand",
     name: "Smart Steel",
@@ -26,26 +30,25 @@ const warehouseProductSchema = {
       "@type": "Offer",
       name: "8m Wide Structure",
       priceCurrency: "ZAR",
+      price: "0.00", // placeholder
+      itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
       url: "https://smartsteel.co.za/warehouse#8m-wide",
-      priceSpecification: {
-        "@type": "PriceSpecification",
-        price: "69000.00",
-      },
+      image: "https://smartsteel.co.za/warehouse-8m.jpg"
     },
     {
       "@type": "Offer",
       name: "12m Wide Structure",
       priceCurrency: "ZAR",
+      price: "0.00", // placeholder
+      itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
       url: "https://smartsteel.co.za/warehouse#12m-wide",
-      priceSpecification: {
-        "@type": "PriceSpecification",
-        price: "79000.00",
-      },
-    },
+      image: "https://smartsteel.co.za/warehouse-13m.jpg"
+    }
   ],
 };
+
 
 export default function WarehouseClient() {
   const handleSubmit = (e) => {
