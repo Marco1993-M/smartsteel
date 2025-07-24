@@ -60,7 +60,7 @@ export const metadata = {
     siteName: "Smart Steel",
     images: [
       {
-        url: "/favicon.png", // swap to your proper OG image
+        url: "/og-image.jpg", // Replace with your real OG image
         width: 1200,
         height: 630,
         alt: "Smart Steel – Lightweight Steel Structures",
@@ -75,9 +75,7 @@ export const metadata = {
       "Smart Steel | Premium Light Weight Steel Structures & Warehousing Solutions",
     description:
       "High-quality lightweight steel structures, modular sheds, and warehouse kits across South Africa.",
-    images: ["/og-image.jpg"],
-    // site: "@yourhandle", // add if you have it
-    // creator: "@yourhandle",
+    images: ["/favicon.png"], // Replace with your real OG image
   },
   icons: {
     icon: [
@@ -88,9 +86,9 @@ export const metadata = {
     apple: "/favicon/apple-touch-icon.png",
   },
   manifest: "/favicon/site.webmanifest",
-  // verification: {
-  //   google: "PHZurmEVfVH4LcziY1ERgqZNLYs4EtmktPLXB5tPdB0", // if you use Search Console
-  // },
+  verification: {
+    google: "PHZurmEVfVH4LcziY1ERgqZNLYs4EtmktPLXB5tPdB0", // Your GSC code
+  },
 };
 
 const organizationJsonLd = {
@@ -100,17 +98,16 @@ const organizationJsonLd = {
   url: "https://www.smartsteel.co.za",
   logo: "https://www.smartsteel.co.za/logo.png",
   sameAs: [
-    "https://www.facebook.com/smartsteelsa",
-    "https://www.instagram.com/smartsteelsa",
+    "https://www.facebook.com/profile.php?id=100091390116080",
   ],
   description:
     "Smart Steel designs and supplies modular steel structures in South Africa. Fast, affordable, and high quality.",
   address: {
     "@type": "PostalAddress",
-    streetAddress: "123 Industrial Ave",
+    streetAddress: "869 29th Avenue",
     addressLocality: "Pretoria",
     addressRegion: "Gauteng",
-    postalCode: "0181",
+    postalCode: "0084",
     addressCountry: "ZA",
   },
   contactPoint: {
