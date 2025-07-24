@@ -31,14 +31,50 @@ const blogSchema = {
   },
 };
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What is lightweight steel framing?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Lightweight steel framing (LSF) is a construction method using cold-formed galvanized steel sections. It is known for being durable, eco-friendly, and faster to build compared to traditional brick or wood construction.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Is lightweight steel framing cost-effective?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes, LSF can significantly reduce overall project costs due to faster construction times, minimal waste, and reduced foundation requirements.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How long does it take to build with LSF?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Building with LSF is approximately 50-60% faster than traditional methods thanks to prefabricated components and easy on-site assembly.",
+      },
+    },
+  ],
+};
+
 export default function LightweightSteelFramingClient() {
   return (
     <main className="font-sans text-gray-800">
-      {/* JSON-LD for BlogPosting */}
+      {/* JSON-LD for BlogPosting & FAQPage */}
       <Script
-        id="ld-blog-lsf"
+        id="blog-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
+      />
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
       {/* Hero Section */}
@@ -199,6 +235,31 @@ export default function LightweightSteelFramingClient() {
         >
           Learn More About Us
         </Link>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-6 bg-white">
+        <h2 className="text-3xl font-semibold mb-6 text-center">Frequently Asked Questions</h2>
+        <div className="max-w-3xl mx-auto space-y-6 text-left">
+          <div>
+            <h3 className="font-semibold text-lg mb-2">What is lightweight steel framing?</h3>
+            <p className="text-gray-700">
+              Lightweight steel framing (LSF) is a construction method using cold-formed steel profiles that are light, durable, and highly precise.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg mb-2">Is lightweight steel framing cost-effective?</h3>
+            <p className="text-gray-700">
+              Yes. LSF structures are quicker to assemble, reduce waste, and lower transport and foundation costs.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg mb-2">How long does it take to build with LSF?</h3>
+            <p className="text-gray-700">
+              Typically, LSF construction is 50–60% faster than conventional building methods.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Contact Section */}
