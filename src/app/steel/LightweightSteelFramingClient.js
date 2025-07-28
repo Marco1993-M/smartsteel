@@ -3,6 +3,27 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import Script from 'next/script';
+import { useState } from 'react';
+
+function FAQItem({ item, index }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border rounded-md shadow-sm">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full text-left px-4 py-3 flex justify-between items-center font-semibold text-lg"
+      >
+        {item.question}
+        <span className="text-xl">{isOpen ? '−' : '+'}</span>
+      </button>
+      {isOpen && (
+        <div className="px-4 pb-4 text-gray-700">{item.answer}</div>
+      )}
+    </div>
+  );
+}
+
 
 const blogSchema = {
   "@context": "https://schema.org",
@@ -61,6 +82,9 @@ const faqSchema = {
     },
   ],
 };
+
+
+
 
 export default function LightweightSteelFramingClient() {
   return (
@@ -237,30 +261,84 @@ export default function LightweightSteelFramingClient() {
         </Link>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-20 px-6 bg-white">
-        <h2 className="text-3xl font-semibold mb-6 text-center">Frequently Asked Questions</h2>
-        <div className="max-w-3xl mx-auto space-y-6 text-left">
-          <div>
-            <h3 className="font-semibold text-lg mb-2">What is lightweight steel framing?</h3>
-            <p className="text-gray-700">
-              Lightweight steel framing (LSF) is a construction method using cold-formed steel profiles that are light, durable, and highly precise.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg mb-2">Is lightweight steel framing cost-effective?</h3>
-            <p className="text-gray-700">
-              Yes. LSF structures are quicker to assemble, reduce waste, and lower transport and foundation costs.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg mb-2">How long does it take to build with LSF?</h3>
-            <p className="text-gray-700">
-              Typically, LSF construction is 50–60% faster than conventional building methods.
-            </p>
-          </div>
-        </div>
-      </section>
+{/* FAQ Section */}
+<section className="py-20 px-6 bg-white">
+  <h2 className="text-3xl font-semibold mb-6 text-center">Frequently Asked Questions</h2>
+  <div className="max-w-3xl mx-auto space-y-4 text-left">
+    {[
+      {
+        question: 'What is a lightweight steel warehouse?',
+        answer:
+          'A lightweight steel warehouse uses cold-formed, light gauge steel framing to create a durable, fast-to-erect, and cost-effective structure for industrial and storage needs.',
+      },
+      {
+        question: 'What are the advantages of lightweight steel warehouses?',
+        answer:
+          `Lightweight steel warehouses offer numerous advantages including:
+- Durability and strength: High-strength steel withstands harsh weather and resists pests, mold, and rot.
+- Design flexibility: Frames can be customized for various layouts and uses.
+- Sustainability: Steel is 100% recyclable, supporting eco-friendly construction.
+- Reduced foundation costs: The lighter structure requires simpler foundations.
+- Lower transport costs: Lightweight components are cheaper to ship.
+- Energy efficiency: Can be designed with insulation and energy-saving features.
+- Low maintenance: Steel buildings require less upkeep than traditional materials.`,
+      },
+      {
+        question: 'How fast can a lightweight steel warehouse be built?',
+        answer:
+          'Thanks to prefabricated steel components, construction time is significantly reduced — often 50–60% faster than traditional methods.',
+      },
+      {
+        question: 'What are common applications of lightweight steel warehouses?',
+        answer:
+          `These warehouses are ideal for:
+- Storage and distribution centers with large clear spans.
+- Manufacturing facilities accommodating heavy machinery.
+- Workshops and maintenance areas needing durability.
+- Agricultural buildings for equipment and supply storage.`,
+      },
+      {
+        question: 'What key considerations should I keep in mind before building with lightweight steel?',
+        answer:
+          `Key factors include:
+- Local building codes: Ensure your design complies with regulations.
+- Professional engineering: Engage structural engineers for safe designs.
+- Material selection: Use high-quality steel and components.
+- Corrosion protection: Apply coatings especially in coastal or humid environments.`,
+      },
+      {
+        question: 'Is lightweight steel framing cost-effective?',
+        answer:
+          'Yes. Lightweight steel structures can be cheaper due to reduced material costs, faster construction, and lower foundation and transport expenses.',
+      },
+      {
+        question: 'Is lightweight steel framing durable and low maintenance?',
+        answer:
+          'Yes. Steel is highly durable, resistant to pests and corrosion, and requires less maintenance compared to wood or concrete.',
+      },
+      {
+        question: 'Can lightweight steel warehouses be customized?',
+        answer:
+          'Absolutely. Lightweight steel framing is flexible and can be adapted to meet specific design and functional needs.',
+      },
+      {
+        question: 'Are lightweight steel warehouses environmentally friendly?',
+        answer:
+          'Yes. Steel is recyclable and LSF buildings can be designed for high energy efficiency and sustainability.',
+      },
+      {
+        question: 'Do lightweight steel warehouses require heavy foundations?',
+        answer:
+          'No. Their lighter weight means simpler, less expensive foundations are often sufficient.',
+      },
+    ].map((item, index) => (
+      <FAQItem key={index} item={item} />
+    ))}
+  </div>
+</section>
+
+
+
 
       {/* Contact Section */}
       <section className="py-20 px-6 bg-white text-center" id="contact">
