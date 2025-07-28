@@ -148,7 +148,7 @@ export default function Navbar() {
           <p className="mt-4 font-semibold">About</p>
           <Link href="/company" className="block ml-4 hover:text-[#da1a33]">Company</Link>
           <Link href="/sustainability" className="block ml-4 hover:text-[#da1a33]">Sustainability</Link>
-          <Link href="/news-events" className="block ml-4 hover:text-[#da1a33]">News & Events</Link>
+          <Link href="/news" className="block ml-4 hover:text-[#da1a33]">News & Events</Link>
 
           <p className="mt-4 font-semibold">For Your Home</p>
           <Link href="/product-advantages" className="block ml-4 hover:text-[#da1a33]">Product Advantages</Link>
