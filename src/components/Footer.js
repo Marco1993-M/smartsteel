@@ -10,7 +10,7 @@ export default function Footer() {
         {/* Logo and About */}
         <div className="md:col-span-1">
           <Link href="/" className="inline-block mb-4">
-            <Image src="/LogoWhite.png" alt="Smart Steel Logo" width={100} height={100} />
+            <Image src="/logoWhite.png" alt="Smart Steel Logo" width={100} height={100} />
           </Link>
           <p className="text-sm text-gray-300">
             Smart Steel is redefining alternative building with lightweight, modular steel frames built for durability and design freedom.
@@ -40,18 +40,20 @@ export default function Footer() {
         <div>
           <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
           <p className="text-sm text-gray-300 mb-2">Email: <a href="mailto:info@smartsteel.co.za" className="hover:text-[#da1a33]">info@smartsteel.co.za</a></p>
-          <p className="text-sm text-gray-300 mb-6">Phone: <a href="tel:+2782 846 4555" className="hover:text-[#da1a33]">+27 82 846 4555</a></p>
+          <p className="text-sm text-gray-300 mb-6">Phone: <a href="tel:+27211234567" className="hover:text-[#da1a33]">+27 21 123 4567</a></p>
 
           <div className="flex space-x-4 text-xl">
-            <a href="https://www.facebook.com/profile.php?id=100091390116080" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaFacebookF /></a>
-            <a href="https://www.instagram.com/pequeno_homes/" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaInstagram /></a>
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaFacebookF /></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaInstagram /></a>
             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaLinkedinIn /></a>
           </div>
         </div>
       </div>
 
+      {/* Bottom bar with copyright and privacy link */}
       <div className="border-t border-gray-700 mt-12 pt-6 text-sm text-center text-gray-400">
-        &copy; {new Date().getFullYear()} Smart Steel. All rights reserved.
+        &copy; {new Date().getFullYear()} Smart Steel. All rights reserved. &nbsp;|&nbsp;
+        <Link href="/privacy" className="hover:text-white underline">Privacy Policy</Link>
       </div>
     </footer>
   );
