@@ -205,7 +205,7 @@ export default function Navbar() {
           <div className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-3 gap-8">
             <div><Link href="/company" className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">Company</Link><p>Learn about our history, mission, and team.</p></div>
             <div><Link href="/sustainability" className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">Sustainability</Link><p>How we build eco-friendly and efficient steel structures.</p></div>
-            <div><Link href="/news-events" className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">News & Events</Link><p>Stay updated with the latest company updates and events.</p></div>
+            <div><Link href="/news" className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">News & Events</Link><p>Stay updated with the latest company updates and events.</p></div>
           </div>
         </div>
       )}
