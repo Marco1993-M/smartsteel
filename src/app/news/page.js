@@ -24,7 +24,7 @@ const articles = [
     title: 'Smart Steel unveils new modular warehouses',
     excerpt:
       'A streamlined range of modular warehouse kits designed to fast-track warehouse builds.',
-    image: '/news2.jpg',
+    image: '/warehouse-12m.jpg',
   },
   {
     slug: 'green-building-codes-favour-steel-framing',
