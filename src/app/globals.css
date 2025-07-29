@@ -27,10 +27,10 @@ body {
 
 .gradient-border {
   position: relative;
-  border-radius: 0.5rem; /* Match Tailwind's rounded-lg */
-  background: linear-gradient(270deg, #da1a33, #facc15, #0ea5e9);
+  border-radius: 1rem; /* Match Tailwind's rounded-lg */
+  background: linear-gradient(270deg, #da1a33, #ffc1c9, #ffffff);
   background-size: 600% 600%;
-  animation: gradient-border 8s ease infinite;
+  animation: gradient-border 5s ease infinite;
 }
 
 @keyframes gradient-border {
