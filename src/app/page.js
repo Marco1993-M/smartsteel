@@ -115,28 +115,27 @@ export default function Home() {
 
         {/* Hero Section */}
 <section className="bg-white text-black py-40 px-6 text-center">
-  {/* Animated gradient container with solid text */}
-  <div className="inline-block px-5 py-2 text-base md:text-xl font-medium rounded-full relative overflow-hidden mb-4">
-    <div className="absolute inset-0 bg-gradient-to-r from-[#da1a33] via-[#ff6d80] to-[#ffffff] bg-[length:200%_200%] animate-gradient z-0" />
-    <p className="relative z-10 m-0">
-      South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
-    </p>
+  {/* Animated Gradient Border */}
+  <div className="relative inline-block mb-4 rounded-lg p-[2px]">
+    <div className="absolute inset-0 animate-gradient border-gradient rounded-lg z-[-1]" />
+    <div className="bg-white px-6 py-2 rounded-lg">
+      <h5 className="text-lg md:text-xl font-thin">
+        South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
+      </h5>
+    </div>
   </div>
 
-  {/* Headline */}
   <h1 className="text-4xl md:text-5xl font-bold mb-4">
     Fast, Affordable & Durable Steel Warehouses
   </h1>
 
-  {/* Subheadline */}
-  <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+  <p className="text-lg md:text-xl mb-6 max-w-2xl mx-auto">
     Lightweight steel framing and metal roofing systems that are engineered for rapid construction, long-term durability, and low maintenance. 100% recyclable, fire-resistant, and termite-proof.
   </p>
 
-  {/* CTA Button */}
   <a
     href="/warehouse"
-    className="bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-white border border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
+    className="bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-white border border-solid border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
   >
     Request a Warehouse Quote
   </a>
