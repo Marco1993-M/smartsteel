@@ -17,13 +17,13 @@ const articles = [
     featured: true,
   },
   {
-    slug: 'smart-steel-unveils-new-modular-kits',
+    slug: 'smart-steel-unveils-new-modular-warehouses',
     category: 'Company news',
     date: '15 June 2025',
     readTime: '3 min read',
-    title: 'Smart Steel unveils new modular kits',
+    title: 'Smart Steel unveils new modular warehouses',
     excerpt:
-      'A streamlined range of modular steel kits designed to fast-track residential builds.',
+      'A streamlined range of modular warehouse kits designed to fast-track warehouse builds.',
     image: '/news2.jpg',
   },
   {
