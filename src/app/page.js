@@ -115,13 +115,14 @@ export default function Home() {
 
         {/* Hero Section */}
 <section className="bg-white text-black py-40 px-6 text-center">
-  {/* Animated Gradient Border */}
-  <div className="relative inline-block mb-4 rounded-lg p-[2px]">
-    <div className="absolute inset-0 animate-gradient border-gradient rounded-lg z-[-1]" />
-    <div className="bg-white px-6 py-2 rounded-lg">
-      <h5 className="text-lg md:text-xl font-thin">
-        South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
-      </h5>
+  {/* Animated Gradient Border Around White Container */}
+  <div className="relative inline-block mb-4">
+    <div className="gradient-border p-[2px] rounded-lg">
+      <div className="bg-white px-6 py-2 rounded-lg">
+        <h5 className="text-lg md:text-xl font-thin">
+          South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
+        </h5>
+      </div>
     </div>
   </div>
 
