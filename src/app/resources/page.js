@@ -37,6 +37,15 @@ export default function ResourcesPage() {
       roles: ['Builder', 'Fabricator'],
       types: ['Installation guide'],
     },
+
+    {
+      title: 'Resilient Building with ligtweight steel',
+      description: 'The benefits of building with lightweight steel',
+      image: '/Brochure D.jpg',
+      pdf: '/pdfs/resilient.pdf',
+      roles: ['Builder', 'Fabricator'],
+      types: ['Installation guide'],
+    },
     // Add more brochures as needed
   ];
 
