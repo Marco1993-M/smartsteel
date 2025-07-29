@@ -117,7 +117,7 @@ export default function Home() {
 <section className="bg-white text-black py-40 px-6 text-center">
   {/* Animated gradient container with solid text */}
   <div className="inline-block px-5 py-2 text-base md:text-xl font-medium rounded-full relative overflow-hidden mb-4">
-    <div className="absolute inset-0 bg-gradient-to-r from-[#fcb69f] via-[#ffecd2] to-[#fcb69f] bg-[length:200%_200%] animate-gradient z-0" />
+    <div className="absolute inset-0 bg-gradient-to-r from-[#da1a33] via-[#ff6d80] to-[#ffffff] bg-[length:200%_200%] animate-gradient z-0" />
     <p className="relative z-10 m-0">
       South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
     </p>
