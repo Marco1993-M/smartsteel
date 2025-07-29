@@ -21,7 +21,7 @@ export const metadata = {
   metadataBase: new URL("https://smartsteel.co.za"),
   title: {
     default:
-      "Smart Steel | Premium Light Weight Steel Structures & Warehousing Solutions",
+      "Smart Steel | Light Weight Steel Warehousing",
     template: "%s | Smart Steel",
   },
   description:
