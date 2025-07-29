@@ -114,29 +114,25 @@ export default function Home() {
       <main className="font-sans text-gray-800">
 {/* Hero Section */}
 <section className="bg-white text-black py-40 px-6 text-center">
-
   {/* Animated Gradient Border Around Pill-Shaped White Container */}
-  <div className="relative inline-block mb-8">
+  <div className="relative inline-block mb-6">
     <div className="gradient-border p-[2px] rounded-full">
-      <div className="bg-white px-6 py-2 rounded-full">
-        <h5 className="text-lg md:text-xl font-thin whitespace-nowrap">
+      <div className="bg-white px-6 py-2 rounded-full inline-flex items-center justify-center whitespace-nowrap">
+        <h5 className="text-lg md:text-xl font-thin">
           South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
         </h5>
       </div>
     </div>
   </div>
 
-  {/* Main Heading */}
   <h1 className="text-4xl md:text-5xl font-bold mb-4">
     Fast, Affordable & Durable Steel Warehouses
   </h1>
 
-  {/* Subheading */}
   <p className="text-lg md:text-xl mb-6 max-w-2xl mx-auto">
     Lightweight steel framing and metal roofing systems that are engineered for rapid construction, long-term durability, and low maintenance. 100% recyclable, fire-resistant, and termite-proof.
   </p>
 
-  {/* CTA Button */}
   <a
     href="/warehouse"
     className="bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-white border border-solid border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
@@ -144,6 +140,7 @@ export default function Home() {
     Request a Warehouse Quote
   </a>
 </section>
+
 
 
 
