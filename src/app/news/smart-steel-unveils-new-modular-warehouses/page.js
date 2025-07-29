@@ -42,7 +42,7 @@ export default function ArticlePage() {
           </p>
 
           <p>
-            These pre-engineered systems are now available in standard widths of <strong>8m, 10m, and 12m</strong>, offering flexibility for a variety of industrial, agricultural, and storage applications. Whether you're building a logistics hub or a DIY distribution point, these structures are engineered to be simple to assemble and strong enough to endure.
+            These pre-engineered systems are now available in standard widths of <strong>8m, 10m, and 12m</strong>, offering flexibility for a variety of industrial, agricultural, and storage applications. Whether you are building a logistics hub or a DIY distribution point, these structures are engineered to be simple to assemble and strong enough to endure.
           </p>
 
           <h2 className="text-2xl font-semibold">Why modular?</h2>
@@ -95,7 +95,7 @@ export default function ArticlePage() {
 
           <h2 className="text-2xl font-semibold">Easy to transport. Easy to assemble.</h2>
           <p>
-            Every warehouse is delivered as a flat-pack kit. Whether you're a seasoned builder or a DIY enthusiast, our assembly manuals and video guides ensure that anyone can put the structure together, no cranes or welding required.
+            Every warehouse is delivered as a flat-pack kit. Whether you are a seasoned builder or a DIY enthusiast, our assembly manuals and video guides ensure that anyone can put the structure together, no cranes or welding required.
           </p>
 
           <p>
