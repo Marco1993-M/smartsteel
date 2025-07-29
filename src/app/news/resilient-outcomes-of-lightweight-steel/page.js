@@ -2,9 +2,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
 export default function ArticlePage() {
   return (
+
+     <>
     <article className="max-w-5xl mx-auto px-6 py-16 space-y-12">
       {/* Meta + Title Row */}
       <div className="flex justify-between items-start flex-wrap gap-y-2">
@@ -15,7 +18,7 @@ export default function ArticlePage() {
           </h1>
         </div>
         <Link
-          href="/brochures/resilient.pdf"
+          href="/brochures/lightweight-steel-brochure.pdf"
           target="_blank"
           rel="noopener noreferrer"
           className="bg-[#da1a33] hover:bg-[#bb182d] text-white px-5 py-2 text-sm rounded font-medium mt-2"
@@ -36,12 +39,12 @@ export default function ArticlePage() {
       {/* Article Content */}
       <section className="space-y-10 text-gray-800 leading-relaxed text-[17px]">
         <p className="text-lg font-medium text-gray-700">
-          When resilience matters most, lightweight steel framing stands out as the preferred solution. In an era of unpredictable climates, tighter budgets, and stricter timelines, construction needs to be stronger, faster, and smarter. That is where lightweight steel excels.
+          When resilience matters most, lightweight steel framing stands out as the preferred solution. In an era of unpredictable climates, tighter budgets, and stricter timelines, construction needs to be stronger, faster, and smarter. That's where lightweight steel excels.
         </p>
 
         <h2 className="text-2xl font-semibold text-gray-900">Built to last, designed to adapt</h2>
         <p>
-          Lightweight steel structures are engineered for long-term performance. Whether you are building in a high-humidity region, near the coast, or in a fire-prone zone, steel framing provides unmatched resistance to moisture, warping, termites, and fire. This makes it an ideal material for resilient buildings—schools, clinics, warehouses, and homes—that need to perform for decades without degradation.
+          Lightweight steel structures are engineered for long-term performance. Whether you're building in a high-humidity region, near the coast, or in a fire-prone zone, steel framing provides unmatched resistance to moisture, warping, termites, and fire. This makes it an ideal material for resilient buildings—schools, clinics, warehouses, and homes—that need to perform for decades without degradation.
         </p>
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
@@ -86,7 +89,7 @@ export default function ArticlePage() {
 
         <h2 className="text-2xl font-semibold text-gray-900">Stronger futures, one frame at a time</h2>
         <p>
-          Whether you are developing modular housing, medical outposts, rural classrooms, or warehouses, the need for resilient construction is universal. With lightweight steel, you are not just building structures, you are building solutions that endure.
+          Whether you're developing modular housing, medical outposts, rural classrooms, or warehouses, the need for resilient construction is universal. With lightweight steel, you're not just building structures—you're building solutions that endure.
         </p>
 
         <p>
@@ -94,5 +97,61 @@ export default function ArticlePage() {
         </p>
       </section>
     </article>
+    
+          {/* Explore More */}
+      <section className="max-w-7xl mx-auto py-20">
+        <h2 className="text-3xl font-bold mb-6 text-left">Explore more content</h2>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <Link href="/projects" className="border rounded-md p-6 hover:bg-gray-50 transition block">
+            <h3 className="font-semibold text-lg text-[#da1a33]">Recent projects →</h3>
+            <p className="text-sm mt-1 text-gray-700">Explore completed structures and case studies across South Africa.</p>
+          </Link>
+
+          <Link href="/resources" className="border rounded-md p-6 hover:bg-gray-50 transition block">
+            <h3 className="font-semibold text-lg text-[#da1a33]">Technical resources and brochures →</h3>
+            <p className="text-sm mt-1 text-gray-700">Browse our range of guides, datasheets, and design tools for your build.</p>
+          </Link>
+        </div>
+      </section>
+
+        {/* Follow Us Section */}
+        <section className="bg-gray-100 py-20 px-6">
+          <div className="max-w-5xl mx-auto text-left">
+            <h2 className="text-3xl font-bold mb-4">Follow us on our socials!</h2>
+            <p className="text-lg mb-8">
+              Discover the latest projects featuring frames made from lightweight steel. Follow us for examples and inspiration on how lightweight steel is helping bring designs to life.
+            </p>
+
+            {/* Social Icons */}
+            <div className="flex space-x-6 text-2xl">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#da1a33] transition"
+              >
+                <FaFacebookF />
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#da1a33] transition"
+              >
+                <FaInstagram />
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#da1a33] transition"
+              >
+                <FaLinkedinIn />
+              </a>
+            </div>
+          </div>
+        </section>
+   </>
   );
 }
