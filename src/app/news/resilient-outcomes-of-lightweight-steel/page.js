@@ -15,7 +15,7 @@ export default function ArticlePage() {
           </h1>
         </div>
         <Link
-          href="/brochures/lightweight-steel-brochure.pdf"
+          href="/brochures/resilient.pdf"
           target="_blank"
           rel="noopener noreferrer"
           className="bg-[#da1a33] hover:bg-[#bb182d] text-white px-5 py-2 text-sm rounded font-medium mt-2"
