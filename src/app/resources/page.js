@@ -34,7 +34,7 @@ export default function ResourcesPage() {
       description: 'Toolkit guide for installing lightweight steel frames safely and efficiently.',
       image: '/Brochure C.jpg',
       pdf: '/pdfs/toolkit.pdf',
-      roles: ['Builder', 'Fabricator'],
+      roles: ['Builder', 'Fabricator', 'Homeowner'],
       types: ['Installation guide'],
     },
 
@@ -43,7 +43,7 @@ export default function ResourcesPage() {
       description: 'The benefits of building with lightweight steel',
       image: '/Brochure D.jpg',
       pdf: '/pdfs/resilient.pdf',
-      roles: ['Builder', 'Fabricator'],
+      roles: ['Builder', 'Fabricator', 'Homeowner'],
       types: ['Installation guide'],
     },
     // Add more brochures as needed
