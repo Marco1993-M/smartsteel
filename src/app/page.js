@@ -116,13 +116,14 @@ export default function Home() {
 {/* Hero Section */}
 <section className="bg-white text-black px-6 py-32 md:py-40 text-center">
   {/* Animated Gradient Pill Badge */}
-  <div className="inline-block mb-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
-    <div className="bg-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full inline-flex items-center justify-center whitespace-nowrap">
-      <h5 className="text-sm sm:text-base md:text-lg font-light">
-        South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
-      </h5>
-    </div>
+<div className="mx-auto w-full max-w-xs sm:max-w-md md:max-w-lg mb-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
+  <div className="bg-white px-4 py-1.5 sm:px-6 sm:py-2 rounded-full flex items-center justify-center">
+    <h5 className="text-sm sm:text-base md:text-lg font-light text-center leading-snug">
+      South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
+    </h5>
   </div>
+</div>
+
 
   {/* Headline */}
   <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
