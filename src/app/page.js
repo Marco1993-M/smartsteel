@@ -115,15 +115,15 @@ export default function Home() {
 {/* Hero Section */}
 <section className="bg-white text-black py-40 px-6 text-center">
   {/* Animated Gradient Border Around Pill-Shaped White Container */}
-  <div className="relative inline-block mb-6">
-    <div className="gradient-border p-[2px] rounded-full">
-      <div className="bg-white px-6 py-2 rounded-full inline-flex items-center justify-center whitespace-nowrap">
-        <h5 className="text-lg md:text-xl font-thin">
-          South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
-        </h5>
-      </div>
+  <div className="inline-block mb-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
+    <div className="bg-white px-6 py-2 rounded-full inline-flex items-center justify-center whitespace-nowrap">
+      <h5 className="text-lg md:text-xl font-thin">
+        South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
+      </h5>
     </div>
   </div>
+</section>
+
 
   <h1 className="text-4xl md:text-5xl font-bold mb-4">
     Fast, Affordable & Durable Steel Warehouses
