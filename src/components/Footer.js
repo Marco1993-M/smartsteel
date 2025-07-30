@@ -43,9 +43,8 @@ export default function Footer() {
           <p className="text-sm text-gray-300 mb-6">Phone: <a href="tel:+27211234567" className="hover:text-[#da1a33]">+27 82 657 6522</a></p>
 
           <div className="flex space-x-4 text-xl">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaFacebookF /></a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaInstagram /></a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaLinkedinIn /></a>
+            <a href="https://www.facebook.com/profile.php?id=61565551157027" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaFacebookF /></a>
+            <a href="https://www.instagram.com/pequeno_homes/" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaInstagram /></a>
           </div>
         </div>
       </div>
