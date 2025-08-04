@@ -115,34 +115,51 @@ export default function Home() {
     
 {/* Hero Section */}
 <section className="bg-white text-black px-6 py-32 md:py-40 text-center">
-{/* Responsive Animated Gradient Pill Badge */}
-<div className="mx-auto w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
-  <div className="bg-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full flex items-center justify-center">
-    <h5 className="text-sm sm:text-base md:text-lg font-light text-center leading-snug">
-      South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
-    </h5>
+  {/* SEO badge / subtitle */}
+  <div className="mx-auto w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
+    <div className="bg-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full flex items-center justify-center">
+      <h2 className="text-sm sm:text-base md:text-lg font-light text-center leading-snug">
+        South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
+      </h2>
+    </div>
   </div>
-</div>
 
-
-
-  {/* Headline */}
+  {/* Main Headline */}
   <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
     Fast, Affordable & Durable Steel Warehouses
   </h1>
 
-  {/* Subheading */}
+  {/* Supporting Subheading */}
   <p className="text-base sm:text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-    Lightweight steel framing and metal roofing systems that are engineered for rapid construction, long-term durability, and low maintenance. 100% recyclable, fire-resistant, and termite-proof.
+    Lightweight steel framing and metal roofing systems engineered for rapid construction, long-term durability, and low maintenance. Fire-resistant, termite-proof, and 100% recyclable.
   </p>
 
-  {/* CTA Button */}
+  {/* Estimator CTA */}
   <a
     href="/warehouse"
-    className="inline-block bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-white border border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
+    className="inline-flex items-center justify-center gap-2 bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-white border border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
   >
-    Request a Warehouse Quote
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 17v-2a4 4 0 00-4-4H5a2 2 0 00-2 2v6a2 2 0 002 2h1a4 4 0 004-4zM15 7h.01M18 14a4 4 0 01-4 4h-1a2 2 0 01-2-2v-1a4 4 0 014-4h3a2 2 0 012 2v1z"
+      />
+    </svg>
+    Get Instant Estimate
   </a>
+
+  {/* Subtext under CTA */}
+  <p className="text-sm text-gray-500 mt-2">
+    No email required. Get real-time pricing based on your building specs.
+  </p>
 </section>
 
 
