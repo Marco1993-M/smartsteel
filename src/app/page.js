@@ -136,7 +136,7 @@ export default function Home() {
 
   {/* Estimator CTA */}
   <a
-    href="/warehouse"
+    href="/tools/estimator"
     className="inline-flex items-center justify-center gap-2 bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-white border border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
   >
     <svg
