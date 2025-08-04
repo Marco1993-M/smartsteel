@@ -131,7 +131,7 @@ export default function Home() {
 
   {/* Supporting Subheading */}
   <p className="text-base sm:text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-    Lightweight steel framing and metal roofing systems engineered for rapid construction, long-term durability, and low maintenance. Fire-resistant, termite-proof, and 100% recyclable.
+    Lightweight steel warehousing and metal roofing systems engineered for rapid construction, long-term durability, and low maintenance. Fire-resistant, termite-proof, and 100% recyclable.
   </p>
 
  {/* Estimator CTA */}
