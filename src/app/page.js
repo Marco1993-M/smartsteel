@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import LightweightSteelTrusses from '../components/LightweightSteelTrusses';
+
 
 const brochures = {
   'Home Owner': [
