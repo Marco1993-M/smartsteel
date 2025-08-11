@@ -131,7 +131,7 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
 
-        <AnnouncementBanner />
+       {/* <AnnouncementBanner /> */}
         <Navbar />
         {children}
         <Footer />
