@@ -95,7 +95,7 @@ export default function TrussesPage() {
     {[
       { title: 'New Homes', icon: '/icon/home.png', desc: 'Fast, durable, and cost-effective roofing for modern houses.' },
       { title: 'Duplexes', icon: '/icon/duplex.png', desc: 'Efficient structural solutions for multi-family living.' },
-      { title: 'Extensions', icon: '/icon/plus.png', desc: 'Seamless integration for expanding existing properties.' },
+      { title: 'Extensions', icon: '/icon/extension.png', desc: 'Seamless integration for expanding existing properties.' },
       { title: 'Townhouses', icon: '/icon/townhouse.png', desc: 'Lightweight yet strong frameworks for compact designs.' },
       { title: 'Renovations', icon: '/icon/renovation.png', desc: 'Upgrade old structures with minimal disruption.' },
       { title: 'Low and Mid-Rise Apartments', icon: '/icon/apartment.png', desc: 'Structural integrity and long lifespan for multi-storey builds.' },
