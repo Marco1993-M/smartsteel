@@ -164,6 +164,8 @@ export default function Home() {
 </section>
 
 
+ {/* Add the trusses section */}
+      <LightweightSteelTrusses />
 
 
 
