@@ -82,41 +82,41 @@ export default function TrussesPage() {
           </div>
         </section>
 
-        {/* BUILD TYPES */}
-        <section className="max-w-6xl mx-auto my-20 px-6">
-          <h2 className="text-3xl font-semibold mb-8 text-center">
-            Our Lightweight Steel Trusses Are Perfect For
-          </h2>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-800 font-medium">
-            {[
-              'New Homes',
-              'Duplexes',
-              'Extensions',
-              'Townhouses',
-              'Renovations',
-              'Low and Mid-Rise Apartments',
-            ].map((item) => (
-              <li
-                key={item}
-                className="flex items-center gap-3 bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition"
-              >
-                <svg
-                  className="w-6 h-6 text-[#c8333a] flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414L9 14.414 6.293 11.707a1 1 0 011.414-1.414L9 11.586l6.293-6.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </section>
+     {/* BUILD TYPES */}
+<section className="max-w-6xl mx-auto my-20 px-6">
+  <h2 className="text-3xl font-semibold mb-4 text-center">
+    Our Lightweight Steel Trusses Are Perfect For
+  </h2>
+  <p className="text-lg text-gray-700 text-center mb-12">
+    Designed to suit a variety of building projects — from residential homes to large-scale developments — our trusses offer strength, speed, and style.
+  </p>
+
+  <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-800 font-medium">
+    {[
+      { title: 'New Homes', icon: '/icon/home.png', desc: 'Fast, durable, and cost-effective roofing for modern houses.' },
+      { title: 'Duplexes', icon: '/icon/duplex.png', desc: 'Efficient structural solutions for multi-family living.' },
+      { title: 'Extensions', icon: '/icon/plus.png', desc: 'Seamless integration for expanding existing properties.' },
+      { title: 'Townhouses', icon: '/icon/townhouse.png', desc: 'Lightweight yet strong frameworks for compact designs.' },
+      { title: 'Renovations', icon: '/icon/renovation.png', desc: 'Upgrade old structures with minimal disruption.' },
+      { title: 'Low and Mid-Rise Apartments', icon: '/icon/apartment.png', desc: 'Structural integrity and long lifespan for multi-storey builds.' },
+    ].map((item) => (
+      <li
+        key={item.title}
+        className="flex flex-col items-center text-center gap-3 bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition"
+      >
+        <Image
+          src={item.icon}
+          alt={item.title}
+          width={50}
+          height={50}
+          className="object-contain"
+        />
+        <h4 className="text-lg font-semibold">{item.title}</h4>
+        <p className="text-sm text-gray-600">{item.desc}</p>
+      </li>
+    ))}
+  </ul>
+</section>
 
         {/* SPECS */}
         <section className="bg-gray-50 py-20">
