@@ -1,0 +1,151 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
+
+export default function TrussesPage() {
+  return (
+    <main className="w-full">
+      {/* HERO */}
+      <section className="w-full bg-white py-20">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center px-6">
+          <div>
+            <h1 className="text-4xl font-bold mb-6">
+              Versatile Trusses to Suit All Types of Builds
+            </h1>
+            <p className="text-lg text-gray-700">
+              Due to growing demand across South Africa, trusses made from lightweight steel are now offered for a broad range of construction projects. These precision-engineered steel trusses combine strength, durability, and design flexibility — ideal for modern builds requiring clear spans and fast assembly.
+            </p>
+          </div>
+          <Image
+            src="/images/steel-trusses-hero.jpg"
+            alt="Lightweight steel trusses in construction"
+            width={800}
+            height={500}
+            className="rounded-xl shadow-lg object-cover w-full h-full border border-black"
+            priority
+          />
+        </div>
+      </section>
+
+      {/* BUILD TYPES */}
+      <section className="max-w-6xl mx-auto my-20 px-6">
+        <h2 className="text-3xl font-semibold mb-8 text-center">
+          Our Lightweight Steel Trusses Are Perfect For
+        </h2>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-800 font-medium">
+          {[
+            'New Homes',
+            'Duplexes',
+            'Extensions',
+            'Townhouses',
+            'Renovations',
+            'Low and Mid-Rise Apartments',
+          ].map((item) => (
+            <li
+              key={item}
+              className="flex items-center gap-3 bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition"
+            >
+              <svg
+                className="w-6 h-6 text-[#c8333a] flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414L9 14.414 6.293 11.707a1 1 0 011.414-1.414L9 11.586l6.293-6.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* SPECS */}
+      <section className="bg-gray-50 py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl font-semibold mb-6 text-center">Truss Specifications</h2>
+          <p className="text-center max-w-3xl mx-auto mb-12 text-gray-700">
+            From small span trusses ideal for residential roofs to long clear span trusses up to 40 meters, our lightweight steel trusses provide unmatched strength without the bulk. Engineered for precision, they are perfect for open-plan spaces and complex roof designs.
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-800 font-medium">
+            {[
+              'Small span trusses for residential roofs',
+              'Clear span trusses up to 40 meters',
+              'Engineered for precise load distribution',
+              'Corrosion-resistant steel for longevity',
+              'Suitable for flat, pitched, and curved roofs',
+              'Custom design options available',
+            ].map((spec) => (
+              <li key={spec} className="flex items-start gap-3 bg-white rounded-lg p-4 shadow-sm">
+                <svg
+                  className="w-6 h-6 mt-1 text-[#c8333a] flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414L9 14.414 6.293 11.707a1 1 0 011.414-1.414L9 11.586l6.293-6.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {spec}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* CUSTOM SIZES NOTE */}
+      <section className="max-w-5xl mx-auto my-16 px-6 text-center">
+        <p className="text-lg text-gray-700">
+          At Smart Steel, we offer complete flexibility with our modular system — including custom sizes tailored to your specific needs. Whether you require minor adjustments or long clear spans up to 40 meters wide, our team is equipped to deliver efficient, engineered solutions without compromising speed or strength.
+        </p>
+      </section>
+
+       {/* Follow Us Section */}
+              <section className="bg-white py-20 px-6">
+                <div className="max-w-5xl mx-auto text-left">
+                  <h2 className="text-3xl font-bold mb-4">Follow us on our socials!</h2>
+                  <p className="text-lg mb-8">
+                    Discover the latest projects featuring frames made from lightweight steel. Follow us for examples and inspiration on how lightweight steel is helping bring designs to life.
+                  </p>
+      
+                  {/* Social Icons */}
+                  <div className="flex space-x-6 text-2xl">
+                    <a
+                      href="https://facebook.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-[#da1a33] transition"
+                    >
+                      <FaFacebookF />
+                    </a>
+                    <a
+                      href="https://instagram.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-[#da1a33] transition"
+                    >
+                      <FaInstagram />
+                    </a>
+                    <a
+                      href="https://linkedin.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-[#da1a33] transition"
+                    >
+                      <FaLinkedinIn />
+                    </a>
+                  </div>
+                </div>
+              </section>
+   
+    </main>
+  );
+}
