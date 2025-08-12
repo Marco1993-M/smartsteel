@@ -24,12 +24,10 @@ const MATERIALS = {
   deliveryRate: 19,
 };
 
-// Base location coordinates for 869 29th Avenue, Rietfontein, Pretoria
 const BASE_COORDS = { lat: -25.7239, lng: 28.2297 };
 
-// Haversine formula to calculate distance between two lat/lng points in km
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth radius in km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -55,29 +53,24 @@ export default function EstimatorPage() {
   const [estimate, setEstimate] = useState(null);
   const [isSending, setIsSending] = useState(false);
 
-  // Calculate bays:
   const bayLength = 2.5;
   const fullBays = 1;
   const halfBays = Math.max(Math.ceil((length - bayLength) / bayLength), 0);
 
-  // Quantities:
   const totalColumns = 4 * fullBays + 2 * halfBays;
   const totalTrusses = 4 * fullBays + 2 * halfBays;
   const totalScrews = 320 * fullBays + 160 * halfBays;
   const totalPostBrackets = totalColumns;
   const totalRidgeBrackets = totalTrusses;
 
-  // Top hats:
   const rowsOfTopHats = 10;
   const totalTopHatLengthMeters = rowsOfTopHats * length;
   const topHatLengthPerUnit = MATERIALS.topHats.length;
   const topHatUnitsNeeded = Math.ceil(totalTopHatLengthMeters / topHatLengthPerUnit);
   const totalTopHatLengthSold = topHatUnitsNeeded * topHatLengthPerUnit;
 
-  // Area:
   const area = width * length;
 
-  // Costs:
   const costColumns = totalColumns * MATERIALS.columns.length * MATERIALS.columns.rate;
   const costTrusses = totalTrusses * MATERIALS.trusses[width].length * MATERIALS.trusses[width].rate;
   const costPostBrackets = totalPostBrackets * MATERIALS.postBracket;
@@ -91,6 +84,7 @@ export default function EstimatorPage() {
       ? area * MATERIALS.sheeting.Chromadek.supply
       : 0;
 
+  // Minimum delivery cost R1350
   const deliveryCost = Math.max(distance * MATERIALS.deliveryRate, 1350);
 
   const installCostPerSqm = 200;
@@ -110,8 +104,8 @@ export default function EstimatorPage() {
   const markup = 1.32;
   const finalEstimate = Math.round(totalCost * markup);
 
-  const competitorLowRate = 1250;
-  const competitorHighRate = 1700;
+  const competitorLowRate = 1100;
+  const competitorHighRate = 1400;
   const competitorLow = Math.round(area * competitorLowRate);
   const competitorHigh = Math.round(area * competitorHighRate);
 
