@@ -91,7 +91,7 @@ export default function EstimatorPage() {
       ? area * MATERIALS.sheeting.Chromadek.supply
       : 0;
 
-  const deliveryCost = distance * MATERIALS.deliveryRate;
+  const deliveryCost = Math.max(distance * MATERIALS.deliveryRate, 1350);
 
   const installCostPerSqm = 200;
   const costInstallation = sheetingInstalled ? area * installCostPerSqm : 0;
