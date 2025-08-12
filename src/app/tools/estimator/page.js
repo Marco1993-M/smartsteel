@@ -264,7 +264,7 @@ export default function EstimatorPage() {
                   onChange={(e) => setSheetingInstalled(e.target.checked)}
                   className="mr-2"
                 />
-                Include Installation for Entire Structure (R200/m²)
+                Include Installation for Structure
               </label>
 
               <label className="block font-semibold text-gray-700">
