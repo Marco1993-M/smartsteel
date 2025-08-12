@@ -24,14 +24,35 @@ const MATERIALS = {
   deliveryRate: 19,
 };
 
+// Base location coordinates (example: Pretoria)
+const BASE_COORDS = { lat: -25.7239, lng: 28.2297 };
+
+// Haversine formula to calculate distance between two lat/lng points in km
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export default function EstimatorPage() {
   const [width, setWidth] = useState(8);
   const [length, setLength] = useState(10);
   const [sheeting, setSheeting] = useState('None');
   const [distance, setDistance] = useState(0);
+  const [usingMyLocation, setUsingMyLocation] = useState(false);
+  const [locationError, setLocationError] = useState(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [estimate, setEstimate] = useState(null);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   // Calculate bays:
@@ -63,9 +84,15 @@ export default function EstimatorPage() {
   const costRidgeBrackets = totalRidgeBrackets * MATERIALS.ridgeBracket;
   const costScrews = totalScrews * MATERIALS.screw;
   const costTopHats = totalTopHatLengthSold * MATERIALS.topHats.rate;
-  const costSheetingSupply = sheeting === 'IBR' ? area * MATERIALS.sheeting.IBR.supply
-    : sheeting === 'Chromadek' ? area * MATERIALS.sheeting.Chromadek.supply
-    : 0;
+  const costSheetingSupply =
+    sheeting === 'IBR'
+      ? area * MATERIALS.sheeting.IBR.supply
+      : sheeting === 'Chromadek'
+      ? area * MATERIALS.sheeting.Chromadek.supply
+      : 0;
+
+
+    const deliveryCost = distance * MATERIALS.deliveryRate;
 
   const totalCost =
     costColumns +
@@ -74,7 +101,9 @@ export default function EstimatorPage() {
     costRidgeBrackets +
     costScrews +
     costTopHats +
+    deliveryCost;
     costSheetingSupply;
+    
 
   const markup = 1.32;
   const finalEstimate = Math.round(totalCost * markup);
@@ -86,25 +115,6 @@ export default function EstimatorPage() {
 
   const savingLow = competitorLow - finalEstimate;
   const savingHigh = competitorHigh - finalEstimate;
-
-  // JSON-LD structured data for SEO
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Smart Steel Warehouse Estimator",
-    "url": "https://www.smartsteel.co.za/tools/estimator", 
-    "description": "Calculate your lightweight steel warehouse or shed cost instantly with our free Smart Steel Estimator. Get accurate pricing & save on durable steel structures in South Africa.",
-    "applicationCategory": "BusinessApplication",
-    "operatingSystem": "Web",
-    "browserRequirements": "Requires JavaScript",
-    "softwareVersion": "1.0",
-    "featureList": [
-      "Estimate warehouse shed costs based on width, length, and materials",
-      "Calculate costs for columns, trusses, sheeting, and fittings",
-      "Compare prices with competitors",
-      "Email estimate to your inbox"
-    ]
-  };
 
   const handleEstimate = () => {
     setEstimate(finalEstimate);
@@ -128,22 +138,50 @@ export default function EstimatorPage() {
       delivery_distance: distance,
     };
 
-    emailjs.send(
-      'service_h817nk1',
-      'template_rdp28qk',
-      templateParams,
-      'JIPAN9YaQCPrkSgep'
-    ).then(() => {
-      alert(`Thanks, ${name}! Your estimate of R${estimate.toLocaleString()} was submitted.`);
-      setIsSending(false);
-      setName('');
-      setEmail('');
-      setEstimate(null);
-    }, (error) => {
-      alert('Oops! Something went wrong, please try again later.');
-      console.error('EmailJS error:', error);
-      setIsSending(false);
-    });
+    emailjs
+      .send('service_h817nk1', 'template_rdp28qk', templateParams, 'JIPAN9YaQCPrkSgep')
+      .then(() => {
+        alert(`Thanks, ${name}! Your estimate of R${estimate.toLocaleString()} was submitted.`);
+        setIsSending(false);
+        setName('');
+        setEmail('');
+        setEstimate(null);
+      })
+      .catch((error) => {
+        alert('Oops! Something went wrong, please try again later.');
+        console.error('EmailJS error:', error);
+        setIsSending(false);
+      });
+  };
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      return;
+    }
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const calculatedDistance = getDistanceFromLatLonInKm(
+          BASE_COORDS.lat,
+          BASE_COORDS.lng,
+          latitude,
+          longitude
+        );
+        setDistance(Number(calculatedDistance.toFixed(1)));
+        setUsingMyLocation(true);
+      },
+      (error) => {
+        setLocationError('Unable to retrieve your location.');
+        setUsingMyLocation(false);
+      }
+    );
+  };
+
+  const handleDistanceChange = (e) => {
+    setDistance(parseFloat(e.target.value) || 0);
+    setUsingMyLocation(false);
   };
 
   return (
@@ -156,11 +194,16 @@ export default function EstimatorPage() {
         />
         <meta name="robots" content="index, follow" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* Structured Data for SEO */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        {/* Optional: Open Graph tags for social sharing */}
+        <meta
+          property="og:title"
+          content="Smart Steel Warehouse Estimator | Lightweight Shed Cost Calculator South Africa"
         />
+        <meta
+          property="og:description"
+          content="Calculate your lightweight steel warehouse or shed cost instantly with our free Smart Steel Estimator. Get accurate pricing & save on durable steel structures in SA!"
+        />
+        <meta property="og:type" content="website" />
       </Head>
 
       <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 p-6 font-sans flex flex-col items-center">
@@ -214,13 +257,28 @@ export default function EstimatorPage() {
 
               <label className="block font-semibold text-gray-700">
                 Delivery Distance (km)
-                <input
-                  type="number"
-                  min={0}
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                  value={distance}
-                  onChange={(e) => setDistance(parseFloat(e.target.value))}
-                />
+                <div className="flex space-x-2 items-center mt-1">
+                  <input
+                    type="number"
+                    min={0}
+                    className="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                    value={distance}
+                    onChange={handleDistanceChange}
+                    disabled={usingMyLocation}
+                    placeholder="Enter distance or use location"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleUseMyLocation}
+                    className="rounded bg-red-600 text-white px-3 py-2 hover:bg-red-700 transition"
+
+                  >
+                    Use My Location
+                  </button>
+                </div>
+                {locationError && (
+                  <p className="text-sm text-red-600 mt-1">{locationError}</p>
+                )}
               </label>
 
               <button
@@ -234,28 +292,32 @@ export default function EstimatorPage() {
             {/* Estimate Result Card */}
             {estimate !== null && (
               <section className="bg-gray-50 rounded-lg p-5 shadow-inner text-center">
-                <h2 className="text-xl font-semibold mb-1 text-gray-800">Estimated Cost (Materials Only)</h2>
-                <p className="text-4xl font-extrabold text-green-600">R {estimate.toLocaleString()}</p>
+                <h2 className="text-xl font-semibold mb-1 text-gray-800">
+                  Estimated Cost (Materials Only)
+                </h2>
+                <p className="text-4xl font-extrabold text-green-600">
+                  R {estimate.toLocaleString()}
+                </p>
 
                 <div className="mt-3 text-gray-700 text-sm relative inline-block">
                   <span>
-                    Compare with Hot-Rolled Steel (Material Only, R1,100–R1,400/m²):<br />
+                    Compare with Hot-Rolled Steel (Material Only, R1,100–R1,400/m²):
+                    <br />
                     ~R{competitorLow.toLocaleString()}–R{competitorHigh.toLocaleString()}
                   </span>
+                  {/* Tooltip code omitted for brevity */}
                 </div>
 
                 <p className="mt-2 font-semibold text-gray-800">
-                  You save up to R{Math.max(savingLow, savingHigh).toLocaleString()} with Smart Steel!
+                  You save up to R{Math.max(savingLow, savingHigh).toLocaleString()} with
+                  Smart Steel!
                 </p>
               </section>
             )}
 
             {/* Lead Capture Form Card */}
             {estimate !== null && (
-              <form
-                onSubmit={handleSubmit}
-                className="bg-white rounded-lg p-5 shadow-md space-y-4"
-              >
+              <form onSubmit={handleSubmit} className="bg-white rounded-lg p-5 shadow-md space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">Get Your Estimate</h2>
 
                 <label className="block text-gray-700 font-medium">
