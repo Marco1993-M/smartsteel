@@ -24,7 +24,7 @@ const MATERIALS = {
   deliveryRate: 19,
 };
 
-// Base location coordinates (example: Pretoria)
+// Base location coordinates for 869 29th Avenue, Rietfontein, Pretoria
 const BASE_COORDS = { lat: -25.7239, lng: 28.2297 };
 
 // Haversine formula to calculate distance between two lat/lng points in km
@@ -46,13 +46,13 @@ export default function EstimatorPage() {
   const [width, setWidth] = useState(8);
   const [length, setLength] = useState(10);
   const [sheeting, setSheeting] = useState('None');
+  const [sheetingInstalled, setSheetingInstalled] = useState(false);
   const [distance, setDistance] = useState(0);
   const [usingMyLocation, setUsingMyLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [estimate, setEstimate] = useState(null);
-  const [showTooltip, setShowTooltip] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   // Calculate bays:
@@ -91,8 +91,10 @@ export default function EstimatorPage() {
       ? area * MATERIALS.sheeting.Chromadek.supply
       : 0;
 
+  const deliveryCost = distance * MATERIALS.deliveryRate;
 
-    const deliveryCost = distance * MATERIALS.deliveryRate;
+  const installCostPerSqm = 200;
+  const costInstallation = sheetingInstalled ? area * installCostPerSqm : 0;
 
   const totalCost =
     costColumns +
@@ -101,15 +103,15 @@ export default function EstimatorPage() {
     costRidgeBrackets +
     costScrews +
     costTopHats +
+    costSheetingSupply +
+    costInstallation +
     deliveryCost;
-    costSheetingSupply;
-    
 
   const markup = 1.32;
   const finalEstimate = Math.round(totalCost * markup);
 
-  const competitorLowRate = 1100;
-  const competitorHighRate = 1400;
+  const competitorLowRate = 1250;
+  const competitorHighRate = 1700;
   const competitorLow = Math.round(area * competitorLowRate);
   const competitorHigh = Math.round(area * competitorHighRate);
 
@@ -135,6 +137,7 @@ export default function EstimatorPage() {
       width,
       length,
       sheeting,
+      sheeting_installed: sheetingInstalled ? 'Yes' : 'No',
       delivery_distance: distance,
     };
 
@@ -146,6 +149,7 @@ export default function EstimatorPage() {
         setName('');
         setEmail('');
         setEstimate(null);
+        setUsingMyLocation(false);
       })
       .catch((error) => {
         alert('Oops! Something went wrong, please try again later.');
@@ -172,7 +176,7 @@ export default function EstimatorPage() {
         setDistance(Number(calculatedDistance.toFixed(1)));
         setUsingMyLocation(true);
       },
-      (error) => {
+      () => {
         setLocationError('Unable to retrieve your location.');
         setUsingMyLocation(false);
       }
@@ -194,7 +198,6 @@ export default function EstimatorPage() {
         />
         <meta name="robots" content="index, follow" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* Optional: Open Graph tags for social sharing */}
         <meta
           property="og:title"
           content="Smart Steel Warehouse Estimator | Lightweight Shed Cost Calculator South Africa"
@@ -256,6 +259,16 @@ export default function EstimatorPage() {
               </label>
 
               <label className="block font-semibold text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={sheetingInstalled}
+                  onChange={(e) => setSheetingInstalled(e.target.checked)}
+                  className="mr-2"
+                />
+                Include Installation for Entire Structure (R200/m²)
+              </label>
+
+              <label className="block font-semibold text-gray-700">
                 Delivery Distance (km)
                 <div className="flex space-x-2 items-center mt-1">
                   <input
@@ -271,7 +284,6 @@ export default function EstimatorPage() {
                     type="button"
                     onClick={handleUseMyLocation}
                     className="rounded bg-red-600 text-white px-3 py-2 hover:bg-red-700 transition"
-
                   >
                     Use My Location
                   </button>
@@ -305,7 +317,6 @@ export default function EstimatorPage() {
                     <br />
                     ~R{competitorLow.toLocaleString()}–R{competitorHigh.toLocaleString()}
                   </span>
-                  {/* Tooltip code omitted for brevity */}
                 </div>
 
                 <p className="mt-2 font-semibold text-gray-800">
