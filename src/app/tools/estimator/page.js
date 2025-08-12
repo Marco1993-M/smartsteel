@@ -206,7 +206,7 @@ export default function EstimatorPage() {
       <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 p-6 font-sans flex flex-col items-center">
        <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 relative">
   <div className="flex justify-center mb-4">
-    <img src="/logo.png" alt="Smart Steel Logo" className="h-16 object-contain" />
+    <img src="/Logo.png" alt="Smart Steel Logo" className="h-16 object-contain" />
   </div>
   <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
     Smart Steel Warehouse Estimator
