@@ -230,13 +230,18 @@ export default function EstimatorPage() {
 
               <label className="block font-semibold text-gray-700">
                 Length (m)
-                <input
-                  type="number"
-                  min={2.5}
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                  value={length}
-                  onChange={(e) => setLength(parseFloat(e.target.value))}
-                />
+              <select
+  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+  value={length}
+  onChange={(e) => setLength(parseFloat(e.target.value))}
+>
+  {Array.from({ length: 20 }, (_, i) => (i + 1) * 2.5).map((val) => (
+    <option key={val} value={val}>
+      {val} m
+    </option>
+  ))}
+</select>
+
               </label>
 
               <label className="block font-semibold text-gray-700">
