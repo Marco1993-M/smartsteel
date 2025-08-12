@@ -299,7 +299,7 @@ export default function EstimatorPage() {
             {estimate !== null && (
               <section className="bg-gray-50 rounded-lg p-5 shadow-inner text-center">
                 <h2 className="text-xl font-semibold mb-1 text-gray-800">
-                  Estimated Cost (Materials Only)
+                  Estimated Cost
                 </h2>
                 <p className="text-4xl font-extrabold text-green-600">
                   R {estimate.toLocaleString()}
