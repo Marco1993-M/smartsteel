@@ -124,16 +124,17 @@ export default function EstimatorPage() {
     }
     setIsSending(true);
 
-    const templateParams = {
-      from_name: name,
-      from_email: email,
-      estimate: `R${estimate.toLocaleString()}`,
-      width,
-      length,
-      sheeting,
-      sheeting_installed: sheetingInstalled ? 'Yes' : 'No',
-      delivery_distance: distance,
-    };
+  const templateParams = {
+  name,
+  email,
+  estimate: finalEstimate.toLocaleString(),
+  width,
+  length,
+  sheeting,
+  distance,
+  sheeting_installed: sheetingInstalled ? 'Yes' : 'No',
+};
+
 
     emailjs
       .send('service_h817nk1', 'template_rdp28qk', templateParams, 'JIPAN9YaQCPrkSgep')
