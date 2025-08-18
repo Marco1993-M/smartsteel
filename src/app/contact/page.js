@@ -67,7 +67,7 @@ export default function ContactPage() {
         </form>
       </section>
 
-      {/* Support Details */}
+     {/* Support Details */}
       <section className="max-w-7xl mx-auto mt-20">
         <h2 className="text-3xl font-bold mb-6 text-left">Enquiries and support</h2>
         <p className="mb-8 text-left max-w-md">You can reach our support team by phone.</p>
@@ -77,7 +77,30 @@ export default function ContactPage() {
             <FaPhoneAlt className="text-2xl text-[#da1a33] mt-1" />
             <div>
               <p className="font-semibold">Phone</p>
-              <p className="text-sm text-gray-700">+27 87 012 3456</p>
+              <p className="text-sm text-gray-700">+27 82 657 6522</p>
+            </div>
+          </div>
+
+          <div className="border p-4 rounded-md flex items-start gap-4">
+            <FaCloudSun className="text-2xl text-[#da1a33] mt-1" />
+            <div>
+              <p className="font-semibold">Opening Times</p>
+              <p className="text-sm text-gray-700">Mon–Fri: 08:00–17:00<br />Sat–Sun: Closed</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+         <section className="max-w-7xl mx-auto mt-20">
+        <h2 className="text-3xl font-bold mb-6 text-left">Enquiries and support in the Western Cape</h2>
+        <p className="mb-8 text-left max-w-md">You can reach our support team by phone.</p>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="border p-4 rounded-md flex items-start gap-4">
+            <FaPhoneAlt className="text-2xl text-[#da1a33] mt-1" />
+            <div>
+              <p className="font-semibold">Phone</p>
+              <p className="text-sm text-gray-700">+27 74 353 6911</p>
             </div>
           </div>
 
