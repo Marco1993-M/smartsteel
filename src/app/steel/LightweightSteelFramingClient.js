@@ -254,7 +254,7 @@ export default function LightweightSteelFramingClient() {
           With a commitment to high-quality builds, reliable supply chains, and sustainable construction practices, our team is trusted across South Africa. Certified, experienced, and client-focused.
         </p>
         <Link
-          href="/about"
+          href="/company"
           className="inline-block bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition"
         >
           Learn More About Us
