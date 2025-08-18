@@ -2,10 +2,16 @@
 import { useState } from 'react';
 import { FaPhoneAlt, FaCloudSun, FaChevronDown } from 'react-icons/fa';
 import Link from 'next/link';
-
+import emailjs from '@emailjs/browser';
 
 export default function ContactPage() {
   const [activeFAQ, setActiveFAQ] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+  });
+  const [status, setStatus] = useState('');
 
   const faqs = [
     {
@@ -30,32 +36,80 @@ export default function ContactPage() {
     },
   ];
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const sendEmail = (e) => {
+    e.preventDefault();
+
+    setStatus('Sending...');
+
+  const templateParams = {
+    name: formData.name,
+    email: formData.email,
+    message: formData.message,
+  };
+
+  emailjs
+    .send(
+      'service_h817nk1',        // your service ID
+      'template_rdp28qk',       // your template ID
+      templateParams,           // the form values
+      'JIPAN9YaQCPrkSgep'       // your public key
+    )
+    .then(
+      () => {
+        setStatus('Message sent successfully ✅');
+        setFormData({ name: '', email: '', message: '' });
+      },
+      (error) => {
+        console.error(error);
+        setStatus('Something went wrong ❌');
+      }
+    );
+};
+
   return (
-            
     <main className="font-sans text-gray-800 px-6 py-20 bg-white">
       {/* Contact Header + Form */}
       <section className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
         <div>
           <h1 className="text-4xl font-bold mb-4 text-left">Need to get in touch?</h1>
           <p className="text-lg text-left max-w-md">
-  We&apos;re here to help! Simply fill out the form, and one of our team will get back to you soon.
-</p>
+            We&apos;re here to help! Simply fill out the form, and one of our team will get back to you soon.
+          </p>
         </div>
 
-        <form className="bg-gray-50 border rounded-lg p-6 space-y-4 w-full">
+        <form
+          onSubmit={sendEmail}
+          className="bg-gray-50 border rounded-lg p-6 space-y-4 w-full"
+        >
           <input
             type="text"
+            name="name"
             placeholder="Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
             className="w-full border px-4 py-2 rounded"
           />
           <input
             type="email"
+            name="email"
             placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
             className="w-full border px-4 py-2 rounded"
           />
           <textarea
             rows={4}
+            name="message"
             placeholder="Your message"
+            value={formData.message}
+            onChange={handleChange}
+            required
             className="w-full border px-4 py-2 rounded"
           />
           <button
@@ -64,10 +118,12 @@ export default function ContactPage() {
           >
             Send Message
           </button>
+
+          {status && <p className="text-sm mt-2">{status}</p>}
         </form>
       </section>
 
-     {/* Support Details */}
+      {/* Support Details */}
       <section className="max-w-7xl mx-auto mt-20">
         <h2 className="text-3xl font-bold mb-6 text-left">Enquiries and support</h2>
         <p className="mb-8 text-left max-w-md">You can reach our support team by phone.</p>
