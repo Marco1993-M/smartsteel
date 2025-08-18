@@ -38,6 +38,15 @@ export default function ResourcesPage() {
       types: ['Installation guide'],
     },
 
+     {
+      title: 'Lightweight Steel Trusses',
+      description: 'Your guide to lightweight steel trusses',
+      image: '/Brochure E.jpg',
+      pdf: '/pdfs/Trusses.pdf',
+      roles: ['Builder', 'Fabricator', 'Homeowner'],
+      types: ['Installation guide'],
+    },
+
     {
       title: 'Resilient Building with ligtweight steel',
       description: 'The benefits of building with lightweight steel',
