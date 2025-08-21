@@ -172,7 +172,7 @@ export default function Home() {
     </a>
 
     {/* Subtext under CTA */}
-    <p className="text-sm text-gray-300 mt-2">
+    <p className="text-sm text-black mt-2">
       No email required. Get real-time pricing based on your building specs.
     </p>
   </div>
