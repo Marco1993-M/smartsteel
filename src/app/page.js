@@ -126,53 +126,58 @@ export default function Home() {
 >
   {/* Overlay for readability */}
   <div className="absolute inset-0 bg-black/0"></div>
-  {/* SEO badge / subtitle */}
-  <div className="mx-auto w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
-    <div className="bg-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full flex items-center justify-center">
-      <h2 className="text-sm sm:text-base md:text-lg font-light text-center leading-snug">
-        South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
-      </h2>
+
+  {/* Content Wrapper */}
+  <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto mt-24 md:mt-32">
+    
+    {/* SEO badge / subtitle */}
+    <div className="w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
+      <div className="bg-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full flex items-center justify-center">
+        <h2 className="text-sm sm:text-base md:text-lg font-light text-center leading-snug text-black">
+          South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
+        </h2>
+      </div>
     </div>
+
+    {/* Main Headline */}
+    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
+      Fast, Affordable & Durable Steel Warehouses
+    </h1>
+
+    {/* Supporting Subheading */}
+    <p className="text-base sm:text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+      Lightweight steel warehousing and metal roofing systems engineered for rapid construction, long-term durability, and low maintenance. Fire-resistant, termite-proof, and 100% recyclable.
+    </p>
+
+    {/* Estimator CTA */}
+    <a
+      href="/tools/estimator"
+      className="inline-flex items-center justify-center gap-2 bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-white border border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+        className="w-6 h-6"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm0 2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V18Zm2.498-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0 0 12 2.25Z"
+        />
+      </svg>
+      Get Instant Estimate
+    </a>
+
+    {/* Subtext under CTA */}
+    <p className="text-sm text-gray-300 mt-2">
+      No email required. Get real-time pricing based on your building specs.
+    </p>
   </div>
-
-  {/* Main Headline */}
-  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
-    Fast, Affordable & Durable Steel Warehouses
-  </h1>
-
-  {/* Supporting Subheading */}
-  <p className="text-base sm:text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-    Lightweight steel warehousing and metal roofing systems engineered for rapid construction, long-term durability, and low maintenance. Fire-resistant, termite-proof, and 100% recyclable.
-  </p>
-
- {/* Estimator CTA */}
-<a
-  href="/tools/estimator"
-  className="inline-flex items-center justify-center gap-2 bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-white border border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth="1.5"
-    stroke="currentColor"
-    className="w-6 h-6"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm0 2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V18Zm2.498-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0 0 12 2.25Z"
-    />
-  </svg>
-  Get Instant Estimate
-</a>
-
-{/* Subtext under CTA */}
-<p className="text-sm text-gray-500 mt-2">
-  No email required. Get real-time pricing based on your building specs.
-</p>
-
 </section>
+
 
 
  {/* Add the trusses section */}
