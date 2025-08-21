@@ -141,12 +141,12 @@ export default function Home() {
 
     {/* Main Headline */}
     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-black leading-tight">
-      Fast, Affordable & Durable Steel Warehouses
+      Lightweight Steel Warehouses That Save You 30% 
     </h1>
 
     {/* Supporting Subheading */}
     <p className="text-base sm:text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-      Lightweight steel warehousing and metal roofing systems engineered for rapid construction, long-term durability, and low maintenance. Fire-resistant, termite-proof, and 100% recyclable.
+      Faster to build, more affordable than hot-rolled steel, and built to last.
     </p>
 
     {/* Estimator CTA */}
