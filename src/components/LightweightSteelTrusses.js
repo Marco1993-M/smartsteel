@@ -4,7 +4,7 @@ export default function LightweightSteelTrusses() {
   return (
     <section
       id="lightweight-steel-trusses"
-      className="bg-white py-16 px-6 md:px-12 lg:px-24"
+      className="bg-white mt-16 py-16 px-6 md:px-12 lg:px-24"
       aria-label="Lightweight Steel Trusses Section"
     >
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-10">
