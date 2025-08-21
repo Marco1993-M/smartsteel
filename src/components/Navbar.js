@@ -63,7 +63,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-white text-black relative z-50">
+    <nav className="bg-transparent text-black relative z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
         <Link href="/" className="flex items-center">
           <Image
