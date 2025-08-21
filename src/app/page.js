@@ -116,7 +116,16 @@ export default function Home() {
       <main className="font-sans text-gray-800">
     
 {/* Hero Section */}
-<section className="bg-white text-black px-6 py-32 md:py-40 text-center">
+<section
+  className="relative w-full h-[90vh] md:h-[100vh] flex items-start justify-center text-center text-white px-6"
+  style={{
+    backgroundImage: "url('/images/hero.jpg')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  }}
+>
+  {/* Overlay for readability */}
+  <div className="absolute inset-0 bg-black/0"></div>
   {/* SEO badge / subtitle */}
   <div className="mx-auto w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
     <div className="bg-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full flex items-center justify-center">
