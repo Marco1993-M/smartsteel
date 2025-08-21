@@ -131,7 +131,7 @@ export default function Home() {
   <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto mt-24 md:mt-32">
     
     {/* SEO badge / subtitle */}
-    <div className="w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
+    <div className="w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-transparent from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
       <div className="bg-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full flex items-center justify-center">
         <h2 className="text-sm sm:text-base md:text-lg font-light text-center leading-snug text-black">
           South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
@@ -140,7 +140,7 @@ export default function Home() {
     </div>
 
     {/* Main Headline */}
-    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
+    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-black leading-tight">
       Fast, Affordable & Durable Steel Warehouses
     </h1>
 
