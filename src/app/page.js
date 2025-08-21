@@ -145,7 +145,7 @@ export default function Home() {
     </h1>
 
     {/* Supporting Subheading */}
-    <p className="text-base sm:text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+    <p className="text-base sm:text-lg md:text-xl mb-8 text-black max-w-2xl mx-auto">
       Faster to build, more affordable than hot-rolled steel, and built to last.
     </p>
 
