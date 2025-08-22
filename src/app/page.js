@@ -199,7 +199,7 @@ export default function Home() {
         </section>
 
   <section className="bg-gray-100 py-16">
-  <div className="max-w-7xl mx-auto px-6 text-center">
+  <div className="max-w-7xl mx-auto mt-16 px-6 text-center">
     <h2 className="text-3xl md:text-4xl font-bold mb-4">Estimate Your Steel Structure Instantly</h2>
     <p className="text-lg text-gray-700 mb-8">
       Use our free tool to get a quick cost estimate for your warehouse, based on your specifications at unbeatable prices.
