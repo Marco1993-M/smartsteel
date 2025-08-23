@@ -141,7 +141,7 @@ export default function Home() {
 
     {/* Main Headline */}
     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-black leading-tight">
-      Lightweight Steel Warehouses That Save You 30% 
+      Lightweight Steel Warehouses That Save You Time & Money 
     </h1>
 
     {/* Supporting Subheading */}
