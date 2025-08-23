@@ -131,8 +131,8 @@ export default function Home() {
   <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto mt-24 md:mt-32">
     
     {/* SEO badge / subtitle */}
-    <div className="w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-transparent from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
-      <div className="bg-white px-4 sm:px-6 py-1 sm:py-1.5 rounded-full flex items-center justify-center">
+    <div className="w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 border border-black bg-transparent rounded-full">
+      <div className="px-4 sm:px-6 py-1 sm:py-1.5 rounded-full flex items-center justify-center">
         <h2 className="text-xs sm:text-sm md:text-base font-semibold text-center leading-snug text-black">
           Join 1000+ South African clients choosing lightweight steel for faster, smarter warehouses.
         </h2>
@@ -172,7 +172,7 @@ export default function Home() {
     </a>
 
     {/* Subtext under CTA */}
-    <div className="mt-2 bg-white/90 px-3 py-1 rounded-full inline-block">
+    <div className="mt-4 bg-white/90 px-3 py-1 rounded-full border border-black inline-block">
       <p className="text-sm text-black">
         No email required. Get real-time pricing based on your building specs.
       </p>
