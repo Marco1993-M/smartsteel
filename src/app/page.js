@@ -179,7 +179,7 @@ export default function Home() {
     </div>
 
     {/* Stats Bar */}
-    <div className="grid grid-cols-3 gap-6 text-white mt-38">
+    <div className="grid grid-cols-3 gap-6 text-white mt-32">
       <div className="text-center">
         <p className="text-xl sm:text-2xl font-bold">1000+</p>
         <p className="text-xs sm:text-sm">Clients Chose Lightweight Steel</p>
