@@ -193,6 +193,9 @@ export default function Home() {
     <p className="text-xs sm:text-sm">Faster Build Time</p>
   </div>
 </div>
+</div>
+</section>
+
 
 
 
