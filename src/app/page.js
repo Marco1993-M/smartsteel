@@ -132,8 +132,8 @@ export default function Home() {
     
     {/* SEO badge / subtitle */}
     <div className="w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-transparent from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
-      <div className="bg-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full flex items-center justify-center">
-        <h2 className="text-sm sm:text-base md:text-lg font-light text-center leading-snug text-black">
+      <div className="bg-white px-4 sm:px-6 py-1 sm:py-1.5 rounded-full flex items-center justify-center">
+        <h2 className="text-xs sm:text-sm md:text-base font-semibold text-center leading-snug text-black">
           Join 1000+ South African clients choosing lightweight steel for faster, smarter warehouses.
         </h2>
       </div>
@@ -172,12 +172,29 @@ export default function Home() {
     </a>
 
     {/* Subtext under CTA */}
-    <p className="text-sm text-black mt-2">
-      No email required. Get real-time pricing based on your building specs.
-    </p>
+    <div className="mt-2 bg-white/90 px-3 py-1 rounded-full inline-block">
+      <p className="text-sm text-black">
+        No email required. Get real-time pricing based on your building specs.
+      </p>
+    </div>
+
+    {/* Stats Bar */}
+    <div className="grid grid-cols-3 gap-6 text-white mt-38">
+      <div className="text-center">
+        <p className="text-xl sm:text-2xl font-bold">1000+</p>
+        <p className="text-xs sm:text-sm">Clients Chose Lightweight Steel</p>
+      </div>
+      <div className="text-center">
+        <p className="text-xl sm:text-2xl font-bold">30%</p>
+        <p className="text-xs sm:text-sm">Avg. Cost Savings</p>
+      </div>
+      <div className="text-center">
+        <p className="text-xl sm:text-2xl font-bold">50%</p>
+        <p className="text-xs sm:text-sm">Faster Build Time</p>
+      </div>
+    </div>
   </div>
 </section>
-
 
 
  {/* Add the trusses section */}
