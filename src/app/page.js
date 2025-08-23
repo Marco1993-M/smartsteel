@@ -134,7 +134,7 @@ export default function Home() {
     <div className="w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 bg-transparent from-pink-500 via-red-500 to-yellow-500 p-[2px] rounded-full">
       <div className="bg-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full flex items-center justify-center">
         <h2 className="text-sm sm:text-base md:text-lg font-light text-center leading-snug text-black">
-          South Africa&apos;s Pick for Lightweight Steel Warehousing Solutions
+          Join 1000+ South African clients choosing lightweight steel for faster, smarter warehouses.
         </h2>
       </div>
     </div>
