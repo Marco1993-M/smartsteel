@@ -178,23 +178,22 @@ export default function Home() {
       </p>
     </div>
 
-    {/* Stats Bar */}
-    <div className="grid grid-cols-3 gap-6 text-white mt-32">
-      <div className="text-center">
-        <p className="text-xl sm:text-2xl font-bold">1000+</p>
-        <p className="text-xs sm:text-sm">Clients Chose Lightweight Steel</p>
-      </div>
-      <div className="text-center">
-        <p className="text-xl sm:text-2xl font-bold">30%</p>
-        <p className="text-xs sm:text-sm">Avg. Cost Savings</p>
-      </div>
-      <div className="text-center">
-        <p className="text-xl sm:text-2xl font-bold">50%</p>
-        <p className="text-xs sm:text-sm">Faster Build Time</p>
-      </div>
-    </div>
+{/* Stats Bar */}
+<div className="grid grid-cols-3 gap-6 text-white mt-12 sm:mt-20 md:mt-32">
+  <div className="text-center">
+    <p className="text-xl sm:text-2xl font-bold">1000+</p>
+    <p className="text-xs sm:text-sm">Clients Chose Lightweight Steel</p>
   </div>
-</section>
+  <div className="text-center">
+    <p className="text-xl sm:text-2xl font-bold">30%</p>
+    <p className="text-xs sm:text-sm">Avg. Cost Savings</p>
+  </div>
+  <div className="text-center">
+    <p className="text-xl sm:text-2xl font-bold">50%</p>
+    <p className="text-xs sm:text-sm">Faster Build Time</p>
+  </div>
+</div>
+
 
 
  {/* Add the trusses section */}
