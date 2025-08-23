@@ -174,7 +174,7 @@ export default function Home() {
     {/* Subtext under CTA */}
     <div className="mt-4 bg-white/90 px-3 py-1 rounded-full border border-black inline-block">
       <p className="text-sm text-black">
-        No email required. Get real-time pricing based on your building specs.
+        No email required. Get INSTANT real-time pricing.
       </p>
     </div>
 
