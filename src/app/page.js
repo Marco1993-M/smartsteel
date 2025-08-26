@@ -149,6 +149,8 @@ export default function Home() {
       Faster to build, more affordable than hot-rolled steel, and built to last.
     </p>
 
+<div className="flex items-center gap-4">
+  
   {/* Estimator CTA */}
   <a
     href="/tools/estimator"
@@ -185,29 +187,30 @@ export default function Home() {
   </a>
 </div>
 
+
     {/* Subtext under CTA */}
     <div className="mt-4 bg-white/90 px-3 py-1 rounded-full border border-black inline-block">
       <p className="text-sm text-black">
-        No email required. Get INSTANT real-time pricing.
+        No email required. Get real-time pricing based on your building specs.
       </p>
     </div>
 
-{/* Stats Bar */}
-<div className="grid grid-cols-3 gap-6 text-white mt-12 sm:mt-20 md:mt-32">
-  <div className="text-center">
-    <p className="text-xl sm:text-2xl font-bold">1000+</p>
-    <p className="text-xs sm:text-sm">Clients Chose Lightweight Steel</p>
+    {/* Stats Bar */}
+    <div className="grid grid-cols-3 gap-6 text-white mt-32">
+      <div className="text-center">
+        <p className="text-xl sm:text-2xl font-bold">1000+</p>
+        <p className="text-xs sm:text-sm">Clients Chose Lightweight Steel</p>
+      </div>
+      <div className="text-center">
+        <p className="text-xl sm:text-2xl font-bold">30%</p>
+        <p className="text-xs sm:text-sm">Avg. Cost Savings</p>
+      </div>
+      <div className="text-center">
+        <p className="text-xl sm:text-2xl font-bold">50%</p>
+        <p className="text-xs sm:text-sm">Faster Build Time</p>
+      </div>
+    </div>
   </div>
-  <div className="text-center">
-    <p className="text-xl sm:text-2xl font-bold">30%</p>
-    <p className="text-xs sm:text-sm">Avg. Cost Savings</p>
-  </div>
-  <div className="text-center">
-    <p className="text-xl sm:text-2xl font-bold">50%</p>
-    <p className="text-xs sm:text-sm">Faster Build Time</p>
-  </div>
-</div>
-</div>
 </section>
 
 
