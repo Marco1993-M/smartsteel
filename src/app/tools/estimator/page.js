@@ -125,30 +125,22 @@ const handleSubmit = (e) => {
     return;
   }
 
-  // Validate email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    alert('Please enter a valid email address.');
-    return;
-  }
-
-  // Validate phone
-  if (!phone.trim()) {
-    alert('Please enter a valid phone number.');
+  if (!email.trim() || !phone.trim()) {
+    alert('Please enter a valid email and phone number.');
     return;
   }
 
   setIsSending(true);
 
   const templateParams = {
-    name: name,
-    email: email,
-    phone_number: phone,
+    name: name || 'N/A',
+    email: email || 'N/A',
+    phone_number: phone || 'N/A', // Ensure phone is always passed
     width,
     length,
     sheeting,
     sheeting_installed: sheetingInstalled ? 'Yes' : 'No',
-    delivery_distance: distance,
+    delivery_distance: distance || 0,
     estimate: `R${estimate.toLocaleString()}`,
     time: new Date().toLocaleString(),
     message: 'New shed estimate request submitted via website',
@@ -166,11 +158,12 @@ const handleSubmit = (e) => {
       setUsingMyLocation(false);
     })
     .catch((error) => {
-      alert('Oops! Something went wrong, please try again later.');
       console.error('EmailJS error:', error);
+      alert('Oops! Something went wrong, please try again later.');
       setIsSending(false);
     });
 };
+
 
 
 
