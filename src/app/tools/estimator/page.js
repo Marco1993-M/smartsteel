@@ -125,12 +125,14 @@ const handleSubmit = (e) => {
     return;
   }
 
+  // Validate email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     alert('Please enter a valid email address.');
     return;
   }
 
+  // Validate phone
   if (!phone.trim()) {
     alert('Please enter a valid phone number.');
     return;
@@ -139,18 +141,17 @@ const handleSubmit = (e) => {
   setIsSending(true);
 
   const templateParams = {
-    from_name: name,
-    from_email: email,
+    name: name,
+    email: email,
     phone_number: phone,
-    estimate: `R${estimate.toLocaleString()}`,
     width,
     length,
     sheeting,
     sheeting_installed: sheetingInstalled ? 'Yes' : 'No',
     delivery_distance: distance,
-    // optional if you want them in template:
-    // message: 'New estimate request',
-    // time: new Date().toLocaleString(),
+    estimate: `R${estimate.toLocaleString()}`,
+    time: new Date().toLocaleString(),
+    message: 'New shed estimate request submitted via website',
   };
 
   emailjs
@@ -161,7 +162,7 @@ const handleSubmit = (e) => {
       setName('');
       setEmail('');
       setPhone('');
-      // setEstimate(null); ❌ maybe don’t clear
+      setEstimate(null);
       setUsingMyLocation(false);
     })
     .catch((error) => {
@@ -170,6 +171,7 @@ const handleSubmit = (e) => {
       setIsSending(false);
     });
 };
+
 
 
   const handleUseMyLocation = () => {
