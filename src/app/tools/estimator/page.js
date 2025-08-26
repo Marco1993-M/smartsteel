@@ -50,6 +50,7 @@ export default function EstimatorPage() {
   const [locationError, setLocationError] = useState(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [estimate, setEstimate] = useState(null);
   const [isSending, setIsSending] = useState(false);
 
@@ -116,42 +117,60 @@ export default function EstimatorPage() {
     setEstimate(finalEstimate);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!estimate) {
-      alert('Please calculate an estimate first.');
-      return;
-    }
-    setIsSending(true);
+const handleSubmit = (e) => {
+  e.preventDefault();
+
+  if (!estimate) {
+    alert('Please calculate an estimate first.');
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    alert('Please enter a valid email address.');
+    return;
+  }
+
+  if (!phone.trim()) {
+    alert('Please enter a valid phone number.');
+    return;
+  }
+
+  setIsSending(true);
 
   const templateParams = {
-  name,
-  email,
-  estimate: finalEstimate.toLocaleString(),
-  width,
-  length,
-  sheeting,
-  distance,
-  sheeting_installed: sheetingInstalled ? 'Yes' : 'No',
+    from_name: name,
+    from_email: email,
+    phone_number: phone,
+    estimate: `R${estimate.toLocaleString()}`,
+    width,
+    length,
+    sheeting,
+    sheeting_installed: sheetingInstalled ? 'Yes' : 'No',
+    delivery_distance: distance,
+    // optional if you want them in template:
+    // message: 'New estimate request',
+    // time: new Date().toLocaleString(),
+  };
+
+  emailjs
+    .send('service_h817nk1', 'template_rdp28qk', templateParams, 'JIPAN9YaQCPrkSgep')
+    .then(() => {
+      alert(`Thanks, ${name}! Your estimate of R${estimate.toLocaleString()} was submitted.`);
+      setIsSending(false);
+      setName('');
+      setEmail('');
+      setPhone('');
+      // setEstimate(null); ❌ maybe don’t clear
+      setUsingMyLocation(false);
+    })
+    .catch((error) => {
+      alert('Oops! Something went wrong, please try again later.');
+      console.error('EmailJS error:', error);
+      setIsSending(false);
+    });
 };
 
-
-    emailjs
-      .send('service_h817nk1', 'template_rdp28qk', templateParams, 'JIPAN9YaQCPrkSgep')
-      .then(() => {
-        alert(`Thanks, ${name}! Your estimate of R${estimate.toLocaleString()} was submitted.`);
-        setIsSending(false);
-        setName('');
-        setEmail('');
-        setEstimate(null);
-        setUsingMyLocation(false);
-      })
-      .catch((error) => {
-        alert('Oops! Something went wrong, please try again later.');
-        console.error('EmailJS error:', error);
-        setIsSending(false);
-      });
-  };
 
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
@@ -359,6 +378,22 @@ export default function EstimatorPage() {
                     disabled={isSending}
                   />
                 </label>
+
+                <label className="block text-gray-700 font-medium">
+  Phone Number
+  <input
+    type="tel"
+    required
+    pattern="^[0-9\-\+\s\(\)]{7,15}$"
+    className="mt-1 w-full rounded-md border border-gray-300 p-2 shadow-sm 
+               focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+    value={phone}
+    onChange={(e) => setPhone(e.target.value)}
+    placeholder="e.g. 082 123 4567"
+    disabled={isSending}
+  />
+</label>
+
 
                 <button
                   type="submit"
