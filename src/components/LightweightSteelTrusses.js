@@ -13,7 +13,7 @@ export default function LightweightSteelTrusses() {
             Lightweight Steel Trusses for Strong, Durable Roof Structures
           </h1>
           <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-            Prefabricated lightweight steel roof trusses engineered for fast, cost-effective installation — ideal for residential, commercial, and industrial buildings across South Africa.
+            Smart Steel designs and builds lightweight steel warehouses that are fast to assemble, durable in any climate, and cost-effective for businesses across South Africa. We also specialise in prefabricated lightweight steel roof trusses engineered for fast, cost-effective installation — ideal for residential, commercial, and industrial buildings across South Africa.
           </p>
 
           {/* Correct usage of Link in Next.js 13+ */}
