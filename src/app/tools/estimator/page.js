@@ -397,6 +397,14 @@ const handleSubmit = (e) => {
                 >
                   {isSending ? 'Sending...' : 'Submit Estimate'}
                 </button>
+
+                                {/* Call Button */}
+    <a
+  href="tel:+27826576522"
+  className="w-full mt-2 inline-block text-center rounded bg-White py-2 text-Black font-semibold shadow hover:bg-gray-100 transition"
+>
+  Call Instead
+</a>
               </form>
             )}
           </div>
