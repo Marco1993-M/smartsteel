@@ -175,7 +175,7 @@ export default function Home() {
 
   {/* Call Button */}
   <a
-    href="tel:+27828464555"
+    href="tel:+27826576522"
     className="flex items-center justify-center w-12 h-12 rounded-full bg-black text-white border border-transparent transition-all duration-300 hover:bg-white hover:text-black hover:border-black"
     title="Call us"
   >
