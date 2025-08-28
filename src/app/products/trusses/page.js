@@ -65,7 +65,7 @@ export default function TrussesPage() {
           <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center px-6">
             <div>
               <h1 className="text-4xl font-bold mb-6">
-                Versatile Trusses to Suit All Types of Builds
+                Versatile Lightweight Steel Trusses to Suit All Types of Builds
               </h1>
               <p className="text-lg text-gray-700">
                 Due to growing demand across South Africa, trusses made from lightweight steel are now offered for a broad range of construction projects. These precision-engineered steel trusses combine strength, durability, and design flexibility — ideal for modern builds requiring clear spans and fast assembly.
