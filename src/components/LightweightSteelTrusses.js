@@ -18,7 +18,7 @@ export default function LightweightSteelTrusses() {
 
           {/* Correct usage of Link in Next.js 13+ */}
           <Link
-            href="/products/trusses"
+            href="/products/lightweight-steel-trusses"
             className="inline-block bg-[#da1a33] hover:bg-red-700 text-white font-semibold px-8 py-4 rounded-lg transition"
             aria-label="Explore Lightweight Steel Trusses Products"
           >
