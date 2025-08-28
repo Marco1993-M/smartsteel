@@ -150,7 +150,7 @@ export default function WarehouseClient() {
               },
               {
                 value: "12m Wide Structure",
-                src: "/warehouse-13m.jpg",
+                src: "/warehouse-8m.jpg",
                 title: "12m Wide Structure",
                 description:
                   "Designed for larger operations requiring significant covered space. Suitable for warehousing, workshops, and commercial use.",
