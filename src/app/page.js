@@ -278,7 +278,7 @@ export default function Home() {
     <h2 className="text-3xl font-semibold mb-6">Smart Warehouses</h2>
     <p className="mb-8">Explore our Smart Warehouses options & more.</p>
     <a
-      href="/warehouse"
+      href="/lightweight-steel-warehouses"
       className="inline-block bg-white bg-opacity-70 text-black px-6 py-3 rounded-full hover:bg-gray-700 transition"
     >
       View options
