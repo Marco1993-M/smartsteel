@@ -55,6 +55,15 @@ export default function ResourcesPage() {
       roles: ['Builder', 'Fabricator', 'Homeowner'],
       types: ['Installation guide'],
     },
+
+      {
+      title: 'Lightweight Steel Warehouses',
+      description: 'A modern solution that's faster, stronger and more cost effective.',
+      image: '/Brochure F.jpg',
+      pdf: '/pdfs/Lightweight Steel Warehouses.pdf',
+      roles: ['Builder', 'Fabricator', 'Homeowner'],
+      types: ['Brochure'],
+    },
     // Add more brochures as needed
   ];
 
