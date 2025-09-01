@@ -58,7 +58,7 @@ export default function ResourcesPage() {
 
       {
       title: 'Lightweight Steel Warehouses',
-      description: 'A modern solution that's faster, stronger and more cost effective.',
+      description: 'A modern solution that is faster, stronger and more cost effective.',
       image: '/Brochure F.jpg',
       pdf: '/pdfs/Lightweight Steel Warehouses.pdf',
       roles: ['Builder', 'Fabricator', 'Homeowner'],
