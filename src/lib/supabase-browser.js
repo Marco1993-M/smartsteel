@@ -1,6 +1,7 @@
+// src/lib/supabase-browser.js
 import { createClient } from '@supabase/supabase-js'
 
-// This one is for React components (runs in the browser)
+// Client-side environment variables (NEXT_PUBLIC_*)
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
