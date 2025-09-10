@@ -7,5 +7,5 @@ if (!supabaseUrl || !supabaseServiceKey) {
   throw new Error("Missing SUPABASE env vars for server client")
 }
 
-// Use service key here (⚠️ never expose this to client)
-export const supabaseServer = createClient(supabaseUrl, supabaseServiceKey)
+// Export with the same name as client
+export const supabase = createClient(supabaseUrl, supabaseServiceKey)
