@@ -53,7 +53,6 @@ export default function KanbanBoard() {
     <div className="p-4 sm:p-6 relative">
       {/* Sticky header */}
       <h1 className="text-2xl font-bold mb-6 text-center sm:text-left sticky top-0 bg-white z-50 kanban-header">
-        Smart Steel Leads Centre
       </h1>
 
 <DndContext
