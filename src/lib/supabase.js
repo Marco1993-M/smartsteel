@@ -1,13 +1,11 @@
-// src/lib/supabase.js
 import { createClient } from '@supabase/supabase-js'
 
-// Server-only environment variables
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_ANON_KEY
+// Use NEXT_PUBLIC_ vars for client-side
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables')
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing environment variables for Supabase")
 }
 
-// Export Supabase client for API routes / server components
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
