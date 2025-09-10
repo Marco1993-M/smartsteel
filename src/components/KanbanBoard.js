@@ -44,7 +44,7 @@ export default function KanbanBoard() {
   return (
     <div className="p-4 sm:p-6">
       <h1 className="text-2xl font-bold mb-6 text-center sm:text-left">
-        Smart Steel Leads Centre
+        
       </h1>
 
       <DndContext
