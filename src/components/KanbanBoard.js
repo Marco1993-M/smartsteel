@@ -133,48 +133,6 @@ export default function KanbanBoard() {
   </div>
 </DndContext>
 
-
-      {/* Mobile Bento Grid Preview */}
-      <div className="grid grid-cols-2 gap-4 sm:hidden mb-20"> {/* extra space for nav */}
-        {statuses.map((status) => {
-          const filtered = leads.filter((l) => l.status === status)
-          return (
-            <div key={status} className="bg-gray-100 p-3 rounded-xl">
-              <h2 className="text-lg font-semibold mb-3 text-center flex justify-between">
-                {status.toUpperCase()}
-                <span className="text-xs bg-gray-300 rounded-full px-2">
-                  {filtered.length}
-                </span>
-              </h2>
-              {filtered.slice(0, 3).map((lead) => (
-                <div
-                  key={lead.id}
-                  onClick={() => setEditingLead(lead)}
-                  className={`rounded-lg p-2 mb-2 cursor-pointer shadow hover:bg-gray-50 ${
-                    teamColors[lead.allocated_to] || "bg-white"
-                  }`}
-                >
-                  <p className="font-medium text-sm">
-                    {lead.name} {lead.last_name}
-                  </p>
-                  <p className="text-xs text-gray-600 truncate">
-                    {lead.estimate_request}
-                  </p>
-                </div>
-              ))}
-              {filtered.length > 3 && (
-                <button
-                  onClick={() => scrollToColumn(status)}
-                  className="text-blue-600 text-xs mt-2"
-                >
-                  View all →
-                </button>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
       {/* Floating Bottom Nav (mobile only) */}
       <div className="sm:hidden fixed bottom-0 left-0 w-full bg-white border-t shadow-md flex justify-around py-2 z-50">
         {statuses.map((status) => (
