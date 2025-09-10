@@ -236,10 +236,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                         >
                           <option>New</option>
                           <option>Contacted</option>
-                          <option>Proposal</option>
-                          <option>Negotiation</option>
-                          <option>Closed Won</option>
-                          <option>Closed Lost</option>
+                          <option>Quoted</option>
+                          <option>Won</option>
+                          <option>Lost</option>
                         </select>
                       </div>
                     </Tab.Panel>
