@@ -145,30 +145,41 @@ export default function KanbanBoard() {
         ))}
       </div>
 
-      {/* Lead Editor Drawer */}
-      {editingLead && (
-        <LeadEditorDrawer
-          lead={editingLead}
-          onClose={() => setEditingLead(null)}
-          onSave={async (updatedLead) => {
-            const { error } = await supabase
-              .from("leads")
-              .update(updatedLead)
-              .eq("id", updatedLead.id)
-            if (!error) {
-              fetchLeads()
-              setEditingLead(null)
-            }
-          }}
-          onDelete={async (leadId) => {
-            const { error } = await supabase.from("leads").delete().eq("id", leadId)
-            if (!error) {
-              fetchLeads()
-              setEditingLead(null)
-            }
-          }}
-        />
-      )}
+{/* Lead Editor Drawer */}
+{editingLead && (
+  <LeadEditorDrawer
+    lead={editingLead}
+    onClose={() => setEditingLead(null)}
+    onSave={async (updatedLead) => {
+      // ✅ Optimistically update UI first
+      setLeads((prev) =>
+        prev.map((l) => (l.id === updatedLead.id ? updatedLead : l))
+      )
+
+      // Save to Supabase
+      const { error } = await supabase
+        .from("leads")
+        .update(updatedLead)
+        .eq("id", updatedLead.id)
+
+      if (error) {
+        console.error("Error updating lead:", error)
+        // fallback: reload if save fails
+        fetchLeads()
+      }
+
+      setEditingLead(null)
+    }}
+    onDelete={async (leadId) => {
+      const { error } = await supabase.from("leads").delete().eq("id", leadId)
+      if (!error) {
+        setLeads((prev) => prev.filter((l) => l.id !== leadId))
+        setEditingLead(null)
+      }
+    }}
+  />
+)}
+
     </div>
   )
 }
