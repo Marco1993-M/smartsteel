@@ -2,9 +2,9 @@
 
 import { useState, useEffect, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
-import { Phone, Mail, MessageSquare, Trash2, Save } from "lucide-react"
+import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft } from "lucide-react"
 
-export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
+export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack }) {
   const isNew = !lead?.id
 
   const [formData, setFormData] = useState({
@@ -36,13 +36,8 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
     setNotes(lead?.notes ? [lead.notes] : [])
   }, [lead])
 
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleAddNote = (note) => {
-    setNotes((prev) => [{ text: note, date: new Date() }, ...prev])
-  }
+  const handleChange = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }))
+  const handleAddNote = (note) => setNotes((prev) => [{ text: note, date: new Date() }, ...prev])
 
   return (
     <Transition.Root show={!!lead || isNew} as={Fragment}>
@@ -61,36 +56,35 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
             <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full max-w-lg h-full sm:h-auto">
               
               {/* Header */}
-              <div className="px-6 py-4 border-b flex items-center justify-between">
-                <Dialog.Title className="text-xl font-semibold">
-                  {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
-                </Dialog.Title>
+              <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
+                <div className="flex items-center gap-2">
+                  {onBack && (
+                    <button onClick={onBack} className="p-2 rounded-full hover:bg-gray-100">
+                      <ArrowLeft size={20} />
+                    </button>
+                  )}
+                  <Dialog.Title className="text-xl font-semibold">
+                    {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
+                  </Dialog.Title>
+                </div>
                 {!isNew && (
                   <div className="flex gap-2">
-                    <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-                      <Phone size={18} />
-                    </button>
-                    <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-                      <Mail size={18} />
-                    </button>
-                    <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-                      <MessageSquare size={18} />
-                    </button>
+                    <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"><Phone size={18} /></button>
+                    <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"><Mail size={18} /></button>
+                    <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"><MessageSquare size={18} /></button>
                   </div>
                 )}
               </div>
 
               {/* Tabs */}
               <Tab.Group>
-                <Tab.List className="flex overflow-x-auto border-b no-scrollbar">
+                <Tab.List className="flex overflow-x-auto no-scrollbar -webkit-overflow-scrolling-touch border-b">
                   {["Details", "Notes", "Activity"].map((tab) => (
                     <Tab
                       key={tab}
                       className={({ selected }) =>
                         `flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap ${
-                          selected
-                            ? "border-b-2 border-blue-600 text-blue-600"
-                            : "text-gray-500"
+                          selected ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"
                         }`
                       }
                     >
@@ -99,9 +93,11 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
                   ))}
                 </Tab.List>
 
+                {/* Scrollable content */}
                 <Tab.Panels className="flex-1 overflow-y-auto p-6">
                   {/* Details */}
                   <Tab.Panel className="space-y-4">
+                    {/* Name */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">First & Last Name</label>
                       <input
@@ -111,7 +107,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                       />
                     </div>
-
+                    {/* Email */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Email</label>
                       <input
@@ -121,7 +117,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                       />
                     </div>
-
+                    {/* Phone */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Phone</label>
                       <input
@@ -262,11 +258,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
                         {notes.map((n, i) => (
                           <div key={i} className="p-2 border rounded-md bg-gray-50">
                             <p className="text-sm">{n.text || n}</p>
-                            {n.date && (
-                              <span className="text-xs text-gray-400">
-                                {new Date(n.date).toLocaleString()}
-                              </span>
-                            )}
+                            {n.date && <span className="text-xs text-gray-400">{new Date(n.date).toLocaleString()}</span>}
                           </div>
                         ))}
                       </div>
@@ -281,7 +273,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
               </Tab.Group>
 
               {/* Footer */}
-              <div className="p-4 border-t flex justify-end gap-2 sticky bottom-0 bg-white">
+              <div className="p-4 border-t flex justify-end gap-2 sticky bottom-0 bg-white z-10">
                 {!isNew && (
                   <button
                     onClick={() => onDelete(lead.id)}
