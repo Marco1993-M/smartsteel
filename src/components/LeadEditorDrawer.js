@@ -39,6 +39,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   const handleChange = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }))
   const handleAddNote = (note) => setNotes((prev) => [{ text: note, date: new Date() }, ...prev])
 
+  // Use onBack if provided, otherwise fallback to onClose
+  const backHandler = onBack || onClose
+
   return (
     <Transition.Root show={!!lead || isNew} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -54,15 +57,15 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             leaveTo="translate-x-full"
           >
             <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full max-w-lg h-full overflow-hidden">
-              
+
               {/* Header */}
               <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
                 <div className="flex items-center gap-2">
-                  {onBack && (
-                    <button onClick={onBack} className="p-2 rounded-full hover:bg-gray-100">
-                      <ArrowLeft size={20} />
-                    </button>
-                  )}
+                  {/* Always show back button */}
+                  <button onClick={backHandler} className="p-2 rounded-full hover:bg-gray-100">
+                    <ArrowLeft size={20} />
+                  </button>
+
                   <Dialog.Title className="text-xl font-semibold">
                     {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
                   </Dialog.Title>
@@ -95,7 +98,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                   </Tab.List>
 
                   <Tab.Panels className="p-6 space-y-4">
-                    {/* Details */}
+                    {/* Details Panel */}
                     <Tab.Panel className="space-y-4">
                       {/* Name */}
                       <div>
@@ -107,6 +110,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                         />
                       </div>
+
                       {/* Email */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -117,6 +121,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                         />
                       </div>
+
                       {/* Phone */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Phone</label>
@@ -128,7 +133,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                         />
                       </div>
 
-                      {/* Estimate Request */}
+                      {/* Warehouse Size & Cladding */}
                       <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse Size</label>
                         <div className="flex gap-2 mb-2 flex-wrap">
@@ -221,6 +226,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                         </div>
                       </div>
 
+                      {/* Status */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Status</label>
                         <select
@@ -238,7 +244,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                       </div>
                     </Tab.Panel>
 
-                    {/* Notes */}
+                    {/* Notes Panel */}
                     <Tab.Panel>
                       <div className="space-y-4">
                         <textarea
@@ -265,7 +271,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                       </div>
                     </Tab.Panel>
 
-                    {/* Activity */}
+                    {/* Activity Panel */}
                     <Tab.Panel>
                       <p className="text-sm text-gray-500">No activity yet. Calls, emails, and updates will appear here.</p>
                     </Tab.Panel>
