@@ -14,13 +14,12 @@ const teamColors = {
 }
 
 const statusColors = {
-  "new": "text-gray-500",
-  "contacted": "text-blue-600",
-  "quoted": "text-yellow-600",
-  "won": "text-green-600",
-  "lost": "text-red-600"
-};
-
+  new: "text-gray-500",
+  contacted: "text-blue-600",
+  quoted: "text-yellow-600",
+  won: "text-green-600",
+  lost: "text-red-600",
+}
 
 export default function KanbanBoard() {
   const [leads, setLeads] = useState([])
@@ -43,8 +42,10 @@ export default function KanbanBoard() {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Smart Steel Leads Centre</h1>
+    <div className="p-4 sm:p-6">
+      <h1 className="text-2xl font-bold mb-6 text-center sm:text-left">
+        Smart Steel Leads Centre
+      </h1>
 
       <DndContext
         collisionDetection={closestCorners}
@@ -53,15 +54,17 @@ export default function KanbanBoard() {
           updateLeadStatus(active.id, over.id)
         }}
       >
-        <div className="grid grid-cols-5 gap-4">
+        {/* Horizontally scrollable columns on mobile */}
+        <div className="flex overflow-x-auto gap-4 pb-4">
           {statuses.map((status) => (
-            <KanbanColumn
-              key={status}
-              id={status}
-              title={status}
-              leads={leads.filter((l) => l.status === status)}
-              setEditingLead={setEditingLead}
-            />
+            <div key={status} className="flex-shrink-0 w-64">
+              <KanbanColumn
+                id={status}
+                title={status}
+                leads={leads.filter((l) => l.status === status)}
+                setEditingLead={setEditingLead}
+              />
+            </div>
           ))}
         </div>
       </DndContext>
@@ -96,9 +99,15 @@ export default function KanbanBoard() {
 // ---------------------- Kanban Column ----------------------
 function KanbanColumn({ id, title, leads, setEditingLead }) {
   const { setNodeRef } = useDroppable({ id })
+
   return (
-    <div ref={setNodeRef} className="bg-gray-100 p-4 rounded-xl min-h-[400px] flex flex-col">
-      <h2 className="text-lg font-semibold mb-3">{title.toUpperCase()}</h2>
+    <div
+      ref={setNodeRef}
+      className="bg-gray-100 p-3 rounded-xl min-h-[400px] flex flex-col w-full"
+    >
+      <h2 className="text-lg font-semibold mb-3 text-center sm:text-left">
+        {title.toUpperCase()}
+      </h2>
       {leads.map((lead) => (
         <KanbanCard key={lead.id} lead={lead} setEditingLead={setEditingLead} />
       ))}
@@ -110,7 +119,6 @@ function KanbanColumn({ id, title, leads, setEditingLead }) {
 function KanbanCard({ lead, setEditingLead }) {
   const [isOpen, setIsOpen] = useState(false)
 
-  // Make this card draggable
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id })
   const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)` } : undefined
 
@@ -120,29 +128,37 @@ function KanbanCard({ lead, setEditingLead }) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`shadow rounded-lg mb-3 cursor-pointer hover:bg-gray-50 border ${teamColors[lead.allocated_to] || "bg-white"}`}
-      onClick={() => setIsOpen(!isOpen)}           // single click: toggle dropdown
-      onDoubleClick={() => setEditingLead(lead)}  // double click: open drawer
+      className={`shadow rounded-lg mb-3 cursor-pointer hover:bg-gray-50 border break-words ${teamColors[lead.allocated_to] || "bg-white"}`}
+      onClick={() => setIsOpen(!isOpen)}
+      onDoubleClick={() => setEditingLead(lead)}
     >
       {/* Header: Name + Status */}
       <div className="flex justify-between items-center p-3">
-        <p className="font-medium text-gray-800">{lead.name} {lead.last_name}</p>
-        <p className={`font-medium ${statusColors[lead.status_board] || "text-gray-400"}`}>
-          {lead.status_board}
+        <p className="font-medium text-gray-800 text-sm sm:text-base">
+          {lead.name} {lead.last_name}
+        </p>
+        <p className={`font-medium text-sm sm:text-base ${statusColors[lead.status] || "text-gray-400"}`}>
+          {lead.status}
         </p>
       </div>
 
       {/* Subheader: Estimate Request */}
-      <div className="px-3 pb-3 text-sm text-gray-600">
-        {lead.estimate_request}
-      </div>
+      <div className="px-3 pb-3 text-sm text-gray-600">{lead.estimate_request}</div>
 
       {/* Collapsible Details */}
       {isOpen && (
         <div className="px-3 pb-3 text-sm text-gray-500 border-t pt-2 space-y-1">
-          <p><span className="font-semibold">Allocated To:</span> {lead.allocated_to || "—"}</p>
-          <p><span className="font-semibold">Status:</span> {lead.status}</p>
-          {lead.notes && <p><span className="font-semibold">Notes:</span> {lead.notes}</p>}
+          <p>
+            <span className="font-semibold">Allocated To:</span> {lead.allocated_to || "—"}
+          </p>
+          <p>
+            <span className="font-semibold">Status:</span> {lead.status}
+          </p>
+          {lead.notes && (
+            <p>
+              <span className="font-semibold">Notes:</span> {lead.notes}
+            </p>
+          )}
         </div>
       )}
     </div>
