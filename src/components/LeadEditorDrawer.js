@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, Fragment, useEffect } from "react"
+import { useState, useEffect, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
 import { Phone, Mail, MessageSquare, Trash2, Save } from "lucide-react"
 
 export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
-  // If lead is null, we are adding a new lead
   const isNew = !lead?.id
 
   const [formData, setFormData] = useState({
@@ -19,6 +18,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
     notes: "",
     ...lead
   })
+
   const [notes, setNotes] = useState(lead?.notes ? [lead.notes] : [])
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
     <Transition.Root show={!!lead || isNew} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-y-0 right-0 flex max-w-lg w-full">
+        <div className="fixed inset-0 flex justify-end">
           <Transition.Child
             as={Fragment}
             enter="transform transition ease-in-out duration-300"
@@ -58,7 +58,8 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full">
+            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full max-w-lg h-full sm:h-auto">
+              
               {/* Header */}
               <div className="px-6 py-4 border-b flex items-center justify-between">
                 <Dialog.Title className="text-xl font-semibold">
@@ -81,13 +82,15 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
 
               {/* Tabs */}
               <Tab.Group>
-                <Tab.List className="flex border-b">
+                <Tab.List className="flex overflow-x-auto border-b no-scrollbar">
                   {["Details", "Notes", "Activity"].map((tab) => (
                     <Tab
                       key={tab}
                       className={({ selected }) =>
-                        `flex-1 py-2 text-sm font-medium ${
-                          selected ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"
+                        `flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                          selected
+                            ? "border-b-2 border-blue-600 text-blue-600"
+                            : "text-gray-500"
                         }`
                       }
                     >
@@ -108,7 +111,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                       />
                     </div>
-        
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Email</label>
                       <input
@@ -118,6 +121,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                       />
                     </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Phone</label>
                       <input
@@ -127,102 +131,99 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                       />
                     </div>
+
                     {/* Estimate Request */}
-{/* Estimate Request */}
-<div className="mt-4">
-  <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse Size</label>
-  <div className="flex gap-2 mb-2">
-    <select
-      value={formData.width || ""}
-      onChange={(e) => handleChange("width", e.target.value)}
-      className="border px-3 py-2 rounded"
-    >
-      <option value="">Select Width</option>
-      <option value="8">8m</option>
-      <option value="10">10m</option>
-      <option value="12">12m</option>
-    </select>
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse Size</label>
+                      <div className="flex gap-2 mb-2 flex-wrap">
+                        <select
+                          value={formData.width || ""}
+                          onChange={(e) => handleChange("width", e.target.value)}
+                          className="border px-3 py-2 rounded flex-1 min-w-[100px]"
+                        >
+                          <option value="">Select Width</option>
+                          <option value="8">8m</option>
+                          <option value="10">10m</option>
+                          <option value="12">12m</option>
+                        </select>
 
-    <select
-      value={formData.length || ""}
-      onChange={(e) => handleChange("length", e.target.value)}
-      className="border px-3 py-2 rounded"
-    >
-      <option value="">Select Length</option>
-      {[...Array(20)].map((_, i) => { // lengths from 2.5m to 50m
-        const len = (i + 1) * 2.5
-        return <option key={len} value={len}>{len}m</option>
-      })}
-    </select>
-  </div>
+                        <select
+                          value={formData.length || ""}
+                          onChange={(e) => handleChange("length", e.target.value)}
+                          className="border px-3 py-2 rounded flex-1 min-w-[100px]"
+                        >
+                          <option value="">Select Length</option>
+                          {[...Array(20)].map((_, i) => {
+                            const len = (i + 1) * 2.5
+                            return <option key={len} value={len}>{len}m</option>
+                          })}
+                        </select>
+                      </div>
 
-  <label className="block text-sm font-medium text-gray-700 mb-2">Cladding & Installation</label>
-  <div className="flex gap-2 flex-wrap">
-    {["IBR", "Chromadek"].map((clad) => (
-      <button
-        key={clad}
-        type="button"
-        className={`px-3 py-1 rounded border ${
-          formData.cladding === clad ? "bg-blue-200 border-blue-500" : "bg-gray-100"
-        }`}
-        onClick={() => handleChange("cladding", formData.cladding === clad ? "" : clad)}
-      >
-        {clad}
-      </button>
-    ))}
-    {["Supply Only", "Installed"].map((option) => (
-      <button
-        key={option}
-        type="button"
-        className={`px-3 py-1 rounded border ${
-          formData.installation === option ? "bg-blue-200 border-blue-500" : "bg-gray-100"
-        }`}
-        onClick={() => handleChange("installation", formData.installation === option ? "" : option)}
-      >
-        {option}
-      </button>
-    ))}
-  </div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Cladding & Installation</label>
+                      <div className="flex gap-2 flex-wrap">
+                        {["IBR", "Chromadek"].map((clad) => (
+                          <button
+                            key={clad}
+                            type="button"
+                            className={`px-3 py-1 rounded border ${
+                              formData.cladding === clad ? "bg-blue-200 border-blue-500" : "bg-gray-100"
+                            }`}
+                            onClick={() => handleChange("cladding", formData.cladding === clad ? "" : clad)}
+                          >
+                            {clad}
+                          </button>
+                        ))}
+                        {["Supply Only", "Installed"].map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            className={`px-3 py-1 rounded border ${
+                              formData.installation === option ? "bg-blue-200 border-blue-500" : "bg-gray-100"
+                            }`}
+                            onClick={() => handleChange("installation", formData.installation === option ? "" : option)}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
 
+                      <textarea
+                        placeholder="Or enter custom request..."
+                        value={formData.estimate_request || ""}
+                        onChange={(e) => handleChange("estimate_request", e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                      />
+                    </div>
 
-  {/* Custom request textarea */}
-  <textarea
-    placeholder="Or enter custom request..."
-    value={formData.estimate_request || ""}
-    onChange={(e) => handleChange("estimate_request", e.target.value)}
-    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-  />
-</div>
-
-{/* Allocated To */}
-<div className="mt-4">
-  <label className="block text-sm font-medium text-gray-700 mb-2">Allocated To</label>
-  <div className="flex gap-2">
-    {["Stefan", "Niel", "Victor", "Marco"].map((member) => {
-      const colors = {
-        Stefan: "bg-red-200",
-        Niel: "bg-blue-200",
-        Victor: "bg-green-200",
-        Marco: "bg-yellow-200",
-      }
-      return (
-        <button
-          key={member}
-          type="button"
-          className={`px-3 py-1 rounded border font-medium ${
-            formData.allocated_to === member
-              ? `${colors[member]} border-gray-500`
-              : "bg-gray-100"
-          }`}
-          onClick={() => handleChange("allocated_to", formData.allocated_to === member ? "" : member)}
-        >
-          {member}
-        </button>
-      )
-    })}
-  </div>
-</div>
-
+                    {/* Allocated To */}
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Allocated To</label>
+                      <div className="flex gap-2 flex-wrap">
+                        {["Stefan", "Niel", "Victor", "Marco"].map((member) => {
+                          const colors = {
+                            Stefan: "bg-red-200",
+                            Niel: "bg-blue-200",
+                            Victor: "bg-green-200",
+                            Marco: "bg-yellow-200",
+                          }
+                          return (
+                            <button
+                              key={member}
+                              type="button"
+                              className={`px-3 py-1 rounded border font-medium ${
+                                formData.allocated_to === member
+                                  ? `${colors[member]} border-gray-500`
+                                  : "bg-gray-100"
+                              }`}
+                              onClick={() => handleChange("allocated_to", formData.allocated_to === member ? "" : member)}
+                            >
+                              {member}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Status</label>
@@ -280,7 +281,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete }) {
               </Tab.Group>
 
               {/* Footer */}
-              <div className="p-4 border-t flex justify-end gap-2">
+              <div className="p-4 border-t flex justify-end gap-2 sticky bottom-0 bg-white">
                 {!isNew && (
                   <button
                     onClick={() => onDelete(lead.id)}
