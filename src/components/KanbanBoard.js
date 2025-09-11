@@ -225,38 +225,56 @@ function KanbanCard({ lead, setEditingLead }) {
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
-      {...attributes}
-      className={`shadow rounded-lg mb-3 cursor-pointer hover:bg-gray-50 border break-words ${
+      className={`shadow rounded-lg mb-3 border break-words ${
         teamColors[lead.allocated_to] || "bg-white"
       } kanban-card`}
-      onClick={() => setIsOpen(!isOpen)}
-      onDoubleClick={() => setEditingLead(lead)}
     >
-      {/* Header: Name + Status */}
-      <div className="flex justify-between items-center p-3">
-        <p className="font-medium text-gray-800 text-sm sm:text-base">
-          {lead.name} {lead.last_name}
-        </p>
-        <p
-          className={`font-medium text-sm sm:text-base ${
-            statusColors[lead.status] || "text-gray-400"
-          }`}
+      {/* Header: Name + Status + Drag Handle */}
+      <div className="flex justify-between items-center p-3 cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation()
+          setIsOpen((o) => !o)
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation()
+          setEditingLead(lead)
+        }}
+      >
+        <div>
+          <p className="font-medium text-gray-800 text-sm sm:text-base">
+            {lead.name} {lead.last_name}
+          </p>
+          <p
+            className={`font-medium text-sm sm:text-base ${
+              statusColors[lead.status] || "text-gray-400"
+            }`}
+          >
+            {lead.status}
+          </p>
+        </div>
+
+        {/* Drag Handle */}
+        <div
+          className="cursor-grab text-gray-400 hover:text-gray-600"
+          {...listeners}
+          {...attributes}
         >
-          {lead.status}
-        </p>
+          ⠿
+        </div>
       </div>
 
-{/* Follow up */}
-<div className="text-xs text-gray-500 mt-1">
-  {lead.follow_up_at && (
-    <span>
-      Follow up by:{" "}
-      {new Date(lead.follow_up_at).toLocaleDateString()}
-    </span>
-  )}
-</div>
-
+      {/* Follow up */}
+      {lead.follow_up_at && (
+        <div
+          className={`text-xs mt-1 px-3 ${
+            new Date(lead.follow_up_at) < new Date()
+              ? "text-red-500 font-semibold"
+              : "text-gray-500"
+          }`}
+        >
+          Follow up by: {new Date(lead.follow_up_at).toLocaleDateString()}
+        </div>
+      )}
 
       {/* Subheader: Estimate Request */}
       <div className="px-3 pb-3 text-sm text-gray-600">{lead.estimate_request}</div>
@@ -281,3 +299,4 @@ function KanbanCard({ lead, setEditingLead }) {
     </div>
   )
 }
+
