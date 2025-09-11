@@ -150,26 +150,26 @@ export default function KanbanBoard() {
   <LeadEditorDrawer
     lead={editingLead}
     onClose={() => setEditingLead(null)}
-    onSave={async (updatedLead) => {
-      // ✅ Optimistically update UI first
-      setLeads((prev) =>
-        prev.map((l) => (l.id === updatedLead.id ? updatedLead : l))
-      )
+onSave={async (updatedLead) => {
+  // ✅ Ensure the full updated lead object is used
+  setLeads((prev) =>
+    prev.map((l) => (l.id === updatedLead.id ? { ...l, ...updatedLead } : l))
+  )
 
-      // Save to Supabase
-      const { error } = await supabase
-        .from("leads")
-        .update(updatedLead)
-        .eq("id", updatedLead.id)
+  // Save to Supabase
+  const { error } = await supabase
+    .from("leads")
+    .update(updatedLead)
+    .eq("id", updatedLead.id)
 
-      if (error) {
-        console.error("Error updating lead:", error)
-        // fallback: reload if save fails
-        fetchLeads()
-      }
+  if (error) {
+    console.error("Error updating lead:", error)
+    fetchLeads() // fallback if something breaks
+  }
 
-      setEditingLead(null)
-    }}
+  setEditingLead(null)
+}}
+
     onDelete={async (leadId) => {
       const { error } = await supabase.from("leads").delete().eq("id", leadId)
       if (!error) {
