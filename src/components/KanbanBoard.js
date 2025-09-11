@@ -151,18 +151,23 @@ export default function KanbanBoard() {
     lead={editingLead}
     onClose={() => setEditingLead(null)}
 onSave={async (updatedLead) => {
+  let leadToSave = { ...updatedLead }
+
+  // ✅ If lead is quoted, add follow_up_at (3 days from now)
+  if (updatedLead.status === "quoted") {
+    leadToSave.follow_up_at = new Date(
+      Date.now() + 3 * 24 * 60 * 60 * 1000
+    ).toISOString()
+  }
+
   setLeads((prev) =>
-    prev.map((l) =>
-      l.id === updatedLead.id
-        ? { ...l, ...updatedLead } // ✅ merge all props
-        : l
-    )
+    prev.map((l) => (l.id === leadToSave.id ? { ...l, ...leadToSave } : l))
   )
 
   const { error } = await supabase
     .from("leads")
-    .update(updatedLead)
-    .eq("id", updatedLead.id)
+    .update(leadToSave)
+    .eq("id", leadToSave.id)
 
   if (error) {
     console.error("Error updating lead:", error)
@@ -171,6 +176,7 @@ onSave={async (updatedLead) => {
 
   setEditingLead(null)
 }}
+
 
 
     onDelete={async (leadId) => {
