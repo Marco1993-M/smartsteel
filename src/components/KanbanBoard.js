@@ -151,12 +151,14 @@ export default function KanbanBoard() {
     lead={editingLead}
     onClose={() => setEditingLead(null)}
 onSave={async (updatedLead) => {
-  // ✅ Ensure the full updated lead object is used
   setLeads((prev) =>
-    prev.map((l) => (l.id === updatedLead.id ? { ...l, ...updatedLead } : l))
+    prev.map((l) =>
+      l.id === updatedLead.id
+        ? { ...l, ...updatedLead } // ✅ merge all props
+        : l
+    )
   )
 
-  // Save to Supabase
   const { error } = await supabase
     .from("leads")
     .update(updatedLead)
@@ -164,11 +166,12 @@ onSave={async (updatedLead) => {
 
   if (error) {
     console.error("Error updating lead:", error)
-    fetchLeads() // fallback if something breaks
+    fetchLeads()
   }
 
   setEditingLead(null)
 }}
+
 
     onDelete={async (leadId) => {
       const { error } = await supabase.from("leads").delete().eq("id", leadId)
