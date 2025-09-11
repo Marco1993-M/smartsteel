@@ -247,6 +247,17 @@ function KanbanCard({ lead, setEditingLead }) {
         </p>
       </div>
 
+{/* Follow up */}
+<div className="text-xs text-gray-500 mt-1">
+  {lead.follow_up_at && (
+    <span>
+      Follow up by:{" "}
+      {new Date(lead.follow_up_at).toLocaleDateString()}
+    </span>
+  )}
+</div>
+
+
       {/* Subheader: Estimate Request */}
       <div className="px-3 pb-3 text-sm text-gray-600">{lead.estimate_request}</div>
 
