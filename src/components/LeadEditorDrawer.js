@@ -58,26 +58,50 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
           >
             <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full max-w-lg h-full overflow-hidden">
 
-              {/* Header */}
-              <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
-                <div className="flex items-center gap-2">
-                  {/* Always show back button */}
-                  <button onClick={backHandler} className="p-2 rounded-full hover:bg-gray-100">
-                    <ArrowLeft size={20} />
-                  </button>
+             {/* Header */}
+<div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
+  <div className="flex items-center gap-2">
+    {/* Always show back button */}
+    <button onClick={backHandler} className="p-2 rounded-full hover:bg-gray-100">
+      <ArrowLeft size={20} />
+    </button>
 
-                  <Dialog.Title className="text-xl font-semibold">
-                    {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
-                  </Dialog.Title>
-                </div>
-                {!isNew && (
-                  <div className="flex gap-2">
-                    <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"><Phone size={18} /></button>
-                    <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"><Mail size={18} /></button>
-                    <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"><MessageSquare size={18} /></button>
-                  </div>
-                )}
-              </div>
+    <Dialog.Title className="text-xl font-semibold">
+      {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
+    </Dialog.Title>
+  </div>
+
+  {!isNew && (
+    <div className="flex gap-2">
+      {/* Phone */}
+      <a
+        href={`tel:${formData.phone}`}
+        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      >
+        <Phone size={18} />
+      </a>
+
+      {/* Email */}
+      <a
+        href={`mailto:${formData.email}`}
+        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      >
+        <Mail size={18} />
+      </a>
+
+      {/* WhatsApp */}
+      <a
+        href={`https://wa.me/${formData.phone?.replace(/\D/g, "")}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      >
+        <MessageSquare size={18} />
+      </a>
+    </div>
+  )}
+</div>
+
 
               {/* Scrollable Body */}
               <div className="flex-1 overflow-y-auto">
