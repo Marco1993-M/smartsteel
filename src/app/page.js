@@ -178,7 +178,7 @@ export default function Home() {
   href="https://wa.me/27828464555"
   target="_blank"
   rel="noopener noreferrer"
-  className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white border border-transparent transition-all duration-300 hover:bg-white hover:text-green-500 hover:border-green-500"
+  className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white border border-white transition-all duration-300 hover:bg-white hover:text-green-500 hover:border-green-500"
   title="Chat with us on WhatsApp"
 >
   {/* WhatsApp Icon SVG */}
