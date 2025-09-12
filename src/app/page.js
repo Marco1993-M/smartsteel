@@ -200,8 +200,8 @@ export default function Home() {
     {/* Stats Bar */}
     <div className="grid grid-cols-3 gap-6 text-white mt-32">
       <div className="text-center">
-        <p className="text-xl sm:text-2xl font-bold">1000+</p>
-        <p className="text-xs sm:text-sm">Clients Chose Lightweight Steel</p>
+        <p className="text-xl sm:text-2xl font-bold">10321+</p>
+        <p className="text-xs sm:text-sm">Lightweight Steel Meters Supplied</p>
       </div>
       <div className="text-center">
         <p className="text-xl sm:text-2xl font-bold">30%</p>
