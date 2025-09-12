@@ -264,17 +264,24 @@ function KanbanCard({ lead, setEditingLead }) {
       </div>
 
       {/* Follow up */}
-      {lead.follow_up_at && (
-        <div
-          className={`text-xs mt-1 px-3 ${
-            new Date(lead.follow_up_at) < new Date()
-              ? "text-red-500 font-semibold"
-              : "text-gray-500"
-          }`}
-        >
-          Follow up by: {new Date(lead.follow_up_at).toLocaleDateString()}
-        </div>
-      )}
+{lead.follow_up_at && (
+  <div
+    className={`text-xs mt-1 px-3 ${
+      new Date(lead.follow_up_at) <= new Date()
+        ? "text-red-500 font-semibold"
+        : "text-gray-500"
+    }`}
+  >
+    Follow up by:{" "}
+    <a
+      href={`mailto:${lead.email}?subject=Follow up on your request&body=Hi ${lead.name},%0D%0A%0D%0AI just wanted to follow up regarding your request for "${lead.estimate_request}".%0D%0A%0D%0ARegards,%0D%0A[Your Name]`}
+      className="underline text-blue-600 hover:text-blue-800"
+    >
+      {new Date(lead.follow_up_at).toLocaleDateString()}
+    </a>
+  </div>
+)}
+
 
       {/* Subheader: Estimate Request */}
       <div className="px-3 pb-3 text-sm text-gray-600">{lead.estimate_request}</div>
