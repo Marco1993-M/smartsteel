@@ -264,7 +264,7 @@ function KanbanCard({ lead, setEditingLead }) {
       </div>
 
 {/* Follow up */}
-{lead.follow_up_at && (
+{lead.follow_up_at && lead.email && (
   <div
     className={`text-xs mt-1 px-3 ${
       new Date(lead.follow_up_at) <= new Date()
@@ -274,13 +274,14 @@ function KanbanCard({ lead, setEditingLead }) {
   >
     Follow up by:{" "}
     <a
-      href={`mailto:info@smartsteel.co.za?subject=Follow up on ${lead.name}'s request&body=Hi ${lead.name},%0D%0A%0D%0AI just wanted to follow up regarding your request for "${lead.estimate_request}".%0D%0A%0D%0ARegards,%0D%0ASmart Steel Team`}
+      href={`mailto:${lead.email}?subject=Follow up on your request&body=Hi ${lead.name},%0D%0A%0D%0AI just wanted to follow up regarding your request for "${lead.estimate_request}".%0D%0A%0D%0ARegards,%0D%0ASmart Steel Team`}
       className="underline text-blue-600 hover:text-blue-800"
     >
       {new Date(lead.follow_up_at).toLocaleDateString()}
     </a>
   </div>
 )}
+
 
 
 
