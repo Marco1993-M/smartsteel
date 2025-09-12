@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import emailjs from '@emailjs/browser';
 import Head from 'next/head';
+import { supabase } from "../../../lib/supabase";
 
 const MATERIALS = {
   columns: { length: 3, rate: 467 },
@@ -15,7 +16,7 @@ const MATERIALS = {
   postBracket: 155,
   ridgeBracket: 155,
   screw: 0.8,
-  sheeting: {
+  cladding: {
     None: { supply: 0, installed: 0 },
     IBR: { supply: 225, installed: 450 },
     Chromadek: { supply: 350, installed: 450 },
@@ -43,8 +44,8 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 export default function EstimatorPage() {
   const [width, setWidth] = useState(8);
   const [length, setLength] = useState(10);
-  const [sheeting, setSheeting] = useState('None');
-  const [sheetingInstalled, setSheetingInstalled] = useState(false);
+  const [cladding, setCladding] = useState('None'); // ✅ renamed
+  const [claddingInstalled, setCladdingInstalled] = useState(false); // ✅ renamed
   const [distance, setDistance] = useState(0);
   const [usingMyLocation, setUsingMyLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
@@ -78,18 +79,16 @@ export default function EstimatorPage() {
   const costRidgeBrackets = totalRidgeBrackets * MATERIALS.ridgeBracket;
   const costScrews = totalScrews * MATERIALS.screw;
   const costTopHats = totalTopHatLengthSold * MATERIALS.topHats.rate;
-  const costSheetingSupply =
-    sheeting === 'IBR'
-      ? area * MATERIALS.sheeting.IBR.supply
-      : sheeting === 'Chromadek'
-      ? area * MATERIALS.sheeting.Chromadek.supply
+  const costCladdingSupply =
+    cladding === 'IBR'
+      ? area * MATERIALS.cladding.IBR.supply
+      : cladding === 'Chromadek'
+      ? area * MATERIALS.cladding.Chromadek.supply
       : 0;
 
-  // Minimum delivery cost R1350
   const deliveryCost = Math.max(distance * MATERIALS.deliveryRate, 1350);
-
   const installCostPerSqm = 200;
-  const costInstallation = sheetingInstalled ? area * installCostPerSqm : 0;
+  const costInstallation = claddingInstalled ? area * installCostPerSqm : 0;
 
   const totalCost =
     costColumns +
@@ -98,7 +97,7 @@ export default function EstimatorPage() {
     costRidgeBrackets +
     costScrews +
     costTopHats +
-    costSheetingSupply +
+    costCladdingSupply +
     costInstallation +
     deliveryCost;
 
@@ -117,55 +116,82 @@ export default function EstimatorPage() {
     setEstimate(finalEstimate);
   };
 
-const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!estimate) {
-    alert('Please calculate an estimate first.');
-    return;
-  }
+    if (!estimate) {
+      alert('Please calculate an estimate first.');
+      return;
+    }
 
-  if (!email.trim() || !phone.trim()) {
-    alert('Please enter a valid email and phone number.');
-    return;
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
 
-  setIsSending(true);
+    if (!phone.trim()) {
+      alert('Please enter a valid phone number.');
+      return;
+    }
 
-  const templateParams = {
-    name: name || 'N/A',
-    email: email || 'N/A',
-    phone_number: phone || 'N/A', // Ensure phone is always passed
-    width,
-    length,
-    sheeting,
-    sheeting_installed: sheetingInstalled ? 'Yes' : 'No',
-    delivery_distance: distance || 0,
-    estimate: `R${estimate.toLocaleString()}`,
-    time: new Date().toLocaleString(),
-    message: 'New shed estimate request submitted via website',
-  };
+    setIsSending(true);
 
-  emailjs
-    .send('service_h817nk1', 'template_rdp28qk', templateParams, 'JIPAN9YaQCPrkSgep')
-    .then(() => {
+    const templateParams = {
+      from_name: name,
+      from_email: email,
+      phone_number: phone,
+      estimate: `R${estimate.toLocaleString()}`,
+      width,
+      length,
+      cladding,
+      cladding_installed: claddingInstalled ? 'Yes' : 'No',
+      delivery_distance: distance,
+    };
+
+    try {
+      // 1. Send email via EmailJS
+      await emailjs.send(
+        'service_h817nk1',
+        'template_rdp28qk',
+        templateParams,
+        'JIPAN9YaQCPrkSgep'
+      );
+
+      // 2. Save lead to Supabase (with fallback last_name + cladding)
+      const { data, error } = await supabase.from('leads').insert([
+        {
+          name,
+          last_name: "Unknown", // ✅ fallback
+          email,
+          phone,
+          width,
+          length,
+          delivery_distance: distance,
+          status: 'new',
+          cladding, // ✅ matches DB column
+          estimate_request: `Warehouse ${width}m × ${length}m, ${cladding}`,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+
+      if (error) throw error;
+
       alert(`Thanks, ${name}! Your estimate of R${estimate.toLocaleString()} was submitted.`);
+
+      // reset
       setIsSending(false);
       setName('');
       setEmail('');
       setPhone('');
-      setEstimate(null);
       setUsingMyLocation(false);
-    })
-    .catch((error) => {
-      console.error('EmailJS error:', error);
+
+    } catch (error) {
       alert('Oops! Something went wrong, please try again later.');
+      console.error('Submission error:', error);
       setIsSending(false);
-    });
-};
-
-
-
+    }
+  };
 
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
@@ -219,13 +245,13 @@ const handleSubmit = (e) => {
       </Head>
 
       <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 p-6 font-sans flex flex-col items-center">
-       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 relative">
-  <div className="flex justify-center mb-4">
-    <img src="/Logo.png" alt="Smart Steel Logo" className="h-16 object-contain" />
-  </div>
-  <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
-    Smart Steel Warehouse Estimator
-  </h1>
+        <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 relative">
+          <div className="flex justify-center mb-4">
+            <img src="/Logo.png" alt="Smart Steel Logo" className="h-16 object-contain" />
+          </div>
+          <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
+            Smart Steel Warehouse Estimator
+          </h1>
           <h4 className="text-1xl font-regular mb-6 text-center text-gray-900">
             Lightweight Warehouse Structure
           </h4>
@@ -248,26 +274,25 @@ const handleSubmit = (e) => {
 
               <label className="block font-semibold text-gray-700">
                 Length (m)
-              <select
-  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-  value={length}
-  onChange={(e) => setLength(parseFloat(e.target.value))}
->
-  {Array.from({ length: 20 }, (_, i) => (i + 1) * 2.5).map((val) => (
-    <option key={val} value={val}>
-      {val} m
-    </option>
-  ))}
-</select>
-
+                <select
+                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                  value={length}
+                  onChange={(e) => setLength(parseFloat(e.target.value))}
+                >
+                  {Array.from({ length: 20 }, (_, i) => (i + 1) * 2.5).map((val) => (
+                    <option key={val} value={val}>
+                      {val} m
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label className="block font-semibold text-gray-700">
-                Sheeting
+                Cladding
                 <select
                   className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                  value={sheeting}
-                  onChange={(e) => setSheeting(e.target.value)}
+                  value={cladding}
+                  onChange={(e) => setCladding(e.target.value)}
                 >
                   <option value="None">None</option>
                   <option value="IBR">IBR</option>
@@ -278,8 +303,8 @@ const handleSubmit = (e) => {
               <label className="block font-semibold text-gray-700">
                 <input
                   type="checkbox"
-                  checked={sheetingInstalled}
-                  onChange={(e) => setSheetingInstalled(e.target.checked)}
+                  checked={claddingInstalled}
+                  onChange={(e) => setCladdingInstalled(e.target.checked)}
                   className="mr-2"
                 />
                 Include Installation for Structure
@@ -375,20 +400,19 @@ const handleSubmit = (e) => {
                 </label>
 
                 <label className="block text-gray-700 font-medium">
-  Phone Number
-  <input
-    type="tel"
-    required
-    pattern="^[0-9\-\+\s\(\)]{7,15}$"
-    className="mt-1 w-full rounded-md border border-gray-300 p-2 shadow-sm 
-               focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-    value={phone}
-    onChange={(e) => setPhone(e.target.value)}
-    placeholder="e.g. 082 123 4567"
-    disabled={isSending}
-  />
-</label>
-
+                  Phone Number
+                  <input
+                    type="tel"
+                    required
+                    pattern="^[0-9\\-\\+\\s\\(\\)]{7,15}$"
+                    className="mt-1 w-full rounded-md border border-gray-300 p-2 shadow-sm 
+                               focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. 082 123 4567"
+                    disabled={isSending}
+                  />
+                </label>
 
                 <button
                   type="submit"
@@ -398,13 +422,13 @@ const handleSubmit = (e) => {
                   {isSending ? 'Sending...' : 'Submit Estimate'}
                 </button>
 
-                                {/* Call Button */}
-    <a
-  href="tel:+27826576522"
-  className="w-full mt-2 inline-block text-center rounded bg-White py-2 text-Black font-semibold shadow hover:bg-gray-100 transition"
->
-  Call Instead
-</a>
+                {/* Call Button */}
+                <a
+                  href="tel:+27826576522"
+                  className="w-full mt-2 inline-block text-center rounded bg-white py-2 text-black font-semibold shadow hover:bg-gray-100 transition"
+                >
+                  Call Instead
+                </a>
               </form>
             )}
           </div>
