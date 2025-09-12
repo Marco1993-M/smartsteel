@@ -173,18 +173,20 @@ export default function Home() {
     Get Instant Estimate
   </a>
 
-  {/* Call Button */}
-  <a
-    href="tel:+27826576522"
-    className="flex items-center justify-center w-12 h-12 rounded-full bg-black text-white border border-transparent transition-all duration-300 hover:bg-white hover:text-black hover:border-black"
-    title="Call us"
-  >
-    {/* Phone Icon SVG */}
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
-</svg>
+{/* WhatsApp Button */}
+<a
+  href="https://wa.me/27828464555"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white border border-transparent transition-all duration-300 hover:bg-white hover:text-green-500 hover:border-green-500"
+  title="Chat with us on WhatsApp"
+>
+  {/* WhatsApp Icon SVG */}
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="size-6 fill-current">
+    <path d="M16 .396c-8.837 0-16 7.163-16 16 0 2.823.737 5.574 2.141 7.998L0 32l7.792-2.098A15.9 15.9 0 0 0 16 32c8.837 0 16-7.163 16-16s-7.163-15.604-16-15.604zm0 29.205a13.15 13.15 0 0 1-6.69-1.822l-.48-.283-4.633 1.248 1.24-4.518-.312-.495A13.123 13.123 0 0 1 2.875 16c0-7.244 5.881-13.125 13.125-13.125S29.125 8.756 29.125 16 23.244 29.6 16 29.6zm7.194-9.727c-.393-.197-2.326-1.151-2.686-1.283-.36-.132-.623-.197-.886.197s-1.017 1.283-1.248 1.546c-.229.262-.459.295-.852.098-.393-.197-1.66-.611-3.162-1.947-1.168-1.041-1.954-2.326-2.184-2.72-.229-.393-.025-.606.172-.803.177-.176.393-.459.59-.688.197-.229.262-.393.393-.656.131-.262.066-.492-.033-.689-.098-.197-.886-2.142-1.214-2.935-.32-.769-.646-.663-.886-.674l-.754-.014c-.229 0-.6.086-.916.418s-1.2 1.171-1.2 2.854c0 1.683 1.229 3.309 1.4 3.536.172.229 2.416 3.686 5.854 5.165.818.353 1.455.564 1.953.722.821.262 1.568.225 2.16.137.659-.098 2.326-.951 2.654-1.87.328-.918.328-1.705.229-1.87-.098-.164-.36-.262-.754-.459z"/>
+  </svg>
+</a>
 
-  </a>
 </div>
 
 
