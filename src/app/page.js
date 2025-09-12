@@ -146,7 +146,7 @@ export default function Home() {
 
     {/* Supporting Subheading */}
     <p className="text-base sm:text-lg md:text-xl mb-8 text-black max-w-2xl mx-auto">
-      Faster to build, more affordable than hot-rolled steel, and built to last.
+      Build Smarter, Faster Warehouses with Lightweight Steel
     </p>
 
 <div className="flex items-center gap-4">
@@ -201,15 +201,15 @@ export default function Home() {
     {/* Stats Bar */}
     <div className="grid grid-cols-3 gap-6 text-white mt-32">
       <div className="text-center">
-        <p className="text-xl sm:text-2xl font-bold">10321+</p>
+        <p className="text-xl sm:text-2xl font-bold">📈 10321+</p>
         <p className="text-xs sm:text-sm">Lightweight Steel Meters Supplied</p>
       </div>
       <div className="text-center">
-        <p className="text-xl sm:text-2xl font-bold">30%</p>
+        <p className="text-xl sm:text-2xl font-bold">💰 30%</p>
         <p className="text-xs sm:text-sm">Avg. Cost Savings</p>
       </div>
       <div className="text-center">
-        <p className="text-xl sm:text-2xl font-bold">50%</p>
+        <p className="text-xl sm:text-2xl font-bold">⏱️ 50%</p>
         <p className="text-xs sm:text-sm">Faster Build Time</p>
       </div>
     </div>
