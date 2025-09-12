@@ -5,6 +5,15 @@ import emailjs from '@emailjs/browser';
 import Head from 'next/head';
 import { supabase } from "../../../lib/supabase";
 
+let lastAllocatedIndex = 0;
+const team = ['Stefan', 'Niel', 'Marco'];
+
+const getNextAllocation = () => {
+  const allocatedTo = team[lastAllocatedIndex % team.length];
+  lastAllocatedIndex++;
+  return allocatedTo;
+};
+
 const MATERIALS = {
   columns: { length: 3, rate: 467 },
   trusses: {
@@ -159,6 +168,8 @@ export default function EstimatorPage() {
       );
 
       // 2. Save lead to Supabase (with fallback last_name + cladding)
+
+      const allocatedTo = getNextAllocation();
       const { data, error } = await supabase.from('leads').insert([
         {
           name,
@@ -168,6 +179,7 @@ export default function EstimatorPage() {
           width,
           length,
           delivery_distance: distance,
+          allocated_to: allocatedTo,
           status: 'new',
           cladding, // ✅ matches DB column
           estimate_request: `Warehouse ${width}m × ${length}m, ${cladding}`,
