@@ -35,12 +35,38 @@ export default function KanbanBoard() {
     if (!error) setLeads(data)
   }
 
-  const updateLeadStatus = async (id, newStatus) => {
-    setLeads((prev) =>
-      prev.map((lead) => (lead.id === id ? { ...lead, status: newStatus } : lead))
-    )
-    await supabase.from("leads").update({ status: newStatus }).eq("id", id)
+const updateLeadStatus = async (id, newStatus) => {
+  const updates = {
+    status: newStatus,
+    last_activity_at: new Date().toISOString(),
+  };
+
+  if (newStatus === "quoted") {
+    updates.follow_up_count = supabase
+      .from("leads")
+      .select("follow_up_count")
+      .eq("id", id)
+      .single()
+      .then(({ data }) => (data?.follow_up_count || 0) + 1);
+
+    updates.follow_up_at = new Date(
+      Date.now() + (updates.follow_up_count === 1 ? 3 : 7) * 24 * 60 * 60 * 1000
+    ).toISOString();
   }
+
+  // Lost → ask reason
+  if (newStatus === "lost") {
+    const reason = prompt("Reason for losing this lead? (e.g., budget, timing, competitor)");
+    updates.lost_reason = reason || "unspecified";
+  }
+
+  setLeads((prev) =>
+    prev.map((lead) => (lead.id === id ? { ...lead, ...updates } : lead))
+  );
+
+  await supabase.from("leads").update(updates).eq("id", id);
+};
+
 
   const scrollToColumn = (id) => {
     const el = document.getElementById(id)
@@ -151,31 +177,30 @@ export default function KanbanBoard() {
     lead={editingLead}
     onClose={() => setEditingLead(null)}
 onSave={async (updatedLead) => {
-  let leadToSave = { ...updatedLead }
+  let leadToSave = { ...updatedLead, last_activity_at: new Date().toISOString() };
 
-  // ✅ If lead is quoted, add follow_up_at (3 days from now)
   if (updatedLead.status === "quoted") {
+    const nextFollowUpDays = (updatedLead.follow_up_count || 0) === 0 ? 3 : 7;
     leadToSave.follow_up_at = new Date(
-      Date.now() + 3 * 24 * 60 * 60 * 1000
-    ).toISOString()
+      Date.now() + nextFollowUpDays * 24 * 60 * 60 * 1000
+    ).toISOString();
+    leadToSave.follow_up_count = (updatedLead.follow_up_count || 0) + 1;
   }
 
   setLeads((prev) =>
     prev.map((l) => (l.id === leadToSave.id ? { ...l, ...leadToSave } : l))
-  )
+  );
 
-  const { error } = await supabase
-    .from("leads")
-    .update(leadToSave)
-    .eq("id", leadToSave.id)
+  const { error } = await supabase.from("leads").update(leadToSave).eq("id", leadToSave.id);
 
   if (error) {
-    console.error("Error updating lead:", error)
-    fetchLeads()
+    console.error("Error updating lead:", error);
+    fetchLeads();
   }
 
-  setEditingLead(null)
+  setEditingLead(null);
 }}
+
 
 
 
@@ -221,6 +246,23 @@ function KanbanCard({ lead, setEditingLead }) {
     ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
     : undefined
 
+  // Helper: format "time since"
+  const timeSince = (date) => {
+    if (!date) return "No activity yet"
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000)
+    let interval = Math.floor(seconds / 31536000)
+    if (interval > 1) return `${interval} years ago`
+    interval = Math.floor(seconds / 2592000)
+    if (interval > 1) return `${interval} months ago`
+    interval = Math.floor(seconds / 86400)
+    if (interval > 1) return `${interval} days ago`
+    interval = Math.floor(seconds / 3600)
+    if (interval > 1) return `${interval} hours ago`
+    interval = Math.floor(seconds / 60)
+    if (interval > 1) return `${interval} minutes ago`
+    return "Just now"
+  }
+
   return (
     <div
       ref={setNodeRef}
@@ -230,7 +272,8 @@ function KanbanCard({ lead, setEditingLead }) {
       } kanban-card`}
     >
       {/* Header: Name + Status + Drag Handle */}
-      <div className="flex justify-between items-center p-3 cursor-pointer"
+      <div
+        className="flex justify-between items-center p-3 cursor-pointer"
         onClick={(e) => {
           e.stopPropagation()
           setIsOpen((o) => !o)
@@ -263,30 +306,63 @@ function KanbanCard({ lead, setEditingLead }) {
         </div>
       </div>
 
-{/* Follow up */}
-{lead.follow_up_at && lead.email && (
-  <div
-    className={`text-xs mt-1 px-3 ${
-      new Date(lead.follow_up_at) <= new Date()
-        ? "text-red-500 font-semibold"
-        : "text-gray-500"
-    }`}
-  >
-    Follow up by:{" "}
-    <a
-      href={`mailto:${lead.email}?subject=Follow up on your request&body=Hi ${lead.name},%0D%0A%0D%0AI just wanted to follow up regarding your request for "${lead.estimate_request}".%0D%0A%0D%0ARegards,%0D%0ASmart Steel Team`}
-      className="underline text-blue-600 hover:text-blue-800"
-    >
-      {new Date(lead.follow_up_at).toLocaleDateString()}
-    </a>
-  </div>
-)}
+      {/* Follow up */}
+      {lead.follow_up_at && lead.email && (
+        <div
+          className={`text-xs mt-1 px-3 ${
+            new Date(lead.follow_up_at) <= new Date()
+              ? "text-red-500 font-semibold"
+              : "text-gray-500"
+          }`}
+        >
+          Follow up by:{" "}
+          <a
+            href={`mailto:${lead.email}?subject=Follow up on your request&body=Hi ${lead.name},%0D%0A%0D%0AI just wanted to follow up regarding your request for "${lead.estimate_request}".%0D%0A%0D%0ARegards,%0D%0ASmart Steel Team`}
+            className="underline text-blue-600 hover:text-blue-800"
+          >
+            {new Date(lead.follow_up_at).toLocaleDateString()}
+          </a>
+        </div>
+      )}
 
-
-
+      {/* 3. Time since last activity */}
+      {lead.last_activity_at && (
+        <div className="text-xs text-gray-400 px-3 mt-1">
+          Last activity: {timeSince(lead.last_activity_at)}
+        </div>
+      )}
 
       {/* Subheader: Estimate Request */}
-      <div className="px-3 pb-3 text-sm text-gray-600">{lead.estimate_request}</div>
+      <div className="px-3 pb-3 text-sm text-gray-600">
+        {lead.estimate_request}
+      </div>
+
+  {/* 4. Quick Actions */}
+<div className="flex gap-2 px-3 pb-2 pt-2 border-t">
+  {lead.email && (
+    <a
+      href={`mailto:${lead.email}?subject=Quick update&body=Hi ${lead.name},`}
+      className="text-xs px-2 py-1 rounded-md bg-white text-blue-700 hover:bg-blue-200 transition"
+    >
+      Email
+    </a>
+  )}
+  {lead.phone && (
+    <a
+      href={`tel:${lead.phone}`}
+      className="text-xs px-2 py-1 rounded-md bg-white text-green-700 hover:bg-green-200 transition"
+    >
+      Call
+    </a>
+  )}
+  <button
+    onClick={() => setEditingLead(lead)}
+    className="text-xs px-2 py-1 rounded-md bg-white text-gray-700 hover:bg-gray-200 transition"
+  >
+    Edit
+  </button>
+</div>
+
 
       {/* Collapsible Details */}
       {isOpen && (
@@ -308,4 +384,3 @@ function KanbanCard({ lead, setEditingLead }) {
     </div>
   )
 }
-
