@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { supabase } from "../lib/supabase"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
 import LeadEditorDrawer from "./LeadEditorDrawer"
+import { Mail, Phone, Edit3 } from "lucide-react"
+
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
 
@@ -338,13 +340,13 @@ function KanbanCard({ lead, setEditingLead }) {
       </div>
 
 {/* 4. Quick Actions */}
-<div className="flex gap-2 px-3 pb-2 pt-2 border-t">
+<div className="flex gap-2 px-3 pb-2 pt-2 bg-black/20 rounded-b-md border-t shadow-sm">
   {lead.email && (
     <a
       href={`mailto:${lead.email}?subject=Quick update&body=Hi ${lead.name},`}
       className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
     >
-      📧 Email
+      <Mail size={14} /> Email
     </a>
   )}
   {lead.phone && (
@@ -352,16 +354,19 @@ function KanbanCard({ lead, setEditingLead }) {
       href={`tel:${lead.phone}`}
       className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-green-100 text-green-700 hover:bg-green-200 transition"
     >
-      📞 Call
+      <Phone size={14} /> Call
     </a>
   )}
   <button
     onClick={() => setEditingLead(lead)}
     className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
   >
-    ✏️ Edit
+    <Edit3 size={14} /> Edit
   </button>
 </div>
+
+
+
 
 
       {/* Collapsible Details */}
