@@ -357,7 +357,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   />
 
   {/* Notes list */}
-  <div className="space-y-2 w-full">
+  <div className="flex flex-col flex-1 min-h-full space-y-4">
     {notes.map((note, i) => (
       <div
         key={note.id}
