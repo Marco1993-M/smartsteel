@@ -54,7 +54,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full max-w-[450px] h-full sm:w-[450px] sm:max-w-[450px] overflow-hidden">
+            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full max-w-[450px] h-full overflow-hidden sm:w-full md:max-w-[450px]">
               {/* Header */}
               <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
                 <div className="flex items-center gap-3">
