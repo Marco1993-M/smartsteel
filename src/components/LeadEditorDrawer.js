@@ -120,7 +120,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     ))}
                   </Tab.List>
 
-                  <Tab.Panels className="p-6 space-y-4">
+                  <Tab.Panels className="p-6 space-y-4 w-full">
                     {/* Details Panel */}
                     <Tab.Panel className="space-y-4">
                       <div>
@@ -306,7 +306,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
 {/* Notes Panel */}
 <Tab.Panel>
-  <div className="space-y-4">
+  <div className="space-y-4 w-full">
     {/* Add new note */}
     <textarea
       placeholder={lead?.id ? "Add a note..." : "Save the lead first to add notes"}
@@ -351,13 +351,13 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     />
 
     {/* Notes list */}
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       {notes.map((note, i) => (
         <div
           key={note.id}
           className="p-2 border rounded-md bg-gray-50 flex justify-between items-start"
         >
-          <div className="flex-1">
+          <div className="flex-1 w-full">
             {note.isEditing ? (
               <textarea
                 value={note.text}
