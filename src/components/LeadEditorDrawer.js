@@ -3,6 +3,7 @@
 import { useState, useEffect, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
 import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft } from "lucide-react"
+import { supabase } from "../lib/supabase" 
 
 export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack }) {
   const isNew = !lead?.id
@@ -37,9 +38,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   }, [lead])
 
   const handleChange = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }))
-  const handleAddNote = (note) => setNotes((prev) => [{ text: note, date: new Date() }, ...prev])
-
-  // Use onBack if provided, otherwise fallback to onClose
   const backHandler = onBack || onClose
 
   return (
@@ -48,7 +46,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <div className="fixed inset-0 flex justify-end">
           <Transition.Child
-            as={Fragment}
+            as="div"
             enter="transform transition ease-in-out duration-300"
             enterFrom="translate-x-full"
             enterTo="translate-x-0"
@@ -56,52 +54,53 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full max-w-lg h-full overflow-hidden">
-
-             {/* Header */}
-<div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
-  <div className="flex items-center gap-2">
-    {/* Always show back button */}
-    <button onClick={backHandler} className="p-2 rounded-full hover:bg-gray-100">
-      <ArrowLeft size={20} />
-    </button>
-
-    <Dialog.Title className="text-xl font-semibold">
-      {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
-    </Dialog.Title>
-  </div>
-
-  {!isNew && (
-    <div className="flex gap-2">
-      {/* Phone */}
-      <a
-        href={`tel:${formData.phone}`}
-        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-      >
-        <Phone size={18} />
-      </a>
-
-      {/* Email */}
-      <a
-        href={`mailto:${formData.email}`}
-        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-      >
-        <Mail size={18} />
-      </a>
-
-      {/* WhatsApp */}
-      <a
-        href={`https://wa.me/${formData.phone?.replace(/\D/g, "")}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-      >
-        <MessageSquare size={18} />
-      </a>
-    </div>
-  )}
-</div>
-
+            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-[450px] max-w-[450px] h-full overflow-hidden">
+              {/* Header */}
+              <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
+                <div className="flex items-center gap-3">
+                  <button onClick={backHandler} className="p-2 rounded-full hover:bg-gray-100">
+                    <ArrowLeft size={20} />
+                  </button>
+                  <Dialog.Title className="flex items-center gap-2 text-xl font-semibold truncate">
+                    {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
+                    {!isNew && (
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${
+                          formData.status === "Won"
+                            ? "bg-green-100 text-green-800"
+                            : formData.status === "Lost"
+                            ? "bg-red-100 text-red-800"
+                            : formData.status === "Quoted"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : formData.status === "Contacted"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {formData.status || "New"}
+                      </span>
+                    )}
+                  </Dialog.Title>
+                </div>
+                {!isNew && (
+                  <div className="flex gap-2">
+                    <a href={`tel:${formData.phone}`} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                      <Phone size={18} />
+                    </a>
+                    <a href={`mailto:${formData.email}`} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                      <Mail size={18} />
+                    </a>
+                    <a
+                      href={`https://wa.me/${formData.phone?.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+                    >
+                      <MessageSquare size={18} />
+                    </a>
+                  </div>
+                )}
+              </div>
 
               {/* Scrollable Body */}
               <div className="flex-1 overflow-y-auto">
@@ -124,7 +123,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                   <Tab.Panels className="p-6 space-y-4">
                     {/* Details Panel */}
                     <Tab.Panel className="space-y-4">
-                      {/* Name */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700">First & Last Name</label>
                         <input
@@ -135,7 +133,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                         />
                       </div>
 
-                      {/* Email */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
                         <input
@@ -146,7 +143,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                         />
                       </div>
 
-                      {/* Phone */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Phone</label>
                         <input
@@ -157,7 +153,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                         />
                       </div>
 
-                      {/* Warehouse Size & Cladding */}
                       <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse Size</label>
                         <div className="flex gap-2 mb-2 flex-wrap">
@@ -214,14 +209,57 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                         </div>
 
                         <textarea
-                          placeholder="Or enter custom request..."
+                          placeholder="Custom request & notes..."
                           value={formData.estimate_request || ""}
                           onChange={(e) => handleChange("estimate_request", e.target.value)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          className="mt-3 block w-full text-gray-400 rounded-md border-gray-300 shadow-sm"
                         />
                       </div>
 
-                      {/* Allocated To */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="date"
+                            value={formData.follow_up_at ? new Date(formData.follow_up_at).toISOString().split("T")[0] : ""}
+                            onChange={(e) =>
+                              handleChange(
+                                "follow_up_at",
+                                e.target.value ? new Date(e.target.value).toISOString() : null
+                              )
+                            }
+                            className="block rounded-md border-gray-300 shadow-sm"
+                          />
+                          <div className="flex gap-1">
+                            {[
+                              { label: "Today", offset: 0 },
+                              { label: "+1 Day", offset: 1 },
+                              { label: "+1 Week", offset: 7 },
+                            ].map(({ label, offset }) => (
+                              <button
+                                key={label}
+                                type="button"
+                                onClick={() => {
+                                  const d = new Date()
+                                  d.setDate(d.getDate() + offset)
+                                  handleChange("follow_up_at", d.toISOString())
+                                }}
+                                className="px-2 py-1 text-xs rounded border bg-gray-100 hover:bg-gray-200"
+                              >
+                                {label}
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => handleChange("follow_up_at", null)}
+                              className="px-2 py-1 text-xs rounded border bg-red-100 text-red-700 hover:bg-red-200"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Allocated To</label>
                         <div className="flex gap-2 flex-wrap">
@@ -250,7 +288,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                         </div>
                       </div>
 
-                      {/* Status */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Status</label>
                         <select
@@ -258,68 +295,158 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                           onChange={(e) => handleChange("status", e.target.value)}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                         >
-                          <option>new</option>
-                          <option>contacted</option>
-                          <option>quoted</option>
-                          <option>won</option>
-                          <option>lost</option>
+                          <option>New</option>
+                          <option>Contacted</option>
+                          <option>Quoted</option>
+                          <option>Won</option>
+                          <option>Lost</option>
                         </select>
                       </div>
                     </Tab.Panel>
 
-                    {/* Notes Panel */}
-                    <Tab.Panel>
-                      <div className="space-y-4">
-                        <textarea
-                          placeholder="Add a note..."
-                          className="w-full rounded-md border-gray-300 shadow-sm"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault()
-                              if (e.target.value.trim()) {
-                                handleAddNote(e.target.value)
-                                e.target.value = ""
-                              }
-                            }
-                          }}
-                        />
-                        <div className="space-y-2">
-                          {notes.map((n, i) => (
-                            <div key={i} className="p-2 border rounded-md bg-gray-50">
-                              <p className="text-sm">{n.text || n}</p>
-                              {n.date && <span className="text-xs text-gray-400">{new Date(n.date).toLocaleString()}</span>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </Tab.Panel>
+{/* Notes Panel */}
+<Tab.Panel>
+  <div className="space-y-4">
+    {/* Add new note */}
+    <textarea
+      placeholder={lead?.id ? "Add a note..." : "Save the lead first to add notes"}
+      disabled={!lead?.id}
+      className="w-full rounded-md border-gray-300 shadow-sm"
+      onKeyDown={async (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault()
+          const text = e.target.value.trim()
+          if (!text) return
+
+          if (!lead?.id) {
+            alert("Please save the lead before adding notes")
+            return
+          }
+
+          // Optimistic UI update
+          const tempId = Math.random()
+          setNotes((prev) => [{ id: tempId, text, created_at: new Date() }, ...prev])
+          e.target.value = ""
+
+          // Save to Supabase
+          const { data, error } = await supabase
+            .from("lead_notes")
+            .insert([{ lead_id: lead.id, text }])
+            .select()
+
+          if (error) {
+            console.error("Error adding note:", error)
+            // Rollback UI update
+            setNotes((prev) => prev.filter((n) => n.id !== tempId))
+          } else {
+            // Replace temp ID with real ID from Supabase
+            setNotes((prev) =>
+              prev.map((n) =>
+                n.id === tempId ? { ...n, id: data[0].id, created_at: data[0].created_at } : n
+              )
+            )
+          }
+        }
+      }}
+    />
+
+    {/* Notes list */}
+    <div className="space-y-2">
+      {notes.map((note, i) => (
+        <div
+          key={note.id}
+          className="p-2 border rounded-md bg-gray-50 flex justify-between items-start"
+        >
+          <div className="flex-1">
+            {note.isEditing ? (
+              <textarea
+                value={note.text}
+                onChange={(e) => {
+                  const updatedText = e.target.value
+                  setNotes((prev) =>
+                    prev.map((n, idx) => (idx === i ? { ...n, text: updatedText } : n))
+                  )
+                }}
+                onBlur={async () => {
+                  setNotes((prev) =>
+                    prev.map((n, idx) => (idx === i ? { ...n, isEditing: false } : n))
+                  )
+                  if (note.id) {
+                    const { error } = await supabase
+                      .from("lead_notes")
+                      .update({ text: note.text })
+                      .eq("id", note.id)
+                    if (error) console.error("Error updating note:", error)
+                  }
+                }}
+                className="w-full rounded-md border-gray-300 shadow-sm"
+              />
+            ) : (
+              <p
+                className="text-sm cursor-pointer"
+                onClick={() =>
+                  setNotes((prev) =>
+                    prev.map((n, idx) => (idx === i ? { ...n, isEditing: true } : n))
+                  )
+                }
+              >
+                {note.text}
+              </p>
+            )}
+            {note.created_at && (
+              <span className="text-xs text-gray-400">
+                {new Date(note.created_at).toLocaleString()}
+              </span>
+            )}
+          </div>
+
+          {/* Delete button */}
+          <button
+            onClick={async () => {
+              setNotes((prev) => prev.filter((_, idx) => idx !== i))
+              if (note.id) {
+                const { error } = await supabase.from("lead_notes").delete().eq("id", note.id)
+                if (error) console.error("Error deleting note:", error)
+              }
+            }}
+            className="ml-2 text-red-600 hover:text-red-800"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+</Tab.Panel>
+
 
                     {/* Activity Panel */}
                     <Tab.Panel>
-                      <p className="text-sm text-gray-500">No activity yet. Calls, emails, and updates will appear here.</p>
+                      <p className="text-sm text-gray-500">
+                        No activity yet. Calls, emails, and updates will appear here.
+                      </p>
                     </Tab.Panel>
                   </Tab.Panels>
+
+                  {/* Footer */}
+                  <div className="p-4 border-t flex justify-end gap-2 sticky bottom-0 bg-white z-10">
+                    {!isNew && (
+                      <button
+                        onClick={() => onDelete(lead.id)}
+                        className="flex items-center gap-1 text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 size={16} /> Delete
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onSave(formData)}
+                      className="flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                      <Save size={16} /> {isNew ? "Add Lead" : "Save"}
+                    </button>
+                  </div>
                 </Tab.Group>
               </div>
-
-              {/* Footer */}
-              <div className="p-4 border-t flex justify-end gap-2 sticky bottom-0 bg-white z-10">
-                {!isNew && (
-                  <button
-                    onClick={() => onDelete(lead.id)}
-                    className="flex items-center gap-1 text-red-600 hover:text-red-800"
-                  >
-                    <Trash2 size={16} /> Delete
-                  </button>
-                )}
-                <button
-                  onClick={() => onSave(formData)}
-                  className="flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  <Save size={16} /> {isNew ? "Add Lead" : "Save"}
-                </button>
-              </div>
-
             </Dialog.Panel>
           </Transition.Child>
         </div>
