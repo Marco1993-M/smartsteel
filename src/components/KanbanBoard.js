@@ -337,29 +337,29 @@ function KanbanCard({ lead, setEditingLead }) {
         {lead.estimate_request}
       </div>
 
-  {/* 4. Quick Actions */}
+{/* 4. Quick Actions */}
 <div className="flex gap-2 px-3 pb-2 pt-2 border-t">
   {lead.email && (
     <a
       href={`mailto:${lead.email}?subject=Quick update&body=Hi ${lead.name},`}
-      className="text-xs px-2 py-1 rounded-md bg-white text-blue-700 hover:bg-blue-200 transition"
+      className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
     >
-      Email
+      📧 Email
     </a>
   )}
   {lead.phone && (
     <a
       href={`tel:${lead.phone}`}
-      className="text-xs px-2 py-1 rounded-md bg-white text-green-700 hover:bg-green-200 transition"
+      className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-green-100 text-green-700 hover:bg-green-200 transition"
     >
-      Call
+      📞 Call
     </a>
   )}
   <button
     onClick={() => setEditingLead(lead)}
-    className="text-xs px-2 py-1 rounded-md bg-white text-gray-700 hover:bg-gray-200 transition"
+    className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
   >
-    Edit
+    ✏️ Edit
   </button>
 </div>
 
