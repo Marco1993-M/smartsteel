@@ -55,52 +55,60 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             leaveTo="translate-x-full"
           >
             <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full max-w-[450px] h-full overflow-hidden sm:w-full md:max-w-[450px]">
-              {/* Header */}
-              <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
-                <div className="flex items-center gap-3">
-                  <button onClick={backHandler} className="p-2 rounded-full hover:bg-gray-100">
-                    <ArrowLeft size={20} />
-                  </button>
-                  <Dialog.Title className="flex items-center gap-2 text-xl font-semibold truncate">
-                    {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
-                    {!isNew && (
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${
-                          formData.status === "Won"
-                            ? "bg-green-100 text-green-800"
-                            : formData.status === "Lost"
-                            ? "bg-red-100 text-red-800"
-                            : formData.status === "Quoted"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : formData.status === "Contacted"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {formData.status || "New"}
-                      </span>
-                    )}
-                  </Dialog.Title>
-                </div>
-                {!isNew && (
-                  <div className="flex gap-2">
-                    <a href={`tel:${formData.phone}`} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-                      <Phone size={18} />
-                    </a>
-                    <a href={`mailto:${formData.email}`} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-                      <Mail size={18} />
-                    </a>
-                    <a
-                      href={`https://wa.me/${formData.phone?.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-                    >
-                      <MessageSquare size={18} />
-                    </a>
-                  </div>
-                )}
-              </div>
+        {/* Header */}
+<div className="px-6 py-4 border-b flex flex-col sm:flex-row sm:items-center justify-between sticky top-0 bg-white z-10 gap-2">
+  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+    {/* Back Button */}
+    <button onClick={backHandler} className="p-2 rounded-full hover:bg-gray-100">
+      <ArrowLeft size={20} />
+    </button>
+
+    {/* Lead Name + Status */}
+    <Dialog.Title className="flex flex-wrap items-center gap-2 text-xl font-semibold truncate">
+      {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
+
+      {/* Status Badge */}
+      {!isNew && (
+        <span
+          className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${
+            formData.status === "Won"
+              ? "bg-green-100 text-green-800"
+              : formData.status === "Lost"
+              ? "bg-red-100 text-red-800"
+              : formData.status === "Quoted"
+              ? "bg-yellow-100 text-yellow-800"
+              : formData.status === "Contacted"
+              ? "bg-blue-100 text-blue-800"
+              : "bg-gray-100 text-gray-700"
+          }`}
+        >
+          {formData.status || "New"}
+        </span>
+      )}
+    </Dialog.Title>
+  </div>
+
+  {/* Action Buttons */}
+  {!isNew && (
+    <div className="flex gap-2 mt-2 sm:mt-0 flex-wrap sm:flex-nowrap">
+      <a href={`tel:${formData.phone}`} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+        <Phone size={18} />
+      </a>
+      <a href={`mailto:${formData.email}`} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+        <Mail size={18} />
+      </a>
+      <a
+        href={`https://wa.me/${formData.phone?.replace(/\D/g, "")}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      >
+        <MessageSquare size={18} />
+      </a>
+    </div>
+  )}
+</div>
+
 
               {/* Scrollable Body */}
               <div className="flex-1 overflow-y-auto">
