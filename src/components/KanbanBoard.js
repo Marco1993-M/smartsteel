@@ -344,6 +344,19 @@ function KanbanCard({ lead, setEditingLead }) {
   {lead.email && (
     <a
       href={`mailto:${lead.email}?subject=Quick update&body=Hi ${lead.name},`}
+      onClick={async (e) => {
+        e.preventDefault(); // prevent default so we can insert activity first
+        await supabase.from("lead_activities").insert([
+          {
+            lead_id: lead.id,
+            type: "email",
+            user_name: "System", // replace with logged-in user if you have auth
+            description: `Sent email to ${lead.name}`,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+        window.location.href = `mailto:${lead.email}?subject=Quick update&body=Hi ${lead.name},`;
+      }}
       className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
     >
       <Mail size={14} /> Email
@@ -352,6 +365,19 @@ function KanbanCard({ lead, setEditingLead }) {
   {lead.phone && (
     <a
       href={`tel:${lead.phone}`}
+      onClick={async (e) => {
+        e.preventDefault();
+        await supabase.from("lead_activities").insert([
+          {
+            lead_id: lead.id,
+            type: "call",
+            user_name: "System",
+            description: `Called ${lead.name}`,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+        window.location.href = `tel:${lead.phone}`;
+      }}
       className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-green-100 text-green-700 hover:bg-green-200 transition"
     >
       <Phone size={14} /> Call
