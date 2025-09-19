@@ -4,9 +4,32 @@ import { useState, useEffect, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
 import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft } from "lucide-react"
 import { supabase } from "../lib/supabase" 
+import { format, isToday, isYesterday } from "date-fns";
+
+// Pure function: only groups activities by date
+function groupActivities(activities) {
+  const groups = {};
+  activities.forEach((activity) => {
+    const date = new Date(activity.timestamp);
+
+    let label;
+    if (isToday(date)) label = "Today";
+    else if (isYesterday(date)) label = "Yesterday";
+    else label = format(date, "MMMM d, yyyy");
+
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(activity);
+  });
+
+  return Object.entries(groups).map(([dateLabel, items]) => ({ dateLabel, items }));
+}
 
 export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack }) {
-  const isNew = !lead?.id
+  const isNew = !lead?.id;
+  const backHandler = onBack || onClose;
+
+  const [activities, setActivities] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -18,10 +41,85 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     allocated_to: "",
     notes: "",
     ...lead
-  })
+  });
 
-  const [notes, setNotes] = useState(lead?.notes ? [lead.notes] : [])
+  const [notes, setNotes] = useState(lead?.notes ? [lead.notes] : []);
 
+  // Fetch notes and activities from Supabase
+  useEffect(() => {
+    if (!lead?.id) return;
+
+    const fetchActivities = async () => {
+      setLoadingActivities(true);
+      try {
+        const { data: notesData, error: notesError } = await supabase
+          .from("lead_notes")
+          .select("id, text, created_at")
+          .eq("lead_id", lead.id)
+          .order("created_at", { ascending: false });
+
+        if (notesError) throw notesError;
+
+        const { data: activitiesData, error: activitiesError } = await supabase
+          .from("lead_activities")
+          .select("*")
+          .eq("lead_id", lead.id)
+          .order("timestamp", { ascending: false });
+
+        if (activitiesError) throw activitiesError;
+
+        const mappedNotes = notesData.map((n) => ({
+          id: n.id,
+          type: "note",
+          user_name: "System",
+          description: n.text,
+          timestamp: n.created_at,
+        }));
+
+        setActivities([...mappedNotes, ...activitiesData]);
+      } catch (error) {
+        console.error("Error fetching activities:", error);
+      } finally {
+        setLoadingActivities(false);
+      }
+    };
+
+    fetchActivities();
+  }, [lead?.id]);
+
+  // Add a new activity
+  const addActivity = async ({ type, description }) => {
+    if (!lead?.id) return;
+
+    const newActivity = {
+      lead_id: lead.id,
+      type,
+      user_name: "System",
+      description,
+      timestamp: new Date().toISOString(),
+    };
+
+    const tempId = Math.random();
+    setActivities((prev) => [{ ...newActivity, id: tempId }, ...prev]);
+
+    try {
+      const { data, error } = await supabase
+        .from("lead_activities")
+        .insert([newActivity])
+        .select();
+
+      if (error) throw error;
+
+      setActivities((prev) =>
+        prev.map((a) => (a.id === tempId ? { ...a, id: data[0].id } : a))
+      );
+    } catch (error) {
+      console.error("Error saving activity:", error);
+      setActivities((prev) => prev.filter((a) => a.id !== tempId));
+    }
+  };
+
+  // Reset form when lead changes
   useEffect(() => {
     setFormData({
       name: "",
@@ -33,12 +131,12 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       allocated_to: "",
       notes: "",
       ...lead
-    })
-    setNotes(lead?.notes ? [lead.notes] : [])
-  }, [lead])
+    });
+    setNotes(lead?.notes ? [lead.notes] : []);
+  }, [lead]);
 
-  const handleChange = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }))
-  const backHandler = onBack || onClose
+  const handleChange = (field, value) =>
+    setFormData((prev) => ({ ...prev, [field]: value }));
 
   return (
     <Transition.Root show={!!lead || isNew} as={Fragment}>
@@ -54,8 +152,8 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full max-w-[450px] h-full overflow-hidden sm:w-full md:max-w-[450px]">
-        {/* Header */}
+            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-[450px] max-w-[450px] h-full overflow-hidden">
+              {/* Header */}
 <div className="px-6 py-4 border-b flex flex-col sm:flex-row sm:items-center justify-between sticky top-0 bg-white z-10 gap-2">
   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
     {/* Back Button */}
@@ -88,27 +186,56 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     </Dialog.Title>
   </div>
 
-  {/* Action Buttons */}
-  {!isNew && (
-    <div className="flex gap-2 mt-2 sm:mt-0 flex-wrap sm:flex-nowrap">
-      <a href={`tel:${formData.phone}`} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-        <Phone size={18} />
-      </a>
-      <a href={`mailto:${formData.email}`} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-        <Mail size={18} />
-      </a>
-      <a
-        href={`https://wa.me/${formData.phone?.replace(/\D/g, "")}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-      >
-        <MessageSquare size={18} />
-      </a>
-    </div>
-  )}
-</div>
+{/* Action Buttons */}
+{!isNew && (
+  <div className="flex gap-2 mt-2 sm:mt-0 flex-wrap sm:flex-nowrap">
+    {/* Call */}
+    <button
+      type="button"
+      className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      onClick={async () => {
+        const description = `Called ${formData.name}`;
+        addActivity({ type: "call", description });
+        // Optional: open phone dialer
+        window.location.href = `tel:${formData.phone}`;
+      }}
+    >
+      <Phone size={18} />
+    </button>
 
+    {/* Email */}
+    <button
+      type="button"
+      className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      onClick={async () => {
+        const description = `Emailed ${formData.name}`;
+        addActivity({ type: "email", description });
+        // Optional: open mail client
+        window.location.href = `mailto:${formData.email}`;
+      }}
+    >
+      <Mail size={18} />
+    </button>
+
+    {/* WhatsApp */}
+    <button
+      type="button"
+      className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      onClick={async () => {
+        const description = `Messaged ${formData.name} on WhatsApp`;
+        addActivity({ type: "whatsapp", description });
+        // Open WhatsApp chat in new tab
+        window.open(`https://wa.me/${formData.phone?.replace(/\D/g, "")}`, "_blank");
+      }}
+    >
+      <MessageSquare size={18} />
+    </button>
+  </div>
+)}
+
+
+
+</div>
 
               {/* Scrollable Body */}
               <div className="flex-1 overflow-y-auto">
@@ -128,7 +255,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     ))}
                   </Tab.List>
 
-                  <Tab.Panels className="flex-1 min-h-full p-6 space-y-4 overflow-y-auto">
+                  <Tab.Panels className="p-6 space-y-4 w-full">
                     {/* Details Panel */}
                     <Tab.Panel className="space-y-4">
                       <div>
@@ -303,133 +430,180 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                           onChange={(e) => handleChange("status", e.target.value)}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                         >
-                          <option>new</option>
-                          <option>contacted</option>
-                          <option>quoted</option>
-                          <option>won</option>
-                          <option>lost</option>
+                          <option>New</option>
+                          <option>Contacted</option>
+                          <option>Quoted</option>
+                          <option>Won</option>
+                          <option>Lost</option>
                         </select>
                       </div>
                     </Tab.Panel>
 
 {/* Notes Panel */}
-<Tab.Panel className="flex flex-col flex-1 w-full">
-  <div className="flex-1 flex flex-col overflow-y-auto space-y-4 p-4">
-    {/* Add new note */}
-    <textarea
-      placeholder="Add a note..."
-      className="w-full rounded-md border-gray-300 shadow-sm"
-      onKeyDown={async (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault()
-          const text = e.target.value.trim()
-          if (!text) return
+<Tab.Panel className="space-y-4 w-full">
+  {/* Add new note */}
+  <textarea
+    placeholder="Add a note..."
+    className="w-full rounded-md border-gray-300 shadow-sm"
+    onKeyDown={async (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault()
+        const text = e.target.value.trim()
+        if (!text) return
 
-          if (!lead?.id) {
-            alert("Please save the lead before adding notes")
-            return
-          }
-
-          // Optimistic UI update
-          const tempId = Math.random()
-          setNotes((prev) => [{ id: tempId, text, created_at: new Date() }, ...prev])
-          e.target.value = ""
-
-          // Save to Supabase
-          const { data, error } = await supabase
-            .from("lead_notes")
-            .insert([{ lead_id: lead.id, text }])
-            .select()
-
-          if (error) {
-            console.error("Error adding note:", error)
-            setNotes((prev) => prev.filter((n) => n.id !== tempId))
-          } else {
-            setNotes((prev) =>
-              prev.map((n) =>
-                n.id === tempId ? { ...n, id: data[0].id, created_at: data[0].created_at } : n
-              )
-            )
-          }
+        if (!lead?.id) {
+          alert("Please save the lead before adding notes")
+          return
         }
-      }}
-    />
 
-    {/* Notes list */}
-    <div className="flex-1 flex flex-col space-y-2 w-full">
-      {notes.map((note, i) => (
-        <div
-          key={note.id}
-          className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
-        >
-          <div className="flex-1 flex flex-col">
-            {note.isEditing ? (
-              <textarea
-                value={note.text}
-                onChange={(e) => {
-                  const updatedText = e.target.value
-                  setNotes((prev) =>
-                    prev.map((n, idx) => (idx === i ? { ...n, text: updatedText } : n))
-                  )
-                }}
-                onBlur={async () => {
-                  setNotes((prev) =>
-                    prev.map((n, idx) => (idx === i ? { ...n, isEditing: false } : n))
-                  )
-                  // Update in Supabase
-                  const { error } = await supabase
-                    .from("lead_notes")
-                    .update({ text: note.text })
-                    .eq("id", note.id)
-                  if (error) console.error("Error updating note:", error)
-                }}
-                className="w-full rounded-md border-gray-300 shadow-sm"
-              />
-            ) : (
-              <p
-                className="text-sm cursor-pointer"
-                onClick={() =>
-                  setNotes((prev) =>
-                    prev.map((n, idx) => (idx === i ? { ...n, isEditing: true } : n))
-                  )
-                }
-              >
-                {note.text}
-              </p>
-            )}
-            {note.created_at && (
-              <span className="text-xs text-gray-400 mt-1">
-                {new Date(note.created_at).toLocaleString()}
-              </span>
-            )}
-          </div>
+        // Optimistic UI update
+        const tempId = Math.random()
+        setNotes((prev) => [{ id: tempId, text, created_at: new Date() }, ...prev])
+        e.target.value = ""
 
-          {/* Delete button */}
-          <button
-            onClick={async () => {
-              setNotes((prev) => prev.filter((_, idx) => idx !== i))
-              const { error } = await supabase.from("lead_notes").delete().eq("id", note.id)
-              if (error) console.error("Error deleting note:", error)
-            }}
-            className="ml-2 text-red-600 hover:text-red-800"
-          >
-            <Trash2 size={16} />
-          </button>
+        // Save to Supabase
+        const { data, error } = await supabase
+          .from("lead_notes")
+          .insert([{ lead_id: lead.id, text }])
+          .select()
+
+        if (error) {
+          console.error("Error adding note:", error)
+          // Rollback UI update
+          setNotes((prev) => prev.filter((n) => n.id !== tempId))
+        } else {
+          // Replace temp ID with real ID
+          setNotes((prev) =>
+            prev.map((n) =>
+              n.id === tempId ? { ...n, id: data[0].id, created_at: data[0].created_at } : n
+            )
+          )
+        }
+      }
+    }}
+  />
+
+  {/* Notes list */}
+  <div className="space-y-2 w-full">
+    {notes.map((note, i) => (
+      <div
+        key={note.id}
+        className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
+      >
+        <div className="flex-1 w-full">
+          {note.isEditing ? (
+            <textarea
+              value={note.text}
+              onChange={(e) => {
+                const updatedText = e.target.value
+                setNotes((prev) =>
+                  prev.map((n, idx) => (idx === i ? { ...n, text: updatedText } : n))
+                )
+              }}
+              onBlur={async () => {
+                setNotes((prev) =>
+                  prev.map((n, idx) => (idx === i ? { ...n, isEditing: false } : n))
+                )
+                const { error } = await supabase
+                  .from("lead_notes")
+                  .update({ text: note.text })
+                  .eq("id", note.id)
+                if (error) console.error("Error updating note:", error)
+              }}
+              className="w-full rounded-md border-gray-300 shadow-sm"
+            />
+          ) : (
+            <p
+              className="text-sm cursor-pointer"
+              onClick={() =>
+                setNotes((prev) =>
+                  prev.map((n, idx) => (idx === i ? { ...n, isEditing: true } : n))
+                )
+              }
+            >
+              {note.text}
+            </p>
+          )}
+          {note.created_at && (
+            <span className="text-xs text-gray-400">
+              {new Date(note.created_at).toLocaleString()}
+            </span>
+          )}
         </div>
-      ))}
-    </div>
+
+        <button
+          onClick={async () => {
+            setNotes((prev) => prev.filter((_, idx) => idx !== i))
+            const { error } = await supabase.from("lead_notes").delete().eq("id", note.id)
+            if (error) console.error("Error deleting note:", error)
+          }}
+          className="ml-2 text-red-600 hover:text-red-800"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    ))}
   </div>
 </Tab.Panel>
 
 
 
+{/* Activity Panel */}
+<Tab.Panel className="space-y-6">
+  {loadingActivities ? (
+    <p className="text-sm text-gray-400">Loading activity…</p>
+  ) : activities.length === 0 ? (
+    <p className="text-sm text-gray-500">
+      No activity yet. Calls, emails, and updates will appear here.
+    </p>
+  ) : (
+    <div className="space-y-8">
+      {groupActivities(
+        // Sort all activities by timestamp descending before grouping
+        activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      ).map((group, idx) => (
+        <div key={idx} className="space-y-4">
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            {group.dateLabel}
+          </h3>
 
-                    {/* Activity Panel */}
-                    <Tab.Panel>
-                      <p className="text-sm text-gray-500">
-                        No activity yet. Calls, emails, and updates will appear here.
-                      </p>
-                    </Tab.Panel>
+          <div className="space-y-6">
+            {group.items.map((activity) => (
+              <div key={activity.id} className="flex items-start space-x-3">
+                {/* Icon by activity type */}
+                <div className="flex-shrink-0 text-lg">
+                  {activity.type === "call" && "📞"}
+                  {activity.type === "email" && "✉️"}
+                  {activity.type === "note" && "📝"}
+                  {activity.type === "update" && "🔄"}
+                  {activity.type === "whatsapp" && "💬"}
+                </div>
+
+                <div className="flex-1">
+                  <p className="text-sm text-gray-800">
+                    <span className="font-medium">{activity.user_name}</span>{" "}
+                    {activity.description}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(activity.timestamp).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</Tab.Panel>
+
+
+
+
+
                   </Tab.Panels>
 
                   {/* Footer */}
