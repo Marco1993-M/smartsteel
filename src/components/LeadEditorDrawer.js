@@ -440,63 +440,65 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     </Tab.Panel>
 
 {/* Notes Panel */}
-<Tab.Panel className="space-y-4 w-full">
-  {/* Add new note */}
-  <textarea
-    placeholder="Add a note..."
-    className="w-full rounded-md border-gray-300 shadow-sm resize-none"
-    rows={3}
-    onKeyDown={async (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        const text = e.target.value.trim();
-        if (!text) return;
+<Tab.Panel className="w-full flex flex-col h-full">
+  {/* Add new note (sticky) */}
+  <div className="sticky top-0 bg-white z-10 p-2 border-b">
+    <textarea
+      placeholder="Add a note..."
+      className="w-full rounded-md border-gray-300 shadow-sm resize-none"
+      rows={3}
+      onKeyDown={async (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          const text = e.target.value.trim();
+          if (!text) return;
 
-        if (!lead?.id) {
-          alert("Please save the lead before adding notes");
-          return;
+          if (!lead?.id) {
+            alert("Please save the lead before adding notes");
+            return;
+          }
+
+          // Optimistic UI update
+          const tempId = Math.random();
+          const newNote = {
+            id: tempId,
+            text,
+            created_at: new Date().toISOString(),
+          };
+          setNotes((prev) => [newNote, ...prev]);
+          e.target.value = "";
+
+          // Save to Supabase
+          const { data, error } = await supabase
+            .from("lead_notes")
+            .insert([{ lead_id: lead.id, text }])
+            .select();
+
+          if (error) {
+            console.error("Error adding note:", error);
+            setNotes((prev) => prev.filter((n) => n.id !== tempId));
+          } else if (data && data[0]) {
+            setNotes((prev) =>
+              prev.map((n) =>
+                n.id === tempId
+                  ? { ...n, id: data[0].id, created_at: data[0].created_at }
+                  : n
+              )
+            );
+          }
         }
-
-        // Optimistic UI update
-        const tempId = Math.random();
-        const newNote = {
-          id: tempId,
-          text,
-          created_at: new Date().toISOString(),
-        };
-        setNotes((prev) => [newNote, ...prev]);
-        e.target.value = "";
-
-        // Save to Supabase
-        const { data, error } = await supabase
-          .from("lead_notes")
-          .insert([{ lead_id: lead.id, text }])
-          .select();
-
-        if (error) {
-          console.error("Error adding note:", error);
-          setNotes((prev) => prev.filter((n) => n.id !== tempId));
-        } else if (data && data[0]) {
-          setNotes((prev) =>
-            prev.map((n) =>
-              n.id === tempId
-                ? { ...n, id: data[0].id, created_at: data[0].created_at }
-                : n
-            )
-          );
-        }
-      }
-    }}
-  />
+      }}
+    />
+  </div>
 
   {/* Notes list */}
-  {notes.length === 0 ? (
-    <p className="text-sm text-gray-500">
-      No notes yet. Add your first note above.
-    </p>
-  ) : (
-    <div className="space-y-2">
-      {notes.map((note) => (
+  <div className="flex-1 overflow-y-auto w-full space-y-2 p-2">
+    {notes.length === 0 ? (
+      <p className="text-sm text-gray-500">
+        No notes yet. Add your first note above.
+      </p>
+    ) : (
+      notes.map((note) => (
         <div
           key={note.id}
           className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
@@ -574,9 +576,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             <Trash2 size={16} />
           </button>
         </div>
-      ))}
-    </div>
-  )}
+      ))
+    )}
+  </div>
 </Tab.Panel>
 
 
