@@ -238,391 +238,371 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 </div>
 
               {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto">
-                <Tab.Group>
-                  <Tab.List className="flex overflow-x-auto no-scrollbar -webkit-overflow-scrolling-touch border-b">
-                    {["Details", "Notes", "Activity"].map((tab) => (
-                      <Tab
-                        key={tab}
-                        className={({ selected }) =>
-                          `flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap ${
-                            selected ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"
-                          }`
-                        }
-                      >
-                        {tab}
-                      </Tab>
-                    ))}
-                  </Tab.List>
-
-                  <Tab.Panels className="p-6 space-y-4 w-full">
-                    {/* Details Panel */}
-                    <Tab.Panel className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">First & Last Name</label>
-                        <input
-                          type="text"
-                          value={formData.name || ""}
-                          onChange={(e) => handleChange("name", e.target.value)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input
-                          type="email"
-                          value={formData.email || ""}
-                          onChange={(e) => handleChange("email", e.target.value)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Phone</label>
-                        <input
-                          type="tel"
-                          value={formData.phone || ""}
-                          onChange={(e) => handleChange("phone", e.target.value)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        />
-                      </div>
-
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse Size</label>
-                        <div className="flex gap-2 mb-2 flex-wrap">
-                          <select
-                            value={formData.width || ""}
-                            onChange={(e) => handleChange("width", e.target.value)}
-                            className="border px-3 py-2 rounded flex-1 min-w-[100px]"
-                          >
-                            <option value="">Select Width</option>
-                            <option value="8">8m</option>
-                            <option value="10">10m</option>
-                            <option value="12">12m</option>
-                          </select>
-
-                          <select
-                            value={formData.length || ""}
-                            onChange={(e) => handleChange("length", e.target.value)}
-                            className="border px-3 py-2 rounded flex-1 min-w-[100px]"
-                          >
-                            <option value="">Select Length</option>
-                            {[...Array(20)].map((_, i) => {
-                              const len = (i + 1) * 2.5
-                              return <option key={len} value={len}>{len}m</option>
-                            })}
-                          </select>
-                        </div>
-
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Cladding & Installation</label>
-                        <div className="flex gap-2 flex-wrap">
-                          {["IBR", "Chromadek"].map((clad) => (
-                            <button
-                              key={clad}
-                              type="button"
-                              className={`px-3 py-1 rounded border ${
-                                formData.cladding === clad ? "bg-blue-200 border-blue-500" : "bg-gray-100"
-                              }`}
-                              onClick={() => handleChange("cladding", formData.cladding === clad ? "" : clad)}
-                            >
-                              {clad}
-                            </button>
-                          ))}
-                          {["Supply Only", "Installed"].map((option) => (
-                            <button
-                              key={option}
-                              type="button"
-                              className={`px-3 py-1 rounded border ${
-                                formData.installation === option ? "bg-blue-200 border-blue-500" : "bg-gray-100"
-                              }`}
-                              onClick={() => handleChange("installation", formData.installation === option ? "" : option)}
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
-
-                        <textarea
-                          placeholder="Custom request & notes..."
-                          value={formData.estimate_request || ""}
-                          onChange={(e) => handleChange("estimate_request", e.target.value)}
-                          className="mt-3 block w-full text-gray-400 rounded-md border-gray-300 shadow-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
-                        <div className="flex gap-2 items-center">
-                          <input
-                            type="date"
-                            value={formData.follow_up_at ? new Date(formData.follow_up_at).toISOString().split("T")[0] : ""}
-                            onChange={(e) =>
-                              handleChange(
-                                "follow_up_at",
-                                e.target.value ? new Date(e.target.value).toISOString() : null
-                              )
-                            }
-                            className="block rounded-md border-gray-300 shadow-sm"
-                          />
-                          <div className="flex gap-1">
-                            {[
-                              { label: "Today", offset: 0 },
-                              { label: "+1 Day", offset: 1 },
-                              { label: "+1 Week", offset: 7 },
-                            ].map(({ label, offset }) => (
-                              <button
-                                key={label}
-                                type="button"
-                                onClick={() => {
-                                  const d = new Date()
-                                  d.setDate(d.getDate() + offset)
-                                  handleChange("follow_up_at", d.toISOString())
-                                }}
-                                className="px-2 py-1 text-xs rounded border bg-gray-100 hover:bg-gray-200"
-                              >
-                                {label}
-                              </button>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() => handleChange("follow_up_at", null)}
-                              className="px-2 py-1 text-xs rounded border bg-red-100 text-red-700 hover:bg-red-200"
-                            >
-                              Clear
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Allocated To</label>
-                        <div className="flex gap-2 flex-wrap">
-                          {["Stefan", "Niel", "Victor", "Marco"].map((member) => {
-                            const colors = {
-                              Stefan: "bg-red-200",
-                              Niel: "bg-blue-200",
-                              Victor: "bg-green-200",
-                              Marco: "bg-yellow-200",
-                            }
-                            return (
-                              <button
-                                key={member}
-                                type="button"
-                                className={`px-3 py-1 rounded border font-medium ${
-                                  formData.allocated_to === member
-                                    ? `${colors[member]} border-gray-500`
-                                    : "bg-gray-100"
-                                }`}
-                                onClick={() => handleChange("allocated_to", formData.allocated_to === member ? "" : member)}
-                              >
-                                {member}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Status</label>
-                        <select
-                          value={formData.status || "New"}
-                          onChange={(e) => handleChange("status", e.target.value)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        >
-                          <option>New</option>
-                          <option>Contacted</option>
-                          <option>Quoted</option>
-                          <option>Won</option>
-                          <option>Lost</option>
-                        </select>
-                      </div>
-                    </Tab.Panel>
-
-{/* Notes Panel */}
-<Tab.Panel className="w-full max-w-full flex flex-col h-full">
-  {/* Sticky Add Note */}
-  <div className="sticky top-0 bg-white z-10 p-2 border-b w-full max-w-full">
-    <textarea
-      placeholder="Add a note..."
-      className="w-full rounded-md border-gray-300 shadow-sm resize-none"
-      rows={3}
-      onKeyDown={async (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          const text = e.target.value.trim();
-          if (!text) return;
-          if (!lead?.id) {
-            alert("Please save the lead before adding notes");
-            return;
+<div className="flex-1 overflow-y-auto w-full max-w-full">
+  <Tab.Group>
+    <Tab.List className="flex overflow-x-auto no-scrollbar -webkit-overflow-scrolling-touch border-b">
+      {["Details", "Notes", "Activity"].map((tab) => (
+        <Tab
+          key={tab}
+          className={({ selected }) =>
+            `flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap ${
+              selected ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"
+            }`
           }
-          const tempId = Math.random();
-          const newNote = {
-            id: tempId,
-            text,
-            created_at: new Date().toISOString(),
-          };
-          setNotes((prev) => [newNote, ...prev]);
-          e.target.value = "";
-          const { data, error } = await supabase
-            .from("lead_notes")
-            .insert([{ lead_id: lead.id, text }])
-            .select();
-          if (error) {
-            console.error("Error adding note:", error);
-            setNotes((prev) => prev.filter((n) => n.id !== tempId));
-          } else if (data && data[0]) {
-            setNotes((prev) =>
-              prev.map((n) =>
-                n.id === tempId
-                  ? { ...n, id: data[0].id, created_at: data[0].created_at }
-                  : n
-              )
-            );
-          }
-        }
-      }}
-    />
-  </div>
-  {/* Notes List */}
-  <div className="flex-1 overflow-y-auto w-full max-w-full space-y-2 p-2">
-    {notes.length === 0 ? (
-      <p className="text-sm text-gray-500">
-        No notes yet. Add your first note above.
-      </p>
-    ) : (
-      notes.map((note) => (
-        <div
-          key={note.id}
-          className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
         >
-          <div className="flex-1">
-            {note.isEditing ? (
-              <textarea
-                value={note.text}
-                onChange={(e) =>
-                  setNotes((prev) =>
-                    prev.map((n) =>
-                      n.id === note.id ? { ...n, text: e.target.value } : n
-                    )
-                  )
+          {tab}
+        </Tab>
+      ))}
+    </Tab.List>
+    <Tab.Panels className="space-y-4 w-full max-w-full p-0">
+      {/* Details Panel */}
+      <Tab.Panel className="space-y-4 w-full max-w-full p-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">First & Last Name</label>
+          <input
+            type="text"
+            value={formData.name || ""}
+            onChange={(e) => handleChange("name", e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Email</label>
+          <input
+            type="email"
+            value={formData.email || ""}
+            onChange={(e) => handleChange("email", e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Phone</label>
+          <input
+            type="tel"
+            value={formData.phone || ""}
+            onChange={(e) => handleChange("phone", e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          />
+        </div>
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse Size</label>
+          <div className="flex gap-2 mb-2 flex-wrap">
+            <select
+              value={formData.width || ""}
+              onChange={(e) => handleChange("width", e.target.value)}
+              className="border px-3 py-2 rounded flex-1 min-w-[100px]"
+            >
+              <option value="">Select Width</option>
+              <option value="8">8m</option>
+              <option value="10">10m</option>
+              <option value="12">12m</option>
+            </select>
+            <select
+              value={formData.length || ""}
+              onChange={(e) => handleChange("length", e.target.value)}
+              className="border px-3 py-2 rounded flex-1 min-w-[100px]"
+            >
+              <option value="">Select Length</option>
+              {[...Array(20)].map((_, i) => {
+                const len = (i + 1) * 2.5;
+                return <option key={len} value={len}>{len}m</option>;
+              })}
+            </select>
+          </div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Cladding & Installation</label>
+          <div className="flex gap-2 flex-wrap">
+            {["IBR", "Chromadek"].map((clad) => (
+              <button
+                key={clad}
+                type="button"
+                className={`px-3 py-1 rounded border ${
+                  formData.cladding === clad ? "bg-blue-200 border-blue-500" : "bg-gray-100"
+                }`}
+                onClick={() => handleChange("cladding", formData.cladding === clad ? "" : clad)}
+              >
+                {clad}
+              </button>
+            ))}
+            {["Supply Only", "Installed"].map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={`px-3 py-1 rounded border ${
+                  formData.installation === option ? "bg-blue-200 border-blue-500" : "bg-gray-100"
+                }`}
+                onClick={() => handleChange("installation", formData.installation === option ? "" : option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          <textarea
+            placeholder="Custom request & notes..."
+            value={formData.estimate_request || ""}
+            onChange={(e) => handleChange("estimate_request", e.target.value)}
+            className="mt-3 block w-full text-gray-400 rounded-md border-gray-300 shadow-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
+          <div className="flex gap-2 items-center">
+            <input
+              type="date"
+              value={formData.follow_up_at ? new Date(formData.follow_up_at).toISOString().split("T")[0] : ""}
+              onChange={(e) =>
+                handleChange(
+                  "follow_up_at",
+                  e.target.value ? new Date(e.target.value).toISOString() : null
+                )
+              }
+              className="block rounded-md border-gray-300 shadow-sm"
+            />
+            <div className="flex gap-1">
+              {[
+                { label: "Today", offset: 0 },
+                { label: "+1 Day", offset: 1 },
+                { label: "+1 Week", offset: 7 },
+              ].map(({ label, offset }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + offset);
+                    handleChange("follow_up_at", d.toISOString());
+                  }}
+                  className="px-2 py-1 text-xs rounded border bg-gray-100 hover:bg-gray-200"
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => handleChange("follow_up_at", null)}
+                className="px-2 py-1 text-xs rounded border bg-red-100 text-red-700 hover:bg-red-200"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Allocated To</label>
+          <div className="flex gap-2 flex-wrap">
+            {["Stefan", "Niel", "Victor", "Marco"].map((member) => {
+              const colors = {
+                Stefan: "bg-red-200",
+                Niel: "bg-blue-200",
+                Victor: "bg-green-200",
+                Marco: "bg-yellow-200",
+              };
+              return (
+                <button
+                  key={member}
+                  type="button"
+                  className={`px-3 py-1 rounded border font-medium ${
+                    formData.allocated_to === member
+                      ? `${colors[member]} border-gray-500`
+                      : "bg-gray-100"
+                  }`}
+                  onClick={() => handleChange("allocated_to", formData.allocated_to === member ? "" : member)}
+                >
+                  {member}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Status</label>
+          <select
+            value={formData.status || "New"}
+            onChange={(e) => handleChange("status", e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          >
+            <option>New</option>
+            <option>Contacted</option>
+            <option>Quoted</option>
+            <option>Won</option>
+            <option>Lost</option>
+          </select>
+        </div>
+      </Tab.Panel>
+      {/* Notes Panel */}
+      <Tab.Panel className="w-full max-w-full flex flex-col h-full">
+        {/* Sticky Add Note */}
+        <div className="sticky top-0 bg-white z-10 p-2 border-b w-full max-w-full">
+          <textarea
+            placeholder="Add a note..."
+            className="w-full rounded-md border-gray-300 shadow-sm resize-none"
+            rows={3}
+            onKeyDown={async (e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                const text = e.target.value.trim();
+                if (!text) return;
+                if (!lead?.id) {
+                  alert("Please save the lead before adding notes");
+                  return;
                 }
-                onBlur={async () => {
-                  const updatedNote = notes.find((n) => n.id === note.id);
-                  if (!updatedNote) return;
+                const tempId = Math.random();
+                const newNote = {
+                  id: tempId,
+                  text,
+                  created_at: new Date().toISOString(),
+                };
+                setNotes((prev) => [newNote, ...prev]);
+                e.target.value = "";
+                const { data, error } = await supabase
+                  .from("lead_notes")
+                  .insert([{ lead_id: lead.id, text }])
+                  .select();
+                if (error) {
+                  console.error("Error adding note:", error);
+                  setNotes((prev) => prev.filter((n) => n.id !== tempId));
+                } else if (data && data[0]) {
                   setNotes((prev) =>
                     prev.map((n) =>
-                      n.id === note.id ? { ...n, isEditing: false } : n
+                      n.id === tempId
+                        ? { ...n, id: data[0].id, created_at: data[0].created_at }
+                        : n
                     )
                   );
-                  const { error } = await supabase
-                    .from("lead_notes")
-                    .update({ text: updatedNote.text })
-                    .eq("id", note.id);
-                  if (error) console.error("Error updating note:", error);
-                }}
-                className="w-full rounded-md border-gray-300 shadow-sm resize-none"
-                autoFocus
-                rows={2}
-              />
-            ) : (
-              <p
-                className="text-sm cursor-pointer break-words"
-                onClick={() =>
-                  setNotes((prev) =>
-                    prev.map((n) =>
-                      n.id === note.id ? { ...n, isEditing: true } : n
-                    )
-                  )
                 }
-              >
-                {note.text}
-              </p>
-            )}
-            {note.created_at && (
-              <span className="text-xs text-gray-400 block mt-1">
-                {new Date(note.created_at).toLocaleString()}
-              </span>
-            )}
-          </div>
-          <button
-            onClick={async () => {
-              const noteId = note.id;
-              setNotes((prev) => prev.filter((n) => n.id !== noteId));
-              const { error } = await supabase
-                .from("lead_notes")
-                .delete()
-                .eq("id", noteId);
-              if (error) {
-                console.error("Error deleting note:", error);
-                setNotes((prev) => [note, ...prev]);
               }
             }}
-            className="ml-2 text-red-600 hover:text-red-800 flex-shrink-0"
-          >
-            <Trash2 size={16} />
-          </button>
+          />
         </div>
-      ))
-    )}
-  </div>
-</Tab.Panel>
-
-
-
-
-
-{/* Activity Panel */}
-<Tab.Panel className="space-y-6">
-  {loadingActivities ? (
-    <p className="text-sm text-gray-400">Loading activity…</p>
-  ) : activities.length === 0 ? (
-    <p className="text-sm text-gray-500">
-      No activity yet. Calls, emails, and updates will appear here.
-    </p>
-  ) : (
-    <div className="space-y-8">
-      {groupActivities(
-        // Sort all activities by timestamp descending before grouping
-        activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      ).map((group, idx) => (
-        <div key={idx} className="space-y-4">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-            {group.dateLabel}
-          </h3>
-
-          <div className="space-y-6">
-            {group.items.map((activity) => (
-              <div key={activity.id} className="flex items-start space-x-3">
-                {/* Icon by activity type */}
-                <div className="flex-shrink-0 text-lg">
-                  {activity.type === "call" && "📞"}
-                  {activity.type === "email" && "✉️"}
-                  {activity.type === "note" && "📝"}
-                  {activity.type === "update" && "🔄"}
-                  {activity.type === "whatsapp" && "💬"}
-                </div>
-
+        {/* Notes List */}
+        <div className="flex-1 overflow-y-auto w-full max-w-full space-y-2 p-2">
+          {notes.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              No notes yet. Add your first note above.
+            </p>
+          ) : (
+            notes.map((note) => (
+              <div
+                key={note.id}
+                className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
+              >
                 <div className="flex-1">
-                  <p className="text-sm text-gray-800">
-                    <span className="font-medium">{activity.user_name}</span>{" "}
-                    {activity.description}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(activity.timestamp).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                  {note.isEditing ? (
+                    <textarea
+                      value={note.text}
+                      onChange={(e) =>
+                        setNotes((prev) =>
+                          prev.map((n) =>
+                            n.id === note.id ? { ...n, text: e.target.value } : n
+                          )
+                        )
+                      }
+                      onBlur={async () => {
+                        const updatedNote = notes.find((n) => n.id === note.id);
+                        if (!updatedNote) return;
+                        setNotes((prev) =>
+                          prev.map((n) =>
+                            n.id === note.id ? { ...n, isEditing: false } : n
+                          )
+                        );
+                        const { error } = await supabase
+                          .from("lead_notes")
+                          .update({ text: updatedNote.text })
+                          .eq("id", note.id);
+                        if (error) console.error("Error updating note:", error);
+                      }}
+                      className="w-full rounded-md border-gray-300 shadow-sm resize-none"
+                      autoFocus
+                      rows={2}
+                    />
+                  ) : (
+                    <p
+                      className="text-sm cursor-pointer break-words"
+                      onClick={() =>
+                        setNotes((prev) =>
+                          prev.map((n) =>
+                            n.id === note.id ? { ...n, isEditing: true } : n
+                          )
+                        )
+                      }
+                    >
+                      {note.text}
+                    </p>
+                  )}
+                  {note.created_at && (
+                    <span className="text-xs text-gray-400 block mt-1">
+                      {new Date(note.created_at).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={async () => {
+                    const noteId = note.id;
+                    setNotes((prev) => prev.filter((n) => n.id !== noteId));
+                    const { error } = await supabase
+                      .from("lead_notes")
+                      .delete()
+                      .eq("id", noteId);
+                    if (error) {
+                      console.error("Error deleting note:", error);
+                      setNotes((prev) => [note, ...prev]);
+                    }
+                  }}
+                  className="ml-2 text-red-600 hover:text-red-800 flex-shrink-0"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </Tab.Panel>
+      {/* Activity Panel */}
+      <Tab.Panel className="space-y-6 w-full max-w-full p-4">
+        {loadingActivities ? (
+          <p className="text-sm text-gray-400">Loading activity…</p>
+        ) : activities.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            No activity yet. Calls, emails, and updates will appear here.
+          </p>
+        ) : (
+          <div className="space-y-8 w-full">
+            {groupActivities(
+              activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            ).map((group, idx) => (
+              <div key={idx} className="space-y-4">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                  {group.dateLabel}
+                </h3>
+                <div className="space-y-6">
+                  {group.items.map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 text-lg">
+                        {activity.type === "call" && "📞"}
+                        {activity.type === "email" && "✉️"}
+                        {activity.type === "note" && "📝"}
+                        {activity.type === "update" && "🔄"}
+                        {activity.type === "whatsapp" && "💬"}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-800">
+                          <span className="font-medium">{activity.user_name}</span>{" "}
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(activity.timestamp).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      ))}
-    </div>
-  )}
-</Tab.Panel>
+        )}
+      </Tab.Panel>
 
 
 
