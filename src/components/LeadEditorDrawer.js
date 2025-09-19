@@ -440,7 +440,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     </Tab.Panel>
 
 {/* Notes Panel */}
-<Tab.Panel className="space-y-4 w-full">
+<Tab.Panel className=""w-full flex-1 space-y-4">
   {/* Add new note */}
   <textarea
     placeholder="Add a note..."
@@ -495,7 +495,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   />
 
   {/* Notes list */}
-  <div className="space-y-2 w-full">
+  <div className="w-full space-y-2">
     {notes.map((note) => (
       <div
         key={note.id}
