@@ -45,5 +45,11 @@ body {
   }
 }
 
+html {
+  color-scheme: light;
+  background-color: white;
+  color: black;
+}
+
 
 
