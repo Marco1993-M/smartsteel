@@ -440,7 +440,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     </Tab.Panel>
 
 {/* Notes Panel */}
-<Tab.Panel className="flex flex-col w-full h-full space-y-4">
+<Tab.Panel className="space-y-4 w-full">
   {/* Add new note */}
   <textarea
     placeholder="Add a note..."
@@ -475,18 +475,12 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
         if (error) {
           console.error("Error adding note:", error);
-          // Rollback
           setNotes((prev) => prev.filter((n) => n.id !== tempId));
         } else if (data && data[0]) {
-          // Replace temp note with real note
           setNotes((prev) =>
             prev.map((n) =>
               n.id === tempId
-                ? {
-                    ...n,
-                    id: data[0].id,
-                    created_at: data[0].created_at,
-                  }
+                ? { ...n, id: data[0].id, created_at: data[0].created_at }
                 : n
             )
           );
@@ -496,89 +490,93 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   />
 
   {/* Notes list */}
-  <div className="flex-1 overflow-y-auto w-full space-y-2">
-    {notes.map((note) => (
-      <div
-        key={note.id}
-        className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
-      >
-        <div className="flex-1 w-full">
-          {note.isEditing ? (
-            <textarea
-              value={note.text}
-              onChange={(e) => {
-                const updatedText = e.target.value;
-                setNotes((prev) =>
-                  prev.map((n) =>
-                    n.id === note.id ? { ...n, text: updatedText } : n
-                  )
-                );
-              }}
-              onBlur={async () => {
-                const updatedNote = notes.find((n) => n.id === note.id);
-                if (!updatedNote) return;
-
-                setNotes((prev) =>
-                  prev.map((n) =>
-                    n.id === note.id ? { ...n, isEditing: false } : n
-                  )
-                );
-
-                const { error } = await supabase
-                  .from("lead_notes")
-                  .update({ text: updatedNote.text })
-                  .eq("id", note.id);
-
-                if (error) console.error("Error updating note:", error);
-              }}
-              className="w-full rounded-md border-gray-300 shadow-sm resize-none"
-              autoFocus
-              rows={2}
-            />
-          ) : (
-            <p
-              className="text-sm cursor-pointer break-words"
-              onClick={() =>
-                setNotes((prev) =>
-                  prev.map((n) =>
-                    n.id === note.id ? { ...n, isEditing: true } : n
-                  )
-                )
-              }
-            >
-              {note.text}
-            </p>
-          )}
-          {note.created_at && (
-            <span className="text-xs text-gray-400 block mt-1">
-              {new Date(note.created_at).toLocaleString()}
-            </span>
-          )}
-        </div>
-
-        <button
-          onClick={async () => {
-            const noteId = note.id;
-            setNotes((prev) => prev.filter((n) => n.id !== noteId));
-
-            const { error } = await supabase
-              .from("lead_notes")
-              .delete()
-              .eq("id", noteId);
-
-            if (error) {
-              console.error("Error deleting note:", error);
-              // Rollback
-              setNotes((prev) => [note, ...prev]);
-            }
-          }}
-          className="ml-2 text-red-600 hover:text-red-800 flex-shrink-0"
+  {notes.length === 0 ? (
+    <p className="text-sm text-gray-500">
+      No notes yet. Add your first note above.
+    </p>
+  ) : (
+    <div className="space-y-2">
+      {notes.map((note) => (
+        <div
+          key={note.id}
+          className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
         >
-          <Trash2 size={16} />
-        </button>
-      </div>
-    ))}
-  </div>
+          <div className="flex-1">
+            {note.isEditing ? (
+              <textarea
+                value={note.text}
+                onChange={(e) =>
+                  setNotes((prev) =>
+                    prev.map((n) =>
+                      n.id === note.id ? { ...n, text: e.target.value } : n
+                    )
+                  )
+                }
+                onBlur={async () => {
+                  const updatedNote = notes.find((n) => n.id === note.id);
+                  if (!updatedNote) return;
+
+                  setNotes((prev) =>
+                    prev.map((n) =>
+                      n.id === note.id ? { ...n, isEditing: false } : n
+                    )
+                  );
+
+                  const { error } = await supabase
+                    .from("lead_notes")
+                    .update({ text: updatedNote.text })
+                    .eq("id", note.id);
+
+                  if (error) console.error("Error updating note:", error);
+                }}
+                className="w-full rounded-md border-gray-300 shadow-sm resize-none"
+                autoFocus
+                rows={2}
+              />
+            ) : (
+              <p
+                className="text-sm cursor-pointer break-words"
+                onClick={() =>
+                  setNotes((prev) =>
+                    prev.map((n) =>
+                      n.id === note.id ? { ...n, isEditing: true } : n
+                    )
+                  )
+                }
+              >
+                {note.text}
+              </p>
+            )}
+            {note.created_at && (
+              <span className="text-xs text-gray-400 block mt-1">
+                {new Date(note.created_at).toLocaleString()}
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={async () => {
+              const noteId = note.id;
+              setNotes((prev) => prev.filter((n) => n.id !== noteId));
+
+              const { error } = await supabase
+                .from("lead_notes")
+                .delete()
+                .eq("id", noteId);
+
+              if (error) {
+                console.error("Error deleting note:", error);
+                setNotes((prev) => [note, ...prev]);
+              }
+            }}
+            className="ml-2 text-red-600 hover:text-red-800 flex-shrink-0"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
 </Tab.Panel>
 
 
