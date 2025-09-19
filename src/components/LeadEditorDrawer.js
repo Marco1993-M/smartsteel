@@ -447,37 +447,48 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     className="w-full rounded-md border-gray-300 shadow-sm"
     onKeyDown={async (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault()
-        const text = e.target.value.trim()
-        if (!text) return
+        e.preventDefault();
+        const text = e.target.value.trim();
+        if (!text) return;
 
         if (!lead?.id) {
-          alert("Please save the lead before adding notes")
-          return
+          alert("Please save the lead before adding notes");
+          return;
         }
 
         // Optimistic UI update
-        const tempId = Math.random()
-        setNotes((prev) => [{ id: tempId, text, created_at: new Date() }, ...prev])
-        e.target.value = ""
+        const tempId = Math.random();
+        const newNote = {
+          id: tempId,
+          text,
+          created_at: new Date().toISOString(),
+        };
+        setNotes((prev) => [newNote, ...prev]);
+        e.target.value = "";
 
         // Save to Supabase
         const { data, error } = await supabase
           .from("lead_notes")
           .insert([{ lead_id: lead.id, text }])
-          .select()
+          .select();
 
         if (error) {
-          console.error("Error adding note:", error)
-          // Rollback UI update
-          setNotes((prev) => prev.filter((n) => n.id !== tempId))
-        } else {
-          // Replace temp ID with real ID
+          console.error("Error adding note:", error);
+          // Rollback
+          setNotes((prev) => prev.filter((n) => n.id !== tempId));
+        } else if (data && data[0]) {
+          // Replace temp note with real note
           setNotes((prev) =>
             prev.map((n) =>
-              n.id === tempId ? { ...n, id: data[0].id, created_at: data[0].created_at } : n
+              n.id === tempId
+                ? {
+                    ...n,
+                    id: data[0].id,
+                    created_at: data[0].created_at,
+                  }
+                : n
             )
-          )
+          );
         }
       }
     }}
@@ -485,7 +496,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
   {/* Notes list */}
   <div className="space-y-2 w-full">
-    {notes.map((note, i) => (
+    {notes.map((note) => (
       <div
         key={note.id}
         className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
@@ -495,29 +506,41 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             <textarea
               value={note.text}
               onChange={(e) => {
-                const updatedText = e.target.value
+                const updatedText = e.target.value;
                 setNotes((prev) =>
-                  prev.map((n, idx) => (idx === i ? { ...n, text: updatedText } : n))
-                )
+                  prev.map((n) =>
+                    n.id === note.id ? { ...n, text: updatedText } : n
+                  )
+                );
               }}
               onBlur={async () => {
+                const updatedNote = notes.find((n) => n.id === note.id);
+                if (!updatedNote) return;
+
                 setNotes((prev) =>
-                  prev.map((n, idx) => (idx === i ? { ...n, isEditing: false } : n))
-                )
+                  prev.map((n) =>
+                    n.id === note.id ? { ...n, isEditing: false } : n
+                  )
+                );
+
                 const { error } = await supabase
                   .from("lead_notes")
-                  .update({ text: note.text })
-                  .eq("id", note.id)
-                if (error) console.error("Error updating note:", error)
+                  .update({ text: updatedNote.text })
+                  .eq("id", note.id);
+
+                if (error) console.error("Error updating note:", error);
               }}
               className="w-full rounded-md border-gray-300 shadow-sm"
+              autoFocus
             />
           ) : (
             <p
               className="text-sm cursor-pointer"
               onClick={() =>
                 setNotes((prev) =>
-                  prev.map((n, idx) => (idx === i ? { ...n, isEditing: true } : n))
+                  prev.map((n) =>
+                    n.id === note.id ? { ...n, isEditing: true } : n
+                  )
                 )
               }
             >
@@ -525,7 +548,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             </p>
           )}
           {note.created_at && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 block mt-1">
               {new Date(note.created_at).toLocaleString()}
             </span>
           )}
@@ -533,9 +556,20 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
         <button
           onClick={async () => {
-            setNotes((prev) => prev.filter((_, idx) => idx !== i))
-            const { error } = await supabase.from("lead_notes").delete().eq("id", note.id)
-            if (error) console.error("Error deleting note:", error)
+            const noteId = note.id;
+            // Optimistic UI update
+            setNotes((prev) => prev.filter((n) => n.id !== noteId));
+
+            const { error } = await supabase
+              .from("lead_notes")
+              .delete()
+              .eq("id", noteId);
+
+            if (error) {
+              console.error("Error deleting note:", error);
+              // Rollback
+              setNotes((prev) => [note, ...prev]);
+            }
           }}
           className="ml-2 text-red-600 hover:text-red-800"
         >
@@ -545,6 +579,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     ))}
   </div>
 </Tab.Panel>
+
 
 
 
