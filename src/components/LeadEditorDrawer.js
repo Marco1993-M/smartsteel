@@ -71,7 +71,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
         const mappedNotes = notesData.map((n) => ({
           id: n.id,
           type: "note",
-          user_name: "System",
+          user_name: "Smart Steel",
           description: n.text,
           timestamp: n.created_at,
         }));
