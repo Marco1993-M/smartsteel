@@ -440,11 +440,12 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     </Tab.Panel>
 
 {/* Notes Panel */}
-<Tab.Panel className="w-full flex-1 space-y-4">
+<Tab.Panel className="flex flex-col w-full h-full space-y-4">
   {/* Add new note */}
   <textarea
     placeholder="Add a note..."
-    className="w-full rounded-md border-gray-300 shadow-sm"
+    className="w-full rounded-md border-gray-300 shadow-sm resize-none"
+    rows={3}
     onKeyDown={async (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -495,7 +496,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   />
 
   {/* Notes list */}
-  <div className="w-full space-y-2">
+  <div className="flex-1 overflow-y-auto w-full space-y-2">
     {notes.map((note) => (
       <div
         key={note.id}
@@ -530,12 +531,13 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
                 if (error) console.error("Error updating note:", error);
               }}
-              className="w-full rounded-md border-gray-300 shadow-sm"
+              className="w-full rounded-md border-gray-300 shadow-sm resize-none"
               autoFocus
+              rows={2}
             />
           ) : (
             <p
-              className="text-sm cursor-pointer"
+              className="text-sm cursor-pointer break-words"
               onClick={() =>
                 setNotes((prev) =>
                   prev.map((n) =>
@@ -557,7 +559,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
         <button
           onClick={async () => {
             const noteId = note.id;
-            // Optimistic UI update
             setNotes((prev) => prev.filter((n) => n.id !== noteId));
 
             const { error } = await supabase
@@ -571,7 +572,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               setNotes((prev) => [note, ...prev]);
             }
           }}
-          className="ml-2 text-red-600 hover:text-red-800"
+          className="ml-2 text-red-600 hover:text-red-800 flex-shrink-0"
         >
           <Trash2 size={16} />
         </button>
@@ -579,6 +580,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     ))}
   </div>
 </Tab.Panel>
+
 
 
 
