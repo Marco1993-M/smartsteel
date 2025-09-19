@@ -440,7 +440,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     </Tab.Panel>
 
 {/* Notes Panel */}
-<Tab.Panel className=""w-full flex-1 space-y-4">
+<Tab.Panel className="w-full flex-1 space-y-4">
   {/* Add new note */}
   <textarea
     placeholder="Add a note..."
