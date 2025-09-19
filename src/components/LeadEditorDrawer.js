@@ -440,9 +440,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     </Tab.Panel>
 
 {/* Notes Panel */}
-<Tab.Panel className="w-full flex flex-col h-full">
-  {/* Add new note (sticky) */}
-  <div className="sticky top-0 bg-white z-10 p-2 border-b">
+<Tab.Panel className="w-full max-w-full flex flex-col h-full">
+  {/* Sticky Add Note */}
+  <div className="sticky top-0 bg-white z-10 p-2 border-b w-full max-w-full">
     <textarea
       placeholder="Add a note..."
       className="w-full rounded-md border-gray-300 shadow-sm resize-none"
@@ -452,13 +452,10 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
           e.preventDefault();
           const text = e.target.value.trim();
           if (!text) return;
-
           if (!lead?.id) {
             alert("Please save the lead before adding notes");
             return;
           }
-
-          // Optimistic UI update
           const tempId = Math.random();
           const newNote = {
             id: tempId,
@@ -467,13 +464,10 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
           };
           setNotes((prev) => [newNote, ...prev]);
           e.target.value = "";
-
-          // Save to Supabase
           const { data, error } = await supabase
             .from("lead_notes")
             .insert([{ lead_id: lead.id, text }])
             .select();
-
           if (error) {
             console.error("Error adding note:", error);
             setNotes((prev) => prev.filter((n) => n.id !== tempId));
@@ -490,9 +484,8 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       }}
     />
   </div>
-
-  {/* Notes list */}
-  <div className="flex-1 overflow-y-auto w-full space-y-2 p-2">
+  {/* Notes List */}
+  <div className="flex-1 overflow-y-auto w-full max-w-full space-y-2 p-2">
     {notes.length === 0 ? (
       <p className="text-sm text-gray-500">
         No notes yet. Add your first note above.
@@ -517,18 +510,15 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                 onBlur={async () => {
                   const updatedNote = notes.find((n) => n.id === note.id);
                   if (!updatedNote) return;
-
                   setNotes((prev) =>
                     prev.map((n) =>
                       n.id === note.id ? { ...n, isEditing: false } : n
                     )
                   );
-
                   const { error } = await supabase
                     .from("lead_notes")
                     .update({ text: updatedNote.text })
                     .eq("id", note.id);
-
                   if (error) console.error("Error updating note:", error);
                 }}
                 className="w-full rounded-md border-gray-300 shadow-sm resize-none"
@@ -555,17 +545,14 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               </span>
             )}
           </div>
-
           <button
             onClick={async () => {
               const noteId = note.id;
               setNotes((prev) => prev.filter((n) => n.id !== noteId));
-
               const { error } = await supabase
                 .from("lead_notes")
                 .delete()
                 .eq("id", noteId);
-
               if (error) {
                 console.error("Error deleting note:", error);
                 setNotes((prev) => [note, ...prev]);
