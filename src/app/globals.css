@@ -1,10 +1,12 @@
 @import "tailwindcss";
 
+/* Force light colors */
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
+/* Inline theme for Tailwind or Geist */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -12,12 +14,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+/* REMOVE dark mode entirely */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #fff;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
   background: var(--background);
@@ -27,7 +30,7 @@ body {
 
 .gradient-border {
   position: relative;
-  border-radius: 0.25rem; /* Match Tailwind's rounded-lg */
+  border-radius: 0.25rem;
   background: linear-gradient(270deg, #da1a33, #ffc1c9, #ffffff);
   background-size: 600% 600%;
   animation: gradient-border 5s ease infinite;
@@ -45,11 +48,9 @@ body {
   }
 }
 
+/* Force light mode */
 html {
   color-scheme: light;
-  background-color: white;
-  color: black;
+  background-color: #ffffff;
+  color: #171717;
 }
-
-
-
