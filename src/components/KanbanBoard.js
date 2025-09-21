@@ -27,17 +27,9 @@ export default function KanbanBoard() {
   const [leads, setLeads] = useState([])
   const [editingLead, setEditingLead] = useState(null)
   const [recentUpdates, setRecentUpdates] = useState([])
+  const [updateFilter, setUpdateFilter] = useState("all") // optional type filter
 
-  useEffect(() => {
-    fetchLeads()
-    fetchRecentUpdates()
-  }, [])
-
-  useEffect(() => {
-    const interval = setInterval(fetchRecentUpdates, 30000) // refresh every 30s
-    return () => clearInterval(interval)
-  }, [])
-
+  // -------------------- FUNCTIONS --------------------
   const fetchLeads = async () => {
     const { data, error } = await supabase.from("leads").select("*")
     if (!error) setLeads(data)
@@ -60,34 +52,6 @@ export default function KanbanBoard() {
     if (!error) setRecentUpdates(data)
   }
 
-  const updateLeadStatus = async (id, newStatus) => {
-    const updates = {
-      status: newStatus,
-      last_activity_at: new Date().toISOString(),
-    }
-
-    if (newStatus === "quoted") {
-      const { data } = await supabase.from("leads").select("follow_up_count").eq("id", id).single()
-      const followUpCount = (data?.follow_up_count || 0) + 1
-      updates.follow_up_count = followUpCount
-      updates.follow_up_at = new Date(Date.now() + (followUpCount === 1 ? 3 : 7) * 24 * 60 * 60 * 1000).toISOString()
-    }
-
-    if (newStatus === "lost") {
-      const reason = prompt("Reason for losing this lead? (e.g., budget, timing, competitor)")
-      updates.lost_reason = reason || "unspecified"
-    }
-
-    setLeads((prev) => prev.map((lead) => (lead.id === id ? { ...lead, ...updates } : lead)))
-
-    await supabase.from("leads").update(updates).eq("id", id)
-  }
-
-  const scrollToColumn = (id) => {
-    const el = document.getElementById(id)
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
-  }
-
   const highlightLead = (leadId) => {
     const el = document.getElementById(leadId)
     if (!el) return
@@ -96,10 +60,20 @@ export default function KanbanBoard() {
     setTimeout(() => el.classList.remove("ring", "ring-blue-400"), 2000)
   }
 
+  // -------------------- EFFECTS --------------------
+  useEffect(() => {
+    fetchLeads()
+    fetchRecentUpdates()
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(fetchRecentUpdates, 30000) // refresh every 30s
+    return () => clearInterval(interval)
+  }, [])
+
+  // -------------------- RENDER --------------------
   return (
     <div className="p-4 sm:p-6 relative">
-      {/* Sticky header */}
-
 
       {/* Recent Updates Banner */}
       {recentUpdates.length > 0 && (
@@ -113,25 +87,45 @@ export default function KanbanBoard() {
               Clear
             </button>
           </div>
-          <ul className="space-y-1">
-            {recentUpdates.map((update) => (
-             <li
-  key={update.id}
-  className="flex justify-between items-center p-2 bg-white rounded shadow-sm hover:bg-gray-100 cursor-pointer"
-  onClick={() => highlightLead(update.lead_id)}
->
-  <span>
-    <strong>{update.leads.name}</strong> — {update.description}
-  </span>
-  <span className="text-gray-400 text-xs">
-    {new Date(update.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-  </span>
-</li>
 
+          {/* Optional type filters */}
+          <div className="flex gap-2 mb-2 flex-wrap">
+            {["all","follow_up","email","call","status"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setUpdateFilter(type)}
+                className={`px-2 py-1 text-xs rounded-full border ${
+                  updateFilter === type
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300"
+                }`}
+              >
+                {type === "all" ? "All" : type.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase())}
+              </button>
+            ))}
+          </div>
+
+          <ul className="space-y-1 max-h-48 overflow-y-auto">
+            {recentUpdates
+              .filter(u => updateFilter === "all" || u.type === updateFilter)
+              .map((update) => (
+                <li
+                  key={update.id}
+                  className="flex justify-between items-center p-2 bg-white rounded shadow-sm hover:bg-gray-100 cursor-pointer"
+                  onClick={() => highlightLead(update.lead_id)}
+                >
+                  <span>
+                    <strong>{update.leads.name}</strong> — {update.description}
+                  </span>
+                  <span className="text-gray-400 text-xs">
+                    {new Date(update.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                  </span>
+                </li>
             ))}
           </ul>
         </div>
       )}
+
 
       <DndContext
         collisionDetection={closestCorners}
