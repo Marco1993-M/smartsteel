@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
 import LeadEditorDrawer from "./LeadEditorDrawer"
 import { Mail, Phone, Edit3 } from "lucide-react"
+import { useRef } from "react"
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
 
@@ -59,6 +60,21 @@ export default function KanbanBoard() {
     el.classList.add("ring", "ring-blue-400")
     setTimeout(() => el.classList.remove("ring", "ring-blue-400"), 2000)
   }
+
+  // -------------------- SCROLL FUNCTION --------------------
+const kanbanRef = useRef(null)
+
+const scrollToColumn = (statusId) => {
+  const el = document.getElementById(statusId)
+  if (!el || !kanbanRef.current) return
+  const container = kanbanRef.current
+  const containerRect = container.getBoundingClientRect()
+  const elRect = el.getBoundingClientRect()
+  container.scrollBy({
+    left: elRect.left - containerRect.left,
+    behavior: "smooth",
+  })
+}
 
   // -------------------- EFFECTS --------------------
   useEffect(() => {
@@ -178,28 +194,35 @@ export default function KanbanBoard() {
           ))}
         </div>
 
-        {/* Desktop Kanban */}
-        <div className="hidden sm:flex overflow-x-auto gap-4 pb-4">
-          {statuses.map((status) => (
-            <div key={status} id={status} className="flex-shrink-0 w-64">
-              <KanbanColumn id={status} title={status} leads={leads.filter((l) => l.status === status)} setEditingLead={setEditingLead} />
-            </div>
-          ))}
-        </div>
+   {/* Desktop Kanban */}
+<div ref={kanbanRef} className="hidden sm:flex overflow-x-auto gap-4 pb-4 scroll-smooth">
+  {statuses.map((status) => (
+    <div key={status} id={status} className="flex-shrink-0 w-64">
+      <KanbanColumn
+        id={status}
+        title={status}
+        leads={leads.filter((l) => l.status === status)}
+        setEditingLead={setEditingLead}
+      />
+    </div>
+  ))}
+</div>
+
       </DndContext>
 
       {/* Floating Bottom Nav (mobile only) */}
-      <div className="sm:hidden fixed bottom-0 left-0 w-full bg-white border-t shadow-md flex justify-around py-2 z-50">
-        {statuses.map((status) => (
-          <button
-            key={status}
-            onClick={() => scrollToColumn(status)}
-            className="text-sm px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 transition"
-          >
-            {status}
-          </button>
-        ))}
-      </div>
+<div className="sm:hidden fixed bottom-0 left-0 w-full bg-white border-t shadow-md flex justify-around py-2 z-50">
+  {statuses.map((status) => (
+    <button
+      key={status}
+      onClick={() => scrollToColumn(status)}
+      className="text-sm px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 transition"
+    >
+      {status}
+    </button>
+  ))}
+</div>
+
 
       {/* Lead Editor Drawer */}
       {editingLead && (
