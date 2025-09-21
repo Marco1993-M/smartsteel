@@ -75,56 +75,61 @@ export default function KanbanBoard() {
   return (
     <div className="p-4 sm:p-6 relative">
 
-      {/* Recent Updates Banner */}
-      {recentUpdates.length > 0 && (
-        <div className="bg-gray-50 border-b border-gray-200 p-4 mb-4 rounded-md shadow-sm">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-semibold text-gray-800">🔔 Recent Updates</h2>
-            <button
-              className="text-sm text-blue-600 hover:underline"
-              onClick={() => setRecentUpdates([])}
-            >
-              Clear
-            </button>
-          </div>
+ {/* Recent Updates Banner - Notion Style */}
+{recentUpdates.length > 0 && (
+  <div className="bg-white border border-gray-200 p-3 mb-4 rounded-xl shadow-sm">
+    <div className="flex justify-between items-center mb-2">
+      <h2 className="text-md font-medium text-gray-800 flex items-center gap-2">
+        🔔 Recent Updates
+      </h2>
+      <button
+        className="text-sm text-gray-500 hover:text-gray-700 transition"
+        onClick={() => setRecentUpdates([])}
+      >
+        Clear
+      </button>
+    </div>
 
-          {/* Optional type filters */}
-          <div className="flex gap-2 mb-2 flex-wrap">
-            {["all","follow_up","email","call","status"].map((type) => (
-              <button
-                key={type}
-                onClick={() => setUpdateFilter(type)}
-                className={`px-2 py-1 text-xs rounded-full border ${
-                  updateFilter === type
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300"
-                }`}
-              >
-                {type === "all" ? "All" : type.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase())}
-              </button>
-            ))}
-          </div>
+    {/* Filter Pills */}
+    <div className="flex gap-2 mb-3 flex-wrap">
+      {["all","follow_up","email","call","status"].map((type) => (
+        <button
+          key={type}
+          onClick={() => setUpdateFilter(type)}
+          className={`px-3 py-1 text-xs font-medium rounded-full border transition ${
+            updateFilter === type
+              ? "bg-gray-900 text-white border-gray-900"
+              : "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200"
+          }`}
+        >
+          {type === "all" ? "All" : type.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase())}
+        </button>
+      ))}
+    </div>
 
-          <ul className="space-y-1 max-h-48 overflow-y-auto">
-            {recentUpdates
-              .filter(u => updateFilter === "all" || u.type === updateFilter)
-              .map((update) => (
-                <li
-                  key={update.id}
-                  className="flex justify-between items-center p-2 bg-white rounded shadow-sm hover:bg-gray-100 cursor-pointer"
-                  onClick={() => highlightLead(update.lead_id)}
-                >
-                  <span>
-                    <strong>{update.leads.name}</strong> — {update.description}
-                  </span>
-                  <span className="text-gray-400 text-xs">
-                    {new Date(update.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                  </span>
-                </li>
-            ))}
-          </ul>
-        </div>
-      )}
+    {/* Updates List */}
+    <ul className="space-y-1 max-h-48 overflow-y-auto">
+      {recentUpdates
+        .filter(u => updateFilter === "all" || u.type === updateFilter)
+        .map((update) => (
+          <li
+            key={update.id}
+            className="flex justify-between items-start p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition"
+            onClick={() => highlightLead(update.lead_id)}
+          >
+            <div className="flex flex-col">
+              <span className="font-medium text-gray-800">{update.leads.name}</span>
+              <span className="text-gray-600 text-sm">{update.description}</span>
+            </div>
+            <span className="text-gray-400 text-xs ml-2">
+              {new Date(update.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+            </span>
+          </li>
+      ))}
+    </ul>
+  </div>
+)}
+
 
 
       <DndContext
