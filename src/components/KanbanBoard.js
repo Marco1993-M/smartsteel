@@ -210,18 +210,18 @@ const scrollToColumn = (statusId) => {
 
       </DndContext>
 
-      {/* Floating Bottom Nav (mobile only) */}
-<div className="sm:hidden fixed bottom-0 left-0 w-full bg-white border-t shadow-md flex justify-around py-2 z-50">
-  {statuses.map((status) => (
-    <button
-      key={status}
-      onClick={() => scrollToColumn(status)}
-      className="text-sm px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 transition"
-    >
-      {status}
-    </button>
-  ))}
-</div>
+           {/* Floating Bottom Nav (mobile only) */}
+      <div className="sm:hidden fixed bottom-0 left-0 w-full bg-white border-t shadow-md flex justify-around py-2 z-50">
+        {statuses.map((status) => (
+          <button
+            key={status}
+            onClick={() => scrollToColumn(status)}
+            className="text-sm px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 transition"
+          >
+            {status}
+          </button>
+        ))}
+      </div>
 
 
       {/* Lead Editor Drawer */}
