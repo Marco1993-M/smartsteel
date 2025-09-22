@@ -420,11 +420,11 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             onChange={(e) => handleChange("status", e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
           >
-            <option>New</option>
-            <option>Contacted</option>
-            <option>Quoted</option>
-            <option>Won</option>
-            <option>Lost</option>
+            <option>new</option>
+            <option>contacted</option>
+            <option>quoted</option>
+            <option>won</option>
+            <option>lost</option>
           </select>
         </div>
       </Tab.Panel>
