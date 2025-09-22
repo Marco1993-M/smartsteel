@@ -428,134 +428,152 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
           </select>
         </div>
       </Tab.Panel>
-      {/* Notes Panel */}
-      <Tab.Panel className="w-full max-w-full flex flex-col h-full">
-        {/* Sticky Add Note */}
-        <div className="sticky top-0 bg-white z-10 p-2 border-b w-full max-w-full">
-          <textarea
-            placeholder="Add a note..."
-            className="w-full rounded-md border-gray-300 shadow-sm resize-none"
-            rows={3}
-            onKeyDown={async (e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                const text = e.target.value.trim();
-                if (!text) return;
-                if (!lead?.id) {
-                  alert("Please save the lead before adding notes");
-                  return;
-                }
-                const tempId = Math.random();
-                const newNote = {
-                  id: tempId,
-                  text,
-                  created_at: new Date().toISOString(),
-                };
-                setNotes((prev) => [newNote, ...prev]);
-                e.target.value = "";
-                const { data, error } = await supabase
-                  .from("lead_notes")
-                  .insert([{ lead_id: lead.id, text }])
-                  .select();
-                if (error) {
-                  console.error("Error adding note:", error);
-                  setNotes((prev) => prev.filter((n) => n.id !== tempId));
-                } else if (data && data[0]) {
+
+
+{/* Notes Panel */}
+<Tab.Panel className="w-full max-w-full flex flex-col h-full">
+  {/* Sticky Add Note */}
+  <div className="sticky top-0 bg-white z-10 p-2 border-b w-full max-w-full">
+    <textarea
+      placeholder="Add a note..."
+      className="w-full rounded-md border-gray-300 shadow-sm resize-none"
+      rows={3}
+      onKeyDown={async (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          const text = e.target.value.trim();
+          if (!text) return;
+          if (!lead?.id) {
+            alert("Please save the lead before adding notes");
+            return;
+          }
+
+          const tempId = Math.random();
+          const newNote = {
+            id: tempId,
+            text,
+            created_at: new Date().toISOString(),
+          };
+          setNotes((prev) => [newNote, ...prev]);
+          e.target.value = "";
+
+          // Insert into notes table
+          const { data, error } = await supabase
+            .from("lead_notes")
+            .insert([{ lead_id: lead.id, text }])
+            .select();
+
+          if (error) {
+            console.error("Error adding note:", error);
+            setNotes((prev) => prev.filter((n) => n.id !== tempId));
+          } else if (data && data[0]) {
+            setNotes((prev) =>
+              prev.map((n) =>
+                n.id === tempId
+                  ? { ...n, id: data[0].id, created_at: data[0].created_at }
+                  : n
+              )
+            );
+
+            // ➕ Add to recent updates
+            await supabase.from("lead_activities").insert([{
+              lead_id: lead.id,
+              type: "note",
+              user_name: "System",
+              description: `Added a note: "${text}"`,
+              timestamp: new Date().toISOString(),
+            }]);
+          }
+        }
+      }}
+    />
+  </div>
+
+  {/* Notes List */}
+  <div className="flex-1 overflow-y-auto w-full max-w-full space-y-2 p-2">
+    {notes.length === 0 ? (
+      <p className="text-sm text-gray-500">
+        No notes yet. Add your first note above.
+      </p>
+    ) : (
+      notes.map((note) => (
+        <div
+          key={note.id}
+          className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
+        >
+          <div className="flex-1">
+            {note.isEditing ? (
+              <textarea
+                value={note.text}
+                onChange={(e) =>
                   setNotes((prev) =>
                     prev.map((n) =>
-                      n.id === tempId
-                        ? { ...n, id: data[0].id, created_at: data[0].created_at }
-                        : n
+                      n.id === note.id ? { ...n, text: e.target.value } : n
+                    )
+                  )
+                }
+                onBlur={async () => {
+                  const updatedNote = notes.find((n) => n.id === note.id);
+                  if (!updatedNote) return;
+                  setNotes((prev) =>
+                    prev.map((n) =>
+                      n.id === note.id ? { ...n, isEditing: false } : n
                     )
                   );
+                  const { error } = await supabase
+                    .from("lead_notes")
+                    .update({ text: updatedNote.text })
+                    .eq("id", note.id);
+                  if (error) console.error("Error updating note:", error);
+                }}
+                className="w-full rounded-md border-gray-300 shadow-sm resize-none"
+                autoFocus
+                rows={2}
+              />
+            ) : (
+              <p
+                className="text-sm cursor-pointer break-words"
+                onClick={() =>
+                  setNotes((prev) =>
+                    prev.map((n) =>
+                      n.id === note.id ? { ...n, isEditing: true } : n
+                    )
+                  )
                 }
+              >
+                {note.text}
+              </p>
+            )}
+            {note.created_at && (
+              <span className="text-xs text-gray-400 block mt-1">
+                {new Date(note.created_at).toLocaleString()}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={async () => {
+              const noteId = note.id;
+              setNotes((prev) => prev.filter((n) => n.id !== noteId));
+              const { error } = await supabase
+                .from("lead_notes")
+                .delete()
+                .eq("id", noteId);
+              if (error) {
+                console.error("Error deleting note:", error);
+                setNotes((prev) => [note, ...prev]);
               }
             }}
-          />
+            className="ml-2 text-red-600 hover:text-red-800 flex-shrink-0"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
-        {/* Notes List */}
-        <div className="flex-1 overflow-y-auto w-full max-w-full space-y-2 p-2">
-          {notes.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              No notes yet. Add your first note above.
-            </p>
-          ) : (
-            notes.map((note) => (
-              <div
-                key={note.id}
-                className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
-              >
-                <div className="flex-1">
-                  {note.isEditing ? (
-                    <textarea
-                      value={note.text}
-                      onChange={(e) =>
-                        setNotes((prev) =>
-                          prev.map((n) =>
-                            n.id === note.id ? { ...n, text: e.target.value } : n
-                          )
-                        )
-                      }
-                      onBlur={async () => {
-                        const updatedNote = notes.find((n) => n.id === note.id);
-                        if (!updatedNote) return;
-                        setNotes((prev) =>
-                          prev.map((n) =>
-                            n.id === note.id ? { ...n, isEditing: false } : n
-                          )
-                        );
-                        const { error } = await supabase
-                          .from("lead_notes")
-                          .update({ text: updatedNote.text })
-                          .eq("id", note.id);
-                        if (error) console.error("Error updating note:", error);
-                      }}
-                      className="w-full rounded-md border-gray-300 shadow-sm resize-none"
-                      autoFocus
-                      rows={2}
-                    />
-                  ) : (
-                    <p
-                      className="text-sm cursor-pointer break-words"
-                      onClick={() =>
-                        setNotes((prev) =>
-                          prev.map((n) =>
-                            n.id === note.id ? { ...n, isEditing: true } : n
-                          )
-                        )
-                      }
-                    >
-                      {note.text}
-                    </p>
-                  )}
-                  {note.created_at && (
-                    <span className="text-xs text-gray-400 block mt-1">
-                      {new Date(note.created_at).toLocaleString()}
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={async () => {
-                    const noteId = note.id;
-                    setNotes((prev) => prev.filter((n) => n.id !== noteId));
-                    const { error } = await supabase
-                      .from("lead_notes")
-                      .delete()
-                      .eq("id", noteId);
-                    if (error) {
-                      console.error("Error deleting note:", error);
-                      setNotes((prev) => [note, ...prev]);
-                    }
-                  }}
-                  className="ml-2 text-red-600 hover:text-red-800 flex-shrink-0"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      </Tab.Panel>
+      ))
+    )}
+  </div>
+</Tab.Panel>
+
+
       {/* Activity Panel */}
       <Tab.Panel className="space-y-6 w-full max-w-full p-4">
         {loadingActivities ? (
