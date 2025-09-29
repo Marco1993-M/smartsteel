@@ -5,28 +5,43 @@ import { supabase } from "../lib/supabase"
 
 export default function UpcomingTasks({ leads }) {
   const [tasks, setTasks] = useState([])
+  const [completedTasks, setCompletedTasks] = useState([])
   const [newTaskTitle, setNewTaskTitle] = useState("")
   const [newTaskDue, setNewTaskDue] = useState("")
   const [filter, setFilter] = useState("all")
 
-  // Fetch tasks from Supabase
+  // Fetch incomplete tasks
   const fetchTasks = async () => {
     const { data, error } = await supabase
       .from("tasks")
       .select("*")
+      .eq("completed", false)
       .order("due_date", { ascending: true })
     if (!error) setTasks(data)
   }
 
+  // Fetch completed tasks
+  const fetchCompletedTasks = async () => {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("completed", true)
+      .order("due_date", { ascending: false })
+    if (!error) setCompletedTasks(data)
+  }
+
   useEffect(() => {
     fetchTasks()
+    fetchCompletedTasks()
   }, [])
 
+  // Add new task
   const addTask = async () => {
     if (!newTaskTitle) return
     const newTask = {
       title: newTaskTitle,
       due_date: newTaskDue || null,
+      completed: false,
       created_at: new Date().toISOString(),
     }
     const { data, error } = await supabase.from("tasks").insert(newTask).select()
@@ -37,9 +52,26 @@ export default function UpcomingTasks({ leads }) {
     }
   }
 
+  // Mark task as completed
+  const markCompleted = async (id) => {
+    const { error } = await supabase
+      .from("tasks")
+      .update({ completed: true })
+      .eq("id", id)
+    if (!error) {
+      const completedTask = tasks.find(t => t.id === id)
+      setTasks(prev => prev.filter(t => t.id !== id))
+      setCompletedTasks(prev => [completedTask, ...prev])
+    }
+  }
+
+  // Optional delete task (permanent removal)
   const deleteTask = async (id) => {
     const { error } = await supabase.from("tasks").delete().eq("id", id)
-    if (!error) setTasks(prev => prev.filter(t => t.id !== id))
+    if (!error) {
+      setTasks(prev => prev.filter(t => t.id !== id))
+      setCompletedTasks(prev => prev.filter(t => t.id !== id))
+    }
   }
 
   const today = new Date().toISOString().split("T")[0]
@@ -48,7 +80,6 @@ export default function UpcomingTasks({ leads }) {
     return true
   })
 
-  // Handle Enter key press in task input
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       e.preventDefault()
@@ -86,7 +117,7 @@ export default function UpcomingTasks({ leads }) {
         </button>
       </div>
 
-      {/* Tasks List */}
+      {/* Upcoming Tasks List */}
       <ul className="space-y-2 max-h-64 overflow-y-auto mb-3">
         {filteredTasks.length === 0 && (
           <li className="text-gray-400 text-sm">No tasks found</li>
@@ -102,16 +133,49 @@ export default function UpcomingTasks({ leads }) {
                 <span className="text-xs text-gray-400">Due: {task.due_date}</span>
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => deleteTask(task.id)}
-              className="text-red-500 hover:text-red-700 text-xs"
-            >
-              ✕
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => markCompleted(task.id)}
+                className="text-green-500 hover:text-green-700 text-xs"
+              >
+                ✅
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteTask(task.id)}
+                className="text-red-500 hover:text-red-700 text-xs"
+              >
+                ✕
+              </button>
+            </div>
           </li>
         ))}
       </ul>
+
+      {/* Completed Tasks Section */}
+      {completedTasks.length > 0 && (
+        <>
+          <h3 className="text-sm font-semibold mb-2 mt-4 text-gray-600">Completed Tasks</h3>
+          <ul className="space-y-2 max-h-40 overflow-y-auto mb-3">
+            {completedTasks.map(task => (
+              <li
+                key={task.id}
+                className="flex justify-between items-center p-2 rounded-lg border border-gray-100 bg-gray-50 text-gray-400 text-sm"
+              >
+                <span>{task.title}</span>
+                <button
+                  type="button"
+                  onClick={() => deleteTask(task.id)}
+                  className="text-red-500 hover:text-red-700 text-xs"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       {/* Add New Task */}
       <div className="flex flex-col gap-2">
