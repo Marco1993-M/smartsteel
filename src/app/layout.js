@@ -20,13 +20,13 @@ const geistMono = Geist_Mono({
 export const metadata = {
   metadataBase: new URL("https://smartsteel.co.za"),
   title: {
-    default:
-      "Smart Steel | Light Weight Steel Warehousing",
+    default: "Lightweight Steel Warehouses",
     template: "%s | Smart Steel",
   },
   description:
-    "Smart Steel specializes in lightweight steel structures, warehouses, solar solutions and sustainable building solutions across South Africa. Get a fast, durable, and cost-effective build.",
+    "Smart Steel specializes in lightweight steel warehouses, solar solutions, and sustainable building systems across South Africa. Get a fast, durable, and cost-effective build.",
   keywords: [
+    "lightweight steel warehouses",
     "steel structures",
     "lightweight steel",
     "modular buildings",
