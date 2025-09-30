@@ -99,7 +99,7 @@ export default function Home() {
   const faqs = [
     {
       q: 'How long does it take to build?',
-      a: 'Smart Steel empowers you to build world-class warehouse facilities faster and more cost-effectively than traditional construction methods. Our lightweight steel warehouse solutions can be shipped anywhere across South Africa and beyond, designed for easy self-assembly or professional erection by the Smart Steel team.',
+      a: 'Smart Steel empowers you to build world-class lighweight steel warehouses faster and more cost-effectively than traditional construction methods. Our lightweight steel warehouse solutions can be shipped anywhere across South Africa and beyond, designed for easy self-assembly or professional erection by the Smart Steel team.',
     },
     {
       q: 'Can I customize or expand later?',
@@ -107,7 +107,7 @@ export default function Home() {
     },
     {
       q: 'How durable are these structures?',
-      a: 'Our steel is galvanized, fire-rated, and built to last over 50 years in South African conditions.',
+      a: 'Our lightweight steel warehouses are fabricated with G550 steel that is galvanized, fire-rated, and built to last over 50 years in South African conditions.',
     },
   ];
 
@@ -294,10 +294,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-left">
-              Lightweight Steel Warehousing in South Africa
+              Lightweight Steel Warehouses in South Africa
             </h2>
             <p className="text-lg text-gray-700 mb-6 text-left">
-              Fast, modular, and energy-efficient — our cold-formed steel warehouses are engineered for South African conditions and tailored to your industry.
+              Fast, modular, and energy-efficient — our cold-formed lightweight steel warehouses are engineered for South African conditions and tailored to your industry.
             </p>
             <ul className="space-y-3 text-gray-800 font-medium mb-8 text-left">
               <li>⚡ <strong>50% faster</strong> to build than brick-and-mortar</li>
