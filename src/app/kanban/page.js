@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { supabase } from "../../lib/supabase"
 import KanbanBoard from "../../components/KanbanBoard"
 import LeadEditorDrawer from "../../components/LeadEditorDrawer"
+import PricesDrawer from "../../components/PricesDrawer"
 
 export default function KanbanPage() {
   const router = useRouter()
@@ -12,6 +13,7 @@ export default function KanbanPage() {
   const [leads, setLeads] = useState([])
   const [editingLead, setEditingLead] = useState(null)
   const [isAddingLead, setIsAddingLead] = useState(false)
+  const [showPricesDrawer, setShowPricesDrawer] = useState(false) // NEW
 
   // Check auth on mount
   useEffect(() => {
@@ -70,12 +72,23 @@ export default function KanbanPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mt-16 mb-6">
         <h1 className="text-2xl font-bold">Smart Steel Leads Centre</h1>
-        <button
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          onClick={() => setIsAddingLead(true)}
-        >
-          + New Lead
-        </button>
+
+        {/* Buttons group */}
+        <div className="flex gap-3">
+          <button
+            className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
+            onClick={() => setShowPricesDrawer(true)}
+          >
+            Prices & Templates
+          </button>
+
+          <button
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            onClick={() => setIsAddingLead(true)}
+          >
+            + New Lead
+          </button>
+        </div>
       </div>
 
       <KanbanBoard
@@ -111,6 +124,11 @@ export default function KanbanPage() {
           onSave={(lead) => handleSaveLead(lead, true)}
           onDelete={handleDeleteLead}
         />
+      )}
+
+      {/* Prices & Templates Drawer */}
+      {showPricesDrawer && (
+        <PricesDrawer onClose={() => setShowPricesDrawer(false)} />
       )}
     </div>
   )
