@@ -60,7 +60,7 @@ export const metadata = {
     siteName: "Smart Steel",
     images: [
       {
-        url: "/smartsteel.jpg", // Replace with your real OG image
+        url: "/smartsteel.jpg",
         width: 1200,
         height: 630,
         alt: "Smart Steel – Lightweight Steel Structures",
@@ -75,7 +75,7 @@ export const metadata = {
       "Smart Steel | Premium Light Weight Steel Structures & Warehousing Solutions",
     description:
       "High-quality lightweight steel structures, modular sheds, and warehouse kits across South Africa.",
-    images: ["/favicon.png"], // Replace with your real OG image
+    images: ["/favicon.png"],
   },
   icons: {
     icon: [
@@ -86,7 +86,7 @@ export const metadata = {
   },
   manifest: "/favicon/site.webmanifest",
   verification: {
-    google: "PHZurmEVfVH4LcziY1ERgqZNLYs4EtmktPLXB5tPdB0", // Your GSC code
+    google: "PHZurmEVfVH4LcziY1ERgqZNLYs4EtmktPLXB5tPdB0",
   },
 };
 
@@ -96,9 +96,7 @@ const organizationJsonLd = {
   name: "Smart Steel",
   url: "https://www.smartsteel.co.za",
   logo: "https://www.smartsteel.co.za/logo.png",
-  sameAs: [
-    "https://www.facebook.com/profile.php?id=100091390116080",
-  ],
+  sameAs: ["https://www.facebook.com/profile.php?id=100091390116080"],
   description:
     "Smart Steel designs and supplies modular steel structures in South Africa. Fast, affordable, and high quality.",
   address: {
@@ -121,6 +119,26 @@ const organizationJsonLd = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17629050810"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-ads-tag"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-17629050810');
+            `,
+          }}
+        />
+      </head>
+
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full flex flex-col`}
       >
@@ -131,7 +149,7 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
 
-       {/* <AnnouncementBanner /> */}
+        {/* <AnnouncementBanner /> */}
         <Navbar />
         {children}
         <Footer />
