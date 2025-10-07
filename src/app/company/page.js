@@ -1,6 +1,6 @@
 // app/company/page.js
 import Image from 'next/image';
-import SocialIcons from '@/components/SocialIcons';
+import SocialIcons from '../../components/SocialIcons';
 
 // --- Metadata for SEO & canonical ---
 export const metadata = {
