@@ -2,6 +2,15 @@
 import Image from 'next/image';
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
+// --- Metadata for SEO & canonical ---
+export const metadata = {
+  title: "Smart Steel | Lightweight Steel Warehouses",
+  description: "Learn about Smart Steel and our lightweight steel building solutions.",
+  alternates: {
+    canonical: '/company', // canonical matches the page URL
+  },
+};
+
 export default function CompanyPage() {
   return (
       <main className="font-sans text-gray-800">
