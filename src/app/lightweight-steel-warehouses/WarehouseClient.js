@@ -18,8 +18,8 @@ const warehouseProductSchema = {
   description:
     "Modular lightweight steel warehouses available in 8m and 12m widths, customizable length and color options, with optional features.",
   image: [
-    "https://smartsteel.co.za/warehouse-8m.jpg",
-    "https://smartsteel.co.za/warehouse-13m.jpg"
+    "https://www.smartsteel.co.za/warehouse-8m.jpg",
+    "https://www.smartsteel.co.za/warehouse-13m.jpg"
   ],
   brand: {
     "@type": "Brand",
@@ -33,8 +33,8 @@ const warehouseProductSchema = {
       price: "0.00", // placeholder
       itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
-      url: "https://smartsteel.co.za/lightweight-steel-warehouses",
-      image: "https://smartsteel.co.za/warehouse-8m.jpg"
+      url: "https://www.smartsteel.co.za/lightweight-steel-warehouses",
+      image: "https://www.smartsteel.co.za/warehouse-8m.jpg"
     },
     {
       "@type": "Offer",
@@ -43,8 +43,8 @@ const warehouseProductSchema = {
       price: "0.00", // placeholder
       itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
-      url: "https://smartsteel.co.za/ightweight-steel-warehouses",
-      image: "https://smartsteel.co.za/warehouse-13m.jpg"
+      url: "https://www.smartsteel.co.za/lightweight-steel-warehouses",
+      image: "https://www.smartsteel.co.za/warehouse-13m.jpg"
     }
   ],
 };
