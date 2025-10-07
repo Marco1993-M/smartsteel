@@ -14,7 +14,7 @@ const serviceSchema = {
   provider: {
     "@type": "Organization",
     name: "Smart Steel",
-    url: "https://smartsteel.co.za",
+    url: "https://www.smartsteel.co.za",
     logo: "https://smartsteel.co.za/logo-512x512.png"
   },
   areaServed: {
@@ -22,17 +22,17 @@ const serviceSchema = {
     name: "South Africa"
   },
   serviceType: "Solar mounting structures, steel solar carports, roof & ground mount frames",
-  url: "https://smartsteel.co.za/solar",
+  url: "https://www.smartsteel.co.za/solar",
   offers: {
     "@type": "Offer",
     price: "0.00",            // custom quotes
     priceCurrency: "ZAR",
     availability: "https://schema.org/InStock",
-    url: "https://smartsteel.co.za/solar"
+    url: "https://www.smartsteel.co.za"
   },
   image: [
-    "https://smartsteel.co.za/solar-hero.jpg",
-    "https://smartsteel.co.za/og-solar.jpg"
+    "https://www.smartsteel.co.za/solar-hero.jpg",
+    "https://www.smartsteel.co.za/og-solar.jpg"
   ]
 };
 
