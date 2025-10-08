@@ -6,8 +6,20 @@ import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
 export default function ArticlePage() {
   return (
-
      <>
+    {/* SEO & Canonical */}
+      <Head>
+        <title>Resilient outcomes with lightweight steel | Smart Steel</title>
+        <meta
+          name="description"
+          content="Learn how lightweight steel framing provides resilient, sustainable, and precision-engineered solutions for buildings."
+        />
+        <link
+          rel="canonical"
+          href="https://www.smartsteel.co.za/news/resilient-outcomes-of-lightweight-steel"
+        />
+      </Head>
+            
     <article className="max-w-5xl mx-auto px-6 py-16 space-y-12">
       {/* Meta + Title Row */}
       <div className="flex justify-between items-start flex-wrap gap-y-2">
