@@ -4,7 +4,7 @@ import WarehouseClient from "./WarehouseClient";
 export const metadata = {
   title: "Lightweight Steel Warehousing Solutions | Smart Steel",
   description:
-    "Build your perfect lightweight steel warehouse with Smart Steel. Choose structure sizes, colors, and extra features tailored to your needs. Fast quotes and expert support.",
+    "Build your lightweight steel warehouse with Smart Steel. Fast quotes and expert support.",
   keywords: [
     "steel sheds",
     "warehouse kits",
