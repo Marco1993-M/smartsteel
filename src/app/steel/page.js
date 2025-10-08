@@ -16,13 +16,13 @@ export const metadata = {
     "eco-friendly construction",
   ],
   alternates: {
-    canonical: "/lightweight-steel-framing",
+    canonical: "/steel",
   },
   openGraph: {
     title: "Lightweight Steel Framing (LSF) Solutions | Smart Steel",
     description:
       "Smart Steel provides innovative LSF construction for warehouses, sheds, and buildings. Faster builds, energy efficiency, and sustainability.",
-    url: "https://smartsteel.co.za/lightweight-steel-framing",
+    url: "https://smartsteel.co.za/steel",
     siteName: "Smart Steel",
     images: [
       {
@@ -40,7 +40,7 @@ export const metadata = {
     title: "Lightweight Steel Framing (LSF) Solutions | Smart Steel",
     description:
       "Durable, eco-friendly, and cost-effective lightweight steel framing for warehouses, sheds, and buildings.",
-    images: ["/og-lightweight-steel-framing.jpg"],
+    images: ["/og-steel.jpg"],
   },
   authors: [{ name: "Smart Steel" }],
   // You can add this if you want search engines to show the publish date:
