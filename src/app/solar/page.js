@@ -3,7 +3,7 @@ import SolarClient from "./SolarClient";
 
 
 export const metadata = {
-  title: "Solar Panel Mounting Structures & Steel Solar Carports | Smart Steel",
+  title: "Solar Panel Mounting Structures & Solar Carports",
   description:
     "Engineered lightweight steel structures for solar: carports, ground mounts, and roof frames. Fast, precise, corrosion‑resistant, and South Africa ready.",
   keywords: [
