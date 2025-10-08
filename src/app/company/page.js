@@ -5,7 +5,7 @@ import SocialIcons from '../../components/SocialIcons';
 // --- Metadata for SEO & canonical ---
 export const metadata = {
   title: "Smart Steel | Lightweight Steel Warehouses",
-  description: "Learn about Smart Steel and our lightweight steel building solutions.",
+  description: "Learn about Smart Steel and our lightweight steel building solutions. Unmatched expert and fast service",
   alternates: {
     canonical: '/company',
   },
