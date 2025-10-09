@@ -53,6 +53,7 @@ export default function Footer() {
       <div className="border-t border-gray-700 mt-12 pt-6 text-sm text-center text-gray-400">
         &copy; {new Date().getFullYear()} Smart Steel. All rights reserved. &nbsp;|&nbsp;
         <Link href="/privacy" className="hover:text-white underline">Privacy Policy</Link>
+        <Link href="/return-policy" className="hover:text-white underline">Return Policy</Link>
       </div>
     </footer>
   );
