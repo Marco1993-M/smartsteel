@@ -6,59 +6,85 @@ export default function SalePopup() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    setShow(true);
+    // Check if popup was already shown this session
+    const hasSeenPopup = sessionStorage.getItem('salePopupShown');
+
+    if (!hasSeenPopup) {
+      const timer = setTimeout(() => {
+        setShow(true);
+        sessionStorage.setItem('salePopupShown', 'true');
+      }, 1500); // show after 1.5s
+
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   if (!show) return null;
 
   return (
     <div
-      className="fixed inset-0 z-53 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}
     >
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col md:flex-row">
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full flex flex-col md:flex-row overflow-hidden animate-fadeIn">
         {/* Left side: Text + CTA */}
-        <div className="relative p-6 md:p-8 flex flex-col justify-center md:w-1/2 text-center md:text-left space-y-4">
+        <div className="p-8 flex flex-col justify-center md:w-1/2 text-center md:text-left space-y-5">
           <button
             onClick={() => setShow(false)}
-            className="absolute top-4 right-4 text-black hover:text-black text-3xl font-bold"
+            className="absolute top-4 right-4 text-white-500 hover:text-black text-3xl font-bold"
             aria-label="Close sale popup"
           >
             &times;
           </button>
-          <h2 className="text-2xl md:text-3xl font-bold text-red-600">
-            🚨 Massive Warehouse Sale at Smart Steel! 🚨
+
+          <h2 className="text-3xl font-bold mb-2 text-red-600">
+            Our Smart Steel Promise!
           </h2>
-          <p className="text-gray-700 text-base md:text-lg leading-relaxed whitespace-pre-line">
-            Get your hands on high-quality steel warehouses at unbeatable prices! Available sizes:
-            <br />
-            ✅ 15x10m
-            <br />
-            ✅ 12x20m
-            <br />
-            Perfect for storage, workshops, or your next big project.
+
+          <p className="text-gray-700 text-lg leading-relaxed">
+            Build smarter and save more with Smart Steel.  
+            Every warehouse order includes:
           </p>
+
+          <ul className="text-gray-800 text-lg space-y-2">
+            <li>✅ <strong>Free Shipping</strong></li>
+            <li>✅ <strong>Free Engineering Design</strong></li>
+            <li>✅ <strong>Free Engineering Sign-Off</strong></li>
+            <li>✅ <strong>Free Foundation Design</strong></li>
+          </ul>
+
           <a
-            href="mailto:info@smartsteel.co.za?subject=Inquiry%20about%20Massive%20Warehouse%20Sale&body=Hi%20Smart%20Steel%20team%2C%0D%0AI%E2%80%99m%20interested%20in%20the%20warehouse%20sale.%20Please%20send%20me%20more%20info."
-            className="inline-block bg-red-600 text-white px-6 py-2 rounded-full text-sm md:text-base hover:bg-red-700 transition"
+            href="mailto:info@smartsteel.co.za?subject=Smart%20Steel%20Special%20Offer&body=Hi%20Smart%20Steel%20team%2C%0D%0AI%E2%80%99m%20interested%20in%20your%20special%20offer.%20Please%20send%20me%20more%20information."
+            className="inline-block bg-red-600 text-white px-8 py-3 rounded-full text-base hover:bg-red-700 transition"
           >
             Contact Us
           </a>
         </div>
 
         {/* Right side: Image */}
-        <div className="md:w-1/2 w-full h-48 md:h-auto">
+        <div className="md:w-1/2">
           <img
             src="/sale-banner.png"
-            alt="Sale Banner"
+            alt="Smart Steel Offer Banner"
             className="w-full h-full object-cover"
           />
         </div>
       </div>
+
+      {/* Animation Style */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
