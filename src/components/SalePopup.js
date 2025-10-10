@@ -1,11 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function SalePopup() {
   const [show, setShow] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
+    // Don't show popup on the CRM page
+    if (pathname === '/kanban') return;
+
     const hasSeenPopup = sessionStorage.getItem('salePopupShown');
 
     if (!hasSeenPopup) {
@@ -15,7 +20,7 @@ export default function SalePopup() {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [pathname]);
 
   if (!show) return null;
 
@@ -82,14 +87,6 @@ export default function SalePopup() {
         }
         .animate-fadeIn {
           animation: fadeIn 0.5s ease-out;
-        }
-
-        /* Mobile improvements */
-        @media (max-width: 768px) {
-          #salePopup {
-            flex-direction: column;
-            text-align: center;
-          }
         }
       `}</style>
     </div>
