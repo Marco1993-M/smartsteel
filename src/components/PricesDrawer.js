@@ -20,21 +20,35 @@ export default function PricesDrawer({ onClose }) {
 
   const templateTexts = {
   "Outreach email": "Hi {Name},\nWe wanted to reach out to introduce our steel solutions...",
-  "Estimate email": `Hi {Name},
-The demand for lightweight steel warehouses is growing rapidly in South Africa. Companies like ATKV Resorts, one of our valued clients, are choosing steel for its speed, durability, and cost efficiency.
-Attached is your estimate for a 15m × 8m warehouse structure. This includes all steelwork, brackets & fasteners and IBR Sheeting. If you would like to include delivery and installation too, please let me know!
-Our lightweight steel system is designed to be quick and easy to construct, low-maintenance, and future-proof, giving you a space that works as hard as you do.
-Please find the estimate attached for your review. If you have any questions or want to discuss adjustments, feel free to reach out, I’m happy to help.
-Best regards,
+  "Estimate email": `Your order includes;
+
+✅ Free Shipping
+✅ Free Engineering Report
+✅ Free Engineering Sign-Off
+✅ Free Foundation Design
+
+Hi [Client Name],
+
+We’re making it easier than ever to build smarter with steel.
+
+The demand for lightweight steel warehouses is growing rapidly across South Africa — and for good reason. Companies like ATKV Resorts, one of our valued clients, are choosing steel for its speed, durability, and cost efficiency.
+
+Attached is your estimate for a [Structure Details], including all steelwork, brackets & fasteners, and [sheeting detail].
+If you’d like to include installation, just let me know,  we can add that in seamlessly.
+
+Our system is quick and easy to self assemble, low-maintenance, and future-proof, giving you a space that works as hard as you do.
+
+Please review the attached estimate, and if you have any questions or would like to make adjustments, I’m happy to assist.
 
 Marco Gerritsen
 Smart Steel 
-Build Better
+Building easier
 
 +27 82 846 4555
 info@smartsteel.co.za
 www.smartsteel.co.za
-P.S. I’ve also attached a short PDF highlighting the advantages of choosing lightweight steel warehouses—it’s a quick read and shows why so many businesses are making the switch.`,
+
+P.S. I’ve also attached a short PDF highlighting the advantages of lightweight steel warehouses — it’s a quick read that shows why so many businesses are making the switch.`,
   "Follow Up Email 1": "Hi {Name},\nJust following up on our previous message...",
   "Follow Up Email 2": "Hi {Name},\nChecking in again regarding your warehouse estimate..."
 }
