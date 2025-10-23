@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import LightweightSteelTrusses from '../components/LightweightSteelTrusses';
+import Image from "next/image";
 
 
 const brochures = {
@@ -116,15 +117,19 @@ export default function Home() {
       <main className="font-sans text-gray-800">
     
 {/* Hero Section */}
-<section
-  className="relative w-full h-[90vh] md:h-[100vh] flex items-start justify-center text-center text-white px-6"
-  style={{
-    backgroundImage: "url('/images/hero.jpg')",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  }}
->
-  {/* Overlay for readability */}
+<section className="relative w-full h-[90vh] md:h-[100vh] flex items-start justify-center text-center text-white px-6 overflow-hidden">
+  {/* Optimized hero image */}
+  <Image
+    src="/images/hero.jpg"
+    alt="Smart Steel lightweight warehouse"
+    fill
+    priority
+    quality={85}
+    sizes="100vw"
+    className="object-cover object-center"
+  />
+
+  {/* Overlay */}
   <div className="absolute inset-0 bg-black/0"></div>
 
   {/* Content Wrapper */}
