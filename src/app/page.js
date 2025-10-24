@@ -229,18 +229,25 @@ export default function Home() {
 
 
 
-        {/* About Section */}
-        <section className="py-16 px-6 bg-white text-center">
-          <h2 className="text-3xl font-semibold mb-6">Steel structures designed to last</h2>
-          <p className="max-w-3xl mx-auto text-lg">
-            Durable metal roofing, trusses, spec houses made from galvanised light weight steel that won’t twist, warp,
-            or shrink — ever. Our steel is fire-resistant, termite and borer proof, 100% recyclable, and engineered for
-            strength and longevity in any climate.
-            Smart Steel is one of the leading designers and suppliers of lightweight steel construction solutions across
-            South Africa. Our solutions are ideal for a wide range of applications, including custom steel workshops,
-            affordable steel storage units, and lightweight steel warehouses.
-          </p>
-        </section>
+{/* About Section */}
+<section className="py-16 px-6 bg-white text-center">
+  <h2 className="text-3xl font-semibold mb-6">Steel structures designed to last</h2>
+  <p className="max-w-3xl mx-auto text-lg">
+    Durable metal roofing, trusses, and spec houses made from galvanised lightweight steel that won’t twist, warp,
+    or shrink — ever. Our steel is fire-resistant, termite and borer proof, 100% recyclable, and engineered for
+    strength and longevity in any climate.
+    <br /><br />
+    Smart Steel is a trusted <strong>steel construction company</strong> and <strong>metal fabricator</strong> 
+    in South Africa. As a full-scope <strong>construction company</strong>, we design, engineer, and build 
+    lightweight steel structures from concept to completion. Our in-house <strong>building designers</strong> 
+    and <strong>architectural designers</strong> ensure that every project balances aesthetics, functionality, 
+    and long-term performance.
+    <br /><br />
+    We are proud to be one of the leading designers and suppliers of lightweight steel construction solutions 
+    across South Africa — ideal for custom steel workshops, affordable storage units, and modern steel warehouses.
+  </p>
+</section>
+
 
   <section className="bg-gray-100 py-16">
   <div className="max-w-7xl mx-auto mt-16 px-6 text-center">
