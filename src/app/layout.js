@@ -36,6 +36,12 @@ export const metadata = {
     "prefab steel buildings",
     "South Africa",
     "Smart Steel",
+    "Steel Construction Company",
+    "Construction Company",
+    "Metal fabricator",
+    "Building designer",
+    "Architectural Designer",
+    
   ],
   alternates: {
     canonical: "/",
