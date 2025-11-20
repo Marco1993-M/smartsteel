@@ -40,6 +40,30 @@ const projects = [
     description:
       'Elevating an existing flat roof into a roof that won’t be moved, this residential retrofit showcases innovative lightweight steel construction...'
   },
+    {
+    image: '/projects/atkv.jpg',
+    gallery: [
+      '/projects/atkv.jpg',
+      '/projects/atkv1.jpg',
+      '/projects/atkv2.jpg',
+      '/projects/atkv3.jpg',
+      '/projects/atkv4.jpg',
+      '/projects/atkv5.jpg',
+      '/projects/atkv6.jpg',
+      '/projects/atkv7.jpg',   
+      '/projects/atkv8.jpg',
+      '/projects/atkv9.jpg',
+      '/projects/atkv10.jpg'      
+    ],
+    title: '5x8m Lightweight Steel Stage for ATKV Bergville',
+    tag: 'Commercial',
+    keywords: ['Infrastructure', 'Roof Construction'],
+    architect: 'Designed by Smart Steel',
+    builder: 'Smart Steel',
+    fabricator: 'Smart Steel',
+    description:
+      'A 5x8m lightweight steel stage was constructed for ATKV in just 2 days, showcasing the efficiency and versatility of lightweight steel construction.'
+  },
 ];
 
 const filters = ['All', 'Commercial', 'Residential', 'Industrial'];
@@ -72,7 +96,7 @@ export default function RecentProjects() {
       <section className="max-w-6xl mx-auto mb-10">
         <h1 className="text-4xl font-bold mb-4 text-left">Project Gallery</h1>
         <p className="text-lg text-gray-700 text-left">
-          Lightweight steel has been used across residential and commercial buildings across South Africa. Whether you are
+          Lightweight steel has been used across residential and commercial buildings across South Africa. Whether you're
           building your home or a large-scale commercial project, explore and be inspired by projects that showcase the use
           of lightweight steel.
         </p>
@@ -149,7 +173,7 @@ export default function RecentProjects() {
             </button>
 
             {/* Image Viewer */}
-            <div className="relative w-full h-[60vh] sm:h-[400px]">
+            <div className="relative w-full h-[80vh] sm:h-[400px]">
               <Image
                 src={modalProject.gallery[currentImageIdx]}
                 alt={modalProject.title}
