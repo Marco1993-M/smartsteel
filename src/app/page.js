@@ -228,6 +228,48 @@ export default function Home() {
       <LightweightSteelTrusses />
 
 
+             {/* Homepage Recent Projects Preview Section */}
+      <section className="bg-white py-20 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between mb-12">
+          <div>
+            <h2 className="text-3xl font-bold mb-2 text-left">Recent Projects</h2>
+            <p className="text-lg text-left">Take a look at some recent builds that have benefited from the inner strength of lightweight steel.</p>
+          </div>
+          <div className="mt-4 md:mt-0">
+            <Link
+              href="/recent"
+              className="inline-block bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition"
+            >
+              Explore All Projects
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[{
+            image: '/projects/atkv.jpg',
+            title: '5x8m Structure for ATKV, Bergville',
+            description: 'A 5x8m lightweight steel structure'
+          }, {
+            image: '/projects/residential1.jpg',
+            title: 'Lightweight Roof Retrofit, Pretoria',
+            description: 'Steel trusses were used to replace aging timber in a school roof retrofit project.'
+          }].map((project, index) => (
+            <div key={index} className="relative group rounded-lg overflow-hidden shadow hover:shadow-lg transition">
+              <img
+                src={project.image}
+                alt={project.title}
+                className="w-full h-128 object-cover"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-[#1e2a39] bg-opacity-90 text-white p-4">
+                <h4 className="text-lg font-semibold">{project.title}</h4>
+                <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-2">{project.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
 
 {/* About Section */}
 <section className="py-16 px-6 bg-white text-center">
@@ -420,48 +462,6 @@ export default function Home() {
             </a>
           </div>
         </section>
-
-       {/* Homepage Recent Projects Preview Section */}
-      <section className="bg-white py-20 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between mb-12">
-          <div>
-            <h2 className="text-3xl font-bold mb-2 text-left">Recent Projects</h2>
-            <p className="text-lg text-left">Take a look at some recent builds that have benefited from the inner strength of lightweight steel.</p>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <Link
-              href="/recent"
-              className="inline-block bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition"
-            >
-              Explore All Projects
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[{
-            image: '/B.jpg',
-            title: 'Modern Farm Shed, Free State',
-            description: 'Custom agricultural shed using galvanised lightweight steel — fast to erect, built to last.'
-          }, {
-            image: '/C.jpg',
-            title: 'Lightweight Roof Retrofit, Pretoria',
-            description: 'Steel trusses were used to replace aging timber in a school roof retrofit project.'
-          }].map((project, index) => (
-            <div key={index} className="relative group rounded-lg overflow-hidden shadow hover:shadow-lg transition">
-              <img
-                src={project.image}
-                alt={project.title}
-                className="w-full h-72 object-cover"
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-[#1e2a39] bg-opacity-90 text-white p-4">
-                <h4 className="text-lg font-semibold">{project.title}</h4>
-                <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-2">{project.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
         {/* Built-in Quality */}
         <section className="bg-gray-100 py-20 px-6">
