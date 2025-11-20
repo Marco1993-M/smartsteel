@@ -253,7 +253,7 @@ export default function Home() {
           }, {
             image: '/projects/residential1.jpg',
             title: 'Lightweight Roof Retrofit, Pretoria',
-            description: 'Steel trusses were used to replace aging timber in a school roof retrofit project.'
+            description: 'Steel trusses were used to replace an aging flat roof in Pretoria.'
           }].map((project, index) => (
             <div key={index} className="relative group rounded-lg overflow-hidden shadow hover:shadow-lg transition">
               <img
