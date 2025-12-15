@@ -225,7 +225,7 @@ export default function WarehouseCatalogue({
 
   {/* WhatsApp FAB */}
   <Link
-    href={`https://wa.me/27821234567?text=Hi%20Smart%20Steel,%20I'm%20interested%20in%20the%20${encodeURIComponent(
+    href={`https://wa.me/27828464555?text=Hi%20Smart%20Steel,%20I'm%20interested%20in%20the%20${encodeURIComponent(
       w.name
     )}`}
     className="flex items-center justify-center
