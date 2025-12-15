@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "./lib/supabaseAuth";
+import { supabaseAdmin } from "./src/lib/supabaseAuth";
+
 
 export async function middleware(req) {
   const url = req.nextUrl.clone();
