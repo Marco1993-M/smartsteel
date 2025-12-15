@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import LightweightSteelTrusses from '../components/LightweightSteelTrusses';
 import Image from "next/image";
+import WarehouseCatalogue from 'components/warehouse-catalogue';
 
 
 const brochures = {
@@ -222,6 +223,8 @@ export default function Home() {
 </section>
 
 
+    {/* Add the trusses section */}
+    <WarehouseCatalogue />
 
 
  {/* Add the trusses section */}
