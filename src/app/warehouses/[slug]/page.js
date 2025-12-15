@@ -1,17 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, use } from "react";
 import Link from "next/link";
 import { warehouses } from "../../../components/warehouse-catalogue";
 
 export default function WarehouseDetailPage({ params }) {
-  const { slug } = params; // ✅ fixed
+  // ✅ Unwrap params Promise (Next.js App Router fix)
+  const { slug } = use(params);
 
   // Find warehouse by slug
   const warehouse = warehouses.find((w) => w.slug === slug);
 
-  // ✅ Always declare hooks at top
-  const [activeImage, setActiveImage] = useState(warehouse ? warehouse.image : null);
+  // ✅ Hooks must always be declared (even if warehouse is undefined)
+  const [activeImage, setActiveImage] = useState(
+    warehouse ? warehouse.image : null
+  );
 
   // Early return if warehouse not found
   if (!warehouse) {
@@ -70,21 +73,21 @@ export default function WarehouseDetailPage({ params }) {
             <p className="text-gray-900 text-lg font-medium">Starting from</p>
             <p className="text-3xl font-bold text-black">{w.price}</p>
             <p className="text-gray-700 leading-relaxed">
-              Final pricing depends on location, ground conditions, and customisation.
-              Speak to our team to confirm your build details.
+              Final pricing depends on location, ground conditions, and
+              customisation. Speak to our team to confirm your build details.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/contact"
                 className="inline-flex items-center justify-center
-                   h-12 px-6
-                   text-sm font-semibold
-                   rounded-full
-                   bg-[#da1a33] text-white
-                   border border-black
-                   transition-all duration-300
-                   hover:bg-white hover:text-black"
+                  h-12 px-6
+                  text-sm font-semibold
+                  rounded-full
+                  bg-[#da1a33] text-white
+                  border border-black
+                  transition-all duration-300
+                  hover:bg-white hover:text-black"
               >
                 Lock in Price
               </Link>
@@ -94,13 +97,13 @@ export default function WarehouseDetailPage({ params }) {
                   w.name
                 )}`}
                 className="inline-flex items-center justify-center
-                   h-12 px-6
-                   text-sm font-semibold
-                   rounded-full
-                   border border-gray-300
-                   text-gray-900
-                   transition-all duration-300
-                   hover:bg-gray-100"
+                  h-12 px-6
+                  text-sm font-semibold
+                  rounded-full
+                  border border-gray-300
+                  text-gray-900
+                  transition-all duration-300
+                  hover:bg-gray-100"
               >
                 WhatsApp Us
               </Link>
@@ -109,21 +112,26 @@ export default function WarehouseDetailPage({ params }) {
 
           {/* Phone note */}
           <p className="text-sm text-gray-700">
-            Installation prices vary by Province, Location and customisation. Call us at{" "}
+            Installation prices vary by Province, Location and customisation.
+            Call us at{" "}
             <a href="tel:+27828464555" className="text-red-600 font-semibold">
               +27 82 846 4555
             </a>{" "}
             for the latest low price.
           </p>
 
-          {/* Description + Custom CTA */}
+          {/* Description */}
           {w.description && (
             <section className="space-y-6">
               <h2 className="text-2xl font-semibold">Description</h2>
-              <p className="text-gray-700 text-lg leading-relaxed">{w.description}</p>
+              <p className="text-gray-700 text-lg leading-relaxed">
+                {w.description}
+              </p>
 
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 space-y-4">
-                <p className="text-gray-900 text-lg font-medium">Need a custom solution?</p>
+                <p className="text-gray-900 text-lg font-medium">
+                  Need a custom solution?
+                </p>
                 <p className="text-gray-700 leading-relaxed">
                   We specialise in designing and manufacturing customised steel
                   building structures tailored to your site, layout, and
@@ -133,13 +141,13 @@ export default function WarehouseDetailPage({ params }) {
                 <Link
                   href="/lightweight-steel-warehouses"
                   className="inline-flex items-center justify-center
-                     h-12 px-6
-                     text-sm font-semibold
-                     rounded-full
-                     bg-[#da1a33] text-white
-                     border border-black
-                     transition-all duration-300
-                     hover:bg-white hover:text-black"
+                    h-12 px-6
+                    text-sm font-semibold
+                    rounded-full
+                    bg-[#da1a33] text-white
+                    border border-black
+                    transition-all duration-300
+                    hover:bg-white hover:text-black"
                 >
                   Request Custom Build Info
                 </Link>
@@ -153,7 +161,10 @@ export default function WarehouseDetailPage({ params }) {
               <h2 className="text-2xl font-semibold">Specifications</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(w.specs).map(([label, value]) => (
-                  <div key={label} className="p-4 border rounded-lg bg-white shadow-sm">
+                  <div
+                    key={label}
+                    className="p-4 border rounded-lg bg-white shadow-sm"
+                  >
                     <p className="text-gray-500 text-sm">{label}</p>
                     <p className="text-black font-semibold text-lg">{value}</p>
                   </div>
