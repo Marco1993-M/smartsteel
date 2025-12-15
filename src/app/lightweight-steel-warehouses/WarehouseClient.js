@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import emailjs from "@emailjs/browser";
 import Script from "next/script";
+import { supabase } from "../../lib/supabase";
 
 const SERVICE_ID = "service_h817nk1";
 const TEMPLATE_ID = "template_vilvxrl";
@@ -18,8 +19,8 @@ const warehouseProductSchema = {
   description:
     "Modular lightweight steel warehouses available in 8m and 12m widths, customizable length and color options, with optional features.",
   image: [
-    "https://www.smartsteel.co.za/warehouse-8m.jpg",
-    "https://www.smartsteel.co.za/warehouse-13m.jpg"
+    "https://smartsteel.co.za/warehouse-8m.jpg",
+    "https://smartsteel.co.za/warehouse-13m.jpg"
   ],
   brand: {
     "@type": "Brand",
@@ -33,8 +34,8 @@ const warehouseProductSchema = {
       price: "0.00", // placeholder
       itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
-      url: "https://www.smartsteel.co.za/lightweight-steel-warehouses",
-      image: "https://www.smartsteel.co.za/warehouse-8m.jpg"
+      url: "https://smartsteel.co.za/lightweight-steel-warehouses",
+      image: "https://smartsteel.co.za/warehouse-8m.jpg"
     },
     {
       "@type": "Offer",
@@ -43,53 +44,59 @@ const warehouseProductSchema = {
       price: "0.00", // placeholder
       itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
-      url: "https://www.smartsteel.co.za/lightweight-steel-warehouses",
-      image: "https://www.smartsteel.co.za/warehouse-13m.jpg"
+      url: "https://smartsteel.co.za/ightweight-steel-warehouses",
+      image: "https://smartsteel.co.za/warehouse-13m.jpg"
     }
   ],
 };
 
 
 export default function WarehouseClient() {
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const form = e.target;
+  const handleSubmit = async (e) => {
+  e.preventDefault()
+  const form = e.target
 
-    const selectedOptions = [];
-    form
-      .querySelectorAll('input[type="checkbox"]:checked')
-      .forEach((checkbox) => {
-        selectedOptions.push(checkbox.value);
-      });
+  const selectedOptions = []
+  form.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => selectedOptions.push(cb.value))
+  const structure = form.querySelector('input[name="structure"]:checked')?.value
+  const length = form.length.value
+  const colour = form.colour.value
+  const name = form.name.value
+  const email = form.email.value
+  const notes = form.notes.value
 
-    const structure = form.querySelector('input[name="structure"]:checked')?.value;
-    const length = form.length.value;
-    const colour = form.colour.value;
-    const name = form.name.value;
-    const email = form.email.value;
-    const notes = form.notes.value;
+  const templateParams = { from_name: name, from_email: email, structure, length, colour, options: selectedOptions.join(", "), notes }
 
-    const templateParams = {
-      from_name: name,
-      from_email: email,
-      structure,
-      length,
-      colour,
-      options: selectedOptions.join(", "),
-      notes,
-    };
+  try {
+    // Send email
+    await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
 
-    emailjs
-      .send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
-      .then(() => {
-        alert("Quote sent successfully!");
-        form.reset();
-      })
-      .catch((error) => {
-        console.error("EmailJS Error:", error);
-        alert("Failed to send quote. Please try again.");
-      });
-  };
+    // Insert lead into Supabase
+await fetch("/api/leads", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name,
+    email,
+    phone: "", // add phone if you collect it
+    estimate_request: `${structure} - ${length} - ${colour} - ${selectedOptions.join(", ")}`,
+    allocated_to: "", // default empty, can assign later
+    notes,
+    status: "New",
+  }),
+})
+
+
+
+
+    alert("Quote sent and lead added successfully!")
+    form.reset()
+  } catch (error) {
+    console.error(error)
+    alert("Failed to send quote or add lead. Please try again.")
+  }
+}
+
 
   return (
     <>
@@ -138,11 +145,11 @@ export default function WarehouseClient() {
 
           <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
           {/* Structure Selection */}
-          <section className="grid md:grid-cols-2 gap-10 px-4 mb-8">
+          <section className="grid md:grid-cols-3 gap-5 px-4 mb-8">
             {[
               {
                 value: "8m Wide Structure",
-                src: "/warehouse-8m.jpg",
+                src: "/warehouse-13m.jpg",
                 title: "8m Wide Structure",
                 description:
                   "Ideal for agricultural, workshop, or small-scale storage use. Fully customizable with optional cladding, doors, and colors.",
@@ -150,10 +157,18 @@ export default function WarehouseClient() {
               },
               {
                 value: "12m Wide Structure",
-                src: "/warehouse-8m.jpg",
+                src: "/warehouse-13m.jpg",
                 title: "12m Wide Structure",
                 description:
                   "Designed for larger operations requiring significant covered space. Suitable for warehousing, workshops, and commercial use.",
+                anchor: "12m-wide",
+              },
+                {
+                value: "Custom Structure",
+                src: "/warehouse-13m.jpg",
+                title: "Custom Structure",
+                description:
+                  "Tailored solutions for unique requirements. Let's make this one more custom. 0-40m wide, any length.",
                 anchor: "12m-wide",
               },
             ].map((item, idx) => (
