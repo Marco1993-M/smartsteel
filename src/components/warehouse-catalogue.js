@@ -38,7 +38,7 @@ export const warehouses = [
     slug: "large-warehouse-",
     name: "Large Production Warehouse",
     size: "30m x 15m",
-    price: "From R 1850,000",
+    price: "From R 1,850,000",
     image: "/images/30x15m.jpg",
       images: [
       "/images/30x15mB.jpg",
