@@ -51,7 +51,7 @@ export default function SalePopup() {
 
     <a
       href="mailto:info@smartsteel.co.za?subject=Smart%20Steel%20Special%20Offer&body=Hi%20Smart%20Steel%20team%2C%0D%0AI%E2%80%99m%20interested%20in%20your%20special%20offer.%20Please%20send%20me%20more%20information."
-      className="bg-red-600 text-white px-8 py-3 rounded-full hover:bg-red-700 transition"
+      className="bg-red-600 text-white px-8 py-3 rounded-full hover:bg-black transition"
     >
       Up to 30% OFF!
     </a>
