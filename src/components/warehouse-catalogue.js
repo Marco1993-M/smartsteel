@@ -78,7 +78,7 @@ export const warehouses = [
       Width: "8m",
       Length: "15m",
       Height: "4m eave height",
-      Cladding: "Concealed Fix Sheeting",
+      Cladding: "Metal Sheeting",
       Structure: "G550 Light Steel Frame",
       Bracing: "Wall Frame System",
     },
