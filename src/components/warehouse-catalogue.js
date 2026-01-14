@@ -151,7 +151,7 @@ export const warehouses = [
     name: "20x12m Warehouse",
     size: "20m x 12m",
     price: "Starting from R224,995",
-    image: "/images/smartsteel240.jpg",
+    image: "/images/smartsteel240tn.jpg",
     images: [
       "/images/smartsteel240.jpg",
       "/images/smartsteel240.jpg",
