@@ -145,6 +145,39 @@ export const warehouses = [
       "Gutters & Downpipes",
     ],
   },
+     {
+    id: 6,
+    slug: "20x12m-warehouse",
+    name: "20x12m Warehouse",
+    size: "20m x 12m",
+    price: "Starting from R224,995",
+    image: "/images/smartsteel240.jpg",
+    images: [
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+    ],
+    description:
+      "Our Smart Steel 240 20x12m warehouse offers exceptional durability, modular expandability, and fast installation — perfect for farms, workshops, storage, and small-scale commercial use. Roof pitched at 15°, it ensures efficient water runoff. Built with high-quality concealed fix roofing and G550 light steel frames, this warehouse is designed to withstand harsh weather conditions while providing a secure and spacious environment for your needs.",
+    specs: {
+      Width: "20m",
+      Length: "12m",
+      Height: "3m eave height",
+      Cladding: "Metal Sheeting",
+      Structure: "G550 Light Steel Frame",
+      Bracing: "Every 5 bays",
+    },
+    addons: [
+      "Concrete Slab",
+      "Gutters & Downpipes",
+      "Door Options",
+      "Window Options",
+      "Chromadek Sheeting",
+    ],
+  },
 ];
 
 export default function WarehouseCatalogue({
