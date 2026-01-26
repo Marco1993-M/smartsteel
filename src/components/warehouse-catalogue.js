@@ -153,12 +153,7 @@ export const warehouses = [
     price: "Starting from R224,995",
     image: "/images/smartsteel240tn.jpg",
     images: [
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
+      "/images/smartsteel240b.jpg",
     ],
     description:
       "Our Smart Steel 240 20x12m warehouse offers exceptional durability, modular expandability, and fast installation — perfect for farms, workshops, storage, and small-scale commercial use. Roof pitched at 15°, it ensures efficient water runoff. Built with high-quality concealed fix roofing and G550 light steel frames, this warehouse is designed to withstand harsh weather conditions while providing a secure and spacious environment for your needs.",
@@ -187,12 +182,7 @@ export const warehouses = [
     price: "Starting from R449,995",
     image: "/images/9mhightn.jpg",
     images: [
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
-      "/images/smartsteel240.jpg",
+    "/images/9mhightn.jpg",
     ],
     description:
       "Our Smart Steel 240 Tall 20x12m warehouse offers exceptional durability, modular expandability, and fast installation — perfect for farms, workshops, storage, and small-scale commercial use. Roof pitched at 15°, it ensures efficient water runoff. Built with high-quality concealed fix roofing and G550 light steel frames, this warehouse is designed to withstand harsh weather conditions while providing a secure and spacious environment for your needs.",
