@@ -180,8 +180,8 @@ export const warehouses = [
   },
 
        {
-    id: 6,
-    slug: "20x12m-warehouse",
+    id: 7,
+    slug: "20x12m-warehouse-tall",
     name: "Smart Steel 240 Tall",
     size: "20m x 12m x 9m",
     price: "Starting from R449,995",
