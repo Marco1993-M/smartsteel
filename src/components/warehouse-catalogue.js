@@ -178,6 +178,40 @@ export const warehouses = [
       "Chromadek Sheeting",
     ],
   },
+
+       {
+    id: 6,
+    slug: "20x12m-warehouse",
+    name: "Smart Steel 240 Tall",
+    size: "20m x 12m x 9m",
+    price: "Starting from R449,995",
+    image: "/images/9mhightn.jpg",
+    images: [
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+      "/images/smartsteel240.jpg",
+    ],
+    description:
+      "Our Smart Steel 240 Tall 20x12m warehouse offers exceptional durability, modular expandability, and fast installation — perfect for farms, workshops, storage, and small-scale commercial use. Roof pitched at 15°, it ensures efficient water runoff. Built with high-quality concealed fix roofing and G550 light steel frames, this warehouse is designed to withstand harsh weather conditions while providing a secure and spacious environment for your needs.",
+    specs: {
+      Width: "20m",
+      Length: "12m",
+      Height: "9m eave height",
+      Cladding: "Metal Sheeting",
+      Structure: "G550 Light Steel Frame",
+      Bracing: "Every 5 bays",
+    },
+    addons: [
+      "Concrete Slab",
+      "Gutters & Downpipes",
+      "Door Options",
+      "Window Options",
+      "Chromadek Sheeting",
+    ],
+  },
 ];
 
 export default function WarehouseCatalogue({
