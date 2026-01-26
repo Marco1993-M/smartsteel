@@ -63,7 +63,7 @@ export const warehouses = [
   },
   {
     id: 3,
-    slug: "tractor-shed",
+    slug: "agri-shed",
     name: "Agri Shed",
     size: "15m x 8m",
     price: "Starting from R156,995",
