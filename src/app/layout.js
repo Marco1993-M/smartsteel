@@ -159,7 +159,7 @@ export default function RootLayout({ children }) {
         <Navbar />
         {children}
         <Footer />
-        <SalePopup />
+        {/*  <SalePopup />*/}
       </body>
     </html>
   );
