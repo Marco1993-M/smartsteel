@@ -10,8 +10,6 @@ export const warehouses = [
     size: "7.5m x 8m",
     price: "Starting from R109,995",
     image: "/images/7.5x8m.jpg",
-       sketchfabEmbedUrl:
-  "https://sketchfab.com/models/a58943cb6d0b4ef194cce99c63778e38/embed",
     images: [
       "/images/7.5x8mB.jpg",
       "/images/7.5x8mC.jpg",
@@ -154,6 +152,8 @@ export const warehouses = [
     size: "20m x 12m",
     price: "Starting from R224,995",
     image: "/images/smartsteel240tn.jpg",
+         sketchfabEmbedUrl:
+  "https://sketchfab.com/models/82a83808651d404c801f064e55e67176/embed",
     images: [
       "/images/smartsteel240b.jpg",
     ],
