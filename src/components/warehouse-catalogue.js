@@ -10,6 +10,8 @@ export const warehouses = [
     size: "7.5m x 8m",
     price: "Starting from R109,995",
     image: "/images/7.5x8m.jpg",
+       sketchfabEmbedUrl:
+  "https://sketchfab.com/models/f1674b0496674f19a42b4b4a25292448/embed",
     images: [
       "/images/7.5x8mB.jpg",
       "/images/7.5x8mC.jpg",
