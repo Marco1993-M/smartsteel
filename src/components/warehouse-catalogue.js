@@ -88,8 +88,38 @@ export const warehouses = [
       "Gutters & Downpipes",
     ],
   },
-  {
+
+    {
     id: 4,
+    slug: "agri-shed-slim",
+    name: "Agri Shed Slim",
+    size: "12m x 3m",
+    price: "Starting from R139,995",
+    image: "/images/12x3m.jpg",
+       sketchfabEmbedUrl:
+  "https://sketchfab.com/models/82a83808651d404c801f064e55e67176/embed",
+    images: [
+      "/images/12x3mB.jpg",
+     
+    ],
+    description:
+      "Our 12x3 Agri Shed warehouse offers exceptional durability, modular expandability, and fast installation — perfect for farms, workshops, storage, and small-scale commercial use. Roof pitched at 15°, it ensures efficient water runoff. Built with high-quality concealed fix roofing and G550 light steel frames, this warehouse is designed to withstand harsh weather conditions while providing a secure and spacious environment for your needs.",
+    specs: {
+      Width: "3m",
+      Length: "12m",
+      Height: "3m eave height",
+      Cladding: "Metal Sheeting",
+      Structure: "G550 Light Steel Frame",
+      Bracing: "Wall Frame System",
+    },
+    addons: [
+      "Insulation (Lambda Board)",
+      "Concrete Slab",
+      "Gutters & Downpipes",
+    ],
+  },
+  {
+    id: 5,
     slug: "double-garage",
     name: "Double Garage - Extra Depth",
     size: "12m x 6m",
@@ -116,7 +146,7 @@ export const warehouses = [
     ],
   },
     {
-    id: 5,
+    id: 6,
     slug: "5x8m-Covered-Area",
     name: "5x8m Sheltered Covered Area",
     size: "5m x 8m",
@@ -146,7 +176,7 @@ export const warehouses = [
     ],
   },
      {
-    id: 6,
+    id: 7,
     slug: "20x12m-warehouse",
     name: "Smart Steel 240",
     size: "20m x 12m",
@@ -177,7 +207,7 @@ export const warehouses = [
   },
 
        {
-    id: 7,
+    id: 8,
     slug: "20x12m-warehouse-tall",
     name: "Smart Steel 240 Tall",
     size: "20m x 12m x 9m",
