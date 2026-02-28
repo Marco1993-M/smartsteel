@@ -234,6 +234,36 @@ export const warehouses = [
       "Chromadek Sheeting",
     ],
   },
+
+         {
+    id: 9,
+    slug: "20-20-hangar",
+    name: "20m x 20m Smart Steel Hangar",
+    size: "20m x 20m x 3m",
+    price: "Starting from R289,995",
+    image: "/images/20x20 Hangar.jpg",
+    images: [
+    "/images/20x20 Hangar.jpg",
+    "/images/20x20 Hangar.jpg",
+    "/images/20x20 Hangar.jpg",
+    ],
+    description:
+      "The Smart Steel 20m x 20m Hangar is a high-performance, lightweight steel structure designed for aircraft storage, industrial use, agricultural equipment, and large-scale storage applications. With a total footprint of 400m², this structure provides a clear-span interior, allowing maximum usable space without internal columns — ideal for aircraft maneuverability, large machinery access, or bulk storage.",
+    specs: {
+      Width: "20m",
+      Length: "20m",
+      Height: "3m eave height",
+      Cladding: "Chromadek Sheeting",
+      Structure: "G550 Light Steel Frame",
+      Bracing: "Wall Panel System",
+    },
+    addons: [
+      "Concrete Slab",
+      "Gutters & Downpipes",
+      "Door Options",
+      "Window Options",
+    ],
+  },
 ];
 
 export default function WarehouseCatalogue({
