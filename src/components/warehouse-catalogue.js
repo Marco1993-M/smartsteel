@@ -272,7 +272,7 @@ export default function WarehouseCatalogue({
   subtitle,
   warehousesList = warehouses,
 }) {
-  const itemsPerPage = 6;
+  const itemsPerPage = 9;
   const [page, setPage] = useState(0);
   const [activeModel, setActiveModel] = useState(null);
 
