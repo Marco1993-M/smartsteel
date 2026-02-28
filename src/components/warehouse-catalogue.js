@@ -244,7 +244,7 @@ export const warehouses = [
     image: "/images/20x20 Hangar.jpg",
     images: [
     "/images/20x20 Hangar.jpg",
-    "/images/20x20 Hangar.jpg",
+    "/images/20x20 Hangar_b.jpg",
     "/images/20x20 Hangar.jpg",
     ],
     description:
