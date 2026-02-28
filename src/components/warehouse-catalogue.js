@@ -242,6 +242,8 @@ export const warehouses = [
     size: "20m x 20m x 3m",
     price: "Starting from R289,995",
     image: "/images/20x20 Hangar.jpg",
+                sketchfabEmbedUrl:
+  "https://sketchfab.com/models/cdfda506de1140aca67c8232b31e6530/embed",
     images: [
     "/images/20x20 Hangar.jpg",
     "/images/20x20 Hangar_b.jpg",
