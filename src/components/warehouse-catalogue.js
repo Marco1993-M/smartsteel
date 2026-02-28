@@ -241,13 +241,12 @@ export const warehouses = [
     name: "20m x 20m Smart Steel Hangar",
     size: "20m x 20m x 3m",
     price: "Starting from R289,995",
-    image: "/images/20x20 Hangar.jpg",
+    image: "/images/20x20_Hangar.jpg",
                 sketchfabEmbedUrl:
   "https://sketchfab.com/models/cdfda506de1140aca67c8232b31e6530/embed",
     images: [
-    "/images/12x12 Hangar.jpg",
-    "/images/12x12 Hangar_b.jpg",
-    "/images/12x12 Hangar.jpg",
+    "/images/20x20_Hangar_b.jpg",
+    "/images/20x20_Hangar.jpg",
     ],
     description:
       "The Smart Steel 20m x 20m Hangar is a high-performance, lightweight steel structure designed for aircraft storage, industrial use, agricultural equipment, and large-scale storage applications. With a total footprint of 400m², this structure provides a clear-span interior, allowing maximum usable space without internal columns — ideal for aircraft maneuverability, large machinery access, or bulk storage.",
