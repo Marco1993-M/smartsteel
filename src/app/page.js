@@ -121,7 +121,7 @@ export default function Home() {
 <section className="relative w-full h-[90vh] md:h-[100vh] flex items-start justify-center text-center text-white px-6 overflow-hidden">
   {/* Optimized hero image */}
   <Image
-    src="/images/hero.jpg"
+    src="/images/hero.webp"
     alt="Smart Steel lightweight warehouse"
     fill
     priority
