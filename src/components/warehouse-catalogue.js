@@ -33,34 +33,38 @@ export const warehouses = [
       "Gutters & Downpipes",
     ],
   },
-  {
+
+             {
     id: 2,
-    slug: "large-warehouse-",
-    name: "Large Production Warehouse",
-    size: "30m x 15m",
-    price: "From R 1,850,000",
-    image: "/images/30x15m.jpg",
-      images: [
-      "/images/30x15mB.jpg",
-      "/images/7.5x8mC.jpg",
-      "/images/7.5x8mD.jpg",
+    slug: "15-8-warehouse",
+    name: "Smart Steel 120",
+    size: "15m x 8m x 3m",
+    price: "Starting from R249,995",
+    image: "/images/15x8_enclosed.webp",
+                sketchfabEmbedUrl:
+  "https://sketchfab.com/models/e412868572b04e9386441867f9478eea/embed",
+    images: [
+    "/images/15x8_enclosed.webp",
+    "/images/15x8_enclosed_b.webp",
     ],
     description:
-      "Our Standard 7.5x8 warehouse offers exceptional durability, modular expandability, and fast installation — perfect for farms, workshops, storage, and small-scale commercial use. Roof pitched at 15°, it ensures efficient water runoff. Built with high-quality concealed fix roofing and G550 light steel frames, this warehouse is designed to withstand harsh weather conditions while providing a secure and spacious environment for your needs.",
+      "The Smart Steel 120 is a high-performance, lightweight steel structure designed for industrial use, agricultural equipment, and large-scale storage applications. With a total footprint of 120m², this structure provides a clear-span interior, allowing maximum usable space without internal columns,ideal for  maneuverability, large machinery access, or bulk storage.",
     specs: {
-      Width: "15m",
-      Length: "30m",
-      Height: "6m eave height",
-      Cladding: "Concealed Fix Sheeting",
+      Width: "8m",
+      Length: "15m",
+      Height: "3m eave height",
+      Cladding: "Chromadek Sheeting",
       Structure: "G550 Light Steel Frame",
-      Bracing: "Every 5 bays",
+      Bracing: "Wall Panel System",
     },
     addons: [
-      "Insulation (Lambda Board)",
       "Concrete Slab",
       "Gutters & Downpipes",
+      "Door Options",
+      "Window Options",
     ],
   },
+
   {
     id: 3,
     slug: "agri-shed",
@@ -266,34 +270,32 @@ export const warehouses = [
     ],
   },
 
-           {
+    {
     id: 10,
-    slug: "15-8-warehouse",
-    name: "Smart Steel 120",
-    size: "15m x 8m x 3m",
-    price: "Starting from R249,995",
-    image: "/images/15x8_enclosed.webp",
-                sketchfabEmbedUrl:
-  "https://sketchfab.com/models/e412868572b04e9386441867f9478eea/embed",
-    images: [
-    "/images/15x8_enclosed.webp",
-    "/images/15x8_enclosed_b.webp",
+    slug: "large-warehouse-",
+    name: "Large Production Warehouse",
+    size: "30m x 15m",
+    price: "From R 1,850,000",
+    image: "/images/30x15m.jpg",
+      images: [
+      "/images/30x15mB.jpg",
+      "/images/7.5x8mC.jpg",
+      "/images/7.5x8mD.jpg",
     ],
     description:
-      "The Smart Steel 120 is a high-performance, lightweight steel structure designed for industrial use, agricultural equipment, and large-scale storage applications. With a total footprint of 120m², this structure provides a clear-span interior, allowing maximum usable space without internal columns,ideal for  maneuverability, large machinery access, or bulk storage.",
+      "Our Standard 7.5x8 warehouse offers exceptional durability, modular expandability, and fast installation — perfect for farms, workshops, storage, and small-scale commercial use. Roof pitched at 15°, it ensures efficient water runoff. Built with high-quality concealed fix roofing and G550 light steel frames, this warehouse is designed to withstand harsh weather conditions while providing a secure and spacious environment for your needs.",
     specs: {
-      Width: "8m",
-      Length: "15m",
-      Height: "3m eave height",
-      Cladding: "Chromadek Sheeting",
+      Width: "15m",
+      Length: "30m",
+      Height: "6m eave height",
+      Cladding: "Concealed Fix Sheeting",
       Structure: "G550 Light Steel Frame",
-      Bracing: "Wall Panel System",
+      Bracing: "Every 5 bays",
     },
     addons: [
+      "Insulation (Lambda Board)",
       "Concrete Slab",
       "Gutters & Downpipes",
-      "Door Options",
-      "Window Options",
     ],
   },
 ];
