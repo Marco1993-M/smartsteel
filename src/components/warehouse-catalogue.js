@@ -265,6 +265,37 @@ export const warehouses = [
       "Window Options",
     ],
   },
+
+           {
+    id: 10,
+    slug: "15-8-warehouse",
+    name: "Smart Steel 120",
+    size: "15m x 8m x 3m",
+    price: "Starting from R189,995",
+    image: "/images/20x20_Hangar.jpg",
+                sketchfabEmbedUrl:
+  "https://sketchfab.com/models/cdfda506de1140aca67c8232b31e6530/embed",
+    images: [
+    "/images/20x20_Hangar_b.jpg",
+    "/images/20x20_Hangar.jpg",
+    ],
+    description:
+      "The Smart Steel 120 is a high-performance, lightweight steel structure designed for industrial use, agricultural equipment, and large-scale storage applications. With a total footprint of 120m², this structure provides a clear-span interior, allowing maximum usable space without internal columns,ideal for  maneuverability, large machinery access, or bulk storage.",
+    specs: {
+      Width: "8m",
+      Length: "15m",
+      Height: "3m eave height",
+      Cladding: "Chromadek Sheeting",
+      Structure: "G550 Light Steel Frame",
+      Bracing: "Wall Panel System",
+    },
+    addons: [
+      "Concrete Slab",
+      "Gutters & Downpipes",
+      "Door Options",
+      "Window Options",
+    ],
+  },
 ];
 
 export default function WarehouseCatalogue({
