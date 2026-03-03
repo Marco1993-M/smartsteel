@@ -40,7 +40,7 @@ export const warehouses = [
     name: "Smart Steel 120",
     size: "15m x 8m x 3m",
     price: "Starting from R249,995",
-    image: "/images/15x8_enclosed.webp",
+    image: "/images/15x8_enclosed_a.webp",
                 sketchfabEmbedUrl:
   "https://sketchfab.com/models/e412868572b04e9386441867f9478eea/embed",
     images: [
