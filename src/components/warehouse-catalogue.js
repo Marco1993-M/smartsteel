@@ -274,7 +274,7 @@ export const warehouses = [
     price: "Starting from R249,995",
     image: "/images/20x20_Hangar.jpg",
                 sketchfabEmbedUrl:
-  "https://sketchfab.com/models/cdfda506de1140aca67c8232b31e6530/embed",
+  "https://sketchfab.com/models/e412868572b04e9386441867f9478eea/embed",
     images: [
     "/images/20x20_Hangar_b.jpg",
     "/images/20x20_Hangar.jpg",
