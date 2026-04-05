@@ -26,7 +26,7 @@ export default function MidrandPage() {
           priority
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="absolute inset-0 bg-black/0"></div>
 
         <div className="relative z-10 max-w-4xl px-6">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
