@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function PretoriaPage() {
+export default function JohannesburgPage() {
   const widths = [8, 10, 12];
   const lengths = [10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 35, 40, 50];
 
   const sizes = [];
   widths.forEach(w => {
     lengths.forEach(l => {
-      sizes.push(`${w}m x ${l}m warehouse Pretoria`);
+      sizes.push(`${w}m x ${l}m warehouse Johannesburg`);
     });
   });
 
