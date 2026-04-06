@@ -11,7 +11,7 @@ export default function PretoriaPage() {
   const city = 'Pretoria';
 
   const widths = [8, 10, 12];
-const lengths = [10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 35, 40, 50];
+const lengths = [10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 32.5, 35, 37.5, 40, 50];
 
 const [selectedWidth, setSelectedWidth] = useState(8);
 
@@ -72,61 +72,107 @@ const [selectedWidth, setSelectedWidth] = useState(8);
       />
 
      {/* HERO */}
-<section className="relative h-[90vh] flex items-center justify-center text-center text-white">
-  
+<section className="relative w-full h-[90vh] md:h-[100vh] flex items-start justify-center text-center text-white px-6 overflow-hidden">
+  {/* Optimized hero image */}
   <Image
-    src="/images/hero.jpg"
-    alt={`Steel warehouse construction in ${city}`}
+    src="/images/hero.webp"
+    alt="Smart Steel lightweight warehouse"
     fill
     priority
-    className="object-cover"
+    quality={85}
+    sizes="100vw"
+    className="object-cover object-center"
   />
 
-  {/* Dark overlay for readability */}
+  {/* Overlay */}
   <div className="absolute inset-0 bg-black/0"></div>
 
-  <div className="relative z-10 max-w-4xl px-6">
+  {/* Content Wrapper */}
+  <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto mt-24 md:mt-32">
+    
+    {/* SEO badge / subtitle */}
+    <div className="w-full max-w-[90vw] sm:max-w-md md:max-w-xl lg:max-w-3xl mb-6 border border-black bg-transparent rounded-full">
+      <div className="px-4 sm:px-6 py-1 sm:py-1.5 rounded-full flex items-center justify-center">
+        <h2 className="text-xs sm:text-sm md:text-base font-semibold text-center leading-snug text-black">
+          The easiest way to build a steel warehouse in Pretoria.
+        </h2>
+      </div>
+    </div>
 
-    {/* MICRO TRUST LINE */}
-    <p className="text-sm uppercase tracking-wider text-gray-300 mb-4">
-      Engineered Steel Buildings • Fast Turnaround • Nationwide
-    </p>
-
-    {/* HEADLINE */}
-    <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-      Steel Buildings {city}
+    {/* Main Headline */}
+    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-black leading-tight">
+      The Capital's #1 Steel Warehouse Supplier 
     </h1>
 
-    {/* SUBHEAD (UPGRADED) */}
-    <p className="text-lg md:text-xl mb-8 text-gray-200">
-      Premium lightweight steel warehouses, factories, and commercial buildings in {city} —
-      built faster and more cost-effective than traditional construction.
+    {/* Supporting Subheading */}
+    <p className="text-base sm:text-lg md:text-xl mb-8 text-black max-w-2xl mx-auto">
+      Build Smarter, Faster Warehouses with Lightweight Steel
     </p>
 
-    {/* CTA GROUP (instead of single button) */}
-    <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
-      <Link
-        href="/tools/estimator"
-        className="bg-[#da1a33] px-8 py-4 rounded-full font-semibold text-lg"
-      >
-        Get Instant Estimate →
-      </Link>
+<div className="flex items-center gap-4">
+  
+  {/* Estimator CTA */}
+  <a
+    href="/tools/estimator"
+    className="inline-flex items-center justify-center gap-2 bg-[#da1a33] text-white px-6 py-3 rounded-full font-semibold hover:bg-white border border-black hover:text-black transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#da1a33]"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      className="w-6 h-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm0 2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V18Zm2.498-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0 0 12 2.25Z"
+      />
+    </svg>
+    Get Instant Estimate
+  </a>
 
-      <a
-        href="tel:+27828464555"
-        className="border border-white px-8 py-4 rounded-full font-semibold text-lg"
-      >
-        Call Now
-      </a>
+{/* WhatsApp Button */}
+<a
+  href="https://wa.me/27828464555?text=Hi%20Smart%20Steel%2C%20I%E2%80%99d%20like%20a%20quote%20for%20a%20project"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white border border-transparent transition-all duration-300 hover:bg-white hover:text-green-500 hover:border-green-500"
+  title="Chat with us on WhatsApp"
+>
+  {/* WhatsApp Icon SVG */}
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="size-6 fill-current">
+    <path d="M16 .396c-8.837 0-16 7.163-16 16 0 2.823.737 5.574 2.141 7.998L0 32l7.792-2.098A15.9 15.9 0 0 0 16 32c8.837 0 16-7.163 16-16s-7.163-15.604-16-15.604zm0 29.205a13.15 13.15 0 0 1-6.69-1.822l-.48-.283-4.633 1.248 1.24-4.518-.312-.495A13.123 13.123 0 0 1 2.875 16c0-7.244 5.881-13.125 13.125-13.125S29.125 8.756 29.125 16 23.244 29.6 16 29.6zm7.194-9.727c-.393-.197-2.326-1.151-2.686-1.283-.36-.132-.623-.197-.886.197s-1.017 1.283-1.248 1.546c-.229.262-.459.295-.852.098-.393-.197-1.66-.611-3.162-1.947-1.168-1.041-1.954-2.326-2.184-2.72-.229-.393-.025-.606.172-.803.177-.176.393-.459.59-.688.197-.229.262-.393.393-.656.131-.262.066-.492-.033-.689-.098-.197-.886-2.142-1.214-2.935-.32-.769-.646-.663-.886-.674l-.754-.014c-.229 0-.6.086-.916.418s-1.2 1.171-1.2 2.854c0 1.683 1.229 3.309 1.4 3.536.172.229 2.416 3.686 5.854 5.165.818.353 1.455.564 1.953.722.821.262 1.568.225 2.16.137.659-.098 2.326-.951 2.654-1.87.328-.918.328-1.705.229-1.87-.098-.164-.36-.262-.754-.459z"/>
+  </svg>
+</a>
+
+
+</div>
+
+
+    {/* Subtext under CTA */}
+    <div className="mt-4 bg-white/90 px-3 py-1 rounded-full border border-black inline-block">
+      <p className="text-sm text-black">
+       Get real-time INSTANT pricing. No email required.
+      </p>
     </div>
 
-    {/* TRUST POINTS */}
-    <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-300">
-      <span>✔ 2–4 Week Lead Times</span>
-      <span>✔ Nationwide Install</span>
-      <span>✔ Engineered for SA</span>
+    {/* Stats Bar */}
+    <div className="grid grid-cols-3 gap-6 text-white mt-32">
+      <div className="text-center">
+        <p className="text-xl sm:text-2xl font-bold">📈 23321+</p>
+        <p className="text-xs sm:text-sm">Lightweight Steel Meters Supplied</p>
+      </div>
+      <div className="text-center">
+        <p className="text-xl sm:text-2xl font-bold">💰 30%</p>
+        <p className="text-xs sm:text-sm">Avg. Cost Savings</p>
+      </div>
+      <div className="text-center">
+        <p className="text-xl sm:text-2xl font-bold">⏱️ 50%</p>
+        <p className="text-xs sm:text-sm">Faster Build Time</p>
+      </div>
     </div>
-
   </div>
 </section>
 
