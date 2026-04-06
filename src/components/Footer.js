@@ -6,7 +6,7 @@ import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 export default function Footer() {
   return (
     <footer className="bg-[#000000] text-white py-12 px-6">
-      <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
+      <div className="max-w-7xl mx-auto grid md:grid-cols-5 gap-12">
         {/* Logo and About */}
         <div className="md:col-span-1">
           <Link href="/" className="inline-block mb-4">
@@ -47,13 +47,26 @@ export default function Footer() {
             <a href="https://www.instagram.com/pequeno_homes/" target="_blank" rel="noopener noreferrer" className="hover:text-[#da1a33]"><FaInstagram /></a>
           </div>
         </div>
+
+          {/* City Links */}
+        <div>
+          <h4 className="text-lg font-semibold mb-4">Find us here</h4>
+           <p className="text-sm text-gray-300 mb-2"> <a href="/johannesburg-warehouses" className="hover:text-[#da1a33]">Johannesburg</a></p>
+           <p className="text-sm text-gray-300 mb-2"> <a href="/centurion-warehouses" className="hover:text-[#da1a33]">Centurion</a></p>
+           <p className="text-sm text-gray-300 mb-2"> <a href="/midrand-warehouses" className="hover:text-[#da1a33]">Midrand</a></p>
+            <div className="grid md:grid-cols-3 gap-4 text-sm">
+
+        
+        </div>
+        
+        </div>
       </div>
 
       {/* Bottom bar with copyright and privacy link */}
       <div className="border-t border-gray-700 mt-12 pt-6 text-sm text-center text-gray-400">
         &copy; {new Date().getFullYear()} Smart Steel. All rights reserved. &nbsp;|&nbsp;
-        <Link href="/privacy" className="hover:text-white underline">Privacy Policy</Link>
-        <Link href="/return-policy" className="hover:text-white underline">Return Policy</Link>
+        <Link href="/privacy" className="hover:text-white underline">Privacy Policy </Link>
+        <Link href="/return-policy" className="hover:text-white underline"> Return Policy</Link>
       </div>
     </footer>
   );
