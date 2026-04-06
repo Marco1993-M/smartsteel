@@ -382,8 +382,8 @@ const [selectedWidth, setSelectedWidth] = useState(8);
         </h2>
 
         <div className="grid md:grid-cols-3 gap-4 text-sm">
-          <Link href="/johannesburg-warehouses" className="underline">
-            Steel Buildings Johannesburg
+          <Link href="/pretoria-warehouses" className="underline">
+            Steel Buildings Pretoria
           </Link>
           <Link href="/centurion-warehouses" className="underline">
             Steel Buildings Centurion
