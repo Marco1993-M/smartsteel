@@ -54,6 +54,7 @@ export default function Footer() {
            <p className="text-sm text-gray-300 mb-2"> <a href="/johannesburg-warehouses" className="hover:text-[#da1a33]">Johannesburg</a></p>
            <p className="text-sm text-gray-300 mb-2"> <a href="/centurion-warehouses" className="hover:text-[#da1a33]">Centurion</a></p>
            <p className="text-sm text-gray-300 mb-2"> <a href="/midrand-warehouses" className="hover:text-[#da1a33]">Midrand</a></p>
+           <p className="text-sm text-gray-300 mb-2"> <a href="/pretoria-warehouses" className="hover:text-[#da1a33]">Pretoria</a></p>
             <div className="grid md:grid-cols-3 gap-4 text-sm">
 
         
