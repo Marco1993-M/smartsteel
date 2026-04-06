@@ -302,19 +302,19 @@ const [selectedWidth, setSelectedWidth] = useState(8);
       <div className="bg-white p-4 rounded">
         <p className="font-semibold">10m × 20m Warehouse</p>
         <p className="text-gray-600">200 m²</p>
-        <p className="mt-2 font-medium">≈ R500k – R900k</p>
+        <p className="mt-2 font-medium">≈ R200k – R400k</p>
       </div>
 
       <div className="bg-white p-4 rounded">
         <p className="font-semibold">12m × 30m Warehouse</p>
         <p className="text-gray-600">360 m²</p>
-        <p className="mt-2 font-medium">≈ R900k – R1.6m</p>
+        <p className="mt-2 font-medium">≈ R320k – R1.2m</p>
       </div>
 
       <div className="bg-white p-4 rounded">
         <p className="font-semibold">12m × 50m Warehouse</p>
         <p className="text-gray-600">600 m²</p>
-        <p className="mt-2 font-medium">≈ R1.5m – R2.7m</p>
+        <p className="mt-2 font-medium">≈ R715k – R1.7m</p>
       </div>
     </div>
   </div>
