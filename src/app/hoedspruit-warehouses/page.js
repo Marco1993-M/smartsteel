@@ -5,10 +5,10 @@ import Image from 'next/image';
 import { useState } from 'react';
 import WarehouseCatalogue from 'components/warehouse-catalogue';
 
-export default function HermanusPage() {
+export default function HoedspruitPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
-  const city = 'Hermanus';
+  const city = 'Hoedspruit';
 
   const widths = [8, 10, 12];
 const lengths = [10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 32.5, 35, 37.5, 40, 50];
@@ -47,6 +47,7 @@ const [selectedWidth, setSelectedWidth] = useState(8);
       q: `Do you deliver and install outside ${city}?`,
       a: `Yes, while we service ${city}, we also deliver and install steel buildings across South Africa.`,
     },
+    
   ];
 
   const faqSchema = {
@@ -75,7 +76,7 @@ const [selectedWidth, setSelectedWidth] = useState(8);
 <section className="relative w-full h-[90vh] md:h-[100vh] flex items-start justify-center text-center text-white px-6 overflow-hidden">
   {/* Optimized hero image */}
   <Image
-    src="/images/hero.webp"
+    src="/images/hoedspruit.webp"
     alt="Smart Steel lightweight warehouse"
     fill
     priority
@@ -101,7 +102,7 @@ const [selectedWidth, setSelectedWidth] = useState(8);
 
     {/* Main Headline */}
     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-black leading-tight">
-      Hermanus loves our steel warehouses
+      Your local source for lightweight steel warehouses in {city}
     </h1>
 
     {/* Supporting Subheading */}
