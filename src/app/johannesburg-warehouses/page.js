@@ -176,6 +176,72 @@ const [selectedWidth, setSelectedWidth] = useState(8);
   </div>
 </section>
 
+{/* BUILD OPTIONS SPLIT */}
+<section className="py-20 px-6 bg-white">
+  <div className="max-w-6xl mx-auto text-center mb-12">
+    <h2 className="text-3xl font-bold mb-4">
+      Choose How You Want to Build
+    </h2>
+    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+      Whether you want a full-service build or a cost-effective DIY kit, Smart Steel gives you the flexibility to build your warehouse your way.
+    </p>
+  </div>
+
+  <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+
+    {/* TURNKEY */}
+    <div className="bg-black text-white p-8 rounded-2xl shadow-lg">
+      <h3 className="text-2xl font-semibold mb-4">
+        Full Turnkey Build
+      </h3>
+      <p className="mb-6 text-gray-300">
+        We handle everything from design to final installation — delivering a complete, ready-to-use steel building in {city}.
+      </p>
+
+      <ul className="space-y-2 text-sm mb-6">
+        <li>✔ Design & engineering</li>
+        <li>✔ Manufacturing</li>
+        <li>✔ On-site installation</li>
+        <li>✔ Project management</li>
+        <li>✔ Full handover</li>
+      </ul>
+
+      <Link
+        href="/tools/estimator"
+        className="inline-block bg-white text-black px-6 py-3 rounded-full font-semibold"
+      >
+        Get Full Build Quote →
+      </Link>
+    </div>
+
+    {/* DIY */}
+    <div className="bg-gray-100 p-8 rounded-2xl shadow-lg">
+      <h3 className="text-2xl font-semibold mb-4">
+        DIY Steel Kits
+      </h3>
+      <p className="mb-6 text-gray-600">
+        Save on costs with precision-engineered kits you can assemble yourself. Delivered anywhere in South Africa.
+      </p>
+
+      <ul className="space-y-2 text-sm mb-6 text-gray-700">
+        <li>✔ Pre-cut steel components</li>
+        <li>✔ Easy-to-assemble system</li>
+        <li>✔ Detailed guidance</li>
+        <li>✔ Fast delivery</li>
+        <li>✔ Ideal for smaller projects</li>
+      </ul>
+
+      <Link
+        href="/tools/estimator"
+        className="inline-block bg-black text-white px-6 py-3 rounded-full font-semibold"
+      >
+        Get Kit Price →
+      </Link>
+    </div>
+
+  </div>
+</section>
+
       {/* INTRO */}
        <section className="py-16 px-6 bg-white text-center">
           <h2 className="text-3xl font-semibold mb-6">Steel structures designed to last</h2>
@@ -189,9 +255,102 @@ const [selectedWidth, setSelectedWidth] = useState(8);
           </p>
         </section>
 
+        {/* WHY STEEL */}
+<section className="bg-gray-100 py-20 px-6">
+  <div className="max-w-6xl mx-auto text-center mb-12">
+    <h2 className="text-3xl font-bold mb-4">
+      Why Build with Steel?
+    </h2>
+    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+      Steel structures offer unmatched durability, speed, and long-term value compared to traditional construction.
+    </p>
+  </div>
+
+  <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-700 max-w-6xl mx-auto">
+    <div className="bg-white p-6 rounded-xl shadow">
+      ⚡ Faster Construction
+      <p className="mt-2 text-gray-600">
+        Build up to 50% faster than brick and mortar structures.
+      </p>
+    </div>
+
+    <div className="bg-white p-6 rounded-xl shadow">
+      💰 Lower Costs
+      <p className="mt-2 text-gray-600">
+        Reduce labour and long-term maintenance costs.
+      </p>
+    </div>
+
+    <div className="bg-white p-6 rounded-xl shadow">
+      🛡️ Built to Last
+      <p className="mt-2 text-gray-600">
+        Resistant to fire, pests, corrosion, and harsh weather.
+      </p>
+    </div>
+
+    <div className="bg-white p-6 rounded-xl shadow">
+      🔧 Low Maintenance
+      <p className="mt-2 text-gray-600">
+        Steel doesn’t warp, crack, or rot over time.
+      </p>
+    </div>
+
+    <div className="bg-white p-6 rounded-xl shadow">
+      📦 Modular Design
+      <p className="mt-2 text-gray-600">
+        Easily expand your building as your business grows.
+      </p>
+    </div>
+
+    <div className="bg-white p-6 rounded-xl shadow">
+      🌍 Sustainable
+      <p className="mt-2 text-gray-600">
+        100% recyclable materials with minimal waste.
+      </p>
+    </div>
+  </div>
+</section>
+
     {/* Add the trusses section */}
     <WarehouseCatalogue />
 
+
+{/* ENGINEERED FOR PERFORMANCE */}
+<section className="py-20 px-6 max-w-6xl mx-auto">
+  <div className="grid md:grid-cols-2 gap-10 items-center">
+    
+    <div>
+      <h2 className="text-3xl font-bold mb-4">
+        Engineered for South African Conditions
+      </h2>
+      <p className="text-gray-600 mb-6">
+        Every Smart Steel structure is designed to handle local environmental conditions — from high winds to intense UV exposure.
+      </p>
+
+      <ul className="space-y-3 text-sm text-gray-700">
+        <li>✔ Structural-grade galvanized steel</li>
+        <li>✔ Designed for wind and load resistance</li>
+        <li>✔ Corrosion-resistant materials</li>
+        <li>✔ Precision-manufactured components</li>
+      </ul>
+    </div>
+
+    <div className="bg-gray-100 p-8 rounded-xl">
+      <h3 className="text-xl font-semibold mb-4">
+        Customisable to Your Needs
+      </h3>
+
+      <ul className="space-y-2 text-sm text-gray-700">
+        <li>• 8m, 10m, 12m width options</li>
+        <li>• Modular length expansion</li>
+        <li>• IBR & Chromadek cladding</li>
+        <li>• Open or enclosed structures</li>
+        <li>• Future expansion ready</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
 
 {/* SIZE MATRIX */}
 <section className="bg-gray-100 py-20 px-6">
@@ -393,6 +552,28 @@ const [selectedWidth, setSelectedWidth] = useState(8);
           </Link>
         </div>
       </section>
+
+      {/* FINAL VALUE STACK */}
+<section className="bg-gray-100 py-20 px-6">
+  <div className="max-w-5xl mx-auto text-center">
+    <h2 className="text-3xl font-bold mb-6">
+      Why Choose Smart Steel in {city}?
+    </h2>
+
+    <div className="grid md:grid-cols-2 gap-6 text-left text-sm text-gray-700">
+      <div>✔ Full turnkey construction available</div>
+      <div>✔ DIY kits delivered nationwide</div>
+      <div>✔ Fast manufacturing lead times</div>
+      <div>✔ Proven modular building system</div>
+      <div>✔ Cost-effective vs traditional building</div>
+      <div>✔ Built for South African conditions</div>
+    </div>
+
+    <p className="mt-10 text-lg font-medium">
+      Whether you want us to build it for you, or you want to build it yourself — we’ve got you covered.
+    </p>
+  </div>
+</section>
 
       {/* CTA */}
       <section className="bg-black text-white text-center py-20 px-6">
