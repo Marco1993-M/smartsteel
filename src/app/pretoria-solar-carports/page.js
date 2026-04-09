@@ -70,7 +70,7 @@ export default function SolarCarportPage({ city = 'Pretoria' }) {
 
   <Link
     href="#pricing"
-    className="inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold border border-black text-black hover:bg-black hover:text-white transition"
+    className="inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold bg-black border border-white text-white hover:bg-white hover:text-black transition"
   >
     View Prices
   </Link>
