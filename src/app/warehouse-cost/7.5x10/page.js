@@ -15,8 +15,8 @@ export default function WarehouseCostPage() {
   const length = 7.5;
   const area = width * length;
 
-  const widths = [7.5, 10, 12];
-  const lengths = [8, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 32.5, 35, 37.5, 40, 50];
+  const widths = [8, 10, 12];
+  const lengths = [7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 32.5, 35, 37.5, 40, 50];
 
   const [selectedWidth, setSelectedWidth] = useState(10);
   const [selectedLength, setSelectedLength] = useState(7.5);
