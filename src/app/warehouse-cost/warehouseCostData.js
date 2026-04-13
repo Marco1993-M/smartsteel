@@ -1,11 +1,13 @@
 const SITE_URL = 'https://www.smartsteel.co.za';
+const AVAILABLE_WIDTHS = [8, 10, 12];
+const AVAILABLE_LENGTHS = Array.from({ length: 19 }, (_, index) => 5 + index * 2.5);
 const PRICE_RATES = {
   structure: { low: 1050, high: 1300 },
   cladding: { low: 1350, high: 1500 },
   turnkey: { low: 1650, high: 2700 },
 };
 
-const warehouseCostPages = {
+const warehouseCostPageOverrides = {
   '7.5x8': {
     width: 8,
     length: 7.5,
@@ -122,11 +124,88 @@ const formatArea = (value) => `${Number.isInteger(value) ? value : value.toFixed
 const formatCurrency = (value) => `R${Math.round(value).toLocaleString('en-ZA')}`;
 const formatDimension = (value) => `${Number.isInteger(value) ? value : value.toFixed(1)}m`;
 
-export function getWarehouseCostPageConfig(slug) {
-  const base = warehouseCostPages[slug];
-  if (!base) {
+function parseWarehouseSlug(slug) {
+  const match = /^(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/.exec(slug);
+  if (!match) {
     return null;
   }
+
+  const length = Number(match[1]);
+  const width = Number(match[2]);
+
+  if (!AVAILABLE_WIDTHS.includes(width)) {
+    return null;
+  }
+
+  if (!AVAILABLE_LENGTHS.includes(length) && length !== 7.5) {
+    return null;
+  }
+
+  return { length, width };
+}
+
+function buildDefaultConfig(length, width) {
+  const area = length * width;
+  const widthLabel = `${width}m wide`;
+
+  let bestFor = ['general storage', 'workshop use', 'light industrial applications'];
+  let suitability = `A practical ${widthLabel} warehouse footprint for secure storage, workshop activity, and small business operations.`;
+  let heightGuide = 'Most clients compare 3m to 4m eave heights depending on access, shelving, and door requirements.';
+  let leadTime = 'allow roughly 4 to 6 weeks for manufacture and installation once the design is approved';
+  let addOns = ['roller shutter door', 'PA door', 'insulation', 'concrete slab', 'gutters and downpipes'];
+
+  if (area >= 100 && area < 200) {
+    bestFor = ['business storage', 'trade workshops', 'regional stock holding'];
+    suitability = `A versatile ${widthLabel} warehouse size that gives you enough floor area for storage, movement, and light operational use.`;
+    heightGuide = 'A 3m to 4m eave height is common, with taller options where vehicle access or racking is important.';
+    leadTime = 'allow approximately 5 to 7 weeks for a standard enclosure and more time for turnkey delivery';
+    addOns = ['roller shutter door', 'insulation', 'concrete slab', 'ridge ventilation', 'electrical-ready detailing'];
+  }
+
+  if (area >= 200 && area < 350) {
+    bestFor = ['distribution storage', 'fleet cover', 'industrial workshop use'];
+    suitability = `A stronger commercial warehouse option for buyers who need more usable floor area without moving into a full industrial mega-span.`;
+    heightGuide = 'Many projects at this size compare 4m to 5m eaves to improve circulation, stacking height, and door clearance.';
+    leadTime = 'allow around 6 to 8 weeks once engineering, foundations, and site access are confirmed';
+    addOns = ['multiple roller doors', 'insulation', 'ridge ventilation', 'concrete slab', 'office-ready allowance'];
+  }
+
+  if (area >= 350) {
+    bestFor = ['bulk storage', 'larger logistics operations', 'agricultural and industrial use'];
+    suitability = `A substantial ${widthLabel} warehouse footprint suited to bigger storage volumes, operational flow, and staged expansion.`;
+    heightGuide = 'Most buyers review 4m to 6m eaves at this size to support practical access and better storage flexibility.';
+    leadTime = 'allow approximately 6 to 9 weeks, especially when foundations, slabs, transport, and larger access openings are part of the scope';
+    addOns = ['multiple access doors', 'insulation', 'ridge ventilation', 'concrete slab', 'loading canopy options'];
+  }
+
+  if (width === 12) {
+    bestFor = [...new Set(['larger enclosed warehousing', ...bestFor])].slice(0, 3);
+    suitability = `A wider warehouse option that improves internal circulation, pallet storage, and vehicle movement for growing operations.`;
+  }
+
+  return {
+    width,
+    length,
+    nearbyCity: 'Pretoria',
+    bestFor,
+    suitability,
+    heightGuide,
+    leadTime,
+    addOns,
+  };
+}
+
+export function getWarehouseCostPageConfig(slug) {
+  const parsed = parseWarehouseSlug(slug);
+  if (!parsed) {
+    return null;
+  }
+
+  const override = warehouseCostPageOverrides[slug] ?? {};
+  const base = {
+    ...buildDefaultConfig(parsed.length, parsed.width),
+    ...override,
+  };
 
   const area = base.width * base.length;
   const structureRange = {
@@ -245,5 +324,5 @@ export function buildWarehouseCostMetadata(slug) {
 }
 
 export function getWarehouseCostSlugs() {
-  return Object.keys(warehouseCostPages);
+  return AVAILABLE_LENGTHS.flatMap((length) => AVAILABLE_WIDTHS.map((width) => `${length}x${width}`));
 }
