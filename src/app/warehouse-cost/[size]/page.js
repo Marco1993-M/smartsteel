@@ -6,22 +6,24 @@ export function generateStaticParams() {
   return getWarehouseCostSlugs().map((size) => ({ size }));
 }
 
-export function generateMetadata({ params }) {
-  const config = getWarehouseCostPageConfig(params.size);
+export async function generateMetadata({ params }) {
+  const { size } = await params;
+  const config = getWarehouseCostPageConfig(size);
 
   if (!config) {
     return {};
   }
 
-  return buildWarehouseCostMetadata(params.size);
+  return buildWarehouseCostMetadata(size);
 }
 
-export default function Page({ params }) {
-  const config = getWarehouseCostPageConfig(params.size);
+export default async function Page({ params }) {
+  const { size } = await params;
+  const config = getWarehouseCostPageConfig(size);
 
   if (!config) {
     notFound();
   }
 
-  return <WarehouseCostPageClient slug={params.size} />;
+  return <WarehouseCostPageClient slug={size} />;
 }
