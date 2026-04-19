@@ -118,6 +118,5 @@ module.exports = {
         disallow: ['/api', '/api/*', '/kanban', '/login'],
       },
     ],
-    additionalSitemaps: [`${siteUrl}/sitemap.xml`],
   },
 };
