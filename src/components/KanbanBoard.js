@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { supabase } from "../lib/supabase"
+import { useEffect, useRef, useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
-import LeadEditorDrawer from "./LeadEditorDrawer"
 import { Mail, Phone, Edit3 } from "lucide-react"
 import UpcomingTasks from "../components/UpcomingTasks"
+import { supabase } from "../lib/supabase"
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
 
@@ -24,18 +23,19 @@ const statusColors = {
   lost: "text-red-600",
 }
 
-export default function KanbanBoard() {
-  const [leads, setLeads] = useState([])
-  const [editingLead, setEditingLead] = useState(null)
+function normalizeStatus(status) {
+  return String(status || "new").trim().toLowerCase()
+}
+
+function formatStatusLabel(status) {
+  const normalized = normalizeStatus(status)
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+}
+
+export default function KanbanBoard({ leads, onEditLead, onLeadStatusChange }) {
   const [recentUpdates, setRecentUpdates] = useState([])
   const [updateFilter, setUpdateFilter] = useState("all")
   const kanbanRef = useRef(null)
-
-  // -------------------- FUNCTIONS --------------------
-  const fetchLeads = async () => {
-    const { data, error } = await supabase.from("leads").select("*")
-    if (!error) setLeads(data)
-  }
 
   const fetchRecentUpdates = async () => {
     const { data, error } = await supabase
@@ -49,30 +49,20 @@ export default function KanbanBoard() {
         leads(id, name, last_name, status)
       `)
       .order("timestamp", { ascending: false })
-      .limit(5)
+      .limit(8)
 
-    if (!error) setRecentUpdates(data)
+    if (!error) setRecentUpdates(data || [])
   }
 
   const highlightLead = (leadId) => {
-    const el = document.getElementById(leadId)
+    const el = document.getElementById(String(leadId))
     if (!el) return
     el.scrollIntoView({ behavior: "smooth", block: "center" })
     el.classList.add("ring", "ring-blue-400")
     setTimeout(() => el.classList.remove("ring", "ring-blue-400"), 2000)
   }
 
-  const updateLeadStatus = async (leadId, newStatus) => {
-    setLeads(prev =>
-      prev.map(l => (l.id === leadId ? { ...l, status: newStatus } : l))
-    )
-    const { error } = await supabase.from("leads").update({ status: newStatus }).eq("id", leadId)
-    if (error) console.error("Error updating lead status:", error)
-  }
-
-  // -------------------- EFFECTS --------------------
   useEffect(() => {
-    fetchLeads()
     fetchRecentUpdates()
   }, [])
 
@@ -81,230 +71,177 @@ export default function KanbanBoard() {
     return () => clearInterval(interval)
   }, [])
 
-  // -------------------- RENDER --------------------
   return (
-    <div className="p-4 sm:p-6 relative">
-{/* Layout: Upcoming Tasks + Kanban */}
-<div className="flex flex-col sm:flex-row gap-6">
-  {/* Upcoming Tasks (on top for mobile, left on desktop) */}
-  <div className="sm:w-1/4 order-first sm:order-first mb-4 sm:mb-0">
-    <UpcomingTasks leads={leads} />
-  </div>
+    <div className="relative rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="mb-5 flex flex-col gap-2 border-b border-slate-200 pb-4">
+        <h2 className="text-xl font-semibold text-slate-900">Pipeline view</h2>
+        <p className="text-sm text-slate-600">
+          Drag leads across the pipeline, open any card to edit details, and use
+          recent updates to jump straight back into active conversations.
+        </p>
+      </div>
 
-  {/* Main CRM / Kanban Board */}
-  <div className="sm:w-3/4">
-    {/* Recent Updates Banner */}
-    {recentUpdates.length > 0 && (
-      <div className="bg-white border border-gray-200 p-3 mb-4 rounded-xl shadow-sm">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-md font-medium text-gray-800 flex items-center gap-2">
-            🔔 Recent Updates
-          </h2>
-          <button
-            className="text-sm text-gray-500 hover:text-gray-700 transition"
-            onClick={() => setRecentUpdates([])}
+      <div className="flex flex-col gap-6 xl:flex-row">
+        <div className="xl:w-[320px] xl:flex-shrink-0">
+          <UpcomingTasks leads={leads} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          {recentUpdates.length > 0 && (
+            <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold text-slate-800">Recent updates</h3>
+                <button
+                  className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
+                  onClick={() => setRecentUpdates([])}
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div className="mb-3 flex flex-wrap gap-2">
+                {["all", "follow_up", "email", "call", "status", "note"].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setUpdateFilter(type)}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                      updateFilter === type
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    {type === "all"
+                      ? "All"
+                      : type.replace("_", " ").replace(/\b\w/g, (char) => char.toUpperCase())}
+                  </button>
+                ))}
+              </div>
+
+              <ul className="max-h-52 space-y-1 overflow-y-auto">
+                {recentUpdates
+                  .filter((update) => updateFilter === "all" || update.type === updateFilter)
+                  .map((update) => (
+                    <li
+                      key={update.id}
+                      className="flex cursor-pointer items-start justify-between gap-3 rounded-xl p-2 transition hover:bg-white"
+                      onClick={() => highlightLead(update.lead_id)}
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-800">
+                          {update.leads?.name || "Lead"} {update.leads?.last_name || ""}
+                        </p>
+                        <p className="text-sm text-slate-600">{update.description}</p>
+                      </div>
+                      <span className="whitespace-nowrap text-xs text-slate-400">
+                        {new Date(update.timestamp).toLocaleString([], {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
+
+          <DndContext
+            collisionDetection={closestCorners}
+            onDragEnd={({ active, over }) => {
+              if (!over) return
+              onLeadStatusChange(active.id, over.id)
+            }}
           >
-            Clear
-          </button>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex gap-2 mb-3 flex-wrap">
-          {["all", "follow_up", "email", "call", "status", "note"].map((type) => (
-            <button
-              key={type}
-              onClick={() => setUpdateFilter(type)}
-              className={`px-3 py-1 text-xs font-medium rounded-full border transition ${
-                updateFilter === type
-                  ? "bg-gray-900 text-white border-gray-900"
-                  : "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200"
-              }`}
+            <div
+              ref={kanbanRef}
+              className="flex gap-4 overflow-x-auto scroll-smooth pb-2"
             >
-              {type === "all"
-                ? "All"
-                : type.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-            </button>
-          ))}
-        </div>
-
-        {/* Updates List */}
-        <ul className="space-y-1 max-h-48 overflow-y-auto">
-          {recentUpdates
-            .filter((u) => updateFilter === "all" || u.type === updateFilter)
-            .map((update) => (
-              <li
-                key={update.id}
-                className="flex justify-between items-start p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition"
-                onClick={() => highlightLead(update.lead_id)}
-              >
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-800">{update.leads.name}</span>
-                  <span className="text-gray-600 text-sm">{update.description}</span>
+              {statuses.map((status) => (
+                <div key={status} id={status} className="w-[260px] flex-shrink-0">
+                  <KanbanColumn
+                    id={status}
+                    title={formatStatusLabel(status)}
+                    leads={leads.filter((lead) => normalizeStatus(lead.status) === status)}
+                    onEditLead={onEditLead}
+                  />
                 </div>
-                <span className="text-gray-400 text-xs ml-2">
-                  {new Date(update.timestamp).toLocaleString([], {
-                    dateStyle: "short",
-                    timeStyle: "short",
-                  })}
-                </span>
-              </li>
-            ))}
-        </ul>
+              ))}
+            </div>
+          </DndContext>
+        </div>
       </div>
-    )}
-
-    {/* Kanban Board */}
-    <DndContext
-      collisionDetection={closestCorners}
-      onDragEnd={({ active, over }) => {
-        if (!over) return
-        updateLeadStatus(active.id, over.id)
-      }}
-    >
-      <div
-        ref={kanbanRef}
-        className="flex gap-4 flex-nowrap overflow-x-auto scroll-smooth"
-      >
-        {statuses.map((status) => (
-          <div key={status} id={status} className="flex-shrink-0 w-48">
-            <KanbanColumn
-              id={status}
-              title={status}
-              leads={leads.filter((l) => l.status === status)}
-              setEditingLead={setEditingLead}
-            />
-          </div>
-        ))}
-      </div>
-    </DndContext>
-  </div>
-</div>
-
-
-      {/* Lead Editor Drawer */}
-      {editingLead && (
-        <LeadEditorDrawer
-          lead={editingLead}
-          onClose={() => setEditingLead(null)}
-          onSave={async (updatedLead) => {
-            let leadToSave = { ...updatedLead, last_activity_at: new Date().toISOString() }
-
-            if (updatedLead.status === "quoted") {
-              const nextFollowUpDays = (updatedLead.follow_up_count || 0) === 0 ? 3 : 7
-              leadToSave.follow_up_at = new Date(
-                Date.now() + nextFollowUpDays * 24 * 60 * 60 * 1000
-              ).toISOString()
-              leadToSave.follow_up_count = (updatedLead.follow_up_count || 0) + 1
-            }
-
-            setLeads((prev) =>
-              prev.map((l) => (l.id === leadToSave.id ? { ...l, ...leadToSave } : l))
-            )
-            const { error } = await supabase
-              .from("leads")
-              .update(leadToSave)
-              .eq("id", leadToSave.id)
-            if (error) {
-              console.error("Error updating lead:", error)
-              fetchLeads()
-            }
-            setEditingLead(null)
-            fetchRecentUpdates()
-          }}
-          onDelete={async (leadId) => {
-            const { error } = await supabase.from("leads").delete().eq("id", leadId)
-            if (!error) {
-              setLeads((prev) => prev.filter((l) => l.id !== leadId))
-              setEditingLead(null)
-              fetchRecentUpdates()
-            }
-          }}
-        />
-      )}
     </div>
   )
 }
 
-// -------------------- Kanban Column --------------------
-function KanbanColumn({ id, title, leads, setEditingLead }) {
+function KanbanColumn({ id, title, leads, onEditLead }) {
   const { setNodeRef } = useDroppable({ id })
 
   return (
     <div
       ref={setNodeRef}
-      className="bg-gray-50 rounded-xl p-2 sm:p-3 min-h-[400px] flex flex-col shadow-sm hover:shadow-md transition"
+      className="flex min-h-[460px] flex-col rounded-2xl bg-slate-50 p-3 shadow-sm"
     >
-      <h2 className="text-lg font-semibold mb-3 text-center sm:text-left sticky top-0 bg-gray-50 z-10">
-        {title.toUpperCase()}
-      </h2>
-      <div className="flex flex-wrap gap-2">
-        {leads.map((lead) => (
-          <KanbanCard key={lead.id} lead={lead} setEditingLead={setEditingLead} />
-        ))}
+      <div className="sticky top-0 z-10 mb-3 flex items-center justify-between rounded-xl bg-slate-50 pb-2">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">
+          {title}
+        </h2>
+        <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-slate-500">
+          {leads.length}
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        {leads.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-4 text-sm text-slate-400">
+            No leads in this stage yet.
+          </div>
+        ) : (
+          leads.map((lead) => (
+            <KanbanCard key={lead.id} lead={lead} onEditLead={onEditLead} />
+          ))
+        )}
       </div>
     </div>
   )
 }
 
-// -------------------- Kanban Card --------------------
-function KanbanCard({ lead, setEditingLead }) {
+function KanbanCard({ lead, onEditLead }) {
   const [isOpen, setIsOpen] = useState(false)
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id })
   const style = transform
     ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
     : undefined
 
-  const timeSince = (date) => {
-    if (!date) return "No activity yet"
-    const seconds = Math.floor((new Date() - new Date(date)) / 1000)
-    let interval = Math.floor(seconds / 31536000)
-    if (interval > 1) return `${interval} years ago`
-    interval = Math.floor(seconds / 2592000)
-    if (interval > 1) return `${interval} months ago`
-    interval = Math.floor(seconds / 86400)
-    if (interval > 1) return `${interval} days ago`
-    interval = Math.floor(seconds / 3600)
-    if (interval > 1) return `${interval} hours ago`
-    interval = Math.floor(seconds / 60)
-    if (interval > 1) return `${interval} minutes ago`
-    return "Just now"
-  }
-
   return (
     <div
       ref={setNodeRef}
       style={style}
-      id={lead.id}
-      className={`p-2 sm:p-3 rounded-xl border border-gray-100 mb-2 flex flex-col break-words transition hover:shadow-md hover:bg-gray-50 w-36 sm:w-full ${
+      id={String(lead.id)}
+      className={`rounded-2xl border border-slate-100 p-3 transition hover:bg-white hover:shadow-md ${
         teamColors[lead.allocated_to] || "bg-white"
       }`}
     >
-      {/* Header */}
       <div
-        className="flex justify-between items-center cursor-pointer mb-1"
-        onClick={(e) => {
-          e.stopPropagation()
-          setIsOpen((o) => !o)
+        className="mb-2 flex cursor-pointer items-start justify-between gap-2"
+        onClick={(event) => {
+          event.stopPropagation()
+          setIsOpen((open) => !open)
         }}
-        onDoubleClick={(e) => {
-          e.stopPropagation()
-          setEditingLead(lead)
+        onDoubleClick={(event) => {
+          event.stopPropagation()
+          onEditLead(lead)
         }}
       >
-        <div>
-          <p className="font-medium text-gray-900 text-sm sm:text-base">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-900 sm:text-base">
             {lead.name} {lead.last_name}
           </p>
-          <p
-            className={`text-xs sm:text-sm font-medium ${
-              statusColors[lead.status] || "text-gray-400"
-            }`}
-          >
-            {lead.status}
+          <p className={`text-xs font-medium ${statusColors[normalizeStatus(lead.status)] || "text-slate-400"}`}>
+            {formatStatusLabel(lead.status)}
           </p>
         </div>
         <div
-          className="cursor-grab text-gray-400 hover:text-gray-600"
+          className="cursor-grab text-slate-400 transition hover:text-slate-600"
           {...listeners}
           {...attributes}
         >
@@ -312,12 +249,11 @@ function KanbanCard({ lead, setEditingLead }) {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="flex gap-1 flex-wrap mb-1 text-xs">
+      <div className="mb-2 flex flex-wrap gap-1 text-xs">
         {lead.email && (
           <a
             href={`mailto:${lead.email}?subject=Quick update&body=Hi ${lead.name},`}
-            className="flex items-center gap-1 px-1 py-0.5 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+            className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-blue-700 transition hover:bg-blue-200"
           >
             <Mail size={12} /> Email
           </a>
@@ -325,29 +261,52 @@ function KanbanCard({ lead, setEditingLead }) {
         {lead.phone && (
           <a
             href={`tel:${lead.phone}`}
-            className="flex items-center gap-1 px-1 py-0.5 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition"
+            className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-green-700 transition hover:bg-green-200"
           >
             <Phone size={12} /> Call
           </a>
         )}
         <button
-          onClick={() => setEditingLead(lead)}
-          className="flex items-center gap-1 px-1 py-0.5 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+          onClick={() => onEditLead(lead)}
+          className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-700 transition hover:bg-slate-200"
         >
           <Edit3 size={12} /> Edit
         </button>
       </div>
 
-      {/* Collapsible Details */}
       {isOpen && (
-        <div className="text-xs text-gray-600 border-t pt-1 mt-1 space-y-1">
+        <div className="space-y-1 border-t border-slate-200 pt-2 text-xs text-slate-600">
           <p>
-            <span className="font-semibold">Allocated To:</span>{" "}
-            {lead.allocated_to || "—"}
+            <span className="font-semibold">Product:</span>{" "}
+            {lead.product_type || "Not set"}
           </p>
           <p>
-            <span className="font-semibold">Status:</span> {lead.status}
+            <span className="font-semibold">Source:</span>{" "}
+            {lead.lead_source || "Not set"}
           </p>
+          <p>
+            <span className="font-semibold">Assigned:</span>{" "}
+            {lead.allocated_to || "Unassigned"}
+          </p>
+          <p>
+            <span className="font-semibold">Next action:</span>{" "}
+            {lead.next_action || "Not set"}
+          </p>
+          <p>
+            <span className="font-semibold">Follow-up:</span>{" "}
+            {lead.follow_up_at
+              ? new Date(lead.follow_up_at).toLocaleDateString()
+              : "Not set"}
+          </p>
+          <p>
+            <span className="font-semibold">Quote value:</span>{" "}
+            {lead.quote_value ? `R ${lead.quote_value}` : "Not set"}
+          </p>
+          {lead.estimate_request && (
+            <p>
+              <span className="font-semibold">Request:</span> {lead.estimate_request}
+            </p>
+          )}
           {lead.notes && (
             <p>
               <span className="font-semibold">Notes:</span> {lead.notes}

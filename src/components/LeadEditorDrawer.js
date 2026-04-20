@@ -6,6 +6,43 @@ import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft } from "lucide-reac
 import { supabase } from "../lib/supabase" 
 import { format, isToday, isYesterday } from "date-fns";
 
+const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
+const LEAD_SOURCE_OPTIONS = [
+  "Website form",
+  "Estimator",
+  "WhatsApp",
+  "Phone call",
+  "Referral",
+  "Google Ads",
+  "Organic search",
+  "Repeat client",
+];
+const PRODUCT_TYPE_OPTIONS = ["Warehouse", "Solar carport", "LSF trusses", "Other"];
+
+function normalizeStatus(status) {
+  return String(status || "new").trim().toLowerCase();
+}
+
+function formatStatusLabel(status) {
+  const normalized = normalizeStatus(status);
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function getStatusBadgeClass(status) {
+  switch (normalizeStatus(status)) {
+    case "won":
+      return "bg-green-100 text-green-800";
+    case "lost":
+      return "bg-red-100 text-red-800";
+    case "quoted":
+      return "bg-yellow-100 text-yellow-800";
+    case "contacted":
+      return "bg-blue-100 text-blue-800";
+    default:
+      return "bg-gray-100 text-gray-700";
+  }
+}
+
 // Pure function: only groups activities by date
 function groupActivities(activities) {
   const groups = {};
@@ -30,6 +67,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
+  const [validationErrors, setValidationErrors] = useState({});
 
   const [formData, setFormData] = useState({
     name: "",
@@ -37,8 +75,14 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     email: "",
     phone: "",
     estimate_request: "",
-    status: "New",
+    status: "new",
     allocated_to: "",
+    next_action: "",
+    lead_source: "",
+    product_type: "",
+    quote_value: "",
+    expected_close_date: "",
+    lost_reason: "",
     notes: "",
     ...lead
   });
@@ -127,16 +171,62 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       email: "",
       phone: "",
       estimate_request: "",
-      status: "New",
+      status: "new",
       allocated_to: "",
+      next_action: "",
+      lead_source: "",
+      product_type: "",
+      quote_value: "",
+      expected_close_date: "",
+      lost_reason: "",
       notes: "",
       ...lead
     });
     setNotes(lead?.notes ? [lead.notes] : []);
+    setValidationErrors({});
   }, [lead]);
 
-  const handleChange = (field, value) =>
+  const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setValidationErrors((prev) => {
+      if (!prev[field]) return prev;
+      const updated = { ...prev };
+      delete updated[field];
+      return updated;
+    });
+  };
+
+  const handleSaveClick = () => {
+    const errors = {};
+
+    if (!formData.name?.trim()) errors.name = "First name is required.";
+    if (!formData.phone?.trim() && !formData.email?.trim()) {
+      errors.contact = "Add either a phone number or an email address.";
+    }
+    if (!formData.lead_source?.trim()) {
+      errors.lead_source = "Capture where the lead came from.";
+    }
+    if (!formData.product_type?.trim()) {
+      errors.product_type = "Select the product category.";
+    }
+    if (!formData.allocated_to?.trim()) {
+      errors.allocated_to = "Assign this lead to someone on the team.";
+    }
+    if (!formData.next_action?.trim()) {
+      errors.next_action = "Set the next action so the team knows what happens next.";
+    }
+    if (normalizeStatus(formData.status) === "quoted" && !String(formData.quote_value || "").trim()) {
+      errors.quote_value = "Quoted leads need a quote value.";
+    }
+    if (normalizeStatus(formData.status) === "lost" && !formData.lost_reason?.trim()) {
+      errors.lost_reason = "Please capture why this lead was lost.";
+    }
+
+    setValidationErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    onSave({ ...formData, status: normalizeStatus(formData.status) });
+  };
 
   return (
     <Transition.Root show={!!lead || isNew} as={Fragment}>
@@ -152,7 +242,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-full sm:w-[450px] max-w-full h-full overflow-hidden">
+            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-[450px] max-w-[450px] h-full overflow-hidden">
               {/* Header */}
 <div className="px-6 py-4 border-b flex flex-col sm:flex-row sm:items-center justify-between sticky top-0 bg-white z-10 gap-2">
   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
@@ -168,19 +258,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       {/* Status Badge */}
       {!isNew && (
         <span
-          className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${
-            formData.status === "Won"
-              ? "bg-green-100 text-green-800"
-              : formData.status === "Lost"
-              ? "bg-red-100 text-red-800"
-              : formData.status === "Quoted"
-              ? "bg-yellow-100 text-yellow-800"
-              : formData.status === "Contacted"
-              ? "bg-blue-100 text-blue-800"
-              : "bg-gray-100 text-gray-700"
-          }`}
+          className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${getStatusBadgeClass(formData.status)}`}
         >
-          {formData.status || "New"}
+          {formatStatusLabel(formData.status)}
         </span>
       )}
     </Dialog.Title>
@@ -265,6 +345,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             onChange={(e) => handleChange("name", e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
           />
+          {validationErrors.name && (
+            <p className="mt-1 text-xs text-red-600">{validationErrors.name}</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -283,6 +366,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             onChange={(e) => handleChange("phone", e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
           />
+          {validationErrors.contact && (
+            <p className="mt-1 text-xs text-red-600">{validationErrors.contact}</p>
+          )}
         </div>
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse Size</label>
@@ -303,8 +389,8 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               className="border px-3 py-2 rounded flex-1 min-w-[100px]"
             >
               <option value="">Select Length</option>
-              {[...Array(20)].map((_, i) => {
-                const len = (i + 1) * 2.5;
+              {[...Array(19)].map((_, i) => {
+                const len = 5 + i * 2.5;
                 return <option key={len} value={len}>{len}m</option>;
               })}
             </select>
@@ -342,6 +428,44 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             onChange={(e) => handleChange("estimate_request", e.target.value)}
             className="mt-3 block w-full text-gray-400 rounded-md border-gray-300 shadow-sm"
           />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Lead Source</label>
+            <select
+              value={formData.lead_source || ""}
+              onChange={(e) => handleChange("lead_source", e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            >
+              <option value="">Select source</option>
+              {LEAD_SOURCE_OPTIONS.map((source) => (
+                <option key={source} value={source}>
+                  {source}
+                </option>
+              ))}
+            </select>
+            {validationErrors.lead_source && (
+              <p className="mt-1 text-xs text-red-600">{validationErrors.lead_source}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Product Type</label>
+            <select
+              value={formData.product_type || ""}
+              onChange={(e) => handleChange("product_type", e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            >
+              <option value="">Select product</option>
+              {PRODUCT_TYPE_OPTIONS.map((product) => (
+                <option key={product} value={product}>
+                  {product}
+                </option>
+              ))}
+            </select>
+            {validationErrors.product_type && (
+              <p className="mt-1 text-xs text-red-600">{validationErrors.product_type}</p>
+            )}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
@@ -386,6 +510,54 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             </div>
           </div>
         </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Quote Value</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.quote_value || ""}
+              onChange={(e) => handleChange("quote_value", e.target.value)}
+              placeholder="0.00"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+            {validationErrors.quote_value && (
+              <p className="mt-1 text-xs text-red-600">{validationErrors.quote_value}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Expected Close Date</label>
+            <input
+              type="date"
+              value={
+                formData.expected_close_date
+                  ? new Date(formData.expected_close_date).toISOString().split("T")[0]
+                  : ""
+              }
+              onChange={(e) =>
+                handleChange(
+                  "expected_close_date",
+                  e.target.value ? new Date(e.target.value).toISOString() : ""
+                )
+              }
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Next Action</label>
+          <textarea
+            value={formData.next_action || ""}
+            onChange={(e) => handleChange("next_action", e.target.value)}
+            placeholder="Example: Send revised quote, call on Thursday, request site address..."
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            rows={3}
+          />
+          {validationErrors.next_action && (
+            <p className="mt-1 text-xs text-red-600">{validationErrors.next_action}</p>
+          )}
+        </div>
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">Allocated To</label>
           <div className="flex gap-2 flex-wrap">
@@ -412,21 +584,39 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               );
             })}
           </div>
+          {validationErrors.allocated_to && (
+            <p className="mt-1 text-xs text-red-600">{validationErrors.allocated_to}</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Status</label>
           <select
-            value={formData.status || "New"}
+            value={normalizeStatus(formData.status)}
             onChange={(e) => handleChange("status", e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
           >
-            <option>new</option>
-            <option>contacted</option>
-            <option>quoted</option>
-            <option>won</option>
-            <option>lost</option>
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status}>
+                {formatStatusLabel(status)}
+              </option>
+            ))}
           </select>
         </div>
+        {normalizeStatus(formData.status) === "lost" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Lost Reason</label>
+            <textarea
+              value={formData.lost_reason || ""}
+              onChange={(e) => handleChange("lost_reason", e.target.value)}
+              placeholder="Example: Budget too low, went with timber, delayed project..."
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              rows={3}
+            />
+            {validationErrors.lost_reason && (
+              <p className="mt-1 text-xs text-red-600">{validationErrors.lost_reason}</p>
+            )}
+          </div>
+        )}
       </Tab.Panel>
 
 
@@ -573,7 +763,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   </div>
 </Tab.Panel>
 
-
       {/* Activity Panel */}
       <Tab.Panel className="space-y-6 w-full max-w-full p-4">
         {loadingActivities ? (
@@ -625,7 +814,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
 
 
-
                   </Tab.Panels>
 
                   {/* Footer */}
@@ -639,7 +827,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                       </button>
                     )}
                     <button
-                      onClick={() => onSave(formData)}
+                      onClick={handleSaveClick}
                       className="flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                     >
                       <Save size={16} /> {isNew ? "Add Lead" : "Save"}
