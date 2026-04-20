@@ -14,7 +14,43 @@ const trussClusterPaths = [
   '/products/lightweight-steel-trusses/why-builders-switch',
 ];
 
-const cityWarehousePaths = ['/midrand/warehouses', '/centurion/warehouses', '/pretoria/warehouses', '/hoedspruit/warehouses'];
+const cityWarehousePaths = [
+  '/bloemfontein/warehouses',
+  '/cape-town/warehouses',
+  '/durban/warehouses',
+  '/east-london/warehouses',
+  '/gqeberha/warehouses',
+  '/nelspruit/warehouses',
+  '/polokwane/warehouses',
+  '/pretoria/warehouses',
+  '/centurion/warehouses',
+  '/johannesburg/warehouses',
+  '/midrand/warehouses',
+  '/roodepoort/warehouses',
+  '/middelburg/warehouses',
+  '/hoedspruit/warehouses',
+  '/hermanus/warehouses',
+  '/rustenburg/warehouses',
+];
+
+const legacyRegionWarehousePaths = [
+  '/bloemfontein-warehouses',
+  '/cape-town-warehouses',
+  '/durban-warehouses',
+  '/east-london-warehouses',
+  '/gqeberha-warehouses',
+  '/nelspruit-warehouses',
+  '/polokwane-warehouses',
+  '/pretoria-warehouses',
+  '/centurion-warehouses',
+  '/johannesburg-warehouses',
+  '/midrand-warehouses',
+  '/roodepoort-warehouses',
+  '/middelburg-warehouses',
+  '/hoedspruit-warehouses',
+  '/hermanus-warehouses',
+  '/rustenburg-warehouses',
+];
 
 const highPriorityPages = new Set([
   '/',
@@ -23,6 +59,7 @@ const highPriorityPages = new Set([
   '/pretoria-solar-carports',
   '/products/lightweight-steel-trusses',
   '/warehouse-cost',
+  '/warehouse-regions',
 ]);
 
 const servicePages = new Set([
@@ -72,7 +109,7 @@ module.exports = {
     } else if (path.startsWith('/products/lightweight-steel-trusses/')) {
       changefreq = 'monthly';
       priority = 0.82;
-    } else if (cityWarehousePaths.includes(path) || path.endsWith('-warehouses')) {
+    } else if (cityWarehousePaths.includes(path) || legacyRegionWarehousePaths.includes(path)) {
       changefreq = 'monthly';
       priority = 0.78;
     } else if (servicePages.has(path)) {
@@ -98,7 +135,13 @@ module.exports = {
     };
   },
   additionalPaths: async (config) => {
-    const extraPaths = [...warehouseCostPaths, ...trussClusterPaths, ...cityWarehousePaths];
+    const extraPaths = [
+      ...warehouseCostPaths,
+      ...trussClusterPaths,
+      ...cityWarehousePaths,
+      ...legacyRegionWarehousePaths,
+      '/warehouse-regions',
+    ];
     const results = [];
 
     for (const path of extraPaths) {
