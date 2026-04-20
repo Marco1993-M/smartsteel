@@ -50,18 +50,18 @@ export default function Footer() {
 
           {/* City Links */}
         <div>
-          <h4 className="text-lg font-semibold mb-4">Find us here</h4>
-           <p className="text-sm text-gray-300 mb-2"> <a href="/johannesburg-warehouses" className="hover:text-[#da1a33]">Johannesburg</a></p>
-           <p className="text-sm text-gray-300 mb-2"> <a href="/centurion-warehouses" className="hover:text-[#da1a33]">Centurion</a></p>
-           <p className="text-sm text-gray-300 mb-2"> <a href="/midrand-warehouses" className="hover:text-[#da1a33]">Midrand</a></p>
-           <p className="text-sm text-gray-300 mb-2"> <a href="/pretoria-warehouses" className="hover:text-[#da1a33]">Pretoria</a></p>
-           <p className="text-sm text-gray-300 mb-2"> <a href="/roodepoort-warehouses" className="hover:text-[#da1a33]">Roodepoort</a></p>
-           <p className="text-sm text-gray-300 mb-2"> <a href="/middelburg-warehouses" className="hover:text-[#da1a33]">Middelburg</a></p>
-            <div className="grid md:grid-cols-3 gap-4 text-sm">
-
-        
-        </div>
-        
+          <h4 className="text-lg font-semibold mb-4">Warehouse Regions</h4>
+          <ul className="space-y-2 text-sm text-gray-300">
+            <li>
+              <Link href="/warehouse-regions" className="font-semibold text-white hover:text-[#da1a33]">
+                All regions
+              </Link>
+            </li>
+            <li><Link href="/johannesburg-warehouses" className="hover:text-[#da1a33]">Johannesburg</Link></li>
+            <li><Link href="/centurion-warehouses" className="hover:text-[#da1a33]">Centurion</Link></li>
+            <li><Link href="/midrand-warehouses" className="hover:text-[#da1a33]">Midrand</Link></li>
+            <li><Link href="/pretoria-warehouses" className="hover:text-[#da1a33]">Pretoria</Link></li>
+          </ul>
         </div>
       </div>
 
