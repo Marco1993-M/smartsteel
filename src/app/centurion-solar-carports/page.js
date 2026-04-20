@@ -1,8 +1,8 @@
 import SolarRegionPageClient from "../solar-regions/SolarRegionPageClient";
 import { buildSolarRegionMetadata } from "../solar-regions/solarRegionData";
 
-export const metadata = buildSolarRegionMetadata("pretoria");
+export const metadata = buildSolarRegionMetadata("centurion");
 
 export default function Page() {
-  return <SolarRegionPageClient citySlug="pretoria" />;
+  return <SolarRegionPageClient citySlug="centurion" />;
 }
