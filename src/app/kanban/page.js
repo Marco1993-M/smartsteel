@@ -1,103 +1,922 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "../../lib/supabase"
 import KanbanBoard from "../../components/KanbanBoard"
 import LeadEditorDrawer from "../../components/LeadEditorDrawer"
 import PricesDrawer from "../../components/PricesDrawer"
+import { supabase } from "../../lib/supabase"
+
+const TEAM_MEMBERS = ["Stefan", "Niel", "Victor", "Marco"]
+const STATUS_OPTIONS = ["all", "new", "contacted", "quoted", "won", "lost"]
+const NEXT_ACTION_STORAGE_KEY = "smartsteel.crm.next-actions"
+const CRM_FALLBACK_STORAGE_KEY = "smartsteel.crm.custom-fields"
+const CRM_FALLBACK_FIELDS = [
+  "next_action",
+  "lead_source",
+  "product_type",
+  "quote_value",
+  "expected_close_date",
+  "lost_reason",
+]
+const LEAD_SOURCE_OPTIONS = [
+  "Website form",
+  "Estimator",
+  "WhatsApp",
+  "Phone call",
+  "Referral",
+  "Google Ads",
+  "Organic search",
+  "Repeat client",
+]
+const PRODUCT_TYPE_OPTIONS = ["Warehouse", "Solar carport", "LSF trusses", "Other"]
+
+const emptyLead = {
+  name: "",
+  last_name: "",
+  email: "",
+  phone: "",
+  estimate_request: "",
+  allocated_to: "",
+  next_action: "",
+  lead_source: "",
+  product_type: "",
+  quote_value: "",
+  expected_close_date: "",
+  lost_reason: "",
+  notes: "",
+  status: "new",
+}
+
+function normalizeStatus(status) {
+  return String(status || "new").trim().toLowerCase()
+}
+
+function normalizeLead(lead) {
+  return {
+    ...lead,
+    status: normalizeStatus(lead.status),
+    next_action: lead.next_action || "",
+    lead_source: lead.lead_source || "",
+    product_type: lead.product_type || "",
+    quote_value: lead.quote_value || "",
+    expected_close_date: lead.expected_close_date || null,
+    lost_reason: lead.lost_reason || "",
+    follow_up_at: lead.follow_up_at || null,
+  }
+}
+
+function formatStatusLabel(status) {
+  const normalized = normalizeStatus(status)
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+}
+
+function isSameDay(dateValue, comparisonDate = new Date()) {
+  if (!dateValue) return false
+  const date = new Date(dateValue)
+  return date.toDateString() === comparisonDate.toDateString()
+}
+
+function isBeforeToday(dateValue) {
+  if (!dateValue) return false
+  const date = new Date(dateValue)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  date.setHours(0, 0, 0, 0)
+  return date < today
+}
+
+function readLocalNextActions() {
+  if (typeof window === "undefined") return {}
+
+  try {
+    return JSON.parse(window.localStorage.getItem(NEXT_ACTION_STORAGE_KEY) || "{}")
+  } catch {
+    return {}
+  }
+}
+
+function writeLocalNextActions(nextActions) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(NEXT_ACTION_STORAGE_KEY, JSON.stringify(nextActions))
+}
+
+function readFallbackFields() {
+  if (typeof window === "undefined") return {}
+
+  try {
+    return JSON.parse(window.localStorage.getItem(CRM_FALLBACK_STORAGE_KEY) || "{}")
+  } catch {
+    return {}
+  }
+}
+
+function writeFallbackFields(data) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(CRM_FALLBACK_STORAGE_KEY, JSON.stringify(data))
+}
+
+function withFallbackNextAction(lead, nextActions) {
+  if (!lead?.id) return normalizeLead(lead)
+
+  return normalizeLead({
+    ...lead,
+    next_action: lead.next_action || nextActions[lead.id] || "",
+  })
+}
+
+function withFallbackFields(lead, fallbackFields) {
+  if (!lead?.id) return normalizeLead(lead)
+
+  const fallback = fallbackFields[lead.id] || {}
+  return normalizeLead({
+    ...lead,
+    ...Object.fromEntries(
+      CRM_FALLBACK_FIELDS.map((field) => [field, lead[field] || fallback[field] || ""])
+    ),
+  })
+}
+
+function validateLead(lead) {
+  if (!lead.name?.trim()) return "Please add the lead's first name."
+  if (!lead.phone?.trim() && !lead.email?.trim()) {
+    return "Please add at least a phone number or email address."
+  }
+  if (!lead.lead_source?.trim()) return "Please capture where this lead came from."
+  if (!lead.product_type?.trim()) return "Please choose the product type for this lead."
+  if (!lead.allocated_to?.trim()) return "Please assign this lead to a team member."
+  if (!lead.next_action?.trim()) return "Please add the next action for this lead."
+  if (normalizeStatus(lead.status) === "quoted" && !String(lead.quote_value || "").trim()) {
+    return "Please capture the quote value before saving a quoted lead."
+  }
+  if (normalizeStatus(lead.status) === "lost" && !lead.lost_reason?.trim()) {
+    return "Please capture why the lead was lost."
+  }
+  return null
+}
+
+function parseMissingColumn(error) {
+  const message = error?.message || ""
+  const match = message.match(/column ["']?([a-zA-Z0-9_]+)["']?/i)
+  return match?.[1] || null
+}
+
+function getLeadFreshnessDate(lead) {
+  return lead.last_activity_at || lead.follow_up_at || lead.updated_at || lead.created_at || null
+}
+
+function getDaysSince(dateValue) {
+  if (!dateValue) return Number.POSITIVE_INFINITY
+  const diff = Date.now() - new Date(dateValue).getTime()
+  return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
 
 export default function KanbanPage() {
   const router = useRouter()
-  const [user, setUser] = useState(null)   // always first after router
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const [leads, setLeads] = useState([])
+  const [loading, setLoading] = useState(true)
   const [editingLead, setEditingLead] = useState(null)
   const [isAddingLead, setIsAddingLead] = useState(false)
-  const [showPricesDrawer, setShowPricesDrawer] = useState(false) // NEW
-
-  // Check auth on mount
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.replace("/login")
-      } else {
-        setUser(session.user)
-        fetchLeads()
-      }
-    }
-    fetchUser()
-  }, [router])
+  const [showPricesDrawer, setShowPricesDrawer] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [assigneeFilter, setAssigneeFilter] = useState("all")
+  const [nextActionFallbacks, setNextActionFallbacks] = useState({})
+  const [fallbackFieldValues, setFallbackFieldValues] = useState({})
 
   const fetchLeads = async () => {
-    const { data, error } = await supabase.from("leads").select("*")
-    if (!error) setLeads(data)
+    setLoading(true)
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching leads:", error)
+    } else {
+      const fallbackActions = readLocalNextActions()
+      const fallbackFields = readFallbackFields()
+      setNextActionFallbacks(fallbackActions)
+      setFallbackFieldValues(fallbackFields)
+      setLeads(
+        (data || []).map((lead) =>
+          withFallbackFields(withFallbackNextAction(lead, fallbackActions), fallbackFields)
+        )
+      )
+    }
+
+    setLoading(false)
   }
 
-  // Save for both new and existing leads
-  const handleSaveLead = async (leadData, isNew = false) => {
-    if (isNew) {
-      const { data, error } = await supabase
-        .from("leads")
-        .insert([{ ...leadData, created_by: user.id }])
-        .select()
-      if (!error) {
-        setLeads((prev) => [...prev, data[0]])
-        setIsAddingLead(false)
-      } else {
-        alert("Error adding lead: " + error.message)
+  useEffect(() => {
+    const bootstrapSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session?.user) {
+        router.replace("/login")
+        setAuthLoading(false)
+        return
       }
-    } else {
-      const { error } = await supabase
-        .from("leads")
-        .update(leadData)
-        .eq("id", leadData.id)
-      if (!error) fetchLeads()
-      setEditingLead(null)
+
+      setUser(session.user)
+      setAuthLoading(false)
+      fetchLeads()
     }
+
+    bootstrapSession()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        setUser(null)
+        router.replace("/login")
+        return
+      }
+
+      setUser(session.user)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [router])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.replace("/login")
+  }
+
+  const persistFallbackNextAction = (leadId, nextAction) => {
+    const updatedFallbacks = {
+      ...nextActionFallbacks,
+      [leadId]: nextAction,
+    }
+    setNextActionFallbacks(updatedFallbacks)
+    writeLocalNextActions(updatedFallbacks)
+  }
+
+  const persistFallbackFields = (leadId, values) => {
+    const updatedFallbacks = {
+      ...fallbackFieldValues,
+      [leadId]: {
+        ...(fallbackFieldValues[leadId] || {}),
+        ...Object.fromEntries(
+          CRM_FALLBACK_FIELDS.map((field) => [field, values[field] || ""])
+        ),
+      },
+    }
+    setFallbackFieldValues(updatedFallbacks)
+    writeFallbackFields(updatedFallbacks)
+  }
+
+  const clearFallbackFields = (leadId, fields = CRM_FALLBACK_FIELDS) => {
+    if (!fallbackFieldValues[leadId]) return
+    const updatedLeadFallback = { ...(fallbackFieldValues[leadId] || {}) }
+    fields.forEach((field) => delete updatedLeadFallback[field])
+
+    const updatedFallbacks = { ...fallbackFieldValues }
+    if (Object.keys(updatedLeadFallback).length === 0) {
+      delete updatedFallbacks[leadId]
+    } else {
+      updatedFallbacks[leadId] = updatedLeadFallback
+    }
+    setFallbackFieldValues(updatedFallbacks)
+    writeFallbackFields(updatedFallbacks)
+  }
+
+  const clearFallbackNextAction = (leadId) => {
+    if (!nextActionFallbacks[leadId]) return
+    const updatedFallbacks = { ...nextActionFallbacks }
+    delete updatedFallbacks[leadId]
+    setNextActionFallbacks(updatedFallbacks)
+    writeLocalNextActions(updatedFallbacks)
+  }
+
+  const logLeadActivity = async (activity) => {
+    const payload = Array.isArray(activity) ? activity.filter(Boolean) : [activity].filter(Boolean)
+    if (payload.length === 0) return
+
+    const { error } = await supabase.from("lead_activities").insert(payload)
+    if (error) {
+      console.error("Error logging lead activity:", error)
+    }
+  }
+
+  const handleSaveLead = async (leadData, isNew = false) => {
+    const normalizedLead = normalizeLead({
+      ...leadData,
+      created_by: leadData.created_by || user?.id || null,
+    })
+    const validationError = validateLead(normalizedLead)
+    if (validationError) {
+      alert(validationError)
+      return false
+    }
+
+    const currentLead = normalizedLead.id
+      ? leads.find((lead) => lead.id === normalizedLead.id)
+      : null
+
+    const persistLead = async (payload) => {
+      if (isNew) {
+        return supabase.from("leads").insert([payload]).select()
+      }
+
+      return supabase.from("leads").update(payload).eq("id", normalizedLead.id)
+    }
+
+    if (isNew) {
+      let response = await persistLead(normalizedLead)
+      const unsupportedFields = []
+
+      while (response.error) {
+        const missingColumn = parseMissingColumn(response.error)
+        if (!missingColumn || !CRM_FALLBACK_FIELDS.includes(missingColumn)) break
+        unsupportedFields.push(missingColumn)
+        const fallbackPayload = { ...normalizedLead }
+        unsupportedFields.forEach((field) => delete fallbackPayload[field])
+        response = await supabase.from("leads").insert([fallbackPayload]).select()
+      }
+
+      if (response.error) {
+        alert("Error adding lead: " + response.error.message)
+        return false
+      }
+
+      const savedLead = normalizeLead(response.data[0])
+      const mergedLead = {
+        ...savedLead,
+        ...Object.fromEntries(
+          CRM_FALLBACK_FIELDS.map((field) => [field, normalizedLead[field] || ""])
+        ),
+      }
+
+      if (unsupportedFields.includes("next_action")) {
+        persistFallbackNextAction(savedLead.id, normalizedLead.next_action)
+      } else {
+        clearFallbackNextAction(savedLead.id)
+      }
+      if (unsupportedFields.length > 0) {
+        persistFallbackFields(savedLead.id, normalizedLead)
+      } else {
+        clearFallbackFields(savedLead.id)
+      }
+
+      setLeads((prev) => [mergedLead, ...prev])
+      setIsAddingLead(false)
+      await logLeadActivity({
+        lead_id: savedLead.id,
+        type: "update",
+        user_name: "System",
+        description: `Lead added to CRM. Next action: ${normalizedLead.next_action}`,
+        timestamp: new Date().toISOString(),
+      })
+      return true
+    }
+
+    let error = null
+    let updateResult = await persistLead(normalizedLead)
+    const unsupportedFields = []
+
+    while (updateResult.error) {
+      const missingColumn = parseMissingColumn(updateResult.error)
+      if (!missingColumn || !CRM_FALLBACK_FIELDS.includes(missingColumn)) break
+      unsupportedFields.push(missingColumn)
+      const fallbackPayload = { ...normalizedLead }
+      unsupportedFields.forEach((field) => delete fallbackPayload[field])
+      updateResult = await supabase
+        .from("leads")
+        .update(fallbackPayload)
+        .eq("id", normalizedLead.id)
+    }
+
+    error = updateResult.error
+
+    if (error) {
+      alert("Error saving lead: " + error.message)
+      return false
+    }
+
+    if (unsupportedFields.includes("next_action")) {
+      persistFallbackNextAction(normalizedLead.id, normalizedLead.next_action)
+    } else {
+      clearFallbackNextAction(normalizedLead.id)
+    }
+    if (unsupportedFields.length > 0) {
+      persistFallbackFields(normalizedLead.id, normalizedLead)
+    } else {
+      clearFallbackFields(normalizedLead.id)
+    }
+
+    setLeads((prev) =>
+      prev.map((lead) => (lead.id === normalizedLead.id ? normalizedLead : lead))
+    )
+
+    const activityEntries = []
+    if (currentLead && normalizeStatus(currentLead.status) !== normalizeStatus(normalizedLead.status)) {
+      activityEntries.push({
+        lead_id: normalizedLead.id,
+        type: "status",
+        user_name: "System",
+        description: `Status changed from ${formatStatusLabel(currentLead.status)} to ${formatStatusLabel(normalizedLead.status)}`,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    if (currentLead?.next_action !== normalizedLead.next_action) {
+      activityEntries.push({
+        lead_id: normalizedLead.id,
+        type: "update",
+        user_name: "System",
+        description: `Next action updated to: ${normalizedLead.next_action}`,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    if (currentLead?.follow_up_at !== normalizedLead.follow_up_at && normalizedLead.follow_up_at) {
+      activityEntries.push({
+        lead_id: normalizedLead.id,
+        type: "follow_up",
+        user_name: "System",
+        description: `Follow-up date set for ${new Date(normalizedLead.follow_up_at).toLocaleDateString()}`,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    await logLeadActivity(activityEntries)
+    setEditingLead(null)
+    return true
   }
 
   const handleDeleteLead = async (id) => {
     if (!confirm("Are you sure you want to delete this lead?")) return
+
     const { error } = await supabase.from("leads").delete().eq("id", id)
-    if (!error) fetchLeads()
+    if (error) {
+      alert("Error deleting lead: " + error.message)
+      return
+    }
+
+    setLeads((prev) => prev.filter((lead) => lead.id !== id))
+    clearFallbackNextAction(id)
+    clearFallbackFields(id)
     setEditingLead(null)
     setIsAddingLead(false)
   }
 
-  // Don’t render until user is checked
-  if (!user) return null
+  const handleLeadStatusChange = async (leadId, newStatus) => {
+    const normalizedStatus = normalizeStatus(newStatus)
+    const previousLead = leads.find((lead) => lead.id === leadId)
 
-  return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mt-16 mb-6">
-        <h1 className="text-2xl font-bold">Smart Steel Leads Centre</h1>
+    setLeads((prev) =>
+      prev.map((lead) =>
+        lead.id === leadId ? { ...lead, status: normalizedStatus } : lead
+      )
+    )
 
-        {/* Buttons group */}
-        <div className="flex gap-3">
-          <button
-            className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
-            onClick={() => setShowPricesDrawer(true)}
-          >
-            Prices & Templates
-          </button>
+    const { error } = await supabase
+      .from("leads")
+      .update({ status: normalizedStatus })
+      .eq("id", leadId)
 
-          <button
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            onClick={() => setIsAddingLead(true)}
-          >
-            + New Lead
-          </button>
+    if (error) {
+      console.error("Error updating lead status:", error)
+      if (previousLead) {
+        setLeads((prev) =>
+          prev.map((lead) => (lead.id === leadId ? previousLead : lead))
+        )
+      }
+      return
+    }
+
+    if (previousLead && normalizeStatus(previousLead.status) !== normalizedStatus) {
+      await logLeadActivity({
+        lead_id: leadId,
+        type: "status",
+        user_name: "System",
+        description: `Status changed from ${formatStatusLabel(previousLead.status)} to ${formatStatusLabel(normalizedStatus)}`,
+        timestamp: new Date().toISOString(),
+      })
+    }
+  }
+
+  const assigneeOptions = useMemo(() => {
+    const seen = new Set(TEAM_MEMBERS)
+    leads.forEach((lead) => {
+      if (lead.allocated_to) {
+        seen.add(lead.allocated_to)
+      }
+    })
+    return ["all", ...Array.from(seen)]
+  }, [leads])
+
+  const filteredLeads = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase()
+
+    return leads.filter((lead) => {
+      const matchesSearch =
+        !query ||
+        [
+          lead.name,
+          lead.last_name,
+          lead.email,
+          lead.phone,
+          lead.estimate_request,
+          lead.notes,
+          lead.next_action,
+          lead.lead_source,
+          lead.product_type,
+          lead.quote_value,
+          lead.expected_close_date,
+          lead.lost_reason,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query))
+
+      const matchesStatus =
+        statusFilter === "all" || normalizeStatus(lead.status) === statusFilter
+      const matchesAssignee =
+        assigneeFilter === "all" || lead.allocated_to === assigneeFilter
+
+      return matchesSearch && matchesStatus && matchesAssignee
+    })
+  }, [assigneeFilter, leads, searchTerm, statusFilter])
+
+  const metrics = useMemo(() => {
+    const todayCount = leads.filter((lead) => isSameDay(lead.follow_up_at)).length
+    const overdueCount = leads.filter((lead) => isBeforeToday(lead.follow_up_at)).length
+
+    return [
+      {
+        label: "Total leads",
+        value: leads.length,
+        tone: "border-slate-200 bg-white",
+      },
+      {
+        label: "Quoted",
+        value: leads.filter((lead) => normalizeStatus(lead.status) === "quoted").length,
+        tone: "border-amber-200 bg-amber-50",
+      },
+      {
+        label: "Won",
+        value: leads.filter((lead) => normalizeStatus(lead.status) === "won").length,
+        tone: "border-emerald-200 bg-emerald-50",
+      },
+      {
+        label: "Follow-up today",
+        value: todayCount,
+        tone: "border-sky-200 bg-sky-50",
+      },
+      {
+        label: "Missing next step",
+        value: leads.filter((lead) => !lead.next_action?.trim()).length,
+        tone: "border-violet-200 bg-violet-50",
+      },
+      {
+        label: "Overdue follow-ups",
+        value: overdueCount,
+        tone: "border-rose-200 bg-rose-50",
+      },
+    ]
+  }, [leads])
+
+  const attentionItems = useMemo(() => {
+    return [
+      {
+        label: "Unassigned leads",
+        value: leads.filter((lead) => !lead.allocated_to?.trim()).length,
+        helper: "No one owns these leads yet.",
+      },
+      {
+        label: "Quoted without value",
+        value: leads.filter(
+          (lead) =>
+            normalizeStatus(lead.status) === "quoted" &&
+            !String(lead.quote_value || "").trim()
+        ).length,
+        helper: "Quoted deals need a number for reporting.",
+      },
+      {
+        label: "Missing close date",
+        value: leads.filter(
+          (lead) =>
+            ["quoted", "contacted"].includes(normalizeStatus(lead.status)) &&
+            !lead.expected_close_date
+        ).length,
+        helper: "No timing expectation has been captured.",
+      },
+      {
+        label: "Lost without reason",
+        value: leads.filter(
+          (lead) =>
+            normalizeStatus(lead.status) === "lost" &&
+            !lead.lost_reason?.trim()
+        ).length,
+        helper: "You need loss reasons to learn from missed deals.",
+      },
+    ]
+  }, [leads])
+
+  const accountabilityRows = useMemo(() => {
+    return TEAM_MEMBERS.map((member) => {
+      const ownedLeads = leads.filter((lead) => lead.allocated_to === member)
+      const overdue = ownedLeads.filter((lead) => isBeforeToday(lead.follow_up_at)).length
+      const noNextStep = ownedLeads.filter((lead) => !lead.next_action?.trim()).length
+      const stale = ownedLeads.filter((lead) => getDaysSince(getLeadFreshnessDate(lead)) > 5).length
+      const won = ownedLeads.filter((lead) => normalizeStatus(lead.status) === "won").length
+
+      return {
+        member,
+        owned: ownedLeads.length,
+        overdue,
+        noNextStep,
+        stale,
+        won,
+      }
+    })
+  }, [leads])
+
+  const atRiskLeads = useMemo(() => {
+    return leads
+      .filter((lead) => {
+        const staleDays = getDaysSince(getLeadFreshnessDate(lead))
+        return (
+          isBeforeToday(lead.follow_up_at) ||
+          !lead.next_action?.trim() ||
+          staleDays > 5 ||
+          (!lead.allocated_to?.trim() && normalizeStatus(lead.status) !== "won")
+        )
+      })
+      .sort((a, b) => getDaysSince(getLeadFreshnessDate(b)) - getDaysSince(getLeadFreshnessDate(a)))
+      .slice(0, 8)
+  }, [leads])
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="rounded-3xl border border-slate-200 bg-white px-8 py-6 text-sm text-slate-600 shadow-sm">
+          Loading Smart Steel CRM...
         </div>
       </div>
+    )
+  }
 
-      <KanbanBoard
-        leads={leads}
-        setEditingLead={setEditingLead}
-        fetchLeads={fetchLeads}
-      />
+  return (
+    <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6">
+      <div className="mx-auto mt-16 max-w-7xl space-y-6">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                Smart Steel CRM
+              </p>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                Smart Steel Leads Centre
+              </h1>
+              <p className="text-sm leading-6 text-slate-600 sm:text-base">
+                Manage leads, next actions, pipeline movement, and team
+                accountability from one central workspace.
+              </p>
+            </div>
 
-      {/* Edit Existing Lead */}
+            <div className="flex flex-wrap gap-3">
+              <button
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                onClick={handleLogout}
+              >
+                Sign out
+              </button>
+              <button
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                onClick={() => setShowPricesDrawer(true)}
+              >
+                Prices & Templates
+              </button>
+              <button
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                onClick={() => setIsAddingLead(true)}
+              >
+                + New Lead
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          {metrics.map((metric) => (
+            <div
+              key={metric.label}
+              className={`rounded-2xl border p-4 shadow-sm ${metric.tone}`}
+            >
+              <p className="text-sm text-slate-600">{metric.label}</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">{metric.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Team accountability</h2>
+                <p className="text-sm text-slate-600">
+                  This shows who owns pipeline workload and where follow-through is slipping.
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-slate-500">
+                    <th className="pb-3 font-medium">Owner</th>
+                    <th className="pb-3 font-medium">Leads</th>
+                    <th className="pb-3 font-medium">Overdue</th>
+                    <th className="pb-3 font-medium">No next step</th>
+                    <th className="pb-3 font-medium">Stale</th>
+                    <th className="pb-3 font-medium">Won</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {accountabilityRows.map((row) => (
+                    <tr key={row.member} className="border-b border-slate-100 last:border-b-0">
+                      <td className="py-3 font-semibold text-slate-900">{row.member}</td>
+                      <td className="py-3 text-slate-700">{row.owned}</td>
+                      <td className="py-3 text-rose-600">{row.overdue}</td>
+                      <td className="py-3 text-violet-600">{row.noNextStep}</td>
+                      <td className="py-3 text-amber-600">{row.stale}</td>
+                      <td className="py-3 text-emerald-600">{row.won}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900">Needs attention</h2>
+              <div className="mt-4 grid gap-3">
+                {attentionItems.map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium text-slate-900">{item.label}</p>
+                      <span className="text-2xl font-bold text-slate-900">{item.value}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-600">{item.helper}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900">Stalled leads</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                These leads are overdue, stale, unassigned, or missing a next step.
+              </p>
+              <div className="mt-4 space-y-3">
+                {atRiskLeads.length === 0 ? (
+                  <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                    No stalled leads right now.
+                  </p>
+                ) : (
+                  atRiskLeads.map((lead) => (
+                    <div key={lead.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-slate-900">
+                            {lead.name} {lead.last_name}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                          {formatStatusLabel(lead.status)}
+                        </span>
+                      </div>
+                      <div className="mt-3 grid gap-2 text-sm text-slate-600">
+                        <p>
+                          <span className="font-medium text-slate-900">Next step:</span>{" "}
+                          {lead.next_action || "Missing"}
+                        </p>
+                        <p>
+                          <span className="font-medium text-slate-900">Follow-up:</span>{" "}
+                          {lead.follow_up_at
+                            ? new Date(lead.follow_up_at).toLocaleDateString()
+                            : "Not set"}
+                        </p>
+                        <p>
+                          <span className="font-medium text-slate-900">Last movement:</span>{" "}
+                          {Number.isFinite(getDaysSince(getLeadFreshnessDate(lead)))
+                            ? `${getDaysSince(getLeadFreshnessDate(lead))} day(s) ago`
+                            : "Unknown"}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingLead(lead)}
+                        className="mt-3 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        Review lead
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="flex-1">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Search leads
+              </label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search by name, phone, email, request or notes"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
+              />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Pipeline stage
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
+                >
+                  {STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {status === "all" ? "All stages" : formatStatusLabel(status)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Assigned to
+                </label>
+                <select
+                  value={assigneeFilter}
+                  onChange={(event) => setAssigneeFilter(event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
+                >
+                  {assigneeOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option === "all" ? "Everyone" : option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-600">
+            <p>
+              Showing <span className="font-semibold text-slate-900">{filteredLeads.length}</span>{" "}
+              of <span className="font-semibold text-slate-900">{leads.length}</span> leads
+            </p>
+            {(searchTerm || statusFilter !== "all" || assigneeFilter !== "all") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("")
+                  setStatusFilter("all")
+                  setAssigneeFilter("all")
+                }}
+                className="font-medium text-slate-700 underline underline-offset-4"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+            Loading leads...
+          </div>
+        ) : (
+          <KanbanBoard
+            leads={filteredLeads}
+            onEditLead={setEditingLead}
+            onLeadStatusChange={handleLeadStatusChange}
+          />
+        )}
+      </div>
+
       {editingLead && (
         <LeadEditorDrawer
           lead={editingLead}
@@ -107,26 +926,15 @@ export default function KanbanPage() {
         />
       )}
 
-      {/* Add New Lead */}
       {isAddingLead && (
         <LeadEditorDrawer
-          lead={{
-            name: "",
-            last_name: "",
-            email: "",
-            phone: "",
-            estimate_request: "",
-            allocated_to: "",
-            notes: "",
-            status: "new",
-          }}
+          lead={emptyLead}
           onClose={() => setIsAddingLead(false)}
           onSave={(lead) => handleSaveLead(lead, true)}
           onDelete={handleDeleteLead}
         />
       )}
 
-      {/* Prices & Templates Drawer */}
       {showPricesDrawer && (
         <PricesDrawer onClose={() => setShowPricesDrawer(false)} />
       )}
