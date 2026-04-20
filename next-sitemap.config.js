@@ -14,6 +14,28 @@ const trussClusterPaths = [
   '/products/lightweight-steel-trusses/why-builders-switch',
 ];
 
+const solarCarportRegionPaths = [
+  '/bloemfontein-solar-carports',
+  '/cape-town-solar-carports',
+  '/centurion-solar-carports',
+  '/durban-solar-carports',
+  '/johannesburg-solar-carports',
+  '/midrand-solar-carports',
+  '/polokwane-solar-carports',
+  '/pretoria-solar-carports',
+];
+
+const solarCarportDynamicPaths = [
+  '/bloemfontein/solar-carports',
+  '/cape-town/solar-carports',
+  '/centurion/solar-carports',
+  '/durban/solar-carports',
+  '/johannesburg/solar-carports',
+  '/midrand/solar-carports',
+  '/polokwane/solar-carports',
+  '/pretoria/solar-carports',
+];
+
 const cityWarehousePaths = [
   '/bloemfontein/warehouses',
   '/cape-town/warehouses',
@@ -57,6 +79,7 @@ const highPriorityPages = new Set([
   '/lightweight-steel-warehouses',
   '/solar',
   '/pretoria-solar-carports',
+  '/solar-carports',
   '/products/lightweight-steel-trusses',
   '/warehouse-cost',
   '/warehouse-regions',
@@ -90,6 +113,7 @@ module.exports = {
     '/case-studies/eco-home',
     '/warehouse-cost/[size]',
     '/products/lightweight-steel-trusses/[slug]',
+    '/[city]/solar-carports',
     '/warehouses/[slug]',
   ],
   transform: async (config, path) => {
@@ -109,7 +133,12 @@ module.exports = {
     } else if (path.startsWith('/products/lightweight-steel-trusses/')) {
       changefreq = 'monthly';
       priority = 0.82;
-    } else if (cityWarehousePaths.includes(path) || legacyRegionWarehousePaths.includes(path)) {
+    } else if (
+      cityWarehousePaths.includes(path) ||
+      legacyRegionWarehousePaths.includes(path) ||
+      solarCarportDynamicPaths.includes(path) ||
+      solarCarportRegionPaths.includes(path)
+    ) {
       changefreq = 'monthly';
       priority = 0.78;
     } else if (servicePages.has(path)) {
@@ -140,6 +169,9 @@ module.exports = {
       ...trussClusterPaths,
       ...cityWarehousePaths,
       ...legacyRegionWarehousePaths,
+      ...solarCarportDynamicPaths,
+      ...solarCarportRegionPaths,
+      '/solar-carports',
       '/warehouse-regions',
     ];
     const results = [];
