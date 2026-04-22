@@ -208,7 +208,7 @@ export default function ContactPage() {
         <h2 className="text-3xl font-bold mb-6 text-left">Explore more content</h2>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <Link href="/projects" className="border rounded-md p-6 hover:bg-gray-50 transition block">
+          <Link href="/recent" className="border rounded-md p-6 hover:bg-gray-50 transition block">
             <h3 className="font-semibold text-lg text-[#da1a33]">Recent projects →</h3>
             <p className="text-sm mt-1 text-gray-700">Explore completed structures and case studies across South Africa.</p>
           </Link>

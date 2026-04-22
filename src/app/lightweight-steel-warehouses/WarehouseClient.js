@@ -319,7 +319,7 @@ await fetch("/api/leads", {
           <h2 className="text-3xl font-bold mb-6 text-left">Explore more content</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <Link
-              href="/projects"
+              href="/recent"
               className="border rounded-md p-6 hover:bg-gray-50 transition block"
             >
               <h3 className="font-semibold text-lg text-[#da1a33]">

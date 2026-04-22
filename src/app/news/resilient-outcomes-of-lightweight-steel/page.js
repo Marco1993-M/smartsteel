@@ -3,24 +3,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
-import Head from 'next/head';
 
 export default function ArticlePage() {
   return (
+
      <>
-    {/* SEO & Canonical */}
-      <Head>
-        <title>Resilient outcomes with lightweight steel | Smart Steel</title>
-        <meta
-          name="description"
-          content="Learn how lightweight steel framing provides resilient, sustainable, and precision-engineered solutions for buildings."
-        />
-        <link
-          rel="canonical"
-          href="https://www.smartsteel.co.za/news/resilient-outcomes-of-lightweight-steel"
-        />
-      </Head>
-            
     <article className="max-w-5xl mx-auto px-6 py-16 space-y-12">
       {/* Meta + Title Row */}
       <div className="flex justify-between items-start flex-wrap gap-y-2">
@@ -31,7 +18,7 @@ export default function ArticlePage() {
           </h1>
         </div>
         <Link
-          href="/brochures/lightweight-steel-brochure.pdf"
+          href="/brochures/resilient.pdf"
           target="_blank"
           rel="noopener noreferrer"
           className="bg-[#da1a33] hover:bg-[#bb182d] text-white px-5 py-2 text-sm rounded font-medium mt-2"
@@ -52,12 +39,12 @@ export default function ArticlePage() {
       {/* Article Content */}
       <section className="space-y-10 text-gray-800 leading-relaxed text-[17px]">
         <p className="text-lg font-medium text-gray-700">
-          When resilience matters most, lightweight steel framing stands out as the preferred solution. In an era of unpredictable climates, tighter budgets, and stricter timelines, construction needs to be stronger, faster, and smarter. That is where lightweight steel excels.
+          When resilience matters most, lightweight steel framing stands out as the preferred solution. In an era of unpredictable climates, tighter budgets, and stricter timelines, construction needs to be stronger, faster, and smarter. That&apos;s where lightweight steel excels.
         </p>
 
         <h2 className="text-2xl font-semibold text-gray-900">Built to last, designed to adapt</h2>
         <p>
-          Lightweight steel structures are engineered for long-term performance. Whether you are building in a high-humidity region, near the coast, or in a fire-prone zone, steel framing provides unmatched resistance to moisture, warping, termites, and fire. This makes it an ideal material for resilient buildings—schools, clinics, warehouses, and homes—that need to perform for decades without degradation.
+          Lightweight steel structures are engineered for long-term performance. Whether you&apos;re building in a high-humidity region, near the coast, or in a fire-prone zone, steel framing provides unmatched resistance to moisture, warping, termites, and fire. This makes it an ideal material for resilient buildings—schools, clinics, warehouses, and homes—that need to perform for decades without degradation.
         </p>
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
@@ -82,7 +69,7 @@ export default function ArticlePage() {
         </p>
 
         <blockquote className="border-l-4 border-[#da1a33] pl-4 italic text-gray-600">
-          “A resilient building isn’t just one that survives—it’s one that adapts. Lightweight steel gives you the flexibility to scale, extend, and retrofit structures without starting from scratch.”
+          “A resilient building isn&apos;t just one that survives—it&apos;s one that adapts. Lightweight steel gives you the flexibility to scale, extend, and retrofit structures without starting from scratch.”
         </blockquote>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -102,7 +89,7 @@ export default function ArticlePage() {
 
         <h2 className="text-2xl font-semibold text-gray-900">Stronger futures, one frame at a time</h2>
         <p>
-          Whether you are developing modular housing, medical outposts, rural classrooms, or warehouses, the need for resilient construction is universal. With lightweight steel, you are not just building structures, you are building solutions that endure.
+          Whether you&apos;re developing modular housing, medical outposts, rural classrooms, or warehouses, the need for resilient construction is universal. With lightweight steel, you&apos;re not just building structures—you&apos;re building solutions that endure.
         </p>
 
         <p>
@@ -116,7 +103,7 @@ export default function ArticlePage() {
         <h2 className="text-3xl font-bold mb-6 text-left">Explore more content</h2>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <Link href="/projects" className="border rounded-md p-6 hover:bg-gray-50 transition block">
+          <Link href="/recent" className="border rounded-md p-6 hover:bg-gray-50 transition block">
             <h3 className="font-semibold text-lg text-[#da1a33]">Recent projects →</h3>
             <p className="text-sm mt-1 text-gray-700">Explore completed structures and case studies across South Africa.</p>
           </Link>

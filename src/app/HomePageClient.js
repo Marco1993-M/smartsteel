@@ -11,13 +11,13 @@ const brochures = {
       title: 'Smart Steel Solutions Guide',
       desc: 'An overview of our lightweight steel kits, ideal for residential and commercial builds.',
       image: '/Brochure A.jpg',
-      link: '/brochure.pdf',
+      link: '/brochures/resilient.pdf',
     },
     {
       title: 'Smart Steel Sustainability Report',
       desc: 'A detailed look at our eco-friendly processes and recyclable materials.',
       image: '/Brochure B.jpg',
-      link: '/sustainability.pdf',
+      link: '/sustainability',
     },
   ],
   'Architect / Specifier': [
@@ -25,13 +25,13 @@ const brochures = {
       title: 'Technical Specs & Compliance',
       desc: 'Detailed engineering specs, load calculations, and local compliance data.',
       image: '/Brochure A.jpg',
-      link: '/Brochure B.pdf',
+      link: '/resources',
     },
     {
       title: 'Smart Steel Solutions Guide',
       desc: 'An overview of our lightweight steel kits, ideal for residential and commercial builds.',
       image: '/brochure-cover1.jpg',
-      link: '/brochure.pdf',
+      link: '/brochures/resilient.pdf',
     },
   ],
   'Builder / Installer': [
@@ -39,13 +39,13 @@ const brochures = {
       title: 'Installation Guide',
       desc: 'Step-by-step instructions to install Smart Steel frame kits on-site.',
       image: '/brochure-cover3.jpg',
-      link: '/install-guide.pdf',
+      link: '/resources',
     },
     {
       title: 'Warranty Document',
       desc: '10-year structural warranty on all steel frames.',
       image: '/brochure-cover2.jpg',
-      link: '/warranty.pdf',
+      link: '/resources',
     },
   ],
   Fabricator: [
@@ -53,13 +53,13 @@ const brochures = {
       title: 'Fabrication Standards Guide',
       desc: 'Guidelines and tolerances for fabrication.',
       image: '/brochure-cover1.jpg',
-      link: '/fabrication.pdf',
+      link: '/resources',
     },
     {
       title: 'Smart Steel Solutions Guide',
       desc: 'An overview of our lightweight steel kits, ideal for residential and commercial builds.',
       image: '/brochure-cover4.jpg',
-      link: '/brochure.pdf',
+      link: '/brochures/resilient.pdf',
     },
   ],
 };

@@ -154,19 +154,19 @@ export default function ProductAdvantages() {
               title: 'Off-Grid Eco Home',
               desc: 'See how steel framing enabled fast, precise assembly in remote terrain.',
               image: '/images/case-eco.jpg',
-              link: '/case-studies/eco-home',
+              link: '/recent',
             },
             {
               title: 'School Expansion Project',
               desc: 'Explore how modular lightweight steel reduced downtime during term.',
               image: '/images/case-school.jpg',
-              link: '/case-studies/school-expansion',
+              link: '/recent',
             },
             {
               title: 'Retail Space Renovation',
               desc: 'Discover the benefits of speed and fire resistance for commercial builds.',
               image: '/images/case-retail.jpg',
-              link: '/case-studies/retail-renovation',
+              link: '/recent',
             },
           ].map((caseStudy, index) => (
             <div key={index} className="bg-white shadow rounded-lg overflow-hidden">

@@ -21,20 +21,10 @@ const articles = [
     category: 'Company news',
     date: '15 June 2025',
     readTime: '3 min read',
-    title: 'Smart Steel unveils new modular warehouses',
+    title: 'Smart Steel unveils new modular kits',
     excerpt:
-      'A streamlined range of modular warehouse kits designed to fast-track warehouse builds.',
-    image: '/warehouse-12m.jpg',
-  },
-  {
-    slug: 'green-building-codes-favour-steel-framing',
-    category: 'Industry news',
-    date: '1 May 2025',
-    readTime: '4 min read',
-    title: 'Green building codes favour steel framing',
-    excerpt:
-      'Lightweight steel is aligning with new regulations focused on sustainability and recyclability.',
-    image: '/news3.jpg',
+      'A streamlined range of modular steel kits designed to fast-track residential builds.',
+    image: '/news2.jpg',
   },
 ];
 
