@@ -1,9 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import emailjs from '@emailjs/browser';
 import Head from 'next/head';
+import Image from 'next/image';
 import { supabase } from "../../../lib/supabase";
+import {
+  calculateWarehouseEstimate,
+  formatCurrency,
+  WAREHOUSE_CLADDING_OPTIONS,
+  WAREHOUSE_LENGTH_OPTIONS,
+  WAREHOUSE_WIDTH_OPTIONS,
+} from "../../../lib/estimates/warehouseEstimate";
 
 let lastAllocatedIndex = 0;
 const team = ['Stefan', 'Niel', 'Marco'];
@@ -12,26 +20,6 @@ const getNextAllocation = () => {
   const allocatedTo = team[lastAllocatedIndex % team.length];
   lastAllocatedIndex++;
   return allocatedTo;
-};
-
-const MATERIALS = {
-  columns: { length: 3, rate: 467 },
-  trusses: {
-    8: { length: 4.141, rate: 344.88 },
-    10: { length: 5.176, rate: 344.88 },
-    12: { length: 6.212, rate: 344.88 },
-  },
-  topHats: { length: 5.2, rate: 56 },
-  postBracket: 155,
-  ridgeBracket: 155,
-  screw: 0.8,
-  cladding: {
-    None: { supply: 0, installed: 0 },
-    IBR: { supply: 225, installed: 450 },
-    Chromadek: { supply: 350, installed: 450 },
-  },
-  installRate: 200,
-  deliveryRate: 19,
 };
 
 const BASE_COORDS = { lat: -25.7239, lng: 28.2297 };
@@ -64,65 +52,20 @@ export default function EstimatorPage() {
   const [estimate, setEstimate] = useState(null);
   const [isSending, setIsSending] = useState(false);
 
-  const bayLength = 2.5;
-  const fullBays = 1;
-  const halfBays = Math.max(Math.ceil((length - bayLength) / bayLength), 0);
-
-  const totalColumns = 4 * fullBays + 2 * halfBays;
-  const totalTrusses = 4 * fullBays + 2 * halfBays;
-  const totalScrews = 320 * fullBays + 160 * halfBays;
-  const totalPostBrackets = totalColumns;
-  const totalRidgeBrackets = totalTrusses;
-
-  const rowsOfTopHats = 10;
-  const totalTopHatLengthMeters = rowsOfTopHats * length;
-  const topHatLengthPerUnit = MATERIALS.topHats.length;
-  const topHatUnitsNeeded = Math.ceil(totalTopHatLengthMeters / topHatLengthPerUnit);
-  const totalTopHatLengthSold = topHatUnitsNeeded * topHatLengthPerUnit;
-
-  const area = width * length;
-
-  const costColumns = totalColumns * MATERIALS.columns.length * MATERIALS.columns.rate;
-  const costTrusses = totalTrusses * MATERIALS.trusses[width].length * MATERIALS.trusses[width].rate;
-  const costPostBrackets = totalPostBrackets * MATERIALS.postBracket;
-  const costRidgeBrackets = totalRidgeBrackets * MATERIALS.ridgeBracket;
-  const costScrews = totalScrews * MATERIALS.screw;
-  const costTopHats = totalTopHatLengthSold * MATERIALS.topHats.rate;
-  const costCladdingSupply =
-    cladding === 'IBR'
-      ? area * MATERIALS.cladding.IBR.supply
-      : cladding === 'Chromadek'
-      ? area * MATERIALS.cladding.Chromadek.supply
-      : 0;
-
-  const deliveryCost = Math.max(distance * MATERIALS.deliveryRate, 1350);
-  const installCostPerSqm = 200;
-  const costInstallation = claddingInstalled ? area * installCostPerSqm : 0;
-
-  const totalCost =
-    costColumns +
-    costTrusses +
-    costPostBrackets +
-    costRidgeBrackets +
-    costScrews +
-    costTopHats +
-    costCladdingSupply +
-    costInstallation +
-    deliveryCost;
-
-  const markup = 1.32;
-  const finalEstimate = Math.round(totalCost * markup);
-
-  const competitorLowRate = 1100;
-  const competitorHighRate = 1400;
-  const competitorLow = Math.round(area * competitorLowRate);
-  const competitorHigh = Math.round(area * competitorHighRate);
-
-  const savingLow = competitorLow - finalEstimate;
-  const savingHigh = competitorHigh - finalEstimate;
+  const estimatePreview = useMemo(
+    () =>
+      calculateWarehouseEstimate({
+        width,
+        length,
+        cladding,
+        claddingInstalled,
+        deliveryDistance: distance,
+      }),
+    [cladding, claddingInstalled, distance, length, width]
+  );
 
   const handleEstimate = () => {
-    setEstimate(finalEstimate);
+    setEstimate(estimatePreview);
   };
 
   const handleSubmit = async (e) => {
@@ -150,7 +93,7 @@ export default function EstimatorPage() {
       from_name: name,
       from_email: email,
       phone_number: phone,
-      estimate: `R${estimate.toLocaleString()}`,
+      estimate: formatCurrency(estimate.pricing.estimatedTotal),
       width,
       length,
       cladding,
@@ -170,6 +113,7 @@ export default function EstimatorPage() {
       // 2. Save lead to Supabase (with fallback last_name + cladding)
 
       const allocatedTo = getNextAllocation();
+
       const { data, error } = await supabase.from('leads').insert([
         {
           name,
@@ -182,14 +126,18 @@ export default function EstimatorPage() {
           allocated_to: allocatedTo,
           status: 'new',
           cladding, // ✅ matches DB column
-          estimate_request: `Warehouse ${width}m × ${length}m, ${cladding}`,
+          estimate_request: estimate.summary.estimateRequest,
+          lead_source: "Estimator",
+          product_type: "Warehouse",
+          next_action: "Review estimator enquiry and send formal quote",
+          quote_value: estimate.pricing.estimatedTotal,
           created_at: new Date().toISOString(),
         },
       ]);
 
       if (error) throw error;
 
-      alert(`Thanks, ${name}! Your estimate of R${estimate.toLocaleString()} was submitted.`);
+      alert(`Thanks, ${name}! Your estimate of ${formatCurrency(estimate.pricing.estimatedTotal)} was submitted.`);
 
       // reset
       setIsSending(false);
@@ -259,7 +207,7 @@ export default function EstimatorPage() {
       <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 p-6 font-sans flex flex-col items-center">
         <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 relative">
           <div className="flex justify-center mb-4">
-            <img src="/Logo.png" alt="Smart Steel Logo" className="h-16 object-contain" />
+            <Image src="/Logo.png" alt="Smart Steel Logo" width={160} height={64} className="h-16 w-auto object-contain" />
           </div>
           <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
             Smart Steel Warehouse Estimator
@@ -278,9 +226,11 @@ export default function EstimatorPage() {
                   value={width}
                   onChange={(e) => setWidth(parseInt(e.target.value))}
                 >
-                  <option value={8}>8m</option>
-                  <option value={10}>10m</option>
-                  <option value={12}>12m</option>
+                  {WAREHOUSE_WIDTH_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}m
+                    </option>
+                  ))}
                 </select>
               </label>
 
@@ -291,7 +241,7 @@ export default function EstimatorPage() {
                   value={length}
                   onChange={(e) => setLength(parseFloat(e.target.value))}
                 >
-                  {Array.from({ length: 20 }, (_, i) => (i + 1) * 2.5).map((val) => (
+                  {WAREHOUSE_LENGTH_OPTIONS.map((val) => (
                     <option key={val} value={val}>
                       {val} m
                     </option>
@@ -306,9 +256,11 @@ export default function EstimatorPage() {
                   value={cladding}
                   onChange={(e) => setCladding(e.target.value)}
                 >
-                  <option value="None">None</option>
-                  <option value="IBR">IBR</option>
-                  <option value="Chromadek">Chromadek</option>
+                  {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
               </label>
 
@@ -362,21 +314,31 @@ export default function EstimatorPage() {
                   Estimated Cost
                 </h2>
                 <p className="text-4xl font-extrabold text-green-600">
-                  R {estimate.toLocaleString()}
+                  {formatCurrency(estimate.pricing.estimatedTotal)}
                 </p>
 
                 <div className="mt-3 text-gray-700 text-sm relative inline-block">
                   <span>
                     Compare with Hot-Rolled Steel (Material Only, R1,100–R1,400/m²):
                     <br />
-                    ~R{competitorLow.toLocaleString()}–R{competitorHigh.toLocaleString()}
+                    ~{formatCurrency(estimate.marketComparison.competitorLow)}–{formatCurrency(estimate.marketComparison.competitorHigh)}
                   </span>
                 </div>
 
                 <p className="mt-2 font-semibold text-gray-800">
-                  You save up to R{Math.max(savingLow, savingHigh).toLocaleString()} with
-                  Smart Steel!
+                  You save up to {formatCurrency(estimate.marketComparison.maxSaving)} with Smart Steel!
                 </p>
+
+                <div className="mt-5 grid gap-3 text-left text-sm text-gray-700 md:grid-cols-2">
+                  {estimate.lineItems.slice(0, 6).map((item) => (
+                    <div key={item.code} className="rounded-lg border border-gray-200 bg-white p-3">
+                      <p className="font-semibold text-gray-900">{item.label}</p>
+                      <p className="mt-1">
+                        {item.quantity} {item.unit} at {formatCurrency(item.unitRate)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </section>
             )}
 
