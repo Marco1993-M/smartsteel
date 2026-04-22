@@ -1,12 +1,10 @@
 @import "tailwindcss";
 
-/* Force light colors */
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-/* Inline theme for Tailwind or Geist */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -14,13 +12,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* REMOVE dark mode entirely */
-/* @media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :root {
     --background: #fff;
     --foreground: #ededed;
   }
-} */
+}
 
 body {
   background: var(--background);
@@ -28,29 +25,45 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-.gradient-border {
-  position: relative;
-  border-radius: 0.25rem;
-  background: linear-gradient(270deg, #da1a33, #ffc1c9, #ffffff);
-  background-size: 600% 600%;
-  animation: gradient-border 5s ease infinite;
+@page {
+  size: A4 portrait;
+  margin: 10mm;
 }
 
-@keyframes gradient-border {
-  0% {
-    background-position: 0% 50%;
+.estimate-sheet {
+  min-height: 297mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff;
   }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
+
+  .estimate-sheet {
+    width: 190mm;
+    min-height: 277mm;
+    margin: 0 auto;
+    page-break-after: avoid;
   }
 }
 
-/* Force light mode */
-html {
-  color-scheme: light;
-  background-color: #ffffff;
-  color: #171717;
+@media (max-width: 768px) {
+  .kanban-column {
+    min-width: 90vw;  /* swipeable full-screen width */
+    max-width: 90vw;
+  }
+
+  .kanban-card {
+    width: 100%;
+    min-height: 120px;
+    padding: 1rem;
+  }
+
+  .kanban-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 50;
+  }
 }
