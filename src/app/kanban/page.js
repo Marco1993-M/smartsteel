@@ -1,16 +1,18 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import KanbanBoard from "../../components/KanbanBoard"
 import LeadEditorDrawer from "../../components/LeadEditorDrawer"
 import PricesDrawer from "../../components/PricesDrawer"
+import EstimateDrawer from "../../components/EstimateDrawer"
 import { supabase } from "../../lib/supabase"
 
 const TEAM_MEMBERS = ["Stefan", "Niel", "Victor", "Marco"]
 const STATUS_OPTIONS = ["all", "new", "contacted", "quoted", "won", "lost"]
 const NEXT_ACTION_STORAGE_KEY = "smartsteel.crm.next-actions"
 const CRM_FALLBACK_STORAGE_KEY = "smartsteel.crm.custom-fields"
+const CRM_ESTIMATES_STORAGE_KEY = "smartsteel.crm.estimates"
 const CRM_FALLBACK_FIELDS = [
   "next_action",
   "lead_source",
@@ -30,6 +32,7 @@ const LEAD_SOURCE_OPTIONS = [
   "Repeat client",
 ]
 const PRODUCT_TYPE_OPTIONS = ["Warehouse", "Solar carport", "LSF trusses", "Other"]
+const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
 
 const emptyLead = {
   name: "",
@@ -116,6 +119,21 @@ function writeFallbackFields(data) {
   window.localStorage.setItem(CRM_FALLBACK_STORAGE_KEY, JSON.stringify(data))
 }
 
+function readStoredEstimates() {
+  if (typeof window === "undefined") return {}
+
+  try {
+    return JSON.parse(window.localStorage.getItem(CRM_ESTIMATES_STORAGE_KEY) || "{}")
+  } catch {
+    return {}
+  }
+}
+
+function writeStoredEstimates(data) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(CRM_ESTIMATES_STORAGE_KEY, JSON.stringify(data))
+}
+
 function withFallbackNextAction(lead, nextActions) {
   if (!lead?.id) return normalizeLead(lead)
 
@@ -171,8 +189,31 @@ function getDaysSince(dateValue) {
   return Math.floor(diff / (1000 * 60 * 60 * 24))
 }
 
+function generateShareToken() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID()
+  }
+
+  return `share-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+async function sendCrmNotification(payload) {
+  try {
+    await fetch("/api/crm-notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+  } catch (error) {
+    console.error("Error sending CRM notification:", error)
+  }
+}
+
 export default function KanbanPage() {
   const router = useRouter()
+  const boardSectionRef = useRef(null)
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [leads, setLeads] = useState([])
@@ -183,8 +224,11 @@ export default function KanbanPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [assigneeFilter, setAssigneeFilter] = useState("all")
+  const [metricFilter, setMetricFilter] = useState("all")
   const [nextActionFallbacks, setNextActionFallbacks] = useState({})
   const [fallbackFieldValues, setFallbackFieldValues] = useState({})
+  const [leadEstimates, setLeadEstimates] = useState({})
+  const [estimatingLead, setEstimatingLead] = useState(null)
 
   const fetchLeads = async () => {
     setLoading(true)
@@ -198,8 +242,10 @@ export default function KanbanPage() {
     } else {
       const fallbackActions = readLocalNextActions()
       const fallbackFields = readFallbackFields()
+      const fallbackEstimates = readStoredEstimates()
       setNextActionFallbacks(fallbackActions)
       setFallbackFieldValues(fallbackFields)
+      setLeadEstimates(fallbackEstimates)
       setLeads(
         (data || []).map((lead) =>
           withFallbackFields(withFallbackNextAction(lead, fallbackActions), fallbackFields)
@@ -295,6 +341,15 @@ export default function KanbanPage() {
     writeLocalNextActions(updatedFallbacks)
   }
 
+  const setStoredEstimatesForLead = (leadId, estimates) => {
+    const updated = {
+      ...leadEstimates,
+      [leadId]: estimates,
+    }
+    setLeadEstimates(updated)
+    writeStoredEstimates(updated)
+  }
+
   const logLeadActivity = async (activity) => {
     const payload = Array.isArray(activity) ? activity.filter(Boolean) : [activity].filter(Boolean)
     if (payload.length === 0) return
@@ -374,6 +429,12 @@ export default function KanbanPage() {
         description: `Lead added to CRM. Next action: ${normalizedLead.next_action}`,
         timestamp: new Date().toISOString(),
       })
+      await sendCrmNotification({
+        eventType: "new_lead",
+        lead: mergedLead,
+        actor: user?.email || "Smart Steel CRM",
+        summary: `New lead added and assigned to ${mergedLead.allocated_to || "the team"}.`,
+      })
       return true
     }
 
@@ -447,6 +508,27 @@ export default function KanbanPage() {
     }
 
     await logLeadActivity(activityEntries)
+    const changedFields = [
+      currentLead?.status !== normalizedLead.status ? "status" : null,
+      currentLead?.allocated_to !== normalizedLead.allocated_to ? "allocated_to" : null,
+      currentLead?.next_action !== normalizedLead.next_action ? "next_action" : null,
+      currentLead?.follow_up_at !== normalizedLead.follow_up_at ? "follow_up_at" : null,
+      currentLead?.quote_value !== normalizedLead.quote_value ? "quote_value" : null,
+      currentLead?.expected_close_date !== normalizedLead.expected_close_date
+        ? "expected_close_date"
+        : null,
+    ].filter(Boolean)
+
+    if (changedFields.length > 0) {
+      await sendCrmNotification({
+        eventType: "lead_updated",
+        lead: normalizedLead,
+        previousLead: currentLead,
+        actor: user?.email || "Smart Steel CRM",
+        changedFields,
+        summary: `Lead updated: ${changedFields.join(", ").replaceAll("_", " ")}.`,
+      })
+    }
     setEditingLead(null)
     return true
   }
@@ -500,7 +582,165 @@ export default function KanbanPage() {
         description: `Status changed from ${formatStatusLabel(previousLead.status)} to ${formatStatusLabel(normalizedStatus)}`,
         timestamp: new Date().toISOString(),
       })
+      await sendCrmNotification({
+        eventType: "status_changed",
+        lead: { ...previousLead, status: normalizedStatus },
+        previousLead,
+        actor: user?.email || "Smart Steel CRM",
+        changedFields: ["status"],
+        summary: `Lead moved from ${formatStatusLabel(previousLead.status)} to ${formatStatusLabel(normalizedStatus)}.`,
+      })
     }
+  }
+
+  const handleOpenEstimate = (lead) => {
+    setEstimatingLead(lead)
+  }
+
+  const handleSaveEstimate = async (estimateDraft) => {
+    if (!estimateDraft?.lead?.id) {
+      alert("Please save the lead before creating an estimate.")
+      return false
+    }
+
+    const leadId = estimateDraft.lead.id
+    const existingForLead = leadEstimates[leadId] || []
+    const shareToken = estimateDraft.share_token || generateShareToken()
+    const estimatePayload = {
+      lead_id: leadId,
+      version_no: estimateDraft.version_no,
+      product_type: estimateDraft.product_type,
+      title: estimateDraft.title,
+      input_data: estimateDraft.input_data,
+      line_items: estimateDraft.line_items,
+      subtotal: estimateDraft.subtotal,
+      markup_multiplier: estimateDraft.markup_multiplier,
+      total: estimateDraft.total,
+      notes: estimateDraft.notes || "",
+      created_by: user?.id || null,
+      share_token: shareToken,
+      shared_at: new Date().toISOString(),
+    }
+
+    let savedEstimate = null
+    let estimateInsertPayload = { ...estimatePayload }
+    let insertResult = await supabase.from("estimates").insert([estimateInsertPayload]).select()
+
+    while (insertResult.error) {
+      const message = insertResult.error.message || ""
+      const missingColumn = parseMissingColumn(insertResult.error)
+
+      if (/relation .*estimates.* does not exist/i.test(message) || /Could not find the table/i.test(message)) {
+        savedEstimate = {
+          id: `local-${leadId}-${Date.now()}`,
+          created_at: new Date().toISOString(),
+          ...estimatePayload,
+        }
+        setStoredEstimatesForLead(leadId, [savedEstimate, ...existingForLead])
+        break
+      }
+
+      if (!missingColumn || !["share_token", "shared_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url"].includes(missingColumn)) {
+        alert("Error saving estimate: " + insertResult.error.message)
+        return false
+      }
+
+      delete estimateInsertPayload[missingColumn]
+      insertResult = await supabase.from("estimates").insert([estimateInsertPayload]).select()
+    }
+
+    if (!savedEstimate && !insertResult.error) {
+      savedEstimate = insertResult.data?.[0]
+      if (!savedEstimate?.share_token) {
+        savedEstimate = {
+          ...savedEstimate,
+          share_token: shareToken,
+        }
+      }
+      setStoredEstimatesForLead(leadId, [savedEstimate, ...existingForLead])
+    }
+
+    const currentLead = leads.find((lead) => lead.id === leadId)
+    const updatedLead = normalizeLead({
+      ...currentLead,
+      status: "quoted",
+      quote_value: estimateDraft.total,
+      product_type: currentLead?.product_type || estimateDraft.product_type,
+      next_action: "Send estimate to client and follow up",
+      estimate_request: estimateDraft.estimate_request,
+    })
+
+    const updatePayload = {
+      status: "quoted",
+      quote_value: estimateDraft.total,
+      product_type: updatedLead.product_type,
+      next_action: updatedLead.next_action,
+      estimate_request: updatedLead.estimate_request,
+    }
+
+    const updateResult = await supabase.from("leads").update(updatePayload).eq("id", leadId)
+    if (updateResult.error) {
+      const unsupportedColumns = []
+      let retryResult = updateResult
+
+      while (retryResult.error) {
+        const missingColumn = parseMissingColumn(retryResult.error)
+        if (!missingColumn || !CRM_FALLBACK_FIELDS.includes(missingColumn)) break
+        unsupportedColumns.push(missingColumn)
+        const fallbackPayload = { ...updatePayload }
+        unsupportedColumns.forEach((field) => delete fallbackPayload[field])
+        retryResult = await supabase.from("leads").update(fallbackPayload).eq("id", leadId)
+      }
+
+      if (retryResult.error) {
+        alert("Estimate saved, but lead update failed: " + retryResult.error.message)
+      } else {
+        if (unsupportedColumns.includes("next_action")) {
+          persistFallbackNextAction(leadId, updatedLead.next_action)
+        } else {
+          clearFallbackNextAction(leadId)
+        }
+        if (unsupportedColumns.length > 0) {
+          persistFallbackFields(leadId, updatedLead)
+        } else {
+          clearFallbackFields(leadId)
+        }
+      }
+    } else {
+      clearFallbackNextAction(leadId)
+      clearFallbackFields(leadId)
+    }
+
+    setLeads((prev) => prev.map((lead) => (lead.id === leadId ? updatedLead : lead)))
+
+    await logLeadActivity([
+      {
+        lead_id: leadId,
+        type: "update",
+        user_name: "System",
+        description: `Estimate V${estimateDraft.version_no} created for ${formatStatusLabel(updatedLead.status)} stage.`,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        lead_id: leadId,
+        type: "status",
+        user_name: "System",
+        description: `Status changed from ${formatStatusLabel(currentLead?.status)} to Quoted`,
+        timestamp: new Date().toISOString(),
+      },
+    ])
+
+    await sendCrmNotification({
+      eventType: "lead_updated",
+      lead: updatedLead,
+      previousLead: currentLead,
+      actor: user?.email || "Smart Steel CRM",
+      changedFields: ["status", "quote_value", "next_action"],
+      summary: `Estimate V${estimateDraft.version_no} created and lead moved to quoted.`,
+    })
+
+    setEditingLead(updatedLead)
+    return savedEstimate
   }
 
   const assigneeOptions = useMemo(() => {
@@ -540,10 +780,17 @@ export default function KanbanPage() {
         statusFilter === "all" || normalizeStatus(lead.status) === statusFilter
       const matchesAssignee =
         assigneeFilter === "all" || lead.allocated_to === assigneeFilter
+      const matchesMetric =
+        metricFilter === "all" ||
+        (metricFilter === "quoted" && normalizeStatus(lead.status) === "quoted") ||
+        (metricFilter === "won" && normalizeStatus(lead.status) === "won") ||
+        (metricFilter === "follow_up_today" && isSameDay(lead.follow_up_at)) ||
+        (metricFilter === "missing_next_step" && !lead.next_action?.trim()) ||
+        (metricFilter === "overdue_follow_up" && isBeforeToday(lead.follow_up_at))
 
-      return matchesSearch && matchesStatus && matchesAssignee
+      return matchesSearch && matchesStatus && matchesAssignee && matchesMetric
     })
-  }, [assigneeFilter, leads, searchTerm, statusFilter])
+  }, [assigneeFilter, leads, metricFilter, searchTerm, statusFilter])
 
   const metrics = useMemo(() => {
     const todayCount = leads.filter((lead) => isSameDay(lead.follow_up_at)).length
@@ -551,37 +798,58 @@ export default function KanbanPage() {
 
     return [
       {
+        key: "all",
         label: "Total leads",
         value: leads.length,
         tone: "border-slate-200 bg-white",
       },
       {
+        key: "quoted",
         label: "Quoted",
         value: leads.filter((lead) => normalizeStatus(lead.status) === "quoted").length,
         tone: "border-amber-200 bg-amber-50",
       },
       {
+        key: "won",
         label: "Won",
         value: leads.filter((lead) => normalizeStatus(lead.status) === "won").length,
         tone: "border-emerald-200 bg-emerald-50",
       },
       {
+        key: "follow_up_today",
         label: "Follow-up today",
         value: todayCount,
         tone: "border-sky-200 bg-sky-50",
       },
       {
+        key: "missing_next_step",
         label: "Missing next step",
         value: leads.filter((lead) => !lead.next_action?.trim()).length,
         tone: "border-violet-200 bg-violet-50",
       },
       {
+        key: "overdue_follow_up",
         label: "Overdue follow-ups",
         value: overdueCount,
         tone: "border-rose-200 bg-rose-50",
       },
     ]
   }, [leads])
+
+  const metricFilterLabel = useMemo(() => {
+    const match = metrics.find((metric) => metric.key === metricFilter)
+    return match?.label || "All leads"
+  }, [metricFilter, metrics])
+
+  const handleMetricShortcut = (nextMetricFilter) => {
+    if (!METRIC_FILTER_OPTIONS.includes(nextMetricFilter)) return
+
+    setMetricFilter(nextMetricFilter)
+
+    window.setTimeout(() => {
+      boardSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }, 60)
+  }
 
   const attentionItems = useMemo(() => {
     return [
@@ -664,6 +932,8 @@ export default function KanbanPage() {
     )
   }
 
+  if (!user) return null
+
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6">
       <div className="mx-auto mt-16 max-w-7xl space-y-6">
@@ -707,13 +977,17 @@ export default function KanbanPage() {
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
           {metrics.map((metric) => (
-            <div
+            <button
               key={metric.label}
-              className={`rounded-2xl border p-4 shadow-sm ${metric.tone}`}
+              type="button"
+              onClick={() => handleMetricShortcut(metric.key)}
+              className={`rounded-2xl border p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                metric.tone
+              } ${metricFilter === metric.key ? "ring-2 ring-slate-900/15" : ""}`}
             >
               <p className="text-sm text-slate-600">{metric.label}</p>
               <p className="mt-2 text-3xl font-bold text-slate-900">{metric.value}</p>
-            </div>
+            </button>
           ))}
         </div>
 
@@ -831,7 +1105,7 @@ export default function KanbanPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div ref={boardSectionRef} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex-1">
               <label className="mb-1 block text-sm font-medium text-slate-700">
@@ -888,19 +1162,27 @@ export default function KanbanPage() {
               Showing <span className="font-semibold text-slate-900">{filteredLeads.length}</span>{" "}
               of <span className="font-semibold text-slate-900">{leads.length}</span> leads
             </p>
-            {(searchTerm || statusFilter !== "all" || assigneeFilter !== "all") && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchTerm("")
-                  setStatusFilter("all")
-                  setAssigneeFilter("all")
-                }}
-                className="font-medium text-slate-700 underline underline-offset-4"
-              >
-                Clear filters
-              </button>
-            )}
+            <div className="flex flex-wrap items-center gap-3">
+              {metricFilter !== "all" && (
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                  Shortcut: {metricFilterLabel}
+                </span>
+              )}
+              {(searchTerm || statusFilter !== "all" || assigneeFilter !== "all" || metricFilter !== "all") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm("")
+                    setStatusFilter("all")
+                    setAssigneeFilter("all")
+                    setMetricFilter("all")
+                  }}
+                  className="font-medium text-slate-700 underline underline-offset-4"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -913,6 +1195,7 @@ export default function KanbanPage() {
             leads={filteredLeads}
             onEditLead={setEditingLead}
             onLeadStatusChange={handleLeadStatusChange}
+            onCreateEstimate={handleOpenEstimate}
           />
         )}
       </div>
@@ -923,6 +1206,7 @@ export default function KanbanPage() {
           onClose={() => setEditingLead(null)}
           onSave={(lead) => handleSaveLead(lead)}
           onDelete={handleDeleteLead}
+          onCreateEstimate={handleOpenEstimate}
         />
       )}
 
@@ -932,6 +1216,15 @@ export default function KanbanPage() {
           onClose={() => setIsAddingLead(false)}
           onSave={(lead) => handleSaveLead(lead, true)}
           onDelete={handleDeleteLead}
+        />
+      )}
+
+      {estimatingLead && (
+        <EstimateDrawer
+          lead={estimatingLead}
+          estimates={leadEstimates[estimatingLead.id] || []}
+          onClose={() => setEstimatingLead(null)}
+          onSaveEstimate={handleSaveEstimate}
         />
       )}
 
