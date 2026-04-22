@@ -63,9 +63,9 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-transparent text-black relative z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-        <Link href="/" className="flex items-center">
+   <nav className="absolute top-0 left-0 w-full z-50 bg-transparent text-black">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+    <Link href="/" className="flex items-center">
           <Image
             src="/Logo.png"
             alt="Smart Steel Logo"
@@ -151,9 +151,9 @@ export default function Navbar() {
           <Link href="/news" className="block ml-4 hover:text-[#da1a33]">News & Events</Link>
 
           <p className="mt-4 font-semibold">For Your Home</p>
-          <Link href="/product-advantages" className="block ml-4 hover:text-[#da1a33]">Product Advantages</Link>
+          <Link href="/architect-advantages" className="block ml-4 hover:text-[#da1a33]">Product Advantages</Link>
           <Link href="/warranty" className="block ml-4 hover:text-[#da1a33]">Warranty</Link>
-          <a href="/brochure.pdf" download className="block ml-4 hover:text-[#da1a33]">Download Brochure</a>
+          <a href="/brochures/resilient.pdf" download className="block ml-4 hover:text-[#da1a33]">Download Brochure</a>
 
           <Link href="/contact" className="block mt-4 hover:text-[#da1a33]">Contact</Link>
         </div>
@@ -179,7 +179,7 @@ export default function Navbar() {
             <div>
               <h3 className="text-xl font-semibold text-[#da1a33] mb-4">Builder / Installers</h3>
               <ul className="space-y-2">
-                <li><Link href="/architect-advantages" className="hover:underline">Product Advantages</Link></li>
+                <li><Link href="/product-advantages" className="hover:underline">Product Advantages</Link></li>
                 <li><Link href="/resources" className="hover:underline">Technical Resources</Link></li>
                 <li><Link href="/resources" className="hover:underline">Installation Guides</Link></li>
               </ul>
@@ -187,7 +187,7 @@ export default function Navbar() {
             <div>
               <h3 className="text-xl font-semibold text-[#da1a33] mb-4">Fabricators</h3>
               <ul className="space-y-2">
-                <li><Link href="/architect-advantages" className="hover:underline">Product Advantages</Link></li>
+                <li><Link href="/product-advantages" className="hover:underline">Product Advantages</Link></li>
                 <li><Link href="/resources" className="hover:underline">Technical Resources</Link></li>
               </ul>
             </div>
@@ -232,9 +232,9 @@ export default function Navbar() {
               <p>10-year structural warranty on all steel frames. Peace of mind guaranteed.</p>
             </div>
             <div>
-              <a href="/brochure.pdf" download className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">Smart Steel Brochure</a>
+              <a href="/brochures/resilient.pdf" download className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">Smart Steel Brochure</a>
               <p>Download our full product brochure.</p>
-              <a href="/brochure.pdf" download className="inline-block mt-4 px-6 py-3 bg-[#da1a33] text-white rounded hover:bg-[#bf172d] transition">Download PDF</a>
+              <a href="/brochures/resilient.pdf" download className="inline-block mt-4 px-6 py-3 bg-[#da1a33] text-white rounded hover:bg-[#bf172d] transition">Download PDF</a>
             </div>
           </div>
         </div>

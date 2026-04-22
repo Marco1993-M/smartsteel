@@ -23,7 +23,7 @@ export default function Footer() {
           <ul className="space-y-2 text-sm text-gray-300">
             <li><Link href="/company" className="hover:text-[#da1a33]">About Us</Link></li>
             <li><Link href="/sustainability" className="hover:text-[#da1a33]">Sustainability</Link></li>
-            <li><Link href="/news-events" className="hover:text-[#da1a33]">News & Events</Link></li>
+            <li><Link href="/news" className="hover:text-[#da1a33]">News & Events</Link></li>
           </ul>
         </div>
 
@@ -32,7 +32,7 @@ export default function Footer() {
           <h4 className="text-lg font-semibold mb-4">Resources</h4>
           <ul className="space-y-2 text-sm text-gray-300">
             <li><Link href="/resources" className="hover:text-[#da1a33]">Technical Resources</Link></li>
-            <li><Link href="/installation-guides" className="hover:text-[#da1a33]">Installation Guides</Link></li>
+            <li><Link href="/resources" className="hover:text-[#da1a33]">Installation Guides</Link></li>
             <li><Link href="/solar-carports" className="hover:text-[#da1a33]">Solar Carport Regions</Link></li>
           </ul>
         </div>
