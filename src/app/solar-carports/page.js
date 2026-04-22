@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   buildSolarRegionHubMetadata,
   getSolarRegionConfigs,
@@ -45,6 +46,68 @@ export default function SolarCarportsHubPage() {
 
       <section className="bg-white px-6 py-20">
         <div className="mx-auto max-w-6xl">
+          <div className="mb-12 rounded-[2rem] border border-gray-200 bg-[#f8f9fa] p-6 shadow-sm md:p-8">
+            <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+                  Featured Project
+                </p>
+                <h2 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
+                  Centurion Golf Club Solar Carports
+                </h2>
+                <p className="mt-3 text-base font-medium text-gray-600">Centurion Golf Club</p>
+                <p className="mt-5 text-lg leading-8 text-gray-700">
+                  A solar carport installation designed for customer parking, combining covered bays
+                  with a large solar footprint and a stronger arrival experience.
+                </p>
+                <div className="mt-6 space-y-3">
+                  {[
+                    "Solar carport for customer parking",
+                    "300+ panels integrated into the parking structure",
+                    "Improved shade, site presentation, and long-term energy positioning",
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700"
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2 overflow-hidden rounded-[1.5rem] bg-white shadow-sm">
+                  <Image
+                    src="/solar_car_port_1.jpg"
+                    alt="Centurion Golf Club solar carport overview"
+                    width={1200}
+                    height={760}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-sm">
+                  <Image
+                    src="/solar_car_port_2.jpg"
+                    alt="Centurion Golf Club solar carport parking bays"
+                    width={900}
+                    height={700}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-sm">
+                  <Image
+                    src="/solar_car_port_3.jpg"
+                    alt="Centurion Golf Club solar carport steel structure detail"
+                    width={900}
+                    height={700}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="mb-10 max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
               Explore Regions

@@ -1,50 +1,36 @@
-// app/solar/page.js
 import SolarClient from "./SolarClient";
 
-
 export const metadata = {
-  title: "Solar Panel Mounting Structures & Solar Carports",
+  title: "Solar Carports & Solar-Ready Steel Structures | Smart Steel",
   description:
-    "Engineered lightweight steel structures for solar: carports, ground mounts, and roof frames. Fast, precise, corrosion‑resistant, and South Africa ready.",
-  keywords: [
-    "solar panel mounting structures",
-    "solar carports",
-    "solar ground mount",
-    "steel solar frames",
-    "solar roof frames",
-    "solar ready steel",
-    "steel carports South Africa",
-    "solar structures South Africa",
-  ],
-  alternates: {
-    canonical: "/solar",
-  },
+    "Explore Smart Steel solar carports, solar-ready parking structures, roof frames, and steel support systems for South African projects.",
   openGraph: {
-    title: "Solar Panel Mounting Structures & Steel Solar Carports | Smart Steel",
+    title: "Solar Carports & Solar-Ready Steel Structures | Smart Steel",
     description:
-      "Lightweight, corrosion-resistant steel solutions for solar: carports, ground mounts & roof frames.",
-    url: "https://smartsteel.co.za/solar",
+      "Compare Smart Steel solar-ready structures for carports, commercial parking, roof framing, and broader solar support applications in South Africa.",
+    url: "https://www.smartsteel.co.za/solar",
     siteName: "Smart Steel",
     images: [
       {
-        url: "/og-solar.jpg",
+        url: "/solar-hero.jpg",
         width: 1200,
         height: 630,
-        alt: "Solar-ready steel structures by Smart Steel",
+        alt: "Smart Steel solar carports and solar-ready steel structures",
       },
     ],
-    locale: "en_ZA",
-    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Solar Panel Mounting Structures & Steel Solar Carports | Smart Steel",
+    title: "Solar Carports & Solar-Ready Steel Structures | Smart Steel",
     description:
-      "Engineered lightweight steel structures for solar: carports, ground mounts & roof frames.",
-    images: ["/og-solar.jpg"],
+      "Solar-ready steel structures for South African parking, commercial, and energy-linked projects.",
+    images: ["/solar-hero.jpg"],
+  },
+  alternates: {
+    canonical: "https://www.smartsteel.co.za/solar",
   },
 };
 
-export default function Page() {
+export default function SolarPage() {
   return <SolarClient />;
 }
