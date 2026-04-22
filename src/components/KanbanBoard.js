@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
-import { Mail, Phone, Edit3 } from "lucide-react"
+import { Mail, Phone, Edit3, FileText } from "lucide-react"
 import UpcomingTasks from "../components/UpcomingTasks"
 import { supabase } from "../lib/supabase"
 
@@ -32,7 +32,7 @@ function formatStatusLabel(status) {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1)
 }
 
-export default function KanbanBoard({ leads, onEditLead, onLeadStatusChange }) {
+export default function KanbanBoard({ leads, onEditLead, onLeadStatusChange, onCreateEstimate }) {
   const [recentUpdates, setRecentUpdates] = useState([])
   const [updateFilter, setUpdateFilter] = useState("all")
   const kanbanRef = useRef(null)
@@ -162,6 +162,7 @@ export default function KanbanBoard({ leads, onEditLead, onLeadStatusChange }) {
                     title={formatStatusLabel(status)}
                     leads={leads.filter((lead) => normalizeStatus(lead.status) === status)}
                     onEditLead={onEditLead}
+                    onCreateEstimate={onCreateEstimate}
                   />
                 </div>
               ))}
@@ -173,7 +174,7 @@ export default function KanbanBoard({ leads, onEditLead, onLeadStatusChange }) {
   )
 }
 
-function KanbanColumn({ id, title, leads, onEditLead }) {
+function KanbanColumn({ id, title, leads, onEditLead, onCreateEstimate }) {
   const { setNodeRef } = useDroppable({ id })
 
   return (
@@ -197,7 +198,7 @@ function KanbanColumn({ id, title, leads, onEditLead }) {
           </div>
         ) : (
           leads.map((lead) => (
-            <KanbanCard key={lead.id} lead={lead} onEditLead={onEditLead} />
+            <KanbanCard key={lead.id} lead={lead} onEditLead={onEditLead} onCreateEstimate={onCreateEstimate} />
           ))
         )}
       </div>
@@ -205,7 +206,7 @@ function KanbanColumn({ id, title, leads, onEditLead }) {
   )
 }
 
-function KanbanCard({ lead, onEditLead }) {
+function KanbanCard({ lead, onEditLead, onCreateEstimate }) {
   const [isOpen, setIsOpen] = useState(false)
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id })
   const style = transform
@@ -271,6 +272,12 @@ function KanbanCard({ lead, onEditLead }) {
           className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-700 transition hover:bg-slate-200"
         >
           <Edit3 size={12} /> Edit
+        </button>
+        <button
+          onClick={() => onCreateEstimate?.(lead)}
+          className="flex items-center gap-1 rounded-full bg-rose-100 px-2 py-1 text-rose-700 transition hover:bg-rose-200"
+        >
+          <FileText size={12} /> Estimate
         </button>
       </div>
 

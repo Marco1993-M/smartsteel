@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
-import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft } from "lucide-react"
+import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft, FileText } from "lucide-react"
 import { supabase } from "../lib/supabase" 
 import { format, isToday, isYesterday } from "date-fns";
 
@@ -61,7 +61,7 @@ function groupActivities(activities) {
   return Object.entries(groups).map(([dateLabel, items]) => ({ dateLabel, items }));
 }
 
-export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack }) {
+export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack, onCreateEstimate }) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
 
@@ -267,9 +267,17 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   </div>
 
 {/* Action Buttons */}
-{!isNew && (
-  <div className="flex gap-2 mt-2 sm:mt-0 flex-wrap sm:flex-nowrap">
-    {/* Call */}
+	{!isNew && (
+	  <div className="flex gap-2 mt-2 sm:mt-0 flex-wrap sm:flex-nowrap">
+      <button
+        type="button"
+        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+        onClick={() => onCreateEstimate?.(lead)}
+        title="Create estimate"
+      >
+        <FileText size={18} />
+      </button>
+	    {/* Call */}
     <button
       type="button"
       className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
