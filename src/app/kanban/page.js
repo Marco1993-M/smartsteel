@@ -935,15 +935,15 @@ export default function KanbanPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6">
-      <div className="mx-auto mt-16 max-w-7xl space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="min-h-screen bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
+      <div className="mx-auto mt-12 max-w-7xl space-y-5 sm:mt-16 sm:space-y-6">
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
                 Smart Steel CRM
               </p>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 Smart Steel Leads Centre
               </h1>
               <p className="text-sm leading-6 text-slate-600 sm:text-base">
@@ -952,21 +952,21 @@ export default function KanbanPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="grid gap-2 sm:flex sm:flex-wrap sm:gap-3">
               <button
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto sm:py-2"
                 onClick={handleLogout}
               >
                 Sign out
               </button>
               <button
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto sm:py-2"
                 onClick={() => setShowPricesDrawer(true)}
               >
                 Prices & Templates
               </button>
               <button
-                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 sm:w-auto sm:py-2"
                 onClick={() => setIsAddingLead(true)}
               >
                 + New Lead
@@ -975,25 +975,25 @@ export default function KanbanPage() {
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
           {metrics.map((metric) => (
             <button
               key={metric.label}
               type="button"
               onClick={() => handleMetricShortcut(metric.key)}
-              className={`rounded-2xl border p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+              className={`rounded-2xl border p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 ${
                 metric.tone
               } ${metricFilter === metric.key ? "ring-2 ring-slate-900/15" : ""}`}
             >
-              <p className="text-sm text-slate-600">{metric.label}</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{metric.value}</p>
+              <p className="text-xs text-slate-600 sm:text-sm">{metric.label}</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">{metric.value}</p>
             </button>
           ))}
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-end justify-between gap-3">
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Team accountability</h2>
                 <p className="text-sm text-slate-600">
@@ -1003,7 +1003,7 @@ export default function KanbanPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
+              <table className="min-w-[620px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-slate-500">
                     <th className="pb-3 font-medium">Owner</th>
@@ -1031,7 +1031,7 @@ export default function KanbanPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <h2 className="text-lg font-semibold text-slate-900">Needs attention</h2>
               <div className="mt-4 grid gap-3">
                 {attentionItems.map((item) => (
@@ -1046,7 +1046,7 @@ export default function KanbanPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <h2 className="text-lg font-semibold text-slate-900">Stalled leads</h2>
               <p className="mt-1 text-sm text-slate-600">
                 These leads are overdue, stale, unassigned, or missing a next step.
@@ -1093,7 +1093,7 @@ export default function KanbanPage() {
                       <button
                         type="button"
                         onClick={() => setEditingLead(lead)}
-                        className="mt-3 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
                       >
                         Review lead
                       </button>
@@ -1105,7 +1105,7 @@ export default function KanbanPage() {
           </div>
         </div>
 
-        <div ref={boardSectionRef} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div ref={boardSectionRef} className="scroll-mt-20 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex-1">
               <label className="mb-1 block text-sm font-medium text-slate-700">
