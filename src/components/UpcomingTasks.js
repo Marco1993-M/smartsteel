@@ -171,7 +171,7 @@ export default function UpcomingTasks() {
           {filteredTasks.map(task => (
             <li
               key={task.id}
-              className="flex justify-between items-center p-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition"
+            className="flex flex-col gap-2 rounded-lg border border-gray-100 p-2 transition hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex flex-col">
                 <span className="font-medium text-gray-800">{task.title}</span>
@@ -193,18 +193,18 @@ export default function UpcomingTasks() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex justify-end gap-2 sm:justify-start">
                 <button
                   type="button"
                   onClick={() => markCompleted(task.id)}
-                  className="text-green-500 hover:text-green-700 text-xs"
+                  className="rounded-lg bg-green-50 px-3 py-1.5 text-xs text-green-600 hover:text-green-700"
                 >
                   ✅
                 </button>
                 <button
                   type="button"
                   onClick={() => deleteTask(task.id)}
-                  className="text-red-500 hover:text-red-700 text-xs"
+                  className="rounded-lg bg-red-50 px-3 py-1.5 text-xs text-red-500 hover:text-red-700"
                 >
                   ✕
                 </button>

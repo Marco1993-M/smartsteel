@@ -242,17 +242,17 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex flex-col bg-white shadow-xl w-[450px] max-w-[450px] h-full overflow-hidden">
+            <Dialog.Panel className="flex h-full w-screen max-w-full flex-col overflow-hidden bg-white shadow-xl sm:w-[450px] sm:max-w-[450px]">
               {/* Header */}
-<div className="px-6 py-4 border-b flex flex-col sm:flex-row sm:items-center justify-between sticky top-0 bg-white z-10 gap-2">
-  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+<div className="sticky top-0 z-10 flex flex-col justify-between gap-3 border-b bg-white px-4 py-3 sm:flex-row sm:items-center sm:px-6 sm:py-4">
+  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
     {/* Back Button */}
-    <button onClick={backHandler} className="p-2 rounded-full hover:bg-gray-100">
+    <button onClick={backHandler} className="shrink-0 rounded-full p-2 hover:bg-gray-100">
       <ArrowLeft size={20} />
     </button>
 
     {/* Lead Name + Status */}
-    <Dialog.Title className="flex flex-wrap items-center gap-2 text-xl font-semibold truncate">
+    <Dialog.Title className="flex min-w-0 flex-wrap items-center gap-2 text-lg font-semibold sm:text-xl">
       {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
 
       {/* Status Badge */}
@@ -268,10 +268,10 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
 {/* Action Buttons */}
 	{!isNew && (
-	  <div className="flex gap-2 mt-2 sm:mt-0 flex-wrap sm:flex-nowrap">
+	  <div className="flex flex-wrap gap-2 sm:flex-nowrap">
       <button
         type="button"
-        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+        className="rounded-full bg-gray-100 p-2 hover:bg-gray-200"
         onClick={() => onCreateEstimate?.(lead)}
         title="Create estimate"
       >
@@ -280,7 +280,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 	    {/* Call */}
     <button
       type="button"
-      className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      className="rounded-full bg-gray-100 p-2 hover:bg-gray-200"
       onClick={async () => {
         const description = `Called ${formData.name}`;
         addActivity({ type: "call", description });
@@ -294,7 +294,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     {/* Email */}
     <button
       type="button"
-      className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      className="rounded-full bg-gray-100 p-2 hover:bg-gray-200"
       onClick={async () => {
         const description = `Emailed ${formData.name}`;
         addActivity({ type: "email", description });
@@ -308,7 +308,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     {/* WhatsApp */}
     <button
       type="button"
-      className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+      className="rounded-full bg-gray-100 p-2 hover:bg-gray-200"
       onClick={async () => {
         const description = `Messaged ${formData.name} on WhatsApp`;
         addActivity({ type: "whatsapp", description });
@@ -344,7 +344,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     </Tab.List>
     <Tab.Panels className="space-y-4 w-full max-w-full p-0">
       {/* Details Panel */}
-      <Tab.Panel className="space-y-4 w-full max-w-full p-4">
+      <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
         <div>
           <label className="block text-sm font-medium text-gray-700">First & Last Name</label>
           <input
@@ -477,7 +477,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               type="date"
               value={formData.follow_up_at ? new Date(formData.follow_up_at).toISOString().split("T")[0] : ""}
@@ -487,9 +487,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                   e.target.value ? new Date(e.target.value).toISOString() : null
                 )
               }
-              className="block rounded-md border-gray-300 shadow-sm"
+              className="block w-full rounded-md border-gray-300 shadow-sm sm:w-auto"
             />
-            <div className="flex gap-1">
+            <div className="flex flex-wrap gap-1">
               {[
                 { label: "Today", offset: 0 },
                 { label: "+1 Day", offset: 1 },
@@ -503,7 +503,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     d.setDate(d.getDate() + offset);
                     handleChange("follow_up_at", d.toISOString());
                   }}
-                  className="px-2 py-1 text-xs rounded border bg-gray-100 hover:bg-gray-200"
+                  className="rounded border bg-gray-100 px-2 py-1.5 text-xs hover:bg-gray-200"
                 >
                   {label}
                 </button>
@@ -511,7 +511,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               <button
                 type="button"
                 onClick={() => handleChange("follow_up_at", null)}
-                className="px-2 py-1 text-xs rounded border bg-red-100 text-red-700 hover:bg-red-200"
+                className="rounded border bg-red-100 px-2 py-1.5 text-xs text-red-700 hover:bg-red-200"
               >
                 Clear
               </button>
@@ -825,18 +825,18 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                   </Tab.Panels>
 
                   {/* Footer */}
-                  <div className="p-4 border-t flex justify-end gap-2 sticky bottom-0 bg-white z-10">
+                  <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-2 border-t bg-white p-4 sm:flex-row sm:justify-end">
                     {!isNew && (
                       <button
                         onClick={() => onDelete(lead.id)}
-                        className="flex items-center gap-1 text-red-600 hover:text-red-800"
+                        className="inline-flex items-center justify-center gap-1 rounded-lg border border-red-200 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-800"
                       >
                         <Trash2 size={16} /> Delete
                       </button>
                     )}
                     <button
                       onClick={handleSaveClick}
-                      className="flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                      className="inline-flex items-center justify-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                     >
                       <Save size={16} /> {isNew ? "Add Lead" : "Save"}
                     </button>

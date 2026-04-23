@@ -219,18 +219,18 @@ export default function EstimateDrawer({
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex h-full w-[520px] max-w-[520px] flex-col overflow-hidden bg-white shadow-xl">
-              <div className="sticky top-0 z-10 border-b bg-white px-6 py-4">
+            <Dialog.Panel className="flex h-full w-screen max-w-full flex-col overflow-hidden bg-white shadow-xl sm:w-[520px] sm:max-w-[520px]">
+              <div className="sticky top-0 z-10 border-b bg-white px-4 py-3 sm:px-6 sm:py-4">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <button onClick={onClose} className="rounded-full p-2 transition hover:bg-gray-100">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <button onClick={onClose} className="shrink-0 rounded-full p-2 transition hover:bg-gray-100">
                       <ArrowLeft size={20} />
                     </button>
-                    <div>
-                      <Dialog.Title className="text-xl font-semibold text-slate-900">
+                    <div className="min-w-0">
+                      <Dialog.Title className="text-lg font-semibold text-slate-900 sm:text-xl">
                         Create Estimate
                       </Dialog.Title>
-                      <p className="text-sm text-slate-500">
+                      <p className="truncate text-sm text-slate-500">
                         {lead?.name} {lead?.last_name} · Version {nextVersion}
                       </p>
                     </div>
@@ -238,7 +238,7 @@ export default function EstimateDrawer({
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 py-5">
+              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
                 <div className="space-y-6">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-sm font-medium text-slate-900">Estimate type</p>
@@ -333,25 +333,25 @@ export default function EstimateDrawer({
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                    <div className="flex items-end justify-between gap-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                       <div>
                         <p className="text-sm font-medium text-slate-700">Estimated total</p>
                         <p className="mt-2 text-3xl font-bold text-emerald-600">
                           {formatCurrency(estimatedTotal)}
                         </p>
                       </div>
-                      <div className="text-right text-sm text-slate-500">
+                      <div className="text-sm text-slate-500 sm:text-right">
                         <p>Subtotal: {formatCurrency(subtotal)}</p>
                         <p>Markup: {preview.pricing.markupMultiplier}x</p>
                       </div>
                     </div>
 
-                    <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <p className="text-sm font-medium text-slate-900">Line items</p>
                       <button
                         type="button"
                         onClick={addManualItem}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
                       >
                         <Plus size={16} />
                         Add manual item
@@ -451,7 +451,7 @@ export default function EstimateDrawer({
                                   className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm"
                                 />
                               </div>
-                              <div className="text-right">
+                              <div className="text-left md:text-right">
                                 <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                                   Line total
                                 </p>
@@ -495,7 +495,7 @@ export default function EstimateDrawer({
                         {estimates.map((estimate) => (
                           <div
                             key={estimate.id}
-                            className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                            className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                           >
                             <div>
                               <p className="text-sm font-semibold text-slate-900">{estimate.title}</p>
@@ -506,7 +506,7 @@ export default function EstimateDrawer({
                             <button
                               type="button"
                               onClick={() => openEstimateDocument(estimate.id)}
-                              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
                             >
                               <Printer size={16} />
                               Open PDF View
@@ -515,7 +515,7 @@ export default function EstimateDrawer({
                               <button
                                 type="button"
                                 onClick={() => handleCopyShareLink(estimate.share_token)}
-                                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
                               >
                                 <Link2 size={16} />
                                 Copy Share Link
@@ -529,11 +529,11 @@ export default function EstimateDrawer({
                 </div>
               </div>
 
-              <div className="sticky bottom-0 z-10 flex justify-end gap-2 border-t bg-white px-6 py-4">
+              <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-2 border-t bg-white px-4 py-3 sm:flex-row sm:justify-end sm:px-6 sm:py-4">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                 >
                   Cancel
                 </button>
@@ -541,7 +541,7 @@ export default function EstimateDrawer({
                   type="button"
                   onClick={handleSaveAndOpen}
                   disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Printer size={16} />
                   {isSaving ? "Saving..." : "Save & Open PDF"}
@@ -550,7 +550,7 @@ export default function EstimateDrawer({
                   type="button"
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Save size={16} />
                   {isSaving ? "Saving..." : "Save Estimate"}
