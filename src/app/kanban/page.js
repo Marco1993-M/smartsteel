@@ -189,6 +189,13 @@ function getDaysSince(dateValue) {
   return Math.floor(diff / (1000 * 60 * 60 * 24))
 }
 
+function getTomorrowIsoDate() {
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(9, 0, 0, 0)
+  return tomorrow.toISOString()
+}
+
 function generateShareToken() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID()
@@ -211,6 +218,136 @@ async function sendCrmNotification(payload) {
   }
 }
 
+function TodayWorkColumn({ title, helper, tone, items, emptyText, renderItem }) {
+  const toneClasses = {
+    rose: "bg-rose-50 text-rose-700 border-rose-100",
+    sky: "bg-sky-50 text-sky-700 border-sky-100",
+    amber: "bg-amber-50 text-amber-700 border-amber-100",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-semibold text-slate-900">{title}</h3>
+          <p className="mt-1 text-xs text-slate-500">{helper}</p>
+        </div>
+        <span className={`rounded-full border px-2 py-1 text-xs font-bold ${toneClasses[tone]}`}>
+          {items.length}
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        {items.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-300 bg-white p-3 text-sm text-slate-400">
+            {emptyText}
+          </p>
+        ) : (
+          items.map(renderItem)
+        )}
+      </div>
+    </div>
+  )
+}
+
+function TodayLeadCard({ lead, onOpen, onSnooze }) {
+  const cleanPhone = lead.phone?.replace(/\D/g, "")
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-slate-900">
+            {lead.name} {lead.last_name}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
+          {formatStatusLabel(lead.status)}
+        </span>
+      </div>
+
+      <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">
+        {lead.next_action || "No next action captured yet."}
+      </p>
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {lead.phone && (
+          <a
+            href={`tel:${lead.phone}`}
+            className="rounded-full bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700"
+          >
+            Call
+          </a>
+        )}
+        {cleanPhone && (
+          <a
+            href={`https://wa.me/${cleanPhone}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full bg-green-50 px-2.5 py-1.5 text-xs font-semibold text-green-700"
+          >
+            WhatsApp
+          </a>
+        )}
+        {lead.email && (
+          <a
+            href={`mailto:${lead.email}`}
+            className="rounded-full bg-sky-50 px-2.5 py-1.5 text-xs font-semibold text-sky-700"
+          >
+            Email
+          </a>
+        )}
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+        >
+          Open
+        </button>
+        <button
+          type="button"
+          onClick={onSnooze}
+          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
+        >
+          Tomorrow
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function TodayTaskCard({ task, onComplete }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">{task.title}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {task.assignee || "Unassigned"} · {task.priority || "No priority"}
+          </p>
+          {task.due_date && (
+            <p className="mt-1 text-xs font-medium text-slate-600">Due: {task.due_date}</p>
+          )}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onComplete}
+        className="mt-3 w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
+      >
+        Mark done
+      </button>
+    </div>
+  )
+}
+
 export default function KanbanPage() {
   const router = useRouter()
   const boardSectionRef = useRef(null)
@@ -229,6 +366,8 @@ export default function KanbanPage() {
   const [fallbackFieldValues, setFallbackFieldValues] = useState({})
   const [leadEstimates, setLeadEstimates] = useState({})
   const [estimatingLead, setEstimatingLead] = useState(null)
+  const [dailyTasks, setDailyTasks] = useState([])
+  const [tasksLoading, setTasksLoading] = useState(true)
 
   const fetchLeads = async () => {
     setLoading(true)
@@ -256,6 +395,23 @@ export default function KanbanPage() {
     setLoading(false)
   }
 
+  const fetchDailyTasks = async () => {
+    setTasksLoading(true)
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("completed", false)
+      .order("due_date", { ascending: true })
+
+    if (error) {
+      console.error("Error fetching daily tasks:", error)
+    } else {
+      setDailyTasks(data || [])
+    }
+
+    setTasksLoading(false)
+  }
+
   useEffect(() => {
     const bootstrapSession = async () => {
       const {
@@ -271,6 +427,7 @@ export default function KanbanPage() {
       setUser(session.user)
       setAuthLoading(false)
       fetchLeads()
+      fetchDailyTasks()
     }
 
     bootstrapSession()
@@ -595,6 +752,43 @@ export default function KanbanPage() {
 
   const handleOpenEstimate = (lead) => {
     setEstimatingLead(lead)
+  }
+
+  const handleSnoozeLeadToTomorrow = async (lead) => {
+    const followUpAt = getTomorrowIsoDate()
+    const { error } = await supabase
+      .from("leads")
+      .update({ follow_up_at: followUpAt })
+      .eq("id", lead.id)
+
+    if (error) {
+      alert("Could not move follow-up to tomorrow: " + error.message)
+      return
+    }
+
+    const updatedLead = normalizeLead({ ...lead, follow_up_at: followUpAt })
+    setLeads((prev) => prev.map((item) => (item.id === lead.id ? updatedLead : item)))
+    await logLeadActivity({
+      lead_id: lead.id,
+      type: "follow_up",
+      user_name: "System",
+      description: "Follow-up moved to tomorrow from Today's Work.",
+      timestamp: new Date().toISOString(),
+    })
+  }
+
+  const handleCompleteDailyTask = async (taskId) => {
+    const { error } = await supabase
+      .from("tasks")
+      .update({ completed: true })
+      .eq("id", taskId)
+
+    if (error) {
+      alert("Could not complete task: " + error.message)
+      return
+    }
+
+    setDailyTasks((prev) => prev.filter((task) => task.id !== taskId))
   }
 
   const handleSaveEstimate = async (estimateDraft) => {
@@ -922,6 +1116,40 @@ export default function KanbanPage() {
       .slice(0, 8)
   }, [leads])
 
+  const todaysWork = useMemo(() => {
+    const activeLeads = leads.filter((lead) => !["won", "lost"].includes(normalizeStatus(lead.status)))
+    const overdueFollowUps = activeLeads
+      .filter((lead) => isBeforeToday(lead.follow_up_at))
+      .sort((a, b) => new Date(a.follow_up_at).getTime() - new Date(b.follow_up_at).getTime())
+      .slice(0, 6)
+    const dueToday = activeLeads
+      .filter((lead) => isSameDay(lead.follow_up_at))
+      .sort((a, b) => String(a.allocated_to || "").localeCompare(String(b.allocated_to || "")))
+      .slice(0, 6)
+    const needsDecision = activeLeads
+      .filter((lead) => {
+        const staleDays = getDaysSince(getLeadFreshnessDate(lead))
+        return !lead.next_action?.trim() || !lead.allocated_to?.trim() || staleDays > 5
+      })
+      .sort((a, b) => getDaysSince(getLeadFreshnessDate(b)) - getDaysSince(getLeadFreshnessDate(a)))
+      .slice(0, 6)
+    const openTasks = dailyTasks
+      .filter((task) => !task.due_date || task.due_date <= new Date().toISOString().split("T")[0])
+      .slice(0, 6)
+
+    return {
+      overdueFollowUps,
+      dueToday,
+      needsDecision,
+      openTasks,
+      total:
+        overdueFollowUps.length +
+        dueToday.length +
+        needsDecision.length +
+        openTasks.length,
+    }
+  }, [dailyTasks, leads])
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
@@ -990,6 +1218,93 @@ export default function KanbanPage() {
             </button>
           ))}
         </div>
+
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-sm">
+          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(248,113,113,0.25),_transparent_34%),linear-gradient(135deg,_#0f172a,_#111827_55%,_#1f2937)] p-4 text-white sm:p-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-red-200">
+                  Today&apos;s work
+                </p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+                  Pocket whiteboard
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
+                  Start here each morning: overdue follow-ups, today&apos;s calls, loose ends,
+                  and open tasks that need to move before the day disappears.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
+                  Open items
+                </p>
+                <p className="mt-1 text-3xl font-bold">{todaysWork.total}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 bg-white p-3 sm:p-4 xl:grid-cols-4">
+            <TodayWorkColumn
+              title="Overdue"
+              helper="Follow-ups already slipping"
+              tone="rose"
+              items={todaysWork.overdueFollowUps}
+              emptyText="No overdue follow-ups."
+              renderItem={(lead) => (
+                <TodayLeadCard
+                  key={lead.id}
+                  lead={lead}
+                  onOpen={() => setEditingLead(lead)}
+                  onSnooze={() => handleSnoozeLeadToTomorrow(lead)}
+                />
+              )}
+            />
+            <TodayWorkColumn
+              title="Due today"
+              helper="Calls and follow-ups for today"
+              tone="sky"
+              items={todaysWork.dueToday}
+              emptyText="Nothing due today."
+              renderItem={(lead) => (
+                <TodayLeadCard
+                  key={lead.id}
+                  lead={lead}
+                  onOpen={() => setEditingLead(lead)}
+                  onSnooze={() => handleSnoozeLeadToTomorrow(lead)}
+                />
+              )}
+            />
+            <TodayWorkColumn
+              title="Needs decision"
+              helper="Missing owner, next step, or stale"
+              tone="amber"
+              items={todaysWork.needsDecision}
+              emptyText="No loose ends showing."
+              renderItem={(lead) => (
+                <TodayLeadCard
+                  key={lead.id}
+                  lead={lead}
+                  onOpen={() => setEditingLead(lead)}
+                  onSnooze={() => handleSnoozeLeadToTomorrow(lead)}
+                />
+              )}
+            />
+            <TodayWorkColumn
+              title="Tasks"
+              helper={tasksLoading ? "Loading tasks..." : "CRM tasks due now"}
+              tone="emerald"
+              items={todaysWork.openTasks}
+              emptyText="No open tasks due."
+              renderItem={(task) => (
+                <TodayTaskCard
+                  key={task.id}
+                  task={task}
+                  onComplete={() => handleCompleteDailyTask(task.id)}
+                />
+              )}
+            />
+          </div>
+        </section>
 
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
