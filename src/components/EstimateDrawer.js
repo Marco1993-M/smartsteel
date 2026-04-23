@@ -63,6 +63,15 @@ function buildShareUrl(shareToken) {
   return `${window.location.origin}/quotes/${shareToken}`
 }
 
+function getNextEstimateVersion(estimates = []) {
+  const maxVersion = estimates.reduce((highest, estimate) => {
+    const version = Number(estimate?.version_no || 0)
+    return Number.isFinite(version) ? Math.max(highest, version) : highest
+  }, 0)
+
+  return maxVersion + 1
+}
+
 export default function EstimateDrawer({
   lead,
   estimates,
@@ -94,7 +103,7 @@ export default function EstimateDrawer({
     })
   }, [preview.lineItems])
 
-  const nextVersion = (estimates?.length || 0) + 1
+  const nextVersion = getNextEstimateVersion(estimates)
   const subtotal = useMemo(
     () => roundMoney(editableLineItems.reduce((sum, item) => sum + Number(item.total || 0), 0)),
     [editableLineItems]
