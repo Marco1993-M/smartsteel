@@ -6,6 +6,11 @@ import KanbanBoard from "../../components/KanbanBoard"
 import LeadEditorDrawer from "../../components/LeadEditorDrawer"
 import PricesDrawer from "../../components/PricesDrawer"
 import EstimateDrawer from "../../components/EstimateDrawer"
+import {
+  formatCrmStatusLabel,
+  getLeadSop,
+  getLeadStageValidationMessage,
+} from "../../lib/crmSop"
 import { supabase } from "../../lib/supabase"
 
 const TEAM_MEMBERS = ["Stefan", "Niel", "Victor", "Marco"]
@@ -70,8 +75,7 @@ function normalizeLead(lead) {
 }
 
 function formatStatusLabel(status) {
-  const normalized = normalizeStatus(status)
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+  return formatCrmStatusLabel(status)
 }
 
 function isSameDay(dateValue, comparisonDate = new Date()) {
@@ -196,6 +200,15 @@ function getTomorrowIsoDate() {
   return tomorrow.toISOString()
 }
 
+function getTeamMemberFromUser(user) {
+  const email = String(user?.email || "").toLowerCase()
+  if (!email) return ""
+
+  return (
+    TEAM_MEMBERS.find((member) => email.includes(member.toLowerCase())) || ""
+  )
+}
+
 function generateShareToken() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID()
@@ -253,6 +266,7 @@ function TodayWorkColumn({ title, helper, tone, items, emptyText, renderItem }) 
 
 function TodayLeadCard({ lead, onOpen, onSnooze }) {
   const cleanPhone = lead.phone?.replace(/\D/g, "")
+  const leadSop = getLeadSop(lead)
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
@@ -273,6 +287,28 @@ function TodayLeadCard({ lead, onOpen, onSnooze }) {
       <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">
         {lead.next_action || "No next action captured yet."}
       </p>
+
+      <div className="mt-2 rounded-lg bg-slate-50 p-2">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              SOP next
+            </p>
+            <p className="mt-1 text-xs font-medium leading-4 text-slate-700">
+              {lead.next_action || leadSop.nextStep}
+            </p>
+          </div>
+          <span
+            className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${
+              leadSop.isComplete
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-amber-100 text-amber-700"
+            }`}
+          >
+            {leadSop.completionLabel}
+          </span>
+        </div>
+      </div>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {lead.phone && (
@@ -362,6 +398,7 @@ export default function KanbanPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [assigneeFilter, setAssigneeFilter] = useState("all")
   const [metricFilter, setMetricFilter] = useState("all")
+  const [ownershipView, setOwnershipView] = useState("mine")
   const [nextActionFallbacks, setNextActionFallbacks] = useState({})
   const [fallbackFieldValues, setFallbackFieldValues] = useState({})
   const [leadEstimates, setLeadEstimates] = useState({})
@@ -525,6 +562,12 @@ export default function KanbanPage() {
     const validationError = validateLead(normalizedLead)
     if (validationError) {
       alert(validationError)
+      return false
+    }
+
+    const stageValidationError = getLeadStageValidationMessage(normalizedLead, normalizedLead.status)
+    if (stageValidationError) {
+      alert(stageValidationError)
       return false
     }
 
@@ -709,6 +752,18 @@ export default function KanbanPage() {
   const handleLeadStatusChange = async (leadId, newStatus) => {
     const normalizedStatus = normalizeStatus(newStatus)
     const previousLead = leads.find((lead) => lead.id === leadId)
+    const stageValidationError = getLeadStageValidationMessage(
+      { ...previousLead, status: normalizedStatus },
+      normalizedStatus
+    )
+
+    if (stageValidationError) {
+      alert(stageValidationError)
+      if (previousLead) {
+        setEditingLead(previousLead)
+      }
+      return
+    }
 
     setLeads((prev) =>
       prev.map((lead) =>
@@ -947,6 +1002,8 @@ export default function KanbanPage() {
     return ["all", ...Array.from(seen)]
   }, [leads])
 
+  const currentTeamMember = useMemo(() => getTeamMemberFromUser(user), [user])
+
   const filteredLeads = useMemo(() => {
     const query = searchTerm.trim().toLowerCase()
 
@@ -974,6 +1031,10 @@ export default function KanbanPage() {
         statusFilter === "all" || normalizeStatus(lead.status) === statusFilter
       const matchesAssignee =
         assigneeFilter === "all" || lead.allocated_to === assigneeFilter
+      const matchesOwnership =
+        ownershipView === "all" ||
+        !currentTeamMember ||
+        lead.allocated_to === currentTeamMember
       const matchesMetric =
         metricFilter === "all" ||
         (metricFilter === "quoted" && normalizeStatus(lead.status) === "quoted") ||
@@ -982,9 +1043,9 @@ export default function KanbanPage() {
         (metricFilter === "missing_next_step" && !lead.next_action?.trim()) ||
         (metricFilter === "overdue_follow_up" && isBeforeToday(lead.follow_up_at))
 
-      return matchesSearch && matchesStatus && matchesAssignee && matchesMetric
+      return matchesSearch && matchesStatus && matchesAssignee && matchesOwnership && matchesMetric
     })
-  }, [assigneeFilter, leads, metricFilter, searchTerm, statusFilter])
+  }, [assigneeFilter, currentTeamMember, leads, metricFilter, ownershipView, searchTerm, statusFilter])
 
   const metrics = useMemo(() => {
     const todayCount = leads.filter((lead) => isSameDay(lead.follow_up_at)).length
@@ -1029,6 +1090,40 @@ export default function KanbanPage() {
       },
     ]
   }, [leads])
+
+  const slaMetrics = useMemo(() => {
+    const scopedLeads = leads.filter((lead) => {
+      if (ownershipView === "all" || !currentTeamMember) return true
+      return lead.allocated_to === currentTeamMember
+    })
+
+    return [
+      {
+        label: "New leads untouched",
+        value: scopedLeads.filter(
+          (lead) => normalizeStatus(lead.status) === "new" && getDaysSince(lead.created_at) >= 1
+        ).length,
+        helper: "New leads older than one day still sitting in New.",
+        tone: "border-rose-200 bg-rose-50 text-rose-700",
+      },
+      {
+        label: "Quoted no follow-up",
+        value: scopedLeads.filter(
+          (lead) =>
+            normalizeStatus(lead.status) === "quoted" &&
+            (!lead.follow_up_at || getDaysSince(lead.follow_up_at) >= 2)
+        ).length,
+        helper: "Quoted leads need a live follow-up date within 48 hours.",
+        tone: "border-amber-200 bg-amber-50 text-amber-700",
+      },
+      {
+        label: "Stale over 5 days",
+        value: scopedLeads.filter((lead) => getDaysSince(getLeadFreshnessDate(lead)) > 5).length,
+        helper: "Leads with no movement in the last five days.",
+        tone: "border-sky-200 bg-sky-50 text-sky-700",
+      },
+    ]
+  }, [currentTeamMember, leads, ownershipView])
 
   const metricFilterLabel = useMemo(() => {
     const match = metrics.find((metric) => metric.key === metricFilter)
@@ -1117,7 +1212,11 @@ export default function KanbanPage() {
   }, [leads])
 
   const todaysWork = useMemo(() => {
-    const activeLeads = leads.filter((lead) => !["won", "lost"].includes(normalizeStatus(lead.status)))
+    const scopedLeads = leads.filter((lead) => {
+      if (ownershipView === "all" || !currentTeamMember) return true
+      return lead.allocated_to === currentTeamMember
+    })
+    const activeLeads = scopedLeads.filter((lead) => !["won", "lost"].includes(normalizeStatus(lead.status)))
     const overdueFollowUps = activeLeads
       .filter((lead) => isBeforeToday(lead.follow_up_at))
       .sort((a, b) => new Date(a.follow_up_at).getTime() - new Date(b.follow_up_at).getTime())
@@ -1134,6 +1233,10 @@ export default function KanbanPage() {
       .sort((a, b) => getDaysSince(getLeadFreshnessDate(b)) - getDaysSince(getLeadFreshnessDate(a)))
       .slice(0, 6)
     const openTasks = dailyTasks
+      .filter((task) => {
+        if (ownershipView === "all" || !currentTeamMember) return true
+        return !task.assignee || task.assignee === currentTeamMember
+      })
       .filter((task) => !task.due_date || task.due_date <= new Date().toISOString().split("T")[0])
       .slice(0, 6)
 
@@ -1148,7 +1251,7 @@ export default function KanbanPage() {
         needsDecision.length +
         openTasks.length,
     }
-  }, [dailyTasks, leads])
+  }, [currentTeamMember, dailyTasks, leads, ownershipView])
 
   if (authLoading) {
     return (
@@ -1178,6 +1281,30 @@ export default function KanbanPage() {
                 Manage leads, next actions, pipeline movement, and team
                 accountability from one central workspace.
               </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOwnershipView("mine")}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    ownershipView === "mine"
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  My Work{currentTeamMember ? `: ${currentTeamMember}` : ""}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOwnershipView("all")}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    ownershipView === "all"
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  Whole Team
+                </button>
+              </div>
             </div>
 
             <div className="grid gap-2 sm:flex sm:flex-wrap sm:gap-3">
@@ -1219,6 +1346,35 @@ export default function KanbanPage() {
           ))}
         </div>
 
+        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                SLA watch
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-slate-900">Where response discipline is slipping</h2>
+            </div>
+            <p className="text-sm text-slate-500">
+              {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s queue` : "Whole team"} priority watch
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {slaMetrics.map((item) => (
+              <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                    <p className="mt-1 text-sm text-slate-500">{item.helper}</p>
+                  </div>
+                  <span className={`rounded-full border px-3 py-1 text-sm font-bold ${item.tone}`}>
+                    {item.value}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-sm">
           <div className="bg-[radial-gradient(circle_at_top_left,_rgba(248,113,113,0.25),_transparent_34%),linear-gradient(135deg,_#0f172a,_#111827_55%,_#1f2937)] p-4 text-white sm:p-6">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -1236,7 +1392,7 @@ export default function KanbanPage() {
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
                 <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
-                  Open items
+                  {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s queue` : "Open items"}
                 </p>
                 <p className="mt-1 text-3xl font-bold">{todaysWork.total}</p>
               </div>
@@ -1483,7 +1639,7 @@ export default function KanbanPage() {
                   Shortcut: {metricFilterLabel}
                 </span>
               )}
-              {(searchTerm || statusFilter !== "all" || assigneeFilter !== "all" || metricFilter !== "all") && (
+              {(searchTerm || statusFilter !== "all" || assigneeFilter !== "all" || metricFilter !== "all" || ownershipView !== "mine") && (
                 <button
                   type="button"
                   onClick={() => {
@@ -1491,6 +1647,7 @@ export default function KanbanPage() {
                     setStatusFilter("all")
                     setAssigneeFilter("all")
                     setMetricFilter("all")
+                    setOwnershipView("mine")
                   }}
                   className="font-medium text-slate-700 underline underline-offset-4"
                 >
