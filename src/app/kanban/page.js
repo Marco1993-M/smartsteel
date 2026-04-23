@@ -200,6 +200,15 @@ function getTomorrowIsoDate() {
   return tomorrow.toISOString()
 }
 
+function getNextEstimateVersion(estimates = []) {
+  const maxVersion = estimates.reduce((highest, estimate) => {
+    const version = Number(estimate?.version_no || 0)
+    return Number.isFinite(version) ? Math.max(highest, version) : highest
+  }, 0)
+
+  return maxVersion + 1
+}
+
 function getTeamMemberFromUser(user) {
   const email = String(user?.email || "").toLowerCase()
   if (!email) return ""
@@ -854,12 +863,13 @@ export default function KanbanPage() {
 
     const leadId = estimateDraft.lead.id
     const existingForLead = leadEstimates[leadId] || []
+    const initialVersion = Number(estimateDraft.version_no) || getNextEstimateVersion(existingForLead)
     const shareToken = estimateDraft.share_token || generateShareToken()
-    const estimatePayload = {
+    let estimatePayload = {
       lead_id: leadId,
-      version_no: estimateDraft.version_no,
+      version_no: initialVersion,
       product_type: estimateDraft.product_type,
-      title: estimateDraft.title,
+      title: `Warehouse Estimate V${initialVersion}`,
       input_data: estimateDraft.input_data,
       line_items: estimateDraft.line_items,
       subtotal: estimateDraft.subtotal,
@@ -878,6 +888,27 @@ export default function KanbanPage() {
     while (insertResult.error) {
       const message = insertResult.error.message || ""
       const missingColumn = parseMissingColumn(insertResult.error)
+
+      if (/estimates_lead_version_idx/i.test(message) || /duplicate key value/i.test(message)) {
+        const { data: existingDbEstimates } = await supabase
+          .from("estimates")
+          .select("id, version_no")
+          .eq("lead_id", leadId)
+
+        const nextVersion = getNextEstimateVersion([
+          ...existingForLead,
+          ...(existingDbEstimates || []),
+        ])
+
+        estimatePayload = {
+          ...estimatePayload,
+          version_no: nextVersion,
+          title: `Warehouse Estimate V${nextVersion}`,
+        }
+        estimateInsertPayload = { ...estimatePayload }
+        insertResult = await supabase.from("estimates").insert([estimateInsertPayload]).select()
+        continue
+      }
 
       if (/relation .*estimates.* does not exist/i.test(message) || /Could not find the table/i.test(message)) {
         savedEstimate = {
@@ -906,7 +937,12 @@ export default function KanbanPage() {
           share_token: shareToken,
         }
       }
-      setStoredEstimatesForLead(leadId, [savedEstimate, ...existingForLead])
+      setStoredEstimatesForLead(
+        leadId,
+        [savedEstimate, ...existingForLead].sort(
+          (a, b) => Number(b.version_no || 0) - Number(a.version_no || 0)
+        )
+      )
     }
 
     const currentLead = leads.find((lead) => lead.id === leadId)
@@ -967,7 +1003,7 @@ export default function KanbanPage() {
         lead_id: leadId,
         type: "update",
         user_name: "System",
-        description: `Estimate V${estimateDraft.version_no} created for ${formatStatusLabel(updatedLead.status)} stage.`,
+        description: `Estimate V${estimatePayload.version_no} created for ${formatStatusLabel(updatedLead.status)} stage.`,
         timestamp: new Date().toISOString(),
       },
       {
@@ -985,7 +1021,7 @@ export default function KanbanPage() {
       previousLead: currentLead,
       actor: user?.email || "Smart Steel CRM",
       changedFields: ["status", "quote_value", "next_action"],
-      summary: `Estimate V${estimateDraft.version_no} created and lead moved to quoted.`,
+      summary: `Estimate V${estimatePayload.version_no} created and lead moved to quoted.`,
     })
 
     setEditingLead(updatedLead)
