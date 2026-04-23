@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
 import { Mail, Phone, Edit3, FileText } from "lucide-react"
 import UpcomingTasks from "../components/UpcomingTasks"
+import { formatCrmStatusLabel, getLeadSop } from "../lib/crmSop"
 import { supabase } from "../lib/supabase"
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
@@ -28,8 +29,7 @@ function normalizeStatus(status) {
 }
 
 function formatStatusLabel(status) {
-  const normalized = normalizeStatus(status)
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+  return formatCrmStatusLabel(status)
 }
 
 export default function KanbanBoard({ leads, onEditLead, onLeadStatusChange, onCreateEstimate }) {
@@ -262,6 +262,7 @@ function KanbanColumn({ id, title, leads, onEditLead, onCreateEstimate, draggabl
 function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
   const [isOpen, setIsOpen] = useState(false)
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id })
+  const leadSop = getLeadSop(lead)
   const style = transform
     ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
     : undefined
@@ -303,6 +304,28 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
             ⠿
           </div>
         ) : null}
+      </div>
+
+      <div className="mb-2 rounded-xl border border-slate-200 bg-white/80 p-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              Next in line
+            </p>
+            <p className="mt-1 text-xs font-medium leading-5 text-slate-700">
+              {lead.next_action || leadSop.nextStep}
+            </p>
+          </div>
+          <span
+            className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${
+              leadSop.isComplete
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-amber-100 text-amber-700"
+            }`}
+          >
+            {leadSop.completionLabel}
+          </span>
+        </div>
       </div>
 
       <div className="mb-2 flex flex-wrap gap-1 text-xs">
@@ -354,6 +377,23 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
             <span className="font-semibold">Next action:</span>{" "}
             {lead.next_action || "Not set"}
           </p>
+          <div>
+            <span className="font-semibold">SOP checklist:</span>{" "}
+            <div className="mt-1 flex flex-wrap gap-1">
+              {leadSop.checklist.map((item) => (
+                <span
+                  key={item.key}
+                  className={`rounded-full px-2 py-0.5 text-[11px] ${
+                    item.done
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  {item.done ? "✓" : "•"} {item.label}
+                </span>
+              ))}
+            </div>
+          </div>
           <p>
             <span className="font-semibold">Follow-up:</span>{" "}
             {lead.follow_up_at

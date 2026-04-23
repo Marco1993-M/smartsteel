@@ -4,6 +4,12 @@ import { useState, useEffect, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
 import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft, FileText } from "lucide-react"
 import { supabase } from "../lib/supabase" 
+import {
+  formatCrmStatusLabel,
+  getFollowUpIsoDate,
+  getLeadSop,
+  getLeadStageBlockers,
+} from "../lib/crmSop"
 import { format, isToday, isYesterday } from "date-fns";
 
 const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
@@ -24,8 +30,7 @@ function normalizeStatus(status) {
 }
 
 function formatStatusLabel(status) {
-  const normalized = normalizeStatus(status);
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  return formatCrmStatusLabel(status);
 }
 
 function getStatusBadgeClass(status) {
@@ -88,6 +93,11 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   });
 
   const [notes, setNotes] = useState(lead?.notes ? [lead.notes] : []);
+  const leadSop = getLeadSop(formData);
+  const selectedStageBlockers = getLeadStageBlockers(formData, formData.status);
+  const fieldLabelClass = "mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500";
+  const inputClass = "block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-0";
+  const sectionClass = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
 
   // Fetch notes and activities from Supabase
   useEffect(() => {
@@ -196,6 +206,64 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     });
   };
 
+  const applySopAction = (action) => {
+    setFormData((prev) => ({
+      ...prev,
+      next_action: action.nextAction,
+      follow_up_at:
+        action.followUpOffsetDays === null
+          ? prev.follow_up_at
+          : getFollowUpIsoDate(action.followUpOffsetDays) || prev.follow_up_at,
+    }));
+    setValidationErrors((prev) => {
+      const updated = { ...prev };
+      delete updated.next_action;
+      return updated;
+    });
+  };
+
+  const handleQuickLogAction = async (actionKey) => {
+    const quickActions = {
+      called_client: {
+        type: "call",
+        description: `Called ${formData.name || "client"}`,
+        nextAction: "Send follow-up summary and confirm outstanding project details.",
+        followUpAt: getFollowUpIsoDate(1),
+      },
+      requested_info: {
+        type: "update",
+        description: `Requested additional project information from ${formData.name || "client"}`,
+        nextAction: "Wait for drawings, dimensions, site photos or address from the client.",
+        followUpAt: getFollowUpIsoDate(1),
+      },
+      sent_quote: {
+        type: "email",
+        description: `Sent quote to ${formData.name || "client"}`,
+        nextAction: "Follow up on the quote and confirm receipt with the client.",
+        followUpAt: getFollowUpIsoDate(2),
+      },
+      follow_tomorrow: {
+        type: "follow_up",
+        description: `Follow-up moved to tomorrow for ${formData.name || "client"}`,
+        nextAction: formData.next_action || "Follow up with the client tomorrow.",
+        followUpAt: getFollowUpIsoDate(1),
+      },
+    };
+
+    const selected = quickActions[actionKey];
+    if (!selected) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      next_action: selected.nextAction,
+      follow_up_at: selected.followUpAt ?? prev.follow_up_at,
+    }));
+
+    if (lead?.id) {
+      await addActivity({ type: selected.type, description: selected.description });
+    }
+  };
+
   const handleSaveClick = () => {
     const errors = {};
 
@@ -242,9 +310,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex h-full w-screen max-w-full flex-col overflow-hidden bg-white shadow-xl sm:w-[450px] sm:max-w-[450px]">
+            <Dialog.Panel className="flex h-full w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-xl sm:w-[450px] sm:max-w-[450px]">
               {/* Header */}
-<div className="sticky top-0 z-10 flex flex-col justify-between gap-3 border-b bg-white px-4 py-3 sm:flex-row sm:items-center sm:px-6 sm:py-4">
+<div className="sticky top-0 z-10 flex flex-col justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:px-6 sm:py-4">
   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
     {/* Back Button */}
     <button onClick={backHandler} className="shrink-0 rounded-full p-2 hover:bg-gray-100">
@@ -252,18 +320,23 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     </button>
 
     {/* Lead Name + Status */}
-    <Dialog.Title className="flex min-w-0 flex-wrap items-center gap-2 text-lg font-semibold sm:text-xl">
-      {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
+    <div className="min-w-0">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+        Lead workspace
+      </p>
+      <Dialog.Title className="mt-1 flex min-w-0 flex-wrap items-center gap-2 text-lg font-semibold text-slate-900 sm:text-xl">
+        {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
 
       {/* Status Badge */}
       {!isNew && (
         <span
-          className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${getStatusBadgeClass(formData.status)}`}
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(formData.status)}`}
         >
           {formatStatusLabel(formData.status)}
         </span>
       )}
-    </Dialog.Title>
+      </Dialog.Title>
+    </div>
   </div>
 
 {/* Action Buttons */}
@@ -271,7 +344,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 	  <div className="flex flex-wrap gap-2 sm:flex-nowrap">
       <button
         type="button"
-        className="rounded-full bg-gray-100 p-2 hover:bg-gray-200"
+        className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100"
         onClick={() => onCreateEstimate?.(lead)}
         title="Create estimate"
       >
@@ -280,7 +353,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 	    {/* Call */}
     <button
       type="button"
-      className="rounded-full bg-gray-100 p-2 hover:bg-gray-200"
+      className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100"
       onClick={async () => {
         const description = `Called ${formData.name}`;
         addActivity({ type: "call", description });
@@ -294,7 +367,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     {/* Email */}
     <button
       type="button"
-      className="rounded-full bg-gray-100 p-2 hover:bg-gray-200"
+      className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100"
       onClick={async () => {
         const description = `Emailed ${formData.name}`;
         addActivity({ type: "email", description });
@@ -308,7 +381,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     {/* WhatsApp */}
     <button
       type="button"
-      className="rounded-full bg-gray-100 p-2 hover:bg-gray-200"
+      className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100"
       onClick={async () => {
         const description = `Messaged ${formData.name} on WhatsApp`;
         addActivity({ type: "whatsapp", description });
@@ -326,15 +399,15 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 </div>
 
               {/* Scrollable Body */}
-<div className="flex-1 overflow-y-auto w-full max-w-full">
+<div className="flex-1 overflow-y-auto w-full max-w-full bg-slate-50">
   <Tab.Group>
-    <Tab.List className="flex overflow-x-auto no-scrollbar -webkit-overflow-scrolling-touch border-b">
+    <Tab.List className="flex overflow-x-auto border-b border-slate-200 bg-white px-2 no-scrollbar -webkit-overflow-scrolling-touch sm:px-4">
       {["Details", "Notes", "Activity"].map((tab) => (
         <Tab
           key={tab}
           className={({ selected }) =>
-            `flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap ${
-              selected ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"
+            `flex-shrink-0 rounded-t-xl px-4 py-3 text-sm font-medium whitespace-nowrap ${
+              selected ? "border-b-2 border-red-600 text-red-600" : "text-slate-500"
             }`
           }
         >
@@ -345,46 +418,144 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     <Tab.Panels className="space-y-4 w-full max-w-full p-0">
       {/* Details Panel */}
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">First & Last Name</label>
-          <input
-            type="text"
-            value={formData.name || ""}
-            onChange={(e) => handleChange("name", e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-          />
-          {validationErrors.name && (
-            <p className="mt-1 text-xs text-red-600">{validationErrors.name}</p>
+        <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#fff1f2)] p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                SOP next step
+              </p>
+              <h3 className="mt-1 text-base font-semibold text-slate-900">
+                {leadSop.nextStep}
+              </h3>
+              <p className="mt-1 text-sm leading-5 text-slate-600">{leadSop.goal}</p>
+            </div>
+            <span
+              className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+                leadSop.isComplete
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-amber-100 text-amber-700"
+              }`}
+            >
+              {leadSop.completionLabel}
+            </span>
+          </div>
+
+          <div className="mt-3 grid gap-2">
+            {leadSop.checklist.map((item) => (
+              <div key={item.key} className="flex items-center gap-2 text-sm">
+                <span
+                  className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
+                    item.done ? "bg-emerald-100 text-emerald-700" : "bg-white text-slate-400"
+                  }`}
+                >
+                  {item.done ? "✓" : "•"}
+                </span>
+                <span className={item.done ? "text-slate-400 line-through" : "text-slate-700"}>
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Quick next actions
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {leadSop.actions.map((action) => (
+                <button
+                  key={action.label}
+                  type="button"
+                  onClick={() => applySopAction(action)}
+                  className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {!isNew && (
+            <div className="mt-4 border-t border-slate-200 pt-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                One-tap logged actions
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { key: "called_client", label: "Called client" },
+                  { key: "requested_info", label: "Requested info" },
+                  { key: "sent_quote", label: "Sent quote" },
+                  { key: "follow_tomorrow", label: "Tomorrow" },
+                ].map((action) => (
+                  <button
+                    key={action.key}
+                    type="button"
+                    onClick={() => handleQuickLogAction(action.key)}
+                    className="rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            value={formData.email || ""}
-            onChange={(e) => handleChange("email", e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Phone</label>
-          <input
-            type="tel"
-            value={formData.phone || ""}
-            onChange={(e) => handleChange("phone", e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-          />
-          {validationErrors.contact && (
-            <p className="mt-1 text-xs text-red-600">{validationErrors.contact}</p>
-          )}
-        </div>
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse Size</label>
+
+        <section className={sectionClass}>
+          <div className="mb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Client & brief</p>
+            <h3 className="mt-1 text-base font-semibold text-slate-900">Who is this lead and what do they need?</h3>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className={fieldLabelClass}>First & Last Name</label>
+              <input
+                type="text"
+                value={formData.name || ""}
+                onChange={(e) => handleChange("name", e.target.value)}
+                className={inputClass}
+              />
+              {validationErrors.name && (
+                <p className="mt-1 text-xs text-red-600">{validationErrors.name}</p>
+              )}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className={fieldLabelClass}>Email</label>
+                <input
+                  type="email"
+                  value={formData.email || ""}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={fieldLabelClass}>Phone</label>
+                <input
+                  type="tel"
+                  value={formData.phone || ""}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  className={inputClass}
+                />
+                {validationErrors.contact && (
+                  <p className="mt-1 text-xs text-red-600">{validationErrors.contact}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={sectionClass}>
+          <div className="mb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Project scope</p>
+            <h3 className="mt-1 text-base font-semibold text-slate-900">Capture the job details up front</h3>
+          </div>
+          <label className={`${fieldLabelClass} mb-2`}>Warehouse Size</label>
           <div className="flex gap-2 mb-2 flex-wrap">
             <select
               value={formData.width || ""}
               onChange={(e) => handleChange("width", e.target.value)}
-              className="border px-3 py-2 rounded flex-1 min-w-[100px]"
+              className={`${inputClass} min-w-[100px] flex-1`}
             >
               <option value="">Select Width</option>
               <option value="8">8m</option>
@@ -394,7 +565,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             <select
               value={formData.length || ""}
               onChange={(e) => handleChange("length", e.target.value)}
-              className="border px-3 py-2 rounded flex-1 min-w-[100px]"
+              className={`${inputClass} min-w-[100px] flex-1`}
             >
               <option value="">Select Length</option>
               {[...Array(19)].map((_, i) => {
@@ -403,14 +574,14 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               })}
             </select>
           </div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Cladding & Installation</label>
+          <label className={`${fieldLabelClass} mb-2`}>Cladding & Installation</label>
           <div className="flex gap-2 flex-wrap">
             {["IBR", "Chromadek"].map((clad) => (
               <button
                 key={clad}
                 type="button"
-                className={`px-3 py-1 rounded border ${
-                  formData.cladding === clad ? "bg-blue-200 border-blue-500" : "bg-gray-100"
+                className={`rounded-full border px-3 py-2 text-sm font-medium ${
+                  formData.cladding === clad ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"
                 }`}
                 onClick={() => handleChange("cladding", formData.cladding === clad ? "" : clad)}
               >
@@ -421,8 +592,8 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               <button
                 key={option}
                 type="button"
-                className={`px-3 py-1 rounded border ${
-                  formData.installation === option ? "bg-blue-200 border-blue-500" : "bg-gray-100"
+                className={`rounded-full border px-3 py-2 text-sm font-medium ${
+                  formData.installation === option ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"
                 }`}
                 onClick={() => handleChange("installation", formData.installation === option ? "" : option)}
               >
@@ -434,16 +605,18 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             placeholder="Custom request & notes..."
             value={formData.estimate_request || ""}
             onChange={(e) => handleChange("estimate_request", e.target.value)}
-            className="mt-3 block w-full text-gray-400 rounded-md border-gray-300 shadow-sm"
+            className={`${inputClass} mt-3 min-h-[110px]`}
           />
-        </div>
+        </section>
+
+        <section className={sectionClass}>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Lead Source</label>
+            <label className={fieldLabelClass}>Lead Source</label>
             <select
               value={formData.lead_source || ""}
               onChange={(e) => handleChange("lead_source", e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              className={inputClass}
             >
               <option value="">Select source</option>
               {LEAD_SOURCE_OPTIONS.map((source) => (
@@ -457,11 +630,11 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Product Type</label>
+            <label className={fieldLabelClass}>Product Type</label>
             <select
               value={formData.product_type || ""}
               onChange={(e) => handleChange("product_type", e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              className={inputClass}
             >
               <option value="">Select product</option>
               {PRODUCT_TYPE_OPTIONS.map((product) => (
@@ -476,7 +649,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
+          <label className={`${fieldLabelClass} mb-2`}>Follow-up Date</label>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               type="date"
@@ -487,7 +660,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                   e.target.value ? new Date(e.target.value).toISOString() : null
                 )
               }
-              className="block w-full rounded-md border-gray-300 shadow-sm sm:w-auto"
+              className={`${inputClass} sm:w-auto`}
             />
             <div className="flex flex-wrap gap-1">
               {[
@@ -503,7 +676,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     d.setDate(d.getDate() + offset);
                     handleChange("follow_up_at", d.toISOString());
                   }}
-                  className="rounded border bg-gray-100 px-2 py-1.5 text-xs hover:bg-gray-200"
+                  className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
                 >
                   {label}
                 </button>
@@ -511,7 +684,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               <button
                 type="button"
                 onClick={() => handleChange("follow_up_at", null)}
-                className="rounded border bg-red-100 px-2 py-1.5 text-xs text-red-700 hover:bg-red-200"
+                className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
               >
                 Clear
               </button>
@@ -520,7 +693,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Quote Value</label>
+            <label className={fieldLabelClass}>Quote Value</label>
             <input
               type="number"
               min="0"
@@ -528,14 +701,14 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               value={formData.quote_value || ""}
               onChange={(e) => handleChange("quote_value", e.target.value)}
               placeholder="0.00"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              className={inputClass}
             />
             {validationErrors.quote_value && (
               <p className="mt-1 text-xs text-red-600">{validationErrors.quote_value}</p>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Expected Close Date</label>
+            <label className={fieldLabelClass}>Expected Close Date</label>
             <input
               type="date"
               value={
@@ -549,17 +722,17 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                   e.target.value ? new Date(e.target.value).toISOString() : ""
                 )
               }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              className={inputClass}
             />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Next Action</label>
+          <label className={fieldLabelClass}>Next Action</label>
           <textarea
             value={formData.next_action || ""}
             onChange={(e) => handleChange("next_action", e.target.value)}
             placeholder="Example: Send revised quote, call on Thursday, request site address..."
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            className={`${inputClass} min-h-[110px]`}
             rows={3}
           />
           {validationErrors.next_action && (
@@ -567,7 +740,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
           )}
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Allocated To</label>
+          <label className={`${fieldLabelClass} mb-2`}>Allocated To</label>
           <div className="flex gap-2 flex-wrap">
             {["Stefan", "Niel", "Victor", "Marco"].map((member) => {
               const colors = {
@@ -580,10 +753,10 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                 <button
                   key={member}
                   type="button"
-                  className={`px-3 py-1 rounded border font-medium ${
+                  className={`rounded-full border px-3 py-2 text-sm font-medium ${
                     formData.allocated_to === member
-                      ? `${colors[member]} border-gray-500`
-                      : "bg-gray-100"
+                      ? `${colors[member]} border-slate-400 text-slate-900`
+                      : "bg-slate-100 text-slate-700"
                   }`}
                   onClick={() => handleChange("allocated_to", formData.allocated_to === member ? "" : member)}
                 >
@@ -597,11 +770,11 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Status</label>
+          <label className={fieldLabelClass}>Status</label>
           <select
             value={normalizeStatus(formData.status)}
             onChange={(e) => handleChange("status", e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            className={inputClass}
           >
             {STATUS_OPTIONS.map((status) => (
               <option key={status} value={status}>
@@ -609,32 +782,56 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               </option>
             ))}
           </select>
+          <div
+            className={`mt-2 rounded-xl border px-3 py-3 text-sm ${
+              selectedStageBlockers.length === 0
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-amber-200 bg-amber-50 text-amber-800"
+            }`}
+          >
+            <p className="font-semibold">
+              {selectedStageBlockers.length === 0
+                ? `${formatStatusLabel(formData.status)} is ready.`
+                : `Before moving to ${formatStatusLabel(formData.status)}:`}
+            </p>
+            {selectedStageBlockers.length > 0 ? (
+              <ul className="mt-2 space-y-1 text-sm">
+                {selectedStageBlockers.map((blocker) => (
+                  <li key={blocker}>• {blocker}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 text-sm">All required information for this stage is captured.</p>
+            )}
+          </div>
         </div>
+        </section>
+
         {normalizeStatus(formData.status) === "lost" && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Lost Reason</label>
+          <section className={sectionClass}>
+            <label className={fieldLabelClass}>Lost Reason</label>
             <textarea
               value={formData.lost_reason || ""}
               onChange={(e) => handleChange("lost_reason", e.target.value)}
               placeholder="Example: Budget too low, went with timber, delayed project..."
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              className={`${inputClass} min-h-[110px]`}
               rows={3}
             />
             {validationErrors.lost_reason && (
               <p className="mt-1 text-xs text-red-600">{validationErrors.lost_reason}</p>
             )}
-          </div>
+          </section>
         )}
       </Tab.Panel>
 
 
 {/* Notes Panel */}
-<Tab.Panel className="w-full max-w-full flex flex-col h-full">
+<Tab.Panel className="flex h-full w-full max-w-full flex-col p-4 sm:p-5">
   {/* Sticky Add Note */}
-  <div className="sticky top-0 bg-white z-10 p-2 border-b w-full max-w-full">
+  <div className="sticky top-0 z-10 mb-3 w-full max-w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
     <textarea
       placeholder="Add a note..."
-      className="w-full rounded-md border-gray-300 shadow-sm resize-none"
+      className={`${inputClass} min-h-[96px] resize-none`}
       rows={3}
       onKeyDown={async (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -688,7 +885,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   </div>
 
   {/* Notes List */}
-  <div className="flex-1 overflow-y-auto w-full max-w-full space-y-2 p-2">
+  <div className="flex-1 overflow-y-auto w-full max-w-full space-y-3">
     {notes.length === 0 ? (
       <p className="text-sm text-gray-500">
         No notes yet. Add your first note above.
@@ -697,7 +894,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       notes.map((note) => (
         <div
           key={note.id}
-          className="p-2 border rounded-md bg-gray-50 flex justify-between items-start w-full"
+          className="flex w-full items-start justify-between rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
         >
           <div className="flex-1">
             {note.isEditing ? (
@@ -724,13 +921,13 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                     .eq("id", note.id);
                   if (error) console.error("Error updating note:", error);
                 }}
-                className="w-full rounded-md border-gray-300 shadow-sm resize-none"
+                className={`${inputClass} resize-none`}
                 autoFocus
                 rows={2}
               />
             ) : (
               <p
-                className="text-sm cursor-pointer break-words"
+                className="cursor-pointer break-words text-sm text-slate-700"
                 onClick={() =>
                   setNotes((prev) =>
                     prev.map((n) =>
@@ -743,7 +940,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               </p>
             )}
             {note.created_at && (
-              <span className="text-xs text-gray-400 block mt-1">
+              <span className="mt-1 block text-xs text-slate-400">
                 {new Date(note.created_at).toLocaleString()}
               </span>
             )}
@@ -761,7 +958,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                 setNotes((prev) => [note, ...prev]);
               }
             }}
-            className="ml-2 text-red-600 hover:text-red-800 flex-shrink-0"
+            className="ml-2 flex-shrink-0 rounded-full bg-red-50 p-2 text-red-600 hover:bg-red-100 hover:text-red-800"
           >
             <Trash2 size={16} />
           </button>
@@ -772,7 +969,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 </Tab.Panel>
 
       {/* Activity Panel */}
-      <Tab.Panel className="space-y-6 w-full max-w-full p-4">
+      <Tab.Panel className="space-y-6 w-full max-w-full p-4 sm:p-5">
         {loadingActivities ? (
           <p className="text-sm text-gray-400">Loading activity…</p>
         ) : activities.length === 0 ? (
@@ -785,13 +982,13 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             ).map((group, idx) => (
               <div key={idx} className="space-y-4">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   {group.dateLabel}
                 </h3>
                 <div className="space-y-6">
                   {group.items.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 text-lg">
+                    <div key={activity.id} className="flex items-start space-x-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg">
                         {activity.type === "call" && "📞"}
                         {activity.type === "email" && "✉️"}
                         {activity.type === "note" && "📝"}
@@ -799,11 +996,11 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                         {activity.type === "whatsapp" && "💬"}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-gray-800">
+                        <p className="text-sm text-slate-800">
                           <span className="font-medium">{activity.user_name}</span>{" "}
                           {activity.description}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {new Date(activity.timestamp).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
