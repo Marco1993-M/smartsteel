@@ -31,6 +31,11 @@ function buildShareUrl(shareToken) {
   return `${window.location.origin}/quotes/${shareToken}`
 }
 
+function buildPdfUrl(estimateId) {
+  if (!estimateId) return ""
+  return `/api/estimates/${estimateId}/pdf`
+}
+
 export default function EstimatePrintPageClient({ estimateId }) {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -142,6 +147,12 @@ export default function EstimatePrintPageClient({ estimateId }) {
     window.setTimeout(() => setShareCopied(false), 1800)
   }
 
+  const handleOpenPdf = () => {
+    const pdfUrl = buildPdfUrl(estimate?.id)
+    if (!pdfUrl) return
+    window.location.href = pdfUrl
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen overflow-x-hidden bg-slate-100 px-6 py-12">
@@ -192,11 +203,11 @@ export default function EstimatePrintPageClient({ estimateId }) {
           ) : null}
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={handleOpenPdf}
             className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
           >
             <Printer size={16} />
-            Print / Save PDF
+            Open Generated PDF
           </button>
         </div>
       </div>
