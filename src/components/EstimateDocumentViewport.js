@@ -70,20 +70,27 @@ export default function EstimateDocumentViewport({ documentModel, estimate }) {
 
   const shellStyle = useMemo(() => {
     if (scale === 1 || isPrintMode || scaledHeight === null) return undefined
-    return { height: `${scaledHeight}px` }
+    return { "--estimate-preview-height": `${scaledHeight}px` }
   }, [isPrintMode, scale, scaledHeight])
 
   const contentStyle = useMemo(() => {
     if (scale === 1 || isPrintMode) return undefined
     return {
-      transform: `scale(${scale})`,
-      transformOrigin: "top center",
+      "--estimate-preview-scale": scale,
     }
   }, [isPrintMode, scale])
 
   return (
-    <div ref={shellRef} className="mx-auto w-full print:w-auto" style={shellStyle}>
-      <div ref={contentRef} className="mx-auto w-fit print:w-auto" style={contentStyle}>
+    <div
+      ref={shellRef}
+      className="estimate-viewport-shell mx-auto w-full print:w-auto"
+      style={shellStyle}
+    >
+      <div
+        ref={contentRef}
+        className="estimate-viewport-content mx-auto w-fit print:w-auto"
+        style={contentStyle}
+      >
         <EstimateDocumentLayout documentModel={documentModel} estimate={estimate} />
       </div>
     </div>
