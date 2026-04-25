@@ -1302,8 +1302,8 @@ export default function KanbanPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
-      <div className="mx-auto mt-12 max-w-7xl space-y-5 sm:mt-16 sm:space-y-6">
+    <div className="min-h-screen overflow-x-hidden bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
+      <div className="mx-auto mt-12 max-w-7xl space-y-5 overflow-x-hidden sm:mt-16 sm:space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-2">

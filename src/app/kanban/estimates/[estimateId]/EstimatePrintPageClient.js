@@ -144,7 +144,7 @@ export default function EstimatePrintPageClient({ estimateId }) {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-100 px-6 py-12">
+      <main className="min-h-screen overflow-x-hidden bg-slate-100 px-6 py-12">
         <div className="mx-auto max-w-5xl rounded-3xl bg-white p-10 shadow-sm">
           <p className="text-sm font-medium text-slate-500">Loading estimate document...</p>
         </div>
@@ -154,7 +154,7 @@ export default function EstimatePrintPageClient({ estimateId }) {
 
   if (error || !estimate || !documentModel) {
     return (
-      <main className="min-h-screen bg-slate-100 px-6 py-12">
+      <main className="min-h-screen overflow-x-hidden bg-slate-100 px-6 py-12">
         <div className="mx-auto max-w-3xl rounded-3xl bg-white p-10 shadow-sm">
           <p className="text-sm font-medium text-red-600">{error || "We couldn't load that estimate."}</p>
           <Link
@@ -170,7 +170,7 @@ export default function EstimatePrintPageClient({ estimateId }) {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
+    <main className="min-h-screen overflow-x-hidden bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
       <div className="mx-auto mb-6 flex max-w-[210mm] flex-wrap items-center justify-between gap-4 print:hidden">
         <Link
           href="/kanban"
