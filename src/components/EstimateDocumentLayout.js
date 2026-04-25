@@ -7,7 +7,7 @@ export default function EstimateDocumentLayout({
   estimate,
 }) {
   return (
-    <article className="estimate-sheet mx-auto w-[210mm] min-w-[210mm] overflow-hidden rounded-[2rem] bg-white pb-[8mm] shadow-lg print:max-w-none print:min-w-0 print:rounded-none print:pb-[6mm] print:shadow-none">
+    <article className="estimate-sheet mx-auto w-[210mm] min-w-[210mm] rounded-[2rem] bg-white pb-[8mm] shadow-lg print:max-w-none print:min-w-0 print:rounded-none print:pb-[6mm] print:shadow-none">
       <section className="estimate-page estimate-cover-page print:break-after-page">
       <div className="estimate-block border-b border-slate-200 bg-[linear-gradient(135deg,_#fff7f7,_#ffffff_38%,_#f8fafc)] px-[12mm] py-[12mm] print:px-[11mm] print:py-[8mm]">
         <div className="max-w-4xl">
@@ -155,9 +155,9 @@ export default function EstimateDocumentLayout({
       </div>
       </section>
 
-      <section className="estimate-page print:break-after-page">
+      <section className="estimate-page estimate-pricing-page print:break-after-page">
       <div className="estimate-block px-[12mm] py-[10mm] print:px-[12mm] print:py-[8mm]">
-        <div className="overflow-hidden rounded-3xl border border-slate-200 shadow-sm">
+        <div className="estimate-table-shell rounded-3xl border border-slate-200 shadow-sm">
           <table className="estimate-table min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-950">
               <tr className="text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -268,7 +268,7 @@ export default function EstimateDocumentLayout({
             By signing or approving this quotation, the client confirms that the quoted scope,
             principal commercial terms, and exclusions have been reviewed and accepted.
           </p>
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="mt-8 grid grid-cols-3 gap-6">
             <div>
               <div className="h-16 rounded-t-xl bg-slate-50" />
               <div className="border-b border-slate-300" />
