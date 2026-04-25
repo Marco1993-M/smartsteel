@@ -53,24 +53,37 @@ function buildEditableLineItem(item, overrides = {}) {
   }
 }
 
-function openEstimateDocument(estimateId) {
-  if (!estimateId || typeof window === "undefined") return
-  const estimateUrl = `/kanban/estimates/${estimateId}`
+function openEstimateDocument(url) {
+  if (!url || typeof window === "undefined") return
   const prefersSameTab =
     window.matchMedia?.("(max-width: 768px)").matches ||
     window.matchMedia?.("(pointer: coarse)").matches
 
   if (prefersSameTab) {
-    window.location.href = estimateUrl
+    window.location.href = url
     return
   }
 
-  window.open(estimateUrl, "_blank", "noopener,noreferrer")
+  window.open(url, "_blank", "noopener,noreferrer")
 }
 
 function buildShareUrl(shareToken) {
   if (!shareToken || typeof window === "undefined") return ""
   return `${window.location.origin}/quotes/${shareToken}`
+}
+
+function buildEstimatePreviewUrl(estimateId) {
+  if (!estimateId) return ""
+  return `/kanban/estimates/${estimateId}`
+}
+
+function buildEstimatePdfUrl(estimateId) {
+  if (!estimateId) return ""
+  return `/api/estimates/${estimateId}/pdf`
+}
+
+function isLocalEstimateId(estimateId) {
+  return String(estimateId || "").startsWith("local-")
 }
 
 function getNextEstimateVersion(estimates = []) {
@@ -240,7 +253,11 @@ export default function EstimateDrawer({
     setIsSaving(false)
 
     if (savedEstimate?.id) {
-      openEstimateDocument(savedEstimate.id)
+      openEstimateDocument(
+        isLocalEstimateId(savedEstimate.id)
+          ? buildEstimatePreviewUrl(savedEstimate.id)
+          : buildEstimatePdfUrl(savedEstimate.id)
+      )
       if (!prefersSameTabPreview) {
         onClose()
       }
@@ -534,7 +551,10 @@ export default function EstimateDrawer({
                         </div>
                       </div>
                       <div className="mt-4 space-y-3">
-                        {estimates.map((estimate) => (
+                        {estimates.map((estimate) => {
+                          const canGeneratePdf = !isLocalEstimateId(estimate.id)
+
+                          return (
                           <div
                             key={estimate.id}
                             className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
@@ -545,13 +565,23 @@ export default function EstimateDrawer({
                                 Version {estimate.version_no} · {formatCurrency(estimate.total || 0)}
                               </p>
                             </div>
+                            {canGeneratePdf ? (
+                              <button
+                                type="button"
+                                onClick={() => openEstimateDocument(buildEstimatePdfUrl(estimate.id))}
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
+                              >
+                                <Printer size={16} />
+                                Open PDF
+                              </button>
+                            ) : null}
                             <button
                               type="button"
-                              onClick={() => openEstimateDocument(estimate.id)}
+                              onClick={() => openEstimateDocument(buildEstimatePreviewUrl(estimate.id))}
                               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
                             >
                               <Printer size={16} />
-                              Open PDF View
+                              Preview Quote
                             </button>
                             {estimate.share_token ? (
                               <button
@@ -564,7 +594,8 @@ export default function EstimateDrawer({
                               </button>
                             ) : null}
                           </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </div>
                   )}
@@ -586,11 +617,7 @@ export default function EstimateDrawer({
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Printer size={16} />
-                  {isSaving
-                    ? "Saving..."
-                    : prefersSameTabPreview
-                      ? "Save & Preview Quote"
-                      : "Save & Open PDF"}
+                  {isSaving ? "Saving..." : "Save & Open PDF"}
                 </button>
                 <button
                   type="button"
