@@ -34,6 +34,15 @@ body {
   min-height: 297mm;
 }
 
+.estimate-viewport-shell {
+  height: var(--estimate-preview-height, auto);
+}
+
+.estimate-viewport-content {
+  transform: scale(var(--estimate-preview-scale, 1));
+  transform-origin: top center;
+}
+
 @media print {
   html,
   body {
@@ -74,6 +83,14 @@ body {
   .estimate-page {
     break-inside: auto;
     page-break-inside: auto;
+  }
+
+  .estimate-viewport-shell {
+    height: auto !important;
+  }
+
+  .estimate-viewport-content {
+    transform: none !important;
   }
 }
 
