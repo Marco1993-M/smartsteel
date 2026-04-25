@@ -78,7 +78,7 @@ export default function KanbanBoard({ leads, onEditLead, onLeadStatusChange, onC
   const mobileStageLeads = getStageLeads(mobileStage)
 
   return (
-    <div className="relative rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="mb-5 flex flex-col gap-2 border-b border-slate-200 pb-4">
         <h2 className="text-xl font-semibold text-slate-900">Pipeline view</h2>
         <p className="text-sm text-slate-600">
