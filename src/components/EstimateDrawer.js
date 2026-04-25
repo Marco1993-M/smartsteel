@@ -55,7 +55,17 @@ function buildEditableLineItem(item, overrides = {}) {
 
 function openEstimateDocument(estimateId) {
   if (!estimateId || typeof window === "undefined") return
-  window.open(`/kanban/estimates/${estimateId}`, "_blank", "noopener,noreferrer")
+  const estimateUrl = `/kanban/estimates/${estimateId}`
+  const prefersSameTab =
+    window.matchMedia?.("(max-width: 768px)").matches ||
+    window.matchMedia?.("(pointer: coarse)").matches
+
+  if (prefersSameTab) {
+    window.location.href = estimateUrl
+    return
+  }
+
+  window.open(estimateUrl, "_blank", "noopener,noreferrer")
 }
 
 function buildShareUrl(shareToken) {
@@ -80,6 +90,7 @@ export default function EstimateDrawer({
 }) {
   const [formState, setFormState] = useState(() => buildInitialState(lead, estimates))
   const [isSaving, setIsSaving] = useState(false)
+  const [prefersSameTabPreview, setPrefersSameTabPreview] = useState(false)
 
   const preview = useMemo(() => calculateWarehouseEstimate(formState), [formState])
   const [editableLineItems, setEditableLineItems] = useState(() =>
@@ -102,6 +113,26 @@ export default function EstimateDrawer({
       return [...mergedBaseItems, ...manualItems]
     })
   }, [preview.lineItems])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const mobileMedia = window.matchMedia("(max-width: 768px)")
+    const coarseMedia = window.matchMedia("(pointer: coarse)")
+
+    const updatePreference = () => {
+      setPrefersSameTabPreview(mobileMedia.matches || coarseMedia.matches)
+    }
+
+    updatePreference()
+    mobileMedia.addEventListener?.("change", updatePreference)
+    coarseMedia.addEventListener?.("change", updatePreference)
+
+    return () => {
+      mobileMedia.removeEventListener?.("change", updatePreference)
+      coarseMedia.removeEventListener?.("change", updatePreference)
+    }
+  }, [])
 
   const nextVersion = getNextEstimateVersion(estimates)
   const subtotal = useMemo(
@@ -210,7 +241,9 @@ export default function EstimateDrawer({
 
     if (savedEstimate?.id) {
       openEstimateDocument(savedEstimate.id)
-      onClose()
+      if (!prefersSameTabPreview) {
+        onClose()
+      }
     }
   }
 
@@ -553,7 +586,11 @@ export default function EstimateDrawer({
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Printer size={16} />
-                  {isSaving ? "Saving..." : "Save & Open PDF"}
+                  {isSaving
+                    ? "Saving..."
+                    : prefersSameTabPreview
+                      ? "Save & Preview Quote"
+                      : "Save & Open PDF"}
                 </button>
                 <button
                   type="button"
