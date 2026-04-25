@@ -35,7 +35,7 @@ export default async function PublicQuotePage({ params }) {
   const shareUrl = `https://www.smartsteel.co.za/quotes/${shareToken}`
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
+    <main className="min-h-screen overflow-x-auto bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
       <EstimateDocumentLayout
         documentModel={documentModel}
         estimate={estimate}
