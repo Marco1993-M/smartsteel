@@ -1,4 +1,4 @@
-import EstimateDocumentLayout from "../../../components/EstimateDocumentLayout"
+import EstimateDocumentViewport from "../../../components/EstimateDocumentViewport"
 import { buildEstimateDisplayModel } from "../../../lib/estimates/estimateDocument"
 import { supabaseServer } from "../../../lib/supabase-server"
 
@@ -35,13 +35,8 @@ export default async function PublicQuotePage({ params }) {
   const shareUrl = `https://www.smartsteel.co.za/quotes/${shareToken}`
 
   return (
-    <main className="min-h-screen overflow-x-auto bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
-      <EstimateDocumentLayout
-        documentModel={documentModel}
-        estimate={estimate}
-        shareUrl={shareUrl}
-        publicView
-      />
+    <main className="min-h-screen bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
+      <EstimateDocumentViewport documentModel={documentModel} estimate={estimate} />
     </main>
   )
 }
