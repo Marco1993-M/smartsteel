@@ -30,24 +30,38 @@ export function formatEstimateDate(value) {
   })
 }
 
+function addDays(value, days) {
+  const date = new Date(value || Date.now())
+  date.setDate(date.getDate() + days)
+  return date
+}
+
 export function buildEstimateDisplayModel(estimate, lead) {
   const input = estimate?.input_data || {}
   const lineItems = Array.isArray(estimate?.line_items) ? estimate.line_items : []
   const subtotal = Number(estimate?.subtotal || 0)
   const total = Number(estimate?.total || 0)
-  const markupMultiplier = Number(estimate?.markup_multiplier || 1)
-  const markupValue = Math.max(total - subtotal, 0)
+  const vatRate = 0.15
+  const vatAmount = total * vatRate
+  const totalInclVat = total + vatAmount
   const area = Number(input.width || 0) * Number(input.length || 0)
+  const hasDimensions = Number(input.width || 0) > 0 && Number(input.length || 0) > 0
+  const productType = estimate?.product_type || lead?.product_type || "Warehouse"
+  const quotationTitle = hasDimensions
+    ? `${formatDimension(input.width)} x ${formatDimension(input.length)} ${productType} Quotation`
+    : `${productType} Quotation`
 
   return {
     estimateNumber: `${String(estimate?.product_type || "Estimate").slice(0, 3).toUpperCase()}-${String(
       estimate?.version_no || 1
     ).padStart(3, "0")}`,
     createdLabel: formatEstimateDate(estimate?.created_at),
+    validUntilLabel: formatEstimateDate(addDays(estimate?.created_at, 14)),
     clientName: [lead?.name, lead?.last_name].filter(Boolean).join(" ") || "Client not linked",
     clientEmail: lead?.email || "Not supplied",
     clientPhone: lead?.phone || "Not supplied",
-    productType: estimate?.product_type || lead?.product_type || "Warehouse",
+    productType,
+    quotationTitle,
     widthLabel: formatDimension(input.width),
     lengthLabel: formatDimension(input.length),
     areaLabel: area > 0 ? `${area} m²` : "Not specified",
@@ -59,10 +73,10 @@ export function buildEstimateDisplayModel(estimate, lead) {
     installationLabel: input.claddingInstalled ? "Included" : "Structure supply only",
     notes: estimate?.notes || "",
     lineItems,
-    subtotalLabel: formatCurrency(subtotal),
-    markupLabel: markupMultiplier > 1 ? `${markupMultiplier.toFixed(2)}x` : "Included",
-    markupValueLabel: formatCurrency(markupValue),
-    totalLabel: formatCurrency(total),
+    subtotalLabel: formatCurrency(total),
+    vatLabel: formatCurrency(vatAmount),
+    totalInclVatLabel: formatCurrency(totalInclVat),
+    preparedByLabel: "Smart Steel Sales Team",
     shareToken: estimate?.share_token || "",
   }
 }
