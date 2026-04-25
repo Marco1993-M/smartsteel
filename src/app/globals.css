@@ -62,9 +62,12 @@ body {
   }
 
   .estimate-sheet {
-    width: 100%;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-width: 210mm !important;
     min-height: auto;
     margin: 0 auto;
+    overflow: visible !important;
     page-break-after: auto;
   }
 
@@ -93,8 +96,20 @@ body {
   }
 
   .estimate-page {
+    display: block;
+    width: 100%;
     break-inside: auto;
     page-break-inside: auto;
+  }
+
+  .estimate-cover-page,
+  .estimate-pricing-page {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .estimate-table-shell {
+    overflow: visible !important;
   }
 
   .estimate-preview-shell {
