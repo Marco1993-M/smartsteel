@@ -77,6 +77,11 @@ body {
     page-break-inside: avoid;
   }
 
+  .estimate-card,
+  .estimate-table-shell {
+    box-shadow: none !important;
+  }
+
   .estimate-table thead {
     display: table-header-group;
   }
