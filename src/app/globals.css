@@ -27,7 +27,7 @@ body {
 
 @page {
   size: A4 portrait;
-  margin: 10mm;
+  margin: 12mm 12mm 16mm 12mm;
 }
 
 .estimate-sheet {
@@ -41,10 +41,39 @@ body {
   }
 
   .estimate-sheet {
-    width: 190mm;
-    min-height: 277mm;
+    width: 100%;
+    min-height: auto;
     margin: 0 auto;
-    page-break-after: avoid;
+    page-break-after: auto;
+  }
+
+  .estimate-block,
+  .estimate-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .estimate-table thead {
+    display: table-header-group;
+  }
+
+  .estimate-table tfoot {
+    display: table-footer-group;
+  }
+
+  .estimate-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .estimate-acceptance {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .estimate-page {
+    break-inside: auto;
+    page-break-inside: auto;
   }
 }
 
