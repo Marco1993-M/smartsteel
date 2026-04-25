@@ -7,7 +7,7 @@ export default function EstimateDocumentLayout({
   estimate,
 }) {
   return (
-    <article className="estimate-sheet mx-auto w-full max-w-[210mm] overflow-hidden rounded-[2rem] bg-white pb-[8mm] shadow-lg print:max-w-none print:rounded-none print:pb-[6mm] print:shadow-none">
+    <article className="estimate-sheet mx-auto w-[210mm] min-w-[210mm] overflow-hidden rounded-[2rem] bg-white pb-[8mm] shadow-lg print:max-w-none print:min-w-0 print:rounded-none print:pb-[6mm] print:shadow-none">
       <section className="estimate-page estimate-cover-page print:break-after-page">
       <div className="estimate-block border-b border-slate-200 bg-[linear-gradient(135deg,_#fff7f7,_#ffffff_38%,_#f8fafc)] px-[12mm] py-[12mm] print:px-[11mm] print:py-[8mm]">
         <div className="max-w-4xl">
@@ -46,7 +46,7 @@ export default function EstimateDocumentLayout({
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-[1.2fr_0.9fr_0.9fr] print:mt-5 print:gap-3">
+        <div className="mt-6 grid grid-cols-[1.2fr_0.9fr_0.9fr] gap-4 print:mt-5 print:gap-3">
           <section className="estimate-card overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 bg-slate-950 px-5 py-4 text-white print:px-4 print:py-3">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
@@ -109,7 +109,7 @@ export default function EstimateDocumentLayout({
         </div>
       </div>
 
-      <div className="estimate-block grid gap-6 border-b border-slate-200 px-[12mm] py-[10mm] md:grid-cols-[0.9fr_1.1fr] print:px-[11mm] print:py-[6mm] print:gap-4">
+      <div className="estimate-block grid grid-cols-[0.9fr_1.1fr] gap-6 border-b border-slate-200 px-[12mm] py-[10mm] print:px-[11mm] print:py-[6mm] print:gap-4">
         <section className="estimate-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
             Client
@@ -134,7 +134,7 @@ export default function EstimateDocumentLayout({
           <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
             Project Summary
           </h2>
-          <div className="mt-3 grid gap-3 text-sm text-slate-700 sm:grid-cols-2 print:mt-2 print:gap-2 print:text-[12px]">
+          <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-slate-700 print:mt-2 print:gap-2 print:text-[12px]">
             {[
               { label: "Width", value: documentModel.widthLabel },
               { label: "Length", value: documentModel.lengthLabel },
@@ -189,7 +189,7 @@ export default function EstimateDocumentLayout({
           </table>
         </div>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-[1.05fr_0.95fr]">
+        <div className="mt-8 grid grid-cols-[1.05fr_0.95fr] gap-6">
           <section className="estimate-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
               Project Notes
@@ -236,7 +236,7 @@ export default function EstimateDocumentLayout({
 
       <section className="estimate-page">
       <div className="estimate-block px-[12mm] pt-0 pb-[10mm] print:px-[12mm] print:pt-0 print:pb-[8mm]">
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-6">
           <section className="estimate-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
               Terms
@@ -295,7 +295,7 @@ export default function EstimateDocumentLayout({
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Prepared by Smart Steel
             </p>
-            <div className="mt-3 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+            <div className="mt-3 grid grid-cols-[1fr_auto] items-end gap-4">
               <div>
                 <p className="text-sm font-semibold text-slate-900">{documentModel.preparedByLabel}</p>
                 <p className="mt-1 text-sm text-slate-600">
