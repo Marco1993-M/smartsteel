@@ -15,7 +15,7 @@ export default async function PublicQuotePage({ params }) {
 
   if (!estimate) {
     return (
-      <main className="min-h-screen bg-slate-100 px-6 py-12">
+      <main className="min-h-screen overflow-x-hidden bg-slate-100 px-6 py-12">
         <div className="mx-auto max-w-3xl rounded-3xl bg-white p-10 shadow-sm">
           <p className="text-sm font-medium text-red-600">
             This estimate link is invalid or no longer available.
@@ -35,7 +35,7 @@ export default async function PublicQuotePage({ params }) {
   const shareUrl = `https://www.smartsteel.co.za/quotes/${shareToken}`
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
+    <main className="min-h-screen overflow-x-hidden bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
       <EstimateDocumentViewport documentModel={documentModel} estimate={estimate} />
     </main>
   )
