@@ -170,8 +170,8 @@ export default function EstimatePrintPageClient({ estimateId }) {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
-      <div className="mx-auto mb-6 flex max-w-[210mm] flex-wrap items-center justify-between gap-4 print:hidden">
+    <main className="min-h-screen overflow-x-auto bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
+      <div className="mx-auto mb-6 flex w-[210mm] min-w-[210mm] flex-wrap items-center justify-between gap-4 print:hidden">
         <Link
           href="/kanban"
           className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
