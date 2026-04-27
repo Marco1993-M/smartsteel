@@ -15,13 +15,26 @@ function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100
 }
 
+function isCatalogSize(width, length) {
+  return WAREHOUSE_WIDTH_OPTIONS.includes(Number(width)) && WAREHOUSE_LENGTH_OPTIONS.includes(Number(length))
+}
+
 function buildInitialState(lead, existingEstimates) {
   const latestEstimate = existingEstimates?.[0]
   const latestInput = latestEstimate?.input_data || {}
+  const width = Number(latestInput.width || lead?.width || 8)
+  const length = Number(latestInput.length || lead?.length || 10)
+  const useCustomSize =
+    typeof latestInput.useCustomSize === "boolean"
+      ? latestInput.useCustomSize
+      : !isCatalogSize(width, length)
 
   return {
-    width: Number(latestInput.width || lead?.width || 8),
-    length: Number(latestInput.length || lead?.length || 10),
+    width,
+    length,
+    useCustomSize,
+    wallHeight: Number(latestInput.wallHeight || lead?.wall_height || 3),
+    quantity: Math.max(1, Number(latestInput.quantity || 1)),
     cladding: latestInput.cladding || lead?.cladding || "None",
     claddingInstalled:
       typeof latestInput.claddingInstalled === "boolean"
@@ -217,8 +230,8 @@ export default function EstimateDrawer({
       lead,
       version_no: nextVersion,
       product_type: "Warehouse",
-      title: `Warehouse Estimate V${nextVersion}`,
-      input_data: preview.input,
+      title: `${preview.summary.title} V${nextVersion}`,
+      input_data: { ...preview.input, useCustomSize: formState.useCustomSize },
       original_line_items: preview.lineItems,
       line_items: editableLineItems,
       subtotal,
@@ -240,8 +253,8 @@ export default function EstimateDrawer({
       lead,
       version_no: nextVersion,
       product_type: "Warehouse",
-      title: `Warehouse Estimate V${nextVersion}`,
-      input_data: preview.input,
+      title: `${preview.summary.title} V${nextVersion}`,
+      input_data: { ...preview.input, useCustomSize: formState.useCustomSize },
       original_line_items: preview.lineItems,
       line_items: editableLineItems,
       subtotal,
@@ -302,39 +315,119 @@ export default function EstimateDrawer({
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-sm font-medium text-slate-900">Estimate type</p>
                     <p className="mt-1 text-sm text-slate-600">
-                      Warehouse estimates are live in the CRM first. Solar carports and trusses can
-                      be added onto the same system next.
+                      Use the catalog sizes for standard warehouse quotes, or switch to custom mode
+                      when a client sends a non-standard structure request.
                     </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleChange("useCustomSize", false)}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                          !formState.useCustomSize
+                            ? "bg-slate-900 text-white"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        Catalog sizes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleChange("useCustomSize", true)}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                          formState.useCustomSize
+                            ? "bg-slate-900 text-white"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        Custom request
+                      </button>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Width</label>
+                        {formState.useCustomSize ? (
+                          <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            value={formState.width}
+                            onChange={(event) =>
+                              handleChange("width", Math.max(0.1, Number(event.target.value) || 0.1))
+                            }
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          />
+                        ) : (
+                          <select
+                            value={formState.width}
+                            onChange={(event) => handleChange("width", Number(event.target.value))}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          >
+                            {WAREHOUSE_WIDTH_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}m
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Length / depth</label>
+                        {formState.useCustomSize ? (
+                          <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            value={formState.length}
+                            onChange={(event) =>
+                              handleChange("length", Math.max(0.1, Number(event.target.value) || 0.1))
+                            }
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          />
+                        ) : (
+                          <select
+                            value={formState.length}
+                            onChange={(event) => handleChange("length", Number(event.target.value))}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          >
+                            {WAREHOUSE_LENGTH_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}m
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Width</label>
-                      <select
-                        value={formState.width}
-                        onChange={(event) => handleChange("width", Number(event.target.value))}
+                      <label className="block text-sm font-medium text-slate-700">Height</label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        value={formState.wallHeight}
+                        onChange={(event) =>
+                          handleChange("wallHeight", Math.max(0.1, Number(event.target.value) || 0.1))
+                        }
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                      >
-                        {WAREHOUSE_WIDTH_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}m
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Length</label>
-                      <select
-                        value={formState.length}
-                        onChange={(event) => handleChange("length", Number(event.target.value))}
+                      <label className="block text-sm font-medium text-slate-700">Quantity</label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={formState.quantity}
+                        onChange={(event) => handleChange("quantity", Math.max(1, Number(event.target.value) || 1))}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                      >
-                        {WAREHOUSE_LENGTH_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}m
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
                   </div>
 
@@ -368,6 +461,12 @@ export default function EstimateDrawer({
                       />
                     </div>
                   </div>
+
+                  {preview.summary.layoutNote ? (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                      {preview.summary.layoutNote}
+                    </div>
+                  ) : null}
 
                   <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                     <input

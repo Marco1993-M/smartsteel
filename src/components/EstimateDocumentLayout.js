@@ -138,6 +138,8 @@ export default function EstimateDocumentLayout({
             {[
               { label: "Width", value: documentModel.widthLabel },
               { label: "Length", value: documentModel.lengthLabel },
+              { label: "Height", value: documentModel.heightLabel },
+              { label: "Quantity", value: documentModel.quantityLabel },
               { label: "Area", value: documentModel.areaLabel },
               { label: "Cladding", value: documentModel.claddingLabel },
               { label: "Delivery", value: documentModel.deliveryLabel },
