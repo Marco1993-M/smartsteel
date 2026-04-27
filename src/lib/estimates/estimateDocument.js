@@ -45,10 +45,18 @@ export function buildEstimateDisplayModel(estimate, lead) {
   const vatAmount = total * vatRate
   const totalInclVat = total + vatAmount
   const area = Number(input.width || 0) * Number(input.length || 0)
+  const quantity = Math.max(1, Number(input.quantity || 1))
+  const totalArea = area * quantity
   const hasDimensions = Number(input.width || 0) > 0 && Number(input.length || 0) > 0
   const productType = estimate?.product_type || lead?.product_type || "Warehouse"
+  const layoutNote =
+    Number(input.length || 0) > 0 &&
+    Number(input.effectiveLength || 0) > 0 &&
+    Number(input.effectiveLength) !== Number(input.length)
+      ? `Requested depth ${Number(input.length)}m is priced against a practical ${Number(input.effectiveLength)}m bay layout.`
+      : ""
   const quotationTitle = hasDimensions
-    ? `${formatDimension(input.width)} x ${formatDimension(input.length)} ${productType} Quotation`
+    ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} x ${formatDimension(input.length)} ${productType} Quotation`
     : `${productType} Quotation`
 
   return {
@@ -64,14 +72,21 @@ export function buildEstimateDisplayModel(estimate, lead) {
     quotationTitle,
     widthLabel: formatDimension(input.width),
     lengthLabel: formatDimension(input.length),
-    areaLabel: area > 0 ? `${area} m²` : "Not specified",
+    heightLabel: formatDimension(input.wallHeight),
+    quantityLabel: `${quantity}`,
+    areaLabel:
+      area > 0
+        ? quantity > 1
+          ? `${area} m² each (${totalArea} m² total)`
+          : `${area} m²`
+        : "Not specified",
     claddingLabel: input.cladding || "Not specified",
     deliveryLabel:
       Number.isFinite(Number(input.deliveryDistance)) && Number(input.deliveryDistance) > 0
         ? `${Number(input.deliveryDistance)} km`
         : "Collection / not specified",
     installationLabel: input.claddingInstalled ? "Included" : "Structure supply only",
-    notes: estimate?.notes || "",
+    notes: [layoutNote, estimate?.notes].filter(Boolean).join("\n\n"),
     lineItems,
     subtotalLabel: formatCurrency(total),
     vatLabel: formatCurrency(vatAmount),
