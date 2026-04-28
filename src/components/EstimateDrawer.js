@@ -19,8 +19,8 @@ function isCatalogSize(width, length) {
   return WAREHOUSE_WIDTH_OPTIONS.includes(Number(width)) && WAREHOUSE_LENGTH_OPTIONS.includes(Number(length))
 }
 
-function buildInitialState(lead, existingEstimates) {
-  const latestEstimate = [...(existingEstimates || [])]
+function getLatestEstimate(existingEstimates) {
+  return [...(existingEstimates || [])]
     .sort((a, b) => {
       const versionDiff = Number(b?.version_no || 0) - Number(a?.version_no || 0)
       if (versionDiff !== 0) return versionDiff
@@ -29,6 +29,10 @@ function buildInitialState(lead, existingEstimates) {
       const dateB = new Date(b?.created_at || 0).getTime()
       return dateB - dateA
     })[0]
+}
+
+function buildInitialState(lead, existingEstimates) {
+  const latestEstimate = getLatestEstimate(existingEstimates)
   const latestInput = latestEstimate?.input_data || {}
   const width = Number(latestInput.width || lead?.width || 8)
   const length = Number(latestInput.length || lead?.length || 10)
@@ -72,6 +76,31 @@ function buildEditableLineItem(item, overrides = {}) {
     manual: Boolean(overrides.manual),
     overrideReason: overrides.overrideReason || "",
   }
+}
+
+function buildEditableLineItemsFromEstimate(previewLineItems, existingEstimates) {
+  const latestEstimate = getLatestEstimate(existingEstimates)
+  const savedItems = Array.isArray(latestEstimate?.line_items) ? latestEstimate.line_items : []
+
+  if (savedItems.length === 0) {
+    return previewLineItems.map((item) => buildEditableLineItem(item))
+  }
+
+  const previewByCode = new Map(previewLineItems.map((item) => [item.code, item]))
+
+  return savedItems.map((savedItem) => {
+    const previewItem = previewByCode.get(savedItem.code)
+
+    if (previewItem) {
+      return buildEditableLineItem(previewItem, savedItem)
+    }
+
+    return buildEditableLineItem(savedItem, {
+      ...savedItem,
+      id: savedItem.id || savedItem.code,
+      manual: true,
+    })
+  })
 }
 
 function openEstimateDocument(url) {
@@ -128,12 +157,16 @@ export default function EstimateDrawer({
 
   const preview = useMemo(() => calculateWarehouseEstimate(formState), [formState])
   const [editableLineItems, setEditableLineItems] = useState(() =>
-    preview.lineItems.map((item) => buildEditableLineItem(item))
+    buildEditableLineItemsFromEstimate(preview.lineItems, estimates)
   )
 
   useEffect(() => {
     setFormState(buildInitialState(lead, estimates))
   }, [lead, estimates])
+
+  useEffect(() => {
+    setEditableLineItems(buildEditableLineItemsFromEstimate(preview.lineItems, estimates))
+  }, [estimates, preview.lineItems])
 
   useEffect(() => {
     setEditableLineItems((currentItems) => {
