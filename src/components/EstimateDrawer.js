@@ -20,7 +20,15 @@ function isCatalogSize(width, length) {
 }
 
 function buildInitialState(lead, existingEstimates) {
-  const latestEstimate = existingEstimates?.[0]
+  const latestEstimate = [...(existingEstimates || [])]
+    .sort((a, b) => {
+      const versionDiff = Number(b?.version_no || 0) - Number(a?.version_no || 0)
+      if (versionDiff !== 0) return versionDiff
+
+      const dateA = new Date(a?.created_at || 0).getTime()
+      const dateB = new Date(b?.created_at || 0).getTime()
+      return dateB - dateA
+    })[0]
   const latestInput = latestEstimate?.input_data || {}
   const width = Number(latestInput.width || lead?.width || 8)
   const length = Number(latestInput.length || lead?.length || 10)
@@ -122,6 +130,10 @@ export default function EstimateDrawer({
   const [editableLineItems, setEditableLineItems] = useState(() =>
     preview.lineItems.map((item) => buildEditableLineItem(item))
   )
+
+  useEffect(() => {
+    setFormState(buildInitialState(lead, estimates))
+  }, [lead, estimates])
 
   useEffect(() => {
     setEditableLineItems((currentItems) => {
