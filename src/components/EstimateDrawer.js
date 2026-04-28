@@ -31,9 +31,12 @@ function getLatestEstimate(existingEstimates) {
     })[0]
 }
 
-function buildInitialState(lead, existingEstimates) {
-  const latestEstimate = getLatestEstimate(existingEstimates)
-  const latestInput = latestEstimate?.input_data || {}
+function stripVersionSuffix(title) {
+  return String(title || "").replace(/\s+V\d+$/i, "").trim()
+}
+
+function buildInitialState(lead, estimate) {
+  const latestInput = estimate?.input_data || {}
   const width = Number(latestInput.width || lead?.width || 8)
   const length = Number(latestInput.length || lead?.length || 10)
   const useCustomSize =
@@ -53,7 +56,8 @@ function buildInitialState(lead, existingEstimates) {
         ? latestInput.claddingInstalled
         : String(lead?.installation || "").toLowerCase() === "installed",
     deliveryDistance: Number(latestInput.deliveryDistance || lead?.delivery_distance || 0),
-    notes: latestEstimate?.notes || "",
+    notes: estimate?.notes || "",
+    estimateName: stripVersionSuffix(estimate?.title) || "",
   }
 }
 
@@ -78,9 +82,8 @@ function buildEditableLineItem(item, overrides = {}) {
   }
 }
 
-function buildEditableLineItemsFromEstimate(previewLineItems, existingEstimates) {
-  const latestEstimate = getLatestEstimate(existingEstimates)
-  const savedItems = Array.isArray(latestEstimate?.line_items) ? latestEstimate.line_items : []
+function buildEditableLineItemsFromEstimate(previewLineItems, estimate) {
+  const savedItems = Array.isArray(estimate?.line_items) ? estimate.line_items : []
 
   if (savedItems.length === 0) {
     return previewLineItems.map((item) => buildEditableLineItem(item))
@@ -151,22 +154,32 @@ export default function EstimateDrawer({
   onClose,
   onSaveEstimate,
 }) {
-  const [formState, setFormState] = useState(() => buildInitialState(lead, estimates))
+  const latestEstimate = useMemo(() => getLatestEstimate(estimates), [estimates])
+  const [loadedEstimateId, setLoadedEstimateId] = useState(() => latestEstimate?.id || null)
+  const loadedEstimate = useMemo(() => {
+    if (!loadedEstimateId) return latestEstimate || null
+    return estimates.find((estimate) => estimate.id === loadedEstimateId) || latestEstimate || null
+  }, [estimates, latestEstimate, loadedEstimateId])
+  const [formState, setFormState] = useState(() => buildInitialState(lead, latestEstimate))
   const [isSaving, setIsSaving] = useState(false)
   const [prefersSameTabPreview, setPrefersSameTabPreview] = useState(false)
 
   const preview = useMemo(() => calculateWarehouseEstimate(formState), [formState])
   const [editableLineItems, setEditableLineItems] = useState(() =>
-    buildEditableLineItemsFromEstimate(preview.lineItems, estimates)
+    buildEditableLineItemsFromEstimate(preview.lineItems, latestEstimate)
   )
 
   useEffect(() => {
-    setFormState(buildInitialState(lead, estimates))
-  }, [lead, estimates])
+    setLoadedEstimateId(latestEstimate?.id || null)
+  }, [lead?.id, latestEstimate?.id])
 
   useEffect(() => {
-    setEditableLineItems(buildEditableLineItemsFromEstimate(preview.lineItems, estimates))
-  }, [estimates, preview.lineItems])
+    const nextFormState = buildInitialState(lead, loadedEstimate)
+    setFormState(nextFormState)
+
+    const nextPreview = calculateWarehouseEstimate(nextFormState)
+    setEditableLineItems(buildEditableLineItemsFromEstimate(nextPreview.lineItems, loadedEstimate))
+  }, [lead, loadedEstimate])
 
   useEffect(() => {
     setEditableLineItems((currentItems) => {
@@ -206,6 +219,14 @@ export default function EstimateDrawer({
   }, [])
 
   const nextVersion = getNextEstimateVersion(estimates)
+  const sortedEstimates = useMemo(() => [...(estimates || [])].sort((a, b) => {
+    const versionDiff = Number(b?.version_no || 0) - Number(a?.version_no || 0)
+    if (versionDiff !== 0) return versionDiff
+
+    const dateA = new Date(a?.created_at || 0).getTime()
+    const dateB = new Date(b?.created_at || 0).getTime()
+    return dateB - dateA
+  }), [estimates])
   const subtotal = useMemo(
     () => roundMoney(editableLineItems.reduce((sum, item) => sum + Number(item.total || 0), 0)),
     [editableLineItems]
@@ -275,7 +296,7 @@ export default function EstimateDrawer({
       lead,
       version_no: nextVersion,
       product_type: "Warehouse",
-      title: `${preview.summary.title} V${nextVersion}`,
+      title: `${(formState.estimateName || preview.summary.title).trim()} V${nextVersion}`,
       input_data: { ...preview.input, useCustomSize: formState.useCustomSize },
       original_line_items: preview.lineItems,
       line_items: editableLineItems,
@@ -298,7 +319,7 @@ export default function EstimateDrawer({
       lead,
       version_no: nextVersion,
       product_type: "Warehouse",
-      title: `${preview.summary.title} V${nextVersion}`,
+      title: `${(formState.estimateName || preview.summary.title).trim()} V${nextVersion}`,
       input_data: { ...preview.input, useCustomSize: formState.useCustomSize },
       original_line_items: preview.lineItems,
       line_items: editableLineItems,
@@ -348,7 +369,7 @@ export default function EstimateDrawer({
                         Create Estimate
                       </Dialog.Title>
                       <p className="truncate text-sm text-slate-500">
-                        {lead?.name} {lead?.last_name} · Version {nextVersion}
+                        {lead?.name} {lead?.last_name} · New version {nextVersion}
                       </p>
                     </div>
                   </div>
@@ -363,6 +384,17 @@ export default function EstimateDrawer({
                       Use the catalog sizes for standard warehouse quotes, or switch to custom mode
                       when a client sends a non-standard structure request.
                     </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700">Estimate name</label>
+                    <input
+                      type="text"
+                      value={formState.estimateName}
+                      onChange={(event) => handleChange("estimateName", event.target.value)}
+                      placeholder={preview.summary.title}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    />
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -684,31 +716,49 @@ export default function EstimateDrawer({
                     )}
                   </div>
 
-                  {estimates?.length > 0 && (
+                  {sortedEstimates.length > 0 && (
                     <div className="rounded-2xl border border-slate-200 bg-white p-5">
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="text-sm font-medium text-slate-900">Saved estimate versions</p>
                           <p className="mt-1 text-sm text-slate-500">
-                            Open a clean print view for any saved estimate revision.
+                            Open a quote, or load a saved version back into the editor as the base for a new revision.
                           </p>
                         </div>
                       </div>
                       <div className="mt-4 space-y-3">
-                        {estimates.map((estimate) => {
+                        {sortedEstimates.map((estimate) => {
                           const canGeneratePdf = !isLocalEstimateId(estimate.id)
+                          const isLoaded = estimate.id === loadedEstimate?.id
 
                           return (
                           <div
                             key={estimate.id}
-                            className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                            className={`flex flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
+                              isLoaded
+                                ? "border-slate-900 bg-slate-100"
+                                : "border-slate-200 bg-slate-50"
+                            }`}
                           >
                             <div>
                               <p className="text-sm font-semibold text-slate-900">{estimate.title}</p>
                               <p className="mt-1 text-xs text-slate-500">
                                 Version {estimate.version_no} · {formatCurrency(estimate.total || 0)}
                               </p>
+                              {isLoaded ? (
+                                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
+                                  Loaded in editor
+                                </p>
+                              ) : null}
                             </div>
+                            <button
+                              type="button"
+                              onClick={() => setLoadedEstimateId(estimate.id)}
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
+                            >
+                              <Save size={16} />
+                              {isLoaded ? "Loaded" : "Load into editor"}
+                            </button>
                             {canGeneratePdf ? (
                               <button
                                 type="button"
