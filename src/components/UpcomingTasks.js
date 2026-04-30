@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { supabase } from "../lib/supabase"
 
-export default function UpcomingTasks() {
+export default function UpcomingTasks({ onTasksChanged }) {
   const [tasks, setTasks] = useState([])
   const [completedTasks, setCompletedTasks] = useState([])
   const [newTaskTitle, setNewTaskTitle] = useState("")
@@ -19,7 +19,7 @@ export default function UpcomingTasks() {
   const assignees = ["Niel", "Stefan", "Marco"]
   const priorities = ["High", "Medium", "Low"]
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     const { data, error } = await supabase
       .from("tasks")
       .select("*")
@@ -27,12 +27,13 @@ export default function UpcomingTasks() {
     if (!error) {
       setTasks(data.filter(t => !t.completed))
       setCompletedTasks(data.filter(t => t.completed))
+      onTasksChanged?.(data.filter(t => !t.completed))
     }
-  }
+  }, [onTasksChanged])
 
   useEffect(() => {
     fetchTasks()
-  }, [])
+  }, [fetchTasks])
 
   const addTask = async () => {
     if (!newTaskTitle) return
@@ -51,6 +52,7 @@ export default function UpcomingTasks() {
       setNewTaskDue("")
       setNewTaskAssignee("")
       setNewTaskPriority("Medium")
+      fetchTasks()
     }
   }
 
@@ -63,6 +65,7 @@ export default function UpcomingTasks() {
       const completedTask = tasks.find(t => t.id === id)
       setTasks(prev => prev.filter(t => t.id !== id))
       setCompletedTasks(prev => [completedTask, ...prev])
+      fetchTasks()
     }
   }
 
@@ -71,6 +74,7 @@ export default function UpcomingTasks() {
     if (!error) {
       setTasks(prev => prev.filter(t => t.id !== id))
       setCompletedTasks(prev => prev.filter(t => t.id !== id))
+      fetchTasks()
     }
   }
 

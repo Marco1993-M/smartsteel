@@ -32,7 +32,13 @@ function formatStatusLabel(status) {
   return formatCrmStatusLabel(status)
 }
 
-export default function KanbanBoard({ leads, onEditLead, onLeadStatusChange, onCreateEstimate }) {
+export default function KanbanBoard({
+  leads,
+  onEditLead,
+  onLeadStatusChange,
+  onCreateEstimate,
+  onTasksChanged,
+}) {
   const [recentUpdates, setRecentUpdates] = useState([])
   const [updateFilter, setUpdateFilter] = useState("all")
   const [mobileStage, setMobileStage] = useState(statuses[0])
@@ -89,7 +95,7 @@ export default function KanbanBoard({ leads, onEditLead, onLeadStatusChange, onC
 
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="xl:w-[320px] xl:flex-shrink-0">
-          <UpcomingTasks leads={leads} />
+          <UpcomingTasks onTasksChanged={onTasksChanged} />
         </div>
 
         <div className="min-w-0 flex-1">
