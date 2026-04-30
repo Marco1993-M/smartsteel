@@ -1699,12 +1699,13 @@ export default function KanbanPage() {
             Loading leads...
           </div>
         ) : (
-          <KanbanBoard
-            leads={filteredLeads}
-            onEditLead={setEditingLead}
-            onLeadStatusChange={handleLeadStatusChange}
-            onCreateEstimate={handleOpenEstimate}
-          />
+        <KanbanBoard
+          leads={filteredLeads}
+          onEditLead={setEditingLead}
+          onLeadStatusChange={handleLeadStatusChange}
+          onCreateEstimate={handleOpenEstimate}
+          onTasksChanged={setDailyTasks}
+        />
         )}
       </div>
 
