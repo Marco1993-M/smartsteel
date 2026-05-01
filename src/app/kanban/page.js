@@ -28,6 +28,7 @@ const CRM_FALLBACK_FIELDS = [
 ]
 const LEAD_SOURCE_OPTIONS = [
   "Website form",
+  "Warehouse Builder",
   "Estimator",
   "WhatsApp",
   "Phone call",
