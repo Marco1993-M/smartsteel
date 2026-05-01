@@ -15,6 +15,7 @@ import { format, isToday, isYesterday } from "date-fns";
 const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
 const LEAD_SOURCE_OPTIONS = [
   "Website form",
+  "Warehouse Builder",
   "Estimator",
   "WhatsApp",
   "Phone call",
