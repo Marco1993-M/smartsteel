@@ -225,6 +225,12 @@ export default function HomePageClient() {
                 Get Instant Estimate
               </Link>
               <Link
+                href="/warehouse-builder"
+                className="rounded-full border border-black bg-white px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
+              >
+                Build Your Warehouse
+              </Link>
+              <Link
                 href="/contact"
                 className="rounded-full border border-black bg-white px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
               >
@@ -326,11 +332,14 @@ export default function HomePageClient() {
             <ul className="mt-8 space-y-3 text-sm leading-7 text-white/85">
               <li><span className="font-semibold text-white">Faster delivery:</span> faster to erect than many traditional alternatives.</li>
               <li><span className="font-semibold text-white">Smarter structure:</span> light yet strong systems built for industrial and commercial use.</li>
-              <li><span className="font-semibold text-white">Clear buyer path:</span> browse standard options or use the estimator for a quick budget range.</li>
+              <li><span className="font-semibold text-white">Clear buyer path:</span> browse standard options, use the estimator, or shape a live warehouse design online.</li>
             </ul>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link href="/lightweight-steel-warehouses" className="rounded-full bg-white px-6 py-3 font-semibold text-black transition hover:bg-[#da1a33] hover:text-white">
                 Explore Warehouses
+              </Link>
+              <Link href="/warehouse-builder" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
+                Try Warehouse Builder
               </Link>
               <Link href="/warehouse-cost" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
                 View Warehouse Cost Guides
@@ -547,6 +556,9 @@ export default function HomePageClient() {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           <Link href="/tools/estimator" className="rounded-full bg-white px-6 py-3 font-semibold text-black transition hover:bg-[#da1a33] hover:text-white">
             Start With an Estimate
+          </Link>
+          <Link href="/warehouse-builder" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
+            Build Your Warehouse
           </Link>
           <Link href="/contact" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
             Contact Smart Steel

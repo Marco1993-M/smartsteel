@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import emailjs from '@emailjs/browser';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 import { supabase } from "../../../lib/supabase";
 import {
   calculateWarehouseEstimate,
@@ -215,6 +216,12 @@ export default function EstimatorPage() {
           <h4 className="text-1xl font-regular mb-6 text-center text-gray-900">
             Lightweight Warehouse Structure
           </h4>
+          <div className="mb-6 rounded-xl border border-red-100 bg-red-50 p-4 text-center">
+            <p className="text-sm font-semibold text-gray-900">Want to shape the building visually first?</p>
+            <Link href="/warehouse-builder" className="mt-2 inline-block text-sm font-semibold text-[#da1a33] underline underline-offset-4">
+              Try the Smart Steel Warehouse Builder
+            </Link>
+          </div>
 
           <div className="space-y-5">
             {/* Inputs Card */}

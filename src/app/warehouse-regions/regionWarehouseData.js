@@ -383,7 +383,7 @@ export function buildRegionWarehouseContent(citySlug) {
   if (!config) return null;
 
   const titlePrefix = titleCaseWords(["steel warehouses", config.name]);
-  const pricePath = "/tools/estimator";
+  const pricePath = "/warehouse-builder";
   const faqItems = [
     {
       question: `How long does it take to build a steel warehouse in ${config.name}?`,
@@ -391,7 +391,7 @@ export function buildRegionWarehouseContent(citySlug) {
     },
     {
       question: `What does a steel warehouse cost in ${config.name}?`,
-      answer: `Lightweight steel warehouse pricing in ${config.name} depends on width, length, cladding, access openings, slab scope, and whether you need supply-only or installation. Use our estimator for a fast starting point.`,
+      answer: `Lightweight steel warehouse pricing in ${config.name} depends on width, length, cladding, access openings, slab scope, and whether you need supply-only or installation. Use our warehouse builder for a fast visual starting point, or the estimator if you want a simpler budget check.`,
     },
     {
       question: `Do you install outside ${config.name}?`,

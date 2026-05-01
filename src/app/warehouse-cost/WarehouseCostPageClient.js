@@ -148,6 +148,12 @@ export default function WarehouseCostPageClient({ slug }) {
             >
               Get Instant Estimate
             </Link>
+            <Link
+              href="/warehouse-builder"
+              className="rounded-full border border-black bg-white px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
+            >
+              Build Your Warehouse
+            </Link>
             <a
               href="https://wa.me/27828464555?text=Hi%20Smart%20Steel%2C%20I%E2%80%99d%20like%20pricing%20for%20a%20warehouse%20project"
               target="_blank"
@@ -340,6 +346,9 @@ export default function WarehouseCostPageClient({ slug }) {
                   <Link href="/tools/estimator" className="mt-5 inline-block text-sm font-semibold text-[#da1a33]">
                     Request estimate
                   </Link>
+                  <Link href="/warehouse-builder" className="mt-2 inline-block text-sm font-semibold text-black">
+                    Try warehouse builder
+                  </Link>
                 </div>
               );
             })}
@@ -401,6 +410,9 @@ export default function WarehouseCostPageClient({ slug }) {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           <Link href="/tools/estimator" className="rounded-full bg-white px-6 py-3 font-semibold text-black transition hover:bg-[#da1a33] hover:text-white">
             Start Estimate
+          </Link>
+          <Link href="/warehouse-builder" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
+            Build Your Warehouse
           </Link>
           <Link href="/lightweight-steel-warehouses" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
             View Warehouse Options
