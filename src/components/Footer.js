@@ -33,6 +33,7 @@ export default function Footer() {
           <ul className="space-y-2 text-sm text-gray-300">
             <li><Link href="/resources" className="hover:text-[#da1a33]">Technical Resources</Link></li>
             <li><Link href="/resources" className="hover:text-[#da1a33]">Installation Guides</Link></li>
+            <li><Link href="/warehouse-builder" className="hover:text-[#da1a33]">Warehouse Builder</Link></li>
             <li><Link href="/solar-carports" className="hover:text-[#da1a33]">Solar Carport Regions</Link></li>
           </ul>
         </div>
