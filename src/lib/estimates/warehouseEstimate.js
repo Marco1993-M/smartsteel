@@ -6,6 +6,21 @@ const DEFAULT_WALL_HEIGHT = 3
 export const WAREHOUSE_WIDTH_OPTIONS = [8, 10, 12]
 export const WAREHOUSE_LENGTH_OPTIONS = Array.from({ length: 19 }, (_, index) => 5 + index * 2.5)
 export const WAREHOUSE_CLADDING_OPTIONS = ["None", "IBR", "Chromadek"]
+export const WAREHOUSE_HEIGHT_OPTIONS = [3, 4, 5]
+export const WAREHOUSE_SCOPE_OPTIONS = [
+  { value: "supply_only", label: "Supply only" },
+  { value: "supply_install", label: "Supply + installation" },
+]
+export const WAREHOUSE_GARAGE_OPENING_OPTIONS = [
+  { value: "single", label: "Single door opening" },
+  { value: "double", label: "Double door opening" },
+  { value: "custom", label: "Custom opening" },
+]
+export const WAREHOUSE_ENCLOSURE_OPTIONS = [
+  { value: "roof_only", label: "Roof only" },
+  { value: "open_sides", label: "Open gable ends" },
+  { value: "fully_enclosed", label: "Fully enclosed" },
+]
 
 export const WAREHOUSE_MATERIALS = {
   columns: { length: 3, rate: 467 },
@@ -27,6 +42,12 @@ export const WAREHOUSE_MATERIALS = {
   deliveryRate: 19,
   competitorLowRate: 1100,
   competitorHighRate: 1400,
+  garageDoorOpeningRates: {
+    single: 1800,
+    double: 3200,
+    custom: 4800,
+  },
+  pedestrianDoorOpeningRate: 950,
 }
 
 function roundMoney(value) {
@@ -44,6 +65,18 @@ export function validateWarehouseEstimateInput(input) {
   const quantity = Math.max(1, Math.round(Number(input?.quantity) || 1))
   const cladding = input?.cladding || "None"
   const deliveryDistance = Math.max(Number(input?.deliveryDistance) || 0, 0)
+  const roofType = input?.roofType || "dual_pitch"
+  const roofPitch = Number(input?.roofPitch || 15)
+  const enclosureType = input?.enclosureType || "fully_enclosed"
+  const scope = input?.scope || (input?.claddingInstalled ? "supply_install" : "supply_only")
+  const rollerDoorCount = Math.max(0, Math.round(Number(input?.rollerDoorCount) || 0))
+  const garageDoorOpeningType = input?.garageDoorOpeningType || "single"
+  const pedestrianDoorCount = Math.max(0, Math.round(Number(input?.pedestrianDoorCount) || 0))
+  const deliveryRequired = Boolean(
+    typeof input?.deliveryRequired === "boolean" ? input.deliveryRequired : deliveryDistance > 0
+  )
+  const province = String(input?.province || "")
+  const location = String(input?.location || "")
 
   if (!Number.isFinite(width) || width <= 0) {
     throw new Error("Please enter a valid structure width.")
@@ -61,14 +94,40 @@ export function validateWarehouseEstimateInput(input) {
     throw new Error("Please choose a valid cladding option.")
   }
 
+  if (!["dual_pitch"].includes(roofType)) {
+    throw new Error("Please choose a valid roof type.")
+  }
+
+  if (!WAREHOUSE_ENCLOSURE_OPTIONS.some((option) => option.value === enclosureType)) {
+    throw new Error("Please choose a valid enclosure option.")
+  }
+
+  if (!WAREHOUSE_SCOPE_OPTIONS.some((option) => option.value === scope)) {
+    throw new Error("Please choose a valid project scope.")
+  }
+
+  if (!WAREHOUSE_GARAGE_OPENING_OPTIONS.some((option) => option.value === garageDoorOpeningType)) {
+    throw new Error("Please choose a valid garage opening size.")
+  }
+
   return {
     width,
     length,
     wallHeight,
     quantity,
     cladding,
-    claddingInstalled: Boolean(input?.claddingInstalled),
+    claddingInstalled: scope === "supply_install",
     deliveryDistance,
+    roofType,
+    roofPitch,
+    enclosureType,
+    scope,
+    rollerDoorCount,
+    garageDoorOpeningType,
+    pedestrianDoorCount,
+    deliveryRequired,
+    province,
+    location,
   }
 }
 
@@ -126,7 +185,25 @@ function interpolateTrussLength(width) {
 
 export function calculateWarehouseEstimate(input) {
   const normalized = validateWarehouseEstimateInput(input)
-  const { width, length, wallHeight, quantity, cladding, claddingInstalled, deliveryDistance } = normalized
+  const {
+    width,
+    length,
+    wallHeight,
+    quantity,
+    cladding,
+    claddingInstalled,
+    deliveryDistance,
+    roofType,
+    roofPitch,
+    enclosureType,
+    scope,
+    rollerDoorCount,
+    garageDoorOpeningType,
+    pedestrianDoorCount,
+    deliveryRequired,
+    province,
+    location,
+  } = normalized
 
   const effectiveLength = Math.ceil(length / BAY_LENGTH) * BAY_LENGTH
   const lengthRounded = effectiveLength !== length
@@ -145,7 +222,16 @@ export function calculateWarehouseEstimate(input) {
   const area = width * length
   const totalArea = area * quantity
   const wallArea = 2 * (width + length) * wallHeight
-  const claddingArea = area + wallArea
+  const roofHalfSpan = Math.sqrt((width / 2) ** 2 + (Math.tan((roofPitch * Math.PI) / 180) * (width / 2)) ** 2)
+  const roofArea = roofHalfSpan * 2 * length
+  const sideWallArea = 2 * length * wallHeight
+  const gableWallArea = 2 * width * wallHeight
+  const claddingArea =
+    enclosureType === "fully_enclosed"
+      ? roofArea + sideWallArea + gableWallArea
+      : enclosureType === "open_sides"
+        ? roofArea + sideWallArea
+        : roofArea
   const totalCladdingArea = claddingArea * quantity
 
   const costColumns = totalColumns * wallHeight * WAREHOUSE_MATERIALS.columns.rate * quantity
@@ -155,11 +241,18 @@ export function calculateWarehouseEstimate(input) {
   const costScrews = totalScrews * WAREHOUSE_MATERIALS.screw * quantity
   const costTopHats = totalTopHatLengthSold * WAREHOUSE_MATERIALS.topHats.rate * quantity
   const costCladdingSupply = totalCladdingArea * WAREHOUSE_MATERIALS.cladding[cladding].supply
-  const costInstallation = claddingInstalled ? totalArea * WAREHOUSE_MATERIALS.installRate : 0
-  const deliveryCost = Math.max(
-    deliveryDistance * WAREHOUSE_MATERIALS.deliveryRate,
-    DEFAULT_DELIVERY_MINIMUM
-  )
+  const installationChargeArea = totalCladdingArea
+  const costInstallation = claddingInstalled ? installationChargeArea * WAREHOUSE_MATERIALS.installRate : 0
+  const rawDeliveryCost = deliveryDistance * WAREHOUSE_MATERIALS.deliveryRate
+  const usesDeliveryMinimum = deliveryRequired && rawDeliveryCost < DEFAULT_DELIVERY_MINIMUM
+  const deliveryCost = deliveryRequired
+    ? Math.max(rawDeliveryCost, DEFAULT_DELIVERY_MINIMUM)
+    : 0
+  const garageOpeningRate =
+    WAREHOUSE_MATERIALS.garageDoorOpeningRates[garageDoorOpeningType] ||
+    WAREHOUSE_MATERIALS.garageDoorOpeningRates.single
+  const costRollerDoors = rollerDoorCount * garageOpeningRate
+  const costPedestrianDoors = pedestrianDoorCount * WAREHOUSE_MATERIALS.pedestrianDoorOpeningRate
 
   const baseTotal =
     costColumns +
@@ -170,7 +263,9 @@ export function calculateWarehouseEstimate(input) {
     costTopHats +
     costCladdingSupply +
     costInstallation +
-    deliveryCost
+    deliveryCost +
+    costRollerDoors +
+    costPedestrianDoors
 
   const estimatedTotal = roundMoney(baseTotal * DEFAULT_MARKUP)
   const competitorLow = roundMoney(totalArea * WAREHOUSE_MATERIALS.competitorLowRate)
@@ -247,7 +342,7 @@ export function calculateWarehouseEstimate(input) {
       buildLineItem({
         code: "installation",
         label: "Installation",
-        quantity: totalArea,
+        quantity: installationChargeArea,
         unit: "sqm",
         unitRate: WAREHOUSE_MATERIALS.installRate,
         total: costInstallation,
@@ -255,16 +350,53 @@ export function calculateWarehouseEstimate(input) {
     )
   }
 
-  lineItems.push(
-    buildLineItem({
-      code: "delivery",
-      label: "Delivery",
-      quantity: deliveryDistance,
-      unit: "km",
-      unitRate: WAREHOUSE_MATERIALS.deliveryRate,
-      total: deliveryCost,
-    })
-  )
+  if (rollerDoorCount > 0) {
+    lineItems.push(
+      buildLineItem({
+        code: "roller_doors",
+        label: `Garage door openings (${WAREHOUSE_GARAGE_OPENING_OPTIONS.find((option) => option.value === garageDoorOpeningType)?.label || garageDoorOpeningType})`,
+        quantity: rollerDoorCount,
+        unit: "items",
+        unitRate: garageOpeningRate,
+        total: costRollerDoors,
+      })
+    )
+  }
+
+  if (pedestrianDoorCount > 0) {
+    lineItems.push(
+      buildLineItem({
+        code: "pedestrian_doors",
+        label: "Pedestrian door openings",
+        quantity: pedestrianDoorCount,
+        unit: "items",
+        unitRate: WAREHOUSE_MATERIALS.pedestrianDoorOpeningRate,
+        total: costPedestrianDoors,
+      })
+    )
+  }
+
+  if (deliveryRequired) {
+    lineItems.push(
+      usesDeliveryMinimum
+        ? buildLineItem({
+            code: "delivery",
+            label: "Delivery (minimum charge)",
+            quantity: 1,
+            unit: "charge",
+            unitRate: DEFAULT_DELIVERY_MINIMUM,
+            total: deliveryCost,
+          })
+        : buildLineItem({
+            code: "delivery",
+            label: "Delivery",
+            quantity: deliveryDistance,
+            unit: "km",
+            unitRate: WAREHOUSE_MATERIALS.deliveryRate,
+            total: deliveryCost,
+          })
+    )
+  }
 
   return {
     input: {
@@ -279,13 +411,19 @@ export function calculateWarehouseEstimate(input) {
       wallHeight,
       quantity,
       area,
+      roofArea: roundMoney(roofArea),
       totalArea: roundMoney(totalArea),
       wallArea: roundMoney(wallArea),
+      sideWallArea: roundMoney(sideWallArea),
+      gableWallArea: roundMoney(gableWallArea),
       claddingArea: roundMoney(claddingArea),
       totalCladdingArea: roundMoney(totalCladdingArea),
       bayLength: BAY_LENGTH,
       totalBays,
       lengthRounded,
+      roofType,
+      roofPitch,
+      enclosureType,
     },
     materials: {
       totalColumns: totalColumns * quantity,
@@ -304,6 +442,11 @@ export function calculateWarehouseEstimate(input) {
       deliveryCost: roundMoney(deliveryCost),
       claddingCost: roundMoney(costCladdingSupply),
       installationCost: roundMoney(costInstallation),
+      installationChargeArea: roundMoney(installationChargeArea),
+      garageDoorOpeningCost: roundMoney(costRollerDoors),
+      garageDoorOpeningType,
+      pedestrianDoorOpeningCost: roundMoney(costPedestrianDoors),
+      usesDeliveryMinimum,
     },
     marketComparison: {
       competitorLow,
@@ -315,8 +458,8 @@ export function calculateWarehouseEstimate(input) {
     lineItems,
     summary: {
       title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m structure`,
-      shortDescription: `${quantity > 1 ? `${quantity} x ` : ""}Structure ${width}m x ${length}m x ${wallHeight}m with ${cladding}${claddingInstalled ? " and installation" : ""}`,
-      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}Structure ${width}m x ${length}m x ${wallHeight}m, ${cladding}${claddingInstalled ? ", installed" : ""}, ${deliveryDistance}km delivery${lengthRounded ? `, priced on ${effectiveLength}m structural bay layout` : ""}`,
+      shortDescription: `${quantity > 1 ? `${quantity} x ` : ""}Structure ${width}m x ${length}m x ${wallHeight}m, ${WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === enclosureType)?.label?.toLowerCase() || enclosureType}, ${cladding}${claddingInstalled ? ", supply and installation" : ", supply only"}`,
+      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}Structure ${width}m x ${length}m x ${wallHeight}m, ${WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === enclosureType)?.label || enclosureType}, ${cladding}, ${WAREHOUSE_SCOPE_OPTIONS.find((option) => option.value === scope)?.label || scope}, ${rollerDoorCount} garage door openings${rollerDoorCount > 0 ? ` (${WAREHOUSE_GARAGE_OPENING_OPTIONS.find((option) => option.value === garageDoorOpeningType)?.label || garageDoorOpeningType})` : ""}, ${pedestrianDoorCount} pedestrian door openings${deliveryRequired ? `, ${deliveryDistance}km delivery` : ", no delivery"}${province ? `, ${province}` : ""}${location ? `, ${location}` : ""}${lengthRounded ? `, priced on ${effectiveLength}m structural bay layout` : ""}`,
       layoutNote: lengthRounded
         ? `Requested depth ${length}m is priced against a practical ${effectiveLength}m bay layout.`
         : "",
