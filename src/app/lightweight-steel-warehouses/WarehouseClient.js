@@ -112,36 +112,74 @@ await fetch("/api/leads", {
       <main className="font-sans text-gray-800 px-6 py-20 bg-white">
         {/* Hero Section */}
         <section className="max-w-5xl mx-auto text-center mb-20">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33] mb-4">
+            Warehouse systems
+          </p>
           <h1 className="text-4xl font-bold mb-4">
             Lightweight Steel Warehousing Solutions
           </h1>
-          <p className="text-lg max-w-3xl mx-auto">
-            Discover our range of versatile and durable lightweight steel warehousing
-            options, tailored to suit various applications. From open shelters
-            to fully enclosed storage solutions, we provide customizable designs
-            that meet your unique needs, with a variety of sizes, colors, and
-            optional features.
+          <p className="text-lg max-w-3xl mx-auto leading-8">
+            Explore Smart Steel warehouse systems built for storage, workshop use, fleet cover, and commercial operations.
+            Compare standard structure options, request a tailored quote, or move into the warehouse builder if you want a more visual starting point.
           </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link href="/warehouse-builder" className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-[#bf172d]">
+              Build Your Warehouse
+            </Link>
+            <Link href="/tools/estimator" className="rounded-full border border-black px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white">
+              Use Estimator
+            </Link>
+          </div>
+        </section>
+
+        <section className="max-w-5xl mx-auto mb-14">
+          <div className="rounded-[2rem] border border-gray-200 bg-gray-50 p-8">
+            <div className="grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  title: "Built for real warehouse use",
+                  description: "Smart Steel warehouse systems are shaped around practical storage, workshop, fleet, and commercial requirements.",
+                },
+                {
+                  title: "Clear modular starting point",
+                  description: "Choose a standard width, set a practical length, and define the shell scope before moving into detailed quoting.",
+                },
+                {
+                  title: "Simple next-step path",
+                  description: "Use this page for a direct enquiry, the estimator for a quick budget check, or the builder for a live visual workflow.",
+                },
+              ].map((item) => (
+                <div key={item.title} className="rounded-2xl bg-white p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-gray-900">{item.title}</p>
+                  <p className="mt-2 text-sm leading-6 text-gray-600">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* Styles Section */}
         <section className="max-w-5xl mx-auto text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Sheds & Warehousing Styles</h2>
-          <p className="text-lg max-w-2xl mx-auto">
-            We offer adaptable shed and warehousing designs to cater to a wide
-            range of uses.
+          <h2 className="text-3xl font-bold mb-4">Warehouse structures built around practical use</h2>
+          <p className="text-lg max-w-2xl mx-auto leading-8">
+            Start with a standard structure width, choose a practical length, and tell us the key requirements that affect your project scope.
           </p>
         </section>
 
         {/* Quote Builder */}
         <section className="max-w-5xl mx-auto my-20 px-4 py-10 border rounded-lg bg-gray-50">
           <h2 className="text-3xl font-bold mb-6 text-center">
-            Build Your Custom Quote
+            Request a warehouse quote
           </h2>
           <p className="text-center max-w-2xl mx-auto mb-8">
-            Select your preferred options below, and we will compile a custom
-            quote. Once submitted, our team will get back to you shortly.
+            Select the structure that best fits your project, choose the main requirements, and send the enquiry through. We’ll review it and come back with the right next step.
           </p>
+          <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
+            <p className="text-sm font-semibold text-gray-900">What happens after you submit?</p>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              Smart Steel reviews the structure, length, finish choices, and project notes, then follows up with the most practical pricing or quoting path.
+            </p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
           {/* Structure Selection */}
@@ -152,7 +190,7 @@ await fetch("/api/leads", {
                 src: "/warehouse-13m.jpg",
                 title: "8m Wide Structure",
                 description:
-                  "Ideal for agricultural, workshop, or small-scale storage use. Fully customizable with optional cladding, doors, and colors.",
+                  "Ideal for smaller workshops, storage, agricultural cover, and practical entry-level warehouse use.",
                 anchor: "8m-wide",
               },
               {
@@ -160,7 +198,7 @@ await fetch("/api/leads", {
                 src: "/warehouse-13m.jpg",
                 title: "12m Wide Structure",
                 description:
-                  "Designed for larger operations requiring significant covered space. Suitable for warehousing, workshops, and commercial use.",
+                  "Designed for larger warehouse, workshop, and commercial operations that need more internal clear span.",
                 anchor: "12m-wide",
               },
                 {
@@ -168,20 +206,20 @@ await fetch("/api/leads", {
                 src: "/warehouse-13m.jpg",
                 title: "Custom Structure",
                 description:
-                  "Tailored solutions for unique requirements. Let's make this one more custom. 0-40m wide, any length.",
+                  "Tailored solutions for projects that need a more specific span, length, height, or operational layout.",
                 anchor: "12m-wide",
               },
             ].map((item, idx) => (
               <label
                 key={idx}
                 id={item.anchor}
-                className="border rounded-lg p-4 flex flex-col items-center text-center cursor-pointer relative hover:shadow-md transition"
+                className="relative flex flex-col items-center rounded-[1.75rem] border border-gray-200 bg-white p-5 text-center cursor-pointer shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <input
                   type="radio"
                   name="structure"
                   value={item.value}
-                  className="absolute top-4 left-4 w-5 h-5 accent-[#da1a33]"
+                  className="absolute top-4 left-4 h-5 w-5 accent-[#da1a33]"
                   required
                 />
                 <Image
@@ -189,10 +227,17 @@ await fetch("/api/leads", {
                   alt={item.title}
                   width={600}
                   height={400}
-                  className="rounded mb-4"
+                  className="rounded-2xl mb-4"
                 />
-                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                <h3 className="text-xl font-semibold mb-2 text-gray-900">{item.title}</h3>
                 <p className="text-gray-700">{item.description}</p>
+                <p className="mt-3 text-sm font-medium text-[#da1a33]">
+                  {item.title === "8m Wide Structure"
+                    ? "Best for smaller warehouse and workshop projects."
+                    : item.title === "12m Wide Structure"
+                      ? "Best for larger warehouse and operational space."
+                      : "Best for tailored warehouse requirements."}
+                </p>
               </label>
             ))}
           </section>
@@ -278,12 +323,13 @@ await fetch("/api/leads", {
 
             {/* Optional Extra Features */}
             <div className="space-y-4 mt-6">
-              <h3 className="font-semibold mb-2">Optional Extra Features</h3>
+              <h3 className="font-semibold mb-2">Project scope options</h3>
+              <p className="text-sm text-gray-600">
+                Select only the items that meaningfully change the structure or shell scope.
+              </p>
               {[
                 "Enclosed Building",
-                "Gutters & Rain Water Down Pipes",
                 "Installation",
-                "Air Vents",
                 "Polycarbonate Sheets",
               ].map((feature, idx) => (
                 <label key={idx} className="block">
@@ -297,9 +343,21 @@ await fetch("/api/leads", {
             <div className="mt-6">
               <textarea
                 name="notes"
-                placeholder="Additional notes or requirements..."
+                placeholder="Add any site details, preferred height, access requirements, openings, or special project notes..."
                 className="w-full border px-4 py-2 rounded min-h-[100px]"
               ></textarea>
+            </div>
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <p className="text-sm font-semibold text-gray-900">Need a different starting point?</p>
+              <div className="mt-3 flex flex-col gap-2 text-sm">
+                <Link href="/warehouse-builder" className="font-semibold text-[#da1a33] hover:underline">
+                  Want a live visual design flow? Try the warehouse builder.
+                </Link>
+                <Link href="/tools/estimator" className="font-semibold text-[#da1a33] hover:underline">
+                  Want a faster budget check first? Use the estimator.
+                </Link>
+              </div>
             </div>
 
             {/* Submit */}
@@ -308,7 +366,7 @@ await fetch("/api/leads", {
                 type="submit"
                 className="bg-[#da1a33] text-white px-6 py-3 rounded hover:bg-[#bf172d] transition w-full"
               >
-                Submit Quote Request
+                Send Warehouse Enquiry
               </button>
             </div>
           </form>
