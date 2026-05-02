@@ -464,11 +464,13 @@ export function buildRegionWarehouseContent(citySlug) {
       "What door, cladding, and insulation options will affect final pricing?",
     ],
     internalLinks: [
+      { href: "/warehouse-builder", label: "Build your warehouse online" },
+      { href: "/tools/estimator", label: "Warehouse estimator" },
+      { href: "/lightweight-steel-warehouses", label: "All warehouse systems" },
       { href: "/warehouse-regions", label: "Warehouse regions hub" },
       { href: "/warehouse-cost", label: "Warehouse cost guide" },
       { href: "/warehouse-cost/10x10", label: "10m x 10m warehouse cost" },
       { href: "/warehouse-cost/20x10", label: "20m x 10m warehouse cost" },
-      { href: "/lightweight-steel-warehouses", label: "All warehouse systems" },
     ],
     sizeBlurb: `Popular warehouse footprints in ${config.name} start with modular widths of 8m, 10m, and 12m, with lengths scaled to suit storage, workshop, and operational requirements.`,
   };

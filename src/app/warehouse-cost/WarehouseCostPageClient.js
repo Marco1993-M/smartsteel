@@ -296,6 +296,35 @@ export default function WarehouseCostPageClient({ slug }) {
         </div>
       </section>
 
+      <section className="mx-auto max-w-6xl px-6 pb-8">
+        <div className="rounded-[2rem] border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#da1a33]">Related warehouse links</p>
+            <h2 className="mt-4 text-3xl font-bold text-gray-900">Keep comparing warehouse options</h2>
+            <p className="mt-4 text-gray-700">
+              Use these warehouse pages to move from pricing research into size planning, live configuration, and regional delivery context.
+            </p>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              { href: "/warehouse-builder", label: "Warehouse builder", description: "Shape a live warehouse design and see an indicative budget." },
+              { href: "/tools/estimator", label: "Warehouse estimator", description: "Run a faster budget check for standard warehouse structures." },
+              { href: "/lightweight-steel-warehouses", label: "Warehouse systems", description: "Explore Smart Steel warehouse solutions and standard options." },
+              { href: "/warehouse-regions", label: "Warehouse regions", description: "Compare warehouse delivery and project context across South Africa." },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-[1.5rem] border border-gray-200 bg-gray-50 p-5 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+              >
+                <p className="text-sm font-semibold text-gray-900">{item.label}</p>
+                <p className="mt-2 text-sm leading-6 text-gray-600">{item.description}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="bg-gray-100 px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <h2 className="text-3xl font-bold text-gray-900">Compare other warehouse sizes</h2>

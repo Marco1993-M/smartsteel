@@ -316,8 +316,52 @@ await fetch("/api/leads", {
 
         {/* Explore More */}
         <section className="max-w-7xl mx-auto py-20">
-          <h2 className="text-3xl font-bold mb-6 text-left">Explore more content</h2>
-          <div className="grid md:grid-cols-2 gap-6">
+          <h2 className="text-3xl font-bold mb-6 text-left">Explore more warehouse content</h2>
+          <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <Link
+              href="/warehouse-builder"
+              className="border rounded-md p-6 hover:bg-gray-50 transition block"
+            >
+              <h3 className="font-semibold text-lg text-[#da1a33]">
+                Warehouse builder →
+              </h3>
+              <p className="text-sm mt-1 text-gray-700">
+                Configure a warehouse online, preview it live, and send a structured enquiry.
+              </p>
+            </Link>
+            <Link
+              href="/tools/estimator"
+              className="border rounded-md p-6 hover:bg-gray-50 transition block"
+            >
+              <h3 className="font-semibold text-lg text-[#da1a33]">
+                Warehouse estimator →
+              </h3>
+              <p className="text-sm mt-1 text-gray-700">
+                Check a quicker warehouse budget range before moving into a detailed design.
+              </p>
+            </Link>
+            <Link
+              href="/warehouse-cost"
+              className="border rounded-md p-6 hover:bg-gray-50 transition block"
+            >
+              <h3 className="font-semibold text-lg text-[#da1a33]">
+                Warehouse cost guides →
+              </h3>
+              <p className="text-sm mt-1 text-gray-700">
+                Compare popular warehouse sizes and pricing paths across the Smart Steel cluster.
+              </p>
+            </Link>
+            <Link
+              href="/warehouse-regions"
+              className="border rounded-md p-6 hover:bg-gray-50 transition block"
+            >
+              <h3 className="font-semibold text-lg text-[#da1a33]">
+                Warehouse regions →
+              </h3>
+              <p className="text-sm mt-1 text-gray-700">
+                See warehouse pages built around regional delivery, local fit, and project context.
+              </p>
+            </Link>
             <Link
               href="/recent"
               className="border rounded-md p-6 hover:bg-gray-50 transition block"
