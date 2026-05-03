@@ -53,38 +53,87 @@ function buildBuilderSubmission(payload, leadId) {
   }
 }
 
+function buildGenericNotes(payload) {
+  const lines = [
+    payload.lead_source ? `${payload.lead_source} enquiry` : "Website enquiry",
+    payload.product_type ? `Product: ${payload.product_type}` : null,
+    payload.estimate_request ? `Request: ${payload.estimate_request}` : null,
+    payload.notes ? `Client notes: ${payload.notes}` : null,
+  ].filter(Boolean)
+
+  return lines.join("\n")
+}
+
+function buildGenericLeadPayload(payload) {
+  return {
+    name: payload.name,
+    last_name: payload.lastName || payload.last_name || "Website Enquiry",
+    email: payload.email,
+    phone: payload.phone || null,
+    estimate_request: payload.estimate_request || payload.estimateRequest || "",
+    allocated_to: payload.allocated_to || payload.allocatedTo || "",
+    notes: buildGenericNotes(payload),
+    status: payload.status || "new",
+    lead_source: payload.lead_source || payload.leadSource || "Website",
+    product_type: payload.product_type || payload.productType || "General Enquiry",
+    next_action:
+      payload.next_action ||
+      payload.nextAction ||
+      "Review website enquiry and contact the client with the right next step.",
+    follow_up_at: payload.follow_up_at || payload.followUpAt || getNextBusinessMorningIso(),
+    quote_value: payload.quote_value || payload.quoteValue || null,
+    created_at: new Date().toISOString(),
+  }
+}
+
 export async function POST(request) {
   try {
     const body = await request.json()
+    const isBuilderSubmission =
+      Boolean(body?.configuration) ||
+      Boolean(body?.summary) ||
+      Boolean(body?.estimatedTotal) ||
+      body?.lead_source === "Warehouse Builder" ||
+      body?.leadSource === "Warehouse Builder"
 
-    if (!body?.name || !body?.email || !body?.phone) {
+    if (!body?.name || !body?.email) {
       return NextResponse.json(
-        { error: "Name, email, and phone are required." },
+        { error: "Name and email are required." },
         { status: 400 }
       )
     }
 
-    const insertPayload = {
-      name: body.name,
-      last_name: body.lastName || "Warehouse Builder",
-      email: body.email,
-      phone: body.phone,
-      estimate_request: body.estimateRequest,
-      allocated_to: "",
-      notes: buildBuilderNotes(body),
-      status: "new",
-      lead_source: "Warehouse Builder",
-      product_type: "Warehouse",
-      next_action: "Call builder lead, confirm scope and site details, then load configuration into estimate workflow.",
-      follow_up_at: getNextBusinessMorningIso(),
-      quote_value: body.estimatedTotal || null,
-      created_at: new Date().toISOString(),
+    if (isBuilderSubmission && !body?.phone) {
+      return NextResponse.json(
+        { error: "Phone is required for warehouse builder submissions." },
+        { status: 400 }
+      )
     }
+
+    const insertPayload = isBuilderSubmission
+      ? {
+          name: body.name,
+          last_name: body.lastName || "Warehouse Builder",
+          email: body.email,
+          phone: body.phone,
+          estimate_request: body.estimateRequest,
+          allocated_to: "",
+          notes: buildBuilderNotes(body),
+          status: "new",
+          lead_source: "Warehouse Builder",
+          product_type: "Warehouse",
+          next_action:
+            "Call builder lead, confirm scope and site details, then load configuration into estimate workflow.",
+          follow_up_at: getNextBusinessMorningIso(),
+          quote_value: body.estimatedTotal || null,
+          created_at: new Date().toISOString(),
+        }
+      : buildGenericLeadPayload(body)
 
     const { data, error } = await supabaseServer.from("leads").insert([insertPayload]).select()
 
     if (error) {
-      console.error("Warehouse Builder lead insert error:", error)
+      console.error("Lead insert error:", error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
@@ -92,7 +141,7 @@ export async function POST(request) {
     let builderSubmission = null
     let submissionWarning = ""
 
-    if (lead?.id) {
+    if (isBuilderSubmission && lead?.id) {
       const submissionPayload = buildBuilderSubmission(body, lead.id)
       const { data: submissionData, error: submissionError } = await supabaseServer
         .from("warehouse_builder_submissions")
@@ -119,9 +168,9 @@ export async function POST(request) {
       { status: 200 }
     )
   } catch (error) {
-    console.error("Warehouse Builder API error:", error)
+    console.error("Lead API error:", error)
     return NextResponse.json(
-      { error: error?.message || "Could not save the builder lead." },
+      { error: error?.message || "Could not save the lead." },
       { status: 500 }
     )
   }
