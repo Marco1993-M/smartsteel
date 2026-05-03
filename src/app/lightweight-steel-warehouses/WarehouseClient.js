@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import emailjs from "@emailjs/browser";
 import Script from "next/script";
-import { supabase } from "../../lib/supabase";
 
 const SERVICE_ID = "service_h817nk1";
 const TEMPLATE_ID = "template_vilvxrl";
@@ -66,26 +65,33 @@ export default function WarehouseClient() {
   const notes = form.notes.value
 
   const templateParams = { from_name: name, from_email: email, structure, length, colour, options: selectedOptions.join(", "), notes }
+  const estimateRequest = `${structure} - ${length} - ${colour}${selectedOptions.length ? ` - ${selectedOptions.join(", ")}` : ""}`
 
   try {
     // Send email
     await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
 
-    // Insert lead into Supabase
-await fetch("/api/leads", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    name,
-    email,
-    phone: "", // add phone if you collect it
-    estimate_request: `${structure} - ${length} - ${colour} - ${selectedOptions.join(", ")}`,
-    allocated_to: "", // default empty, can assign later
-    notes,
-    status: "New",
-  }),
-})
+    const leadResponse = await fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        email,
+        phone: "",
+        estimate_request: estimateRequest,
+        allocated_to: "",
+        notes,
+        status: "new",
+        lead_source: "Warehouse Page",
+        product_type: "Warehouse",
+        next_action: "Review warehouse enquiry and contact the client with the right quoting path.",
+      }),
+    })
 
+    if (!leadResponse.ok) {
+      const errorPayload = await leadResponse.json().catch(() => null)
+      throw new Error(errorPayload?.error || "Failed to add the warehouse enquiry to CRM.")
+    }
 
 
 
