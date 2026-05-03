@@ -40,7 +40,7 @@ export default function ContactPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const sendEmail = (e) => {
+  const sendEmail = async (e) => {
     e.preventDefault();
 
     setStatus('Sending...');
@@ -51,24 +51,42 @@ export default function ContactPage() {
     message: formData.message,
   };
 
-  emailjs
-    .send(
-      'service_h817nk1',        // your service ID
-      'template_rdp28qk',       // your template ID
-      templateParams,           // the form values
-      'JIPAN9YaQCPrkSgep'       // your public key
-    )
-    .then(
-      () => {
-        setStatus('Message sent successfully ✅');
-        setFormData({ name: '', email: '', message: '' });
-      },
-      (error) => {
-        console.error(error);
-        setStatus('Something went wrong ❌');
+    try {
+      await emailjs.send(
+        'service_h817nk1',
+        'template_rdp28qk',
+        templateParams,
+        'JIPAN9YaQCPrkSgep'
+      );
+
+      const leadResponse = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: '',
+          estimate_request: 'General website contact enquiry',
+          notes: formData.message,
+          status: 'new',
+          lead_source: 'Contact Page',
+          product_type: 'General Enquiry',
+          next_action: 'Review contact enquiry and reply to the client.',
+        }),
+      });
+
+      if (!leadResponse.ok) {
+        const errorPayload = await leadResponse.json().catch(() => null);
+        throw new Error(errorPayload?.error || 'Failed to add the contact enquiry to CRM.');
       }
-    );
-};
+
+      setStatus('Message sent successfully ✅');
+      setFormData({ name: '', email: '', message: '' });
+    } catch (error) {
+      console.error(error);
+      setStatus('Something went wrong ❌');
+    }
+  };
 
   return (
     <main className="font-sans text-gray-800 px-6 py-20 bg-white">
