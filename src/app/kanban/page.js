@@ -37,7 +37,14 @@ const LEAD_SOURCE_OPTIONS = [
   "Organic search",
   "Repeat client",
 ]
-const PRODUCT_TYPE_OPTIONS = ["Warehouse", "Solar carport", "LSF trusses", "Other"]
+const PRODUCT_TYPE_OPTIONS = [
+  "Warehouse",
+  "Solar carport",
+  "Solar ground mount",
+  "Solar structure",
+  "LSF trusses",
+  "Other",
+]
 const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
 
 const emptyLead = {
@@ -73,6 +80,10 @@ function normalizeLead(lead) {
     lost_reason: lead.lost_reason || "",
     follow_up_at: lead.follow_up_at || null,
   }
+}
+
+function stripEstimateVersionSuffix(title) {
+  return String(title || "").replace(/\s+V\d+$/i, "").trim()
 }
 
 function formatStatusLabel(status) {
@@ -864,13 +875,17 @@ export default function KanbanPage() {
 
     const leadId = estimateDraft.lead.id
     const existingForLead = leadEstimates[leadId] || []
+    const isEstimateUpdate = estimateDraft.save_mode === "update" && Boolean(estimateDraft.id)
     const initialVersion = Number(estimateDraft.version_no) || getNextEstimateVersion(existingForLead)
     const shareToken = estimateDraft.share_token || generateShareToken()
+    const estimateBaseTitle =
+      stripEstimateVersionSuffix(estimateDraft.title) ||
+      `${estimateDraft.product_type || "Estimate"} Estimate`
     let estimatePayload = {
       lead_id: leadId,
       version_no: initialVersion,
       product_type: estimateDraft.product_type,
-      title: `Warehouse Estimate V${initialVersion}`,
+      title: `${estimateBaseTitle} V${initialVersion}`,
       input_data: estimateDraft.input_data,
       line_items: estimateDraft.line_items,
       subtotal: estimateDraft.subtotal,
@@ -884,13 +899,19 @@ export default function KanbanPage() {
 
     let savedEstimate = null
     let estimateInsertPayload = { ...estimatePayload }
-    let insertResult = await supabase.from("estimates").insert([estimateInsertPayload]).select()
+    let insertResult = isEstimateUpdate
+      ? await supabase
+          .from("estimates")
+          .update(estimateInsertPayload)
+          .eq("id", estimateDraft.id)
+          .select()
+      : await supabase.from("estimates").insert([estimateInsertPayload]).select()
 
     while (insertResult.error) {
       const message = insertResult.error.message || ""
       const missingColumn = parseMissingColumn(insertResult.error)
 
-      if (/estimates_lead_version_idx/i.test(message) || /duplicate key value/i.test(message)) {
+      if (!isEstimateUpdate && (/estimates_lead_version_idx/i.test(message) || /duplicate key value/i.test(message))) {
         const { data: existingDbEstimates } = await supabase
           .from("estimates")
           .select("id, version_no")
@@ -904,7 +925,7 @@ export default function KanbanPage() {
         estimatePayload = {
           ...estimatePayload,
           version_no: nextVersion,
-          title: `Warehouse Estimate V${nextVersion}`,
+          title: `${estimateBaseTitle} V${nextVersion}`,
         }
         estimateInsertPayload = { ...estimatePayload }
         insertResult = await supabase.from("estimates").insert([estimateInsertPayload]).select()
@@ -912,12 +933,26 @@ export default function KanbanPage() {
       }
 
       if (/relation .*estimates.* does not exist/i.test(message) || /Could not find the table/i.test(message)) {
-        savedEstimate = {
-          id: `local-${leadId}-${Date.now()}`,
-          created_at: new Date().toISOString(),
-          ...estimatePayload,
-        }
-        setStoredEstimatesForLead(leadId, [savedEstimate, ...existingForLead])
+        savedEstimate = isEstimateUpdate
+          ? {
+              ...(existingForLead.find((estimate) => estimate.id === estimateDraft.id) || {}),
+              ...estimatePayload,
+              id: estimateDraft.id,
+              created_at:
+                existingForLead.find((estimate) => estimate.id === estimateDraft.id)?.created_at ||
+                new Date().toISOString(),
+            }
+          : {
+              id: `local-${leadId}-${Date.now()}`,
+              created_at: new Date().toISOString(),
+              ...estimatePayload,
+            }
+        setStoredEstimatesForLead(
+          leadId,
+          isEstimateUpdate
+            ? existingForLead.map((estimate) => (estimate.id === savedEstimate.id ? savedEstimate : estimate))
+            : [savedEstimate, ...existingForLead]
+        )
         break
       }
 
@@ -927,7 +962,13 @@ export default function KanbanPage() {
       }
 
       delete estimateInsertPayload[missingColumn]
-      insertResult = await supabase.from("estimates").insert([estimateInsertPayload]).select()
+      insertResult = isEstimateUpdate
+        ? await supabase
+            .from("estimates")
+            .update(estimateInsertPayload)
+            .eq("id", estimateDraft.id)
+            .select()
+        : await supabase.from("estimates").insert([estimateInsertPayload]).select()
     }
 
     if (!savedEstimate && !insertResult.error) {
@@ -940,9 +981,13 @@ export default function KanbanPage() {
       }
       setStoredEstimatesForLead(
         leadId,
-        [savedEstimate, ...existingForLead].sort(
-          (a, b) => Number(b.version_no || 0) - Number(a.version_no || 0)
-        )
+        isEstimateUpdate
+          ? existingForLead
+              .map((estimate) => (estimate.id === savedEstimate.id ? savedEstimate : estimate))
+              .sort((a, b) => Number(b.version_no || 0) - Number(a.version_no || 0))
+          : [savedEstimate, ...existingForLead].sort(
+              (a, b) => Number(b.version_no || 0) - Number(a.version_no || 0)
+            )
       )
     }
 
@@ -951,7 +996,7 @@ export default function KanbanPage() {
       ...currentLead,
       status: "quoted",
       quote_value: estimateDraft.total,
-      product_type: currentLead?.product_type || estimateDraft.product_type,
+      product_type: estimateDraft.product_type || currentLead?.product_type,
       next_action: "Send estimate to client and follow up",
       estimate_request: estimateDraft.estimate_request,
     })
@@ -1004,16 +1049,18 @@ export default function KanbanPage() {
         lead_id: leadId,
         type: "update",
         user_name: "System",
-        description: `Estimate V${estimatePayload.version_no} created for ${formatStatusLabel(updatedLead.status)} stage.`,
+        description: `Estimate V${estimatePayload.version_no} ${isEstimateUpdate ? "updated" : "created"} for ${formatStatusLabel(updatedLead.status)} stage.`,
         timestamp: new Date().toISOString(),
       },
-      {
-        lead_id: leadId,
-        type: "status",
-        user_name: "System",
-        description: `Status changed from ${formatStatusLabel(currentLead?.status)} to Quoted`,
-        timestamp: new Date().toISOString(),
-      },
+      currentLead?.status !== "quoted"
+        ? {
+            lead_id: leadId,
+            type: "status",
+            user_name: "System",
+            description: `Status changed from ${formatStatusLabel(currentLead?.status)} to Quoted`,
+            timestamp: new Date().toISOString(),
+          }
+        : null,
     ])
 
     await sendCrmNotification({
@@ -1022,7 +1069,9 @@ export default function KanbanPage() {
       previousLead: currentLead,
       actor: user?.email || "Smart Steel CRM",
       changedFields: ["status", "quote_value", "next_action"],
-      summary: `Estimate V${estimatePayload.version_no} created and lead moved to quoted.`,
+      summary: isEstimateUpdate
+        ? `Estimate V${estimatePayload.version_no} updated and lead quote data refreshed.`
+        : `Estimate V${estimatePayload.version_no} created and lead moved to quoted.`,
     })
 
     setEditingLead(updatedLead)
