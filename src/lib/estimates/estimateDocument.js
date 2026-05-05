@@ -20,6 +20,10 @@ function formatDimension(value) {
   return `${numeric}m`
 }
 
+function isSolarProduct(productType) {
+  return ["Solar carport", "Solar ground mount", "Solar structure"].includes(productType)
+}
+
 export function formatEstimateDate(value) {
   if (!value) return "Not saved"
 
@@ -46,9 +50,12 @@ export function buildEstimateDisplayModel(estimate, lead) {
   const totalInclVat = total + vatAmount
   const area = Number(input.width || 0) * Number(input.length || 0)
   const quantity = Math.max(1, Number(input.quantity || 1))
+  const moduleCount = Math.max(0, Number(input.moduleCount || 0))
+  const totalModuleCount = moduleCount * quantity
   const totalArea = area * quantity
   const hasDimensions = Number(input.width || 0) > 0 && Number(input.length || 0) > 0
   const productType = estimate?.product_type || lead?.product_type || "Warehouse"
+  const solarProduct = isSolarProduct(productType)
   const layoutNote =
     Number(input.length || 0) > 0 &&
     Number(input.effectiveLength || 0) > 0 &&
@@ -58,6 +65,64 @@ export function buildEstimateDisplayModel(estimate, lead) {
   const quotationTitle = hasDimensions
     ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} x ${formatDimension(input.length)} ${productType} Quotation`
     : `${productType} Quotation`
+  const summaryFields = solarProduct
+    ? [
+        { label: "Width", value: formatDimension(input.width) },
+        { label: "Length", value: formatDimension(input.length) },
+        { label: "Clearance", value: formatDimension(input.wallHeight) },
+        { label: "Quantity", value: `${quantity}` },
+        {
+          label: "Area",
+          value:
+            area > 0
+              ? quantity > 1
+                ? `${area} m² each (${totalArea} m² total)`
+                : `${area} m²`
+              : "Not specified",
+        },
+        {
+          label: "Modules",
+          value: totalModuleCount > 0 ? `${totalModuleCount}` : "Not specified",
+        },
+        {
+          label: "Delivery",
+          value:
+            Number.isFinite(Number(input.deliveryDistance)) && Number(input.deliveryDistance) > 0
+              ? `${Number(input.deliveryDistance)} km`
+              : "Collection / not specified",
+        },
+        {
+          label: "Installation",
+          value: input.claddingInstalled ? "Included" : "Structure supply only",
+        },
+      ]
+    : [
+        { label: "Width", value: formatDimension(input.width) },
+        { label: "Length", value: formatDimension(input.length) },
+        { label: "Height", value: formatDimension(input.wallHeight) },
+        { label: "Quantity", value: `${quantity}` },
+        {
+          label: "Area",
+          value:
+            area > 0
+              ? quantity > 1
+                ? `${area} m² each (${totalArea} m² total)`
+                : `${area} m²`
+              : "Not specified",
+        },
+        { label: "Cladding", value: input.cladding || "Not specified" },
+        {
+          label: "Delivery",
+          value:
+            Number.isFinite(Number(input.deliveryDistance)) && Number(input.deliveryDistance) > 0
+              ? `${Number(input.deliveryDistance)} km`
+              : "Collection / not specified",
+        },
+        {
+          label: "Installation",
+          value: input.claddingInstalled ? "Included" : "Structure supply only",
+        },
+      ]
 
   return {
     estimateNumber: `${String(estimate?.product_type || "Estimate").slice(0, 3).toUpperCase()}-${String(
@@ -86,6 +151,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
         ? `${Number(input.deliveryDistance)} km`
         : "Collection / not specified",
     installationLabel: input.claddingInstalled ? "Included" : "Structure supply only",
+    summaryFields,
     notes: [layoutNote, estimate?.notes].filter(Boolean).join("\n\n"),
     lineItems,
     subtotalLabel: formatCurrency(total),
