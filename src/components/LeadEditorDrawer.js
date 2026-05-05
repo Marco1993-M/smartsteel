@@ -24,7 +24,14 @@ const LEAD_SOURCE_OPTIONS = [
   "Organic search",
   "Repeat client",
 ];
-const PRODUCT_TYPE_OPTIONS = ["Warehouse", "Solar carport", "LSF trusses", "Other"];
+const PRODUCT_TYPE_OPTIONS = [
+  "Warehouse",
+  "Solar carport",
+  "Solar ground mount",
+  "Solar structure",
+  "LSF trusses",
+  "Other",
+];
 
 function normalizeStatus(status) {
   return String(status || "new").trim().toLowerCase();

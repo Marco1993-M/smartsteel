@@ -135,16 +135,7 @@ export default function EstimateDocumentLayout({
             Project Summary
           </h2>
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-slate-700 print:mt-2 print:gap-2 print:text-[12px]">
-            {[
-              { label: "Width", value: documentModel.widthLabel },
-              { label: "Length", value: documentModel.lengthLabel },
-              { label: "Height", value: documentModel.heightLabel },
-              { label: "Quantity", value: documentModel.quantityLabel },
-              { label: "Area", value: documentModel.areaLabel },
-              { label: "Cladding", value: documentModel.claddingLabel },
-              { label: "Delivery", value: documentModel.deliveryLabel },
-              { label: "Installation", value: documentModel.installationLabel },
-            ].map((item) => (
+            {documentModel.summaryFields.map((item) => (
               <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 print:px-3 print:py-2.5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                   {item.label}

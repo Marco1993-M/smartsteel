@@ -10,6 +10,16 @@ import {
   WAREHOUSE_LENGTH_OPTIONS,
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../lib/estimates/warehouseEstimate"
+import {
+  calculateSolarEstimate,
+  SOLAR_PRODUCT_TYPE_OPTIONS,
+} from "../lib/estimates/solarEstimate"
+
+const SOLAR_PRODUCT_TYPES = SOLAR_PRODUCT_TYPE_OPTIONS.map((option) => option.value)
+const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
+  { value: "Warehouse", label: "Warehouse" },
+  ...SOLAR_PRODUCT_TYPE_OPTIONS,
+]
 
 function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100
@@ -35,21 +45,33 @@ function stripVersionSuffix(title) {
   return String(title || "").replace(/\s+V\d+$/i, "").trim()
 }
 
+function isSolarProductType(productType) {
+  return SOLAR_PRODUCT_TYPES.includes(productType)
+}
+
 function buildInitialState(lead, estimate) {
   const latestInput = estimate?.input_data || {}
+  const productType =
+    latestInput.productType ||
+    estimate?.product_type ||
+    lead?.product_type ||
+    "Warehouse"
   const width = Number(latestInput.width || lead?.width || 8)
   const length = Number(latestInput.length || lead?.length || 10)
+  const solarProduct = isSolarProductType(productType)
   const useCustomSize =
     typeof latestInput.useCustomSize === "boolean"
       ? latestInput.useCustomSize
-      : !isCatalogSize(width, length)
+      : solarProduct || !isCatalogSize(width, length)
 
   return {
+    productType,
     width,
     length,
     useCustomSize,
     wallHeight: Number(latestInput.wallHeight || lead?.wall_height || 3),
     quantity: Math.max(1, Number(latestInput.quantity || 1)),
+    moduleCount: Math.max(0, Number(latestInput.moduleCount || 0)),
     cladding: latestInput.cladding || lead?.cladding || "None",
     claddingInstalled:
       typeof latestInput.claddingInstalled === "boolean"
@@ -148,6 +170,36 @@ function getNextEstimateVersion(estimates = []) {
   return maxVersion + 1
 }
 
+function buildEstimateDraft({
+  lead,
+  versionNo,
+  formState,
+  preview,
+  editableLineItems,
+  subtotal,
+  estimatedTotal,
+  existingEstimate,
+  saveMode = "new",
+}) {
+  return {
+    id: existingEstimate?.id,
+    lead,
+    version_no: versionNo,
+    product_type: formState.productType,
+    title: `${(formState.estimateName || preview.summary.title).trim()} V${versionNo}`,
+    input_data: { ...preview.input, useCustomSize: formState.useCustomSize, productType: formState.productType },
+    original_line_items: preview.lineItems,
+    line_items: editableLineItems,
+    subtotal,
+    markup_multiplier: preview.pricing.markupMultiplier,
+    total: estimatedTotal,
+    notes: formState.notes,
+    estimate_request: preview.summary.estimateRequest,
+    save_mode: saveMode,
+    share_token: existingEstimate?.share_token,
+  }
+}
+
 export default function EstimateDrawer({
   lead,
   estimates,
@@ -163,8 +215,14 @@ export default function EstimateDrawer({
   const [formState, setFormState] = useState(() => buildInitialState(lead, latestEstimate))
   const [isSaving, setIsSaving] = useState(false)
   const [prefersSameTabPreview, setPrefersSameTabPreview] = useState(false)
-
-  const preview = useMemo(() => calculateWarehouseEstimate(formState), [formState])
+  const isSolarEstimate = isSolarProductType(formState.productType)
+  const preview = useMemo(
+    () =>
+      isSolarEstimate
+        ? calculateSolarEstimate(formState)
+        : calculateWarehouseEstimate(formState),
+    [formState, isSolarEstimate]
+  )
   const [editableLineItems, setEditableLineItems] = useState(() =>
     buildEditableLineItemsFromEstimate(preview.lineItems, latestEstimate)
   )
@@ -177,7 +235,9 @@ export default function EstimateDrawer({
     const nextFormState = buildInitialState(lead, loadedEstimate)
     setFormState(nextFormState)
 
-    const nextPreview = calculateWarehouseEstimate(nextFormState)
+    const nextPreview = isSolarProductType(nextFormState.productType)
+      ? calculateSolarEstimate(nextFormState)
+      : calculateWarehouseEstimate(nextFormState)
     setEditableLineItems(buildEditableLineItemsFromEstimate(nextPreview.lineItems, loadedEstimate))
   }, [lead, loadedEstimate])
 
@@ -219,6 +279,7 @@ export default function EstimateDrawer({
   }, [])
 
   const nextVersion = getNextEstimateVersion(estimates)
+  const canUpdateLoadedEstimate = Boolean(loadedEstimate?.id)
   const sortedEstimates = useMemo(() => [...(estimates || [])].sort((a, b) => {
     const versionDiff = Number(b?.version_no || 0) - Number(a?.version_no || 0)
     if (versionDiff !== 0) return versionDiff
@@ -292,20 +353,17 @@ export default function EstimateDrawer({
 
   const handleSave = async () => {
     setIsSaving(true)
-    const savedEstimate = await onSaveEstimate({
-      lead,
-      version_no: nextVersion,
-      product_type: "Warehouse",
-      title: `${(formState.estimateName || preview.summary.title).trim()} V${nextVersion}`,
-      input_data: { ...preview.input, useCustomSize: formState.useCustomSize },
-      original_line_items: preview.lineItems,
-      line_items: editableLineItems,
-      subtotal,
-      markup_multiplier: preview.pricing.markupMultiplier,
-      total: estimatedTotal,
-      notes: formState.notes,
-      estimate_request: preview.summary.estimateRequest,
-    })
+    const savedEstimate = await onSaveEstimate(
+      buildEstimateDraft({
+        lead,
+        versionNo: nextVersion,
+        formState,
+        preview,
+        editableLineItems,
+        subtotal,
+        estimatedTotal,
+      })
+    )
     setIsSaving(false)
 
     if (savedEstimate) {
@@ -315,20 +373,17 @@ export default function EstimateDrawer({
 
   const handleSaveAndOpen = async () => {
     setIsSaving(true)
-    const savedEstimate = await onSaveEstimate({
-      lead,
-      version_no: nextVersion,
-      product_type: "Warehouse",
-      title: `${(formState.estimateName || preview.summary.title).trim()} V${nextVersion}`,
-      input_data: { ...preview.input, useCustomSize: formState.useCustomSize },
-      original_line_items: preview.lineItems,
-      line_items: editableLineItems,
-      subtotal,
-      markup_multiplier: preview.pricing.markupMultiplier,
-      total: estimatedTotal,
-      notes: formState.notes,
-      estimate_request: preview.summary.estimateRequest,
-    })
+    const savedEstimate = await onSaveEstimate(
+      buildEstimateDraft({
+        lead,
+        versionNo: nextVersion,
+        formState,
+        preview,
+        editableLineItems,
+        subtotal,
+        estimatedTotal,
+      })
+    )
     setIsSaving(false)
 
     if (savedEstimate?.id) {
@@ -340,6 +395,42 @@ export default function EstimateDrawer({
       if (!prefersSameTabPreview) {
         onClose()
       }
+    }
+  }
+
+  const handleUpdateLoadedEstimate = async (openAfterSave = false) => {
+    if (!loadedEstimate?.id) return
+
+    setIsSaving(true)
+    const savedEstimate = await onSaveEstimate(
+      buildEstimateDraft({
+        lead,
+        versionNo: Number(loadedEstimate.version_no) || nextVersion,
+        formState,
+        preview,
+        editableLineItems,
+        subtotal,
+        estimatedTotal,
+        existingEstimate: loadedEstimate,
+        saveMode: "update",
+      })
+    )
+    setIsSaving(false)
+
+    if (savedEstimate?.id && openAfterSave) {
+      openEstimateDocument(
+        isLocalEstimateId(savedEstimate.id)
+          ? buildEstimatePreviewUrl(savedEstimate.id)
+          : buildEstimatePdfUrl(savedEstimate.id)
+      )
+      if (!prefersSameTabPreview) {
+        onClose()
+      }
+      return
+    }
+
+    if (savedEstimate) {
+      onClose()
     }
   }
 
@@ -366,10 +457,10 @@ export default function EstimateDrawer({
                     </button>
                     <div className="min-w-0">
                       <Dialog.Title className="text-lg font-semibold text-slate-900 sm:text-xl">
-                        Create Estimate
+                        {canUpdateLoadedEstimate ? "Edit Estimate" : "Create Estimate"}
                       </Dialog.Title>
                       <p className="truncate text-sm text-slate-500">
-                        {lead?.name} {lead?.last_name} · New version {nextVersion}
+                        {lead?.name} {lead?.last_name} · {canUpdateLoadedEstimate ? `Loaded version ${loadedEstimate?.version_no}` : `New version ${nextVersion}`}
                       </p>
                     </div>
                   </div>
@@ -381,9 +472,23 @@ export default function EstimateDrawer({
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-sm font-medium text-slate-900">Estimate type</p>
                     <p className="mt-1 text-sm text-slate-600">
-                      Use the catalog sizes for standard warehouse quotes, or switch to custom mode
-                      when a client sends a non-standard structure request.
+                      Choose the structure category first, then shape the estimate inputs for that product.
                     </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700">Product type</label>
+                    <select
+                      value={formState.productType}
+                      onChange={(event) => handleChange("productType", event.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    >
+                      {ESTIMATE_PRODUCT_TYPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
@@ -398,35 +503,39 @@ export default function EstimateDrawer({
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleChange("useCustomSize", false)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                          !formState.useCustomSize
-                            ? "bg-slate-900 text-white"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        Catalog sizes
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleChange("useCustomSize", true)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                          formState.useCustomSize
-                            ? "bg-slate-900 text-white"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        Custom request
-                      </button>
-                    </div>
+                    {!isSolarEstimate ? (
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleChange("useCustomSize", false)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                            !formState.useCustomSize
+                              ? "bg-slate-900 text-white"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          Catalog sizes
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleChange("useCustomSize", true)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                            formState.useCustomSize
+                              ? "bg-slate-900 text-white"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          Custom request
+                        </button>
+                      </div>
+                    ) : null}
 
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700">Width</label>
-                        {formState.useCustomSize ? (
+                        <label className="block text-sm font-medium text-slate-700">
+                          {isSolarEstimate ? "Width / span" : "Width"}
+                        </label>
+                        {formState.useCustomSize || isSolarEstimate ? (
                           <input
                             type="number"
                             min="0.1"
@@ -452,8 +561,10 @@ export default function EstimateDrawer({
                         )}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700">Length / depth</label>
-                        {formState.useCustomSize ? (
+                        <label className="block text-sm font-medium text-slate-700">
+                          {isSolarEstimate ? "Length" : "Length / depth"}
+                        </label>
+                        {formState.useCustomSize || isSolarEstimate ? (
                           <input
                             type="number"
                             min="0.1"
@@ -483,7 +594,9 @@ export default function EstimateDrawer({
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Height</label>
+                      <label className="block text-sm font-medium text-slate-700">
+                        {isSolarEstimate ? "Clearance height" : "Height"}
+                      </label>
                       <input
                         type="number"
                         min="0.1"
@@ -509,20 +622,36 @@ export default function EstimateDrawer({
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700">Cladding</label>
-                      <select
-                        value={formState.cladding}
-                        onChange={(event) => handleChange("cladding", event.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                      >
-                        {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {!isSolarEstimate ? (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Cladding</label>
+                        <select
+                          value={formState.cladding}
+                          onChange={(event) => handleChange("cladding", event.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        >
+                          {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Module count</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formState.moduleCount}
+                          onChange={(event) =>
+                            handleChange("moduleCount", Math.max(0, Number(event.target.value) || 0))
+                          }
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      </div>
+                    )}
                     <div>
                       <label className="block text-sm font-medium text-slate-700">
                         Delivery distance (km)
@@ -539,7 +668,7 @@ export default function EstimateDrawer({
                     </div>
                   </div>
 
-                  {preview.summary.layoutNote ? (
+                  {!isSolarEstimate && preview.summary.layoutNote ? (
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                       {preview.summary.layoutNote}
                     </div>
@@ -553,7 +682,7 @@ export default function EstimateDrawer({
                         handleChange("claddingInstalled", event.target.checked)
                       }
                     />
-                    Include installation for the structure
+                    {isSolarEstimate ? "Include installation and site assembly" : "Include installation for the structure"}
                   </label>
 
                   <div>
@@ -707,8 +836,9 @@ export default function EstimateDrawer({
                   </div>
 
                   <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">
-                    This estimate will save against the lead, mark the lead as quoted, update the
-                    quote value, and log the activity in the CRM.
+                    {canUpdateLoadedEstimate
+                      ? "You can update the loaded estimate in place, or save these changes as a new version. The CRM will still refresh the lead quote value and activity log."
+                      : "This estimate will save against the lead, mark the lead as quoted, update the quote value, and log the activity in the CRM."}
                     {hasOverrides && (
                       <span className="mt-2 block text-amber-700">
                         This revision includes manual line-item adjustments.
@@ -811,8 +941,19 @@ export default function EstimateDrawer({
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Printer size={16} />
-                  {isSaving ? "Saving..." : "Save & Open PDF"}
+                  {isSaving ? "Saving..." : canUpdateLoadedEstimate ? "Save New Version & Open PDF" : "Save & Open PDF"}
                 </button>
+                {canUpdateLoadedEstimate ? (
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateLoadedEstimate(false)}
+                    disabled={isSaving}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Save size={16} />
+                    {isSaving ? "Saving..." : `Update Loaded V${loadedEstimate?.version_no}`}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={handleSave}
@@ -820,7 +961,7 @@ export default function EstimateDrawer({
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Save size={16} />
-                  {isSaving ? "Saving..." : "Save Estimate"}
+                  {isSaving ? "Saving..." : canUpdateLoadedEstimate ? "Save New Version" : "Save Estimate"}
                 </button>
               </div>
             </Dialog.Panel>

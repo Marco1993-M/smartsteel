@@ -3,6 +3,15 @@
 import { useState } from "react"
 import { supabase } from "../lib/supabase"
 
+const PRODUCT_TYPE_OPTIONS = [
+  "Warehouse",
+  "Solar carport",
+  "Solar ground mount",
+  "Solar structure",
+  "LSF trusses",
+  "Other",
+]
+
 export default function AddLeadModal({ onClose, onLeadAdded }) {
   const [lead, setLead] = useState({
     name: "",
@@ -10,6 +19,7 @@ export default function AddLeadModal({ onClose, onLeadAdded }) {
     estimate_request: "",
     status: "new",
     allocated_to: "",
+    product_type: "Warehouse",
     notes: "",
   })
 
@@ -55,6 +65,17 @@ export default function AddLeadModal({ onClose, onLeadAdded }) {
             onChange={(e) => setLead({ ...lead, estimate_request: e.target.value })}
             className="border px-3 py-2 rounded"
           />
+          <select
+            value={lead.product_type}
+            onChange={(e) => setLead({ ...lead, product_type: e.target.value })}
+            className="border px-3 py-2 rounded"
+          >
+            {PRODUCT_TYPE_OPTIONS.map((product) => (
+              <option key={product} value={product}>
+                {product}
+              </option>
+            ))}
+          </select>
           <select
             value={lead.status}
             onChange={(e) => setLead({ ...lead, status: e.target.value })}
