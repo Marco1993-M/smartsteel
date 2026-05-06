@@ -50,7 +50,7 @@ const PRODUCT_TYPE_OPTIONS = [
   "Other",
 ]
 const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
-const GENERAL_GOOGLE_SHEET_URL = ""
+const GENERAL_GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1xfXyuDuDCUKVHjQXF3Z_qMyWadyKvLL9h3svKxohvZ8/edit?gid=1145942094#gid=1145942094"
 
 const emptyLead = {
   name: "",
