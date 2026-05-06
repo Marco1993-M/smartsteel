@@ -25,6 +25,7 @@ const CRM_FALLBACK_FIELDS = [
   "quote_value",
   "expected_close_date",
   "lost_reason",
+  "google_sheet_url",
 ]
 const LEAD_SOURCE_OPTIONS = [
   "Website form",
@@ -38,11 +39,13 @@ const LEAD_SOURCE_OPTIONS = [
   "Repeat client",
 ]
 const PRODUCT_TYPE_OPTIONS = [
-  "Warehouse",
+  "LSF Warehouse",
+  "LCSS Warehouse",
   "Solar carport",
   "Solar ground mount",
   "Solar structure",
   "LSF trusses",
+  "Bracketry",
   "Other",
 ]
 const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
@@ -60,6 +63,7 @@ const emptyLead = {
   quote_value: "",
   expected_close_date: "",
   lost_reason: "",
+  google_sheet_url: "",
   notes: "",
   status: "new",
 }
@@ -78,6 +82,7 @@ function normalizeLead(lead) {
     quote_value: lead.quote_value || "",
     expected_close_date: lead.expected_close_date || null,
     lost_reason: lead.lost_reason || "",
+    google_sheet_url: lead.google_sheet_url || "",
     follow_up_at: lead.follow_up_at || null,
   }
 }
@@ -737,6 +742,9 @@ export default function KanbanPage() {
       currentLead?.quote_value !== normalizedLead.quote_value ? "quote_value" : null,
       currentLead?.expected_close_date !== normalizedLead.expected_close_date
         ? "expected_close_date"
+        : null,
+      currentLead?.google_sheet_url !== normalizedLead.google_sheet_url
+        ? "google_sheet_url"
         : null,
     ].filter(Boolean)
 
