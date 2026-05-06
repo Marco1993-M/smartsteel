@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
-import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft, FileText } from "lucide-react"
+import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft, FileText, Link2 } from "lucide-react"
 import { supabase } from "../lib/supabase" 
 import {
   formatCrmStatusLabel,
@@ -25,11 +25,13 @@ const LEAD_SOURCE_OPTIONS = [
   "Repeat client",
 ];
 const PRODUCT_TYPE_OPTIONS = [
-  "Warehouse",
+  "LSF Warehouse",
+  "LCSS Warehouse",
   "Solar carport",
   "Solar ground mount",
   "Solar structure",
   "LSF trusses",
+  "Bracketry",
   "Other",
 ];
 
@@ -96,6 +98,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     quote_value: "",
     expected_close_date: "",
     lost_reason: "",
+    google_sheet_url: "",
     notes: "",
     ...lead
   });
@@ -197,6 +200,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       quote_value: "",
       expected_close_date: "",
       lost_reason: "",
+      google_sheet_url: "",
       notes: "",
       ...lead
     });
@@ -733,6 +737,32 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               className={inputClass}
             />
           </div>
+        </div>
+        <div>
+          <label className={fieldLabelClass}>Google Sheet Link</label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              type="url"
+              value={formData.google_sheet_url || ""}
+              onChange={(e) => handleChange("google_sheet_url", e.target.value)}
+              placeholder="https://docs.google.com/spreadsheets/..."
+              className={`${inputClass} flex-1`}
+            />
+            {formData.google_sheet_url ? (
+              <a
+                href={formData.google_sheet_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                <Link2 size={16} />
+                Open Sheet
+              </a>
+            ) : null}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Link the working Google Sheet here so the team can open it directly from the CRM.
+          </p>
         </div>
         <div>
           <label className={fieldLabelClass}>Next Action</label>

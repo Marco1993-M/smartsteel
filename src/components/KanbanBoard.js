@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
-import { Mail, Phone, Edit3, FileText } from "lucide-react"
+import { Mail, Phone, Edit3, FileText, Link2 } from "lucide-react"
 import UpcomingTasks from "../components/UpcomingTasks"
 import { formatCrmStatusLabel, getLeadSop } from "../lib/crmSop"
 import { supabase } from "../lib/supabase"
@@ -363,6 +363,16 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         >
           <FileText size={12} /> Estimate
         </button>
+        {lead.google_sheet_url && (
+          <a
+            href={lead.google_sheet_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1.5 text-amber-700 transition hover:bg-amber-200 sm:px-2 sm:py-1"
+          >
+            <Link2 size={12} /> Sheet
+          </a>
+        )}
       </div>
 
       {isOpen && (
@@ -410,6 +420,19 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
             <span className="font-semibold">Quote value:</span>{" "}
             {lead.quote_value ? `R ${lead.quote_value}` : "Not set"}
           </p>
+          {lead.google_sheet_url && (
+            <p>
+              <span className="font-semibold">Google Sheet:</span>{" "}
+              <a
+                href={lead.google_sheet_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                Open linked sheet
+              </a>
+            </p>
+          )}
           {lead.estimate_request && (
             <p>
               <span className="font-semibold">Request:</span> {lead.estimate_request}
