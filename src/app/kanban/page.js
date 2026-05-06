@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { Link2 } from "lucide-react"
 import KanbanBoard from "../../components/KanbanBoard"
 import LeadEditorDrawer from "../../components/LeadEditorDrawer"
 import PricesDrawer from "../../components/PricesDrawer"
@@ -49,6 +50,7 @@ const PRODUCT_TYPE_OPTIONS = [
   "Other",
 ]
 const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
+const GENERAL_GOOGLE_SHEET_URL = ""
 
 const emptyLead = {
   name: "",
@@ -1413,6 +1415,20 @@ export default function KanbanPage() {
                 onClick={() => setShowPricesDrawer(true)}
               >
                 Prices & Templates
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!GENERAL_GOOGLE_SHEET_URL) {
+                    alert("Add your shared Google Sheet URL in src/app/kanban/page.js to enable this shortcut.")
+                    return
+                  }
+                  window.open(GENERAL_GOOGLE_SHEET_URL, "_blank", "noopener,noreferrer")
+                }}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto sm:py-2"
+              >
+                <Link2 size={16} />
+                General Sheet
               </button>
               <button
                 className="inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 sm:w-auto sm:py-2"
