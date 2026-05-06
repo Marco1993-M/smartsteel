@@ -4,20 +4,22 @@ import { Fragment, useEffect, useMemo, useState } from "react"
 import { Dialog, Transition } from "@headlessui/react"
 import { ArrowLeft, Link2, Plus, Printer, Save, Trash2 } from "lucide-react"
 import {
-  calculateWarehouseEstimate,
   formatCurrency,
   WAREHOUSE_CLADDING_OPTIONS,
   WAREHOUSE_LENGTH_OPTIONS,
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../lib/estimates/warehouseEstimate"
 import {
-  calculateSolarEstimate,
   SOLAR_PRODUCT_TYPE_OPTIONS,
 } from "../lib/estimates/solarEstimate"
+import {
+  calculateEstimateByProductType,
+  isSolarEstimateProduct,
+} from "../lib/estimates/estimateFactory"
 
-const SOLAR_PRODUCT_TYPES = SOLAR_PRODUCT_TYPE_OPTIONS.map((option) => option.value)
 const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
-  { value: "Warehouse", label: "Warehouse" },
+  { value: "LSF Warehouse", label: "LSF Warehouse" },
+  { value: "LCSS Warehouse", label: "LCSS Warehouse" },
   ...SOLAR_PRODUCT_TYPE_OPTIONS,
 ]
 
@@ -45,20 +47,16 @@ function stripVersionSuffix(title) {
   return String(title || "").replace(/\s+V\d+$/i, "").trim()
 }
 
-function isSolarProductType(productType) {
-  return SOLAR_PRODUCT_TYPES.includes(productType)
-}
-
 function buildInitialState(lead, estimate) {
   const latestInput = estimate?.input_data || {}
   const productType =
     latestInput.productType ||
     estimate?.product_type ||
     lead?.product_type ||
-    "Warehouse"
+    "LSF Warehouse"
   const width = Number(latestInput.width || lead?.width || 8)
   const length = Number(latestInput.length || lead?.length || 10)
-  const solarProduct = isSolarProductType(productType)
+  const solarProduct = isSolarEstimateProduct(productType)
   const useCustomSize =
     typeof latestInput.useCustomSize === "boolean"
       ? latestInput.useCustomSize
@@ -215,13 +213,10 @@ export default function EstimateDrawer({
   const [formState, setFormState] = useState(() => buildInitialState(lead, latestEstimate))
   const [isSaving, setIsSaving] = useState(false)
   const [prefersSameTabPreview, setPrefersSameTabPreview] = useState(false)
-  const isSolarEstimate = isSolarProductType(formState.productType)
+  const isSolarEstimate = isSolarEstimateProduct(formState.productType)
   const preview = useMemo(
-    () =>
-      isSolarEstimate
-        ? calculateSolarEstimate(formState)
-        : calculateWarehouseEstimate(formState),
-    [formState, isSolarEstimate]
+    () => calculateEstimateByProductType(formState.productType, formState),
+    [formState]
   )
   const [editableLineItems, setEditableLineItems] = useState(() =>
     buildEditableLineItemsFromEstimate(preview.lineItems, latestEstimate)
@@ -235,9 +230,7 @@ export default function EstimateDrawer({
     const nextFormState = buildInitialState(lead, loadedEstimate)
     setFormState(nextFormState)
 
-    const nextPreview = isSolarProductType(nextFormState.productType)
-      ? calculateSolarEstimate(nextFormState)
-      : calculateWarehouseEstimate(nextFormState)
+    const nextPreview = calculateEstimateByProductType(nextFormState.productType, nextFormState)
     setEditableLineItems(buildEditableLineItemsFromEstimate(nextPreview.lineItems, loadedEstimate))
   }, [lead, loadedEstimate])
 
