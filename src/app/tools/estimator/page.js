@@ -1,18 +1,25 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import emailjs from '@emailjs/browser';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from "../../../lib/supabase";
 import {
-  calculateWarehouseEstimate,
   formatCurrency,
   WAREHOUSE_CLADDING_OPTIONS,
   WAREHOUSE_LENGTH_OPTIONS,
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../../../lib/estimates/warehouseEstimate";
+import {
+  calculateEstimateByProductType,
+} from "../../../lib/estimates/estimateFactory";
+import {
+  LCSS_WAREHOUSE_GABLE_OPTIONS,
+  LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS,
+  LCSS_WAREHOUSE_WIDTH_OPTIONS,
+} from "../../../lib/estimates/warehouseEstimateLcss";
 
 let lastAllocatedIndex = 0;
 const team = ['Stefan', 'Niel', 'Marco'];
@@ -40,10 +47,14 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 }
 
 export default function EstimatorPage() {
+  const [productType, setProductType] = useState('LSF Warehouse');
   const [width, setWidth] = useState(8);
   const [length, setLength] = useState(10);
+  const [wallHeight, setWallHeight] = useState(3);
   const [cladding, setCladding] = useState('None'); // ✅ renamed
   const [claddingInstalled, setCladdingInstalled] = useState(false); // ✅ renamed
+  const [steelFinish, setSteelFinish] = useState('Galv');
+  const [gableMode, setGableMode] = useState('sheeted_gable');
   const [distance, setDistance] = useState(0);
   const [usingMyLocation, setUsingMyLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
@@ -52,17 +63,36 @@ export default function EstimatorPage() {
   const [phone, setPhone] = useState('');
   const [estimate, setEstimate] = useState(null);
   const [isSending, setIsSending] = useState(false);
+  const isLcssWarehouse = productType === 'LCSS Warehouse';
+  const productTypeLabel = isLcssWarehouse ? 'CFLC Warehouse' : 'LSF Warehouse';
+
+  useEffect(() => {
+    if (isLcssWarehouse) {
+      setWidth((current) => (LCSS_WAREHOUSE_WIDTH_OPTIONS.includes(current) ? current : 6));
+      setCladdingInstalled(false);
+      setDistance(0);
+      setUsingMyLocation(false);
+      setLocationError(null);
+    } else {
+      setWidth((current) => (WAREHOUSE_WIDTH_OPTIONS.includes(current) ? current : 8));
+      setWallHeight(3);
+    }
+    setEstimate(null);
+  }, [isLcssWarehouse]);
 
   const estimatePreview = useMemo(
     () =>
-      calculateWarehouseEstimate({
+      calculateEstimateByProductType(productType, {
         width,
         length,
+        wallHeight,
         cladding,
         claddingInstalled,
         deliveryDistance: distance,
+        steelFinish,
+        gableMode,
       }),
-    [cladding, claddingInstalled, distance, length, width]
+    [cladding, claddingInstalled, distance, gableMode, length, productType, steelFinish, wallHeight, width]
   );
 
   const handleEstimate = () => {
@@ -94,11 +124,15 @@ export default function EstimatorPage() {
       from_name: name,
       from_email: email,
       phone_number: phone,
-      estimate: formatCurrency(estimate.pricing.estimatedTotal),
+      estimate: formatCurrency(
+        isLcssWarehouse ? estimate.pricing.totalInclVat : estimate.pricing.estimatedTotal
+      ),
+      product_type: productType,
       width,
       length,
-      cladding,
-      cladding_installed: claddingInstalled ? 'Yes' : 'No',
+      height: wallHeight,
+      cladding: isLcssWarehouse ? steelFinish : cladding,
+      cladding_installed: isLcssWarehouse ? 'N/A' : claddingInstalled ? 'Yes' : 'No',
       delivery_distance: distance,
     };
 
@@ -123,22 +157,23 @@ export default function EstimatorPage() {
           phone,
           width,
           length,
+          wall_height: wallHeight,
           delivery_distance: distance,
           allocated_to: allocatedTo,
           status: 'new',
-          cladding, // ✅ matches DB column
+          cladding: isLcssWarehouse ? steelFinish : cladding,
           estimate_request: estimate.summary.estimateRequest,
           lead_source: "Estimator",
-          product_type: "Warehouse",
+          product_type: productType,
           next_action: "Review estimator enquiry and send formal quote",
-          quote_value: estimate.pricing.estimatedTotal,
+          quote_value: isLcssWarehouse ? estimate.pricing.totalInclVat : estimate.pricing.estimatedTotal,
           created_at: new Date().toISOString(),
         },
       ]);
 
       if (error) throw error;
 
-      alert(`Thanks, ${name}! Your estimate of ${formatCurrency(estimate.pricing.estimatedTotal)} was submitted.`);
+      alert(`Thanks, ${name}! Your estimate of ${formatCurrency(isLcssWarehouse ? estimate.pricing.totalInclVat : estimate.pricing.estimatedTotal)} was submitted.`);
 
       // reset
       setIsSending(false);
@@ -190,7 +225,7 @@ export default function EstimatorPage() {
         <title>Smart Steel Warehouse Estimator | Lightweight Shed Cost Calculator South Africa</title>
         <meta
           name="description"
-          content="Calculate your lightweight steel warehouse or shed cost instantly with our free Smart Steel Estimator. Get accurate pricing & save on durable steel structures in SA!"
+          content="Choose your Smart Steel warehouse system and calculate an indicative LSF or CFLC warehouse cost online. Fast, structured pricing guidance for South African projects."
         />
         <meta name="robots" content="index, follow" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -200,7 +235,7 @@ export default function EstimatorPage() {
         />
         <meta
           property="og:description"
-          content="Calculate your lightweight steel warehouse or shed cost instantly with our free Smart Steel Estimator. Get accurate pricing & save on durable steel structures in SA!"
+          content="Choose your Smart Steel warehouse system and calculate an indicative LSF or CFLC warehouse cost online."
         />
         <meta property="og:type" content="website" />
       </Head>
@@ -214,7 +249,7 @@ export default function EstimatorPage() {
             Smart Steel Warehouse Estimator
           </h1>
           <h4 className="text-1xl font-regular mb-6 text-center text-gray-900">
-            Lightweight Warehouse Structure
+            Choose your warehouse system, then price the right structure path
           </h4>
           <div className="mb-6 rounded-xl border border-red-100 bg-red-50 p-4 text-center">
             <p className="text-sm font-semibold text-gray-900">Want to shape the building visually first?</p>
@@ -226,6 +261,32 @@ export default function EstimatorPage() {
           <div className="space-y-5">
             {/* Inputs Card */}
             <section className="space-y-4">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-sm font-semibold text-gray-900">Warehouse system</p>
+                <p className="mt-1 text-sm text-gray-600">
+                  Start by choosing the system you want priced. The estimator will then switch to the relevant commercial logic.
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {[
+                    { value: 'LSF Warehouse', label: 'LSF Warehouse' },
+                    { value: 'LCSS Warehouse', label: 'CFLC Warehouse' },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setProductType(option.value)}
+                      className={`rounded-xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                        productType === option.value
+                          ? 'border-black bg-black text-white'
+                          : 'border-gray-200 bg-white text-gray-800 hover:border-gray-400'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <label className="block font-semibold text-gray-700">
                 Width (m)
                 <select
@@ -233,7 +294,7 @@ export default function EstimatorPage() {
                   value={width}
                   onChange={(e) => setWidth(parseInt(e.target.value))}
                 >
-                  {WAREHOUSE_WIDTH_OPTIONS.map((option) => (
+                  {(isLcssWarehouse ? LCSS_WAREHOUSE_WIDTH_OPTIONS : WAREHOUSE_WIDTH_OPTIONS).map((option) => (
                     <option key={option} value={option}>
                       {option}m
                     </option>
@@ -256,55 +317,110 @@ export default function EstimatorPage() {
                 </select>
               </label>
 
-              <label className="block font-semibold text-gray-700">
-                Cladding
-                <select
-                  className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                  value={cladding}
-                  onChange={(e) => setCladding(e.target.value)}
-                >
-                  {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {isLcssWarehouse ? (
+                <>
+                  <label className="block font-semibold text-gray-700">
+                    Wall Height (m)
+                    <input
+                      type="number"
+                      min={2}
+                      step={0.1}
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                      value={wallHeight}
+                      onChange={(e) => setWallHeight(parseFloat(e.target.value) || 3)}
+                    />
+                  </label>
 
-              <label className="block font-semibold text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={claddingInstalled}
-                  onChange={(e) => setCladdingInstalled(e.target.checked)}
-                  className="mr-2"
-                />
-                Include Installation for Structure
-              </label>
+                  <label className="block font-semibold text-gray-700">
+                    Steel Finish
+                    <select
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                      value={steelFinish}
+                      onChange={(e) => setSteelFinish(e.target.value)}
+                    >
+                      {LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-              <label className="block font-semibold text-gray-700">
-                Delivery Distance (km)
-                <div className="flex space-x-2 items-center mt-1">
-                  <input
-                    type="number"
-                    min={0}
-                    className="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                    value={distance}
-                    onChange={handleDistanceChange}
-                    disabled={usingMyLocation}
-                    placeholder="Enter distance or use location"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleUseMyLocation}
-                    className="rounded bg-red-600 text-white px-3 py-2 hover:bg-red-700 transition"
-                  >
-                    Use My Location
-                  </button>
+                  <label className="block font-semibold text-gray-700">
+                    Gable Type
+                    <select
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                      value={gableMode}
+                      onChange={(e) => setGableMode(e.target.value)}
+                    >
+                      {LCSS_WAREHOUSE_GABLE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label className="block font-semibold text-gray-700">
+                    Cladding
+                    <select
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                      value={cladding}
+                      onChange={(e) => setCladding(e.target.value)}
+                    >
+                      {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="block font-semibold text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={claddingInstalled}
+                      onChange={(e) => setCladdingInstalled(e.target.checked)}
+                      className="mr-2"
+                    />
+                    Include Installation for Structure
+                  </label>
+                </>
+              )}
+
+              {!isLcssWarehouse ? (
+                <label className="block font-semibold text-gray-700">
+                  Delivery Distance (km)
+                  <div className="flex space-x-2 items-center mt-1">
+                    <input
+                      type="number"
+                      min={0}
+                      className="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                      value={distance}
+                      onChange={handleDistanceChange}
+                      disabled={usingMyLocation}
+                      placeholder="Enter distance or use location"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleUseMyLocation}
+                      className="rounded bg-red-600 text-white px-3 py-2 hover:bg-red-700 transition"
+                    >
+                      Use My Location
+                    </button>
+                  </div>
+                  {locationError && (
+                    <p className="text-sm text-red-600 mt-1">{locationError}</p>
+                  )}
+                </label>
+              ) : (
+                <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-900">
+                  The current CFLC estimator follows your workbook model for structure and hat pricing.
+                  Delivery, sheeting, and installation can still be added during detailed quoting.
                 </div>
-                {locationError && (
-                  <p className="text-sm text-red-600 mt-1">{locationError}</p>
-                )}
-              </label>
+              )}
 
               <button
                 onClick={handleEstimate}
@@ -318,34 +434,38 @@ export default function EstimatorPage() {
             {estimate !== null && (
               <section className="bg-gray-50 rounded-lg p-5 shadow-inner text-center">
                 <h2 className="text-xl font-semibold mb-1 text-gray-800">
-                  Estimated Cost
+                  {isLcssWarehouse ? 'Estimated Cost (incl. VAT)' : 'Estimated Cost'}
                 </h2>
                 <p className="text-4xl font-extrabold text-green-600">
-                  {formatCurrency(estimate.pricing.estimatedTotal)}
+                  {formatCurrency(isLcssWarehouse ? estimate.pricing.totalInclVat : estimate.pricing.estimatedTotal)}
                 </p>
 
-                <div className="mt-3 text-gray-700 text-sm relative inline-block">
-                  <span>
-                    Compare with Hot-Rolled Steel (Material Only, R1,100–R1,400/m²):
-                    <br />
-                    ~{formatCurrency(estimate.marketComparison.competitorLow)}–{formatCurrency(estimate.marketComparison.competitorHigh)}
-                  </span>
-                </div>
-
-                <p className="mt-2 font-semibold text-gray-800">
-                  You save up to {formatCurrency(estimate.marketComparison.maxSaving)} with Smart Steel!
-                </p>
-
-                <div className="mt-5 grid gap-3 text-left text-sm text-gray-700 md:grid-cols-2">
-                  {estimate.lineItems.slice(0, 6).map((item) => (
-                    <div key={item.code} className="rounded-lg border border-gray-200 bg-white p-3">
-                      <p className="font-semibold text-gray-900">{item.label}</p>
-                      <p className="mt-1">
-                        {item.quantity} {item.unit} at {formatCurrency(item.unitRate)}
-                      </p>
+                {!isLcssWarehouse && estimate.marketComparison ? (
+                  <>
+                    <div className="mt-3 text-gray-700 text-sm relative inline-block">
+                      <span>
+                        Compare with Hot-Rolled Steel (Material Only, R1,100–R1,400/m²):
+                        <br />
+                        ~{formatCurrency(estimate.marketComparison.competitorLow)}–{formatCurrency(estimate.marketComparison.competitorHigh)}
+                      </span>
                     </div>
-                  ))}
-                </div>
+
+                    <p className="mt-2 font-semibold text-gray-800">
+                      You save up to {formatCurrency(estimate.marketComparison.maxSaving)} with Smart Steel!
+                    </p>
+                  </>
+                ) : (
+                  <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3 text-left text-sm text-gray-700">
+                    <p className="font-semibold text-gray-900">CFLC warehouse summary</p>
+                    <p className="mt-1">
+                      This estimate follows your CFLC workbook model and gives a structured client-facing budget indication.
+                    </p>
+                    <p className="mt-2 text-xs text-gray-500">
+                      Final pricing is confirmed once the full design scope, sheeting, delivery, and project details are reviewed.
+                    </p>
+                  </div>
+                )}
+
               </section>
             )}
 
