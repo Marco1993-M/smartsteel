@@ -11,10 +11,10 @@ const COST_BANDS = [
     title: "Indicative shell budget",
     price: "Use estimator or builder",
     summary:
-      "Best when you want a faster budget starting point before Smart Steel refines the final commercial route.",
+      "Best when you want a faster budget starting point before Smart Steel prepares a more detailed quotation.",
   },
   {
-    title: "Project-specific quote path",
+    title: "Project-specific quotation",
     price: "Refined after review",
     summary:
       "Best when delivery, access, foundations, openings, and project detail need to be confirmed properly.",
@@ -65,9 +65,9 @@ export default function CflcWarehouseCostPage() {
               CFLC warehouse cost in South Africa
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-              Use this page to understand how Smart Steel approaches CFLC warehouse pricing. It is the
-              right starting point if you want to compare the cold formed lip channel warehouse path,
-              understand what affects budget, and move into the estimator or builder with better context.
+              Use this page to understand the main factors that shape CFLC warehouse pricing. It is a
+              strong starting point if you want to compare the cold formed lip channel warehouse option,
+              understand what affects budget, and then continue into the estimator or builder.
             </p>
           </div>
 
@@ -129,10 +129,10 @@ export default function CflcWarehouseCostPage() {
             </h2>
             <div className="mt-5 space-y-3">
               {[
-                "You already know the project may suit a CFLC warehouse route.",
+                "You already know the project may suit a CFLC warehouse.",
                 "You want to understand the main budget drivers before you contact Smart Steel.",
                 "You want a simpler client-facing starting point before using the builder or estimator.",
-                "You need a cleaner SEO-style entry page for CFLC warehouse cost searches in South Africa.",
+                "You want a cleaner first step before moving into a more detailed warehouse enquiry.",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-sm leading-6 text-slate-700">{item}</p>
@@ -150,8 +150,8 @@ export default function CflcWarehouseCostPage() {
             Move from cost curiosity into a proper project conversation
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
-            Smart Steel now gives you three strong ways to continue: compare the CFLC product lane, use the
-            estimator for a quick budget path, or use the builder if you want to shape the warehouse visually first.
+            Smart Steel gives you three strong ways to continue: explore the CFLC warehouse page, use the
+            estimator for a quick budget check, or use the builder if you want to shape the warehouse visually first.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
@@ -204,22 +204,22 @@ export default function CflcWarehouseCostPage() {
                 {
                   href: "/warehouses/cflc",
                   title: "CFLC warehouses",
-                  description: "Explore the main product page for the cold formed warehouse system lane.",
+                  description: "Explore the main CFLC warehouse page for the cold formed warehouse option.",
                 },
                 {
                   href: "/warehouses/lsf-vs-cflc",
                   title: "LSF vs CFLC",
-                  description: "Compare the two warehouse systems side by side before choosing your route.",
+                  description: "Compare the two warehouse systems side by side before choosing the best fit.",
                 },
                 {
                   href: "/pretoria-cflc-warehouses",
                   title: "Pretoria CFLC warehouses",
-                  description: "See the first regional CFLC warehouse page for Pretoria enquiries.",
+                  description: "See the Pretoria CFLC warehouse page if your project is based in Gauteng.",
                 },
                 {
                   href: "/johannesburg-cflc-warehouses",
                   title: "Johannesburg CFLC warehouses",
-                  description: "See the first regional CFLC warehouse page for Johannesburg enquiries.",
+                  description: "See the Johannesburg CFLC warehouse page for logistics, storage, and industrial enquiries.",
                 },
               ].map((item) => (
                 <Link

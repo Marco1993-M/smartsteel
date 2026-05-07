@@ -79,10 +79,10 @@ export default function CflcRegionPage({
             </h2>
             <div className="mt-5 space-y-3">
               {[
-                `A practical warehouse system route for ${city} projects that need a cleaner structural starting point.`,
-                "A quicker way to compare the warehouse direction before moving into a refined quote.",
-                "A client-facing path that makes more sense when CFLC is already part of the project conversation.",
-                "A stronger follow-on route into the Smart Steel estimator or builder for regional enquiries.",
+                `A practical CFLC warehouse option for ${city} projects that need a clear structural starting point.`,
+                "A quicker way to compare the warehouse direction before moving into a detailed quotation.",
+                "A useful path when CFLC is already part of the project conversation.",
+                "A strong next step into the Smart Steel estimator or builder for regional enquiries.",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-sm leading-6 text-slate-700">{item}</p>
@@ -103,14 +103,14 @@ export default function CflcRegionPage({
             {[
               {
                 title: "Choose the system",
-                description: `Start with the CFLC lane if that warehouse route already suits your ${city} project best.`,
+                description: `Start with the CFLC option if that warehouse system already suits your ${city} project best.`,
               },
               {
                 title: "Set the essentials",
                 description: "Use the builder or estimator to define span, length, wall height, finish, and overall direction.",
               },
               {
-                title: "Refine the quote path",
+                title: "Refine the quotation",
                 description: `Smart Steel reviews the ${city} project context, delivery realities, and the next practical step.`,
               },
             ].map((item) => (
@@ -134,7 +134,7 @@ export default function CflcRegionPage({
               {[
                 {
                   question: `Can Smart Steel support CFLC warehouse enquiries in ${city}?`,
-                  answer: `Yes. This page is designed to help buyers in ${city} start the CFLC warehouse conversation more clearly before moving into a refined quote path.`,
+                  answer: `Yes. This page helps buyers in ${city} start the CFLC warehouse conversation more clearly before moving into a more detailed quotation.`,
                 },
                 {
                   question: `Is this a fixed price for ${city}?`,
@@ -166,7 +166,7 @@ export default function CflcRegionPage({
               >
                 <p className="text-sm font-semibold text-slate-900">CFLC warehouses</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Explore the main CFLC product lane before you continue into pricing or design.
+                  Explore the main CFLC warehouse page before you continue into pricing or design.
                 </p>
               </Link>
               <Link

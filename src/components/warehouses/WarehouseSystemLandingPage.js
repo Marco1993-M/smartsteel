@@ -106,7 +106,7 @@ export default function WarehouseSystemLandingPage({
               How Smart Steel Helps
             </p>
             <h2 className="mt-3 text-3xl font-semibold">
-              Clear next steps from first idea to proper quote
+              Clear next steps from first idea to a practical quotation
             </h2>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -169,7 +169,7 @@ export default function WarehouseSystemLandingPage({
               >
                 <p className="text-sm font-semibold text-slate-900">CFLC warehouse cost</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  See the client-facing CFLC warehouse cost guide before moving into the builder or estimator.
+                  See the CFLC warehouse cost guide before moving into the builder or estimator.
                 </p>
               </Link>
               <Link

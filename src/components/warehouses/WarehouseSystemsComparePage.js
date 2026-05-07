@@ -14,12 +14,12 @@ const COMPARISON_ROWS = [
   {
     label: "Commercial style",
     lsf: "Broader modular budget path with live builder and estimator options.",
-    cflc: "Tighter structural budget path based on a more system-specific pricing model.",
+    cflc: "A simpler structural budget path focused on the main warehouse system choices.",
   },
   {
     label: "Typical strength",
     lsf: "Fast concept-to-budget flow for mainstream warehouse enquiries.",
-    cflc: "Clear route for clients who already know they want a cold formed lip channel solution.",
+    cflc: "A clear option for clients who already know they want a cold formed lip channel warehouse.",
   },
   {
     label: "Best next step",
@@ -41,9 +41,9 @@ export default function WarehouseSystemsComparePage() {
               LSF vs CFLC Warehouses
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-              Smart Steel now offers both LSF and CFLC warehouse paths. This page helps you understand
-              how the systems differ commercially and where each one tends to fit best, so you can start
-              your enquiry on the right footing.
+              Smart Steel offers both LSF and CFLC warehouse systems. This page helps you understand
+              the difference between them, where each one tends to fit best, and which route may suit
+              your project more naturally.
             </p>
           </div>
 
@@ -72,16 +72,16 @@ export default function WarehouseSystemsComparePage() {
         <section className="mt-8 grid gap-4 lg:grid-cols-3">
           {[
             {
-              title: "Two clear warehouse lanes",
-              description: "You no longer need to fit every enquiry into one generic warehouse story. Smart Steel can now route warehouse projects into the right structural lane earlier.",
+              title: "Two clear warehouse options",
+              description: "You can now compare two distinct warehouse systems instead of trying to force every project into one generic starting point.",
             },
             {
-              title: "Better quoting discipline",
-              description: "The more clearly the system is defined at the start, the easier it becomes to align the enquiry, the estimator, the builder, and the final quote path.",
+              title: "Better project clarity",
+              description: "The more clearly the system is defined at the start, the easier it becomes to compare pricing, design direction, and the next practical step.",
             },
             {
-              title: "Stronger project conversations",
-              description: "Clients can now compare systems with a clearer understanding of the practical direction each one supports.",
+              title: "Stronger early decisions",
+              description: "You can compare the systems with a clearer understanding of the type of warehouse direction each one supports.",
             },
           ].map((item) => (
             <div key={item.title} className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
@@ -121,7 +121,7 @@ export default function WarehouseSystemsComparePage() {
               {[
                 "Good fit for clients comparing cladding, enclosure, access openings, and supply vs installation scope.",
                 "Strong option when you want a live visual builder flow and broader standard warehouse budget guidance.",
-                "Useful for mainstream warehouse, workshop, storage, and operational building enquiries.",
+                "Useful for mainstream warehouse, workshop, storage, and day-to-day business building needs.",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-sm leading-6 text-slate-700">{item}</p>
@@ -135,12 +135,12 @@ export default function WarehouseSystemsComparePage() {
               CFLC Warehouse Path
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Best when you want a clearer cold formed system route
+              Best when you want a clearer cold formed warehouse route
             </h2>
             <div className="mt-5 space-y-3">
               {[
                 "Good fit for projects where the cold formed lip channel approach is already part of the decision.",
-                "Strong option when you want a simpler structural starting point with a practical, system-specific budget path.",
+                "Strong option when you want a simpler structural starting point with a practical budget path.",
                 "Useful for clients who want to compare warehouse systems before moving into a refined quote discussion.",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
