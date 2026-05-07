@@ -164,6 +164,15 @@ export default function WarehouseSystemLandingPage({
                 </p>
               </Link>
               <Link
+                href="/cflc-warehouse-cost"
+                className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-slate-300 hover:bg-white"
+              >
+                <p className="text-sm font-semibold text-slate-900">CFLC warehouse cost</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  See the client-facing CFLC warehouse cost guide before moving into the builder or estimator.
+                </p>
+              </Link>
+              <Link
                 href="/warehouse-builder"
                 className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-slate-300 hover:bg-white"
               >
