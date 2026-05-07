@@ -178,7 +178,7 @@ export default function WarehouseSystemLandingPage({
               >
                 <p className="text-sm font-semibold text-slate-900">Warehouse builder</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Shape a live warehouse design and send a structured enquiry with the system that suits you best.
+                  Shape a live warehouse design and send an enquiry with the system that suits you best.
                 </p>
               </Link>
               <Link
