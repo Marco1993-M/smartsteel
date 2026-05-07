@@ -40,9 +40,9 @@ export default function WarehouseSystemsComparePage() {
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
               LSF vs CFLC Warehouses
             </h1>
-            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
+          <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
               Smart Steel offers both LSF and CFLC warehouse systems. This page helps you understand
-              the difference between them, where each one tends to fit best, and which route may suit
+              the difference between them, where each one tends to fit best, and which option may suit
               your project more naturally.
             </p>
           </div>
@@ -141,7 +141,7 @@ export default function WarehouseSystemsComparePage() {
               {[
                 "Good fit for projects where the cold formed lip channel approach is already part of the decision.",
                 "Strong option when you want a simpler structural starting point with a practical budget path.",
-                "Useful for clients who want to compare warehouse systems before moving into a refined quote discussion.",
+                "Useful for clients who want to compare warehouse systems before moving into a more detailed quote discussion.",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-sm leading-6 text-slate-700">{item}</p>
@@ -152,7 +152,7 @@ export default function WarehouseSystemsComparePage() {
         </section>
 
         <section className="mt-8 rounded-[2rem] border border-slate-200 bg-slate-950 px-6 py-8 text-white shadow-sm sm:px-8">
-          <h2 className="text-3xl font-semibold">Not sure which route suits your project?</h2>
+          <h2 className="text-3xl font-semibold">Not sure which option suits your project?</h2>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
             Start with the builder or estimator and choose the system that feels closest to your project.
             If you already know you want a specific warehouse system, use the dedicated product page and send

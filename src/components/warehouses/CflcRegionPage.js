@@ -81,7 +81,7 @@ export default function CflcRegionPage({
               {[
                 `A practical CFLC warehouse option for ${city} projects that need a clear structural starting point.`,
                 "A quicker way to compare the warehouse direction before moving into a detailed quotation.",
-                "A useful path when CFLC is already part of the project conversation.",
+                "A useful option when CFLC is already part of the project conversation.",
                 "A strong next step into the Smart Steel estimator or builder for regional enquiries.",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">

@@ -33,7 +33,7 @@ const FAQS = [
   {
     question: "How do I get a CFLC warehouse price online?",
     answer:
-      "The fastest route is to use the Smart Steel estimator or warehouse builder, choose the CFLC warehouse system, and send the enquiry through with your project details.",
+      "The fastest way is to use the Smart Steel estimator or warehouse builder, choose the CFLC warehouse system, and send the enquiry through with your project details.",
   },
   {
     question: "Does this page show a final fixed price?",
@@ -131,7 +131,7 @@ export default function CflcWarehouseCostPage() {
               {[
                 "You already know the project may suit a CFLC warehouse.",
                 "You want to understand the main budget drivers before you contact Smart Steel.",
-                "You want a simpler client-facing starting point before using the builder or estimator.",
+                "You want a simpler starting point before using the builder or estimator.",
                 "You want a cleaner first step before moving into a more detailed warehouse enquiry.",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
