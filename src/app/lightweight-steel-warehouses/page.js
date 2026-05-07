@@ -2,22 +2,22 @@
 import WarehouseClient from "./WarehouseClient";
 
 export const metadata = {
-  title: "Lightweight Steel Warehousing Solutions | Smart Steel",
+  title: "Warehouse Systems South Africa | LSF & CFLC Warehouses | Smart Steel",
   description:
-    "Build your perfect lightweight steel warehouse with Smart Steel. Choose structure sizes, colors, and extra features tailored to your needs. Fast quotes and expert support.",
+    "Explore Smart Steel warehouse systems in South Africa, including LSF and CFLC warehouses. Compare systems, use the builder, or request a practical quote path.",
   keywords: [
-    "steel sheds",
-    "warehouse kits",
-    "custom sheds",
-    "modular steel buildings",
-    "warehouse solutions South Africa",
-    "steel structure quote",
-    "prefab warehouse",
+    "warehouse systems South Africa",
+    "LSF warehouses",
+    "CFLC warehouses",
+    "steel warehouse builder",
+    "warehouse estimator",
+    "modular steel warehouses",
+    "warehouse quote South Africa",
   ],
   openGraph: {
-    title: "Lightweight Steel Warehousing Solutions | Smart Steel",
+    title: "Warehouse Systems South Africa | LSF & CFLC Warehouses | Smart Steel",
     description:
-      "Build your perfect lightweight steel warehouse with Smart Steel. Choose structure sizes, colors, and extra features tailored to your needs.",
+      "Explore Smart Steel warehouse systems including LSF and CFLC warehouses, then move into the builder or estimator.",
     url: "https://smartsteel.co.za/lightweight-steel-warehouses",
     siteName: "Smart Steel",
     images: [
@@ -33,9 +33,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Customizable Sheds & Warehousing Solutions | Smart Steel",
+    title: "Warehouse Systems South Africa | Smart Steel",
     description:
-      "Build your perfect steel shed or warehouse with Smart Steel. Choose structure sizes, colors, and extra features tailored to your needs.",
+      "Explore Smart Steel LSF and CFLC warehouse systems, compare the routes, and start the right warehouse enquiry.",
     images: ["/og-warehouse.jpg"],
   },
   alternates: {

@@ -122,11 +122,11 @@ export default function WarehouseClient() {
             Warehouse systems
           </p>
           <h1 className="text-4xl font-bold mb-4">
-            Lightweight Steel Warehousing Solutions
+            Warehouse systems for practical South African projects
           </h1>
           <p className="text-lg max-w-3xl mx-auto leading-8">
             Explore Smart Steel warehouse systems built for storage, workshop use, fleet cover, and commercial operations.
-            Compare standard structure options, request a tailored quote, or move into the warehouse builder if you want a more visual starting point.
+            Compare our LSF and CFLC warehouse lanes, request a tailored quote, or move into the warehouse builder if you want a more visual starting point.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link href="/warehouse-builder" className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-[#bf172d]">
@@ -134,6 +134,9 @@ export default function WarehouseClient() {
             </Link>
             <Link href="/tools/estimator" className="rounded-full border border-black px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white">
               Use Estimator
+            </Link>
+            <Link href="/warehouses/lsf-vs-cflc" className="rounded-full border border-gray-300 px-6 py-3 font-semibold text-gray-700 transition hover:border-black hover:text-black">
+              Compare LSF vs CFLC
             </Link>
           </div>
         </section>
@@ -147,8 +150,8 @@ export default function WarehouseClient() {
                   description: "Smart Steel warehouse systems are shaped around practical storage, workshop, fleet, and commercial requirements.",
                 },
                 {
-                  title: "Clear modular starting point",
-                  description: "Choose a standard width, set a practical length, and define the shell scope before moving into detailed quoting.",
+                  title: "Two clear system paths",
+                  description: "Choose between the LSF and CFLC warehouse lanes so your project starts in the right structural direction.",
                 },
                 {
                   title: "Simple next-step path",
@@ -170,6 +173,37 @@ export default function WarehouseClient() {
           <p className="text-lg max-w-2xl mx-auto leading-8">
             Start with a standard structure width, choose a practical length, and tell us the key requirements that affect your project scope.
           </p>
+        </section>
+
+        <section className="max-w-6xl mx-auto mb-20">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Link href="/warehouses/lsf" className="rounded-[1.75rem] border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#da1a33]">LSF warehouses</p>
+              <h2 className="mt-3 text-2xl font-bold text-gray-900">The modular warehouse lane</h2>
+              <p className="mt-3 text-sm leading-7 text-gray-600">
+                Best when you want a more configurable warehouse shell with clearer comparisons around enclosure, cladding, openings, and project scope.
+              </p>
+              <p className="mt-5 text-sm font-semibold text-[#da1a33]">Explore LSF warehouses →</p>
+            </Link>
+
+            <Link href="/warehouses/cflc" className="rounded-[1.75rem] border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#da1a33]">CFLC warehouses</p>
+              <h2 className="mt-3 text-2xl font-bold text-gray-900">The cold formed system lane</h2>
+              <p className="mt-3 text-sm leading-7 text-gray-600">
+                Best when you want a clearer cold formed lip channel warehouse path and a more system-specific starting point for the project conversation.
+              </p>
+              <p className="mt-5 text-sm font-semibold text-[#da1a33]">Explore CFLC warehouses →</p>
+            </Link>
+
+            <Link href="/warehouses/lsf-vs-cflc" className="rounded-[1.75rem] border border-gray-200 bg-gray-50 p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#da1a33]">Compare the systems</p>
+              <h2 className="mt-3 text-2xl font-bold text-gray-900">LSF vs CFLC</h2>
+              <p className="mt-3 text-sm leading-7 text-gray-600">
+                If you are still deciding which warehouse direction suits your project, compare the two systems side by side before you enquire.
+              </p>
+              <p className="mt-5 text-sm font-semibold text-[#da1a33]">See the comparison →</p>
+            </Link>
+          </div>
         </section>
 
         {/* Quote Builder */}
@@ -363,6 +397,9 @@ export default function WarehouseClient() {
                 <Link href="/tools/estimator" className="font-semibold text-[#da1a33] hover:underline">
                   Want a faster budget check first? Use the estimator.
                 </Link>
+                <Link href="/warehouses/lsf-vs-cflc" className="font-semibold text-[#da1a33] hover:underline">
+                  Need to choose between systems first? Compare LSF and CFLC.
+                </Link>
               </div>
             </div>
 
@@ -382,6 +419,39 @@ export default function WarehouseClient() {
         <section className="max-w-7xl mx-auto py-20">
           <h2 className="text-3xl font-bold mb-6 text-left">Explore more warehouse content</h2>
           <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <Link
+              href="/warehouses/lsf"
+              className="border rounded-md p-6 hover:bg-gray-50 transition block"
+            >
+              <h3 className="font-semibold text-lg text-[#da1a33]">
+                LSF warehouses →
+              </h3>
+              <p className="text-sm mt-1 text-gray-700">
+                Explore the modular LSF warehouse lane and see where it fits best.
+              </p>
+            </Link>
+            <Link
+              href="/warehouses/cflc"
+              className="border rounded-md p-6 hover:bg-gray-50 transition block"
+            >
+              <h3 className="font-semibold text-lg text-[#da1a33]">
+                CFLC warehouses →
+              </h3>
+              <p className="text-sm mt-1 text-gray-700">
+                Explore the cold formed warehouse lane if your project suits that system better.
+              </p>
+            </Link>
+            <Link
+              href="/warehouses/lsf-vs-cflc"
+              className="border rounded-md p-6 hover:bg-gray-50 transition block"
+            >
+              <h3 className="font-semibold text-lg text-[#da1a33]">
+                LSF vs CFLC →
+              </h3>
+              <p className="text-sm mt-1 text-gray-700">
+                Compare the two warehouse systems side by side before moving into design or pricing.
+              </p>
+            </Link>
             <Link
               href="/warehouse-builder"
               className="border rounded-md p-6 hover:bg-gray-50 transition block"
