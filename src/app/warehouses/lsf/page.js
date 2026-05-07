@@ -3,7 +3,7 @@ import WarehouseSystemLandingPage from "../../../components/warehouses/Warehouse
 export const metadata = {
   title: "LSF Warehouses South Africa | Smart Steel",
   description:
-    "Explore Smart Steel LSF warehouses for storage, workshop, fleet, and commercial projects in South Africa. Compare the system, use the builder, or request a quote.",
+    "Explore Smart Steel LSF warehouses for storage, workshop, fleet, and commercial projects in South Africa. Compare the option, use the builder, or request a quote.",
   keywords: [
     "LSF warehouses South Africa",
     "lightweight steel warehouse",
@@ -54,11 +54,11 @@ export default function LsfWarehousesPage() {
       strengths={[
         {
           title: "Flexible buyer path",
-          description: "The LSF option is well suited to clients who want to compare systems, budget paths, and scope options before committing to a quotation.",
+          description: "The LSF option is well suited to clients who want to compare systems, budget ranges, and scope options before committing to a quotation.",
         },
         {
           title: "Strong visual planning",
-          description: "The warehouse builder and estimator both support the LSF lane well, which makes early design conversations easier.",
+          description: "The warehouse builder and estimator both support the LSF option well, which makes early design conversations easier.",
         },
         {
           title: "Modular warehouse thinking",
@@ -102,7 +102,7 @@ export default function LsfWarehousesPage() {
         {
           question: "Do I need final drawings before I enquire?",
           answer:
-            "No. This page is built for clients who want a stronger starting point before they have every detail finalised.",
+            "No. This page is useful for clients who want a stronger starting point before they have every detail finalised.",
         },
       ]}
       ctaPrimary={{ href: "/warehouse-builder", label: "Build an LSF warehouse" }}

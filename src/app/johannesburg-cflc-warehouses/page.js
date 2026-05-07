@@ -3,7 +3,7 @@ import CflcRegionPage from "../../components/warehouses/CflcRegionPage"
 export const metadata = {
   title: "CFLC Warehouses Johannesburg | Smart Steel",
   description:
-    "Explore CFLC warehouses in Johannesburg with Smart Steel. Start the right warehouse enquiry path for logistics, industrial, and storage projects.",
+    "Explore CFLC warehouses in Johannesburg with Smart Steel. Start the right warehouse enquiry for logistics, industrial, and storage projects.",
   keywords: [
     "CFLC warehouses Johannesburg",
     "cold formed warehouse Johannesburg",
@@ -30,7 +30,7 @@ export default function JohannesburgCflcWarehousesPage() {
       city="Johannesburg"
       province="Gauteng"
       heroLabel="CFLC warehouse systems for Johannesburg logistics and industrial demand"
-      intro="Johannesburg is one of the most important commercial and industrial warehouse markets in South Africa, so it makes sense to have a dedicated CFLC regional page here. This page gives buyers a cleaner way to start the CFLC warehouse conversation before the quotation is refined."
+      intro="Johannesburg is one of the most important commercial and industrial warehouse markets in South Africa, so it makes sense to have a dedicated CFLC regional page here. This page gives buyers a cleaner way to start the CFLC warehouse conversation before the quotation is finalised."
       marketFocus="Johannesburg warehouse enquiries usually need speed, scale, and practical direction. The CFLC page helps when the buyer wants a clearer starting point, especially in logistics, industrial, and storage-led projects."
       localZones={["Aeroton", "Wadeville", "City Deep", "Roodepoort", "Midrand"]}
       industries={["distribution", "light industrial", "fleet and logistics"]}
