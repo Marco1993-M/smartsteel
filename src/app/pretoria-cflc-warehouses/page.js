@@ -30,20 +30,20 @@ export default function PretoriaCflcWarehousesPage() {
       city="Pretoria"
       province="Gauteng"
       heroLabel="CFLC warehouse systems for Pretoria and surrounding Gauteng zones"
-      intro="Pretoria remains one of the strongest industrial and storage markets in Gauteng, which makes it a sensible place to introduce a dedicated CFLC warehouse lane. If your project needs a clearer cold formed steel system route before the quote is refined, this is the right place to start."
-      marketFocus="Pretoria clients often need warehouse systems that balance speed, practicality, and a cleaner structural starting point. The CFLC lane helps buyers who already know they want a cold formed route, or who need to compare it against LSF before they go further."
+      intro="Pretoria remains one of the strongest industrial and storage markets in Gauteng, which makes it a natural fit for a dedicated CFLC warehouse page. If your project needs a clearer cold formed steel option before the quotation is refined, this is the right place to start."
+      marketFocus="Pretoria clients often need warehouse systems that balance speed, practicality, and a cleaner structural starting point. The CFLC page helps buyers who already know they want a cold formed option, or who need to compare it against LSF before they go further."
       localZones={["Rosslyn", "Silverton", "Montana", "Centurion", "Irene"]}
       industries={["manufacturing", "distribution", "industrial storage"]}
       relatedCityLinks={[
         {
           href: "/johannesburg-cflc-warehouses",
           title: "Johannesburg CFLC warehouses",
-          description: "Explore the first Johannesburg CFLC support page for a stronger Gauteng cluster.",
+          description: "Explore the Johannesburg CFLC warehouse page if your project footprint extends across Gauteng.",
         },
         {
           href: "/pretoria-warehouses",
           title: "Pretoria warehouse systems",
-          description: "See the broader Pretoria warehouse page if you still need to compare beyond the CFLC lane.",
+          description: "See the broader Pretoria warehouse page if you still need to compare beyond the CFLC option.",
         },
       ]}
     />

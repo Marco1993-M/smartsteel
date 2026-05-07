@@ -39,22 +39,22 @@ export default function LsfWarehousesPage() {
         },
         {
           title: "Good for structured budgeting",
-          description: "The LSF lane is built to help you compare scope, cladding, enclosure, openings, and overall project direction without overcomplicating the first step.",
+          description: "This option makes it easier to compare scope, cladding, enclosure, openings, and overall project direction without overcomplicating the first step.",
         },
         {
-          title: "Easy route into the builder",
+          title: "Easy move into the builder",
           description: "If you want a more visual design process, the LSF warehouse builder gives you a live preview and a cleaner enquiry handoff.",
         },
       ]}
       bestFor={[
         "General warehousing, storage, workshop, and light industrial buildings that benefit from a modular steel shell.",
         "Projects where the buyer wants to compare enclosure level, cladding, and access openings before moving into a detailed quote.",
-        "Clients who want a structured commercial starting point, not just a vague 'contact us' form.",
+        "Clients who want a clearer starting point, not just a vague 'contact us' form.",
       ]}
       strengths={[
         {
           title: "Flexible buyer path",
-          description: "The LSF route is well suited to clients who want to compare systems, pricing paths, and scope options before committing to a quote direction.",
+          description: "The LSF option is well suited to clients who want to compare systems, budget paths, and scope options before committing to a quotation.",
         },
         {
           title: "Strong visual planning",
@@ -66,7 +66,7 @@ export default function LsfWarehousesPage() {
         },
         {
           title: "Good fit for early-stage enquiries",
-          description: "If the project brief is still taking shape, the LSF lane gives Smart Steel a strong way to guide the client toward the right solution.",
+          description: "If the project brief is still taking shape, this page gives Smart Steel a strong way to guide the client toward the right solution.",
         },
       ]}
       process={[
@@ -79,15 +79,15 @@ export default function LsfWarehousesPage() {
           description: "Define the span, length, enclosure, cladding, and opening requirements that affect how the warehouse will actually be used.",
         },
         {
-          title: "Move into the proper quote path",
-          description: "Smart Steel reviews the project context, sense-checks the scope, and follows up with the most practical quotation route.",
+          title: "Move into the quotation",
+          description: "Smart Steel reviews the project context, checks the scope, and follows up with the most practical next step.",
         },
       ]}
       faqs={[
         {
           question: "What does LSF mean in a warehouse project?",
           answer:
-            "LSF stands for lightweight steel framing. In a warehouse context, it gives buyers a practical modular steel route with clear sizing, scope, and design choices.",
+            "LSF stands for lightweight steel framing. In a warehouse context, it gives buyers a practical modular steel option with clear sizing, scope, and design choices.",
         },
         {
           question: "Is the LSF warehouse path only for small buildings?",

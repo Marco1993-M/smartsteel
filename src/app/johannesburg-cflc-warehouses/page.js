@@ -30,15 +30,15 @@ export default function JohannesburgCflcWarehousesPage() {
       city="Johannesburg"
       province="Gauteng"
       heroLabel="CFLC warehouse systems for Johannesburg logistics and industrial demand"
-      intro="Johannesburg is one of the most important commercial and industrial warehouse markets in South Africa, so it makes sense to establish a dedicated CFLC regional lane here early. This page gives buyers a cleaner way to start the CFLC warehouse conversation before the quote path is refined."
-      marketFocus="Johannesburg warehouse enquiries usually need speed, scale, and practical commercial direction. The CFLC lane helps when the buyer wants a more system-specific starting point, especially in logistics, industrial, and storage-led projects."
+      intro="Johannesburg is one of the most important commercial and industrial warehouse markets in South Africa, so it makes sense to have a dedicated CFLC regional page here. This page gives buyers a cleaner way to start the CFLC warehouse conversation before the quotation is refined."
+      marketFocus="Johannesburg warehouse enquiries usually need speed, scale, and practical direction. The CFLC page helps when the buyer wants a clearer starting point, especially in logistics, industrial, and storage-led projects."
       localZones={["Aeroton", "Wadeville", "City Deep", "Roodepoort", "Midrand"]}
       industries={["distribution", "light industrial", "fleet and logistics"]}
       relatedCityLinks={[
         {
           href: "/pretoria-cflc-warehouses",
           title: "Pretoria CFLC warehouses",
-          description: "Explore the Pretoria CFLC support page to strengthen the Gauteng system cluster.",
+          description: "Explore the Pretoria CFLC warehouse page if your project links into the wider Gauteng market.",
         },
         {
           href: "/johannesburg-warehouses",

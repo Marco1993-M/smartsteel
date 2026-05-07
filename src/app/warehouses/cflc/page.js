@@ -30,39 +30,39 @@ export default function CflcWarehousesPage() {
     <WarehouseSystemLandingPage
       eyebrow="CFLC Warehouses"
       title="CFLC warehouses for buyers who want a clearer cold formed steel system path"
-      intro="Smart Steel CFLC warehouse systems give clients a stronger route into cold formed lip channel steel structures when that system suits the project better. It is a simpler, more system-specific warehouse path that helps clients start with a realistic structural direction before the quote is refined."
+      intro="Smart Steel CFLC warehouse systems give clients a clearer way into cold formed lip channel steel structures when that system suits the project better. It is a simpler warehouse option that helps clients start with a realistic structural direction before the quotation is refined."
       systemName="CFLC warehouses"
       summary={[
         {
           title: "Clear system identity",
-          description: "This lane helps clients who already know they want a cold formed lip channel warehouse or want to compare it seriously against LSF.",
+          description: "This page helps clients who already know they want a cold formed lip channel warehouse or want to compare it properly against LSF.",
         },
         {
           title: "Practical first-step budgeting",
           description: "The CFLC path keeps the early conversation focused on the main structural choices that shape the project.",
         },
         {
-          title: "Cleaner product story",
-          description: "CFLC is now presented as its own Smart Steel warehouse lane, not buried inside a generic warehouse page.",
+          title: "Clearer product choice",
+          description: "CFLC is presented as its own Smart Steel warehouse option, rather than being hidden inside a generic warehouse page.",
         },
       ]}
       bestFor={[
-        "Warehouse, yard cover, workspace, and storage projects where a cold formed lip channel route is already part of the commercial conversation.",
-        "Clients who want a simpler structural starting point before Smart Steel refines the final quote direction.",
+        "Warehouse, yard cover, workspace, and storage projects where a cold formed lip channel option is already part of the project conversation.",
+        "Clients who want a simpler structural starting point before Smart Steel refines the final quotation.",
         "Projects where comparing LSF and CFLC clearly up front helps avoid confusion later.",
       ]}
       strengths={[
         {
-          title: "System-specific route",
-          description: "The CFLC lane gives buyers a more focused cold formed steel path instead of forcing every warehouse enquiry into one generic model.",
+          title: "Focused warehouse option",
+          description: "The CFLC page gives buyers a more focused cold formed steel option instead of forcing every warehouse enquiry into one generic model.",
         },
         {
           title: "Strong comparison value",
-          description: "If your project team is weighing up different warehouse systems, this page gives you a cleaner understanding of the CFLC route.",
+          description: "If your project team is weighing up different warehouse systems, this page gives you a cleaner understanding of the CFLC option.",
         },
         {
           title: "Faster structural direction",
-          description: "This path is useful when the main requirement is to define the warehouse direction early and then let Smart Steel shape the final quote properly.",
+          description: "This page is useful when the main requirement is to define the warehouse direction early and then let Smart Steel shape the final quotation properly.",
         },
         {
           title: "Supports modern steel buying journeys",
@@ -71,28 +71,28 @@ export default function CflcWarehousesPage() {
       ]}
       process={[
         {
-          title: "Choose CFLC as your warehouse lane",
-          description: "Start with the builder, estimator, or direct product page depending on how much design guidance you want at the beginning.",
+          title: "Choose CFLC as your warehouse option",
+          description: "Start with the builder, estimator, or direct page depending on how much design guidance you want at the beginning.",
         },
         {
           title: "Define the main structural details",
           description: "Set the span, length, wall height, steel finish, and gable direction that best reflect your warehouse requirement.",
         },
         {
-          title: "Refine the quote path with Smart Steel",
-          description: "Smart Steel reviews the enquiry, confirms the best commercial route, and follows up with the next practical step.",
+          title: "Refine the quotation with Smart Steel",
+          description: "Smart Steel reviews the enquiry, confirms the best direction, and follows up with the next practical step.",
         },
       ]}
       faqs={[
         {
           question: "What does CFLC mean in a warehouse project?",
           answer:
-            "CFLC refers to a cold formed lip channel steel warehouse system. This page helps buyers explore that specific route more clearly.",
+            "CFLC refers to a cold formed lip channel steel warehouse system. This page helps buyers explore that specific option more clearly.",
         },
         {
           question: "Why does Smart Steel have a separate CFLC warehouse page now?",
           answer:
-            "Because CFLC is now being treated as a distinct product lane rather than a hidden variation inside a generic warehouse page. That makes buying, quoting, and comparison clearer.",
+            "Because CFLC is now being presented as its own warehouse option rather than a hidden variation inside a generic warehouse page. That makes buying and comparison clearer.",
         },
         {
           question: "Can I compare CFLC against LSF before I enquire?",
@@ -111,7 +111,7 @@ export default function CflcWarehousesPage() {
       alternateSystem={{
         href: "/warehouses/lsf",
         title: "LSF warehouses",
-        description: "See the more modular LSF warehouse lane if your project needs broader scope and shell comparisons.",
+        description: "See the more modular LSF warehouse page if your project needs broader scope and shell comparisons.",
       }}
     />
   )
