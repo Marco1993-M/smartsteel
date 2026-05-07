@@ -442,6 +442,17 @@ export default function WarehouseClient() {
               </p>
             </Link>
             <Link
+              href="/cflc-warehouse-cost"
+              className="border rounded-md p-6 hover:bg-gray-50 transition block"
+            >
+              <h3 className="font-semibold text-lg text-[#da1a33]">
+                CFLC warehouse cost →
+              </h3>
+              <p className="text-sm mt-1 text-gray-700">
+                Start with the CFLC cost guide if you want a cleaner budget-focused entry point.
+              </p>
+            </Link>
+            <Link
               href="/warehouses/lsf-vs-cflc"
               className="border rounded-md p-6 hover:bg-gray-50 transition block"
             >
