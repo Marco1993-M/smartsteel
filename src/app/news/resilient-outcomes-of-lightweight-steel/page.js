@@ -1,8 +1,36 @@
-'use client';
-
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
+
+export const metadata = {
+  title: 'Resilient Outcomes With Lightweight Steel | Smart Steel',
+  description:
+    'Read how lightweight steel framing supports resilient, durable, and efficient construction across South African projects.',
+  alternates: {
+    canonical: '/news/resilient-outcomes-of-lightweight-steel',
+  },
+  openGraph: {
+    title: 'Resilient Outcomes With Lightweight Steel | Smart Steel',
+    description:
+      'Read how lightweight steel framing supports resilient, durable, and efficient construction across South African projects.',
+    url: 'https://www.smartsteel.co.za/news/resilient-outcomes-of-lightweight-steel',
+    siteName: 'Smart Steel',
+    locale: 'en_ZA',
+    type: 'article',
+    images: [
+      {
+        url: '/banner-resilient-steel.jpg',
+        alt: 'Lightweight steel framing for resilient outcomes',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Resilient Outcomes With Lightweight Steel | Smart Steel',
+    description:
+      'Read how lightweight steel framing supports resilient, durable, and efficient construction across South African projects.',
+  },
+};
 
 export default function ArticlePage() {
   return (

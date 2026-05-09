@@ -1,8 +1,36 @@
-'use client';
-
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
+
+export const metadata = {
+  title: 'Smart Steel Unveils New Modular Warehouses | Smart Steel',
+  description:
+    'Explore Smart Steel’s modular warehouse range and see how the new kit systems simplify supply, transport, and installation.',
+  alternates: {
+    canonical: '/news/smart-steel-unveils-new-modular-warehouses',
+  },
+  openGraph: {
+    title: 'Smart Steel Unveils New Modular Warehouses | Smart Steel',
+    description:
+      'Explore Smart Steel’s modular warehouse range and see how the new kit systems simplify supply, transport, and installation.',
+    url: 'https://www.smartsteel.co.za/news/smart-steel-unveils-new-modular-warehouses',
+    siteName: 'Smart Steel',
+    locale: 'en_ZA',
+    type: 'article',
+    images: [
+      {
+        url: '/modular-warehouses.jpg',
+        alt: 'Smart Steel modular warehouses',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Smart Steel Unveils New Modular Warehouses | Smart Steel',
+    description:
+      'Explore Smart Steel’s modular warehouse range and see how the new kit systems simplify supply, transport, and installation.',
+  },
+};
 
 export default function ArticlePage() {
   return (
