@@ -47,11 +47,18 @@ const legacyRegionWarehousePaths = [
 const highPriorityPages = new Set([
   '/',
   '/lightweight-steel-warehouses',
+  '/warehouses',
+  '/warehouses/lsf',
+  '/warehouses/cflc',
+  '/warehouses/lsf-vs-cflc',
   '/solar',
   '/pretoria-solar-carports',
   '/solar-carports',
+  '/products',
+  '/products/cflc-diy-warehouse-kits',
   '/products/lightweight-steel-trusses',
   '/warehouse-cost',
+  '/cflc-warehouse-cost',
   '/warehouse-regions',
 ]);
 
@@ -100,6 +107,9 @@ module.exports = {
     } else if (path.startsWith('/warehouse-cost/')) {
       changefreq = 'monthly';
       priority = 0.85;
+    } else if (path.startsWith('/products/cflc-diy-warehouse-kits')) {
+      changefreq = 'weekly';
+      priority = 0.88;
     } else if (path.startsWith('/products/lightweight-steel-trusses/')) {
       changefreq = 'monthly';
       priority = 0.82;
@@ -109,6 +119,9 @@ module.exports = {
     ) {
       changefreq = 'monthly';
       priority = 0.78;
+    } else if (path.startsWith('/products/')) {
+      changefreq = 'monthly';
+      priority = 0.8;
     } else if (servicePages.has(path)) {
       changefreq = 'monthly';
       priority = 0.75;
@@ -138,6 +151,13 @@ module.exports = {
       ...legacyRegionWarehousePaths,
       ...solarCarportRegionPaths,
       '/solar-carports',
+      '/warehouses',
+      '/warehouses/lsf',
+      '/warehouses/cflc',
+      '/warehouses/lsf-vs-cflc',
+      '/products',
+      '/products/cflc-diy-warehouse-kits',
+      '/cflc-warehouse-cost',
       '/warehouse-regions',
     ];
     const results = [];
