@@ -25,36 +25,6 @@ const solarCarportRegionPaths = [
   '/pretoria-solar-carports',
 ];
 
-const solarCarportDynamicPaths = [
-  '/bloemfontein/solar-carports',
-  '/cape-town/solar-carports',
-  '/centurion/solar-carports',
-  '/durban/solar-carports',
-  '/johannesburg/solar-carports',
-  '/midrand/solar-carports',
-  '/polokwane/solar-carports',
-  '/pretoria/solar-carports',
-];
-
-const cityWarehousePaths = [
-  '/bloemfontein/warehouses',
-  '/cape-town/warehouses',
-  '/durban/warehouses',
-  '/east-london/warehouses',
-  '/gqeberha/warehouses',
-  '/nelspruit/warehouses',
-  '/polokwane/warehouses',
-  '/pretoria/warehouses',
-  '/centurion/warehouses',
-  '/johannesburg/warehouses',
-  '/midrand/warehouses',
-  '/roodepoort/warehouses',
-  '/middelburg/warehouses',
-  '/hoedspruit/warehouses',
-  '/hermanus/warehouses',
-  '/rustenburg/warehouses',
-];
-
 const legacyRegionWarehousePaths = [
   '/bloemfontein-warehouses',
   '/cape-town-warehouses',
@@ -134,9 +104,7 @@ module.exports = {
       changefreq = 'monthly';
       priority = 0.82;
     } else if (
-      cityWarehousePaths.includes(path) ||
       legacyRegionWarehousePaths.includes(path) ||
-      solarCarportDynamicPaths.includes(path) ||
       solarCarportRegionPaths.includes(path)
     ) {
       changefreq = 'monthly';
@@ -167,9 +135,7 @@ module.exports = {
     const extraPaths = [
       ...warehouseCostPaths,
       ...trussClusterPaths,
-      ...cityWarehousePaths,
       ...legacyRegionWarehousePaths,
-      ...solarCarportDynamicPaths,
       ...solarCarportRegionPaths,
       '/solar-carports',
       '/warehouse-regions',
