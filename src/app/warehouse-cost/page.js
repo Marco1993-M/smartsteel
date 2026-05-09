@@ -3,9 +3,9 @@ import { buildWarehouseCostMetadata, getWarehouseCostPageConfig, getWarehouseCos
 
 export const metadata = {
   ...buildWarehouseCostMetadata('10x10'),
-  title: 'Warehouse Cost Guide South Africa | Smart Steel',
+  title: 'Steel Warehouse Cost South Africa | Size & Price Guide',
   description:
-    'Compare Smart Steel warehouse cost guides by size, including structure-only, cladding, and turnkey price ranges for South African projects.',
+    'Compare steel warehouse costs in South Africa by size, including structure-only, cladding, and turnkey price ranges for Smart Steel projects.',
   alternates: {
     canonical: '/warehouse-cost',
   },
@@ -21,10 +21,10 @@ export default function WarehouseCostHubPage() {
     <main className="mx-auto max-w-6xl px-6 py-24 font-sans text-gray-900">
       <section className="max-w-4xl">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">Warehouse cost guides</p>
-        <h1 className="mt-4 text-4xl font-bold md:text-6xl">Compare steel warehouse costs by size</h1>
+        <h1 className="mt-4 text-4xl font-bold md:text-6xl">Steel warehouse costs in South Africa by size</h1>
         <p className="mt-6 text-lg leading-8 text-gray-700">
-          Browse our South African warehouse cost pages to compare structure-only, clad, and turnkey pricing by footprint. Each
-          page includes estimated ranges, buyer guidance, FAQs, and nearby warehouse links.
+          Browse Smart Steel warehouse cost guides to compare structure-only, clad, and turnkey pricing by footprint. Each
+          page gives you indicative price ranges, buyer guidance, FAQs, and links to related warehouse pages.
         </p>
       </section>
 

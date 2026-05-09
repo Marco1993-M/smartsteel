@@ -1,9 +1,9 @@
 import WarehouseSystemLandingPage from "../../../components/warehouses/WarehouseSystemLandingPage"
 
 export const metadata = {
-  title: "CFLC Warehouses South Africa | Smart Steel",
+  title: "CFLC Warehouses South Africa | Steel Warehouse Systems",
   description:
-    "Explore Smart Steel CFLC warehouses for storage, workshop, and commercial projects in South Africa. Compare the system, use the builder, or request a quote.",
+    "Explore CFLC warehouses in South Africa for storage, workshop, and commercial projects. Compare the system, use the builder, or request a Smart Steel quote.",
   keywords: [
     "CFLC warehouses South Africa",
     "cold formed lip channel warehouse",
@@ -29,8 +29,8 @@ export default function CflcWarehousesPage() {
   return (
     <WarehouseSystemLandingPage
       eyebrow="CFLC Warehouses"
-      title="CFLC warehouses for storage, workshop, and commercial projects"
-      intro="Smart Steel CFLC warehouses give you a clear starting point if a cold formed lip channel steel structure suits your project better. This page helps you understand where the system fits, what makes it useful, and how to start the conversation with the right project details."
+      title="CFLC warehouses for practical storage, workshop, and cover projects"
+      intro="Smart Steel CFLC warehouses give you a clear starting point if a cold formed lip channel steel structure suits your project better. Use this page to understand where the system fits, what sizes and uses it suits, and how to start the quote conversation with the right project details."
       heroImage="/CFLC.webp"
       heroImageAlt="CFLC warehouse placeholder"
       systemName="CFLC warehouses"

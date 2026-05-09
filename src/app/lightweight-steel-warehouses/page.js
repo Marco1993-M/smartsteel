@@ -2,9 +2,9 @@
 import WarehouseClient from "./WarehouseClient";
 
 export const metadata = {
-  title: "Warehouse Systems South Africa | LSF & CFLC Warehouses | Smart Steel",
+  title: "Steel Warehouses South Africa | LSF & CFLC Warehouse Systems",
   description:
-    "Explore Smart Steel warehouse systems in South Africa, including LSF and CFLC warehouses. Compare systems, use the builder, or request a practical quote path.",
+    "Explore steel warehouses in South Africa from Smart Steel. Compare LSF and CFLC warehouse systems, use the builder, check indicative pricing, or request a quote.",
   keywords: [
     "warehouse systems South Africa",
     "LSF warehouses",
@@ -15,9 +15,9 @@ export const metadata = {
     "warehouse quote South Africa",
   ],
   openGraph: {
-    title: "Warehouse Systems South Africa | LSF & CFLC Warehouses | Smart Steel",
+    title: "Steel Warehouses South Africa | LSF & CFLC Warehouse Systems",
     description:
-      "Explore Smart Steel warehouse systems including LSF and CFLC warehouses, then move into the builder or estimator.",
+      "Compare Smart Steel LSF and CFLC steel warehouse systems, then move into the builder, estimator, or quote path.",
     url: "https://smartsteel.co.za/lightweight-steel-warehouses",
     siteName: "Smart Steel",
     images: [
@@ -33,9 +33,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Warehouse Systems South Africa | Smart Steel",
+    title: "Steel Warehouses South Africa | Smart Steel",
     description:
-      "Explore Smart Steel LSF and CFLC warehouse systems, compare the routes, and start the right warehouse enquiry.",
+      "Compare Smart Steel LSF and CFLC steel warehouse systems and start the right warehouse enquiry.",
     images: ["/og-warehouse.jpg"],
   },
   alternates: {

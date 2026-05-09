@@ -1,9 +1,9 @@
 import WarehouseSystemLandingPage from "../../../components/warehouses/WarehouseSystemLandingPage"
 
 export const metadata = {
-  title: "LSF Warehouses South Africa | Smart Steel",
+  title: "LSF Warehouses South Africa | Steel Warehouse Systems",
   description:
-    "Explore Smart Steel LSF warehouses for storage, workshop, fleet, and commercial projects in South Africa. Compare the option, use the builder, or request a quote.",
+    "Explore LSF warehouses in South Africa for storage, workshop, fleet, and commercial projects. Compare the system, use the builder, or request a Smart Steel quote.",
   keywords: [
     "LSF warehouses South Africa",
     "lightweight steel warehouse",
@@ -29,8 +29,8 @@ export default function LsfWarehousesPage() {
   return (
     <WarehouseSystemLandingPage
       eyebrow="LSF Warehouses"
-      title="LSF warehouses built for practical warehouse, workshop, and storage projects"
-      intro="Smart Steel LSF warehouse systems give buyers a clear modular starting point for warehousing, workshop use, fleet cover, and day-to-day operational space. If you want a cleaner way to compare size, enclosure, access openings, and scope, this is the strongest place to start."
+      title="LSF warehouses for storage, workshops, and commercial space"
+      intro="Smart Steel LSF warehouse systems give you a clear modular starting point for warehousing, workshop use, fleet cover, and day-to-day operations. If you want to compare size, enclosure, access openings, and scope before requesting a quote, this is the right place to start."
       systemName="LSF warehouses"
       summary={[
         {

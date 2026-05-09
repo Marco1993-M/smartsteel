@@ -122,11 +122,11 @@ export default function WarehouseClient() {
             Warehouse systems
           </p>
           <h1 className="text-4xl font-bold mb-4">
-            Warehouse systems for practical South African projects
+            Steel warehouses for practical South African projects
           </h1>
           <p className="text-lg max-w-3xl mx-auto leading-8">
-            Explore Smart Steel warehouse systems built for storage, workshop use, fleet cover, and commercial operations.
-            Compare our LSF and CFLC warehouse lanes, request a tailored quote, or move into the warehouse builder if you want a more visual starting point.
+            Explore Smart Steel steel warehouses built for storage, workshop use, fleet cover, and commercial operations.
+            Compare our LSF and CFLC warehouse systems, request a tailored quote, or use the warehouse builder if you want a more visual starting point.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link href="/warehouse-builder" className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-[#bf172d]">

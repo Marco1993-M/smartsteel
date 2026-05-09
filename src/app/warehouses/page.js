@@ -1,16 +1,16 @@
 import Link from "next/link"
 
 export const metadata = {
-  title: "Warehouses | Smart Steel",
+  title: "Steel Warehouses South Africa | Compare LSF & CFLC",
   description:
-    "Explore Smart Steel warehouse systems, compare LSF and CFLC warehouses, use the warehouse builder, and estimate your next warehouse project in South Africa.",
+    "Compare steel warehouses in South Africa from Smart Steel. Explore LSF and CFLC warehouse systems, use the builder, check pricing, and start the right quote path.",
   alternates: {
     canonical: "/warehouses",
   },
   openGraph: {
-    title: "Warehouses | Smart Steel",
+    title: "Steel Warehouses South Africa | Compare LSF & CFLC",
     description:
-      "Compare Smart Steel warehouse systems, use the builder, and start the right warehouse enquiry for your project.",
+      "Compare Smart Steel LSF and CFLC warehouse systems, use the builder, and start the right warehouse enquiry.",
     url: "https://www.smartsteel.co.za/warehouses",
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -83,14 +83,12 @@ export default function WarehousesHubPage() {
                 Warehouses
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Warehouses built around the way your project needs to work
+                Steel warehouses built for South African projects
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                This is the main Smart Steel warehouse hub for custom warehouse projects. Start
-                here if you want to compare LSF and CFLC warehouses, move into the builder, check a
-                budget range, or start the right enquiry for your project. This side of the site is
-                especially strong for broader custom planning, with LSF taking the lead when the
-                project needs a more modular approach.
+                Start here if you want to compare LSF and CFLC steel warehouses, check pricing guidance,
+                use the warehouse builder, or move into the right quote path for your project. This is
+                the main Smart Steel warehouse hub for custom warehouse planning in South Africa.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link

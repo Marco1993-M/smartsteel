@@ -2,9 +2,8 @@
 
 import { useMemo, useState } from "react"
 import WarehouseBuilderScene from "../../components/warehouse-builder/WarehouseBuilderScene"
-import { useWarehouseBuilderStore } from "../../lib/warehouseBuilderStore"
+import { calculateEstimateByProductType } from "../../lib/estimates/estimateFactory"
 import {
-  calculateWarehouseEstimate,
   formatCurrency,
   WAREHOUSE_CLADDING_OPTIONS,
   WAREHOUSE_ENCLOSURE_OPTIONS,
@@ -14,6 +13,12 @@ import {
   WAREHOUSE_SCOPE_OPTIONS,
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../../lib/estimates/warehouseEstimate"
+import {
+  LCSS_WAREHOUSE_GABLE_OPTIONS,
+  LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS,
+  LCSS_WAREHOUSE_WIDTH_OPTIONS,
+} from "../../lib/estimates/warehouseEstimateLcss"
+import { useWarehouseBuilderStore } from "../../lib/warehouseBuilderStore"
 
 const PROVINCES = [
   "Gauteng",
@@ -27,12 +32,26 @@ const PROVINCES = [
   "Northern Cape",
 ]
 
-const QUICK_START_PRESETS = [
+const WAREHOUSE_SYSTEM_OPTIONS = [
   {
-    id: "small_workshop",
+    value: "LSF Warehouse",
+    label: "LSF Warehouse",
+    description: "Modular warehouse pricing with scope, cladding, enclosure, and opening selections.",
+  },
+  {
+    value: "LCSS Warehouse",
+    label: "CFLC Warehouse",
+    description: "A practical cold formed steel warehouse option with a simple design path.",
+  },
+]
+
+const LSF_QUICK_START_PRESETS = [
+  {
+    id: "lsf_small_workshop",
     name: "Small workshop",
     description: "A compact starter building for light trade or storage use.",
     config: {
+      productType: "LSF Warehouse",
       width: 8,
       length: 10,
       wallHeight: 3,
@@ -50,10 +69,11 @@ const QUICK_START_PRESETS = [
     },
   },
   {
-    id: "standard_warehouse",
+    id: "lsf_standard_warehouse",
     name: "Standard warehouse",
     description: "A balanced general-purpose warehouse for stock and operations.",
     config: {
+      productType: "LSF Warehouse",
       width: 10,
       length: 20,
       wallHeight: 4,
@@ -71,10 +91,11 @@ const QUICK_START_PRESETS = [
     },
   },
   {
-    id: "large_storage",
+    id: "lsf_large_storage",
     name: "Large storage building",
     description: "A bigger enclosed footprint for serious warehousing or fleet cover.",
     config: {
+      productType: "LSF Warehouse",
       width: 12,
       length: 30,
       wallHeight: 5,
@@ -92,6 +113,91 @@ const QUICK_START_PRESETS = [
     },
   },
 ]
+
+const CFLC_QUICK_START_PRESETS = [
+  {
+    id: "cflc_small_storage",
+    name: "Small CFLC span",
+    description: "A compact CFLC building for lighter-duty storage or workspace cover.",
+    config: {
+      productType: "LCSS Warehouse",
+      width: 6,
+      length: 10,
+      wallHeight: 3,
+      steelFinish: "Galv",
+      gableMode: "sheeted_gable",
+      deliveryRequired: true,
+      deliveryDistance: 50,
+      province: "Gauteng",
+      location: "",
+      notes: "",
+    },
+  },
+  {
+    id: "cflc_standard_span",
+    name: "Standard CFLC warehouse",
+    description: "A practical mid-size CFLC warehouse for storage, work areas, or general industrial use.",
+    config: {
+      productType: "LCSS Warehouse",
+      width: 8,
+      length: 20,
+      wallHeight: 3,
+      steelFinish: "Galv",
+      gableMode: "sheeted_gable",
+      deliveryRequired: true,
+      deliveryDistance: 50,
+      province: "Gauteng",
+      location: "",
+      notes: "",
+    },
+  },
+  {
+    id: "cflc_yard_cover",
+    name: "Open gable yard cover",
+    description: "A more open CFLC option for yard use, vehicle cover, or working space.",
+    config: {
+      productType: "LCSS Warehouse",
+      width: 12,
+      length: 25,
+      wallHeight: 4,
+      steelFinish: "Mild",
+      gableMode: "open_gable",
+      deliveryRequired: true,
+      deliveryDistance: 50,
+      province: "Gauteng",
+      location: "",
+      notes: "",
+    },
+  },
+]
+
+const LSF_SYSTEM_DEFAULTS = {
+  productType: "LSF Warehouse",
+  width: 10,
+  length: 20,
+  wallHeight: 4,
+  cladding: "IBR",
+  scope: "supply_only",
+  enclosureType: "fully_enclosed",
+  rollerDoorCount: 1,
+  garageDoorOpeningType: "single",
+  pedestrianDoorCount: 1,
+}
+
+const CFLC_SYSTEM_DEFAULTS = {
+  productType: "LCSS Warehouse",
+  width: 8,
+  length: 20,
+  wallHeight: 3,
+  steelFinish: "Galv",
+  gableMode: "sheeted_gable",
+  cladding: "IBR",
+  scope: "supply_only",
+  enclosureType: "fully_enclosed",
+  rollerDoorCount: 0,
+  garageDoorOpeningType: "single",
+  pedestrianDoorCount: 0,
+}
 
 function FieldLabel({ title, hint }) {
   return (
@@ -120,6 +226,16 @@ function ContactField({ label, type = "text", value, onChange, placeholder, requ
   )
 }
 
+function getSystemLabel(productType) {
+  return productType === "LCSS Warehouse" ? "CFLC Warehouse" : "LSF Warehouse"
+}
+
+function getSystemDescription(productType) {
+  return productType === "LCSS Warehouse"
+    ? "Choose the main CFLC warehouse details and get a fast indicative budget."
+    : "Choose size, scope, cladding, and access requirements for an indicative LSF warehouse budget."
+}
+
 export default function WarehouseBuilderClient() {
   const config = useWarehouseBuilderStore()
   const updateField = useWarehouseBuilderStore((state) => state.updateField)
@@ -137,15 +253,11 @@ export default function WarehouseBuilderClient() {
     phone: "",
   })
 
-  const estimate = useMemo(
-    () =>
-      calculateWarehouseEstimate({
-        ...config,
-        claddingInstalled: config.scope === "supply_install",
-      }),
-    [config]
-  )
-
+  const isLcssWarehouse = config.productType === "LCSS Warehouse"
+  const systemLabel = getSystemLabel(config.productType)
+  const currentSystemDescription = getSystemDescription(config.productType)
+  const visiblePresets = isLcssWarehouse ? CFLC_QUICK_START_PRESETS : LSF_QUICK_START_PRESETS
+  const widthOptions = isLcssWarehouse ? LCSS_WAREHOUSE_WIDTH_OPTIONS : WAREHOUSE_WIDTH_OPTIONS
   const scopeLabel = WAREHOUSE_SCOPE_OPTIONS.find((option) => option.value === config.scope)?.label || config.scope
   const enclosureLabel =
     WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === config.enclosureType)?.label ||
@@ -154,13 +266,77 @@ export default function WarehouseBuilderClient() {
   const garageDoorOpeningTypeLabel =
     WAREHOUSE_GARAGE_OPENING_OPTIONS.find((option) => option.value === config.garageDoorOpeningType)?.label ||
     config.garageDoorOpeningType
+  const steelFinishLabel = config.steelFinish || "Galv"
+  const gableModeLabel =
+    LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === config.gableMode)?.label || config.gableMode
+
+  const estimateInput = useMemo(() => {
+    if (isLcssWarehouse) {
+      return {
+        width: config.width,
+        length: config.length,
+        wallHeight: config.wallHeight,
+        steelFinish: config.steelFinish,
+        gableMode: config.gableMode,
+      }
+    }
+
+    return {
+      ...config,
+      claddingInstalled: config.scope === "supply_install",
+    }
+  }, [config, isLcssWarehouse])
+
+  const estimate = useMemo(
+    () => calculateEstimateByProductType(config.productType, estimateInput),
+    [config.productType, estimateInput]
+  )
+
+  const budgetValue = estimate.pricing.totalInclVat ?? estimate.pricing.estimatedTotal
+
   const activePresetId =
-    QUICK_START_PRESETS.find((preset) =>
+    visiblePresets.find((preset) =>
       Object.entries(preset.config).every(([field, value]) => config[field] === value)
     )?.id || null
 
+  const sceneProps = useMemo(() => {
+    if (isLcssWarehouse) {
+      return {
+        width: config.width,
+        length: config.length,
+        wallHeight: config.wallHeight,
+        roofPitch: 15,
+        cladding: "IBR",
+        enclosureType: config.gableMode === "open_gable" ? "open_sides" : "fully_enclosed",
+        rollerDoorCount: 0,
+        garageDoorOpeningType: "single",
+        pedestrianDoorCount: 0,
+      }
+    }
+
+    return {
+      width: config.width,
+      length: config.length,
+      wallHeight: config.wallHeight,
+      roofPitch: config.roofPitch,
+      cladding: config.cladding,
+      enclosureType: config.enclosureType,
+      rollerDoorCount: config.rollerDoorCount,
+      garageDoorOpeningType: config.garageDoorOpeningType,
+      pedestrianDoorCount: config.pedestrianDoorCount,
+    }
+  }, [config, isLcssWarehouse])
+
   const applyPreset = (presetConfig) => {
     patchFields(presetConfig)
+    setSubmitted(false)
+    setSubmissionResult(null)
+    setShowLeadForm(false)
+    setSubmitError("")
+  }
+
+  const applySystem = (productType) => {
+    patchFields(productType === "LCSS Warehouse" ? CFLC_SYSTEM_DEFAULTS : LSF_SYSTEM_DEFAULTS)
     setSubmitted(false)
     setSubmissionResult(null)
     setShowLeadForm(false)
@@ -178,27 +354,34 @@ export default function WarehouseBuilderClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...leadForm,
+          lead_source: "Warehouse Builder",
+          productType: config.productType,
+          systemLabel,
           userNotes: config.notes,
           province: config.province,
           location: config.location,
-          scope: config.scope,
-          scopeLabel,
-          enclosureType: config.enclosureType,
-          enclosureLabel,
+          scope: isLcssWarehouse ? null : config.scope,
+          scopeLabel: isLcssWarehouse ? null : scopeLabel,
+          enclosureType: isLcssWarehouse ? null : config.enclosureType,
+          enclosureLabel: isLcssWarehouse ? null : enclosureLabel,
           roofType: config.roofType,
           roofTypeLabel,
-          cladding: config.cladding,
-          rollerDoorCount: config.rollerDoorCount,
-          garageDoorOpeningType: config.garageDoorOpeningType,
-          garageDoorOpeningTypeLabel,
-          pedestrianDoorCount: config.pedestrianDoorCount,
+          cladding: isLcssWarehouse ? null : config.cladding,
+          rollerDoorCount: isLcssWarehouse ? 0 : config.rollerDoorCount,
+          garageDoorOpeningType: isLcssWarehouse ? null : config.garageDoorOpeningType,
+          garageDoorOpeningTypeLabel: isLcssWarehouse ? null : garageDoorOpeningTypeLabel,
+          pedestrianDoorCount: isLcssWarehouse ? 0 : config.pedestrianDoorCount,
+          steelFinish: isLcssWarehouse ? config.steelFinish : null,
+          gableMode: isLcssWarehouse ? config.gableMode : null,
+          gableModeLabel: isLcssWarehouse ? gableModeLabel : null,
           deliveryRequired: config.deliveryRequired,
           deliveryDistance: config.deliveryRequired ? config.deliveryDistance : 0,
           estimateRequest: estimate.summary.estimateRequest,
-          estimatedTotal: estimate.pricing.estimatedTotal,
-          priceLabel: formatCurrency(estimate.pricing.estimatedTotal),
+          estimatedTotal: budgetValue,
+          priceLabel: formatCurrency(budgetValue),
           summaryNote: estimate.summary.layoutNote,
           configuration: {
+            productType: config.productType,
             width: config.width,
             length: config.length,
             wallHeight: config.wallHeight,
@@ -210,6 +393,8 @@ export default function WarehouseBuilderClient() {
             rollerDoorCount: config.rollerDoorCount,
             garageDoorOpeningType: config.garageDoorOpeningType,
             pedestrianDoorCount: config.pedestrianDoorCount,
+            steelFinish: config.steelFinish,
+            gableMode: config.gableMode,
             deliveryRequired: config.deliveryRequired,
             deliveryDistance: config.deliveryRequired ? config.deliveryDistance : 0,
             province: config.province,
@@ -217,17 +402,21 @@ export default function WarehouseBuilderClient() {
             notes: config.notes,
           },
           summary: {
-            scopeLabel,
-            enclosureLabel,
+            systemLabel,
+            scopeLabel: isLcssWarehouse ? null : scopeLabel,
+            enclosureLabel: isLcssWarehouse ? null : enclosureLabel,
             roofTypeLabel,
-            priceLabel: formatCurrency(estimate.pricing.estimatedTotal),
+            priceLabel: formatCurrency(budgetValue),
             estimateRequest: estimate.summary.estimateRequest,
             layoutNote: estimate.summary.layoutNote,
             dimensionsLabel: `${config.width}m x ${config.length}m x ${config.wallHeight}m`,
-            rollerDoorCount: config.rollerDoorCount,
-            garageDoorOpeningType: config.garageDoorOpeningType,
-            garageDoorOpeningTypeLabel,
-            pedestrianDoorCount: config.pedestrianDoorCount,
+            rollerDoorCount: isLcssWarehouse ? 0 : config.rollerDoorCount,
+            garageDoorOpeningType: isLcssWarehouse ? null : config.garageDoorOpeningType,
+            garageDoorOpeningTypeLabel: isLcssWarehouse ? null : garageDoorOpeningTypeLabel,
+            pedestrianDoorCount: isLcssWarehouse ? 0 : config.pedestrianDoorCount,
+            steelFinish: isLcssWarehouse ? config.steelFinish : null,
+            gableMode: isLcssWarehouse ? config.gableMode : null,
+            gableModeLabel: isLcssWarehouse ? gableModeLabel : null,
           },
         }),
       })
@@ -248,6 +437,82 @@ export default function WarehouseBuilderClient() {
     }
   }
 
+  const summaryItems = isLcssWarehouse
+    ? [
+        { label: "System", value: systemLabel },
+        { label: "Warehouse", value: `${config.width}m x ${config.length}m` },
+        { label: "Height", value: `${config.wallHeight}m wall height` },
+        { label: "Steel finish", value: steelFinishLabel },
+        { label: "Gable type", value: gableModeLabel },
+        {
+          label: "Delivery",
+          value: config.deliveryRequired
+            ? `${config.province}${config.location ? `, ${config.location}` : ""}`
+            : "Collection / no delivery",
+        },
+      ]
+    : [
+        { label: "System", value: systemLabel },
+        { label: "Warehouse", value: `${config.width}m x ${config.length}m` },
+        { label: "Height", value: `${config.wallHeight}m eave` },
+        { label: "Cladding", value: config.cladding },
+        { label: "Scope", value: scopeLabel },
+        { label: "Enclosure", value: enclosureLabel },
+      ]
+
+  const budgetItems = isLcssWarehouse
+    ? [
+        { label: "Size", value: `${config.width}m x ${config.length}m x ${config.wallHeight}m` },
+        { label: "System", value: systemLabel },
+        { label: "Steel finish", value: steelFinishLabel },
+        { label: "Gable type", value: gableModeLabel },
+      ]
+    : [
+        { label: "Size", value: `${config.width}m x ${config.length}m x ${config.wallHeight}m` },
+        { label: "Scope", value: scopeLabel },
+        { label: "Enclosure", value: enclosureLabel },
+        {
+          label: "Access",
+          value: `${config.rollerDoorCount} garage${config.rollerDoorCount > 0 ? ` (${garageDoorOpeningTypeLabel})` : ""} / ${config.pedestrianDoorCount} pedestrian`,
+        },
+      ]
+
+  const submittedSummaryItems = isLcssWarehouse
+    ? [
+        { label: "System", value: systemLabel },
+        { label: "Steel finish", value: steelFinishLabel },
+        { label: "Gable type", value: gableModeLabel },
+        {
+          label: "Delivery",
+          value: config.deliveryRequired
+            ? `${config.province}${config.location ? `, ${config.location}` : ""}`
+            : "Collection / no delivery",
+        },
+        {
+          label: "Status",
+          value: "Received",
+        },
+      ]
+    : [
+        { label: "Scope", value: scopeLabel },
+        { label: "Enclosure", value: enclosureLabel },
+        { label: "Cladding", value: config.cladding },
+        {
+          label: "Openings",
+          value: `${config.rollerDoorCount} garage${config.rollerDoorCount > 0 ? ` (${garageDoorOpeningTypeLabel})` : ""} / ${config.pedestrianDoorCount} pedestrian`,
+        },
+        {
+          label: "Delivery",
+          value: config.deliveryRequired
+            ? `${config.province}${config.location ? `, ${config.location}` : ""}`
+            : "Collection / no delivery",
+        },
+        {
+          label: "Status",
+          value: "Received",
+        },
+      ]
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#fff8f6,_#ffffff_24%,_#eef3f7)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -257,11 +522,11 @@ export default function WarehouseBuilderClient() {
               Build Your Warehouse
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              Shape a Smart Steel warehouse in minutes
+              Shape an LSF or CFLC warehouse in minutes
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-              Choose your size, scope, cladding, and access requirements. We&apos;ll show you a live
-              visual and an indicative budget, then send the design straight into Smart Steel&apos;s CRM.
+              Choose the right warehouse system first, then shape the essentials. We&apos;ll show you
+              a live visual and an indicative budget, then send your enquiry straight to Smart Steel.
             </p>
           </div>
         </section>
@@ -272,7 +537,7 @@ export default function WarehouseBuilderClient() {
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">Configuration</h2>
-                  <p className="text-sm text-slate-500">Choose the essentials first. Fine-tune the rest only if needed.</p>
+                  <p className="text-sm text-slate-500">{currentSystemDescription}</p>
                 </div>
                 <button
                   type="button"
@@ -290,11 +555,41 @@ export default function WarehouseBuilderClient() {
               <div className="space-y-5">
                 <div>
                   <FieldLabel
-                    title="Quick starts"
-                    hint="Start from a sensible building type, then fine-tune the details."
+                    title="Warehouse system"
+                    hint="Pick the warehouse system that best suits your project."
                   />
                   <div className="grid gap-2">
-                    {QUICK_START_PRESETS.map((preset) => {
+                    {WAREHOUSE_SYSTEM_OPTIONS.map((option) => {
+                      const isActive = config.productType === option.value
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => applySystem(option.value)}
+                          className={`rounded-[1.4rem] border px-4 py-3 text-left transition ${
+                            isActive
+                              ? "border-slate-900 bg-slate-900 text-white"
+                              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                          }`}
+                        >
+                          <p className="text-sm font-semibold">{option.label}</p>
+                          <p className={`mt-1 text-xs leading-5 ${isActive ? "text-slate-200" : "text-slate-500"}`}>
+                            {option.description}
+                          </p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <FieldLabel
+                    title="Quick starts"
+                    hint={`Start from a sensible ${isLcssWarehouse ? "CFLC" : "LSF"} building type, then fine-tune the details.`}
+                  />
+                  <div className="grid gap-2">
+                    {visiblePresets.map((preset) => {
                       const isActive = activePresetId === preset.id
 
                       return (
@@ -328,9 +623,16 @@ export default function WarehouseBuilderClient() {
                 </div>
 
                 <div>
-                  <FieldLabel title="Warehouse size" hint="Set the footprint and eave height for the building." />
+                  <FieldLabel
+                    title={isLcssWarehouse ? "CFLC warehouse size" : "Warehouse size"}
+                    hint={
+                      isLcssWarehouse
+                        ? "Set the span, length, and wall height for the warehouse you need."
+                        : "Set the footprint and eave height for the building."
+                    }
+                  />
                   <div className="grid grid-cols-3 gap-2">
-                    {WAREHOUSE_WIDTH_OPTIONS.map((option) => (
+                    {widthOptions.map((option) => (
                       <button
                         key={option}
                         type="button"
@@ -364,7 +666,7 @@ export default function WarehouseBuilderClient() {
                     </div>
                     <div>
                       <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Eave height
+                        {isLcssWarehouse ? "Wall height" : "Eave height"}
                       </label>
                       <select
                         value={config.wallHeight}
@@ -381,109 +683,69 @@ export default function WarehouseBuilderClient() {
                   </div>
                 </div>
 
-                <div>
-                  <FieldLabel title="Project scope" hint="This helps frame the indicative budget more realistically." />
-                  <div className="grid gap-2">
-                    {WAREHOUSE_SCOPE_OPTIONS.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => updateField("scope", option.value)}
-                        className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
-                          config.scope === option.value
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <FieldLabel title="Cladding and enclosure" hint="Choose how enclosed the structure should be." />
-                  <div className="grid grid-cols-3 gap-2">
-                    {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => updateField("cladding", option)}
-                        className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                          config.cladding === option
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="mt-3 grid gap-2">
-                    {WAREHOUSE_ENCLOSURE_OPTIONS.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => updateField("enclosureType", option.value)}
-                        className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
-                          config.enclosureType === option.value
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <FieldLabel title="Access openings" hint="We currently price framed openings, not supplied doors." />
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Garage door openings
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="6"
-                        value={config.rollerDoorCount}
-                        onChange={(event) =>
-                          updateField("rollerDoorCount", Math.max(0, Number(event.target.value) || 0))
-                        }
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Pedestrian door openings
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="6"
-                        value={config.pedestrianDoorCount}
-                        onChange={(event) =>
-                          updateField("pedestrianDoorCount", Math.max(0, Number(event.target.value) || 0))
-                        }
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                      />
+                {isLcssWarehouse ? (
+                  <div>
+                    <FieldLabel
+                      title="CFLC assumptions"
+                      hint="Choose the main structural options for your CFLC warehouse."
+                    />
+                    <div className="grid gap-3">
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          Steel finish
+                        </label>
+                        <div className="mt-1 grid grid-cols-2 gap-2">
+                          {LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => updateField("steelFinish", option)}
+                              className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                                config.steelFinish === option
+                                  ? "border-slate-900 bg-slate-900 text-white"
+                                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          Gable type
+                        </label>
+                        <div className="mt-1 grid gap-2">
+                          {LCSS_WAREHOUSE_GABLE_OPTIONS.map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => updateField("gableMode", option.value)}
+                              className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                                config.gableMode === option.value
+                                  ? "border-slate-900 bg-slate-900 text-white"
+                                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  {config.rollerDoorCount > 0 ? (
-                    <div className="mt-3">
-                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Garage opening size
-                      </label>
-                      <div className="mt-1 grid gap-2 sm:grid-cols-3">
-                        {WAREHOUSE_GARAGE_OPENING_OPTIONS.map((option) => (
+                ) : (
+                  <>
+                    <div>
+                      <FieldLabel title="Project scope" hint="This helps frame the indicative budget more realistically." />
+                      <div className="grid gap-2">
+                        {WAREHOUSE_SCOPE_OPTIONS.map((option) => (
                           <button
                             key={option.value}
                             type="button"
-                            onClick={() => updateField("garageDoorOpeningType", option.value)}
-                            className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                              config.garageDoorOpeningType === option.value
+                            onClick={() => updateField("scope", option.value)}
+                            className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                              config.scope === option.value
                                 ? "border-slate-900 bg-slate-900 text-white"
                                 : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
                             }`}
@@ -493,11 +755,113 @@ export default function WarehouseBuilderClient() {
                         ))}
                       </div>
                     </div>
-                  ) : null}
-                </div>
+
+                    <div>
+                      <FieldLabel title="Cladding and enclosure" hint="Choose how enclosed the structure should be." />
+                      <div className="grid grid-cols-3 gap-2">
+                        {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => updateField("cladding", option)}
+                            className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                              config.cladding === option
+                                ? "border-slate-900 bg-slate-900 text-white"
+                                : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                            }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-3 grid gap-2">
+                        {WAREHOUSE_ENCLOSURE_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => updateField("enclosureType", option.value)}
+                            className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                              config.enclosureType === option.value
+                                ? "border-slate-900 bg-slate-900 text-white"
+                                : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <FieldLabel title="Access openings" hint="We currently price framed openings, not supplied doors." />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            Garage door openings
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="6"
+                            value={config.rollerDoorCount}
+                            onChange={(event) =>
+                              updateField("rollerDoorCount", Math.max(0, Number(event.target.value) || 0))
+                            }
+                            className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            Pedestrian door openings
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="6"
+                            value={config.pedestrianDoorCount}
+                            onChange={(event) =>
+                              updateField("pedestrianDoorCount", Math.max(0, Number(event.target.value) || 0))
+                            }
+                            className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                          />
+                        </div>
+                      </div>
+                      {config.rollerDoorCount > 0 ? (
+                        <div className="mt-3">
+                          <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            Garage opening size
+                          </label>
+                          <div className="mt-1 grid gap-2 sm:grid-cols-3">
+                            {WAREHOUSE_GARAGE_OPENING_OPTIONS.map((option) => (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => updateField("garageDoorOpeningType", option.value)}
+                                className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                                  config.garageDoorOpeningType === option.value
+                                    ? "border-slate-900 bg-slate-900 text-white"
+                                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </>
+                )}
 
                 <div>
-                  <FieldLabel title="Delivery" hint="Capture the project area early so the handoff is cleaner." />
+                  <FieldLabel
+                    title="Delivery"
+                    hint={
+                      isLcssWarehouse
+                        ? "Share the project area so we can understand delivery and site context."
+                        : "Capture the project area early so the handoff is cleaner."
+                    }
+                  />
                   <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                     <input
                       type="checkbox"
@@ -547,41 +911,31 @@ export default function WarehouseBuilderClient() {
                     rows={4}
                     value={config.notes}
                     onChange={(event) => updateField("notes", event.target.value)}
-                    placeholder="Anything unusual about access, use, vehicle clearance, or site conditions?"
+                    placeholder="Anything unusual about access, use, site conditions, clearance, or the system you need?"
                     className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
                   />
                 </div>
               </div>
             </section>
-
           </aside>
 
           <section className="space-y-6">
-
             <div className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Live warehouse preview</p>
                   <p className="text-sm text-slate-500">
-                    Rotate, zoom, and sense-check the structure before sending the enquiry through.
+                    {isLcssWarehouse
+                      ? "Use this as a quick visual guide while you shape the overall warehouse."
+                      : "Rotate, zoom, and sense-check the structure before sending the enquiry through."}
                   </p>
                 </div>
                 <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                  {roofTypeLabel} · {config.roofPitch}&deg;
+                  {systemLabel} · {roofTypeLabel}
                 </div>
               </div>
 
-              <WarehouseBuilderScene
-                width={config.width}
-                length={config.length}
-                wallHeight={config.wallHeight}
-                roofPitch={config.roofPitch}
-                cladding={config.cladding}
-                enclosureType={config.enclosureType}
-                rollerDoorCount={config.rollerDoorCount}
-                garageDoorOpeningType={config.garageDoorOpeningType}
-                pedestrianDoorCount={config.pedestrianDoorCount}
-              />
+              <WarehouseBuilderScene {...sceneProps} />
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -589,17 +943,7 @@ export default function WarehouseBuilderClient() {
                 <h2 className="text-lg font-semibold text-slate-900">Design summary</h2>
                 <p className="mt-1 text-sm text-slate-500">A quick read on the structure you’ve shaped so far.</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {[
-                    { label: "Warehouse", value: `${config.width}m x ${config.length}m` },
-                    { label: "Height", value: `${config.wallHeight}m eave` },
-                    { label: "Cladding", value: config.cladding },
-                    { label: "Scope", value: scopeLabel },
-                    { label: "Enclosure", value: enclosureLabel },
-                    {
-                      label: "Openings",
-                      value: `${config.rollerDoorCount} garage${config.rollerDoorCount > 0 ? ` (${garageDoorOpeningTypeLabel})` : ""} / ${config.pedestrianDoorCount} pedestrian`,
-                    },
-                  ].map((item) => (
+                  {summaryItems.map((item) => (
                     <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                         {item.label}
@@ -617,11 +961,13 @@ export default function WarehouseBuilderClient() {
 
               <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-semibold text-slate-900">What happens next</h2>
-                <p className="mt-1 text-sm text-slate-500">The builder helps qualify the enquiry before the team takes it forward.</p>
+                <p className="mt-1 text-sm text-slate-500">A quick summary of what happens after you send your enquiry.</p>
                 <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  <p>1. You send the design as a structured Smart Steel enquiry.</p>
-                  <p>2. The configuration lands in the CRM with your indicative budget and project notes.</p>
-                  <p>3. The team reviews scope, confirms assumptions, and follows up with the next commercial step.</p>
+                  <p>1. You send your design enquiry to Smart Steel.</p>
+                  <p>2. We review the size, layout, and project details you&apos;ve shared.</p>
+                  <p>
+                    3. We follow up with the next practical step, whether that&apos;s refining the design or preparing a quotation.
+                  </p>
                 </div>
               </section>
             </div>
@@ -633,10 +979,12 @@ export default function WarehouseBuilderClient() {
                     Indicative budget
                   </p>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-                    A fast commercial guide based on your current structure, enclosure, and opening selections.
+                    {isLcssWarehouse
+                      ? "A fast guide based on your selected size, wall height, steel finish, and gable type."
+                      : "A fast commercial guide based on your current structure, enclosure, and opening selections."}
                   </p>
                   <p className="mt-3 text-4xl font-semibold sm:text-5xl">
-                    {formatCurrency(estimate.pricing.estimatedTotal)}
+                    {formatCurrency(budgetValue)}
                   </p>
                 </div>
                 <button
@@ -649,15 +997,7 @@ export default function WarehouseBuilderClient() {
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {[
-                  { label: "Size", value: `${config.width}m x ${config.length}m x ${config.wallHeight}m` },
-                  { label: "Scope", value: scopeLabel },
-                  { label: "Enclosure", value: enclosureLabel },
-                  {
-                    label: "Access",
-                    value: `${config.rollerDoorCount} garage${config.rollerDoorCount > 0 ? ` (${garageDoorOpeningTypeLabel})` : ""} / ${config.pedestrianDoorCount} pedestrian`,
-                  },
-                ].map((item) => (
+                {budgetItems.map((item) => (
                   <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">
                       {item.label}
@@ -669,7 +1009,7 @@ export default function WarehouseBuilderClient() {
 
               <p className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-6 text-slate-200">
                 Indicative budget only. Final pricing still depends on confirmed scope, delivery,
-                site access, openings, and final design review by the Smart Steel team.
+                site access, and final design review by the Smart Steel team.
               </p>
             </section>
 
@@ -680,14 +1020,13 @@ export default function WarehouseBuilderClient() {
                     Send My Design
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-                    Send this warehouse enquiry to Smart Steel
+                    Send this {systemLabel.toLowerCase()} enquiry to Smart Steel
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    We&apos;ll save the configuration into the CRM as a structured warehouse enquiry so
-                    the team can respond with context, not guesswork.
+                    Send the design details through and we&apos;ll review the project with the right context from the start.
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    The more accurate the contact details, location, and notes, the cleaner the follow-up will be.
+                    The more accurate the contact details, location, and notes, the easier it is for us to respond well.
                   </p>
                 </div>
 
@@ -729,7 +1068,7 @@ export default function WarehouseBuilderClient() {
                     >
                       {submitting ? "Sending enquiry..." : "Send My Design"}
                     </button>
-                    <p className="text-sm text-slate-500">This creates a structured enquiry in the Smart Steel CRM.</p>
+                    <p className="text-sm text-slate-500">We&apos;ll use this information to review your project and respond properly.</p>
                   </div>
                   {submitError ? (
                     <p className="md:col-span-2 text-sm text-red-600">{submitError}</p>
@@ -746,11 +1085,10 @@ export default function WarehouseBuilderClient() {
                       Design Received
                     </p>
                     <h2 className="mt-2 text-2xl font-semibold text-emerald-950">
-                      Your warehouse enquiry is now with Smart Steel
+                      Your {systemLabel.toLowerCase()} enquiry is now with Smart Steel
                     </h2>
                     <p className="mt-3 text-sm leading-6 text-emerald-900/80">
-                      We&apos;ve saved the configuration, indicative budget, and your project notes into
-                      the CRM so the team can review the enquiry with full context.
+                      We&apos;ve received your design details, indicative budget, and project notes so we can review the enquiry properly.
                     </p>
                   </div>
                   <div className="rounded-[1.5rem] border border-emerald-200 bg-white px-5 py-4 text-left shadow-sm lg:min-w-[260px]">
@@ -758,7 +1096,7 @@ export default function WarehouseBuilderClient() {
                       Indicative Budget
                     </p>
                     <p className="mt-2 text-3xl font-semibold text-slate-950">
-                      {formatCurrency(estimate.pricing.estimatedTotal)}
+                      {formatCurrency(budgetValue)}
                     </p>
                     <p className="mt-2 text-sm text-slate-600">
                       {config.width}m x {config.length}m x {config.wallHeight}m
@@ -770,25 +1108,7 @@ export default function WarehouseBuilderClient() {
                   <div className="rounded-[1.5rem] border border-emerald-200 bg-white p-4 shadow-sm">
                     <p className="text-sm font-semibold text-slate-900">Submitted summary</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      {[
-                        { label: "Scope", value: scopeLabel },
-                        { label: "Enclosure", value: enclosureLabel },
-                        { label: "Cladding", value: config.cladding },
-                        {
-                          label: "Openings",
-                          value: `${config.rollerDoorCount} garage${config.rollerDoorCount > 0 ? ` (${garageDoorOpeningTypeLabel})` : ""} / ${config.pedestrianDoorCount} pedestrian`,
-                        },
-                        {
-                          label: "Delivery",
-                          value: config.deliveryRequired
-                            ? `${config.province}${config.location ? `, ${config.location}` : ""}`
-                            : "Collection / no delivery",
-                        },
-                        {
-                          label: "CRM status",
-                          value: submissionResult?.builderSubmission?.status || "new",
-                        },
-                      ].map((item) => (
+                      {submittedSummaryItems.map((item) => (
                         <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                             {item.label}
@@ -809,10 +1129,12 @@ export default function WarehouseBuilderClient() {
 
                   <div className="rounded-[1.5rem] border border-emerald-200 bg-white p-4 shadow-sm">
                     <p className="text-sm font-semibold text-slate-900">What happens next</p>
-                    <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
-                      <p>1. Smart Steel reviews the structure size, scope, and access requirements.</p>
-                      <p>2. The team sense-checks assumptions like delivery, enclosure, and openings.</p>
-                      <p>3. You get a follow-up with the next commercial step or a refined quotation path.</p>
+                  <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
+                      <p>1. Smart Steel reviews the structure size and your project notes.</p>
+                      <p>
+                        2. We review the design details and project requirements you&apos;ve shared.
+                      </p>
+                      <p>3. You get a follow-up with the next step or a refined quotation path.</p>
                     </div>
                     <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
                       This budget is still indicative only and will be refined once the team confirms
