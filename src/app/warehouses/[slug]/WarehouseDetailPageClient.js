@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { warehouses } from "../../../components/warehouse-catalogue";
+import { warehouses } from "../../../components/warehouse-catalogue-data";
 
 export default function WarehouseDetailPage({ params }) {
   const slug = params?.slug;

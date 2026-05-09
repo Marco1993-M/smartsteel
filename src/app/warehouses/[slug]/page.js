@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import WarehouseDetailPageClient from "./WarehouseDetailPageClient";
-import { warehouses } from "../../../components/warehouse-catalogue";
+import { warehouses } from "../../../components/warehouse-catalogue-data";
 
 function getWarehouseBySlug(slug) {
   return warehouses.find((warehouse) => warehouse.slug === slug) || null;
