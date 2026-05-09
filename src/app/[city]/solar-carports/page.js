@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import SolarRegionPageClient from "../../solar-regions/SolarRegionPageClient";
 import {
   buildSolarRegionMetadata,
@@ -26,6 +26,8 @@ export default async function Page({ params }) {
   if (!config) {
     notFound();
   }
+
+  permanentRedirect(`/${config.legacySlug}`);
 
   return <SolarRegionPageClient citySlug={city} />;
 }
