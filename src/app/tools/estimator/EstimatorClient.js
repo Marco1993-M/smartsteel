@@ -396,8 +396,9 @@ export default function EstimatorPage() {
                 </label>
               ) : (
                 <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-900">
-                  The current CFLC estimator follows your workbook model for structure and hat pricing.
-                  Delivery, sheeting, and installation can still be added during detailed quoting.
+                  This CFLC estimate gives you a practical starting point for the structure price.
+                  Delivery, sheeting, and installation can still be added once your full project
+                  details are confirmed.
                 </div>
               )}
 
@@ -437,7 +438,7 @@ export default function EstimatorPage() {
                   <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3 text-left text-sm text-gray-700">
                     <p className="font-semibold text-gray-900">CFLC warehouse summary</p>
                     <p className="mt-1">
-                      This estimate follows your CFLC workbook model and gives a structured client-facing budget indication.
+                      This estimate gives you a clear starting budget for a CFLC warehouse.
                     </p>
                     <p className="mt-2 text-xs text-gray-500">
                       Final pricing is confirmed once the full design scope, sheeting, delivery, and project details are reviewed.
