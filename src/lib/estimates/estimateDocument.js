@@ -54,7 +54,11 @@ export function buildEstimateDisplayModel(estimate, lead) {
   const totalModuleCount = moduleCount * quantity
   const totalArea = area * quantity
   const hasDimensions = Number(input.width || 0) > 0 && Number(input.length || 0) > 0
-  const productType = estimate?.product_type || lead?.product_type || "Warehouse"
+  const productType = estimate?.product_type || lead?.product_type || "LSF Warehouse"
+  const productTypeLabel =
+    input.productTypeLabel ||
+    estimate?.product_type_display ||
+    productType
   const solarProduct = isSolarProduct(productType)
   const layoutNote =
     Number(input.length || 0) > 0 &&
@@ -63,8 +67,8 @@ export function buildEstimateDisplayModel(estimate, lead) {
       ? `Requested depth ${Number(input.length)}m is priced against a practical ${Number(input.effectiveLength)}m bay layout.`
       : ""
   const quotationTitle = hasDimensions
-    ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} x ${formatDimension(input.length)} ${productType} Quotation`
-    : `${productType} Quotation`
+    ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} x ${formatDimension(input.length)} ${productTypeLabel} Quotation`
+    : `${productTypeLabel} Quotation`
   const summaryFields = solarProduct
     ? [
         { label: "Width", value: formatDimension(input.width) },
@@ -134,6 +138,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
     clientEmail: lead?.email || "Not supplied",
     clientPhone: lead?.phone || "Not supplied",
     productType,
+    productTypeLabel,
     quotationTitle,
     widthLabel: formatDimension(input.width),
     lengthLabel: formatDimension(input.length),
