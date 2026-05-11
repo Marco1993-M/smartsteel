@@ -22,6 +22,16 @@ const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
   { value: "LCSS Warehouse", label: "LCSS Warehouse" },
   ...SOLAR_PRODUCT_TYPE_OPTIONS,
 ]
+const INTERNAL_PRODUCT_LABELS = [
+  "LSF Warehouse",
+  "LCSS Warehouse",
+  "LCSS warehouse",
+  "CFLC Warehouse",
+  "CFLC warehouse",
+  "Solar carport",
+  "Solar ground mount",
+  "Solar structure",
+]
 
 function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100
@@ -64,6 +74,12 @@ function buildInitialState(lead, estimate) {
 
   return {
     productType,
+    productTypeLabel:
+      latestInput.productTypeLabel ||
+      estimate?.product_type_display ||
+      estimate?.product_type ||
+      lead?.product_type ||
+      productType,
     width,
     length,
     useCustomSize,
@@ -79,6 +95,28 @@ function buildInitialState(lead, estimate) {
     notes: estimate?.notes || "",
     estimateName: stripVersionSuffix(estimate?.title) || "",
   }
+}
+
+function buildDefaultEstimateTitle(previewTitle, productTypeLabel) {
+  if (!productTypeLabel?.trim()) return previewTitle
+
+  let output = String(previewTitle || "")
+  INTERNAL_PRODUCT_LABELS.forEach((label) => {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    output = output.replace(new RegExp(escaped, "g"), productTypeLabel.trim())
+  })
+  return output
+}
+
+function buildEstimateRequestLabel(previewRequest, productTypeLabel) {
+  if (!productTypeLabel?.trim()) return previewRequest
+
+  let output = String(previewRequest || "")
+  INTERNAL_PRODUCT_LABELS.forEach((label) => {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    output = output.replace(new RegExp(escaped, "g"), productTypeLabel.trim())
+  })
+  return output
 }
 
 function buildEditableLineItem(item, overrides = {}) {
@@ -107,24 +145,49 @@ function buildEditableLineItem(item, overrides = {}) {
   }
 }
 
-function buildEditableLineItemsFromEstimate(previewLineItems, estimate) {
+function applyMarkupToLineItem(item, markupMultiplier) {
+  const quantity = Number(item.quantity ?? 0)
+  const unitRate = Number(item.unitRate ?? 0)
+  const baseTotal = Number(item.total ?? quantity * unitRate)
+  const sellTotal = roundMoney(baseTotal * markupMultiplier)
+  const sellUnitRate = quantity > 0 ? roundMoney(sellTotal / quantity) : roundMoney(unitRate * markupMultiplier)
+
+  return {
+    ...item,
+    unitRate: sellUnitRate,
+    total: sellTotal,
+    priceIncludesMarkup: true,
+  }
+}
+
+function buildEditableLineItemsFromEstimate(previewLineItems, estimate, markupMultiplier) {
   const savedItems = Array.isArray(estimate?.line_items) ? estimate.line_items : []
 
   if (savedItems.length === 0) {
-    return previewLineItems.map((item) => buildEditableLineItem(item))
+    return previewLineItems.map((item) =>
+      buildEditableLineItem(applyMarkupToLineItem(item, markupMultiplier), {
+        priceIncludesMarkup: true,
+      })
+    )
   }
 
   const previewByCode = new Map(previewLineItems.map((item) => [item.code, item]))
 
   return savedItems.map((savedItem) => {
     const previewItem = previewByCode.get(savedItem.code)
+    const normalizedSavedItem = savedItem.priceIncludesMarkup
+      ? savedItem
+      : applyMarkupToLineItem(savedItem, markupMultiplier)
 
     if (previewItem) {
-      return buildEditableLineItem(previewItem, savedItem)
+      return buildEditableLineItem(
+        applyMarkupToLineItem(previewItem, markupMultiplier),
+        normalizedSavedItem
+      )
     }
 
-    return buildEditableLineItem(savedItem, {
-      ...savedItem,
+    return buildEditableLineItem(normalizedSavedItem, {
+      ...normalizedSavedItem,
       id: savedItem.id || savedItem.code,
       manual: true,
     })
@@ -189,15 +252,27 @@ function buildEstimateDraft({
     lead,
     version_no: versionNo,
     product_type: formState.productType,
-    title: `${(formState.estimateName || preview.summary.title).trim()} V${versionNo}`,
-    input_data: { ...preview.input, useCustomSize: formState.useCustomSize, productType: formState.productType },
+    product_type_display: formState.productTypeLabel?.trim() || formState.productType,
+    title: `${(
+      formState.estimateName ||
+      buildDefaultEstimateTitle(preview.summary.title, formState.productTypeLabel)
+    ).trim()} V${versionNo}`,
+    input_data: {
+      ...preview.input,
+      useCustomSize: formState.useCustomSize,
+      productType: formState.productType,
+      productTypeLabel: formState.productTypeLabel?.trim() || formState.productType,
+    },
     original_line_items: preview.lineItems,
     line_items: editableLineItems,
     subtotal,
     markup_multiplier: preview.pricing.markupMultiplier,
     total: estimatedTotal,
     notes: formState.notes,
-    estimate_request: preview.summary.estimateRequest,
+    estimate_request: buildEstimateRequestLabel(
+      preview.summary.estimateRequest,
+      formState.productTypeLabel
+    ),
     save_mode: saveMode,
     share_token: existingEstimate?.share_token,
   }
@@ -224,7 +299,11 @@ export default function EstimateDrawer({
     [formState]
   )
   const [editableLineItems, setEditableLineItems] = useState(() =>
-    buildEditableLineItemsFromEstimate(preview.lineItems, latestEstimate)
+    buildEditableLineItemsFromEstimate(
+      preview.lineItems,
+      latestEstimate,
+      preview.pricing.markupMultiplier
+    )
   )
 
   useEffect(() => {
@@ -236,7 +315,13 @@ export default function EstimateDrawer({
     setFormState(nextFormState)
 
     const nextPreview = calculateEstimateByProductType(nextFormState.productType, nextFormState)
-    setEditableLineItems(buildEditableLineItemsFromEstimate(nextPreview.lineItems, loadedEstimate))
+    setEditableLineItems(
+      buildEditableLineItemsFromEstimate(
+        nextPreview.lineItems,
+        loadedEstimate,
+        nextPreview.pricing.markupMultiplier
+      )
+    )
   }, [lead, loadedEstimate])
 
   useEffect(() => {
@@ -248,13 +333,16 @@ export default function EstimateDrawer({
       )
 
       const mergedBaseItems = preview.lineItems.map((item) =>
-        buildEditableLineItem(item, currentByCode.get(item.code))
+        buildEditableLineItem(
+          applyMarkupToLineItem(item, preview.pricing.markupMultiplier),
+          currentByCode.get(item.code)
+        )
       )
 
       const manualItems = currentItems.filter((item) => item.manual)
       return [...mergedBaseItems, ...manualItems]
     })
-  }, [preview.lineItems])
+  }, [preview.lineItems, preview.pricing.markupMultiplier])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -286,30 +374,11 @@ export default function EstimateDrawer({
     const dateB = new Date(b?.created_at || 0).getTime()
     return dateB - dateA
   }), [estimates])
-  const markupableSubtotal = useMemo(
-    () =>
-      roundMoney(
-        editableLineItems.reduce((sum, item) => {
-          if (item.priceIncludesMarkup) return sum
-          return sum + Number(item.total || 0)
-        }, 0)
-      ),
+  const subtotal = useMemo(
+    () => roundMoney(editableLineItems.reduce((sum, item) => sum + Number(item.total || 0), 0)),
     [editableLineItems]
   )
-  const manualFinalPriceTotal = useMemo(
-    () =>
-      roundMoney(
-        editableLineItems.reduce((sum, item) => {
-          if (!item.priceIncludesMarkup) return sum
-          return sum + Number(item.total || 0)
-        }, 0)
-      ),
-    [editableLineItems]
-  )
-  const subtotal = roundMoney(markupableSubtotal + manualFinalPriceTotal)
-  const estimatedTotal = roundMoney(
-    markupableSubtotal * preview.pricing.markupMultiplier + manualFinalPriceTotal
-  )
+  const estimatedTotal = subtotal
   const hasOverrides = editableLineItems.some(
     (item) =>
       item.manual ||
@@ -515,9 +584,23 @@ export default function EstimateDrawer({
                       type="text"
                       value={formState.estimateName}
                       onChange={(event) => handleChange("estimateName", event.target.value)}
-                      placeholder={preview.summary.title}
+                      placeholder={buildDefaultEstimateTitle(preview.summary.title, formState.productTypeLabel)}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700">Client-facing product label</label>
+                    <input
+                      type="text"
+                      value={formState.productTypeLabel}
+                      onChange={(event) => handleChange("productTypeLabel", event.target.value)}
+                      placeholder={formState.productType}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Use this when the quote should say something more specific than the internal product type.
+                    </p>
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -723,11 +806,8 @@ export default function EstimateDrawer({
                         </p>
                       </div>
                       <div className="text-sm text-slate-500 sm:text-right">
-                        <p>Markupable subtotal: {formatCurrency(markupableSubtotal)}</p>
-                        {manualFinalPriceTotal > 0 && (
-                          <p>Manual final-price items: {formatCurrency(manualFinalPriceTotal)}</p>
-                        )}
-                        <p>Markup: {preview.pricing.markupMultiplier}x</p>
+                        <p>Line-item total: {formatCurrency(subtotal)}</p>
+                        <p>Prices shown include margin</p>
                       </div>
                     </div>
 
