@@ -1,27 +1,25 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
-import { Mail, Phone, Edit3, FileText, Link2 } from "lucide-react"
-import UpcomingTasks from "../components/UpcomingTasks"
-import { formatCrmStatusLabel, getLeadSop } from "../lib/crmSop"
-import { supabase } from "../lib/supabase"
+import { Edit3, FileText, GripVertical } from "lucide-react"
+import { formatCrmStatusLabel } from "../lib/crmSop"
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
 
 const teamColors = {
-  Stefan: "bg-red-200",
-  Niel: "bg-blue-200",
-  Victor: "bg-green-200",
-  Marco: "bg-yellow-200",
+  Stefan: "bg-red-100",
+  Niel: "bg-blue-100",
+  Victor: "bg-green-100",
+  Marco: "bg-yellow-100",
 }
 
-const statusColors = {
-  new: "text-gray-500",
-  contacted: "text-blue-600",
-  quoted: "text-yellow-600",
-  won: "text-green-600",
-  lost: "text-red-600",
+const statusBadgeColors = {
+  new: "bg-slate-100 text-slate-600",
+  contacted: "bg-blue-100 text-blue-700",
+  quoted: "bg-amber-100 text-amber-700",
+  won: "bg-emerald-100 text-emerald-700",
+  lost: "bg-rose-100 text-rose-700",
 }
 
 function normalizeStatus(status) {
@@ -32,51 +30,18 @@ function formatStatusLabel(status) {
   return formatCrmStatusLabel(status)
 }
 
+function formatFollowUpLabel(followUpAt) {
+  if (!followUpAt) return "No follow-up"
+  return new Date(followUpAt).toLocaleDateString()
+}
+
 export default function KanbanBoard({
   leads,
   onEditLead,
   onLeadStatusChange,
   onCreateEstimate,
-  onTasksChanged,
 }) {
-  const [recentUpdates, setRecentUpdates] = useState([])
-  const [updateFilter, setUpdateFilter] = useState("all")
   const [mobileStage, setMobileStage] = useState(statuses[0])
-  const kanbanRef = useRef(null)
-
-  const fetchRecentUpdates = async () => {
-    const { data, error } = await supabase
-      .from("lead_activities")
-      .select(`
-        id,
-        lead_id,
-        type,
-        description,
-        timestamp,
-        leads(id, name, last_name, status)
-      `)
-      .order("timestamp", { ascending: false })
-      .limit(8)
-
-    if (!error) setRecentUpdates(data || [])
-  }
-
-  const highlightLead = (leadId) => {
-    const el = document.getElementById(String(leadId))
-    if (!el) return
-    el.scrollIntoView({ behavior: "smooth", block: "center" })
-    el.classList.add("ring", "ring-blue-400")
-    setTimeout(() => el.classList.remove("ring", "ring-blue-400"), 2000)
-  }
-
-  useEffect(() => {
-    fetchRecentUpdates()
-  }, [])
-
-  useEffect(() => {
-    const interval = setInterval(fetchRecentUpdates, 30000)
-    return () => clearInterval(interval)
-  }, [])
 
   const getStageLeads = (status) =>
     leads.filter((lead) => normalizeStatus(lead.status) === status)
@@ -88,141 +53,73 @@ export default function KanbanBoard({
       <div className="mb-5 flex flex-col gap-2 border-b border-slate-200 pb-4">
         <h2 className="text-xl font-semibold text-slate-900">Pipeline view</h2>
         <p className="text-sm text-slate-600">
-          On desktop, drag leads across the pipeline. On mobile, choose a stage
-          and open cards quickly while you are on the move.
+          Keep the board for awareness and movement. Open a lead to handle the
+          detail work in the drawer.
         </p>
       </div>
 
-      <div className="flex flex-col gap-6 xl:flex-row">
-        <div className="xl:w-[320px] xl:flex-shrink-0">
-          <UpcomingTasks onTasksChanged={onTasksChanged} />
-        </div>
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-2 md:hidden">
+        {statuses.map((status) => {
+          const count = getStageLeads(status).length
+          const isActive = mobileStage === status
 
-        <div className="min-w-0 flex-1">
-          {recentUpdates.length > 0 && (
-            <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-slate-800">Recent updates</h3>
-                <button
-                  className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
-                  onClick={() => setRecentUpdates([])}
-                >
-                  Clear
-                </button>
-              </div>
-
-              <div className="mb-3 flex flex-wrap gap-2">
-                {["all", "follow_up", "email", "call", "status", "note"].map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setUpdateFilter(type)}
-                    className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                      updateFilter === type
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-                    }`}
-                  >
-                    {type === "all"
-                      ? "All"
-                      : type.replace("_", " ").replace(/\b\w/g, (char) => char.toUpperCase())}
-                  </button>
-                ))}
-              </div>
-
-              <ul className="max-h-52 space-y-1 overflow-y-auto">
-                {recentUpdates
-                  .filter((update) => updateFilter === "all" || update.type === updateFilter)
-                  .map((update) => (
-                    <li
-                      key={update.id}
-                      className="flex cursor-pointer items-start justify-between gap-3 rounded-xl p-2 transition hover:bg-white"
-                      onClick={() => highlightLead(update.lead_id)}
-                    >
-                      <div className="min-w-0">
-                        <p className="font-medium text-slate-800">
-                          {update.leads?.name || "Lead"} {update.leads?.last_name || ""}
-                        </p>
-                        <p className="text-sm text-slate-600">{update.description}</p>
-                      </div>
-                      <span className="whitespace-nowrap text-xs text-slate-400">
-                        {new Date(update.timestamp).toLocaleString([], {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
-                      </span>
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="mb-4 flex gap-2 overflow-x-auto pb-2 md:hidden">
-            {statuses.map((status) => {
-              const count = getStageLeads(status).length
-              const isActive = mobileStage === status
-
-              return (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setMobileStage(status)}
-                  className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                    isActive
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-white text-slate-700"
-                  }`}
-                >
-                  {formatStatusLabel(status)}
-                  <span
-                    className={`rounded-full px-2 py-0.5 ${
-                      isActive ? "bg-white/15 text-white" : "bg-slate-100 text-slate-500"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="md:hidden">
-            <KanbanColumn
-              id={mobileStage}
-              title={formatStatusLabel(mobileStage)}
-              leads={mobileStageLeads}
-              onEditLead={onEditLead}
-              onCreateEstimate={onCreateEstimate}
-              draggable={false}
-            />
-          </div>
-
-          <DndContext
-            collisionDetection={closestCorners}
-            onDragEnd={({ active, over }) => {
-              if (!over) return
-              onLeadStatusChange(active.id, over.id)
-            }}
-          >
-            <div
-              ref={kanbanRef}
-              className="hidden gap-4 overflow-x-auto scroll-smooth pb-2 md:flex"
+          return (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setMobileStage(status)}
+              className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                isActive
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 bg-white text-slate-700"
+              }`}
             >
-              {statuses.map((status) => (
-                <div key={status} id={status} className="w-[260px] flex-shrink-0">
-                  <KanbanColumn
-                    id={status}
-                    title={formatStatusLabel(status)}
-                    leads={getStageLeads(status)}
-                    onEditLead={onEditLead}
-                    onCreateEstimate={onCreateEstimate}
-                    draggable
-                  />
-                </div>
-              ))}
-            </div>
-          </DndContext>
-        </div>
+              {formatStatusLabel(status)}
+              <span
+                className={`rounded-full px-2 py-0.5 ${
+                  isActive ? "bg-white/15 text-white" : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {count}
+              </span>
+            </button>
+          )
+        })}
       </div>
+
+      <div className="md:hidden">
+        <KanbanColumn
+          id={mobileStage}
+          title={formatStatusLabel(mobileStage)}
+          leads={mobileStageLeads}
+          onEditLead={onEditLead}
+          onCreateEstimate={onCreateEstimate}
+          draggable={false}
+        />
+      </div>
+
+      <DndContext
+        collisionDetection={closestCorners}
+        onDragEnd={({ active, over }) => {
+          if (!over) return
+          onLeadStatusChange(active.id, over.id)
+        }}
+      >
+        <div className="hidden gap-4 overflow-x-auto scroll-smooth pb-2 md:flex">
+          {statuses.map((status) => (
+            <div key={status} id={status} className="w-[265px] flex-shrink-0">
+              <KanbanColumn
+                id={status}
+                title={formatStatusLabel(status)}
+                leads={getStageLeads(status)}
+                onEditLead={onEditLead}
+                onCreateEstimate={onCreateEstimate}
+                draggable
+              />
+            </div>
+          ))}
+        </div>
+      </DndContext>
     </div>
   )
 }
@@ -266,12 +163,14 @@ function KanbanColumn({ id, title, leads, onEditLead, onCreateEstimate, draggabl
 }
 
 function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
-  const [isOpen, setIsOpen] = useState(false)
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id })
-  const leadSop = getLeadSop(lead)
   const style = transform
     ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
     : undefined
+
+  const normalizedStatus = normalizeStatus(lead.status)
+  const isQuoted = normalizedStatus === "quoted"
+  const followUpLabel = formatFollowUpLabel(lead.follow_up_at)
 
   return (
     <div
@@ -282,169 +181,73 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         teamColors[lead.allocated_to] || "bg-white"
       }`}
     >
-      <div
-        className="mb-2 flex cursor-pointer items-start justify-between gap-2"
-        onClick={(event) => {
-          event.stopPropagation()
-          setIsOpen((open) => !open)
-        }}
-        onDoubleClick={(event) => {
-          event.stopPropagation()
-          onEditLead(lead)
-        }}
-      >
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-900 sm:text-base">
+      <div className="mb-2 flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">
             {lead.name} {lead.last_name}
           </p>
-          <p className={`text-xs font-medium ${statusColors[normalizeStatus(lead.status)] || "text-slate-400"}`}>
-            {formatStatusLabel(lead.status)}
+          <p className="mt-0.5 truncate text-xs text-slate-500">
+            {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
           </p>
         </div>
+        <span
+          className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold ${
+            statusBadgeColors[normalizedStatus] || "bg-slate-100 text-slate-600"
+          }`}
+        >
+          {formatStatusLabel(lead.status)}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onEditLead(lead)}
+        className="w-full rounded-xl border border-slate-200 bg-white/85 p-2 text-left transition hover:border-slate-300"
+      >
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+          Next action
+        </p>
+        <p className="mt-1 line-clamp-2 text-xs font-medium leading-5 text-slate-700">
+          {lead.next_action || "Open this lead and capture the next step."}
+        </p>
+      </button>
+
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+          Follow-up: {followUpLabel}
+        </span>
+        {isQuoted && (
+          <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-700">
+            {lead.quote_value ? `R ${lead.quote_value}` : "Quote value missing"}
+          </span>
+        )}
         {draggable ? (
           <div
-            className="cursor-grab text-slate-400 transition hover:text-slate-600"
+            className="ml-auto inline-flex cursor-grab items-center justify-center rounded-full bg-slate-100 px-2 py-1 text-slate-500 transition hover:text-slate-700"
             {...listeners}
             {...attributes}
           >
-            ⠿
+            <GripVertical size={12} />
           </div>
         ) : null}
       </div>
 
-      <div className="mb-2 rounded-xl border border-slate-200 bg-white/80 p-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-              Next in line
-            </p>
-            <p className="mt-1 text-xs font-medium leading-5 text-slate-700">
-              {lead.next_action || leadSop.nextStep}
-            </p>
-          </div>
-          <span
-            className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${
-              leadSop.isComplete
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-amber-100 text-amber-700"
-            }`}
-          >
-            {leadSop.completionLabel}
-          </span>
-        </div>
-      </div>
-
-      <div className="mb-2 flex flex-wrap gap-1 text-xs">
-        {lead.email && (
-          <a
-            href={`mailto:${lead.email}?subject=Quick update&body=Hi ${lead.name},`}
-            className="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1.5 text-blue-700 transition hover:bg-blue-200 sm:px-2 sm:py-1"
-          >
-            <Mail size={12} /> Email
-          </a>
-        )}
-        {lead.phone && (
-          <a
-            href={`tel:${lead.phone}`}
-            className="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1.5 text-green-700 transition hover:bg-green-200 sm:px-2 sm:py-1"
-          >
-            <Phone size={12} /> Call
-          </a>
-        )}
+      <div className="mt-3 flex gap-2">
         <button
+          type="button"
           onClick={() => onEditLead(lead)}
-          className="flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1.5 text-slate-700 transition hover:bg-slate-200 sm:px-2 sm:py-1"
+          className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
         >
-          <Edit3 size={12} /> Edit
+          <Edit3 size={12} /> Open
         </button>
         <button
+          type="button"
           onClick={() => onCreateEstimate?.(lead)}
-          className="flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1.5 text-rose-700 transition hover:bg-rose-200 sm:px-2 sm:py-1"
+          className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-rose-100 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-200"
         >
           <FileText size={12} /> Estimate
         </button>
-        {lead.google_sheet_url && (
-          <a
-            href={lead.google_sheet_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1.5 text-amber-700 transition hover:bg-amber-200 sm:px-2 sm:py-1"
-          >
-            <Link2 size={12} /> Sheet
-          </a>
-        )}
       </div>
-
-      {isOpen && (
-        <div className="space-y-1 border-t border-slate-200 pt-2 text-xs text-slate-600">
-          <p>
-            <span className="font-semibold">Product:</span>{" "}
-            {lead.product_type || "Not set"}
-          </p>
-          <p>
-            <span className="font-semibold">Source:</span>{" "}
-            {lead.lead_source || "Not set"}
-          </p>
-          <p>
-            <span className="font-semibold">Assigned:</span>{" "}
-            {lead.allocated_to || "Unassigned"}
-          </p>
-          <p>
-            <span className="font-semibold">Next action:</span>{" "}
-            {lead.next_action || "Not set"}
-          </p>
-          <div>
-            <span className="font-semibold">SOP checklist:</span>{" "}
-            <div className="mt-1 flex flex-wrap gap-1">
-              {leadSop.checklist.map((item) => (
-                <span
-                  key={item.key}
-                  className={`rounded-full px-2 py-0.5 text-[11px] ${
-                    item.done
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {item.done ? "✓" : "•"} {item.label}
-                </span>
-              ))}
-            </div>
-          </div>
-          <p>
-            <span className="font-semibold">Follow-up:</span>{" "}
-            {lead.follow_up_at
-              ? new Date(lead.follow_up_at).toLocaleDateString()
-              : "Not set"}
-          </p>
-          <p>
-            <span className="font-semibold">Quote value:</span>{" "}
-            {lead.quote_value ? `R ${lead.quote_value}` : "Not set"}
-          </p>
-          {lead.google_sheet_url && (
-            <p>
-              <span className="font-semibold">Google Sheet:</span>{" "}
-              <a
-                href={lead.google_sheet_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline"
-              >
-                Open linked sheet
-              </a>
-            </p>
-          )}
-          {lead.estimate_request && (
-            <p>
-              <span className="font-semibold">Request:</span> {lead.estimate_request}
-            </p>
-          )}
-          {lead.notes && (
-            <p>
-              <span className="font-semibold">Notes:</span> {lead.notes}
-            </p>
-          )}
-        </div>
-      )}
     </div>
   )
 }
