@@ -31,6 +31,8 @@ export default function Footer() {
         <div>
           <h4 className="text-lg font-semibold mb-4">Resources</h4>
           <ul className="space-y-2 text-sm text-gray-300">
+            <li><Link href="/warehouses" className="hover:text-[#da1a33]">Projects &amp; Systems</Link></li>
+            <li><Link href="/products" className="hover:text-[#da1a33]">Products &amp; DIY Systems</Link></li>
             <li><Link href="/resources" className="hover:text-[#da1a33]">Technical Resources</Link></li>
             <li><Link href="/resources" className="hover:text-[#da1a33]">Installation Guides</Link></li>
             <li><Link href="/warehouse-builder" className="hover:text-[#da1a33]">Warehouse Builder</Link></li>
