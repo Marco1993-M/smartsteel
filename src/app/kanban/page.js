@@ -7,6 +7,7 @@ import KanbanBoard from "../../components/KanbanBoard"
 import LeadEditorDrawer from "../../components/LeadEditorDrawer"
 import PricesDrawer from "../../components/PricesDrawer"
 import EstimateDrawer from "../../components/EstimateDrawer"
+import UpcomingTasks from "../../components/UpcomingTasks"
 import {
   formatCrmStatusLabel,
   getLeadSop,
@@ -50,7 +51,12 @@ const PRODUCT_TYPE_OPTIONS = [
   "Other",
 ]
 const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
-const GENERAL_GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1xfXyuDuDCUKVHjQXF3Z_qMyWadyKvLL9h3svKxohvZ8/edit?gid=1145942094#gid=1145942094"
+const CRM_VIEW_OPTIONS = [
+  { key: "pipeline", label: "Pipeline", helper: "Move and review leads" },
+  { key: "whiteboard", label: "Whiteboard", helper: "Handle today’s work" },
+  { key: "insights", label: "Insights", helper: "Check workload and risk" },
+]
+const GENERAL_GOOGLE_SHEET_URL = ""
 
 const emptyLead = {
   name: "",
@@ -427,6 +433,7 @@ export default function KanbanPage() {
   const [assigneeFilter, setAssigneeFilter] = useState("all")
   const [metricFilter, setMetricFilter] = useState("all")
   const [ownershipView, setOwnershipView] = useState("mine")
+  const [crmView, setCrmView] = useState("pipeline")
   const [nextActionFallbacks, setNextActionFallbacks] = useState({})
   const [fallbackFieldValues, setFallbackFieldValues] = useState({})
   const [leadEstimates, setLeadEstimates] = useState({})
@@ -1229,6 +1236,7 @@ export default function KanbanPage() {
   const handleMetricShortcut = (nextMetricFilter) => {
     if (!METRIC_FILTER_OPTIONS.includes(nextMetricFilter)) return
 
+    setCrmView("pipeline")
     setMetricFilter(nextMetricFilter)
 
     window.setTimeout(() => {
@@ -1440,51 +1448,87 @@ export default function KanbanPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
-          {metrics.map((metric) => (
-            <button
-              key={metric.label}
-              type="button"
-              onClick={() => handleMetricShortcut(metric.key)}
-              className={`rounded-2xl border p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 ${
-                metric.tone
-              } ${metricFilter === metric.key ? "ring-2 ring-slate-900/15" : ""}`}
-            >
-              <p className="text-xs text-slate-600 sm:text-sm">{metric.label}</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">{metric.value}</p>
-            </button>
-          ))}
-        </div>
-
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <section className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                SLA watch
+                Workspace view
               </p>
-              <h2 className="mt-1 text-lg font-semibold text-slate-900">Where response discipline is slipping</h2>
+              <h2 className="mt-1 text-lg font-semibold text-slate-900">Choose the lens you need right now</h2>
             </div>
-            <p className="text-sm text-slate-500">
-              {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s queue` : "Whole team"} priority watch
-            </p>
+            <div className="flex flex-wrap gap-2">
+              {CRM_VIEW_OPTIONS.map((view) => (
+                <button
+                  key={view.key}
+                  type="button"
+                  onClick={() => setCrmView(view.key)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    crmView === view.key
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {view.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {slaMetrics.map((item) => (
-              <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{item.label}</p>
-                    <p className="mt-1 text-sm text-slate-500">{item.helper}</p>
-                  </div>
-                  <span className={`rounded-full border px-3 py-1 text-sm font-bold ${item.tone}`}>
-                    {item.value}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className="mt-3 text-sm text-slate-600">
+            {CRM_VIEW_OPTIONS.find((view) => view.key === crmView)?.helper}
+          </p>
         </section>
 
+        {crmView === "insights" && (
+          <>
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
+              {metrics.map((metric) => (
+                <button
+                  key={metric.label}
+                  type="button"
+                  onClick={() => handleMetricShortcut(metric.key)}
+                  className={`rounded-2xl border p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 ${
+                    metric.tone
+                  } ${metricFilter === metric.key ? "ring-2 ring-slate-900/15" : ""}`}
+                >
+                  <p className="text-xs text-slate-600 sm:text-sm">{metric.label}</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">{metric.value}</p>
+                </button>
+              ))}
+            </div>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    SLA watch
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold text-slate-900">Where response discipline is slipping</h2>
+                </div>
+                <p className="text-sm text-slate-500">
+                  {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s queue` : "Whole team"} priority watch
+                </p>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                {slaMetrics.map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                        <p className="mt-1 text-sm text-slate-500">{item.helper}</p>
+                      </div>
+                      <span className={`rounded-full border px-3 py-1 text-sm font-bold ${item.tone}`}>
+                        {item.value}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        {crmView === "whiteboard" && (
+          <>
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-sm">
           <div className="bg-[radial-gradient(circle_at_top_left,_rgba(248,113,113,0.25),_transparent_34%),linear-gradient(135deg,_#0f172a,_#111827_55%,_#1f2937)] p-4 text-white sm:p-6">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -1571,121 +1615,130 @@ export default function KanbanPage() {
             />
           </div>
         </section>
+            <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+              <UpcomingTasks onTasksChanged={setDailyTasks} />
 
-        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">Team accountability</h2>
-                <p className="text-sm text-slate-600">
-                  This shows who owns pipeline workload and where follow-through is slipping.
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                <h2 className="text-lg font-semibold text-slate-900">Stalled leads</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  These leads are overdue, stale, unassigned, or missing a next step.
                 </p>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-[620px] text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-left text-slate-500">
-                    <th className="pb-3 font-medium">Owner</th>
-                    <th className="pb-3 font-medium">Leads</th>
-                    <th className="pb-3 font-medium">Overdue</th>
-                    <th className="pb-3 font-medium">No next step</th>
-                    <th className="pb-3 font-medium">Stale</th>
-                    <th className="pb-3 font-medium">Won</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accountabilityRows.map((row) => (
-                    <tr key={row.member} className="border-b border-slate-100 last:border-b-0">
-                      <td className="py-3 font-semibold text-slate-900">{row.member}</td>
-                      <td className="py-3 text-slate-700">{row.owned}</td>
-                      <td className="py-3 text-rose-600">{row.overdue}</td>
-                      <td className="py-3 text-violet-600">{row.noNextStep}</td>
-                      <td className="py-3 text-amber-600">{row.stale}</td>
-                      <td className="py-3 text-emerald-600">{row.won}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-              <h2 className="text-lg font-semibold text-slate-900">Needs attention</h2>
-              <div className="mt-4 grid gap-3">
-                {attentionItems.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="font-medium text-slate-900">{item.label}</p>
-                      <span className="text-2xl font-bold text-slate-900">{item.value}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-slate-600">{item.helper}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-              <h2 className="text-lg font-semibold text-slate-900">Stalled leads</h2>
-              <p className="mt-1 text-sm text-slate-600">
-                These leads are overdue, stale, unassigned, or missing a next step.
-              </p>
-              <div className="mt-4 space-y-3">
-                {atRiskLeads.length === 0 ? (
-                  <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                    No stalled leads right now.
-                  </p>
-                ) : (
-                  atRiskLeads.map((lead) => (
-                    <div key={lead.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            {lead.name} {lead.last_name}
+                <div className="mt-4 space-y-3">
+                  {atRiskLeads.length === 0 ? (
+                    <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                      No stalled leads right now.
+                    </p>
+                  ) : (
+                    atRiskLeads.map((lead) => (
+                      <div key={lead.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-slate-900">
+                              {lead.name} {lead.last_name}
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                            {formatStatusLabel(lead.status)}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid gap-2 text-sm text-slate-600">
+                          <p>
+                            <span className="font-medium text-slate-900">Next step:</span>{" "}
+                            {lead.next_action || "Missing"}
                           </p>
-                          <p className="text-sm text-slate-600">
-                            {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
+                          <p>
+                            <span className="font-medium text-slate-900">Follow-up:</span>{" "}
+                            {lead.follow_up_at
+                              ? new Date(lead.follow_up_at).toLocaleDateString()
+                              : "Not set"}
+                          </p>
+                          <p>
+                            <span className="font-medium text-slate-900">Last movement:</span>{" "}
+                            {Number.isFinite(getDaysSince(getLeadFreshnessDate(lead)))
+                              ? `${getDaysSince(getLeadFreshnessDate(lead))} day(s) ago`
+                              : "Unknown"}
                           </p>
                         </div>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                          {formatStatusLabel(lead.status)}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingLead(lead)}
+                          className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
+                        >
+                          Review lead
+                        </button>
                       </div>
-                      <div className="mt-3 grid gap-2 text-sm text-slate-600">
-                        <p>
-                          <span className="font-medium text-slate-900">Next step:</span>{" "}
-                          {lead.next_action || "Missing"}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-900">Follow-up:</span>{" "}
-                          {lead.follow_up_at
-                            ? new Date(lead.follow_up_at).toLocaleDateString()
-                            : "Not set"}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-900">Last movement:</span>{" "}
-                          {Number.isFinite(getDaysSince(getLeadFreshnessDate(lead)))
-                            ? `${getDaysSince(getLeadFreshnessDate(lead))} day(s) ago`
-                            : "Unknown"}
-                        </p>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {crmView === "insights" && (
+          <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Team accountability</h2>
+                  <p className="text-sm text-slate-600">
+                    This shows who owns pipeline workload and where follow-through is slipping.
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-[620px] text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-left text-slate-500">
+                      <th className="pb-3 font-medium">Owner</th>
+                      <th className="pb-3 font-medium">Leads</th>
+                      <th className="pb-3 font-medium">Overdue</th>
+                      <th className="pb-3 font-medium">No next step</th>
+                      <th className="pb-3 font-medium">Stale</th>
+                      <th className="pb-3 font-medium">Won</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {accountabilityRows.map((row) => (
+                      <tr key={row.member} className="border-b border-slate-100 last:border-b-0">
+                        <td className="py-3 font-semibold text-slate-900">{row.member}</td>
+                        <td className="py-3 text-slate-700">{row.owned}</td>
+                        <td className="py-3 text-rose-600">{row.overdue}</td>
+                        <td className="py-3 text-violet-600">{row.noNextStep}</td>
+                        <td className="py-3 text-amber-600">{row.stale}</td>
+                        <td className="py-3 text-emerald-600">{row.won}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                <h2 className="text-lg font-semibold text-slate-900">Needs attention</h2>
+                <div className="mt-4 grid gap-3">
+                  {attentionItems.map((item) => (
+                    <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-medium text-slate-900">{item.label}</p>
+                        <span className="text-2xl font-bold text-slate-900">{item.value}</span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setEditingLead(lead)}
-                        className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
-                      >
-                        Review lead
-                      </button>
+                      <p className="mt-1 text-sm text-slate-600">{item.helper}</p>
                     </div>
-                  ))
-                )}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
+        {crmView === "pipeline" && (
+        <>
         <div ref={boardSectionRef} className="scroll-mt-20 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex-1">
@@ -1778,8 +1831,9 @@ export default function KanbanPage() {
           onEditLead={setEditingLead}
           onLeadStatusChange={handleLeadStatusChange}
           onCreateEstimate={handleOpenEstimate}
-          onTasksChanged={setDailyTasks}
         />
+        )}
+        </>
         )}
       </div>
 
