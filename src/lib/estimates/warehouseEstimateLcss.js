@@ -10,7 +10,7 @@ const LCSS_LAP_WASTE_FACTOR = 1.04
 const LCSS_OVERALL_WASTE_FACTOR = 1.1
 const DEFAULT_WALL_HEIGHT = 3
 
-export const LCSS_WAREHOUSE_WIDTH_OPTIONS = [6, 8, 10, 12]
+export const LCSS_WAREHOUSE_WIDTH_OPTIONS = [3, 6, 8, 10, 12]
 export const LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS = ["Galv", "Mild"]
 export const LCSS_WAREHOUSE_GABLE_OPTIONS = [
   { value: "sheeted_gable", label: "Sheeted gable" },
@@ -18,6 +18,18 @@ export const LCSS_WAREHOUSE_GABLE_OPTIONS = [
 ]
 
 export const LCSS_SPAN_DATA = {
+  3: {
+    columnSection: "100x50x20x2 CFLC",
+    columnKgAt3m: 43.1,
+    rafterSection: "175x75x20x2.5 CFLC",
+    // 3m is not present in the source workbook. We extend the same 15-degree roof geometry
+    // and scale the 6m rafter rule proportionally to keep the commercial model consistent.
+    rafterKgPerPortal: 21.1,
+    braceSection: "100x50x20x2 CFLC",
+    braceKgPerLength: 21.6,
+    trussLength: 1.553,
+    trussHeight: 0.402,
+  },
   6: {
     columnSection: "100x50x20x2 CFLC",
     columnKgAt3m: 43.1,
@@ -88,7 +100,7 @@ export function validateLcssWarehouseEstimateInput(input) {
   const gableMode = input?.gableMode || "sheeted_gable"
 
   if (!LCSS_WAREHOUSE_WIDTH_OPTIONS.includes(width)) {
-    throw new Error("LCSS warehouses currently support 6m, 8m, 10m, or 12m spans only.")
+    throw new Error("LCSS warehouses currently support 3m, 6m, 8m, 10m, or 12m spans only.")
   }
 
   if (!Number.isFinite(length) || length <= 0) {
