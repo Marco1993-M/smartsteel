@@ -91,6 +91,20 @@ function getLcssSpanData(width) {
   return LCSS_SPAN_DATA[Number(width)] || null
 }
 
+function getLcssLengthRule(width, length) {
+  if (Number(width) === 3 && Number(length) === 6) {
+    return {
+      baySpacing: 3,
+      label: "carport_6m_rule",
+    }
+  }
+
+  return {
+    baySpacing: LCSS_BAY_SPACING,
+    label: "standard_2_5m_rule",
+  }
+}
+
 export function validateLcssWarehouseEstimateInput(input) {
   const width = Number(input?.width)
   const length = Number(input?.length)
@@ -98,6 +112,7 @@ export function validateLcssWarehouseEstimateInput(input) {
   const quantity = Math.max(1, Math.round(Number(input?.quantity) || 1))
   const steelFinish = input?.steelFinish || input?.cladding || "Galv"
   const gableMode = input?.gableMode || "sheeted_gable"
+  const lengthRule = getLcssLengthRule(width, length)
 
   if (!LCSS_WAREHOUSE_WIDTH_OPTIONS.includes(width)) {
     throw new Error("LCSS warehouses currently support 3m, 6m, 8m, 10m, or 12m spans only.")
@@ -111,8 +126,8 @@ export function validateLcssWarehouseEstimateInput(input) {
     throw new Error("Please enter a valid structure height.")
   }
 
-  if (Math.abs(length / LCSS_BAY_SPACING - Math.round(length / LCSS_BAY_SPACING)) > 0.0001) {
-    throw new Error("LCSS warehouse lengths must follow 2.5m bay increments.")
+  if (Math.abs(length / lengthRule.baySpacing - Math.round(length / lengthRule.baySpacing)) > 0.0001) {
+    throw new Error("LCSS lengths must follow 2.5m bay increments, except for the dedicated 3m x 6m carport rule.")
   }
 
   if (!LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.includes(steelFinish)) {
@@ -130,16 +145,18 @@ export function validateLcssWarehouseEstimateInput(input) {
     quantity,
     steelFinish,
     gableMode,
+    baySpacing: lengthRule.baySpacing,
+    lengthRule: lengthRule.label,
   }
 }
 
 export function calculateLcssWarehouseEstimate(input) {
   const normalized = validateLcssWarehouseEstimateInput(input)
-  const { width, length, wallHeight, quantity, steelFinish, gableMode } = normalized
+  const { width, length, wallHeight, quantity, steelFinish, gableMode, baySpacing, lengthRule } = normalized
   const span = getLcssSpanData(width)
 
-  const portals = length / LCSS_BAY_SPACING + 1
-  const bays = length / LCSS_BAY_SPACING
+  const portals = length / baySpacing + 1
+  const bays = length / baySpacing
   const columnKg = span.columnKgAt3m * (wallHeight / 3)
   const totalColumnKg = portals * columnKg
   const totalRafterKg = portals * span.rafterKgPerPortal
@@ -228,7 +245,7 @@ export function calculateLcssWarehouseEstimate(input) {
     input: {
       ...normalized,
       steelRatePerTon,
-      baySpacing: LCSS_BAY_SPACING,
+      baySpacing,
     },
     dimensions: {
       width,
@@ -237,6 +254,7 @@ export function calculateLcssWarehouseEstimate(input) {
       quantity,
       portals,
       bays,
+      lengthRule,
       trussLength: span.trussLength,
       trussHeight: span.trussHeight,
       roofPurlins,
