@@ -43,7 +43,7 @@ These are consistent across the workbook and should be configurable constants in
 These are the real pricing inputs the code should accept:
 
 - `spanWidth`
-  - supported now: `6`, `8`, `10`, `12`
+  - supported now: `3`, `6`, `8`, `10`, `12`
 - `buildingLength`
   - must follow `2.5m` bay logic
 - `wallHeight`
@@ -62,6 +62,16 @@ The workbook effectively relies on span-specific structural assumptions. These s
 
 ```js
 const LCSS_SPAN_DATA = {
+  3: {
+    columnSection: "100x50x20x2 CFLC",
+    columnKgAt3m: 43.1,
+    rafterSection: "175x75x20x2.5 CFLC",
+    rafterKgPerPortal: 21.1,
+    braceSection: "100x50x20x2 CFLC",
+    braceKgPerLength: 21.6,
+    trussLength: 1.553,
+    trussHeight: 0.402,
+  },
   6: {
     columnSection: "100x50x20x2 CFLC",
     columnKgAt3m: 43.1,
@@ -104,6 +114,31 @@ const LCSS_SPAN_DATA = {
   },
 }
 ```
+
+## 3m Span Extension Rule
+
+The original workbook does not include a `3m` tab.
+
+To add a valid `3m` product lane without breaking the workbook logic, use the same structural model with these rules:
+
+- keep the same `15°` roof pitch already implied by the workbook
+- keep the same `100x50x20x2 CFLC` column / brace family
+- keep the same `175x75x20x2.5 CFLC` rafter family used at `6m`
+- scale the `6m` rafter weight proportionally by span
+
+That gives:
+
+- `trussHeight = 1.5 * tan(15°) = 0.402`
+- `trussLength = sqrt(1.5^2 + 0.402^2) = 1.553`
+- `rafterKgPerPortal = 42.2 * (1.553 / 3.106) = 21.1`
+
+This is the cleanest same-model extension for:
+
+- single carport kits
+- narrow side covers
+- small utility cover products
+
+It should still be commercially checked against one real supplier / fabrication input before publishing at scale, but it is a disciplined extension of the workbook rather than a separate pricing model.
 
 ## Important Data Caveat
 
@@ -375,12 +410,13 @@ const LCSS_PRICING_CONSTANTS = {
 
 For the workbook-derived estimator, only allow:
 
+- `3`
 - `6`
 - `8`
 - `10`
 - `12`
 
-until you intentionally extend the span data.
+The `3m` span is an intentional extension of the same workbook logic for CFLC product use cases.
 
 ### 2. Force 2.5m length increments
 
