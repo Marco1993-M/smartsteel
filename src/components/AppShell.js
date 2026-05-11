@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation"
 import Navbar from "./Navbar"
 import Footer from "./Footer"
-import SalePopup from "./SalePopup"
 
 const CHROMELESS_PATHS = ["/kanban/estimates/", "/quotes/"]
 
@@ -20,7 +19,6 @@ export default function AppShell({ children }) {
       <Navbar />
       <div className="pt-10">{children}</div>
       <Footer />
-      <SalePopup />
     </>
   )
 }
