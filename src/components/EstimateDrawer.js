@@ -86,6 +86,10 @@ function buildEditableLineItem(item, overrides = {}) {
   const unitRate = Number(overrides.unitRate ?? item.unitRate ?? 0)
   const label = overrides.label ?? item.label
   const unit = overrides.unit ?? item.unit
+  const priceIncludesMarkup =
+    typeof overrides.priceIncludesMarkup === "boolean"
+      ? overrides.priceIncludesMarkup
+      : Boolean(overrides.manual)
   return {
     id: overrides.id || item.code,
     code: item.code,
@@ -98,6 +102,7 @@ function buildEditableLineItem(item, overrides = {}) {
     originalUnitRate: Number(item.unitRate ?? 0),
     originalTotal: roundMoney(item.total ?? quantity * unitRate),
     manual: Boolean(overrides.manual),
+    priceIncludesMarkup,
     overrideReason: overrides.overrideReason || "",
   }
 }
@@ -281,11 +286,30 @@ export default function EstimateDrawer({
     const dateB = new Date(b?.created_at || 0).getTime()
     return dateB - dateA
   }), [estimates])
-  const subtotal = useMemo(
-    () => roundMoney(editableLineItems.reduce((sum, item) => sum + Number(item.total || 0), 0)),
+  const markupableSubtotal = useMemo(
+    () =>
+      roundMoney(
+        editableLineItems.reduce((sum, item) => {
+          if (item.priceIncludesMarkup) return sum
+          return sum + Number(item.total || 0)
+        }, 0)
+      ),
     [editableLineItems]
   )
-  const estimatedTotal = roundMoney(subtotal * preview.pricing.markupMultiplier)
+  const manualFinalPriceTotal = useMemo(
+    () =>
+      roundMoney(
+        editableLineItems.reduce((sum, item) => {
+          if (!item.priceIncludesMarkup) return sum
+          return sum + Number(item.total || 0)
+        }, 0)
+      ),
+    [editableLineItems]
+  )
+  const subtotal = roundMoney(markupableSubtotal + manualFinalPriceTotal)
+  const estimatedTotal = roundMoney(
+    markupableSubtotal * preview.pricing.markupMultiplier + manualFinalPriceTotal
+  )
   const hasOverrides = editableLineItems.some(
     (item) =>
       item.manual ||
@@ -329,6 +353,7 @@ export default function EstimateDrawer({
         originalUnitRate: 0,
         originalTotal: 0,
         manual: true,
+        priceIncludesMarkup: true,
         overrideReason: "Added manually",
       },
     ])
@@ -698,7 +723,10 @@ export default function EstimateDrawer({
                         </p>
                       </div>
                       <div className="text-sm text-slate-500 sm:text-right">
-                        <p>Subtotal: {formatCurrency(subtotal)}</p>
+                        <p>Markupable subtotal: {formatCurrency(markupableSubtotal)}</p>
+                        {manualFinalPriceTotal > 0 && (
+                          <p>Manual final-price items: {formatCurrency(manualFinalPriceTotal)}</p>
+                        )}
                         <p>Markup: {preview.pricing.markupMultiplier}x</p>
                       </div>
                     </div>
@@ -807,6 +835,11 @@ export default function EstimateDrawer({
                                   placeholder={item.manual ? "Why was this added?" : "Why was this changed?"}
                                   className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm"
                                 />
+                                {item.manual && item.priceIncludesMarkup && (
+                                  <p className="mt-1 text-xs text-slate-500">
+                                    Manual items are treated as final sell prices and are not marked up again.
+                                  </p>
+                                )}
                               </div>
                               <div className="text-left md:text-right">
                                 <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
