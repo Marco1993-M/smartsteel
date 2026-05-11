@@ -122,9 +122,9 @@ export const cflcCatalogueMetadata = {
 }
 
 export const cflcCatalogueIntroPoints = [
-  "CFLC is the lead DIY warehouse system because it is especially practical for smaller, lower-ticket enquiries.",
-  "Warehouse kits follow 2.5m bay increments, while dedicated CFLC carport products can use a deliberate 6m depth rule where needed.",
-  "These prices are useful starting points for supply-only CFLC kits.",
+  "CFLC suits buyers who want a practical steel kit for smaller warehouses, covered work areas, and simpler product enquiries.",
+  "The range includes standard warehouse kit sizes as well as smaller cover and carport options.",
+  "These prices give you a useful starting point before final delivery, finish, and project details are confirmed.",
 ]
 
 export const cflcStarterKits = STARTER_KITS.map(buildStarterKit)

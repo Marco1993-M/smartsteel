@@ -47,19 +47,19 @@ export default function CflcDiyWarehouseKitsPage() {
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
                 <p className="text-2xl font-semibold text-slate-950">3m, 6m, 10m, 12m</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  launch widths that cover single carports through to useful smaller and mid-range kit demand
+                  sizes that cover single carports through to practical warehouse and storage kits
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Warehouse and carport rules</p>
+                <p className="text-2xl font-semibold text-slate-950">Warehouse and carport sizes</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  repeatable warehouse sizing, plus a deliberate 3m x 6m carport format
+                  standard warehouse kit sizes, plus a straightforward 3m x 6m single-carport option
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Supply-first pricing</p>
+                <p className="text-2xl font-semibold text-slate-950">Clear starting prices</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  a cleaner product starting point for DIY kits and direct website demand
+                  a simpler way to compare common kit sizes before you send an enquiry
                 </p>
               </div>
             </div>
@@ -69,10 +69,10 @@ export default function CflcDiyWarehouseKitsPage() {
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Why CFLC Leads Here
+              Why CFLC
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              A better fit for smaller-span and easier product buying
+              A practical fit for smaller warehouses, cover kits, and easier product buying
             </h2>
             <div className="mt-5 space-y-3">
               {cflcCatalogueIntroPoints.map((item) => (
@@ -85,14 +85,14 @@ export default function CflcDiyWarehouseKitsPage() {
 
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Need A Custom Project?
+              Need Something Bigger?
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Move across to the broader warehouse systems side
+              Explore the broader warehouse options too
             </h2>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              If you need a larger, more bespoke warehouse path or want to compare LSF and CFLC in
-              a broader project context, the warehouse section is the better place to continue.
+              If you need a larger custom warehouse, want to compare LSF and CFLC, or want a more
+              visual starting point, the warehouse section is the better place to continue.
             </p>
             <div className="mt-6 flex flex-col gap-3">
               <Link
@@ -114,15 +114,14 @@ export default function CflcDiyWarehouseKitsPage() {
         <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Launch Range
+              Main Ranges
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Start with the repeatable kit sizes that are easiest to choose from
+              Start with the kit sizes that are easiest to compare
             </h2>
             <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base">
-              The warehouse ranges follow practical repeatable sizes, while the CFLC carport side
-              can start with a dedicated 3m x 6m product format that is easier for buyers to
-              understand quickly.
+              These ranges make it easier to compare common CFLC kit sizes, from smaller cover
+              products to larger warehouse options.
             </p>
           </div>
 
@@ -260,12 +259,11 @@ export default function CflcDiyWarehouseKitsPage() {
               Carport Products
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Small covers and carport kits can now start from a real CFLC product format
+              Small covers and carport kits can start here too
             </h2>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              The same CFLC thinking now moves naturally into smaller cover kits, single-carport
-              products, and practical product-led structures that are easier to request than a
-              broader custom project.
+              If you need a smaller cover product, these CFLC options give you a simpler way to
+              start with a carport or compact utility shelter before moving into a larger structure.
             </p>
             <div className="mt-5 space-y-3">
               {cflcStarterKits.map((kit) => (
