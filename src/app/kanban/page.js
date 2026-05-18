@@ -225,6 +225,27 @@ function getTomorrowIsoDate() {
   return tomorrow.toISOString()
 }
 
+function parseQuoteValue(value) {
+  if (value == null) return 0
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0
+
+  const normalized = String(value)
+    .replace(/[^0-9.,-]/g, "")
+    .replace(/,/g, "")
+    .trim()
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function formatZar(value) {
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0))
+}
+
 function getNextEstimateVersion(estimates = []) {
   const maxVersion = estimates.reduce((highest, estimate) => {
     const version = Number(estimate?.version_no || 0)
@@ -1194,6 +1215,20 @@ export default function KanbanPage() {
     ]
   }, [leads])
 
+  const quotedValueSummary = useMemo(() => {
+    const quotedLeads = leads.filter((lead) => normalizeStatus(lead.status) === "quoted")
+    const totalQuotedValue = quotedLeads.reduce(
+      (sum, lead) => sum + parseQuoteValue(lead.quote_value),
+      0
+    )
+
+    return {
+      leadCount: quotedLeads.length,
+      totalQuotedValue,
+      averageQuotedValue: quotedLeads.length > 0 ? totalQuotedValue / quotedLeads.length : 0,
+    }
+  }, [leads])
+
   const slaMetrics = useMemo(() => {
     const scopedLeads = leads.filter((lead) => {
       if (ownershipView === "all" || !currentTeamMember) return true
@@ -1495,6 +1530,59 @@ export default function KanbanPage() {
                 </button>
               ))}
             </div>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Quoted value
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                    Total value currently sitting in quoted leads
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleMetricShortcut("quoted")}
+                  className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                >
+                  Open quoted leads
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Total quoted value</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {formatZar(quotedValueSummary.totalQuotedValue)}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Across {quotedValueSummary.leadCount} quoted lead{quotedValueSummary.leadCount === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Average quoted lead</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {formatZar(quotedValueSummary.averageQuotedValue)}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Useful as a quick quality check on current pipeline value
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Quoted leads with value</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {leads.filter(
+                      (lead) =>
+                        normalizeStatus(lead.status) === "quoted" && parseQuoteValue(lead.quote_value) > 0
+                    ).length}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Helps spot how complete your quoted-stage reporting is
+                  </p>
+                </div>
+              </div>
+            </section>
 
             <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
