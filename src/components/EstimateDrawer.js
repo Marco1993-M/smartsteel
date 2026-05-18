@@ -14,6 +14,7 @@ import {
 } from "../lib/estimates/solarEstimate"
 import {
   calculateEstimateByProductType,
+  isLcssEstimateProduct,
   isSolarEstimateProduct,
 } from "../lib/estimates/estimateFactory"
 
@@ -32,6 +33,9 @@ const INTERNAL_PRODUCT_LABELS = [
   "Solar ground mount",
   "Solar structure",
 ]
+const LCSS_ALLOWED_WIDTHS = [3, 6, 8, 10, 12]
+const LCSS_ALLOWED_STEEL_FINISHES = ["Galv", "Mild"]
+const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable"]
 
 function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100
@@ -39,6 +43,67 @@ function roundMoney(value) {
 
 function isCatalogSize(width, length) {
   return WAREHOUSE_WIDTH_OPTIONS.includes(Number(width)) && WAREHOUSE_LENGTH_OPTIONS.includes(Number(length))
+}
+
+function isValidLcssLength(width, length) {
+  const normalizedWidth = Number(width)
+  const normalizedLength = Number(length)
+
+  if (normalizedWidth === 3 && normalizedLength === 6) return true
+  return Math.abs(normalizedLength / 2.5 - Math.round(normalizedLength / 2.5)) <= 0.0001
+}
+
+function buildProductTypeAdjustedState(previousState, nextProductType) {
+  const nextState = {
+    ...previousState,
+    productType: nextProductType,
+  }
+
+  if (!previousState.productTypeLabel?.trim() || INTERNAL_PRODUCT_LABELS.includes(previousState.productTypeLabel)) {
+    nextState.productTypeLabel = nextProductType
+  }
+
+  if (isLcssEstimateProduct(nextProductType)) {
+    const width = Number(previousState.width)
+    const length = Number(previousState.length)
+
+    nextState.width = LCSS_ALLOWED_WIDTHS.includes(width) ? width : 6
+    nextState.length = isValidLcssLength(nextState.width, length) ? length : 10
+    nextState.wallHeight =
+      Number.isFinite(Number(previousState.wallHeight)) && Number(previousState.wallHeight) > 0
+        ? Number(previousState.wallHeight)
+        : 3
+    nextState.useCustomSize = true
+    nextState.steelFinish = LCSS_ALLOWED_STEEL_FINISHES.includes(previousState.steelFinish)
+      ? previousState.steelFinish
+      : "Galv"
+    nextState.gableMode = LCSS_ALLOWED_GABLE_MODES.includes(previousState.gableMode)
+      ? previousState.gableMode
+      : "sheeted_gable"
+    return nextState
+  }
+
+  if (nextProductType === "LSF Warehouse") {
+    const width = Number(previousState.width)
+    const length = Number(previousState.length)
+
+    nextState.width = WAREHOUSE_WIDTH_OPTIONS.includes(width) ? width : 8
+    nextState.length = WAREHOUSE_LENGTH_OPTIONS.includes(length) ? length : 10
+    nextState.useCustomSize =
+      typeof previousState.useCustomSize === "boolean" ? previousState.useCustomSize : false
+    return nextState
+  }
+
+  if (isSolarEstimateProduct(nextProductType)) {
+    nextState.useCustomSize = true
+    nextState.moduleCount = Math.max(0, Number(previousState.moduleCount) || 0)
+    nextState.width = Math.max(0.1, Number(previousState.width) || 6)
+    nextState.length = Math.max(0.1, Number(previousState.length) || 6)
+    nextState.wallHeight = Math.max(0.1, Number(previousState.wallHeight) || 3)
+    return nextState
+  }
+
+  return nextState
 }
 
 function getLatestEstimate(existingEstimates) {
@@ -72,7 +137,7 @@ function buildInitialState(lead, estimate) {
       ? latestInput.useCustomSize
       : solarProduct || !isCatalogSize(width, length)
 
-  return {
+  const initialState = {
     productType,
     productTypeLabel:
       latestInput.productTypeLabel ||
@@ -95,6 +160,8 @@ function buildInitialState(lead, estimate) {
     notes: estimate?.notes || "",
     estimateName: stripVersionSuffix(estimate?.title) || "",
   }
+
+  return buildProductTypeAdjustedState(initialState, productType)
 }
 
 function buildDefaultEstimateTitle(previewTitle, productTypeLabel) {
@@ -388,7 +455,11 @@ export default function EstimateDrawer({
   )
 
   const handleChange = (field, value) => {
-    setFormState((prev) => ({ ...prev, [field]: value }))
+    setFormState((prev) =>
+      field === "productType"
+        ? buildProductTypeAdjustedState(prev, value)
+        : { ...prev, [field]: value }
+    )
   }
 
   const updateLineItem = (id, updates) => {
