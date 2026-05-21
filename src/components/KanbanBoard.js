@@ -35,6 +35,17 @@ function formatFollowUpLabel(followUpAt) {
   return new Date(followUpAt).toLocaleDateString()
 }
 
+function formatCreatedAtLabel(createdAt) {
+  if (!createdAt) return "Added recently"
+  return new Date(createdAt).toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
 export default function KanbanBoard({
   leads,
   onEditLead,
@@ -171,6 +182,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
   const normalizedStatus = normalizeStatus(lead.status)
   const isQuoted = normalizedStatus === "quoted"
   const followUpLabel = formatFollowUpLabel(lead.follow_up_at)
+  const createdAtLabel = formatCreatedAtLabel(lead.created_at)
 
   return (
     <div
@@ -213,6 +225,9 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
       </button>
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+          Added: {createdAtLabel}
+        </span>
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
           Follow-up: {followUpLabel}
         </span>

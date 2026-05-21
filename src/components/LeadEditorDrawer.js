@@ -76,6 +76,17 @@ function groupActivities(activities) {
   return Object.entries(groups).map(([dateLabel, items]) => ({ dateLabel, items }));
 }
 
+function formatLeadCreatedAt(createdAt) {
+  if (!createdAt) return "Not yet saved"
+  return new Date(createdAt).toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
 export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack, onCreateEstimate }) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
@@ -106,6 +117,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   const [notes, setNotes] = useState(lead?.notes ? [lead.notes] : []);
   const leadSop = getLeadSop(formData);
   const selectedStageBlockers = getLeadStageBlockers(formData, formData.status);
+  const createdAtLabel = formatLeadCreatedAt(formData.created_at);
   const fieldLabelClass = "mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500";
   const inputClass = "block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-0";
   const sectionClass = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
@@ -336,18 +348,23 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
         Lead workspace
       </p>
-      <Dialog.Title className="mt-1 flex min-w-0 flex-wrap items-center gap-2 text-lg font-semibold text-slate-900 sm:text-xl">
-        {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
-
-      {/* Status Badge */}
+      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+        <Dialog.Title className="text-lg font-semibold text-slate-900 sm:text-xl">
+          {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
+        </Dialog.Title>
+        {!isNew && (
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(formData.status)}`}
+          >
+            {formatStatusLabel(formData.status)}
+          </span>
+        )}
+      </div>
       {!isNew && (
-        <span
-          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(formData.status)}`}
-        >
-          {formatStatusLabel(formData.status)}
-        </span>
+        <p className="mt-1 text-xs text-slate-500">
+          Added {createdAtLabel}
+        </p>
       )}
-      </Dialog.Title>
     </div>
   </div>
 
@@ -431,6 +448,14 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       {/* Details Panel */}
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
         <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#fff1f2)] p-4 shadow-sm">
+          {!isNew && (
+            <div className="mb-4 rounded-2xl border border-slate-200 bg-white/80 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Date added
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-800">{createdAtLabel}</p>
+            </div>
+          )}
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
