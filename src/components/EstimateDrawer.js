@@ -36,6 +36,7 @@ const INTERNAL_PRODUCT_LABELS = [
 const LCSS_ALLOWED_WIDTHS = [3, 6, 8, 10, 12]
 const LCSS_ALLOWED_STEEL_FINISHES = ["Galv", "Mild"]
 const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable"]
+const GROUND_MOUNT_STEEL_FINISHES = ["Galv", "Mild"]
 
 function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100
@@ -100,6 +101,15 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
     nextState.width = Math.max(0.1, Number(previousState.width) || 6)
     nextState.length = Math.max(0.1, Number(previousState.length) || 6)
     nextState.wallHeight = Math.max(0.1, Number(previousState.wallHeight) || 3)
+    nextState.transportTrips = Math.max(0, Math.round(Number(previousState.transportTrips) || 0))
+    nextState.includeStructureLabour = Boolean(previousState.includeStructureLabour)
+    nextState.includeSolarBrackets =
+      typeof previousState.includeSolarBrackets === "boolean" ? previousState.includeSolarBrackets : true
+    nextState.includeTransport =
+      typeof previousState.includeTransport === "boolean" ? previousState.includeTransport : false
+    nextState.steelFinish = GROUND_MOUNT_STEEL_FINISHES.includes(previousState.steelFinish)
+      ? previousState.steelFinish
+      : "Galv"
     return nextState
   }
 
@@ -157,6 +167,20 @@ function buildInitialState(lead, estimate) {
         ? latestInput.claddingInstalled
         : String(lead?.installation || "").toLowerCase() === "installed",
     deliveryDistance: Number(latestInput.deliveryDistance || lead?.delivery_distance || 0),
+    transportTrips: Math.max(0, Number(latestInput.transportTrips || 0)),
+    includeStructureLabour:
+      typeof latestInput.includeStructureLabour === "boolean"
+        ? latestInput.includeStructureLabour
+        : false,
+    includeSolarBrackets:
+      typeof latestInput.includeSolarBrackets === "boolean"
+        ? latestInput.includeSolarBrackets
+        : true,
+    includeTransport:
+      typeof latestInput.includeTransport === "boolean"
+        ? latestInput.includeTransport
+        : false,
+    steelFinish: latestInput.steelFinish || "Galv",
     notes: estimate?.notes || "",
     estimateName: stripVersionSuffix(estimate?.title) || "",
   }
@@ -361,6 +385,7 @@ export default function EstimateDrawer({
   const [isSaving, setIsSaving] = useState(false)
   const [prefersSameTabPreview, setPrefersSameTabPreview] = useState(false)
   const isSolarEstimate = isSolarEstimateProduct(formState.productType)
+  const isGroundMountEstimate = formState.productType === "Solar ground mount"
   const preview = useMemo(
     () => calculateEstimateByProductType(formState.productType, formState),
     [formState]
@@ -705,7 +730,7 @@ export default function EstimateDrawer({
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className="block text-sm font-medium text-slate-700">
-                          {isSolarEstimate ? "Width / span" : "Width"}
+                          {isGroundMountEstimate ? "Width / footprint" : isSolarEstimate ? "Width / span" : "Width"}
                         </label>
                         {formState.useCustomSize || isSolarEstimate ? (
                           <input
@@ -734,7 +759,7 @@ export default function EstimateDrawer({
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-slate-700">
-                          {isSolarEstimate ? "Length" : "Length / depth"}
+                          {isGroundMountEstimate ? "Length / footprint" : isSolarEstimate ? "Length" : "Length / depth"}
                         </label>
                         {formState.useCustomSize || isSolarEstimate ? (
                           <input
@@ -766,9 +791,9 @@ export default function EstimateDrawer({
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">
-                        {isSolarEstimate ? "Clearance height" : "Height"}
-                      </label>
+                        <label className="block text-sm font-medium text-slate-700">
+                          {isGroundMountEstimate ? "Frame height" : isSolarEstimate ? "Clearance height" : "Height"}
+                        </label>
                       <input
                         type="number"
                         min="0.1"
@@ -840,22 +865,101 @@ export default function EstimateDrawer({
                     </div>
                   </div>
 
+                  {isGroundMountEstimate ? (
+                    <>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700">Steel finish</label>
+                          <select
+                            value={formState.steelFinish}
+                            onChange={(event) => handleChange("steelFinish", event.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          >
+                            {GROUND_MOUNT_STEEL_FINISHES.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700">Transport trips</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={formState.transportTrips}
+                            onChange={(event) =>
+                              handleChange("transportTrips", Math.max(0, Number(event.target.value) || 0))
+                            }
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={formState.includeStructureLabour}
+                            onChange={(event) =>
+                              handleChange("includeStructureLabour", event.target.checked)
+                            }
+                          />
+                          Include structure labour
+                        </label>
+                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={formState.includeSolarBrackets}
+                            onChange={(event) =>
+                              handleChange("includeSolarBrackets", event.target.checked)
+                            }
+                          />
+                          Include rail and brackets
+                        </label>
+                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={formState.includeTransport}
+                            onChange={(event) =>
+                              handleChange("includeTransport", event.target.checked)
+                            }
+                          />
+                          Include transport
+                        </label>
+                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={formState.claddingInstalled}
+                            onChange={(event) =>
+                              handleChange("claddingInstalled", event.target.checked)
+                            }
+                          />
+                          Include panel installation
+                        </label>
+                      </div>
+                    </>
+                  ) : null}
+
                   {!isSolarEstimate && preview.summary.layoutNote ? (
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                       {preview.summary.layoutNote}
                     </div>
                   ) : null}
 
-                  <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={formState.claddingInstalled}
-                      onChange={(event) =>
-                        handleChange("claddingInstalled", event.target.checked)
-                      }
-                    />
-                    {isSolarEstimate ? "Include installation and site assembly" : "Include installation for the structure"}
-                  </label>
+                  {!isGroundMountEstimate ? (
+                    <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={formState.claddingInstalled}
+                        onChange={(event) =>
+                          handleChange("claddingInstalled", event.target.checked)
+                        }
+                      />
+                      {isSolarEstimate ? "Include installation and site assembly" : "Include installation for the structure"}
+                    </label>
+                  ) : null}
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700">Estimate notes</label>
