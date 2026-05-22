@@ -6,6 +6,9 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
+const ESTIMATE_PDF_BUCKET =
+  process.env.SUPABASE_ESTIMATE_PDF_BUCKET || "estimate-pdfs"
+
 function buildFilename(estimate) {
   const base = String(estimate?.title || `smart-steel-quote-${estimate?.version_no || "1"}`)
     .toLowerCase()
@@ -15,12 +18,45 @@ function buildFilename(estimate) {
   return `${base || "smart-steel-quote"}.pdf`
 }
 
+function buildStoragePath(estimate) {
+  const updatedAt = estimate?.updated_at || estimate?.created_at || new Date().toISOString()
+  const safeUpdatedAt = String(updatedAt).replace(/[^0-9T]/g, "").replace(/:/g, "")
+  return `quotes/${estimate.id}/v${estimate.version_no || 1}-${safeUpdatedAt}.pdf`
+}
+
+async function getCachedPdfBuffer(storagePath) {
+  const { data, error } = await supabaseServer.storage
+    .from(ESTIMATE_PDF_BUCKET)
+    .download(storagePath)
+
+  if (error || !data) {
+    return null
+  }
+
+  const arrayBuffer = await data.arrayBuffer()
+  return Buffer.from(arrayBuffer)
+}
+
+async function storePdfBuffer(storagePath, pdfBuffer) {
+  const { error } = await supabaseServer.storage
+    .from(ESTIMATE_PDF_BUCKET)
+    .upload(storagePath, pdfBuffer, {
+      contentType: "application/pdf",
+      upsert: true,
+      cacheControl: "31536000",
+    })
+
+  if (error) {
+    console.warn("Could not cache estimate PDF in storage:", error.message)
+  }
+}
+
 export async function GET(request, { params }) {
   const { estimateId } = await params
 
   const { data: estimate, error } = await supabaseServer
     .from("estimates")
-    .select("id, title, version_no, share_token")
+    .select("id, title, version_no, share_token, created_at, updated_at")
     .eq("id", estimateId)
     .single()
 
@@ -36,6 +72,21 @@ export async function GET(request, { params }) {
       { error: "This estimate does not have a share token yet." },
       { status: 400 }
     )
+  }
+
+  const storagePath = buildStoragePath(estimate)
+  const cachedPdfBuffer = await getCachedPdfBuffer(storagePath)
+
+  if (cachedPdfBuffer) {
+    return new NextResponse(cachedPdfBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="${buildFilename(estimate)}"`,
+        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+        "X-SmartSteel-PDF-Cache": "hit",
+      },
+    })
   }
 
   const pdfUrl = new URL(`/quotes/${estimate.share_token}?pdf=1`, request.url).toString()
@@ -65,12 +116,15 @@ export async function GET(request, { params }) {
       },
     })
 
+    await storePdfBuffer(storagePath, pdfBuffer)
+
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${buildFilename(estimate)}"`,
-        "Cache-Control": "no-store",
+        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+        "X-SmartSteel-PDF-Cache": "miss",
       },
     })
   } catch (pdfError) {
