@@ -47,6 +47,7 @@ const PRODUCT_TYPE_OPTIONS = [
   "Solar ground mount",
   "Solar structure",
   "LSF trusses",
+  "CFLC trusses",
   "Bracketry",
   "Other",
 ]
