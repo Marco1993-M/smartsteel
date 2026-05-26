@@ -24,6 +24,14 @@ function isSolarProduct(productType) {
   return ["Solar carport", "Solar ground mount", "Solar structure"].includes(productType)
 }
 
+function isTrussProduct(productType) {
+  return ["LSF trusses", "CFLC trusses"].includes(productType)
+}
+
+function getRoofStyleLabel(value) {
+  return value === "mono_pitch" ? "Mono pitch" : "Dual pitch"
+}
+
 export function formatEstimateDate(value) {
   if (!value) return "Not saved"
 
@@ -60,16 +68,40 @@ export function buildEstimateDisplayModel(estimate, lead) {
     estimate?.product_type_display ||
     productType
   const solarProduct = isSolarProduct(productType)
+  const trussProduct = isTrussProduct(productType)
+  const roofStyleLabel = getRoofStyleLabel(input.roofStyle)
   const layoutNote =
     Number(input.length || 0) > 0 &&
     Number(input.effectiveLength || 0) > 0 &&
     Number(input.effectiveLength) !== Number(input.length)
       ? `Requested depth ${Number(input.length)}m is priced against a practical ${Number(input.effectiveLength)}m bay layout.`
       : ""
-  const quotationTitle = hasDimensions
-    ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} x ${formatDimension(input.length)} ${productTypeLabel} Quotation`
-    : `${productTypeLabel} Quotation`
-  const summaryFields = solarProduct
+  const quotationTitle = trussProduct
+    ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} ${roofStyleLabel} ${productTypeLabel} Quotation`
+    : hasDimensions
+      ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} x ${formatDimension(input.length)} ${productTypeLabel} Quotation`
+      : `${productTypeLabel} Quotation`
+  const summaryFields = trussProduct
+    ? [
+        { label: "Span", value: formatDimension(input.width) },
+        { label: "Building length", value: formatDimension(input.length) },
+        { label: "Roof style", value: roofStyleLabel },
+        { label: "Roof pitch", value: input.roofPitch ? `${Number(input.roofPitch)}°` : "Not specified" },
+        { label: "Truss spacing", value: input.trussSpacing ? formatDimension(input.trussSpacing) : "Not specified" },
+        { label: "Quantity", value: `${quantity}` },
+        {
+          label: "Delivery",
+          value:
+            Number.isFinite(Number(input.deliveryDistance)) && Number(input.deliveryDistance) > 0
+              ? `${Number(input.deliveryDistance)} km`
+              : "Collection / not specified",
+        },
+        {
+          label: "Installation",
+          value: input.claddingInstalled ? "Included" : "Supply only",
+        },
+      ]
+    : solarProduct
     ? [
         { label: "Width", value: formatDimension(input.width) },
         { label: "Length", value: formatDimension(input.length) },

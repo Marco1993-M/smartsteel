@@ -1,4 +1,5 @@
 import { calculateSolarEstimate } from "./solarEstimate"
+import { calculateTrussEstimate, TRUSS_PRODUCT_TYPES } from "./trussEstimate"
 import { calculateWarehouseEstimate } from "./warehouseEstimate"
 import { calculateLcssWarehouseEstimate } from "./warehouseEstimateLcss"
 
@@ -17,9 +18,17 @@ export function isLcssEstimateProduct(productType) {
   return LCSS_PRODUCT_TYPES.includes(productType)
 }
 
+export function isTrussEstimateProduct(productType) {
+  return TRUSS_PRODUCT_TYPES.includes(productType)
+}
+
 export function calculateEstimateByProductType(productType, input) {
   if (isSolarEstimateProduct(productType)) {
     return calculateSolarEstimate(input)
+  }
+
+  if (isTrussEstimateProduct(productType)) {
+    return calculateTrussEstimate(input)
   }
 
   if (isLcssEstimateProduct(productType)) {
