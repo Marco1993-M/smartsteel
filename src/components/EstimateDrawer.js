@@ -16,11 +16,15 @@ import {
   calculateEstimateByProductType,
   isLcssEstimateProduct,
   isSolarEstimateProduct,
+  isTrussEstimateProduct,
 } from "../lib/estimates/estimateFactory"
+import { TRUSS_ROOF_STYLE_OPTIONS } from "../lib/estimates/trussEstimate"
 
 const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
   { value: "LSF Warehouse", label: "LSF Warehouse" },
   { value: "LCSS Warehouse", label: "LCSS Warehouse" },
+  { value: "LSF trusses", label: "LSF trusses" },
+  { value: "CFLC trusses", label: "CFLC trusses" },
   ...SOLAR_PRODUCT_TYPE_OPTIONS,
 ]
 const INTERNAL_PRODUCT_LABELS = [
@@ -32,11 +36,14 @@ const INTERNAL_PRODUCT_LABELS = [
   "Solar carport",
   "Solar ground mount",
   "Solar structure",
+  "LSF trusses",
+  "CFLC trusses",
 ]
 const LCSS_ALLOWED_WIDTHS = [3, 6, 8, 10, 12]
 const LCSS_ALLOWED_STEEL_FINISHES = ["Galv", "Mild"]
 const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable"]
 const GROUND_MOUNT_STEEL_FINISHES = ["Galv", "Mild"]
+const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
 
 function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100
@@ -92,6 +99,18 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
     nextState.length = WAREHOUSE_LENGTH_OPTIONS.includes(length) ? length : 10
     nextState.useCustomSize =
       typeof previousState.useCustomSize === "boolean" ? previousState.useCustomSize : false
+    return nextState
+  }
+
+  if (isTrussEstimateProduct(nextProductType)) {
+    nextState.useCustomSize = true
+    nextState.width = Math.max(0.1, Number(previousState.width) || 8)
+    nextState.length = Math.max(0.1, Number(previousState.length) || 10)
+    nextState.roofStyle = TRUSS_ROOF_STYLES.includes(previousState.roofStyle)
+      ? previousState.roofStyle
+      : "dual_pitch"
+    nextState.roofPitch = Math.max(1, Number(previousState.roofPitch) || 15)
+    nextState.trussSpacing = Math.max(0.1, Number(previousState.trussSpacing) || 1.2)
     return nextState
   }
 
@@ -160,6 +179,9 @@ function buildInitialState(lead, estimate) {
     useCustomSize,
     wallHeight: Number(latestInput.wallHeight || lead?.wall_height || 3),
     quantity: Math.max(1, Number(latestInput.quantity || 1)),
+    roofStyle: latestInput.roofStyle || "dual_pitch",
+    roofPitch: Math.max(1, Number(latestInput.roofPitch || 15)),
+    trussSpacing: Math.max(0.1, Number(latestInput.trussSpacing || 1.2)),
     moduleCount: Math.max(0, Number(latestInput.moduleCount || 0)),
     cladding: latestInput.cladding || lead?.cladding || "None",
     claddingInstalled:
@@ -386,6 +408,7 @@ export default function EstimateDrawer({
   const [prefersSameTabPreview, setPrefersSameTabPreview] = useState(false)
   const isSolarEstimate = isSolarEstimateProduct(formState.productType)
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
+  const isTrussEstimate = isTrussEstimateProduct(formState.productType)
   const preview = useMemo(
     () => calculateEstimateByProductType(formState.productType, formState),
     [formState]
@@ -700,7 +723,7 @@ export default function EstimateDrawer({
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    {!isSolarEstimate ? (
+                    {!isSolarEstimate && !isTrussEstimate ? (
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
@@ -730,9 +753,9 @@ export default function EstimateDrawer({
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className="block text-sm font-medium text-slate-700">
-                          {isGroundMountEstimate ? "Width / footprint" : isSolarEstimate ? "Width / span" : "Width"}
+                          {isTrussEstimate ? "Span" : isGroundMountEstimate ? "Width / footprint" : isSolarEstimate ? "Width / span" : "Width"}
                         </label>
-                        {formState.useCustomSize || isSolarEstimate ? (
+                        {formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
                           <input
                             type="number"
                             min="0.1"
@@ -759,9 +782,9 @@ export default function EstimateDrawer({
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-slate-700">
-                          {isGroundMountEstimate ? "Length / footprint" : isSolarEstimate ? "Length" : "Length / depth"}
+                          {isTrussEstimate ? "Building length" : isGroundMountEstimate ? "Length / footprint" : isSolarEstimate ? "Length" : "Length / depth"}
                         </label>
-                        {formState.useCustomSize || isSolarEstimate ? (
+                        {formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
                           <input
                             type="number"
                             min="0.1"
@@ -789,35 +812,111 @@ export default function EstimateDrawer({
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700">
-                          {isGroundMountEstimate ? "Frame height" : isSolarEstimate ? "Clearance height" : "Height"}
-                        </label>
-                      <input
-                        type="number"
-                        min="0.1"
-                        step="0.1"
-                        value={formState.wallHeight}
-                        onChange={(event) =>
-                          handleChange("wallHeight", Math.max(0.1, Number(event.target.value) || 0.1))
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                      />
+                  {isTrussEstimate ? (
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Roof style</label>
+                        <select
+                          value={formState.roofStyle}
+                          onChange={(event) => handleChange("roofStyle", event.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        >
+                          {TRUSS_ROOF_STYLE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Roof pitch (°)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          step="0.5"
+                          value={formState.roofPitch}
+                          onChange={(event) =>
+                            handleChange("roofPitch", Math.max(1, Number(event.target.value) || 1))
+                          }
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Truss spacing (m)</label>
+                        <input
+                          type="number"
+                          min="0.1"
+                          step="0.1"
+                          value={formState.trussSpacing}
+                          onChange={(event) =>
+                            handleChange("trussSpacing", Math.max(0.1, Number(event.target.value) || 0.1))
+                          }
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700">Quantity</label>
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={formState.quantity}
-                        onChange={(event) => handleChange("quantity", Math.max(1, Number(event.target.value) || 1))}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                      />
+                  ) : (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                          <label className="block text-sm font-medium text-slate-700">
+                            {isGroundMountEstimate ? "Frame height" : isSolarEstimate ? "Clearance height" : "Height"}
+                          </label>
+                        <input
+                          type="number"
+                          min="0.1"
+                          step="0.1"
+                          value={formState.wallHeight}
+                          onChange={(event) =>
+                            handleChange("wallHeight", Math.max(0.1, Number(event.target.value) || 0.1))
+                          }
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Quantity</label>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={formState.quantity}
+                          onChange={(event) => handleChange("quantity", Math.max(1, Number(event.target.value) || 1))}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
+                  {isTrussEstimate ? (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Quantity</label>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={formState.quantity}
+                          onChange={(event) => handleChange("quantity", Math.max(1, Number(event.target.value) || 1))}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">
+                          Delivery distance (km)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={formState.deliveryDistance}
+                          onChange={(event) =>
+                            handleChange("deliveryDistance", Number(event.target.value) || 0)
+                          }
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {!isTrussEstimate ? (
                   <div className="grid gap-4 sm:grid-cols-2">
                     {!isSolarEstimate ? (
                       <div>
@@ -864,6 +963,7 @@ export default function EstimateDrawer({
                       />
                     </div>
                   </div>
+                  ) : null}
 
                   {isGroundMountEstimate ? (
                     <>
@@ -957,7 +1057,11 @@ export default function EstimateDrawer({
                           handleChange("claddingInstalled", event.target.checked)
                         }
                       />
-                      {isSolarEstimate ? "Include installation and site assembly" : "Include installation for the structure"}
+                      {isTrussEstimate
+                        ? "Include installation"
+                        : isSolarEstimate
+                          ? "Include installation and site assembly"
+                          : "Include installation for the structure"}
                     </label>
                   ) : null}
 

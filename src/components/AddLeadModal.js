@@ -4,11 +4,14 @@ import { useState } from "react"
 import { supabase } from "../lib/supabase"
 
 const PRODUCT_TYPE_OPTIONS = [
-  "Warehouse",
+  "LSF Warehouse",
+  "LCSS Warehouse",
   "Solar carport",
   "Solar ground mount",
   "Solar structure",
   "LSF trusses",
+  "CFLC trusses",
+  "Bracketry",
   "Other",
 ]
 
@@ -19,7 +22,7 @@ export default function AddLeadModal({ onClose, onLeadAdded }) {
     estimate_request: "",
     status: "new",
     allocated_to: "",
-    product_type: "Warehouse",
+    product_type: "LSF Warehouse",
     notes: "",
   })
 
