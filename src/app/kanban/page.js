@@ -24,6 +24,7 @@ const CRM_FALLBACK_FIELDS = [
   "next_action",
   "lead_source",
   "product_type",
+  "client_follow_up_state",
   "quote_value",
   "expected_close_date",
   "lost_reason",
@@ -70,6 +71,7 @@ const emptyLead = {
   next_action: "",
   lead_source: "",
   product_type: "",
+  client_follow_up_state: "",
   quote_value: "",
   expected_close_date: "",
   lost_reason: "",
@@ -89,6 +91,7 @@ function normalizeLead(lead) {
     next_action: lead.next_action || "",
     lead_source: lead.lead_source || "",
     product_type: lead.product_type || "",
+    client_follow_up_state: lead.client_follow_up_state || "",
     quote_value: lead.quote_value || "",
     expected_close_date: lead.expected_close_date || null,
     lost_reason: lead.lost_reason || "",
@@ -755,6 +758,19 @@ export default function KanbanPage() {
       })
     }
 
+    if (currentLead?.client_follow_up_state !== normalizedLead.client_follow_up_state) {
+      activityEntries.push({
+        lead_id: normalizedLead.id,
+        type: "update",
+        user_name: "System",
+        description:
+          normalizedLead.client_follow_up_state === "waiting_on_client"
+            ? "Lead marked as waiting on client."
+            : "Waiting on client flag cleared.",
+        timestamp: new Date().toISOString(),
+      })
+    }
+
     if (currentLead?.follow_up_at !== normalizedLead.follow_up_at && normalizedLead.follow_up_at) {
       activityEntries.push({
         lead_id: normalizedLead.id,
@@ -777,6 +793,9 @@ export default function KanbanPage() {
         : null,
       currentLead?.google_sheet_url !== normalizedLead.google_sheet_url
         ? "google_sheet_url"
+        : null,
+      currentLead?.client_follow_up_state !== normalizedLead.client_follow_up_state
+        ? "client_follow_up_state"
         : null,
     ].filter(Boolean)
 
