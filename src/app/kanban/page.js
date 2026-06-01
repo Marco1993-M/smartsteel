@@ -26,7 +26,6 @@ const CRM_FALLBACK_FIELDS = [
   "product_type",
   "client_follow_up_state",
   "quote_value",
-  "expected_close_date",
   "lost_reason",
   "google_sheet_url",
 ]
@@ -73,7 +72,6 @@ const emptyLead = {
   product_type: "",
   client_follow_up_state: "",
   quote_value: "",
-  expected_close_date: "",
   lost_reason: "",
   google_sheet_url: "",
   notes: "",
@@ -93,7 +91,6 @@ function normalizeLead(lead) {
     product_type: lead.product_type || "",
     client_follow_up_state: lead.client_follow_up_state || "",
     quote_value: lead.quote_value || "",
-    expected_close_date: lead.expected_close_date || null,
     lost_reason: lead.lost_reason || "",
     google_sheet_url: lead.google_sheet_url || "",
     follow_up_at: lead.follow_up_at || null,
@@ -791,9 +788,6 @@ export default function KanbanPage() {
       currentLead?.next_action !== normalizedLead.next_action ? "next_action" : null,
       currentLead?.follow_up_at !== normalizedLead.follow_up_at ? "follow_up_at" : null,
       currentLead?.quote_value !== normalizedLead.quote_value ? "quote_value" : null,
-      currentLead?.expected_close_date !== normalizedLead.expected_close_date
-        ? "expected_close_date"
-        : null,
       currentLead?.google_sheet_url !== normalizedLead.google_sheet_url
         ? "google_sheet_url"
         : null,
@@ -1169,7 +1163,6 @@ export default function KanbanPage() {
           lead.lead_source,
           lead.product_type,
           lead.quote_value,
-          lead.expected_close_date,
           lead.lost_reason,
         ]
           .filter(Boolean)
@@ -1348,13 +1341,11 @@ export default function KanbanPage() {
         helper: "Quoted deals need a number for reporting.",
       },
       {
-        label: "Missing close date",
+        label: "Waiting on client",
         value: leads.filter(
-          (lead) =>
-            ["quoted", "contacted"].includes(normalizeStatus(lead.status)) &&
-            !lead.expected_close_date
+          (lead) => String(lead.client_follow_up_state || "").trim() === "waiting_on_client"
         ).length,
-        helper: "No timing expectation has been captured.",
+        helper: "Positive leads where the client said they will come back.",
       },
       {
         label: "Lost without reason",
