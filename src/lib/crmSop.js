@@ -39,13 +39,12 @@ export const CRM_STAGE_SOP = {
     nextStep: "Follow up on the quote and capture the decision date.",
     checklist: [
       { key: "quote_value", label: "Quote value captured", isDone: (lead) => Boolean(lead.quote_value) },
-      { key: "expected_close_date", label: "Expected close date captured", isDone: (lead) => Boolean(lead.expected_close_date) },
       { key: "follow_up_at", label: "Follow-up date set", isDone: (lead) => Boolean(lead.follow_up_at) },
       { key: "next_action", label: "Next action written", isDone: (lead) => Boolean(lead.next_action) },
     ],
     actions: [
       { label: "Confirm receipt", nextAction: "Confirm client received the estimate and ask if anything needs clarification.", followUpOffsetDays: 1 },
-      { label: "Quote follow-up", nextAction: "Follow up on quote decision and capture expected close date.", followUpOffsetDays: 2 },
+      { label: "Quote follow-up", nextAction: "Follow up on the quote decision and confirm the next step with the client.", followUpOffsetDays: 2 },
       { label: "Revise quote", nextAction: "Revise estimate based on client feedback and resend updated version.", followUpOffsetDays: 1 },
     ],
   },
@@ -55,7 +54,6 @@ export const CRM_STAGE_SOP = {
     nextStep: "Confirm order/admin requirements and hand over for production or delivery.",
     checklist: [
       { key: "quote_value", label: "Final value captured", isDone: (lead) => Boolean(lead.quote_value) },
-      { key: "expected_close_date", label: "Project timing captured", isDone: (lead) => Boolean(lead.expected_close_date) },
       { key: "next_action", label: "Handover/admin action written", isDone: (lead) => Boolean(lead.next_action) },
     ],
     actions: [
