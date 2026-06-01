@@ -209,8 +209,11 @@ function validateLead(lead) {
 
 function parseMissingColumn(error) {
   const message = error?.message || ""
-  const match = message.match(/column ["']?([a-zA-Z0-9_]+)["']?/i)
-  return match?.[1] || null
+  const directMatch = message.match(/column ["']?([a-zA-Z0-9_]+)["']?/i)
+  if (directMatch?.[1]) return directMatch[1]
+
+  const inverseMatch = message.match(/["']([a-zA-Z0-9_]+)["'] column/i)
+  return inverseMatch?.[1] || null
 }
 
 function getLeadFreshnessDate(lead) {
