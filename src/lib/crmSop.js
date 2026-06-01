@@ -131,3 +131,176 @@ export function getFollowUpIsoDate(offsetDays) {
   date.setHours(9, 0, 0, 0)
   return date.toISOString()
 }
+
+function getLeadFreshnessDate(lead) {
+  return lead?.last_activity_at || lead?.follow_up_at || lead?.updated_at || lead?.created_at || null
+}
+
+function getDaysSince(dateValue) {
+  if (!dateValue) return Number.POSITIVE_INFINITY
+  const diff = Date.now() - new Date(dateValue).getTime()
+  return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
+
+function isOverdue(dateValue) {
+  if (!dateValue) return false
+  const date = new Date(dateValue)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  date.setHours(0, 0, 0, 0)
+  return date < today
+}
+
+function isFuture(dateValue) {
+  if (!dateValue) return false
+  const date = new Date(dateValue)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  date.setHours(0, 0, 0, 0)
+  return date > today
+}
+
+export function getLeadNextBestAction(lead) {
+  const status = normalizeCrmStatus(lead?.status)
+  const followUpState = String(lead?.client_follow_up_state || "").trim()
+  const staleDays = getDaysSince(getLeadFreshnessDate(lead))
+  const hasContact = Boolean(lead?.phone?.trim() || lead?.email?.trim())
+  const hasOwner = Boolean(lead?.allocated_to?.trim())
+  const hasNextAction = Boolean(lead?.next_action?.trim())
+  const hasRequirements = Boolean(lead?.estimate_request || lead?.width || lead?.length)
+  const hasQuoteValue = Boolean(String(lead?.quote_value || "").trim())
+  const hasFollowUp = Boolean(lead?.follow_up_at)
+
+  if (!hasContact) {
+    return {
+      title: "Capture contact info",
+      reason: "Add a phone number or email address before the team can move this lead properly.",
+      shortLabel: "Capture contact info",
+      tone: "rose",
+    }
+  }
+
+  if (!hasOwner) {
+    return {
+      title: "Assign an owner",
+      reason: "This lead needs clear ownership before anyone can follow through consistently.",
+      shortLabel: "Assign owner",
+      tone: "amber",
+    }
+  }
+
+  if (!hasNextAction) {
+    return {
+      title: "Write the next action",
+      reason: "The team needs one clear next step so this lead does not drift.",
+      shortLabel: "Add next action",
+      tone: "amber",
+    }
+  }
+
+  if (hasFollowUp && isOverdue(lead.follow_up_at)) {
+    return {
+      title: "Follow up today",
+      reason: "The current follow-up date has already passed, so this lead needs attention now.",
+      shortLabel: "Follow up today",
+      tone: "rose",
+    }
+  }
+
+  if (status === "new") {
+    return {
+      title: "Call and qualify",
+      reason: "This is still a new lead, so confirm the requirement, location, and decision-maker first.",
+      shortLabel: "Call and qualify",
+      tone: "sky",
+    }
+  }
+
+  if (status === "contacted" && !hasRequirements) {
+    return {
+      title: "Request missing project info",
+      reason: "You still need dimensions, drawings, site photos, or intended use before quoting accurately.",
+      shortLabel: "Request info",
+      tone: "amber",
+    }
+  }
+
+  if (status === "contacted" && hasRequirements) {
+    return {
+      title: "Prepare the estimate",
+      reason: "There is enough project detail captured now to move this lead into pricing.",
+      shortLabel: "Prepare estimate",
+      tone: "sky",
+    }
+  }
+
+  if (status === "quoted" && !hasQuoteValue) {
+    return {
+      title: "Capture the quote value",
+      reason: "Quoted leads need a value so reporting and follow-up discipline stay accurate.",
+      shortLabel: "Capture quote value",
+      tone: "amber",
+    }
+  }
+
+  if (status === "quoted" && !hasFollowUp) {
+    return {
+      title: "Set a quote follow-up",
+      reason: "This quote is live, but there is no follow-up date protecting momentum.",
+      shortLabel: "Set follow-up",
+      tone: "amber",
+    }
+  }
+
+  if (status === "quoted" && followUpState === "awaiting_reply" && hasFollowUp && isFuture(lead.follow_up_at)) {
+    return {
+      title: "No action needed today",
+      reason: "The client is still within the follow-up window, so wait for the reply date before nudging again.",
+      shortLabel: "Awaiting reply",
+      tone: "slate",
+    }
+  }
+
+  if (status === "quoted" && followUpState === "client_will_revert" && hasFollowUp && isFuture(lead.follow_up_at)) {
+    return {
+      title: "Hold until follow-up date",
+      reason: "The client has already replied positively, so give them space until the agreed check-in date.",
+      shortLabel: "Client will revert",
+      tone: "sky",
+    }
+  }
+
+  if (status === "quoted" && staleDays >= 5) {
+    return {
+      title: "Revive quote momentum",
+      reason: "This quoted lead has gone quiet for several days and needs a follow-up or quick call.",
+      shortLabel: "Revive quote",
+      tone: "rose",
+    }
+  }
+
+  if (status === "won") {
+    return {
+      title: "Start handover",
+      reason: "Move the sale into admin, production, delivery, or installation without losing momentum.",
+      shortLabel: "Start handover",
+      tone: "emerald",
+    }
+  }
+
+  if (status === "lost" && !lead?.lost_reason?.trim()) {
+    return {
+      title: "Capture the lost reason",
+      reason: "You need the outcome reason so Smart Steel can learn from this lost opportunity.",
+      shortLabel: "Capture lost reason",
+      tone: "rose",
+    }
+  }
+
+  return {
+    title: "Keep the next step moving",
+    reason: lead?.next_action?.trim() || "Review the lead and confirm the next commercial step.",
+    shortLabel: "Review lead",
+    tone: "slate",
+  }
+}
