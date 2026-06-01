@@ -765,10 +765,11 @@ export default function KanbanPage() {
         lead_id: normalizedLead.id,
         type: "update",
         user_name: "System",
-        description:
-          normalizedLead.client_follow_up_state === "waiting_on_client"
-            ? "Lead marked as waiting on client."
-            : "Waiting on client flag cleared.",
+        description: normalizedLead.client_follow_up_state
+          ? `Client response state updated to ${String(normalizedLead.client_follow_up_state)
+              .replaceAll("_", " ")
+              .trim()}.`
+          : "Client response state cleared.",
         timestamp: new Date().toISOString(),
       })
     }
@@ -1345,9 +1346,9 @@ export default function KanbanPage() {
       {
         label: "Waiting on client",
         value: leads.filter(
-          (lead) => String(lead.client_follow_up_state || "").trim() === "waiting_on_client"
+          (lead) => Boolean(String(lead.client_follow_up_state || "").trim())
         ).length,
-        helper: "Positive leads where the client said they will come back.",
+        helper: "Leads where the next move is with the client, either awaiting reply or waiting for them to revert.",
       },
       {
         label: "Lost without reason",
