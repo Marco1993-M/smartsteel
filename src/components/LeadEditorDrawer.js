@@ -88,12 +88,33 @@ function formatLeadCreatedAt(createdAt) {
   })
 }
 
+function formatZar(value) {
+  const parsed = Number(String(value || 0).replace(/[^0-9.-]/g, ""))
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 0,
+  }).format(Number.isFinite(parsed) ? parsed : 0)
+}
+
+function buildEstimatePreviewUrl(estimateId) {
+  if (!estimateId) return ""
+  return `/kanban/estimates/${estimateId}`
+}
+
+function buildEstimatePdfUrl(estimateId) {
+  if (!estimateId) return ""
+  return `/api/estimates/${estimateId}/pdf`
+}
+
 export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack, onCreateEstimate }) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
 
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
+  const [savedEstimates, setSavedEstimates] = useState([]);
+  const [loadingEstimates, setLoadingEstimates] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
   const [formData, setFormData] = useState({
@@ -163,6 +184,41 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     };
 
     fetchActivities();
+  }, [lead?.id]);
+
+  useEffect(() => {
+    if (!lead?.id) {
+      setSavedEstimates([])
+      return
+    }
+
+    const fetchEstimates = async () => {
+      setLoadingEstimates(true)
+      try {
+        const { data, error } = await supabase
+          .from("estimates")
+          .select("*")
+          .eq("lead_id", lead.id)
+          .order("version_no", { ascending: false })
+
+        if (error) {
+          if (/relation .*estimates.* does not exist/i.test(error.message || "")) {
+            setSavedEstimates([])
+            return
+          }
+          throw error
+        }
+
+        setSavedEstimates(data || [])
+      } catch (error) {
+        console.error("Error fetching estimates:", error)
+        setSavedEstimates([])
+      } finally {
+        setLoadingEstimates(false)
+      }
+    }
+
+    fetchEstimates()
   }, [lead?.id]);
 
   // Add a new activity
@@ -432,7 +488,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 <div className="flex-1 overflow-y-auto w-full max-w-full bg-slate-50">
   <Tab.Group>
     <Tab.List className="flex overflow-x-auto border-b border-slate-200 bg-white px-2 no-scrollbar -webkit-overflow-scrolling-touch sm:px-4">
-      {["Overview", "Notes", "Activity"].map((tab) => (
+      {["Overview", "Tasks & Links", "Estimates", "Notes", "Activity"].map((tab) => (
         <Tab
           key={tab}
           className={({ selected }) =>
@@ -686,49 +742,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             )}
           </div>
         </div>
-        <div>
-          <label className={`${fieldLabelClass} mb-2`}>Follow-up Date</label>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <input
-              type="date"
-              value={formData.follow_up_at ? new Date(formData.follow_up_at).toISOString().split("T")[0] : ""}
-              onChange={(e) =>
-                handleChange(
-                  "follow_up_at",
-                  e.target.value ? new Date(e.target.value).toISOString() : null
-                )
-              }
-              className={`${inputClass} sm:w-auto`}
-            />
-            <div className="flex flex-wrap gap-1">
-              {[
-                { label: "Today", offset: 0 },
-                { label: "+1 Day", offset: 1 },
-                { label: "+1 Week", offset: 7 },
-              ].map(({ label, offset }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => {
-                    const d = new Date();
-                    d.setDate(d.getDate() + offset);
-                    handleChange("follow_up_at", d.toISOString());
-                  }}
-                  className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
-                >
-                  {label}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => handleChange("follow_up_at", null)}
-                className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={fieldLabelClass}>Quote Value</label>
@@ -763,45 +776,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               className={inputClass}
             />
           </div>
-        </div>
-        <div>
-          <label className={fieldLabelClass}>Google Sheet Link</label>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <input
-              type="url"
-              value={formData.google_sheet_url || ""}
-              onChange={(e) => handleChange("google_sheet_url", e.target.value)}
-              placeholder="https://docs.google.com/spreadsheets/..."
-              className={`${inputClass} flex-1`}
-            />
-            {formData.google_sheet_url ? (
-              <a
-                href={formData.google_sheet_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-              >
-                <Link2 size={16} />
-                Open Sheet
-              </a>
-            ) : null}
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            Link the working Google Sheet here so the team can open it directly from the CRM.
-          </p>
-        </div>
-        <div>
-          <label className={fieldLabelClass}>Next Action</label>
-          <textarea
-            value={formData.next_action || ""}
-            onChange={(e) => handleChange("next_action", e.target.value)}
-            placeholder="Example: Send revised quote, call on Thursday, request site address..."
-            className={`${inputClass} min-h-[110px]`}
-            rows={3}
-          />
-          {validationErrors.next_action && (
-            <p className="mt-1 text-xs text-red-600">{validationErrors.next_action}</p>
-          )}
         </div>
         <div className="mt-4">
           <label className={`${fieldLabelClass} mb-2`}>Allocated To</label>
@@ -886,6 +860,211 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             )}
           </section>
         )}
+      </Tab.Panel>
+
+      <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
+        <section className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#eff6ff)] p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Execution workspace
+          </p>
+          <h3 className="mt-1 text-base font-semibold text-slate-900">Keep the next step obvious</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Follow-up timing, working links, and the immediate action all live here so the team can move faster.
+          </p>
+        </section>
+
+        <section className={sectionClass}>
+          <label className={`${fieldLabelClass} mb-2`}>Follow-up Date</label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="date"
+              value={formData.follow_up_at ? new Date(formData.follow_up_at).toISOString().split("T")[0] : ""}
+              onChange={(e) =>
+                handleChange(
+                  "follow_up_at",
+                  e.target.value ? new Date(e.target.value).toISOString() : null
+                )
+              }
+              className={`${inputClass} sm:w-auto`}
+            />
+            <div className="flex flex-wrap gap-1">
+              {[
+                { label: "Today", offset: 0 },
+                { label: "+1 Day", offset: 1 },
+                { label: "+1 Week", offset: 7 },
+              ].map(({ label, offset }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + offset);
+                    handleChange("follow_up_at", d.toISOString());
+                  }}
+                  className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => handleChange("follow_up_at", null)}
+                className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className={sectionClass}>
+          <label className={fieldLabelClass}>Next Action</label>
+          <textarea
+            value={formData.next_action || ""}
+            onChange={(e) => handleChange("next_action", e.target.value)}
+            placeholder="Example: Send revised quote, call on Thursday, request site address..."
+            className={`${inputClass} min-h-[110px]`}
+            rows={3}
+          />
+          {validationErrors.next_action && (
+            <p className="mt-1 text-xs text-red-600">{validationErrors.next_action}</p>
+          )}
+        </section>
+
+        <section className={sectionClass}>
+          <label className={fieldLabelClass}>Google Sheet Link</label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              type="url"
+              value={formData.google_sheet_url || ""}
+              onChange={(e) => handleChange("google_sheet_url", e.target.value)}
+              placeholder="https://docs.google.com/spreadsheets/..."
+              className={`${inputClass} flex-1`}
+            />
+            {formData.google_sheet_url ? (
+              <a
+                href={formData.google_sheet_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                <Link2 size={16} />
+                Open Sheet
+              </a>
+            ) : null}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Link the working Google Sheet here so the team can open it directly from the CRM.
+          </p>
+        </section>
+      </Tab.Panel>
+
+      <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
+        <section className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#fff7ed_55%,_#fef2f2)] p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Estimate workspace
+              </p>
+              <h3 className="mt-1 text-base font-semibold text-slate-900">Quote history and pricing actions</h3>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Keep estimate versions, quote value, and quote actions in one place so pricing work stays organized.
+              </p>
+            </div>
+            {!isNew && (
+              <button
+                type="button"
+                onClick={() => onCreateEstimate?.(lead)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+              >
+                <FileText size={16} />
+                Open estimate
+              </button>
+            )}
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Current quote value</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {String(formData.quote_value || "").trim() ? formatZar(formData.quote_value) : "Not captured"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Estimate versions</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{savedEstimates.length}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latest status</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{formatStatusLabel(formData.status)}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className={sectionClass}>
+          <h4 className="text-base font-semibold text-slate-900">Saved estimate versions</h4>
+          <p className="mt-1 text-sm text-slate-600">
+            Preview the working document, open the PDF, or jump to the share view when you need the client-facing version.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            {loadingEstimates ? (
+              <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                Loading estimate history...
+              </p>
+            ) : savedEstimates.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                No saved estimates yet. Create the first estimate to start a proper quote trail for this lead.
+              </p>
+            ) : (
+              savedEstimates.map((estimate) => (
+                <div key={estimate.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{estimate.title}</p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Version {estimate.version_no} · {formatZar(estimate.total || 0)}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {estimate.created_at
+                          ? new Date(estimate.created_at).toLocaleString()
+                          : "Saved estimate"}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={buildEstimatePreviewUrl(estimate.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        Preview
+                      </a>
+                      <a
+                        href={buildEstimatePdfUrl(estimate.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        PDF
+                      </a>
+                      {estimate.share_token ? (
+                        <a
+                          href={`/quotes/${estimate.share_token}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        >
+                          Share view
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
       </Tab.Panel>
 
 
