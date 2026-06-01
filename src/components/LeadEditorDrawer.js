@@ -59,6 +59,10 @@ function getStatusBadgeClass(status) {
   }
 }
 
+function isWaitingOnClient(lead) {
+  return String(lead?.client_follow_up_state || "").trim() === "waiting_on_client"
+}
+
 // Pure function: only groups activities by date
 function groupActivities(activities) {
   const groups = {};
@@ -273,6 +277,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     next_action: "",
     lead_source: "",
     product_type: "",
+    client_follow_up_state: "",
     quote_value: "",
     expected_close_date: "",
     lost_reason: "",
@@ -283,6 +288,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
   const [notes, setNotes] = useState(lead?.notes ? [lead.notes] : []);
   const leadSop = getLeadSop(formData);
+  const waitingOnClient = isWaitingOnClient(formData)
   const selectedStageBlockers = getLeadStageBlockers(formData, formData.status);
   const createdAtLabel = formatLeadCreatedAt(formData.created_at);
   const fieldLabelClass = "mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500";
@@ -411,6 +417,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       next_action: "",
       lead_source: "",
       product_type: "",
+      client_follow_up_state: "",
       quote_value: "",
       expected_close_date: "",
       lost_reason: "",
@@ -606,6 +613,22 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     window.location.href = mailtoUrl
   }
 
+  const handleMarkWaitingOnClient = async () => {
+    const nextFollowUpAt = getBusinessFollowUpIsoDate(5)
+    const nextAction = "Client said they will be in touch. Follow up next week if no reply."
+    const updatedLead = {
+      ...formData,
+      client_follow_up_state: "waiting_on_client",
+      follow_up_at: nextFollowUpAt,
+      next_action: nextAction,
+    }
+    setFormData(updatedLead)
+    await onSave({
+      ...updatedLead,
+      client_follow_up_state: "waiting_on_client",
+    })
+  }
+
   return (
     <Transition.Root show={!!lead || isNew} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -643,6 +666,11 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(formData.status)}`}
           >
             {formatStatusLabel(formData.status)}
+          </span>
+        )}
+        {waitingOnClient && (
+          <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
+            Waiting on client
           </span>
         )}
       </div>
@@ -1100,14 +1128,23 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               </p>
             </div>
             {!isNew && (
-              <button
-                type="button"
-                onClick={openEmailComposer}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                <Mail size={16} />
-                Follow-up email
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={openEmailComposer}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  <Mail size={16} />
+                  Follow-up email
+                </button>
+                <button
+                  type="button"
+                  onClick={handleMarkWaitingOnClient}
+                  className="inline-flex items-center justify-center rounded-xl bg-sky-100 px-4 py-2.5 text-sm font-semibold text-sky-700 transition hover:bg-sky-200"
+                >
+                  Mark waiting on client
+                </button>
+              </div>
             )}
           </div>
         </section>

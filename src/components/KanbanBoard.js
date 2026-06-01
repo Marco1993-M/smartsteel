@@ -46,6 +46,10 @@ function formatCreatedAtLabel(createdAt) {
   })
 }
 
+function isWaitingOnClient(lead) {
+  return String(lead?.client_follow_up_state || "").trim() === "waiting_on_client"
+}
+
 export default function KanbanBoard({
   leads,
   onEditLead,
@@ -181,6 +185,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
 
   const normalizedStatus = normalizeStatus(lead.status)
   const isQuoted = normalizedStatus === "quoted"
+  const waitingOnClient = isWaitingOnClient(lead)
   const followUpLabel = formatFollowUpLabel(lead.follow_up_at)
   const createdAtLabel = formatCreatedAtLabel(lead.created_at)
 
@@ -231,6 +236,11 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
           Follow-up: {followUpLabel}
         </span>
+        {waitingOnClient && (
+          <span className="rounded-full bg-sky-100 px-2 py-1 text-sky-700">
+            Waiting on client
+          </span>
+        )}
         {isQuoted && (
           <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-700">
             {lead.quote_value ? `R ${lead.quote_value}` : "Quote value missing"}
