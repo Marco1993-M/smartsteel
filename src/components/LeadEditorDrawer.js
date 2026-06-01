@@ -10,7 +10,7 @@ import {
   getLeadSop,
   getLeadStageBlockers,
 } from "../lib/crmSop"
-import { format, isToday, isYesterday } from "date-fns";
+import { addBusinessDays, format, isToday, isYesterday } from "date-fns";
 
 const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
 const LEAD_SOURCE_OPTIONS = [
@@ -105,6 +105,12 @@ function buildEstimatePreviewUrl(estimateId) {
 function buildEstimatePdfUrl(estimateId) {
   if (!estimateId) return ""
   return `/api/estimates/${estimateId}/pdf`
+}
+
+function getBusinessFollowUpIsoDate(offsetDays = 3) {
+  const nextDate = addBusinessDays(new Date(), offsetDays)
+  nextDate.setHours(9, 0, 0, 0)
+  return nextDate.toISOString()
 }
 
 function toTitleCase(value) {
@@ -568,11 +574,33 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   }
 
   const handleSendFollowUpEmail = async () => {
+    const nextFollowUpAt = getBusinessFollowUpIsoDate(3)
+    const nextAction =
+      formData.next_action?.trim() || "Follow up if the client has not responded to the email."
     const mailtoUrl = `mailto:${encodeURIComponent(formData.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+
+    setFormData((prev) => ({
+      ...prev,
+      follow_up_at: nextFollowUpAt,
+      next_action: nextAction,
+    }))
+
     if (lead?.id) {
+      const { error } = await supabase
+        .from("leads")
+        .update({
+          follow_up_at: nextFollowUpAt,
+          next_action: nextAction,
+        })
+        .eq("id", lead.id)
+
+      if (error) {
+        console.error("Error updating follow-up date:", error)
+      }
+
       await addActivity({
         type: "email",
-        description: `Opened a follow-up email draft for ${formData.name || "client"}.`,
+        description: `Opened a follow-up email draft for ${formData.name || "client"} and scheduled the next follow-up for ${new Date(nextFollowUpAt).toLocaleDateString()}.`,
       })
     }
     window.location.href = mailtoUrl
