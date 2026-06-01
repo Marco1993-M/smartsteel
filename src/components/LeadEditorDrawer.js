@@ -432,7 +432,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 <div className="flex-1 overflow-y-auto w-full max-w-full bg-slate-50">
   <Tab.Group>
     <Tab.List className="flex overflow-x-auto border-b border-slate-200 bg-white px-2 no-scrollbar -webkit-overflow-scrolling-touch sm:px-4">
-      {["Details", "Notes", "Activity"].map((tab) => (
+      {["Overview", "Notes", "Activity"].map((tab) => (
         <Tab
           key={tab}
           className={({ selected }) =>
