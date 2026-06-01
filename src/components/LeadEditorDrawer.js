@@ -107,6 +107,21 @@ function buildEstimatePdfUrl(estimateId) {
   return `/api/estimates/${estimateId}/pdf`
 }
 
+function toTitleCase(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function normalizePersonName(value) {
+  return String(value || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => toTitleCase(part))
+    .join(" ")
+}
+
 const FOLLOW_UP_TEMPLATE_OPTIONS = [
   { key: "enquiry_follow_up", label: "General follow-up" },
   { key: "estimate_follow_up", label: "Estimate follow-up" },
@@ -116,15 +131,27 @@ const FOLLOW_UP_TEMPLATE_OPTIONS = [
 ]
 
 function getLeadFirstName(lead) {
-  return String(lead?.name || "there").trim() || "there"
+  return normalizePersonName(lead?.name || "there") || "there"
 }
 
 function getProjectReference(lead) {
-  return (
-    String(lead?.estimate_request || "").trim() ||
-    String(lead?.product_type || "").trim() ||
-    "your project"
-  )
+  const productType = String(lead?.product_type || "").trim()
+  const estimateRequest = String(lead?.estimate_request || "").trim()
+
+  if (productType) {
+    if (/trusses/i.test(productType)) return `${productType} project`
+    if (/warehouse/i.test(productType)) return `${productType} project`
+    if (/solar/i.test(productType)) return `${productType} project`
+    return productType
+  }
+
+  if (estimateRequest) {
+    const firstChunk = estimateRequest.split("·")[0]?.trim()
+    if (firstChunk) return firstChunk
+    return estimateRequest
+  }
+
+  return "your project"
 }
 
 function getSuggestedFollowUpTemplate(lead) {
@@ -153,11 +180,7 @@ I’m just following up on the estimate we prepared for ${projectReference}${quo
 
 If you have any questions, need an adjustment, or would like us to talk through the next step, I’d be happy to help.
 
-Please let me know if you’d like us to revise anything or if you’re ready for us to move forward.
-
-Kind regards,
-${ownerName}
-Smart Steel`,
+If you'd like, I can revise the estimate, answer any questions, or help you with the next step. If easier, just reply with "call me" and I’ll give you a ring.`,
       }
     case "missing_info":
       return {
@@ -185,11 +208,7 @@ I just wanted to check in regarding the quote we sent for ${projectReference}.
 
 If you need anything clarified, updated, or broken down further, please let me know and I’ll help you with it.
 
-I’d also be happy to discuss the next step whenever you’re ready.
-
-Kind regards,
-${ownerName}
-Smart Steel`,
+If you'd like to keep this moving, I can help with the next step. If easier, just reply with "call me" and I’ll give you a ring.`,
       }
     case "reactivation":
       return {
@@ -500,7 +519,12 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     setValidationErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
-    onSave({ ...formData, status: normalizeStatus(formData.status) });
+    onSave({
+      ...formData,
+      name: normalizePersonName(formData.name),
+      last_name: normalizePersonName(formData.last_name),
+      status: normalizeStatus(formData.status),
+    });
   };
 
   const applyEmailTemplate = (templateKey) => {
