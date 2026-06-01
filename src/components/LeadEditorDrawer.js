@@ -107,6 +107,122 @@ function buildEstimatePdfUrl(estimateId) {
   return `/api/estimates/${estimateId}/pdf`
 }
 
+const FOLLOW_UP_TEMPLATE_OPTIONS = [
+  { key: "enquiry_follow_up", label: "General follow-up" },
+  { key: "estimate_follow_up", label: "Estimate follow-up" },
+  { key: "missing_info", label: "Request missing info" },
+  { key: "quote_check_in", label: "Quote check-in" },
+  { key: "reactivation", label: "Reactivation" },
+]
+
+function getLeadFirstName(lead) {
+  return String(lead?.name || "there").trim() || "there"
+}
+
+function getProjectReference(lead) {
+  return (
+    String(lead?.estimate_request || "").trim() ||
+    String(lead?.product_type || "").trim() ||
+    "your project"
+  )
+}
+
+function getSuggestedFollowUpTemplate(lead) {
+  const status = normalizeStatus(lead?.status)
+  if (status === "quoted") return "estimate_follow_up"
+  if (status === "lost") return "reactivation"
+  if (!String(lead?.estimate_request || "").trim()) return "missing_info"
+  return "enquiry_follow_up"
+}
+
+function buildFollowUpTemplate(templateKey, lead) {
+  const firstName = getLeadFirstName(lead)
+  const ownerName = String(lead?.allocated_to || "Smart Steel").trim() || "Smart Steel"
+  const projectReference = getProjectReference(lead)
+  const quoteValue = String(lead?.quote_value || "").trim()
+    ? formatZar(lead.quote_value)
+    : ""
+
+  switch (templateKey) {
+    case "estimate_follow_up":
+      return {
+        subject: "Following up on your Smart Steel estimate",
+        body: `Hi ${firstName},
+
+I’m just following up on the estimate we prepared for ${projectReference}${quoteValue ? `, currently at ${quoteValue}` : ""}.
+
+If you have any questions, need an adjustment, or would like us to talk through the next step, I’d be happy to help.
+
+Please let me know if you’d like us to revise anything or if you’re ready for us to move forward.
+
+Kind regards,
+${ownerName}
+Smart Steel`,
+      }
+    case "missing_info":
+      return {
+        subject: "A few details needed for your Smart Steel quote",
+        body: `Hi ${firstName},
+
+Thanks again for your enquiry.
+
+To prepare the right recommendation and pricing for ${projectReference}, we still need a few project details from you.
+
+When you have a moment, please send through any dimensions, drawings, site photos, or notes that will help us quote accurately.
+
+As soon as we have that, we can move this forward properly.
+
+Kind regards,
+${ownerName}
+Smart Steel`,
+      }
+    case "quote_check_in":
+      return {
+        subject: "Checking in on your Smart Steel quote",
+        body: `Hi ${firstName},
+
+I just wanted to check in regarding the quote we sent for ${projectReference}.
+
+If you need anything clarified, updated, or broken down further, please let me know and I’ll help you with it.
+
+I’d also be happy to discuss the next step whenever you’re ready.
+
+Kind regards,
+${ownerName}
+Smart Steel`,
+      }
+    case "reactivation":
+      return {
+        subject: "Checking in on your steel project",
+        body: `Hi ${firstName},
+
+I wanted to check in to see whether your plans for ${projectReference} are still active.
+
+If the project is back on the table, we’d be happy to help you pick things up again and advise on the best next step.
+
+If your requirements have changed, feel free to reply and we can update things accordingly.
+
+Kind regards,
+${ownerName}
+Smart Steel`,
+      }
+    case "enquiry_follow_up":
+    default:
+      return {
+        subject: "Following up on your Smart Steel enquiry",
+        body: `Hi ${firstName},
+
+I’m just following up on your enquiry about ${projectReference}.
+
+If you’d like to move forward, need pricing, or want help choosing the right option, please reply and I’ll help you from there.
+
+Kind regards,
+${ownerName}
+Smart Steel`,
+      }
+  }
+}
+
 export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack, onCreateEstimate }) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
@@ -115,6 +231,10 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [savedEstimates, setSavedEstimates] = useState([]);
   const [loadingEstimates, setLoadingEstimates] = useState(false);
+  const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [emailTemplateKey, setEmailTemplateKey] = useState(getSuggestedFollowUpTemplate(lead));
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
 
   const [formData, setFormData] = useState({
@@ -274,6 +394,12 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       ...lead
     });
     setNotes(lead?.notes ? [lead.notes] : []);
+    const suggestedTemplate = getSuggestedFollowUpTemplate(lead)
+    const template = buildFollowUpTemplate(suggestedTemplate, lead)
+    setEmailTemplateKey(suggestedTemplate)
+    setEmailSubject(template.subject)
+    setEmailBody(template.body)
+    setShowEmailComposer(false)
     setValidationErrors({});
   }, [lead]);
 
@@ -377,6 +503,57 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     onSave({ ...formData, status: normalizeStatus(formData.status) });
   };
 
+  const applyEmailTemplate = (templateKey) => {
+    const template = buildFollowUpTemplate(templateKey, formData)
+    setEmailTemplateKey(templateKey)
+    setEmailSubject(template.subject)
+    setEmailBody(template.body)
+  }
+
+  const openEmailComposer = () => {
+    if (!formData.email?.trim()) {
+      alert("Add an email address for this lead first.")
+      return
+    }
+
+    if (!emailSubject || !emailBody) {
+      const suggestedTemplate = getSuggestedFollowUpTemplate(formData)
+      const template = buildFollowUpTemplate(suggestedTemplate, formData)
+      setEmailTemplateKey(suggestedTemplate)
+      setEmailSubject(template.subject)
+      setEmailBody(template.body)
+    }
+
+    setShowEmailComposer(true)
+  }
+
+  const handleCopyFollowUpEmail = async () => {
+    const combined = `Subject: ${emailSubject}\n\n${emailBody}`
+    try {
+      await navigator.clipboard.writeText(combined)
+      if (lead?.id) {
+        await addActivity({
+          type: "email",
+          description: `Generated and copied a follow-up email for ${formData.name || "client"}.`,
+        })
+      }
+    } catch (error) {
+      console.error("Error copying email:", error)
+      alert("Could not copy the email. Please try again.")
+    }
+  }
+
+  const handleSendFollowUpEmail = async () => {
+    const mailtoUrl = `mailto:${encodeURIComponent(formData.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+    if (lead?.id) {
+      await addActivity({
+        type: "email",
+        description: `Opened a follow-up email draft for ${formData.name || "client"}.`,
+      })
+    }
+    window.location.href = mailtoUrl
+  }
+
   return (
     <Transition.Root show={!!lead || isNew} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -391,7 +568,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex h-full w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-xl sm:w-[450px] sm:max-w-[450px]">
+            <Dialog.Panel className="relative flex h-full w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-xl sm:w-[450px] sm:max-w-[450px]">
               {/* Header */}
 <div className="sticky top-0 z-10 flex flex-col justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:px-6 sm:py-4">
   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -454,12 +631,8 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     <button
       type="button"
       className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100"
-      onClick={async () => {
-        const description = `Emailed ${formData.name}`;
-        addActivity({ type: "email", description });
-        // Optional: open mail client
-        window.location.href = `mailto:${formData.email}`;
-      }}
+      onClick={openEmailComposer}
+      title="Create follow-up email"
     >
       <Mail size={18} />
     </button>
@@ -864,13 +1037,27 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
         <section className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#eff6ff)] p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Execution workspace
-          </p>
-          <h3 className="mt-1 text-base font-semibold text-slate-900">Keep the next step obvious</h3>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
-            Follow-up timing, working links, and the immediate action all live here so the team can move faster.
-          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Execution workspace
+              </p>
+              <h3 className="mt-1 text-base font-semibold text-slate-900">Keep the next step obvious</h3>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Follow-up timing, working links, and the immediate action all live here so the team can move faster.
+              </p>
+            </div>
+            {!isNew && (
+              <button
+                type="button"
+                onClick={openEmailComposer}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                <Mail size={16} />
+                Follow-up email
+              </button>
+            )}
+          </div>
         </section>
 
         <section className={sectionClass}>
@@ -1263,6 +1450,93 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
 
                   </Tab.Panels>
+
+                  {showEmailComposer && (
+                    <div className="absolute inset-0 z-20 flex items-end justify-center bg-slate-900/30 p-3 sm:items-center sm:p-6">
+                      <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                        <div className="border-b border-slate-200 px-4 py-4 sm:px-5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                Follow-up email
+                              </p>
+                              <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                                Generate, edit, and send
+                              </h3>
+                              <p className="mt-1 text-sm text-slate-600">
+                                Use this as your trial run for the 10 follow-ups you need to get out quickly.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowEmailComposer(false)}
+                              className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                            >
+                              Close
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4 px-4 py-4 sm:px-5">
+                          <div>
+                            <label className={fieldLabelClass}>Template</label>
+                            <select
+                              value={emailTemplateKey}
+                              onChange={(e) => applyEmailTemplate(e.target.value)}
+                              className={inputClass}
+                            >
+                              {FOLLOW_UP_TEMPLATE_OPTIONS.map((template) => (
+                                <option key={template.key} value={template.key}>
+                                  {template.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className={fieldLabelClass}>Subject</label>
+                            <input
+                              type="text"
+                              value={emailSubject}
+                              onChange={(e) => setEmailSubject(e.target.value)}
+                              className={inputClass}
+                            />
+                          </div>
+
+                          <div>
+                            <label className={fieldLabelClass}>Email body</label>
+                            <textarea
+                              value={emailBody}
+                              onChange={(e) => setEmailBody(e.target.value)}
+                              className={`${inputClass} min-h-[260px]`}
+                              rows={12}
+                            />
+                          </div>
+
+                          <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
+                            Sending to <span className="font-semibold text-slate-900">{formData.email || "No email set"}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 border-t border-slate-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
+                          <button
+                            type="button"
+                            onClick={handleCopyFollowUpEmail}
+                            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                          >
+                            Copy email
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSendFollowUpEmail}
+                            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+                          >
+                            Open email draft
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Footer */}
                   <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-2 border-t bg-white p-4 sm:flex-row sm:justify-end">
