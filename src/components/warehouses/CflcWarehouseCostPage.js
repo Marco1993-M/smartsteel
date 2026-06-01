@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 
 const COST_BANDS = [
@@ -57,39 +58,52 @@ export default function CflcWarehouseCostPage() {
     <main className="min-h-screen bg-[linear-gradient(180deg,_#fff8f6,_#ffffff_24%,_#edf3f7)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <section className="rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
-          <div className="max-w-4xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-              CFLC Warehouse Cost
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              CFLC warehouse cost in South Africa
-            </h1>
-            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-              Use this page to understand the main factors that shape CFLC warehouse pricing. It is a
-              strong starting point if you want to compare the cold formed lip channel warehouse option,
-              understand what affects budget, and then continue into the estimator or builder.
-            </p>
-          </div>
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div className="max-w-4xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
+                CFLC Warehouse Cost
+              </p>
+              <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+                CFLC warehouse cost in South Africa
+              </h1>
+              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
+                Use this page to understand the main factors that shape CFLC warehouse pricing. It is a
+                strong starting point if you want to compare the cold formed lip channel warehouse option,
+                understand what affects budget, and then continue into the estimator or builder.
+              </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/tools/estimator"
-              className="rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
-            >
-              Estimate a CFLC warehouse
-            </Link>
-            <Link
-              href="/warehouse-builder"
-              className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
-            >
-              Build a CFLC warehouse
-            </Link>
-            <Link
-              href="/warehouses/cflc"
-              className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-            >
-              Explore CFLC warehouses
-            </Link>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/tools/estimator"
+                  className="rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
+                >
+                  Estimate a CFLC warehouse
+                </Link>
+                <Link
+                  href="/warehouse-builder"
+                  className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
+                >
+                  Build a CFLC warehouse
+                </Link>
+                <Link
+                  href="/warehouses/cflc"
+                  className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                >
+                  Explore CFLC warehouses
+                </Link>
+              </div>
+            </div>
+
+            <div className="relative min-h-[320px] overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50 shadow-sm">
+              <Image
+                src="/CFLC.webp"
+                alt="CFLC warehouse placeholder"
+                fill
+                priority
+                sizes="(min-width: 1024px) 40vw, 100vw"
+                className="object-cover"
+              />
+            </div>
           </div>
         </section>
 
