@@ -59,8 +59,15 @@ function getStatusBadgeClass(status) {
   }
 }
 
-function isWaitingOnClient(lead) {
-  return String(lead?.client_follow_up_state || "").trim() === "waiting_on_client"
+function getClientFollowUpStateLabel(state) {
+  switch (String(state || "").trim()) {
+    case "awaiting_reply":
+      return "Awaiting reply"
+    case "client_will_revert":
+      return "Client will be in touch"
+    default:
+      return ""
+  }
 }
 
 // Pure function: only groups activities by date
@@ -261,16 +268,16 @@ function getWaitingSummaryForTemplate(templateKey, lead) {
 
   switch (templateKey) {
     case "missing_info":
-      return `Waiting on client to send the missing project details for ${projectReference}.`
+      return `Awaiting the client's missing project details for ${projectReference}.`
     case "quote_check_in":
-      return `Waiting on client to confirm whether they want to proceed or need revisions for ${projectReference}.`
+      return `Awaiting the client's reply on whether they want to proceed or need revisions for ${projectReference}.`
     case "reactivation":
-      return `Waiting on client to confirm whether ${projectReference} is still active.`
+      return `Awaiting the client's reply on whether ${projectReference} is still active.`
     case "estimate_follow_up":
-      return `Waiting on client to review the estimate and confirm the next step for ${projectReference}.`
+      return `Awaiting the client's review of the estimate and the next step for ${projectReference}.`
     case "enquiry_follow_up":
     default:
-      return `Waiting on client to come back regarding ${projectReference}.`
+      return `Awaiting the client's reply regarding ${projectReference}.`
   }
 }
 
@@ -309,7 +316,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
   const [notes, setNotes] = useState(lead?.notes ? [lead.notes] : []);
   const leadSop = getLeadSop(formData);
-  const waitingOnClient = isWaitingOnClient(formData)
+  const clientFollowUpStateLabel = getClientFollowUpStateLabel(formData.client_follow_up_state)
   const lastFollowUpEmailActivity = useMemo(() => {
     return [...activities]
       .filter(
@@ -617,7 +624,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
     setFormData((prev) => ({
       ...prev,
-      client_follow_up_state: "waiting_on_client",
+      client_follow_up_state: "awaiting_reply",
       follow_up_at: nextFollowUpAt,
       next_action: nextAction,
     }))
@@ -626,7 +633,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       let updateResult = await supabase
         .from("leads")
         .update({
-          client_follow_up_state: "waiting_on_client",
+          client_follow_up_state: "awaiting_reply",
           follow_up_at: nextFollowUpAt,
           next_action: nextAction,
         })
@@ -662,14 +669,14 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     const nextAction = "Client said they will be in touch. Follow up next week if no reply."
     const updatedLead = {
       ...formData,
-      client_follow_up_state: "waiting_on_client",
+      client_follow_up_state: "client_will_revert",
       follow_up_at: nextFollowUpAt,
       next_action: nextAction,
     }
     setFormData(updatedLead)
     await onSave({
       ...updatedLead,
-      client_follow_up_state: "waiting_on_client",
+      client_follow_up_state: "client_will_revert",
     })
   }
 
@@ -712,9 +719,9 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             {formatStatusLabel(formData.status)}
           </span>
         )}
-        {waitingOnClient && (
+        {clientFollowUpStateLabel && (
           <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
-            Waiting on client
+            {clientFollowUpStateLabel}
           </span>
         )}
       </div>
@@ -1269,10 +1276,10 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               <div className="flex items-center gap-2">
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                    waitingOnClient ? "bg-sky-100 text-sky-700" : "bg-slate-200 text-slate-700"
+                    clientFollowUpStateLabel ? "bg-sky-100 text-sky-700" : "bg-slate-200 text-slate-700"
                   }`}
                 >
-                  {waitingOnClient ? "Waiting on client" : "Active follow-up"}
+                  {clientFollowUpStateLabel || "Active follow-up"}
                 </span>
               </div>
               <p className="mt-2 text-sm text-slate-700">

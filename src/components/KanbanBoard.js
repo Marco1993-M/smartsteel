@@ -46,8 +46,15 @@ function formatCreatedAtLabel(createdAt) {
   })
 }
 
-function isWaitingOnClient(lead) {
-  return String(lead?.client_follow_up_state || "").trim() === "waiting_on_client"
+function getClientFollowUpStateLabel(state) {
+  switch (String(state || "").trim()) {
+    case "awaiting_reply":
+      return "Awaiting reply"
+    case "client_will_revert":
+      return "Client will be in touch"
+    default:
+      return ""
+  }
 }
 
 export default function KanbanBoard({
@@ -185,7 +192,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
 
   const normalizedStatus = normalizeStatus(lead.status)
   const isQuoted = normalizedStatus === "quoted"
-  const waitingOnClient = isWaitingOnClient(lead)
+  const clientFollowUpStateLabel = getClientFollowUpStateLabel(lead?.client_follow_up_state)
   const followUpLabel = formatFollowUpLabel(lead.follow_up_at)
   const createdAtLabel = formatCreatedAtLabel(lead.created_at)
 
@@ -236,9 +243,9 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
           Follow-up: {followUpLabel}
         </span>
-        {waitingOnClient && (
+        {clientFollowUpStateLabel && (
           <span className="rounded-full bg-sky-100 px-2 py-1 text-sky-700">
-            Waiting on client
+            {clientFollowUpStateLabel}
           </span>
         )}
         {isQuoted && (
