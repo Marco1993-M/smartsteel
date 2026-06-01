@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
 import { Edit3, FileText, GripVertical } from "lucide-react"
-import { formatCrmStatusLabel } from "../lib/crmSop"
+import { formatCrmStatusLabel, getLeadNextBestAction } from "../lib/crmSop"
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
 
@@ -193,6 +193,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
   const normalizedStatus = normalizeStatus(lead.status)
   const isQuoted = normalizedStatus === "quoted"
   const clientFollowUpStateLabel = getClientFollowUpStateLabel(lead?.client_follow_up_state)
+  const nextBestAction = getLeadNextBestAction(lead)
   const followUpLabel = formatFollowUpLabel(lead.follow_up_at)
   const createdAtLabel = formatCreatedAtLabel(lead.created_at)
 
@@ -235,6 +236,15 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
           {lead.next_action || "Open this lead and capture the next step."}
         </p>
       </button>
+
+      <div className="mt-2 rounded-xl bg-slate-900 px-3 py-2 text-left text-white">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">
+          Best next move
+        </p>
+        <p className="mt-1 line-clamp-2 text-xs font-medium leading-5 text-white">
+          {nextBestAction.shortLabel}
+        </p>
+      </div>
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">

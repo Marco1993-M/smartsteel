@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabase"
 import {
   formatCrmStatusLabel,
   getFollowUpIsoDate,
+  getLeadNextBestAction,
   getLeadSop,
   getLeadStageBlockers,
 } from "../lib/crmSop"
@@ -316,6 +317,7 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
   const [notes, setNotes] = useState(lead?.notes ? [lead.notes] : []);
   const leadSop = getLeadSop(formData);
+  const nextBestAction = getLeadNextBestAction(formData)
   const clientFollowUpStateLabel = getClientFollowUpStateLabel(formData.client_follow_up_state)
   const lastFollowUpEmailActivity = useMemo(() => {
     return [...activities]
@@ -853,6 +855,18 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
                 </span>
               </div>
             ))}
+          </div>
+
+          <div className="mt-4 rounded-2xl bg-slate-900 p-4 text-white">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+              Best next move
+            </p>
+            <h3 className="mt-1 text-base font-semibold text-white">
+              {nextBestAction.title}
+            </h3>
+            <p className="mt-1 text-sm leading-6 text-slate-200">
+              {nextBestAction.reason}
+            </p>
           </div>
 
           <div className="mt-4">
