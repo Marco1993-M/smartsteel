@@ -206,11 +206,13 @@ function validateLead(lead) {
 
 function parseMissingColumn(error) {
   const message = error?.message || ""
-  const directMatch = message.match(/column ["']?([a-zA-Z0-9_]+)["']?/i)
-  if (directMatch?.[1]) return directMatch[1]
-
   const inverseMatch = message.match(/["']([a-zA-Z0-9_]+)["'] column/i)
-  return inverseMatch?.[1] || null
+  if (inverseMatch?.[1]) return inverseMatch[1]
+
+  const directMatch = message.match(/column\s+["']?([a-zA-Z0-9_]+)["']?/i)
+  if (directMatch?.[1] && directMatch[1].toLowerCase() !== "of") return directMatch[1]
+
+  return null
 }
 
 function getLeadFreshnessDate(lead) {
