@@ -54,7 +54,8 @@ const PRODUCT_TYPE_OPTIONS = [
 const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
 const CRM_VIEW_OPTIONS = [
   { key: "pipeline", label: "Pipeline", helper: "Move and review leads" },
-  { key: "whiteboard", label: "Whiteboard", helper: "Handle today’s work" },
+  { key: "my_work", label: "My Work", helper: "Handle follow-ups, tasks, and loose ends" },
+  { key: "quotes", label: "Quotes", helper: "Manage priced work and quoted momentum" },
   { key: "insights", label: "Insights", helper: "Check workload and risk" },
 ]
 const GENERAL_GOOGLE_SHEET_URL = ""
@@ -1230,6 +1231,34 @@ export default function KanbanPage() {
     }
   }, [leads])
 
+  const quotedLeads = useMemo(() => {
+    return [...leads]
+      .filter((lead) => normalizeStatus(lead.status) === "quoted")
+      .sort((a, b) => {
+        const quoteDiff = parseQuoteValue(b.quote_value) - parseQuoteValue(a.quote_value)
+        if (quoteDiff !== 0) return quoteDiff
+        return new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0)
+      })
+  }, [leads])
+
+  const quoteWorkspaceSummary = useMemo(() => {
+    const missingValue = quotedLeads.filter((lead) => parseQuoteValue(lead.quote_value) <= 0).length
+    const missingFollowUp = quotedLeads.filter((lead) => !lead.follow_up_at).length
+    const stale = quotedLeads.filter((lead) => getDaysSince(getLeadFreshnessDate(lead)) >= 5).length
+    const biggestQuote = quotedLeads.reduce((highest, lead) => {
+      const value = parseQuoteValue(lead.quote_value)
+      return value > highest ? value : highest
+    }, 0)
+
+    return {
+      total: quotedLeads.length,
+      missingValue,
+      missingFollowUp,
+      stale,
+      biggestQuote,
+    }
+  }, [quotedLeads])
+
   const slaMetrics = useMemo(() => {
     const scopedLeads = leads.filter((lead) => {
       if (ownershipView === "all" || !currentTeamMember) return true
@@ -1616,7 +1645,7 @@ export default function KanbanPage() {
           </>
         )}
 
-        {crmView === "whiteboard" && (
+        {crmView === "my_work" && (
           <>
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-sm">
           <div className="bg-[radial-gradient(circle_at_top_left,_rgba(248,113,113,0.25),_transparent_34%),linear-gradient(135deg,_#0f172a,_#111827_55%,_#1f2937)] p-4 text-white sm:p-6">
@@ -1626,7 +1655,7 @@ export default function KanbanPage() {
                   Today&apos;s work
                 </p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-                  Pocket whiteboard
+                  My work queue
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
                   Start here each morning: overdue follow-ups, today&apos;s calls, loose ends,
@@ -1765,6 +1794,168 @@ export default function KanbanPage() {
               </div>
             </div>
           </>
+        )}
+
+        {crmView === "quotes" && (
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Quote workspace
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                    Stay on top of the money already in motion
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatusFilter("quoted")
+                    setCrmView("pipeline")
+                  }}
+                  className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                >
+                  Open quoted pipeline
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-4">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Quoted leads</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">{quoteWorkspaceSummary.total}</p>
+                  <p className="mt-1 text-sm text-slate-600">Active quoted opportunities</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Total quoted value</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {formatZar(quotedValueSummary.totalQuotedValue)}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">Current value on the table</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Need follow-up</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">{quoteWorkspaceSummary.missingFollowUp}</p>
+                  <p className="mt-1 text-sm text-slate-600">Quoted leads without a next date</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Largest live quote</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {formatZar(quoteWorkspaceSummary.biggestQuote)}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">Biggest opportunity currently quoted</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Quoted leads</h2>
+                  <p className="text-sm text-slate-600">
+                    Keep follow-ups tight, adjust estimates fast, and protect quoted momentum.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                  <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">
+                    Missing value: {quoteWorkspaceSummary.missingValue}
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">
+                    Missing follow-up: {quoteWorkspaceSummary.missingFollowUp}
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">
+                    Stale 5+ days: {quoteWorkspaceSummary.stale}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                {quotedLeads.length === 0 ? (
+                  <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                    No quoted leads yet. As soon as quotes are created, they&apos;ll show up here as a working queue.
+                  </p>
+                ) : (
+                  quotedLeads.map((lead) => (
+                    <div key={lead.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-slate-900">
+                            {lead.name} {lead.last_name}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                          {formatStatusLabel(lead.status)}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-xl bg-white p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            Quote value
+                          </p>
+                          <p className="mt-1 text-2xl font-bold text-slate-900">
+                            {parseQuoteValue(lead.quote_value) > 0 ? formatZar(lead.quote_value) : "Missing"}
+                          </p>
+                        </div>
+                        <div className="rounded-xl bg-white p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            Follow-up
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-slate-900">
+                            {lead.follow_up_at
+                              ? new Date(lead.follow_up_at).toLocaleDateString()
+                              : "Not scheduled"}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Last movement{" "}
+                            {Number.isFinite(getDaysSince(getLeadFreshnessDate(lead)))
+                              ? `${getDaysSince(getLeadFreshnessDate(lead))} day(s) ago`
+                              : "unknown"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 rounded-xl bg-white p-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          Next step
+                        </p>
+                        <p className="mt-1 text-sm text-slate-700">
+                          {lead.next_action || "No next step captured yet."}
+                        </p>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingLead(lead)}
+                          className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        >
+                          Open lead
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEstimate(lead)}
+                          className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                        >
+                          Open estimate
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSnoozeLeadToTomorrow(lead)}
+                          className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        >
+                          Move to tomorrow
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
         )}
 
         {crmView === "insights" && (
