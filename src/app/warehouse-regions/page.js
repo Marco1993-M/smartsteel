@@ -121,7 +121,7 @@ export default function WarehouseRegionsHubPage() {
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/lightweight-steel-warehouses"
+                href="/warehouses"
                 className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#da1a33] hover:text-white"
               >
                 View warehouse systems

@@ -204,7 +204,7 @@ const internalLinks = [
   { href: "/pretoria-solar-carports", label: "Solar carports Pretoria" },
   { href: "/johannesburg-solar-carports", label: "Solar carports Johannesburg" },
   { href: "/midrand-solar-carports", label: "Solar carports Midrand" },
-  { href: "/lightweight-steel-warehouses", label: "Lightweight steel warehouses" },
+  { href: "/warehouses", label: "Warehouse systems" },
   { href: "/products/lightweight-steel-trusses", label: "LSF roof trusses" },
 ];
 

@@ -33,7 +33,7 @@ const warehouseProductSchema = {
       price: "0.00", // placeholder
       itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
-      url: "https://smartsteel.co.za/lightweight-steel-warehouses",
+      url: "https://smartsteel.co.za/warehouses",
       image: "https://smartsteel.co.za/warehouse-8m.jpg"
     },
     {
@@ -43,7 +43,7 @@ const warehouseProductSchema = {
       price: "0.00", // placeholder
       itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
-      url: "https://smartsteel.co.za/ightweight-steel-warehouses",
+      url: "https://smartsteel.co.za/warehouses",
       image: "https://smartsteel.co.za/warehouse-13m.jpg"
     }
   ],

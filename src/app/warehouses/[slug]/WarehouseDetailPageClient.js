@@ -138,7 +138,7 @@ export default function WarehouseDetailPage({ params }) {
                 </p>
 
                 <Link
-                  href="/lightweight-steel-warehouses"
+                  href="/warehouses"
                   className="inline-flex items-center justify-center
                     h-12 px-6
                     text-sm font-semibold

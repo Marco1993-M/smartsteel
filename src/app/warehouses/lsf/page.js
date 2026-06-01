@@ -28,33 +28,69 @@ export const metadata = {
 export default function LsfWarehousesPage() {
   return (
     <WarehouseSystemLandingPage
+      modeSwitch={{
+        helper: "Choose between DIY-friendly CFLC kits and custom LSF warehouse systems.",
+        modes: [
+          { label: "CFLC Kits", href: "/products/cflc-diy-warehouse-kits", active: false },
+          {
+            label: "LSF Systems",
+            href: "/warehouses/lsf",
+            active: true,
+            actions: [
+              { label: "Build your warehouse", href: "/warehouse-builder" },
+              { label: "Use estimator", href: "/tools/estimator", variant: "secondary" },
+            ],
+          },
+        ],
+      }}
       eyebrow="LSF Warehouses"
-      title="LSF warehouses for storage, workshops, and commercial space"
-      intro="Smart Steel LSF warehouse systems give you a clear modular starting point for warehousing, workshop use, fleet cover, and day-to-day operations. If you want to compare size, enclosure, access openings, and scope before requesting a quote, this is the right place to start."
+      title="LSF warehouse systems for broader custom warehouse projects"
+      intro="Use the LSF route when you want to shape a more custom warehouse project. Compare the system, start with the builder or estimator, and move into a clearer project conversation with Smart Steel."
       systemName="LSF warehouses"
       summary={[
         {
-          title: "Clear modular path",
-          description: "Choose a standard span, define the length, and shape the shell around the way your project actually needs to work.",
+          title: "Custom project route",
+          description: "A stronger fit when you want to shape a broader warehouse project instead of selecting a standard DIY kit.",
         },
         {
-          title: "Good for structured budgeting",
-          description: "This option makes it easier to compare scope, cladding, enclosure, openings, and overall project direction without overcomplicating the first step.",
+          title: "Builder and estimator",
+          description: "Use the builder for a visual route or the estimator for a quicker budget starting point.",
         },
         {
-          title: "Easy move into the builder",
-          description: "If you want a more visual design process, the LSF warehouse builder gives you a live preview and a cleaner enquiry handoff.",
+          title: "Broader warehouse flexibility",
+          description: "Compare scope, cladding, enclosure, openings, and size with more room to shape the project.",
+        },
+        {
+          title: "Project-led support",
+          description: "A good fit when you want to move from concept into a more consultative quote process.",
+        },
+      ]}
+      entryPaths={[
+        {
+          title: "Use the warehouse builder",
+          href: "/warehouse-builder",
+          description: "Take a more visual route and shape the warehouse step by step before you enquire.",
+        },
+        {
+          title: "Use the estimator",
+          href: "/tools/estimator",
+          description: "Get a clearer starting budget first if you want a quicker planning route.",
+        },
+        {
+          title: "Talk to Smart Steel",
+          href: "/contact",
+          description: "Start directly with the team if you already know the broad project direction.",
         },
       ]}
       bestFor={[
-        "General warehousing, storage, workshop, and light industrial buildings that benefit from a modular steel shell.",
+        "General warehousing, storage, workshop, and light industrial buildings that benefit from a modular steel shell and a more custom planning route.",
         "Projects where the buyer wants to compare enclosure level, cladding, and access openings before moving into a detailed quote.",
-        "Clients who want a clearer starting point, not just a vague 'contact us' form.",
+        "Clients who want to start with builder, estimator, or direct project guidance instead of a standard product selection flow.",
       ]}
       strengths={[
         {
           title: "Flexible buyer path",
-          description: "The LSF option is well suited to clients who want to compare systems, budget ranges, and scope options before committing to a quotation.",
+          description: "The LSF route works well for buyers who want to compare systems, budget ranges, and scope options before committing to a quotation.",
         },
         {
           title: "Strong visual planning",
@@ -107,11 +143,10 @@ export default function LsfWarehousesPage() {
       ]}
       ctaPrimary={{ href: "/warehouse-builder", label: "Build an LSF warehouse" }}
       ctaSecondary={{ href: "/tools/estimator", label: "Estimate an LSF warehouse" }}
-      ctaTertiary={{ href: "/warehouses/lsf-vs-cflc", label: "Compare LSF vs CFLC" }}
       alternateSystem={{
-        href: "/warehouses/cflc",
-        title: "CFLC warehouses",
-        description: "See the cold formed lip channel warehouse path if your project suits that system better.",
+        href: "/products/cflc-diy-warehouse-kits",
+        title: "CFLC kits",
+        description: "If you would rather browse standard kit sizes, compare starting prices, and request a more DIY-friendly option, switch to the CFLC kit route.",
       }}
     />
   )

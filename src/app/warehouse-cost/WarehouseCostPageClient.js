@@ -234,7 +234,7 @@ export default function WarehouseCostPageClient({ slug }) {
               'Roof structure ready for cladding',
               'Best when you are managing finishes separately',
             ]}
-            href="/lightweight-steel-warehouses"
+            href="/warehouses"
             cta="Get Structure Pricing"
           />
           <PriceCard
@@ -246,7 +246,7 @@ export default function WarehouseCostPageClient({ slug }) {
               'Weatherproof enclosure for fast occupation',
               'Most common option for growing businesses',
             ]}
-            href="/lightweight-steel-warehouses"
+            href="/warehouses"
             cta="Get Shell Pricing"
             featured
           />
@@ -259,7 +259,7 @@ export default function WarehouseCostPageClient({ slug }) {
               'Civil works, finishes, and handover scope',
               'Best when you want one team managing delivery',
             ]}
-            href="/lightweight-steel-warehouses"
+            href="/warehouses"
             cta="Start Turnkey Quote"
           />
         </div>
@@ -309,7 +309,7 @@ export default function WarehouseCostPageClient({ slug }) {
             {[
               { href: "/warehouse-builder", label: "Warehouse builder", description: "Shape a live warehouse design and see an indicative budget." },
               { href: "/tools/estimator", label: "Warehouse estimator", description: "Run a faster budget check for standard warehouse structures." },
-              { href: "/lightweight-steel-warehouses", label: "Warehouse systems", description: "Explore Smart Steel warehouse solutions and standard options." },
+              { href: "/warehouses", label: "Warehouse systems", description: "Explore Smart Steel warehouse solutions and standard options." },
               { href: "/warehouse-regions", label: "Warehouse regions", description: "Compare warehouse delivery and project context across South Africa." },
             ].map((item) => (
               <Link
@@ -443,7 +443,7 @@ export default function WarehouseCostPageClient({ slug }) {
           <Link href="/warehouse-builder" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
             Build Your Warehouse
           </Link>
-          <Link href="/lightweight-steel-warehouses" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
+          <Link href="/warehouses" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
             View Warehouse Options
           </Link>
         </div>

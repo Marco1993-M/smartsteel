@@ -53,7 +53,7 @@ export default function RegionWarehousePageClient({ citySlug }) {
         "@type": "ListItem",
         position: 2,
         name: "Lightweight Steel Warehouses",
-        item: "https://www.smartsteel.co.za/lightweight-steel-warehouses",
+        item: "https://www.smartsteel.co.za/warehouses",
       },
       {
         "@type": "ListItem",

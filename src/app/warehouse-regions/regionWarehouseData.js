@@ -466,7 +466,7 @@ export function buildRegionWarehouseContent(citySlug) {
     internalLinks: [
       { href: "/warehouse-builder", label: "Build your warehouse online" },
       { href: "/tools/estimator", label: "Warehouse estimator" },
-      { href: "/lightweight-steel-warehouses", label: "All warehouse systems" },
+      { href: "/warehouses", label: "All warehouse systems" },
       { href: "/warehouse-regions", label: "Warehouse regions hub" },
       { href: "/warehouse-cost", label: "Warehouse cost guide" },
       { href: "/warehouse-cost/10x10", label: "10m x 10m warehouse cost" },

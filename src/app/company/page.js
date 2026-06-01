@@ -2,12 +2,23 @@
 import Image from 'next/image';
 import SocialIcons from '../../components/SocialIcons';
 
+
 // --- Metadata for SEO & canonical ---
 export const metadata = {
-  title: "Smart Steel | Lightweight Steel Warehouses",
-  description: "Learn about Smart Steel and our lightweight steel building solutions. Unmatched expert and fast service",
+  title: "About Smart Steel | Steel Building Systems South Africa",
+  description:
+    "Learn about Smart Steel, our approach to steel building systems, and the team behind our warehouse, product, and project solutions in South Africa.",
   alternates: {
     canonical: '/company',
+  },
+  openGraph: {
+    title: "About Smart Steel | Steel Building Systems South Africa",
+    description:
+      "Learn about Smart Steel and the team behind our steel building systems, warehouse solutions, and project support in South Africa.",
+    url: "https://www.smartsteel.co.za/company",
+    siteName: "Smart Steel",
+    locale: "en_ZA",
+    type: "website",
   },
 };
 

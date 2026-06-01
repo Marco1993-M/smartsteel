@@ -28,6 +28,10 @@ export async function generateMetadata({ params }) {
     alternates: {
       canonical: `/warehouses/${warehouse.slug}`,
     },
+    robots: {
+      index: false,
+      follow: true,
+    },
     openGraph: {
       title: `${warehouse.name} | Smart Steel`,
       description:

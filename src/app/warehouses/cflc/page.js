@@ -109,7 +109,6 @@ export default function CflcWarehousesPage() {
       ]}
       ctaPrimary={{ href: "/warehouse-builder", label: "Build a CFLC warehouse" }}
       ctaSecondary={{ href: "/tools/estimator", label: "Estimate a CFLC warehouse" }}
-      ctaTertiary={{ href: "/cflc-warehouse-cost", label: "See CFLC warehouse cost" }}
       alternateSystem={{
         href: "/warehouses/lsf",
         title: "LSF warehouses",

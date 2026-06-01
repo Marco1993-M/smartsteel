@@ -326,7 +326,7 @@ export function buildSolarRegionContent(citySlug) {
       { href: "/solar-carports", label: "Solar carport regions hub" },
       { href: "/solar", label: "Main solar page" },
       { href: "/warehouse-regions", label: "Warehouse regions hub" },
-      { href: "/lightweight-steel-warehouses", label: "Warehouse systems" },
+      { href: "/warehouses", label: "Warehouse systems" },
       { href: "/contact", label: "Request a project quote" },
     ],
     sizeBlurb: `Typical solar carport layouts in ${config.name} range from compact single-bay coverage to wider multi-bay parking structures depending on the site and power goals.`,
