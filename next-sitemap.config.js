@@ -46,7 +46,6 @@ const legacyRegionWarehousePaths = [
 
 const highPriorityPages = new Set([
   '/',
-  '/lightweight-steel-warehouses',
   '/warehouses',
   '/warehouses/lsf',
   '/warehouses/cflc',
@@ -65,11 +64,7 @@ const highPriorityPages = new Set([
 const servicePages = new Set([
   '/company',
   '/contact',
-  '/resources',
-  '/recent',
-  '/steel',
-  '/architect-advantages',
-  '/sustainability',
+  '/lightweight-steel-framing',
 ]);
 
 module.exports = {
@@ -89,7 +84,6 @@ module.exports = {
     '/case-studies/retail-renovation',
     '/case-studies/eco-home',
     '/warehouse-cost/[size]',
-    '/products/lightweight-steel-trusses/[slug]',
     '/[city]/solar-carports',
     '/warehouses/[slug]',
   ],
