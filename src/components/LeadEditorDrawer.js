@@ -279,7 +279,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
     product_type: "",
     client_follow_up_state: "",
     quote_value: "",
-    expected_close_date: "",
     lost_reason: "",
     google_sheet_url: "",
     notes: "",
@@ -419,7 +418,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
       product_type: "",
       client_follow_up_state: "",
       quote_value: "",
-      expected_close_date: "",
       lost_reason: "",
       google_sheet_url: "",
       notes: "",
@@ -1010,24 +1008,6 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
             {validationErrors.quote_value && (
               <p className="mt-1 text-xs text-red-600">{validationErrors.quote_value}</p>
             )}
-          </div>
-          <div>
-            <label className={fieldLabelClass}>Expected Close Date</label>
-            <input
-              type="date"
-              value={
-                formData.expected_close_date
-                  ? new Date(formData.expected_close_date).toISOString().split("T")[0]
-                  : ""
-              }
-              onChange={(e) =>
-                handleChange(
-                  "expected_close_date",
-                  e.target.value ? new Date(e.target.value).toISOString() : ""
-                )
-              }
-              className={inputClass}
-            />
           </div>
         </div>
         <div className="mt-4">
