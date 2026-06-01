@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Fragment } from "react"
+import { useState, useEffect, useMemo, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
 import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft, FileText, Link2 } from "lucide-react"
 import { supabase } from "../lib/supabase" 
@@ -252,6 +252,28 @@ Smart Steel`,
   }
 }
 
+function getFollowUpTemplateLabel(templateKey) {
+  return FOLLOW_UP_TEMPLATE_OPTIONS.find((template) => template.key === templateKey)?.label || "Follow-up"
+}
+
+function getWaitingSummaryForTemplate(templateKey, lead) {
+  const projectReference = getProjectReference(lead)
+
+  switch (templateKey) {
+    case "missing_info":
+      return `Waiting on client to send the missing project details for ${projectReference}.`
+    case "quote_check_in":
+      return `Waiting on client to confirm whether they want to proceed or need revisions for ${projectReference}.`
+    case "reactivation":
+      return `Waiting on client to confirm whether ${projectReference} is still active.`
+    case "estimate_follow_up":
+      return `Waiting on client to review the estimate and confirm the next step for ${projectReference}.`
+    case "enquiry_follow_up":
+    default:
+      return `Waiting on client to come back regarding ${projectReference}.`
+  }
+}
+
 export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack, onCreateEstimate }) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
@@ -288,6 +310,15 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
   const [notes, setNotes] = useState(lead?.notes ? [lead.notes] : []);
   const leadSop = getLeadSop(formData);
   const waitingOnClient = isWaitingOnClient(formData)
+  const lastFollowUpEmailActivity = useMemo(() => {
+    return [...activities]
+      .filter(
+        (activity) =>
+          activity.type === "email" &&
+          /Follow-up email/i.test(String(activity.description || ""))
+      )
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0] || null
+  }, [activities])
   const selectedStageBlockers = getLeadStageBlockers(formData, formData.status);
   const createdAtLabel = formatLeadCreatedAt(formData.created_at);
   const fieldLabelClass = "mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500";
@@ -580,32 +611,47 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
 
   const handleSendFollowUpEmail = async () => {
     const nextFollowUpAt = getBusinessFollowUpIsoDate(3)
-    const nextAction =
-      formData.next_action?.trim() || "Follow up if the client has not responded to the email."
+    const nextAction = getWaitingSummaryForTemplate(emailTemplateKey, formData)
+    const templateLabel = getFollowUpTemplateLabel(emailTemplateKey)
     const mailtoUrl = `mailto:${encodeURIComponent(formData.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
 
     setFormData((prev) => ({
       ...prev,
+      client_follow_up_state: "waiting_on_client",
       follow_up_at: nextFollowUpAt,
       next_action: nextAction,
     }))
 
     if (lead?.id) {
-      const { error } = await supabase
+      let updateResult = await supabase
         .from("leads")
         .update({
+          client_follow_up_state: "waiting_on_client",
           follow_up_at: nextFollowUpAt,
           next_action: nextAction,
         })
         .eq("id", lead.id)
 
-      if (error) {
-        console.error("Error updating follow-up date:", error)
+      if (updateResult.error) {
+        const message = updateResult.error.message || ""
+        if (/client_follow_up_state/i.test(message)) {
+          updateResult = await supabase
+            .from("leads")
+            .update({
+              follow_up_at: nextFollowUpAt,
+              next_action: nextAction,
+            })
+            .eq("id", lead.id)
+        }
+      }
+
+      if (updateResult.error) {
+        console.error("Error updating follow-up date:", updateResult.error)
       }
 
       await addActivity({
         type: "email",
-        description: `Opened a follow-up email draft for ${formData.name || "client"} and scheduled the next follow-up for ${new Date(nextFollowUpAt).toLocaleDateString()}.`,
+        description: `Follow-up email opened (${templateLabel}). Subject: ${emailSubject}. Waiting for: ${nextAction}`,
       })
     }
     window.location.href = mailtoUrl
@@ -1212,6 +1258,48 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
           <p className="mt-1 text-xs text-slate-500">
             Link the working Google Sheet here so the team can open it directly from the CRM.
           </p>
+        </section>
+
+        <section className={sectionClass}>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Client response state
+          </p>
+          <div className="mt-3 space-y-3">
+            <div className="rounded-2xl bg-slate-50 p-3">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    waitingOnClient ? "bg-sky-100 text-sky-700" : "bg-slate-200 text-slate-700"
+                  }`}
+                >
+                  {waitingOnClient ? "Waiting on client" : "Active follow-up"}
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-slate-700">
+                {formData.next_action || "No next step captured yet."}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Last follow-up email
+              </p>
+              {lastFollowUpEmailActivity ? (
+                <>
+                  <p className="mt-2 text-sm text-slate-700">
+                    {lastFollowUpEmailActivity.description}
+                  </p>
+                  <p className="mt-2 text-xs text-slate-500">
+                    {new Date(lastFollowUpEmailActivity.timestamp).toLocaleString()}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-slate-500">
+                  No follow-up email has been logged yet.
+                </p>
+              )}
+            </div>
+          </div>
         </section>
       </Tab.Panel>
 
