@@ -3,7 +3,7 @@ import { INVOICE_TERMS } from "../lib/invoices/invoiceDocument"
 import { formatCurrency } from "../lib/estimates/warehouseEstimate"
 
 export default function InvoiceDocumentLayout({ documentModel }) {
-  const invoiceCardClass = "invoice-card rounded-3xl border border-slate-200 bg-white"
+  const invoiceCardClass = "invoice-card overflow-hidden rounded-3xl border border-slate-200 bg-white"
 
   return (
     <article className="invoice-sheet mx-auto w-[210mm] min-w-[210mm] rounded-[2rem] bg-white pb-[8mm] shadow-lg print:max-w-none print:min-w-0 print:rounded-none print:pb-[6mm] print:shadow-none">
