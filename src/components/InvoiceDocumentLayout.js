@@ -3,6 +3,9 @@ import { INVOICE_TERMS } from "../lib/invoices/invoiceDocument"
 import { formatCurrency } from "../lib/estimates/warehouseEstimate"
 
 export default function InvoiceDocumentLayout({ documentModel }) {
+  const softCardClass =
+    "rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
+
   return (
     <article className="invoice-sheet mx-auto w-[210mm] min-w-[210mm] rounded-[2rem] bg-white pb-[8mm] shadow-lg print:max-w-none print:min-w-0 print:rounded-none print:pb-[6mm] print:shadow-none">
       <section className="invoice-page print:break-after-page">
@@ -33,7 +36,7 @@ export default function InvoiceDocumentLayout({ documentModel }) {
           </div>
 
           <div className="mt-6 grid grid-cols-[1.2fr_0.9fr_0.9fr] gap-4 print:mt-5 print:gap-3">
-            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <section className={`overflow-hidden ${softCardClass}`}>
               <div className="border-b border-slate-200 bg-slate-950 px-5 py-4 text-white print:px-4 print:py-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
                   Invoice Summary
@@ -53,7 +56,7 @@ export default function InvoiceDocumentLayout({ documentModel }) {
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <section className={`${softCardClass} px-5 py-4`}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Invoice Details
               </p>
@@ -73,7 +76,7 @@ export default function InvoiceDocumentLayout({ documentModel }) {
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <section className={`${softCardClass} px-5 py-4`}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Payment
               </p>
@@ -92,7 +95,7 @@ export default function InvoiceDocumentLayout({ documentModel }) {
         </div>
 
         <div className="grid grid-cols-[0.9fr_1.1fr] gap-6 border-b border-slate-200 px-[12mm] py-[10mm] print:px-[11mm] print:py-[6mm] print:gap-4">
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={`${softCardClass} p-6`}>
             <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Bill To</h2>
             <div className="mt-3 space-y-2 text-sm text-slate-700 print:mt-2 print:space-y-1.5 print:text-[12px]">
               <p className="text-xl font-semibold text-slate-950 print:text-lg">{documentModel.clientName}</p>
@@ -112,7 +115,7 @@ export default function InvoiceDocumentLayout({ documentModel }) {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={`${softCardClass} p-6`}>
             <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Invoice Summary</h2>
             <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-slate-700 print:mt-2 print:gap-2 print:text-[12px]">
               {documentModel.summaryFields.map((item) => (
@@ -163,14 +166,14 @@ export default function InvoiceDocumentLayout({ documentModel }) {
           </div>
 
           <div className="mt-8 grid grid-cols-[1.05fr_0.95fr] gap-6">
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className={`${softCardClass} p-6`}>
               <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Invoice Notes</h2>
               <p className="mt-4 text-sm leading-7 text-slate-700">
                 {documentModel.notes || "Please contact Smart Steel if you need any clarification on this invoice or the billed scope."}
               </p>
             </section>
 
-            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <section className={`overflow-hidden ${softCardClass}`}>
               <div className="bg-[linear-gradient(135deg,_#0f172a,_#1e293b)] px-6 py-5 text-white">
                 <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Commercial Summary</h2>
                 <p className="mt-2 text-3xl font-semibold">{documentModel.totalInclVatLabel}</p>
@@ -203,7 +206,7 @@ export default function InvoiceDocumentLayout({ documentModel }) {
       <section className="invoice-page">
         <div className="px-[12mm] pt-0 pb-[10mm] print:px-[12mm] print:pt-0 print:pb-[8mm]">
           <div className="grid grid-cols-2 gap-6">
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className={`${softCardClass} p-6`}>
               <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Payment Terms</h2>
               <ul className="mt-4 list-none space-y-3 pl-0 text-sm leading-6 text-slate-700">
                 {INVOICE_TERMS.map((item) => (
@@ -225,7 +228,7 @@ export default function InvoiceDocumentLayout({ documentModel }) {
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className={`${softCardClass} p-6`}>
               <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Banking Details</h2>
               <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
                 <p>Account holder: {documentModel.billingDetails.legalEntity}</p>
