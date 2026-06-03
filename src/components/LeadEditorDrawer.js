@@ -282,7 +282,15 @@ function getWaitingSummaryForTemplate(templateKey, lead) {
   }
 }
 
-export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBack, onCreateEstimate }) {
+export default function LeadEditorDrawer({
+  lead,
+  onClose,
+  onSave,
+  onDelete,
+  onBack,
+  onCreateEstimate,
+  onCreateInvoice,
+}) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
 
@@ -1337,14 +1345,24 @@ export default function LeadEditorDrawer({ lead, onClose, onSave, onDelete, onBa
               </p>
             </div>
             {!isNew && (
-              <button
-                type="button"
-                onClick={() => onCreateEstimate?.(lead)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
-              >
-                <FileText size={16} />
-                Open estimate
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => onCreateEstimate?.(lead)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+                >
+                  <FileText size={16} />
+                  Open estimate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onCreateInvoice?.(lead)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  <FileText size={16} />
+                  Create invoice
+                </button>
+              </div>
             )}
           </div>
 
