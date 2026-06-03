@@ -38,6 +38,15 @@ body {
   min-height: 297mm;
 }
 
+.invoice-sheet,
+.invoice-sheet *,
+.invoice-sheet *::before,
+.invoice-sheet *::after {
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
 .estimate-preview-shell {
   width: 100%;
   overflow-x: hidden;
