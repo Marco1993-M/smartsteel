@@ -34,6 +34,10 @@ body {
   min-height: 297mm;
 }
 
+.invoice-sheet {
+  min-height: 297mm;
+}
+
 .estimate-preview-shell {
   width: 100%;
   overflow-x: hidden;
@@ -130,6 +134,21 @@ body {
     display: block;
     width: auto;
     min-width: 0;
+  }
+
+  .invoice-sheet {
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-width: 210mm !important;
+    min-height: auto;
+    margin: 0 auto;
+    overflow: visible !important;
+    page-break-after: auto;
+  }
+
+  .invoice-card,
+  .invoice-table-shell {
+    box-shadow: none !important;
   }
 }
 
