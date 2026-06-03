@@ -16,15 +16,17 @@ function getNextBusinessMorningIso() {
 }
 
 function buildBuilderNotes(payload) {
+  const isLcssWarehouse = payload.productType === "LCSS Warehouse"
   const lines = [
     "Warehouse Builder submission",
-    `Scope: ${payload.scopeLabel}`,
-    `Enclosure: ${payload.enclosureLabel}`,
-    `Cladding: ${payload.cladding}`,
+    payload.productType ? `System: ${payload.productType === "LCSS Warehouse" ? "CFLC Warehouse" : payload.productType}` : null,
+    isLcssWarehouse ? `Steel finish: ${payload.steelFinish}` : `Scope: ${payload.scopeLabel}`,
+    isLcssWarehouse ? `Gable type: ${payload.gableModeLabel}` : `Enclosure: ${payload.enclosureLabel}`,
+    isLcssWarehouse ? null : `Cladding: ${payload.cladding}`,
     `Roof: ${payload.roofTypeLabel}`,
-    `Garage door openings: ${payload.rollerDoorCount}`,
-    payload.garageDoorOpeningTypeLabel ? `Garage opening size: ${payload.garageDoorOpeningTypeLabel}` : null,
-    `Pedestrian door openings: ${payload.pedestrianDoorCount}`,
+    isLcssWarehouse ? null : `Garage door openings: ${payload.rollerDoorCount}`,
+    isLcssWarehouse ? null : payload.garageDoorOpeningTypeLabel ? `Garage opening size: ${payload.garageDoorOpeningTypeLabel}` : null,
+    isLcssWarehouse ? null : `Pedestrian door openings: ${payload.pedestrianDoorCount}`,
     `Delivery required: ${payload.deliveryRequired ? "Yes" : "No"}`,
     payload.province ? `Province: ${payload.province}` : null,
     payload.location ? `Location: ${payload.location}` : null,
@@ -121,7 +123,7 @@ export async function POST(request) {
           notes: buildBuilderNotes(body),
           status: "new",
           lead_source: "Warehouse Builder",
-          product_type: "Warehouse",
+          product_type: body.productType || "LSF Warehouse",
           next_action:
             "Call builder lead, confirm scope and site details, then load configuration into estimate workflow.",
           follow_up_at: getNextBusinessMorningIso(),

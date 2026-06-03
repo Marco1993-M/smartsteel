@@ -7,6 +7,7 @@ import KanbanBoard from "../../components/KanbanBoard"
 import LeadEditorDrawer from "../../components/LeadEditorDrawer"
 import PricesDrawer from "../../components/PricesDrawer"
 import EstimateDrawer from "../../components/EstimateDrawer"
+import InvoiceDrawer from "../../components/InvoiceDrawer"
 import UpcomingTasks from "../../components/UpcomingTasks"
 import {
   formatCrmStatusLabel,
@@ -20,6 +21,7 @@ const STATUS_OPTIONS = ["all", "new", "contacted", "quoted", "won", "lost"]
 const NEXT_ACTION_STORAGE_KEY = "smartsteel.crm.next-actions"
 const CRM_FALLBACK_STORAGE_KEY = "smartsteel.crm.custom-fields"
 const CRM_ESTIMATES_STORAGE_KEY = "smartsteel.crm.estimates"
+const CRM_INVOICES_STORAGE_KEY = "smartsteel.crm.invoices"
 const CRM_FALLBACK_FIELDS = [
   "next_action",
   "lead_source",
@@ -163,6 +165,21 @@ function readStoredEstimates() {
 function writeStoredEstimates(data) {
   if (typeof window === "undefined") return
   window.localStorage.setItem(CRM_ESTIMATES_STORAGE_KEY, JSON.stringify(data))
+}
+
+function readStoredInvoices() {
+  if (typeof window === "undefined") return {}
+
+  try {
+    return JSON.parse(window.localStorage.getItem(CRM_INVOICES_STORAGE_KEY) || "{}")
+  } catch {
+    return {}
+  }
+}
+
+function writeStoredInvoices(data) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(CRM_INVOICES_STORAGE_KEY, JSON.stringify(data))
 }
 
 function withFallbackNextAction(lead, nextActions) {
@@ -465,7 +482,9 @@ export default function KanbanPage() {
   const [nextActionFallbacks, setNextActionFallbacks] = useState({})
   const [fallbackFieldValues, setFallbackFieldValues] = useState({})
   const [leadEstimates, setLeadEstimates] = useState({})
+  const [leadInvoices, setLeadInvoices] = useState({})
   const [estimatingLead, setEstimatingLead] = useState(null)
+  const [invoicingLead, setInvoicingLead] = useState(null)
   const [dailyTasks, setDailyTasks] = useState([])
   const [tasksLoading, setTasksLoading] = useState(true)
 
@@ -482,9 +501,11 @@ export default function KanbanPage() {
       const fallbackActions = readLocalNextActions()
       const fallbackFields = readFallbackFields()
       const fallbackEstimates = readStoredEstimates()
+      const fallbackInvoices = readStoredInvoices()
       setNextActionFallbacks(fallbackActions)
       setFallbackFieldValues(fallbackFields)
       setLeadEstimates(fallbackEstimates)
+      setLeadInvoices(fallbackInvoices)
       setLeads(
         (data || []).map((lead) =>
           withFallbackFields(withFallbackNextAction(lead, fallbackActions), fallbackFields)
@@ -605,6 +626,15 @@ export default function KanbanPage() {
     }
     setLeadEstimates(updated)
     writeStoredEstimates(updated)
+  }
+
+  const setStoredInvoicesForLead = (leadId, invoices) => {
+    const updated = {
+      ...leadInvoices,
+      [leadId]: invoices,
+    }
+    setLeadInvoices(updated)
+    writeStoredInvoices(updated)
   }
 
   const logLeadActivity = async (activity) => {
@@ -889,6 +919,10 @@ export default function KanbanPage() {
     setEstimatingLead(lead)
   }
 
+  const handleOpenInvoice = (lead) => {
+    setInvoicingLead(lead)
+  }
+
   const handleSnoozeLeadToTomorrow = async (lead) => {
     const followUpAt = getTomorrowIsoDate()
     const { error } = await supabase
@@ -1135,6 +1169,177 @@ export default function KanbanPage() {
 
     setEditingLead(updatedLead)
     return savedEstimate
+  }
+
+  const handleSaveInvoice = async (invoiceDraft) => {
+    if (!invoiceDraft?.lead?.id) {
+      alert("Please save the lead before creating an invoice.")
+      return false
+    }
+
+    const leadId = invoiceDraft.lead.id
+    const existingForLead = leadInvoices[leadId] || []
+    const isInvoiceUpdate = invoiceDraft.save_mode === "update" && Boolean(invoiceDraft.id)
+    const initialSequence = Number(invoiceDraft.sequence_no) || getNextEstimateVersion(existingForLead)
+    const shareToken = invoiceDraft.share_token || generateShareToken()
+    let invoicePayload = {
+      lead_id: leadId,
+      sequence_no: initialSequence,
+      invoice_number: invoiceDraft.invoice_number || `INV-${String(initialSequence).padStart(3, "0")}`,
+      title: invoiceDraft.title,
+      invoice_for: invoiceDraft.invoice_for,
+      product_type: invoiceDraft.product_type || "",
+      product_type_display: invoiceDraft.product_type_display || invoiceDraft.product_type || "",
+      reference_no: invoiceDraft.reference_no || "",
+      issue_date: invoiceDraft.issue_date,
+      due_date: invoiceDraft.due_date,
+      payment_terms: invoiceDraft.payment_terms || "",
+      input_data: invoiceDraft.input_data || {},
+      line_items: invoiceDraft.line_items || [],
+      subtotal: invoiceDraft.subtotal || 0,
+      vat_rate: invoiceDraft.vat_rate || 0.15,
+      total: invoiceDraft.total || 0,
+      notes: invoiceDraft.notes || "",
+      created_by: user?.id || null,
+      share_token: shareToken,
+      shared_at: new Date().toISOString(),
+    }
+
+    let savedInvoice = null
+    let invoiceInsertPayload = { ...invoicePayload }
+    let insertResult = isInvoiceUpdate
+      ? await supabase
+          .from("invoices")
+          .update(invoiceInsertPayload)
+          .eq("id", invoiceDraft.id)
+          .select()
+      : await supabase.from("invoices").insert([invoiceInsertPayload]).select()
+
+    while (insertResult.error) {
+      const message = insertResult.error.message || ""
+      const missingColumn = parseMissingColumn(insertResult.error)
+
+      if (!isInvoiceUpdate && /duplicate key value/i.test(message)) {
+        const { data: existingDbInvoices } = await supabase
+          .from("invoices")
+          .select("id, sequence_no")
+          .eq("lead_id", leadId)
+
+        const nextSequence = getNextEstimateVersion([
+          ...existingForLead,
+          ...(existingDbInvoices || []),
+        ])
+
+        invoicePayload = {
+          ...invoicePayload,
+          sequence_no: nextSequence,
+          invoice_number: `INV-${String(nextSequence).padStart(3, "0")}`,
+        }
+        invoiceInsertPayload = { ...invoicePayload }
+        insertResult = await supabase.from("invoices").insert([invoiceInsertPayload]).select()
+        continue
+      }
+
+      if (/relation .*invoices.* does not exist/i.test(message) || /Could not find the table/i.test(message)) {
+        savedInvoice = isInvoiceUpdate
+          ? {
+              ...(existingForLead.find((invoice) => invoice.id === invoiceDraft.id) || {}),
+              ...invoicePayload,
+              id: invoiceDraft.id,
+              created_at:
+                existingForLead.find((invoice) => invoice.id === invoiceDraft.id)?.created_at ||
+                new Date().toISOString(),
+            }
+          : {
+              id: `local-${leadId}-${Date.now()}`,
+              created_at: new Date().toISOString(),
+              ...invoicePayload,
+            }
+        setStoredInvoicesForLead(
+          leadId,
+          isInvoiceUpdate
+            ? existingForLead.map((invoice) => (invoice.id === savedInvoice.id ? savedInvoice : invoice))
+            : [savedInvoice, ...existingForLead]
+        )
+        break
+      }
+
+      if (
+        !missingColumn ||
+        ![
+          "invoice_number",
+          "sequence_no",
+          "invoice_for",
+          "reference_no",
+          "issue_date",
+          "due_date",
+          "payment_terms",
+          "input_data",
+          "line_items",
+          "subtotal",
+          "vat_rate",
+          "share_token",
+          "shared_at",
+          "pdf_url",
+          "product_type_display",
+        ].includes(missingColumn)
+      ) {
+        alert("Error saving invoice: " + insertResult.error.message)
+        return false
+      }
+
+      delete invoiceInsertPayload[missingColumn]
+      insertResult = isInvoiceUpdate
+        ? await supabase
+            .from("invoices")
+            .update(invoiceInsertPayload)
+            .eq("id", invoiceDraft.id)
+            .select()
+        : await supabase.from("invoices").insert([invoiceInsertPayload]).select()
+    }
+
+    if (!savedInvoice && !insertResult.error) {
+      savedInvoice = insertResult.data?.[0]
+      if (!savedInvoice?.share_token) {
+        savedInvoice = {
+          ...savedInvoice,
+          share_token: shareToken,
+        }
+      }
+      setStoredInvoicesForLead(
+        leadId,
+        isInvoiceUpdate
+          ? existingForLead
+              .map((invoice) => (invoice.id === savedInvoice.id ? savedInvoice : invoice))
+              .sort((a, b) => Number(b.sequence_no || 0) - Number(a.sequence_no || 0))
+          : [savedInvoice, ...existingForLead].sort(
+              (a, b) => Number(b.sequence_no || 0) - Number(a.sequence_no || 0)
+            )
+      )
+    }
+
+    await logLeadActivity({
+      lead_id: leadId,
+      type: "update",
+      user_name: "System",
+      description: `Invoice ${invoicePayload.invoice_number} ${isInvoiceUpdate ? "updated" : "created"} for ${invoicePayload.invoice_for || "this lead"}.`,
+      timestamp: new Date().toISOString(),
+    })
+
+    const currentLead = leads.find((lead) => lead.id === leadId)
+    await sendCrmNotification({
+      eventType: "lead_updated",
+      lead: currentLead,
+      previousLead: currentLead,
+      actor: user?.email || "Smart Steel CRM",
+      changedFields: ["invoice"],
+      summary: isInvoiceUpdate
+        ? `Invoice ${invoicePayload.invoice_number} updated.`
+        : `Invoice ${invoicePayload.invoice_number} created.`,
+    })
+
+    setEditingLead(currentLead || null)
+    return savedInvoice
   }
 
   const assigneeOptions = useMemo(() => {
@@ -1960,6 +2165,13 @@ export default function KanbanPage() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => handleOpenInvoice(lead)}
+                          className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        >
+                          Create invoice
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleSnoozeLeadToTomorrow(lead)}
                           className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                         >
@@ -2140,6 +2352,7 @@ export default function KanbanPage() {
           onSave={(lead) => handleSaveLead(lead)}
           onDelete={handleDeleteLead}
           onCreateEstimate={handleOpenEstimate}
+          onCreateInvoice={handleOpenInvoice}
         />
       )}
 
@@ -2158,6 +2371,16 @@ export default function KanbanPage() {
           estimates={leadEstimates[estimatingLead.id] || []}
           onClose={() => setEstimatingLead(null)}
           onSaveEstimate={handleSaveEstimate}
+        />
+      )}
+
+      {invoicingLead && (
+        <InvoiceDrawer
+          lead={invoicingLead}
+          invoices={leadInvoices[invoicingLead.id] || []}
+          estimates={leadEstimates[invoicingLead.id] || []}
+          onClose={() => setInvoicingLead(null)}
+          onSaveInvoice={handleSaveInvoice}
         />
       )}
 
