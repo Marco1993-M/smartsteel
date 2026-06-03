@@ -279,6 +279,15 @@ function getNextEstimateVersion(estimates = []) {
   return maxVersion + 1
 }
 
+function getNextInvoiceSequenceValue(invoices = []) {
+  const maxSequence = invoices.reduce((highest, invoice) => {
+    const sequence = Number(invoice?.sequence_no || 0)
+    return Number.isFinite(sequence) ? Math.max(highest, sequence) : highest
+  }, 0)
+
+  return maxSequence + 1
+}
+
 function getTeamMemberFromUser(user) {
   const email = String(user?.email || "").toLowerCase()
   if (!email) return ""
@@ -1180,8 +1189,22 @@ export default function KanbanPage() {
     const leadId = invoiceDraft.lead.id
     const existingForLead = leadInvoices[leadId] || []
     const isInvoiceUpdate = invoiceDraft.save_mode === "update" && Boolean(invoiceDraft.id)
-    const initialSequence = Number(invoiceDraft.sequence_no) || getNextEstimateVersion(existingForLead)
+    let initialSequence = Number(invoiceDraft.sequence_no) || getNextInvoiceSequenceValue(existingForLead)
     const shareToken = invoiceDraft.share_token || generateShareToken()
+
+    if (!isInvoiceUpdate) {
+      const { data: existingDbInvoices } = await supabase
+        .from("invoices")
+        .select("sequence_no")
+        .order("sequence_no", { ascending: false })
+        .limit(1)
+
+      initialSequence = Math.max(
+        initialSequence,
+        getNextInvoiceSequenceValue(existingDbInvoices || [])
+      )
+    }
+
     let invoicePayload = {
       lead_id: leadId,
       sequence_no: initialSequence,
@@ -1222,10 +1245,11 @@ export default function KanbanPage() {
       if (!isInvoiceUpdate && /duplicate key value/i.test(message)) {
         const { data: existingDbInvoices } = await supabase
           .from("invoices")
-          .select("id, sequence_no")
-          .eq("lead_id", leadId)
+          .select("sequence_no")
+          .order("sequence_no", { ascending: false })
+          .limit(1)
 
-        const nextSequence = getNextEstimateVersion([
+        const nextSequence = getNextInvoiceSequenceValue([
           ...existingForLead,
           ...(existingDbInvoices || []),
         ])
