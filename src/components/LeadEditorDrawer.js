@@ -37,6 +37,151 @@ const PRODUCT_TYPE_OPTIONS = [
   "Other",
 ];
 
+const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", "LCSS Warehouse"]
+const TRUSS_PRODUCT_TYPES = ["LSF trusses", "CFLC trusses"]
+const SOLAR_PRODUCT_TYPES = ["Solar carport", "Solar ground mount", "Solar structure"]
+
+const SCOPE_PRESET_OPTIONS = {
+  "LSF Warehouse": [
+    "Supply only",
+    "Installed",
+    "IBR cladding",
+    "Chromadek cladding",
+    "Open-sided",
+    "Enclosed shell",
+  ],
+  "LCSS Warehouse": [
+    "Supply only",
+    "Installed",
+    "Open-gable",
+    "Sheeted-gable",
+    "Galv finish",
+    "Mild steel finish",
+  ],
+  "Solar carport": [
+    "Single bay",
+    "Double bay",
+    "Structure only",
+    "Solar-ready structure",
+    "Supply only",
+    "Installed",
+  ],
+  "Solar ground mount": [
+    "30 panel structure",
+    "60 panel structure",
+    "120 panel structure",
+    "Galv finish",
+    "Mild steel finish",
+    "Supply only",
+  ],
+  "Solar structure": [
+    "Structure only",
+    "Solar-ready support steel",
+    "Custom steel support frame",
+    "Supply only",
+    "Installed",
+  ],
+  "LSF trusses": [
+    "Mono pitch",
+    "Dual pitch",
+    "Supply only",
+    "Installed",
+    "Engineering drawings",
+  ],
+  "CFLC trusses": [
+    "Mono pitch",
+    "Dual pitch",
+    "Supply only",
+    "Installed",
+    "Engineering drawings",
+  ],
+  Bracketry: [
+    "Standard bracket set",
+    "Custom fabrication",
+    "Galvanized",
+    "Powder coated",
+    "Supply only",
+  ],
+  Other: [
+    "Custom steel project",
+    "Site-specific scope",
+    "Supply only",
+    "Installed",
+  ],
+}
+
+function getScopeSectionConfig(productType) {
+  if (WAREHOUSE_PRODUCT_TYPES.includes(productType)) {
+    return {
+      title: "Capture the warehouse scope up front",
+      sizeLabel: "Warehouse Size",
+      widthLabel: "Select Width",
+      lengthLabel: "Select Length",
+      note: "Use the buttons and size selectors for the main shell scope, then add any custom notes below.",
+      showWarehouseOptions: true,
+      showSizeSelectors: true,
+      customPlaceholder: "Custom warehouse request & notes...",
+    }
+  }
+
+  if (TRUSS_PRODUCT_TYPES.includes(productType)) {
+    return {
+      title: "Capture the truss job scope up front",
+      sizeLabel: "Truss Size",
+      widthLabel: "Select Span",
+      lengthLabel: "Select Building Length",
+      note: "Capture the truss style, supply/install direction, and any sizing notes that will affect pricing.",
+      showWarehouseOptions: false,
+      showSizeSelectors: true,
+      customPlaceholder: "Custom truss request, roof pitch, or site notes...",
+    }
+  }
+
+  if (SOLAR_PRODUCT_TYPES.includes(productType)) {
+    return {
+      title: "Capture the solar structure scope up front",
+      sizeLabel: "Structure Footprint",
+      widthLabel: "Select Width",
+      lengthLabel: "Select Length",
+      note: "Capture the structure type, supply/install direction, and any panel or site notes that affect scope.",
+      showWarehouseOptions: false,
+      showSizeSelectors: true,
+      customPlaceholder: "Panel count, layout notes, or custom solar structure request...",
+    }
+  }
+
+  if (productType === "Bracketry") {
+    return {
+      title: "Capture the bracketry scope up front",
+      sizeLabel: "",
+      widthLabel: "",
+      lengthLabel: "",
+      note: "Capture the bracket type, finish, and fabrication notes clearly so quoting starts in the right lane.",
+      showWarehouseOptions: false,
+      showSizeSelectors: false,
+      customPlaceholder: "Bracket type, finish, quantity, or fabrication notes...",
+    }
+  }
+
+  return {
+    title: "Capture the job details up front",
+    sizeLabel: "",
+    widthLabel: "",
+    lengthLabel: "",
+    note: "Use the preset scope buttons where they help, then describe the project clearly below.",
+    showWarehouseOptions: false,
+    showSizeSelectors: false,
+    customPlaceholder: "Custom project request & notes...",
+  }
+}
+
+function appendScopePreset(currentValue, preset) {
+  const existing = String(currentValue || "").trim()
+  if (!existing) return preset
+  if (existing.toLowerCase().includes(preset.toLowerCase())) return existing
+  return `${existing}\n• ${preset}`
+}
+
 function normalizeStatus(status) {
   return String(status || "new").trim().toLowerCase();
 }
@@ -338,6 +483,8 @@ export default function LeadEditorDrawer({
   }, [activities])
   const selectedStageBlockers = getLeadStageBlockers(formData, formData.status);
   const createdAtLabel = formatLeadCreatedAt(formData.created_at);
+  const scopeConfig = getScopeSectionConfig(formData.product_type)
+  const scopePresetOptions = SCOPE_PRESET_OPTIONS[formData.product_type] || SCOPE_PRESET_OPTIONS.Other
   const fieldLabelClass = "mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500";
   const inputClass = "block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-0";
   const sectionClass = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
@@ -968,61 +1115,87 @@ export default function LeadEditorDrawer({
         <section className={sectionClass}>
           <div className="mb-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Project scope</p>
-            <h3 className="mt-1 text-base font-semibold text-slate-900">Capture the job details up front</h3>
+            <h3 className="mt-1 text-base font-semibold text-slate-900">{scopeConfig.title}</h3>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              {scopeConfig.note}
+            </p>
           </div>
-          <label className={`${fieldLabelClass} mb-2`}>Warehouse Size</label>
-          <div className="flex gap-2 mb-2 flex-wrap">
-            <select
-              value={formData.width || ""}
-              onChange={(e) => handleChange("width", e.target.value)}
-              className={`${inputClass} min-w-[100px] flex-1`}
-            >
-              <option value="">Select Width</option>
-              <option value="8">8m</option>
-              <option value="10">10m</option>
-              <option value="12">12m</option>
-            </select>
-            <select
-              value={formData.length || ""}
-              onChange={(e) => handleChange("length", e.target.value)}
-              className={`${inputClass} min-w-[100px] flex-1`}
-            >
-              <option value="">Select Length</option>
-              {[...Array(19)].map((_, i) => {
-                const len = 5 + i * 2.5;
-                return <option key={len} value={len}>{len}m</option>;
-              })}
-            </select>
-          </div>
-          <label className={`${fieldLabelClass} mb-2`}>Cladding & Installation</label>
-          <div className="flex gap-2 flex-wrap">
-            {["IBR", "Chromadek"].map((clad) => (
+          {scopeConfig.showSizeSelectors ? (
+            <>
+              <label className={`${fieldLabelClass} mb-2`}>{scopeConfig.sizeLabel}</label>
+              <div className="mb-3 flex gap-2 flex-wrap">
+                <select
+                  value={formData.width || ""}
+                  onChange={(e) => handleChange("width", e.target.value)}
+                  className={`${inputClass} min-w-[100px] flex-1`}
+                >
+                  <option value="">{scopeConfig.widthLabel}</option>
+                  {[3, 5, 6, 8, 10, 12, 15, 20].map((width) => (
+                    <option key={width} value={width}>{width}m</option>
+                  ))}
+                </select>
+                <select
+                  value={formData.length || ""}
+                  onChange={(e) => handleChange("length", e.target.value)}
+                  className={`${inputClass} min-w-[100px] flex-1`}
+                >
+                  <option value="">{scopeConfig.lengthLabel}</option>
+                  {[...Array(19)].map((_, i) => {
+                    const len = 5 + i * 2.5;
+                    return <option key={len} value={len}>{len}m</option>;
+                  })}
+                </select>
+              </div>
+            </>
+          ) : null}
+
+          {scopeConfig.showWarehouseOptions ? (
+            <>
+              <label className={`${fieldLabelClass} mb-2`}>Cladding & Installation</label>
+              <div className="mb-3 flex gap-2 flex-wrap">
+                {["IBR", "Chromadek"].map((clad) => (
+                  <button
+                    key={clad}
+                    type="button"
+                    className={`rounded-full border px-3 py-2 text-sm font-medium ${
+                      formData.cladding === clad ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"
+                    }`}
+                    onClick={() => handleChange("cladding", formData.cladding === clad ? "" : clad)}
+                  >
+                    {clad}
+                  </button>
+                ))}
+                {["Supply Only", "Installed"].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={`rounded-full border px-3 py-2 text-sm font-medium ${
+                      formData.installation === option ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"
+                    }`}
+                    onClick={() => handleChange("installation", formData.installation === option ? "" : option)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          <label className={`${fieldLabelClass} mb-2`}>Scope presets</label>
+          <div className="mb-3 flex gap-2 flex-wrap">
+            {scopePresetOptions.map((preset) => (
               <button
-                key={clad}
+                key={preset}
                 type="button"
-                className={`rounded-full border px-3 py-2 text-sm font-medium ${
-                  formData.cladding === clad ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"
-                }`}
-                onClick={() => handleChange("cladding", formData.cladding === clad ? "" : clad)}
+                className="rounded-full border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-200"
+                onClick={() => handleChange("estimate_request", appendScopePreset(formData.estimate_request, preset))}
               >
-                {clad}
-              </button>
-            ))}
-            {["Supply Only", "Installed"].map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={`rounded-full border px-3 py-2 text-sm font-medium ${
-                  formData.installation === option ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"
-                }`}
-                onClick={() => handleChange("installation", formData.installation === option ? "" : option)}
-              >
-                {option}
+                {preset}
               </button>
             ))}
           </div>
           <textarea
-            placeholder="Custom request & notes..."
+            placeholder={scopeConfig.customPlaceholder}
             value={formData.estimate_request || ""}
             onChange={(e) => handleChange("estimate_request", e.target.value)}
             className={`${inputClass} mt-3 min-h-[110px]`}
