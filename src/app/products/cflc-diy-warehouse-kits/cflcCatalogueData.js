@@ -46,7 +46,7 @@ const LAUNCH_SPANS = [
     width: 12,
     label: "12m span kits",
     image: "/CFLC.webp",
-    audience: "Larger footprint kits for warehousing, agricultural use, and buyers who still want a repeatable product-style route.",
+    audience: "Larger footprint kits for warehousing and agricultural use where a standard size still makes sense.",
     lengths: [10, 15, 20, 25, 30],
   },
 ]
@@ -122,14 +122,14 @@ export const cflcLaunchRanges = LAUNCH_SPANS.map((span) => {
 export const cflcCatalogueMetadata = {
   title: "CFLC DIY Warehouse Kits | Smart Steel",
   description:
-    "Browse Smart Steel CFLC DIY warehouse kits in practical repeatable sizes, including 6m, 10m, and 12m span options built for easy product enquiries and a clearer lipped channel steel buying path.",
+    "Browse Smart Steel CFLC DIY warehouse kits in practical repeatable sizes, including 6m, 10m, and 12m span options built for easy enquiries and a clearer lipped channel steel buying experience.",
   alternates: {
     canonical: CATEGORY_PATH,
   },
   openGraph: {
     title: "CFLC DIY Warehouse Kits | Smart Steel",
     description:
-      "Explore Smart Steel CFLC DIY warehouse kits in practical sizes for smaller-span value, easy product enquiries, and a clearer lipped channel steel route.",
+      "Explore Smart Steel CFLC DIY warehouse kits in practical sizes for smaller-span value, easy enquiries, and a clearer lipped channel steel buying experience.",
     url: `${SITE_URL}${CATEGORY_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -138,9 +138,9 @@ export const cflcCatalogueMetadata = {
 }
 
 export const cflcCatalogueIntroPoints = [
-  "CFLC suits buyers who want a practical lipped channel steel kit for smaller warehouses, covered work areas, and simpler product enquiries.",
+  "CFLC suits clients who want a practical lipped channel steel kit for smaller warehouses, covered work areas, and simpler product enquiries.",
   "The range includes standard warehouse kit sizes as well as smaller cover and carport options.",
-  "These prices give you a useful starting point before final delivery, finish, and project details are confirmed.",
+  "These prices give you a useful guide before final delivery, finish, and project details are confirmed.",
 ]
 
 export const cflcStarterKits = STARTER_KITS.map(buildStarterKit)

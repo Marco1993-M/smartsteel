@@ -30,7 +30,7 @@ export default function CflcWarehousesPage() {
     <WarehouseSystemLandingPage
       eyebrow="CFLC Warehouses"
       title="CFLC warehouses for practical storage, workshop, and cover projects"
-      intro="Smart Steel CFLC warehouses give you a clear starting point if a cold formed lipped channel steel structure suits your project better. Use this page to understand where the system fits, what sizes and uses it suits, and how to start the quote conversation with the right project details."
+      intro="Smart Steel CFLC warehouses are a practical option for storage, workshop, and cover projects that suit cold formed lipped channel steel. Use this page to understand the system, see where it fits best, and start your quote with the right project details."
       heroImage="/CFLC.webp"
       heroImageAlt="CFLC warehouse placeholder"
       systemName="CFLC warehouses"
@@ -45,18 +45,18 @@ export default function CflcWarehousesPage() {
         },
         {
           title: "Stronger project fit",
-          description: "It gives you a more specific warehouse starting point when the project needs a clear structural direction from the beginning.",
+          description: "It helps when you already know a lipped channel steel structure is likely to suit the building better.",
         },
       ]}
       bestFor={[
         "Warehouse, yard cover, workspace, and storage projects where a cold formed lipped channel structure suits the brief.",
-        "Clients who want a simpler structural starting point before Smart Steel prepares a more detailed quotation.",
+        "Clients who want a simpler structural option before Smart Steel prepares a more detailed quotation.",
         "Projects where comparing LSF and CFLC clearly up front helps avoid confusion later.",
       ]}
       strengths={[
         {
           title: "Clear structural direction",
-          description: "CFLC gives buyers a more focused cold formed steel option when the project needs a clear structural starting point.",
+          description: "CFLC gives you a focused cold formed steel option when a lipped channel structure suits the project.",
         },
         {
           title: "Useful when comparing systems",
@@ -64,11 +64,11 @@ export default function CflcWarehousesPage() {
         },
         {
           title: "Good first-step planning",
-          description: "This page is useful when the main requirement is to define the warehouse direction early and then let Smart Steel shape the final quotation properly.",
+          description: "This page is useful when you want to confirm the main structural details early before moving into the final quotation.",
         },
         {
           title: "Easy next steps",
-          description: "You can compare systems, try the builder, or use the estimator without losing track of which warehouse option you are exploring.",
+          description: "You can compare systems, try the builder, or use the estimator before you send your enquiry.",
         },
       ]}
       process={[
@@ -99,12 +99,12 @@ export default function CflcWarehousesPage() {
         {
           question: "Can I compare CFLC against LSF before I enquire?",
           answer:
-            "Yes. Use the comparison page if you want to understand the difference first, or use the builder and estimator to explore both paths more actively.",
+            "Yes. Use the comparison page if you want to understand the difference first, or use the builder and estimator to compare both options in more detail.",
         },
         {
           question: "Does this page replace a final engineered quote?",
           answer:
-            "No. It gives you a stronger client-facing starting point so Smart Steel can take the enquiry into the right quote conversation.",
+            "No. It helps you understand the system before Smart Steel prepares the final engineered quote.",
         },
       ]}
       ctaPrimary={{ href: "/warehouse-builder", label: "Build a CFLC warehouse" }}

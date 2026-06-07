@@ -3,14 +3,14 @@ import Link from "next/link"
 export const metadata = {
   title: "Steel Warehouses South Africa | LSF & CFLC Warehouse Systems",
   description:
-    "Explore steel warehouses in South Africa from Smart Steel. Compare LSF and CFLC warehouse systems, understand pricing, and choose between a custom warehouse route or practical lipped channel kit options.",
+    "Explore steel warehouses in South Africa from Smart Steel. Compare LSF and CFLC warehouse systems, understand pricing, and choose between a custom warehouse or practical lipped channel kit options.",
   alternates: {
     canonical: "/warehouses",
   },
   openGraph: {
     title: "Steel Warehouses South Africa | Smart Steel",
     description:
-      "Compare LSF and CFLC steel warehouse systems, understand what affects pricing, and start the right warehouse route for your project.",
+      "Compare LSF and CFLC steel warehouse systems, understand what affects pricing, and start the right warehouse option for your project.",
     url: "https://www.smartsteel.co.za/warehouses",
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -27,12 +27,12 @@ const quickAnswers = [
   {
     question: "Do you offer custom and standard options?",
     answer:
-      "Yes. Smart Steel offers custom LSF warehouse systems as well as more practical CFLC and lipped channel kit-style options.",
+      "Yes. Smart Steel offers custom LSF warehouse systems as well as CFLC and lipped channel kits in standard sizes.",
   },
   {
     question: "What is the difference between LSF and CFLC?",
     answer:
-      "LSF is the stronger route for broader custom warehouse planning, while CFLC gives you a more practical cold formed lipped channel path for clearer early product selection.",
+      "LSF is better suited to custom warehouse projects, while CFLC gives you a practical cold formed lipped channel option for standard sizes and simpler supply enquiries.",
   },
   {
     question: "How do I get a price?",
@@ -45,11 +45,11 @@ const systems = [
   {
     title: "LSF warehouse systems",
     description:
-      "Best for broader custom warehouse requirements, more project-specific layouts, and a more consultative planning route.",
+      "Best for custom warehouse projects, larger requirements, and layouts that need more flexibility.",
     bullets: [
-      "Broader custom project flexibility",
-      "Stronger route for builder and estimator workflows",
-      "Useful when layout, shell scope, and planning need more refinement",
+      "Custom sizes and layouts",
+      "Useful for broader warehouse requirements",
+      "A good fit when scope, cladding, and openings need more flexibility",
     ],
     href: "/warehouses/lsf",
     cta: "Explore LSF systems",
@@ -57,11 +57,11 @@ const systems = [
   {
     title: "CFLC and lipped channel warehouse options",
     description:
-      "Best for more practical, repeatable steel building options and a clearer product-style starting point for smaller warehouse and cover requirements.",
+      "Best for practical, repeatable steel building sizes for smaller warehouses, covers, and utility structures.",
     bullets: [
-      "Cold formed lipped channel steel direction",
-      "Easier product-style browsing and kit comparison",
-      "Useful when you want a practical standard-size route first",
+      "Cold formed lipped channel steel construction",
+      "Standard sizes that are easier to compare",
+      "A simpler option when you want supply-only kit pricing first",
     ],
     href: "/products/cflc-diy-warehouse-kits",
     cta: "Browse CFLC kits",
@@ -80,7 +80,7 @@ const pricingFactors = [
 const includedItems = [
   "main structural steel",
   "system-specific engineering scope where relevant",
-  "selected kit or warehouse components based on the route",
+  "selected kit or warehouse components based on the option you choose",
 ]
 
 const excludedItems = [
@@ -103,27 +103,27 @@ const finalQuestions = [
   {
     question: "Do you offer steel warehouses across South Africa?",
     answer:
-      "Yes. Smart Steel supports warehouse enquiries across South Africa, with online tools and region pages that help buyers start the process more clearly.",
+      "Yes. Smart Steel supports warehouse enquiries across South Africa, with online tools and region pages that make it easier to get started.",
   },
   {
     question: "Can I choose between a custom system and a standard kit?",
     answer:
-      "Yes. You can move into the custom LSF route or start with a more practical CFLC and lipped channel kit route depending on the project.",
+      "Yes. You can choose a custom LSF warehouse system or start with a CFLC and lipped channel kit in a standard size.",
   },
   {
     question: "Is CFLC suitable for DIY-friendly projects?",
     answer:
-      "Yes. The CFLC and lipped channel range is the more DIY-friendly, product-led route when standard sizes and supply-only options make sense.",
+      "Yes. The CFLC and lipped channel range works well for DIY-friendly projects when standard sizes and supply-only options make sense.",
   },
   {
     question: "Can Smart Steel help with pricing before final quoting?",
     answer:
-      "Yes. The estimator, pricing pages, and product pages give you a clearer budget starting point before the final quote is prepared.",
+      "Yes. The estimator, pricing pages, and product pages give you a clearer budget guide before the final quote is prepared.",
   },
   {
     question: "What if I am not sure which system fits my project?",
     answer:
-      "Start on this page, compare the two routes, and then move into the builder, estimator, or speak to Smart Steel for guidance.",
+      "Start on this page, compare the two systems, and then use the builder, estimator, or speak to Smart Steel for guidance.",
   },
 ]
 
@@ -141,10 +141,10 @@ export default function WarehousesHubPage() {
                 Steel warehouses in South Africa
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Smart Steel offers two main warehouse routes: LSF systems for custom project
-                flexibility, and CFLC or lipped channel options for more practical, repeatable
-                steel building sizes. Use this page to understand the difference, what affects
-                pricing, and how to start the right warehouse path.
+                Smart Steel offers custom LSF warehouse systems as well as CFLC and lipped
+                channel options in practical standard sizes. Use this page to compare the systems,
+                understand what affects pricing, and decide which warehouse option suits your
+                project best.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -164,10 +164,10 @@ export default function WarehousesHubPage() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Custom or product-led</p>
+                <p className="text-2xl font-semibold text-slate-950">Custom or standard sizes</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Start with a broader LSF system or move into a more practical CFLC and lipped
-                  channel kit route.
+                  Compare a custom LSF warehouse with a CFLC and lipped channel kit in a standard
+                  size.
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
@@ -185,7 +185,7 @@ export default function WarehousesHubPage() {
             Quick Answers
           </p>
           <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-            The main warehouse questions buyers usually ask first
+            The main warehouse questions clients usually ask first
           </h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {quickAnswers.map((item) => (
@@ -237,18 +237,18 @@ export default function WarehousesHubPage() {
             </h2>
             <div className="mt-5 space-y-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
-                Choose <span className="font-semibold text-slate-900">LSF</span> if you need more
-                custom design flexibility, a broader planning route, or a more project-specific
-                warehouse workflow.
+                Choose <span className="font-semibold text-slate-900">LSF</span> if you need a
+                custom warehouse, more flexibility in the layout, or a building that needs a more
+                tailored scope.
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
                 Choose <span className="font-semibold text-slate-900">CFLC / lipped channel</span>{" "}
-                if you want a more practical standard-size route, clearer kit-style selection, and
-                an easier product-led starting point.
+                if you want standard sizes, simpler pricing, and a practical steel kit that is
+                easier to compare.
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
                 If you are not sure yet, start with the estimator or talk to Smart Steel before
-                locking into the final route.
+                choosing the final system.
               </div>
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function WarehousesHubPage() {
               >
                 <p className="text-sm font-semibold text-slate-900">Build Your Warehouse</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Best if you already know the broad size, use, and layout direction.
+                  Best if you already know the broad size, use, and layout you need.
                 </p>
               </Link>
               <Link
@@ -285,7 +285,7 @@ export default function WarehousesHubPage() {
               >
                 <p className="text-sm font-semibold text-slate-900">Browse CFLC Kits</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Best if you want a simpler lipped channel product route with standard sizes.
+                  Best if you want a simpler lipped channel kit in a standard size.
                 </p>
               </Link>
             </div>
@@ -376,7 +376,7 @@ export default function WarehousesHubPage() {
             Common Questions
           </p>
           <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-            The final questions buyers usually ask before they enquire
+            The final questions clients usually ask before they enquire
           </h2>
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
             {finalQuestions.map((item) => (
@@ -396,9 +396,9 @@ export default function WarehousesHubPage() {
             Start your warehouse project with the right system
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">
-            Use the builder if you want a stronger custom project start, browse the CFLC and
-            lipped channel kit range if you want a more practical product route, or talk to Smart
-            Steel if you want help choosing.
+            Use the builder if you want to shape a custom warehouse, browse the CFLC and lipped
+            channel kit range if you want to compare standard sizes, or talk to Smart Steel if you
+            want help choosing.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link

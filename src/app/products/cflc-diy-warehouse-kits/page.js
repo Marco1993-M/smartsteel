@@ -14,7 +14,7 @@ export default function CflcDiyWarehouseKitsPage() {
     <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <SystemModeSwitch
-          helper="Choose between DIY-friendly CFLC and lipped channel kits and custom LSF warehouse systems."
+          helper="Compare CFLC and lipped channel kits with custom LSF warehouse systems."
           modes={[
             {
               label: "CFLC Kits",
@@ -36,7 +36,7 @@ export default function CflcDiyWarehouseKitsPage() {
                 CFLC DIY Warehouse Kits
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                CFLC DIY steel kits built for easier lipped channel product selection
+                CFLC DIY steel kits built for easier lipped channel kit comparison
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
                 Compare practical CFLC and lipped channel kit sizes for carports, cover kits, and
@@ -86,7 +86,7 @@ export default function CflcDiyWarehouseKitsPage() {
           <div className="rounded-[1.75rem] border border-slate-200 bg-white px-5 py-5 shadow-sm">
             <p className="text-sm font-semibold text-slate-900">DIY supply only</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              A straightforward route for buyers who want a practical supply-only kit.
+              A straightforward option if you want a practical supply-only kit.
             </p>
           </div>
           <div className="rounded-[1.75rem] border border-slate-200 bg-white px-5 py-5 shadow-sm">
@@ -135,7 +135,7 @@ export default function CflcDiyWarehouseKitsPage() {
             </h2>
             <p className="mt-4 text-sm leading-6 text-slate-600">
               If you need a larger custom warehouse, want to compare LSF and CFLC more fully, or
-              want a more visual starting point, the warehouse section is the better place to
+              want a more visual starting point, the warehouse section is the best place to
               continue.
             </p>
             <div className="mt-6 flex flex-col gap-3">
@@ -163,11 +163,11 @@ export default function CflcDiyWarehouseKitsPage() {
               Need Something More Custom?
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Switch to the LSF route if you need a broader warehouse project path
+              Explore LSF if you need a more custom warehouse
             </h2>
             <p className="mt-4 text-sm leading-6 text-slate-600">
               If the standard CFLC sizes do not fit, or you want to compare cladding, openings,
-              and scope in a more custom workflow, the LSF warehouse route is the better place to
+              and scope in a more custom quote, the LSF warehouse page is the better place to
               continue.
             </p>
             <div className="mt-6 flex flex-col gap-3">
@@ -190,7 +190,7 @@ export default function CflcDiyWarehouseKitsPage() {
               Buying Made Easier
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              A clearer product page for a more practical steel kit
+              A clearer page for choosing the right steel kit
             </h2>
             <p className="mt-4 text-sm leading-6 text-slate-600">
               This page is built to help you compare sizes, understand what is included, and choose
@@ -204,7 +204,7 @@ export default function CflcDiyWarehouseKitsPage() {
                 Product details that update as you choose a size
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
-                A simpler request flow for direct buyers and trade enquiries
+                A simpler enquiry process for direct buyers and trade enquiries
               </div>
             </div>
           </div>
