@@ -103,7 +103,7 @@ export default function WarehouseSystemLandingPage({
               Start Your Project
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Choose the route that suits how you want to begin
+              Choose how you want to get started
             </h2>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {entryPaths.map((item) => (
@@ -229,7 +229,7 @@ export default function WarehouseSystemLandingPage({
                 Ready To Start?
               </p>
               <h2 className="mt-3 text-3xl font-semibold text-slate-950">
-                Take the next step with the route that suits your project best
+                Take the next step with the option that suits your project best
               </h2>
             </div>
             {hasPrimaryCta || hasSecondaryCta ? (
