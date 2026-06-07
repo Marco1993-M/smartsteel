@@ -127,6 +127,34 @@ const finalQuestions = [
   },
 ]
 
+const clusterLinks = [
+  {
+    title: "LSF warehouse systems",
+    description: "See the custom warehouse page if you need more flexibility in size, cladding, and layout.",
+    href: "/warehouses/lsf",
+  },
+  {
+    title: "CFLC warehouse systems",
+    description: "Understand how CFLC and lipped channel steel suits practical warehouse and cover projects.",
+    href: "/warehouses/cflc",
+  },
+  {
+    title: "CFLC DIY kits",
+    description: "Browse standard-size CFLC kits if you want a simpler supply-only starting point.",
+    href: "/products/cflc-diy-warehouse-kits",
+  },
+  {
+    title: "Warehouse pricing",
+    description: "Use the cost guides to understand how size, span, and scope change the price.",
+    href: "/warehouse-cost",
+  },
+  {
+    title: "Warehouse estimator",
+    description: "Run a quick budget check before you move into a full warehouse quote.",
+    href: "/tools/estimator",
+  },
+]
+
 export default function WarehousesHubPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#fff7f5,_#ffffff_24%,_#edf3f7)] px-4 py-10 sm:px-6 lg:px-8">
@@ -384,6 +412,27 @@ export default function WarehousesHubPage() {
                 <p className="text-sm font-semibold text-slate-900">{item.question}</p>
                 <p className="mt-3 text-sm leading-6 text-slate-600">{item.answer}</p>
               </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+            More Help
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+            Explore the pages that support your warehouse decision
+          </h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {clusterLinks.map((item) => (
+              <Link
+                key={item.title}
+                href={item.href}
+                className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
+              >
+                <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
+              </Link>
             ))}
           </div>
         </section>

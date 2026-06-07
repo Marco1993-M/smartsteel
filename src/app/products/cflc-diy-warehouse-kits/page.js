@@ -9,6 +9,57 @@ import SystemModeSwitch from "../../../components/warehouses/SystemModeSwitch"
 
 export const metadata = cflcCatalogueMetadata
 
+const productQuestions = [
+  {
+    question: "What is included in a CFLC kit?",
+    answer:
+      "The standard kit includes the main frame, bracing, purlins or hats, fasteners, and drawings or an installation guide.",
+  },
+  {
+    question: "Is sheeting included?",
+    answer:
+      "No. Sheeting and flashings are not included in the standard kit price unless they are specifically added.",
+  },
+  {
+    question: "Is CFLC suitable for DIY projects?",
+    answer:
+      "Yes. CFLC and lipped channel kits work well for DIY-friendly projects when you want a supply-only steel kit in a standard size.",
+  },
+  {
+    question: "What sizes are available?",
+    answer:
+      "The current range includes smaller carport sizes as well as 6m, 10m, and 12m span warehouse kit options in practical repeatable lengths.",
+  },
+  {
+    question: "What happens after I request a kit?",
+    answer:
+      "Smart Steel reviews the size, finish, and project details with you, confirms the scope, and then prepares the final quote.",
+  },
+]
+
+const supportLinks = [
+  {
+    title: "Compare all warehouse systems",
+    description: "Go back to the main warehouse page if you want to compare LSF and CFLC more clearly.",
+    href: "/warehouses",
+  },
+  {
+    title: "Explore LSF systems",
+    description: "See the custom warehouse option if a standard-size kit does not fit the project.",
+    href: "/warehouses/lsf",
+  },
+  {
+    title: "Understand warehouse pricing",
+    description: "Use the cost guide if you want more context on what changes warehouse pricing.",
+    href: "/warehouse-cost",
+  },
+  {
+    title: "Use the estimator",
+    description: "Run a quick budget check if you want another pricing reference before enquiring.",
+    href: "/tools/estimator",
+  },
+]
+
 export default function CflcDiyWarehouseKitsPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
@@ -207,6 +258,44 @@ export default function CflcDiyWarehouseKitsPage() {
                 A simpler enquiry process for direct buyers and trade enquiries
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+            Common Questions
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+            The main questions clients ask before they request a kit
+          </h2>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {productQuestions.map((item) => (
+              <div key={item.question} className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+                <p className="text-sm font-semibold text-slate-900">{item.question}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+            More Help
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+            Explore the pages that help you compare your options
+          </h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {supportLinks.map((item) => (
+              <Link
+                key={item.title}
+                href={item.href}
+                className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
+              >
+                <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
+              </Link>
+            ))}
           </div>
         </section>
       </div>
