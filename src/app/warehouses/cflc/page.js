@@ -3,12 +3,12 @@ import WarehouseSystemLandingPage from "../../../components/warehouses/Warehouse
 export const metadata = {
   title: "CFLC Warehouses South Africa | Steel Warehouse Systems",
   description:
-    "Explore CFLC warehouses in South Africa for storage, workshop, and commercial projects. Compare the system, use the builder, or request a Smart Steel quote.",
+    "Explore CFLC warehouses in South Africa for storage, workshop, and commercial projects. Compare cold formed lipped channel steel options, use the builder, or request a Smart Steel quote.",
   keywords: [
     "CFLC warehouses South Africa",
-    "cold formed lip channel warehouse",
+    "cold formed lipped channel warehouse",
     "CFLC warehouse system",
-    "lip channel warehouse",
+    "lipped channel warehouse",
     "steel warehouse pricing South Africa",
   ],
   alternates: {
@@ -30,14 +30,14 @@ export default function CflcWarehousesPage() {
     <WarehouseSystemLandingPage
       eyebrow="CFLC Warehouses"
       title="CFLC warehouses for practical storage, workshop, and cover projects"
-      intro="Smart Steel CFLC warehouses give you a clear starting point if a cold formed lip channel steel structure suits your project better. Use this page to understand where the system fits, what sizes and uses it suits, and how to start the quote conversation with the right project details."
+      intro="Smart Steel CFLC warehouses give you a clear starting point if a cold formed lipped channel steel structure suits your project better. Use this page to understand where the system fits, what sizes and uses it suits, and how to start the quote conversation with the right project details."
       heroImage="/CFLC.webp"
       heroImageAlt="CFLC warehouse placeholder"
       systemName="CFLC warehouses"
       summary={[
         {
           title: "Clear warehouse option",
-          description: "This page is useful if you already know you want a cold formed lip channel warehouse or want to compare it properly against LSF.",
+          description: "This page is useful if you already know you want a cold formed lipped channel warehouse or want to compare it properly against LSF.",
         },
         {
           title: "Practical first-step budgeting",
@@ -49,7 +49,7 @@ export default function CflcWarehousesPage() {
         },
       ]}
       bestFor={[
-        "Warehouse, yard cover, workspace, and storage projects where a cold formed lip channel structure suits the brief.",
+        "Warehouse, yard cover, workspace, and storage projects where a cold formed lipped channel structure suits the brief.",
         "Clients who want a simpler structural starting point before Smart Steel prepares a more detailed quotation.",
         "Projects where comparing LSF and CFLC clearly up front helps avoid confusion later.",
       ]}
@@ -89,7 +89,7 @@ export default function CflcWarehousesPage() {
         {
           question: "What does CFLC mean in a warehouse project?",
           answer:
-            "CFLC refers to a cold formed lip channel steel warehouse system. It is a practical steel option for warehouse, storage, and workspace projects.",
+            "CFLC refers to a cold formed lipped channel steel warehouse system. It is a practical steel option for warehouse, storage, and workspace projects.",
         },
         {
           question: "Why does Smart Steel have a separate CFLC warehouse page now?",

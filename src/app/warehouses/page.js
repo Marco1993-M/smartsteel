@@ -1,16 +1,16 @@
 import Link from "next/link"
 
 export const metadata = {
-  title: "Steel Warehouses South Africa | Compare LSF & CFLC",
+  title: "Steel Warehouses South Africa | LSF & CFLC Warehouse Systems",
   description:
-    "Compare steel warehouses in South Africa from Smart Steel. Explore LSF and CFLC warehouse systems, use the builder, check pricing, and start the right quote path.",
+    "Explore steel warehouses in South Africa from Smart Steel. Compare LSF and CFLC warehouse systems, understand pricing, and choose between a custom warehouse route or practical lipped channel kit options.",
   alternates: {
     canonical: "/warehouses",
   },
   openGraph: {
-    title: "Steel Warehouses South Africa | Compare LSF & CFLC",
+    title: "Steel Warehouses South Africa | Smart Steel",
     description:
-      "Compare Smart Steel LSF and CFLC warehouse systems, use the builder, and start the right warehouse enquiry.",
+      "Compare LSF and CFLC steel warehouse systems, understand what affects pricing, and start the right warehouse route for your project.",
     url: "https://www.smartsteel.co.za/warehouses",
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -18,58 +18,113 @@ export const metadata = {
   },
 }
 
-const warehouseSystems = [
+const quickAnswers = [
   {
-    title: "LSF Warehouses",
+    question: "What is a steel warehouse?",
+    answer:
+      "A steel warehouse is a structural building system used for storage, workshops, operational space, agricultural use, and commercial utility buildings.",
+  },
+  {
+    question: "Do you offer custom and standard options?",
+    answer:
+      "Yes. Smart Steel offers custom LSF warehouse systems as well as more practical CFLC and lipped channel kit-style options.",
+  },
+  {
+    question: "What is the difference between LSF and CFLC?",
+    answer:
+      "LSF is the stronger route for broader custom warehouse planning, while CFLC gives you a more practical cold formed lipped channel path for clearer early product selection.",
+  },
+  {
+    question: "How do I get a price?",
+    answer:
+      "You can start with the warehouse builder, use the estimator for a budget check, or browse the pricing and product pages before sending an enquiry.",
+  },
+]
+
+const systems = [
+  {
+    title: "LSF warehouse systems",
     description:
-      "A practical modular starting point for storage, workshop, fleet, and day-to-day operational space.",
+      "Best for broader custom warehouse requirements, more project-specific layouts, and a more consultative planning route.",
+    bullets: [
+      "Broader custom project flexibility",
+      "Stronger route for builder and estimator workflows",
+      "Useful when layout, shell scope, and planning need more refinement",
+    ],
     href: "/warehouses/lsf",
-    cta: "Explore LSF warehouses",
+    cta: "Explore LSF systems",
   },
   {
-    title: "CFLC Warehouses",
+    title: "CFLC and lipped channel warehouse options",
     description:
-      "A clear cold formed lip channel steel option for buyers who want a more focused structural direction from the start.",
-    href: "/warehouses/cflc",
-    cta: "Explore CFLC warehouses",
-  },
-  {
-    title: "LSF vs CFLC",
-    description:
-      "Compare the two warehouse systems side by side if you want a clearer sense of which option fits your project best.",
-    href: "/warehouses/lsf-vs-cflc",
-    cta: "Compare the systems",
+      "Best for more practical, repeatable steel building options and a clearer product-style starting point for smaller warehouse and cover requirements.",
+    bullets: [
+      "Cold formed lipped channel steel direction",
+      "Easier product-style browsing and kit comparison",
+      "Useful when you want a practical standard-size route first",
+    ],
+    href: "/products/cflc-diy-warehouse-kits",
+    cta: "Browse CFLC kits",
   },
 ]
 
-const warehouseTools = [
-  {
-    title: "Warehouse Builder",
-    description:
-      "Shape a live warehouse design, see the structure take form, and send a stronger enquiry.",
-    href: "/warehouse-builder",
-    cta: "Open the builder",
-  },
-  {
-    title: "Warehouse Estimator",
-    description:
-      "Run a faster budget check if you want an indicative cost before moving into a full conversation.",
-    href: "/tools/estimator",
-    cta: "Use the estimator",
-  },
-  {
-    title: "Warehouse Cost Guides",
-    description:
-      "Browse size-based and regional cost guidance to understand what shapes warehouse pricing.",
-    href: "/warehouse-cost",
-    cta: "View cost guides",
-  },
+const pricingFactors = [
+  "span and overall building width",
+  "building length and number of bays",
+  "wall height and ridge height",
+  "LSF or CFLC / lipped channel structural system",
+  "cladding, openings, and finish choices",
+  "delivery, installation, and site-specific requirements",
 ]
 
-const whyBuyersStartHere = [
-  "Compare warehouse systems without guessing which path to follow.",
-  "Move from a broad project idea into a clearer builder, estimator, or direct enquiry path.",
-  "Keep sizing, scope, budgeting, and next steps in one place instead of jumping between disconnected pages.",
+const includedItems = [
+  "main structural steel",
+  "system-specific engineering scope where relevant",
+  "selected kit or warehouse components based on the route",
+]
+
+const excludedItems = [
+  "delivery unless confirmed",
+  "installation unless confirmed",
+  "concrete and foundations",
+  "doors, windows, and site-specific extras unless included in scope",
+]
+
+const useCases = [
+  "storage warehouses",
+  "workshops",
+  "agricultural buildings",
+  "commercial utility buildings",
+  "light industrial use",
+  "cover and yard structures",
+]
+
+const finalQuestions = [
+  {
+    question: "Do you offer steel warehouses across South Africa?",
+    answer:
+      "Yes. Smart Steel supports warehouse enquiries across South Africa, with online tools and region pages that help buyers start the process more clearly.",
+  },
+  {
+    question: "Can I choose between a custom system and a standard kit?",
+    answer:
+      "Yes. You can move into the custom LSF route or start with a more practical CFLC and lipped channel kit route depending on the project.",
+  },
+  {
+    question: "Is CFLC suitable for DIY-friendly projects?",
+    answer:
+      "Yes. The CFLC and lipped channel range is the more DIY-friendly, product-led route when standard sizes and supply-only options make sense.",
+  },
+  {
+    question: "Can Smart Steel help with pricing before final quoting?",
+    answer:
+      "Yes. The estimator, pricing pages, and product pages give you a clearer budget starting point before the final quote is prepared.",
+  },
+  {
+    question: "What if I am not sure which system fits my project?",
+    answer:
+      "Start on this page, compare the two routes, and then move into the builder, estimator, or speak to Smart Steel for guidance.",
+  },
 ]
 
 export default function WarehousesHubPage() {
@@ -83,12 +138,13 @@ export default function WarehousesHubPage() {
                 Warehouses
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Steel warehouses built for South African projects
+                Steel warehouses in South Africa
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Start here if you want to compare LSF and CFLC steel warehouses, check pricing guidance,
-                use the warehouse builder, or move into the right quote path for your project. This is
-                the main Smart Steel warehouse hub for custom warehouse planning in South Africa.
+                Smart Steel offers two main warehouse routes: LSF systems for custom project
+                flexibility, and CFLC or lipped channel options for more practical, repeatable
+                steel building sizes. Use this page to understand the difference, what affects
+                pricing, and how to start the right warehouse path.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -98,172 +154,266 @@ export default function WarehousesHubPage() {
                   Build your warehouse
                 </Link>
                 <Link
-                  href="/tools/estimator"
+                  href="/products/cflc-diy-warehouse-kits"
                   className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
                 >
-                  Use the estimator
+                  Browse CFLC kits
                 </Link>
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">2</p>
+                <p className="text-2xl font-semibold text-slate-950">Custom or product-led</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  warehouse systems presented clearly for easier comparison
+                  Start with a broader LSF system or move into a more practical CFLC and lipped
+                  channel kit route.
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Builder + estimator</p>
+                <p className="text-2xl font-semibold text-slate-950">Builder, estimator, pricing</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  stronger ways to move from a rough idea into a practical enquiry
-                </p>
-              </div>
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">South Africa</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  cost guides and regional pages that support the warehouse journey
+                  Use the right tool for the stage your warehouse project is currently in.
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+            Quick Answers
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+            The main warehouse questions buyers usually ask first
+          </h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {quickAnswers.map((item) => (
+              <div key={item.question} className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+                <p className="text-sm font-semibold text-slate-950">{item.question}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+            LSF vs CFLC
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+            Which warehouse system fits your project?
+          </h2>
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            {systems.map((item) => (
+              <div key={item.title} className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
+                <p className="text-xl font-semibold text-slate-950">{item.title}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
+                <div className="mt-4 space-y-2">
+                  {item.bullets.map((bullet) => (
+                    <div key={bullet} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+                      {bullet}
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  href={item.href}
+                  className="mt-5 inline-flex text-sm font-semibold text-[#da1a33] transition hover:text-[#bf172d]"
+                >
+                  {item.cta}
+                </Link>
+              </div>
+            ))}
           </div>
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Start With The Right System
+              How To Choose
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Choose the warehouse option that matches your project
+              How do I choose between LSF and CFLC?
             </h2>
-            <div className="mt-5 grid gap-4">
-              {warehouseSystems.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
-                >
-                  <p className="text-lg font-semibold text-slate-950">{item.title}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
-                  <p className="mt-4 text-sm font-semibold text-[#da1a33]">{item.cta}</p>
-                </Link>
-              ))}
+            <div className="mt-5 space-y-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
+                Choose <span className="font-semibold text-slate-900">LSF</span> if you need more
+                custom design flexibility, a broader planning route, or a more project-specific
+                warehouse workflow.
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
+                Choose <span className="font-semibold text-slate-900">CFLC / lipped channel</span>{" "}
+                if you want a more practical standard-size route, clearer kit-style selection, and
+                an easier product-led starting point.
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
+                If you are not sure yet, start with the estimator or talk to Smart Steel before
+                locking into the final route.
+              </div>
             </div>
           </div>
 
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Why Start Here
+              Start Here
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              A clearer way to move from idea to enquiry
+              How do I get started?
             </h2>
-            <div className="mt-5 space-y-3">
-              {whyBuyersStartHere.map((item) => (
-                <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                  <p className="text-sm leading-6 text-slate-700">{item}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <p className="text-sm font-semibold text-slate-900">Looking for a DIY-friendly kit instead?</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                If you want an easier product-led starting point with CFLC warehouse kits, move
-                across to the products section instead of staying in the broader custom project
-                flow.
-              </p>
+            <div className="mt-5 grid gap-3">
               <Link
-                href="/products"
-                className="mt-4 inline-flex text-sm font-semibold text-[#da1a33] transition hover:text-[#bf172d]"
+                href="/warehouse-builder"
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-slate-300 hover:bg-white"
               >
-                Explore products & DIY systems
+                <p className="text-sm font-semibold text-slate-900">Build Your Warehouse</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Best if you already know the broad size, use, and layout direction.
+                </p>
+              </Link>
+              <Link
+                href="/tools/estimator"
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-slate-300 hover:bg-white"
+              >
+                <p className="text-sm font-semibold text-slate-900">Use the Estimator</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Best if you want a quick budget check before moving into a full quote.
+                </p>
+              </Link>
+              <Link
+                href="/products/cflc-diy-warehouse-kits"
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-slate-300 hover:bg-white"
+              >
+                <p className="text-sm font-semibold text-slate-900">Browse CFLC Kits</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Best if you want a simpler lipped channel product route with standard sizes.
+                </p>
               </Link>
             </div>
           </div>
         </section>
 
-        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-slate-950 px-6 py-8 text-white shadow-sm sm:px-8">
-          <div className="max-w-4xl">
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[2rem] border border-slate-200 bg-slate-950 px-6 py-8 text-white shadow-sm sm:px-8">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
-              Tools & Planning
+              Pricing
             </p>
             <h2 className="mt-3 text-3xl font-semibold">
-              Use the right tool for the stage your project is in
+              What affects the cost of a steel warehouse?
             </h2>
-          </div>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {warehouseTools.map((item) => (
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {pricingFactors.map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-200">
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                key={item.title}
-                href={item.href}
-                className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 transition hover:border-white/20 hover:bg-white/10"
+                href="/warehouse-cost"
+                className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
               >
-                <p className="text-lg font-semibold text-white">{item.title}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-300">{item.description}</p>
-                <p className="mt-4 text-sm font-semibold text-white">{item.cta}</p>
+                See warehouse pricing
               </Link>
+              <Link
+                href="/tools/estimator"
+                className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Use the estimator
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+              Included vs Excluded
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+              What is usually included in a warehouse quote?
+            </h2>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <p className="text-sm font-semibold text-slate-900">Usually included</p>
+                <div className="mt-3 space-y-2">
+                  {includedItems.map((item) => (
+                    <div key={item} className="text-sm leading-6 text-slate-600">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <p className="text-sm font-semibold text-slate-900">Not always included</p>
+                <div className="mt-3 space-y-2">
+                  {excludedItems.map((item) => (
+                    <div key={item} className="text-sm leading-6 text-slate-600">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+            Use Cases
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+            What can these warehouse systems be used for?
+          </h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {useCases.map((item) => (
+              <div key={item} className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
+                <p className="text-sm font-semibold capitalize text-slate-900">{item}</p>
+              </div>
             ))}
           </div>
         </section>
 
-        <section className="mt-8 grid gap-6 xl:grid-cols-[1fr_320px]">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Warehouse Support Pages
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Keep building confidence before you enquire
-            </h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <Link
-                href="/warehouse-cost"
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
-              >
-                <p className="text-sm font-semibold text-slate-900">Warehouse cost pages</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Compare standard warehouse sizes and pricing guidance across the range.
-                </p>
-              </Link>
-              <Link
-                href="/warehouse-regions"
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
-              >
-                <p className="text-sm font-semibold text-slate-900">Warehouse region pages</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Explore regional warehouse pages built around local delivery and commercial intent.
-                </p>
-              </Link>
-            </div>
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+            Common Questions
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+            The final questions buyers usually ask before they enquire
+          </h2>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {finalQuestions.map((item) => (
+              <div key={item.question} className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+                <p className="text-sm font-semibold text-slate-900">{item.question}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.answer}</p>
+              </div>
+            ))}
           </div>
+        </section>
 
-          <aside className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Next Step
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Ready to shape your project?
-            </h2>
-            <p className="mt-4 text-sm leading-6 text-slate-600">
-              If you already know the broad size and use case, the builder is the strongest place
-              to start. If you only want a quick budget range first, the estimator is the faster
-              path.
-            </p>
-            <div className="mt-6 flex flex-col gap-3">
-              <Link
-                href="/warehouse-builder"
-                className="rounded-full bg-[#da1a33] px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#bf172d]"
-              >
-                Go to the warehouse builder
-              </Link>
-              <Link
-                href="/tools/estimator"
-                className="rounded-full border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-              >
-                Go to the estimator
-              </Link>
-            </div>
-          </aside>
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+            Final Step
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold text-slate-950">
+            Start your warehouse project with the right system
+          </h2>
+          <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">
+            Use the builder if you want a stronger custom project start, browse the CFLC and
+            lipped channel kit range if you want a more practical product route, or talk to Smart
+            Steel if you want help choosing.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/warehouse-builder"
+              className="rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
+            >
+              Build your warehouse
+            </Link>
+            <Link
+              href="/contact"
+              className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
+            >
+              Talk to Smart Steel
+            </Link>
+          </div>
         </section>
       </div>
     </main>
