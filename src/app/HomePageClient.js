@@ -169,7 +169,7 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      <section className="bg-white px-6 pb-6 pt-0">
+      <section className="bg-white px-6 pb-6 pt-10 md:pt-14">
         <div className="mx-auto max-w-6xl">
           <div className="rounded-[2rem] border border-gray-200 bg-gray-50 p-8">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">
