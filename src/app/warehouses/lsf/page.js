@@ -3,7 +3,7 @@ import WarehouseSystemLandingPage from "../../../components/warehouses/Warehouse
 export const metadata = {
   title: "LSF Warehouses South Africa | Steel Warehouse Systems",
   description:
-    "Explore LSF warehouses in South Africa for storage, workshop, fleet, and commercial projects. Understand the system, use the builder, or request a Smart Steel quote.",
+    "Explore LSF warehouses in South Africa for storage, workshops, poultry houses, fleet, and commercial projects. Understand the system, use the builder, or request a Smart Steel quote.",
   keywords: [
     "LSF warehouses South Africa",
     "lightweight steel warehouse",
@@ -83,7 +83,7 @@ export default function LsfWarehousesPage() {
         },
       ]}
       bestFor={[
-        "Warehouses, storage buildings, workshops, and light industrial buildings that need a custom steel shell.",
+        "Warehouses, storage buildings, workshops, poultry houses, and light industrial buildings that need a custom steel shell.",
         "Projects where you want to compare enclosure level, cladding, and access openings before moving into a detailed quote.",
         "Clients who want to start with the builder, estimator, or direct guidance instead of a standard-size kit.",
       ]}
@@ -128,7 +128,12 @@ export default function LsfWarehousesPage() {
         {
           question: "Is LSF only for small buildings?",
           answer:
-            "No. It works well for a range of warehouse, workshop, and storage projects, especially where a structured modular approach helps the design and budgeting process.",
+            "No. It works well for a range of warehouse, workshop, poultry house, and storage projects, especially where a structured modular approach helps the design and budgeting process.",
+        },
+        {
+          question: "Can LSF work for chicken houses or poultry buildings?",
+          answer:
+            "Yes. LSF can work well for poultry houses and chicken house buildings when the project needs a custom size, enclosure level, and practical long-term steel structure.",
         },
         {
           question: "Can I price an LSF warehouse online first?",

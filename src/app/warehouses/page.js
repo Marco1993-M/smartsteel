@@ -22,7 +22,7 @@ const quickAnswers = [
   {
     question: "What is a steel warehouse?",
     answer:
-      "A steel warehouse is a structural building system used for storage, workshops, operational space, agricultural use, and commercial utility buildings.",
+      "A steel warehouse is a structural building system used for storage, workshops, poultry houses, operational space, agricultural use, and commercial utility buildings.",
   },
   {
     question: "Do you offer custom and standard options?",
@@ -94,6 +94,7 @@ const useCases = [
   "storage warehouses",
   "workshops",
   "agricultural buildings",
+  "poultry houses and chicken houses",
   "commercial utility buildings",
   "light industrial use",
   "cover and yard structures",

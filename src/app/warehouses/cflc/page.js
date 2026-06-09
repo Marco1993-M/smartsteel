@@ -3,7 +3,7 @@ import WarehouseSystemLandingPage from "../../../components/warehouses/Warehouse
 export const metadata = {
   title: "CFLC Warehouses South Africa | Steel Warehouse Systems",
   description:
-    "Explore CFLC warehouses in South Africa for storage, workshop, and commercial projects. Understand cold formed lipped channel steel, compare your options, and request a Smart Steel quote.",
+    "Explore CFLC warehouses in South Africa for storage, workshops, poultry buildings, and commercial projects. Understand cold formed lipped channel steel, compare your options, and request a Smart Steel quote.",
   keywords: [
     "CFLC warehouses South Africa",
     "cold formed lipped channel warehouse",
@@ -49,7 +49,7 @@ export default function CflcWarehousesPage() {
         },
       ]}
       bestFor={[
-        "Warehouse, yard cover, workspace, and storage projects where a cold formed lipped channel structure suits the brief.",
+        "Warehouse, yard cover, workspace, storage, and poultry building projects where a cold formed lipped channel structure suits the brief.",
         "Clients who want a simpler structural option before Smart Steel prepares a more detailed quotation.",
         "Projects where you want to compare CFLC against LSF before choosing the right warehouse system.",
       ]}
@@ -105,6 +105,11 @@ export default function CflcWarehousesPage() {
           question: "What if I want a standard-size CFLC kit instead?",
           answer:
             "If you already know you want a standard-size CFLC kit, the CFLC DIY kits page is the best place to compare sizes, see what is included, and request the kit.",
+        },
+        {
+          question: "Can CFLC work for poultry or chicken house projects?",
+          answer:
+            "Yes. CFLC can suit poultry and chicken house projects when a practical lipped channel steel structure fits the required size, enclosure, and budget.",
         },
         {
           question: "Does this page replace a final engineered quote?",

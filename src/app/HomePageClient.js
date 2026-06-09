@@ -60,7 +60,7 @@ const supportCategories = [
 const trustPoints = [
   'A clear online path between DIY products and custom systems',
   'Engineering-led steel solutions backed by practical delivery support',
-  'Designed for South African commercial, residential, and agricultural conditions',
+  'Designed for South African commercial, residential, agricultural, and poultry building conditions',
 ];
 
 const homepageQuestions = [
