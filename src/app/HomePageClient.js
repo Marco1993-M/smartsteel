@@ -63,6 +63,33 @@ const trustPoints = [
   'Designed for South African commercial, residential, and agricultural conditions',
 ];
 
+const homepageQuestions = [
+  {
+    question: 'Do you offer custom warehouses or standard kits?',
+    answer:
+      'Yes. Smart Steel offers custom LSF warehouse systems as well as CFLC and lipped channel kits in standard sizes.',
+  },
+  {
+    question: 'What is the difference between LSF and CFLC?',
+    answer:
+      'LSF is better suited to custom warehouse projects, while CFLC works well when you want a practical steel kit in a standard size.',
+  },
+  {
+    question: 'How do I get a price?',
+    answer:
+      'You can use the estimator for a quick budget guide, browse the CFLC kits for starting prices, or use the warehouse builder before you enquire.',
+  },
+];
+
+const homepageSupportLinks = [
+  { title: 'Warehouse page', href: '/warehouses' },
+  { title: 'LSF systems', href: '/warehouses/lsf' },
+  { title: 'CFLC warehouses', href: '/warehouses/cflc' },
+  { title: 'CFLC kits', href: '/products/cflc-diy-warehouse-kits' },
+  { title: 'Warehouse pricing', href: '/warehouse-cost' },
+  { title: 'Estimator', href: '/tools/estimator' },
+];
+
 const featuredProjects = [
   {
     image: '/projects/atkv.jpg',
@@ -96,11 +123,11 @@ export default function HomePageClient() {
               Smart Steel building kits and systems for South African projects
             </div>
             <h1 className="mt-6 max-w-4xl text-4xl font-bold leading-tight text-black md:text-6xl">
-              Steel kits and warehouse systems made easier to choose
+              Steel warehouses, CFLC kits, and LSF systems for South African projects
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-black/80 md:text-xl">
-              Smart Steel helps clients move faster by making the choice simple: browse CFLC DIY kits when you want a
-              practical product, or explore LSF systems when you need a broader custom warehouse solution.
+              Smart Steel makes it easier to compare steel warehouses, browse CFLC DIY kits, and
+              explore custom LSF systems with clearer pricing, tools, and enquiry options.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
@@ -123,7 +150,7 @@ export default function HomePageClient() {
               </Link>
             </div>
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-black/75">
-              <span>DIY products and custom project routes</span>
+              <span>Standard kits and custom warehouse options</span>
               <span className="hidden text-black/30 md:inline">•</span>
               <span>Online tools to help you price and plan</span>
               <span className="hidden text-black/30 md:inline">•</span>
@@ -138,6 +165,25 @@ export default function HomePageClient() {
                 <p className="mt-2 text-sm leading-7 text-gray-700">{stat.label}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-6 pb-6 pt-0">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-[2rem] border border-gray-200 bg-gray-50 p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">
+              Quick Answers
+            </p>
+            <h2 className="mt-4 text-3xl font-bold md:text-4xl">A few useful answers before you start</h2>
+            <div className="mt-8 grid gap-4 lg:grid-cols-3">
+              {homepageQuestions.map((item) => (
+                <div key={item.question} className="rounded-3xl border border-gray-200 bg-white p-6">
+                  <h3 className="text-lg font-bold text-black">{item.question}</h3>
+                  <p className="mt-3 text-sm leading-7 text-gray-700">{item.answer}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -180,6 +226,26 @@ export default function HomePageClient() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-6 pb-20 pt-0">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-[2rem] border border-gray-200 bg-white p-8 shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">Explore More</p>
+            <h2 className="mt-4 text-3xl font-bold md:text-4xl">Start with the page that matches your project</h2>
+            <div className="mt-8 flex flex-wrap gap-3">
+              {homepageSupportLinks.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="rounded-full border border-black bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-black hover:text-white"
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>

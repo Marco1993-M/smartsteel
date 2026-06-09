@@ -1,16 +1,16 @@
 import HomePageClient from './HomePageClient';
 
 export const metadata = {
-  title: 'Smart Steel | Warehouses, Solar Carports & LSF Trusses',
+  title: 'Smart Steel | Steel Warehouses, CFLC Kits & LSF Systems',
   description:
-    'Smart Steel designs and supplies lightweight steel warehouses, solar carports, and LSF roof trusses across South Africa.',
+    'Smart Steel helps South African clients compare steel warehouses, CFLC DIY kits, and custom LSF systems with clearer pricing, tools, and enquiry paths.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Smart Steel | Warehouses, Solar Carports & LSF Trusses',
+    title: 'Smart Steel | Steel Warehouses, CFLC Kits & LSF Systems',
     description:
-      'Explore Smart Steel lightweight steel warehouses, solar-ready carports, and LSF truss systems built for South African projects.',
+      'Explore Smart Steel steel warehouses, CFLC DIY kits, and custom LSF systems built for South African projects.',
     url: 'https://www.smartsteel.co.za/',
     siteName: 'Smart Steel',
     locale: 'en_ZA',
@@ -20,15 +20,15 @@ export const metadata = {
         url: '/og-warehouse.jpg',
         width: 1200,
         height: 630,
-        alt: 'Smart Steel warehouses, solar carports and trusses',
+        alt: 'Smart Steel steel warehouses, CFLC kits and LSF systems',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Smart Steel | Warehouses, Solar Carports & LSF Trusses',
+    title: 'Smart Steel | Steel Warehouses, CFLC Kits & LSF Systems',
     description:
-      'Lightweight steel structures for South African warehouses, solar carports, and roof trusses.',
+      'Steel warehouses, CFLC DIY kits, and custom LSF systems for South African projects.',
     images: ['/og-warehouse.jpg'],
   },
 };
