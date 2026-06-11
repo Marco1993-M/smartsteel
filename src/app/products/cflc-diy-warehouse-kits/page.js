@@ -6,7 +6,6 @@ import {
   cflcCatalogueMetadata,
 } from "./cflcCatalogueData"
 import CflcProductSelectorClient from "./CflcProductSelectorClient"
-import SystemModeSwitch from "../../../components/warehouses/SystemModeSwitch"
 
 export const metadata = cflcCatalogueMetadata
 
@@ -70,22 +69,6 @@ export default function CflcDiyWarehouseKitsPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <SystemModeSwitch
-          helper="Compare CFLC and lip channel kits with custom LSF warehouse systems."
-          modes={[
-            {
-              label: "CFLC Kits",
-              href: "/products/cflc-diy-warehouse-kits",
-              active: true,
-              actions: [
-                { label: "Browse products", href: "#choose-size" },
-                { label: "Request a CFLC kit", href: "/contact", variant: "secondary" },
-              ],
-            },
-            { label: "LSF Systems", href: "/warehouses/lsf", active: false },
-          ]}
-        />
-
         <section className="relative overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
           <Image
             src="/CFLC_carport.webp"

@@ -28,21 +28,6 @@ export const metadata = {
 export default function LsfWarehousesPage() {
   return (
     <WarehouseSystemLandingPage
-      modeSwitch={{
-        helper: "Compare CFLC kits with custom LSF warehouse systems.",
-        modes: [
-          { label: "CFLC Kits", href: "/products/cflc-diy-warehouse-kits", active: false },
-          {
-            label: "LSF Systems",
-            href: "/warehouses/lsf",
-            active: true,
-            actions: [
-              { label: "Build your warehouse", href: "/warehouse-builder" },
-              { label: "Use estimator", href: "/tools/estimator", variant: "secondary" },
-            ],
-          },
-        ],
-      }}
       eyebrow="LSF Warehouses"
       title="LSF warehouse systems for custom steel warehouse projects"
       intro="LSF is a strong option when you need a custom steel warehouse with more flexibility in size, layout, cladding, and openings. Use this page to understand the system, check the main questions, and start your quote with clearer project details."

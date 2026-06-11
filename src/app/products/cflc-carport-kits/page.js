@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Link from "next/link"
-import SystemModeSwitch from "../../../components/warehouses/SystemModeSwitch"
 import { cflcCarportSelections } from "../cflc-diy-warehouse-kits/cflcCatalogueData"
 
 const SITE_URL = "https://www.smartsteel.co.za"
@@ -97,22 +96,6 @@ export default function CflcCarportKitsPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <SystemModeSwitch
-          helper="Compare practical CFLC and lip channel carport kits with the broader LSF warehouse system pages."
-          modes={[
-            {
-              label: "CFLC Kits",
-              href: "/products/cflc-carport-kits",
-              active: true,
-              actions: [
-                { label: "Browse carport sizes", href: "#carport-sizes" },
-                { label: "Request a carport kit", href: "/contact", variant: "secondary" },
-              ],
-            },
-            { label: "LSF Systems", href: "/warehouses/lsf", active: false },
-          ]}
-        />
-
         <section className="relative mt-6 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
           <Image
             src="/CFLC_carport.webp"

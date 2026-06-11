@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Link from "next/link"
-import SystemModeSwitch from "../../../components/warehouses/SystemModeSwitch"
 
 const SITE_URL = "https://www.smartsteel.co.za"
 const PAGE_PATH = "/products/cflc-solar-carports"
@@ -92,22 +91,6 @@ export default function CflcSolarCarportsPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <SystemModeSwitch
-          helper="Compare solar-ready parking structures with standard CFLC carport kits and the broader warehouse pages."
-          modes={[
-            {
-              label: "CFLC Kits",
-              href: "/products/cflc-solar-carports",
-              active: true,
-              actions: [
-                { label: "View solar carports", href: "#solar-carports" },
-                { label: "Request a solar carport quote", href: "/contact", variant: "secondary" },
-              ],
-            },
-            { label: "LSF Systems", href: "/warehouses/lsf", active: false },
-          ]}
-        />
-
         <section className="relative mt-6 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
           <Image
             src="/solar_carport_hero.webp"

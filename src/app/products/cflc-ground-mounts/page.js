@@ -1,5 +1,4 @@
 import Link from "next/link"
-import SystemModeSwitch from "../../../components/warehouses/SystemModeSwitch"
 import { calculateSolarEstimate } from "../../../lib/estimates/solarEstimate"
 import { formatCurrency } from "../../../lib/estimates/warehouseEstimate"
 
@@ -112,22 +111,6 @@ export default function CflcGroundMountsPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <SystemModeSwitch
-          helper="Compare CFLC ground mounts with solar carports and the broader warehouse pages."
-          modes={[
-            {
-              label: "CFLC Kits",
-              href: "/products/cflc-ground-mounts",
-              active: true,
-              actions: [
-                { label: "View ground mount options", href: "#ground-mount-options" },
-                { label: "Request a ground mount quote", href: "/contact", variant: "secondary" },
-              ],
-            },
-            { label: "LSF Systems", href: "/warehouses/lsf", active: false },
-          ]}
-        />
-
         <section className="relative mt-6 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(218,26,51,0.12),transparent_42%),linear-gradient(135deg,rgba(255,255,255,0.96),rgba(255,247,245,0.9))]" />
           <div className="relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
