@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { calculateSolarEstimate } from "../../../lib/estimates/solarEstimate"
 import { formatCurrency } from "../../../lib/estimates/warehouseEstimate"
@@ -89,6 +90,12 @@ const quickAnswers = [
   },
 ]
 
+const galleryImages = [
+  { src: "/solar_ground_mount.webp", alt: "Smart Steel CFLC ground mount overview" },
+  { src: "/solar_ground_mount_1.webp", alt: "Smart Steel CFLC ground mount side view" },
+  { src: "/solar_ground_mount_2.webp", alt: "Smart Steel CFLC ground mount detail view" },
+]
+
 const supportLinks = [
   {
     title: "Explore solar carports",
@@ -112,7 +119,15 @@ export default function CflcGroundMountsPage() {
     <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <section className="relative mt-6 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(218,26,51,0.12),transparent_42%),linear-gradient(135deg,rgba(255,255,255,0.96),rgba(255,247,245,0.9))]" />
+          <Image
+            src="/solar_ground_mount.webp"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center opacity-[0.98]"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.78))]" />
           <div className="relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
@@ -199,8 +214,17 @@ export default function CflcGroundMountsPage() {
           </div>
 
           <div className="mt-6 grid gap-5 lg:grid-cols-3">
-            {groundMountExamples.map((item) => (
+            {groundMountExamples.map((item, index) => (
               <div key={item.title} className="rounded-[1.85rem] border border-slate-200 bg-slate-50 p-6 shadow-sm">
+                <div className="relative mb-5 h-48 overflow-hidden rounded-[1.5rem] border border-slate-200">
+                  <Image
+                    src={galleryImages[index % galleryImages.length].src}
+                    alt={galleryImages[index % galleryImages.length].alt}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, 100vw"
+                    className="object-cover object-center"
+                  />
+                </div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#da1a33]">
                   {item.panels} panels
                 </p>
@@ -235,6 +259,22 @@ export default function CflcGroundMountsPage() {
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+              Ground Mount Photos
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+              Real images help show the structure more clearly
+            </h2>
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              {galleryImages.map((image) => (
+                <div key={image.src} className="relative h-40 overflow-hidden rounded-[1.5rem] border border-slate-200">
+                  <Image src={image.src} alt={image.alt} fill sizes="33vw" className="object-cover object-center" />
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
               What Usually Changes The Price

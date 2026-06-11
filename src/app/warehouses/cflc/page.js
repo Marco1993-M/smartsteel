@@ -31,8 +31,8 @@ export default function CflcWarehousesPage() {
       eyebrow="CFLC Warehouses"
       title="CFLC and lip channel warehouses for practical storage, workshop, and cover projects"
       intro="Smart Steel CFLC warehouses are a practical option for storage, workshop, and cover projects that suit cold formed lip channel steel. Use this page to understand the system, see where it works well, and decide whether you need a custom quote or a standard-size kit."
-      heroImage="/CFLC.webp"
-      heroImageAlt="CFLC warehouse placeholder"
+      heroImage="/warehouse.jpg"
+      heroImageAlt="CFLC warehouse building"
       systemName="CFLC warehouses"
       summary={[
         {

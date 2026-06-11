@@ -71,7 +71,7 @@ export default function CflcDiyWarehouseKitsPage() {
       <div className="mx-auto max-w-7xl">
         <section className="relative overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
           <Image
-            src="/CFLC_carport.webp"
+            src="/warehouse.jpg"
             alt=""
             fill
             priority
