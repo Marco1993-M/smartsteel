@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 const proofStats = [
-  { value: 'CFLC kits', label: 'Standard steel kits for practical DIY and trade enquiries' },
+  { value: 'CFLC kits', label: 'Standard lip channel steel kits for practical DIY and trade enquiries' },
   { value: 'LSF systems', label: 'Custom warehouse solutions supported by our builder and estimator tools' },
   { value: 'Built in SA', label: 'Steel solutions designed for real South African project conditions' },
 ];
@@ -15,7 +15,7 @@ const primaryPaths = [
     title: 'CFLC DIY kits',
     backgroundImage: '/CFLC_carport.webp',
     description:
-      'Browse practical steel kits with clear sizes, starting prices, and a simple enquiry process for carports, cover kits, and warehouse structures.',
+      'Browse practical lip channel steel kits with clear sizes, starting prices, and a simple enquiry process for carports, cover kits, and warehouse structures.',
     bullets: [
       'Clear sizes and starting prices',
       'DIY supply with standard kit options',
@@ -69,12 +69,12 @@ const homepageQuestions = [
   {
     question: 'Do you offer custom warehouses or standard kits?',
     answer:
-      'Yes. Smart Steel offers custom LSF warehouse systems as well as CFLC and lipped channel kits in standard sizes.',
+      'Yes. Smart Steel offers custom LSF warehouse systems as well as CFLC and lip channel kits in standard sizes.',
   },
   {
     question: 'What is the difference between LSF and CFLC?',
     answer:
-      'LSF is better suited to custom warehouse projects, while CFLC works well when you want a practical steel kit in a standard size.',
+      'LSF is better suited to custom warehouse projects, while CFLC works well when you want a practical lip channel steel kit in a standard size.',
   },
   {
     question: 'How do I get a price?',
@@ -128,8 +128,9 @@ export default function HomePageClient() {
               Steel warehouses, CFLC kits, and LSF systems for South African projects
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-black/80 md:text-xl">
-              Smart Steel makes it easier to compare steel warehouses, browse CFLC DIY kits, and
-              explore custom LSF systems with clearer pricing, tools, and enquiry options.
+              Smart Steel makes it easier to compare steel warehouses, browse CFLC lip channel
+              kits, and explore custom LSF systems with clearer pricing, tools, and enquiry
+              options.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
@@ -196,8 +197,8 @@ export default function HomePageClient() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">Choose your path</p>
             <h2 className="mt-4 text-3xl font-bold md:text-5xl">Two clear ways to work with Smart Steel</h2>
             <p className="mt-5 text-lg leading-8 text-gray-700">
-              Start with CFLC kits if you want a practical DIY product. Start with LSF systems if you need a broader
-              custom warehouse solution.
+              Start with CFLC kits if you want a practical lip channel steel kit. Start with LSF
+              systems if you need a broader custom warehouse solution.
             </p>
           </div>
 
@@ -330,8 +331,8 @@ export default function HomePageClient() {
       <section className="bg-black px-6 py-20 text-center text-white">
         <h2 className="text-3xl font-bold md:text-5xl">Start in the right lane</h2>
         <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-white/75">
-          Browse CFLC kits if you want a practical product, or explore LSF systems if you are planning a broader
-          warehouse project.
+          Browse CFLC kits if you want a practical lip channel steel kit, or explore LSF systems
+          if you are planning a broader warehouse project.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           <Link href="/products/cflc-diy-warehouse-kits" className="rounded-full bg-white px-6 py-3 font-semibold text-black transition hover:bg-[#da1a33] hover:text-white">
