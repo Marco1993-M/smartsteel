@@ -120,16 +120,16 @@ export const cflcLaunchRanges = LAUNCH_SPANS.map((span) => {
 })
 
 export const cflcCatalogueMetadata = {
-  title: "CFLC DIY Warehouse Kits | Smart Steel",
+  title: "CFLC Warehouse Kits | Smart Steel",
   description:
-    "Browse Smart Steel CFLC DIY warehouse kits in practical repeatable sizes, including 6m, 10m, and 12m span options built for easy enquiries and a clearer lip channel steel buying experience.",
+    "Browse Smart Steel CFLC warehouse kits in practical repeatable sizes, including 6m, 10m, and 12m span options built for easy enquiries and a clearer lip channel steel buying experience.",
   alternates: {
     canonical: CATEGORY_PATH,
   },
   openGraph: {
-    title: "CFLC DIY Warehouse Kits | Smart Steel",
+    title: "CFLC Warehouse Kits | Smart Steel",
     description:
-      "Explore Smart Steel CFLC DIY warehouse kits in practical sizes for smaller-span value, easy enquiries, and a clearer lip channel steel buying experience.",
+      "Explore Smart Steel CFLC warehouse kits in practical sizes for smaller-span value, easy enquiries, and a clearer lip channel steel buying experience.",
     url: `${SITE_URL}${CATEGORY_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -139,7 +139,7 @@ export const cflcCatalogueMetadata = {
 
 export const cflcCatalogueIntroPoints = [
   "CFLC suits clients who want a practical lip channel steel kit for smaller warehouses, covered work areas, and simpler product enquiries.",
-  "The range includes standard warehouse kit sizes as well as smaller cover and carport options.",
+  "The range focuses on standard warehouse kit sizes that are easier to compare before you enquire.",
   "These prices give you a useful guide before final delivery, finish, and project details are confirmed.",
 ]
 
@@ -270,3 +270,6 @@ export const cflcFeaturedSelections = [
       "Estimated flat-packed structural and purlin bundles for collection or arranged delivery.",
   }),
 ]
+
+export const cflcCarportSelections = cflcFeaturedSelections.filter((item) => item.family === "Carport kits")
+export const cflcWarehouseSelections = cflcFeaturedSelections.filter((item) => item.family !== "Carport kits")

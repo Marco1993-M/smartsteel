@@ -2,7 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import {
   cflcCatalogueIntroPoints,
-  cflcFeaturedSelections,
+  cflcWarehouseSelections,
   cflcCatalogueMetadata,
 } from "./cflcCatalogueData"
 import CflcProductSelectorClient from "./CflcProductSelectorClient"
@@ -29,7 +29,7 @@ const productQuestions = [
   {
     question: "What sizes are available?",
     answer:
-      "The current range includes smaller carport sizes as well as 6m, 10m, and 12m span warehouse kit options in practical repeatable lengths.",
+      "The current range includes 6m, 10m, and 12m span warehouse kit options in practical repeatable lengths.",
   },
   {
     question: "What happens after I request a kit?",
@@ -39,6 +39,11 @@ const productQuestions = [
 ]
 
 const supportLinks = [
+  {
+    title: "Browse CFLC carport kits",
+    description: "See the dedicated carport page if you want single and double carport sizes first.",
+    href: "/products/cflc-carport-kits",
+  },
   {
     title: "Compare all warehouse systems",
     description: "Go back to the main warehouse page if you want to compare LSF and CFLC more clearly.",
@@ -94,15 +99,14 @@ export default function CflcDiyWarehouseKitsPage() {
           <div className="relative z-10 grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-                CFLC DIY Warehouse Kits
+                CFLC Warehouse Kits
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                CFLC DIY steel kits built for easier lip channel kit comparison
+                CFLC warehouse kits built for easier lip channel warehouse comparison
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Compare practical CFLC and lip channel kit sizes for carports, cover kits, and
-                warehouses. Choose a size, see the product details clearly, and request the kit
-                that fits your project.
+                Compare practical CFLC and lip channel warehouse kit sizes. Choose a size, see the
+                product details clearly, and request the warehouse kit that fits your project.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -122,15 +126,15 @@ export default function CflcDiyWarehouseKitsPage() {
 
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">3m, 6m, 10m, 12m</p>
+                <p className="text-2xl font-semibold text-slate-950">6m, 10m, 12m</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  sizes that cover single carports through to practical warehouse and storage kits
+                  practical warehouse kit spans for storage, workshops, and covered work areas
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Warehouse and carport sizes</p>
+                <p className="text-2xl font-semibold text-slate-950">Standard warehouse sizes</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  standard warehouse kit sizes, plus a straightforward 3m x 6m single-carport option
+                  straightforward warehouse kit sizes that are easier to compare before you enquire
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
@@ -153,7 +157,7 @@ export default function CflcDiyWarehouseKitsPage() {
           <div className="rounded-[1.75rem] border border-slate-200 bg-white px-5 py-5 shadow-sm">
             <p className="text-sm font-semibold text-slate-900">Standard kit sizes</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Compare common carport, cover, and warehouse kit sizes in one place.
+              Compare common warehouse kit sizes in one place.
             </p>
           </div>
           <div className="rounded-[1.75rem] border border-slate-200 bg-white px-5 py-5 shadow-sm">
@@ -216,7 +220,7 @@ export default function CflcDiyWarehouseKitsPage() {
           </div>
         </section>
 
-        <CflcProductSelectorClient products={cflcFeaturedSelections} />
+        <CflcProductSelectorClient products={cflcWarehouseSelections} />
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
