@@ -13,6 +13,7 @@ const primaryPaths = [
   {
     eyebrow: 'Products / DIY Systems',
     title: 'CFLC DIY kits',
+    backgroundImage: '/CFLC_carport.webp',
     description:
       'Browse practical steel kits with clear sizes, starting prices, and a simple enquiry process for carports, cover kits, and warehouse structures.',
     bullets: [
@@ -28,6 +29,7 @@ const primaryPaths = [
   {
     eyebrow: 'Projects & Systems',
     title: 'LSF warehouse systems',
+    backgroundImage: '/warehouse.jpg',
     description:
       'Start here when you need a custom warehouse solution, live configuration, or a clearer estimating path for a larger project.',
     bullets: [
@@ -201,28 +203,38 @@ export default function HomePageClient() {
 
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
             {primaryPaths.map((path) => (
-              <div key={path.title} className="rounded-[2rem] border border-gray-200 bg-gray-50 p-8">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">{path.eyebrow}</p>
-                <h3 className="mt-4 text-3xl font-bold text-black">{path.title}</h3>
-                <p className="mt-4 text-base leading-8 text-gray-700">{path.description}</p>
-                <ul className="mt-6 space-y-3 text-sm leading-7 text-gray-700">
-                  {path.bullets.map((bullet) => (
-                    <li key={bullet}>{bullet}</li>
-                  ))}
-                </ul>
-                <div className="mt-8 flex flex-wrap gap-4">
-                  <Link
-                    href={path.primaryHref}
-                    className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-black"
-                  >
-                    {path.primaryCta}
-                  </Link>
-                  <Link
-                    href={path.secondaryHref}
-                    className="rounded-full border border-black bg-white px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
-                  >
-                    {path.secondaryCta}
-                  </Link>
+              <div key={path.title} className="relative overflow-hidden rounded-[2rem] border border-gray-200 bg-gray-50 p-8">
+                <Image
+                  src={path.backgroundImage}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  className="object-cover object-center opacity-98"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.88),rgba(255,255,255,0.72))]" />
+                <div className="relative z-10">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">{path.eyebrow}</p>
+                  <h3 className="mt-4 text-3xl font-bold text-black">{path.title}</h3>
+                  <p className="mt-4 text-base leading-8 text-gray-700">{path.description}</p>
+                  <ul className="mt-6 space-y-3 text-sm leading-7 text-gray-700">
+                    {path.bullets.map((bullet) => (
+                      <li key={bullet}>{bullet}</li>
+                    ))}
+                  </ul>
+                  <div className="mt-8 flex flex-wrap gap-4">
+                    <Link
+                      href={path.primaryHref}
+                      className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-black"
+                    >
+                      {path.primaryCta}
+                    </Link>
+                    <Link
+                      href={path.secondaryHref}
+                      className="rounded-full border border-black bg-white/90 px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
+                    >
+                      {path.secondaryCta}
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
