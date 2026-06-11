@@ -23,7 +23,7 @@ const productQuestions = [
   {
     question: "Is CFLC suitable for DIY projects?",
     answer:
-      "Yes. CFLC and lipped channel kits work well for DIY-friendly projects when you want a supply-only steel kit in a standard size.",
+      "Yes. CFLC and lip channel kits work well for DIY-friendly projects when you want a supply-only steel kit in a standard size.",
   },
   {
     question: "What sizes are available?",
@@ -65,7 +65,7 @@ export default function CflcDiyWarehouseKitsPage() {
     <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <SystemModeSwitch
-          helper="Compare CFLC and lipped channel kits with custom LSF warehouse systems."
+          helper="Compare CFLC and lip channel kits with custom LSF warehouse systems."
           modes={[
             {
               label: "CFLC Kits",
@@ -87,10 +87,10 @@ export default function CflcDiyWarehouseKitsPage() {
                 CFLC DIY Warehouse Kits
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                CFLC DIY steel kits built for easier lipped channel kit comparison
+                CFLC DIY steel kits built for easier lip channel kit comparison
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Compare practical CFLC and lipped channel kit sizes for carports, cover kits, and
+                Compare practical CFLC and lip channel kit sizes for carports, cover kits, and
                 warehouses. Choose a size, see the product details clearly, and request the kit
                 that fits your project.
               </p>
@@ -166,7 +166,7 @@ export default function CflcDiyWarehouseKitsPage() {
               Why CFLC
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              A practical lipped channel steel kit range for easier browsing, clearer pricing, and faster decisions
+              A practical lip channel steel kit range for easier browsing, clearer pricing, and faster decisions
             </h2>
             <div className="mt-5 space-y-3">
               {cflcCatalogueIntroPoints.map((item) => (

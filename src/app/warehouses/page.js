@@ -27,12 +27,12 @@ const quickAnswers = [
   {
     question: "Do you offer custom and standard options?",
     answer:
-      "Yes. Smart Steel offers custom LSF warehouse systems as well as CFLC and lipped channel kits in standard sizes.",
+      "Yes. Smart Steel offers custom LSF warehouse systems as well as CFLC and lip channel kits in standard sizes.",
   },
   {
     question: "What is the difference between LSF and CFLC?",
     answer:
-      "LSF is better suited to custom warehouse projects, while CFLC gives you a practical cold formed lipped channel option for standard sizes and simpler supply enquiries.",
+      "LSF is better suited to custom warehouse projects, while CFLC gives you a practical cold formed lip channel option for standard sizes and simpler supply enquiries.",
   },
   {
     question: "How do I get a price?",
@@ -55,11 +55,11 @@ const systems = [
     cta: "Explore LSF systems",
   },
   {
-    title: "CFLC and lipped channel warehouse options",
+    title: "CFLC and lip channel warehouse options",
     description:
       "Best for practical, repeatable steel building sizes for smaller warehouses, covers, and utility structures.",
     bullets: [
-      "Cold formed lipped channel steel construction",
+      "Cold formed lip channel steel construction",
       "Standard sizes that are easier to compare",
       "A simpler option when you want supply-only kit pricing first",
     ],
@@ -72,7 +72,7 @@ const pricingFactors = [
   "span and overall building width",
   "building length and number of bays",
   "wall height and ridge height",
-  "LSF or CFLC / lipped channel structural system",
+  "LSF or CFLC / lip channel structural system",
   "cladding, openings, and finish choices",
   "delivery, installation, and site-specific requirements",
 ]
@@ -109,12 +109,12 @@ const finalQuestions = [
   {
     question: "Can I choose between a custom system and a standard kit?",
     answer:
-      "Yes. You can choose a custom LSF warehouse system or start with a CFLC and lipped channel kit in a standard size.",
+      "Yes. You can choose a custom LSF warehouse system or start with a CFLC and lip channel kit in a standard size.",
   },
   {
     question: "Is CFLC suitable for DIY-friendly projects?",
     answer:
-      "Yes. The CFLC and lipped channel range works well for DIY-friendly projects when standard sizes and supply-only options make sense.",
+      "Yes. The CFLC and lip channel range works well for DIY-friendly projects when standard sizes and supply-only options make sense.",
   },
   {
     question: "Can Smart Steel help with pricing before final quoting?",
@@ -136,7 +136,7 @@ const clusterLinks = [
   },
   {
     title: "CFLC warehouse systems",
-    description: "Understand how CFLC and lipped channel steel suits practical warehouse and cover projects.",
+    description: "Understand how CFLC and lip channel steel suits practical warehouse and cover projects.",
     href: "/warehouses/cflc",
   },
   {
@@ -170,7 +170,7 @@ export default function WarehousesHubPage() {
                 Steel warehouses in South Africa
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Smart Steel offers custom LSF warehouse systems as well as CFLC and lipped
+                Smart Steel offers custom LSF warehouse systems as well as CFLC and lip
                 channel options in practical standard sizes. Use this page to compare the systems,
                 understand what affects pricing, and decide which warehouse option suits your
                 project best.
@@ -195,7 +195,7 @@ export default function WarehousesHubPage() {
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
                 <p className="text-2xl font-semibold text-slate-950">Custom or standard sizes</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Compare a custom LSF warehouse with a CFLC and lipped channel kit in a standard
+                  Compare a custom LSF warehouse with a CFLC and lip channel kit in a standard
                   size.
                 </p>
               </div>
@@ -271,7 +271,7 @@ export default function WarehousesHubPage() {
                 tailored scope.
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
-                Choose <span className="font-semibold text-slate-900">CFLC / lipped channel</span>{" "}
+                Choose <span className="font-semibold text-slate-900">CFLC / lip channel</span>{" "}
                 if you want standard sizes, simpler pricing, and a practical steel kit that is
                 easier to compare.
               </div>
@@ -314,7 +314,7 @@ export default function WarehousesHubPage() {
               >
                 <p className="text-sm font-semibold text-slate-900">Browse CFLC Kits</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Best if you want a simpler lipped channel kit in a standard size.
+                  Best if you want a simpler lip channel kit in a standard size.
                 </p>
               </Link>
             </div>
@@ -446,7 +446,7 @@ export default function WarehousesHubPage() {
             Start your warehouse project with the right system
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">
-            Use the builder if you want to shape a custom warehouse, browse the CFLC and lipped
+            Use the builder if you want to shape a custom warehouse, browse the CFLC and lip
             channel kit range if you want to compare standard sizes, or talk to Smart Steel if you
             want help choosing.
           </p>
