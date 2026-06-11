@@ -1,9 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
-import SystemModeSwitch from "./SystemModeSwitch"
 
 export default function WarehouseSystemLandingPage({
-  modeSwitch,
   eyebrow,
   title,
   intro,
@@ -29,12 +27,6 @@ export default function WarehouseSystemLandingPage({
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#fff7f5,_#ffffff_22%,_#edf3f7)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {modeSwitch ? (
-          <div className="mb-6">
-            <SystemModeSwitch helper={modeSwitch.helper} modes={modeSwitch.modes} />
-          </div>
-        ) : null}
-
         <section className="rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
           <div className={`grid gap-8 ${heroImage ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : ""}`}>
             <div className="max-w-4xl">
