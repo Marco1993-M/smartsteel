@@ -23,6 +23,7 @@ export const metadata = {
 const catalogueCards = [
   {
     title: "CFLC DIY Warehouse Kits",
+    backgroundImage: "/CFLC_carport.webp",
     description:
       "Our lead DIY warehouse range for smaller spans, practical steel use, and better value on simpler projects.",
     href: "/products/cflc-diy-warehouse-kits",
@@ -31,6 +32,7 @@ const catalogueCards = [
   },
   {
     title: "DIY Carport Kits",
+    backgroundImage: "/CFLC_carport.webp",
     description:
       "A future-ready category for practical shade and cover kits that buyers can request more easily.",
     href: "/contact",
@@ -39,6 +41,7 @@ const catalogueCards = [
   },
   {
     title: "Bracketry",
+    backgroundImage: "/warehouse.jpg",
     description:
       "A growing range of repeatable steel bracketry and related items for direct and trade enquiries.",
     href: "/contact",
@@ -47,6 +50,7 @@ const catalogueCards = [
   },
   {
     title: "Lightweight Steel Trusses",
+    backgroundImage: "/images/steel-trusses-hero.jpg",
     description:
       "Browse the current truss product range if you want a simpler product enquiry starting point.",
     href: "/products/lightweight-steel-trusses",
@@ -168,18 +172,28 @@ export default function ProductsHubPage() {
               <Link
                 key={item.title}
                 href={item.href}
-                className="rounded-[1.85rem] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
+                className="relative overflow-hidden rounded-[1.85rem] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
               >
-                <span className="inline-flex rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  {item.status}
-                </span>
-                <p className="mt-4 text-lg font-semibold text-slate-950">{item.title}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
-                <div className="mt-5 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-[#da1a33]">{item.cta}</p>
-                  <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-                    Browse
+                <Image
+                  src={item.backgroundImage}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
+                  className="object-cover object-center opacity-[0.98]"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(248,250,252,0.93),rgba(255,255,255,0.84))]" />
+                <div className="relative z-10">
+                  <span className="inline-flex rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {item.status}
                   </span>
+                  <p className="mt-4 text-lg font-semibold text-slate-950">{item.title}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
+                  <div className="mt-5 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-[#da1a33]">{item.cta}</p>
+                    <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                      Browse
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}

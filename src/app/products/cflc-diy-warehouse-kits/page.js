@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import {
   cflcCatalogueIntroPoints,
@@ -80,8 +81,17 @@ export default function CflcDiyWarehouseKitsPage() {
           ]}
         />
 
-        <section className="rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
-          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+        <section className="relative overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
+          <Image
+            src="/CFLC_carport.webp"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center opacity-[0.98]"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(255,255,255,0.76))]" />
+          <div className="relative z-10 grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
                 CFLC DIY Warehouse Kits

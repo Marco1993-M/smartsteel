@@ -46,6 +46,8 @@ export default function LsfWarehousesPage() {
       eyebrow="LSF Warehouses"
       title="LSF warehouse systems for custom steel warehouse projects"
       intro="LSF is a strong option when you need a custom steel warehouse with more flexibility in size, layout, cladding, and openings. Use this page to understand the system, check the main questions, and start your quote with clearer project details."
+      heroImage="/warehouse.jpg"
+      heroImageAlt="LSF warehouse building"
       systemName="LSF warehouses"
       summary={[
         {
