@@ -42,7 +42,7 @@ const INTERNAL_PRODUCT_LABELS = [
 const LCSS_ALLOWED_WIDTHS = [3, 6, 8, 10, 12]
 const LCSS_ALLOWED_STEEL_FINISHES = ["Galv", "Mild"]
 const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable"]
-const GROUND_MOUNT_STEEL_FINISHES = ["Galv", "Mild"]
+const GROUND_MOUNT_STEEL_FINISHES = ["Galv", "Mild", "ZAM"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
 
 function roundMoney(value) {
