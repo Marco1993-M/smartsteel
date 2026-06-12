@@ -33,7 +33,7 @@ const groundMountExamples = [
     width: item.width,
     length: item.length,
     wallHeight: 3,
-    steelFinish: "Galv",
+    steelFinish: "ZAM",
     scope: "supply_only",
     includeStructureLabour: false,
     includeSolarBrackets: true,
@@ -81,7 +81,7 @@ const quickAnswers = [
   {
     question: "Can I choose the steel finish?",
     answer:
-      "Yes. The current model allows for either galvanised or mild steel, depending on the project requirement.",
+      "Yes. The current model allows for galvanised, mild, or ZAM steel, depending on the project requirement.",
   },
   {
     question: "What affects the price?",
@@ -165,7 +165,7 @@ export default function CflcGroundMountsPage() {
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Galv or Mild steel</p>
+                <p className="text-2xl font-semibold text-slate-950">Galv, Mild or ZAM steel</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   Choose the steel finish that best matches the project and budget requirement.
                 </p>
@@ -211,6 +211,10 @@ export default function CflcGroundMountsPage() {
               These examples use the current CFLC ground mount pricing model as a guide. Final pricing
               still depends on steel finish, transport, rail and brackets, and installation scope.
             </p>
+            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+              The guide prices below use ZAM steel with rails and brackets included, but exclude transport
+              and installation so the starting point stays comparable across projects.
+            </p>
           </div>
 
           <div className="mt-6 grid gap-5 lg:grid-cols-3">
@@ -248,9 +252,12 @@ export default function CflcGroundMountsPage() {
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Indicative supply price
+                      Guide price
                     </p>
                     <p className="mt-2 text-xl font-semibold text-slate-950">{item.priceFrom}</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      Includes rails and brackets. Excludes transport and installation.
+                    </p>
                   </div>
                 </div>
               </div>
