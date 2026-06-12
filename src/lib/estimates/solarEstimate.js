@@ -3,8 +3,8 @@ import { formatCurrency } from "./warehouseEstimate"
 const DEFAULT_MARKUP = 1.32
 const DEFAULT_DELIVERY_MINIMUM = 1350
 const CFLC_GROUND_MOUNT_STRUCTURE_PANEL_UNIT = 30
-const CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_UNIT = 730
-const CFLC_GROUND_MOUNT_BOLTS_PER_UNIT = 280
+const CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_UNIT = 720
+const CFLC_GROUND_MOUNT_BOLTS_PER_UNIT = 180
 const CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_PANELS_PER_UNIT = 30
 const CFLC_GROUND_MOUNT_SOLAR_RAIL_METERS_PER_UNIT = 69
 const CFLC_GROUND_MOUNT_END_BRACKETS_PER_UNIT = 12
@@ -12,14 +12,17 @@ const CFLC_GROUND_MOUNT_MIDDLE_BRACKETS_PER_UNIT = 54
 const CFLC_GROUND_MOUNT_INSTALL_PANELS_PER_UNIT = 30
 const CFLC_GROUND_MOUNT_GALV_RATE_PER_TON = 21500
 const CFLC_GROUND_MOUNT_MILD_RATE_PER_TON = 15000
+const CFLC_GROUND_MOUNT_ZAM_RATE_PER_TON = 20600
 const CFLC_GROUND_MOUNT_BOLT_RATE = 15
 const CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_RATE_PER_PANEL = 250
+// The workbook's solar-rail rate cell is currently zero, so we keep the live rate until that row is confirmed.
 const CFLC_GROUND_MOUNT_SOLAR_RAIL_RATE_PER_METER = 80
-const CFLC_GROUND_MOUNT_END_BRACKET_RATE = 16.1
-const CFLC_GROUND_MOUNT_MIDDLE_BRACKET_RATE = 19.95
+const CFLC_GROUND_MOUNT_END_BRACKET_RATE = 25
+const CFLC_GROUND_MOUNT_MIDDLE_BRACKET_RATE = 30
 const CFLC_GROUND_MOUNT_INSTALL_RATE_PER_PANEL = 375
 const CFLC_GROUND_MOUNT_TRANSPORT_RATE_PER_KM = 26
 const CFLC_GROUND_MOUNT_VAT_RATE = 0.15
+const CFLC_GROUND_MOUNT_STEEL_FINISHES = ["Galv", "Mild", "ZAM"]
 
 export const SOLAR_PRODUCT_TYPE_OPTIONS = [
   { value: "Solar carport", label: "Solar carport" },
@@ -79,7 +82,7 @@ function formatDimension(value) {
 function getCflcGroundMountMarkupRate(panelCount) {
   if (panelCount < 500) return 0.3
   if (panelCount < 1501) return 0.25
-  if (panelCount < 3501) return 0.2
+  if (panelCount < 5001) return 0.2
   return 0.15
 }
 
@@ -123,8 +126,8 @@ export function validateSolarEstimateInput(input) {
     throw new Error("Please choose a valid project scope.")
   }
 
-  if (productType === "Solar ground mount" && !["Galv", "Mild"].includes(steelFinish)) {
-    throw new Error("Please choose Galv or Mild steel for the CFLC ground mount.")
+  if (productType === "Solar ground mount" && !CFLC_GROUND_MOUNT_STEEL_FINISHES.includes(steelFinish)) {
+    throw new Error("Please choose Galv, Mild, or ZAM steel for the CFLC ground mount.")
   }
 
   return {
@@ -170,7 +173,9 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   const steelRatePerTon =
     steelFinish === "Galv"
       ? CFLC_GROUND_MOUNT_GALV_RATE_PER_TON
-      : CFLC_GROUND_MOUNT_MILD_RATE_PER_TON
+      : steelFinish === "Mild"
+        ? CFLC_GROUND_MOUNT_MILD_RATE_PER_TON
+        : CFLC_GROUND_MOUNT_ZAM_RATE_PER_TON
 
   const structureSteelCostPerUnit =
     CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_UNIT * (steelRatePerTon / 1000)
