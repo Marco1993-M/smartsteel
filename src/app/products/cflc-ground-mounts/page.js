@@ -214,12 +214,12 @@ export default function CflcGroundMountsPage() {
           </div>
 
           <div className="mt-6 grid gap-5 lg:grid-cols-3">
-            {groundMountExamples.map((item, index) => (
+            {groundMountExamples.map((item) => (
               <div key={item.title} className="rounded-[1.85rem] border border-slate-200 bg-slate-50 p-6 shadow-sm">
                 <div className="relative mb-5 h-48 overflow-hidden rounded-[1.5rem] border border-slate-200">
                   <Image
-                    src={galleryImages[index % galleryImages.length].src}
-                    alt={galleryImages[index % galleryImages.length].alt}
+                    src={galleryImages[0].src}
+                    alt={galleryImages[0].alt}
                     fill
                     sizes="(min-width: 1024px) 33vw, 100vw"
                     className="object-cover object-center"

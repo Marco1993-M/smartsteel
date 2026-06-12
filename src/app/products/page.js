@@ -63,7 +63,7 @@ const mainProducts = [
       "Explore practical CFLC ground mount structures for solar projects that need scalable steel support away from buildings and parking areas.",
     href: "/products/cflc-ground-mounts",
     cta: "Explore CFLC ground mounts",
-    backgroundImage: "/images/solar-carport-2.webp",
+    backgroundImage: "/solar_ground_mount.webp",
   },
 ]
 
