@@ -33,7 +33,7 @@ const groundMountExamples = [
     width: item.width,
     length: item.length,
     wallHeight: 3,
-    steelFinish: "ZAM",
+    steelFinish: "Mild",
     scope: "supply_only",
     includeStructureLabour: false,
     includeSolarBrackets: true,
@@ -44,7 +44,7 @@ const groundMountExamples = [
 
   return {
     ...item,
-    priceFrom: formatCurrency(estimate.pricing.totalInclVat),
+    priceFrom: formatCurrency(estimate.pricing.estimatedTotal),
     structureUnits: estimate.totals.structureUnits,
   }
 })
@@ -212,8 +212,8 @@ export default function CflcGroundMountsPage() {
               still depends on steel finish, transport, rail and brackets, and installation scope.
             </p>
             <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-              The guide prices below use ZAM steel with rails and brackets included, but exclude transport
-              and installation so the starting point stays comparable across projects.
+              The guide prices below use mild steel with rails and brackets included, but exclude VAT,
+              transport, and installation so the starting point stays more comparable across projects.
             </p>
           </div>
 
@@ -252,11 +252,11 @@ export default function CflcGroundMountsPage() {
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Guide price
+                      Starting from
                     </p>
                     <p className="mt-2 text-xl font-semibold text-slate-950">{item.priceFrom}</p>
                     <p className="mt-2 text-xs leading-5 text-slate-500">
-                      Includes rails and brackets. Excludes transport and installation.
+                      Includes rails and brackets. Excludes VAT, transport, and installation.
                     </p>
                   </div>
                 </div>
