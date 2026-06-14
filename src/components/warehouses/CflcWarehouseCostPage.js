@@ -226,14 +226,14 @@ export default function CflcWarehouseCostPage() {
                   description: "Compare the two warehouse systems side by side before choosing the best fit.",
                 },
                 {
-                  href: "/pretoria-cflc-warehouses",
-                  title: "Pretoria CFLC warehouses",
-                  description: "See the Pretoria CFLC warehouse page if your project is based in Gauteng.",
+                  href: "/warehouse-regions",
+                  title: "Warehouse regions",
+                  description: "Use the warehouse regions page if you want to compare delivery areas and regional project context across South Africa.",
                 },
                 {
-                  href: "/johannesburg-cflc-warehouses",
-                  title: "Johannesburg CFLC warehouses",
-                  description: "See the Johannesburg CFLC warehouse page for logistics, storage, and industrial enquiries.",
+                  href: "/warehouse-cost",
+                  title: "Warehouse pricing",
+                  description: "See the wider warehouse pricing guidance if you want another budget reference before you enquire.",
                 },
               ].map((item) => (
                 <Link

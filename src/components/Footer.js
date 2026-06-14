@@ -61,10 +61,10 @@ export default function Footer() {
                 All regions
               </Link>
             </li>
-            <li><Link href="/johannesburg-warehouses" className="hover:text-[#da1a33]">Johannesburg</Link></li>
-            <li><Link href="/centurion-warehouses" className="hover:text-[#da1a33]">Centurion</Link></li>
-            <li><Link href="/midrand-warehouses" className="hover:text-[#da1a33]">Midrand</Link></li>
-            <li><Link href="/pretoria-warehouses" className="hover:text-[#da1a33]">Pretoria</Link></li>
+            <li><Link href="/warehouses" className="hover:text-[#da1a33]">Warehouse systems</Link></li>
+            <li><Link href="/warehouses/lsf" className="hover:text-[#da1a33]">LSF warehouses</Link></li>
+            <li><Link href="/warehouses/cflc" className="hover:text-[#da1a33]">CFLC warehouses</Link></li>
+            <li><Link href="/warehouse-cost" className="hover:text-[#da1a33]">Warehouse pricing</Link></li>
           </ul>
         </div>
       </div>
