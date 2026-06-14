@@ -16,10 +16,10 @@ const availablePages = new Map(
 );
 
 const nearbyLinks = [
-  { href: '/pretoria-warehouses', label: 'Steel Warehouses Pretoria' },
-  { href: '/johannesburg-warehouses', label: 'Steel Warehouses Johannesburg' },
-  { href: '/centurion-warehouses', label: 'Steel Warehouses Centurion' },
-  { href: '/midrand-warehouses', label: 'Steel Warehouses Midrand' },
+  { href: '/warehouses', label: 'Steel warehouse systems' },
+  { href: '/warehouses/lsf', label: 'LSF warehouses' },
+  { href: '/warehouses/cflc', label: 'CFLC warehouses' },
+  { href: '/warehouse-regions', label: 'Warehouse regions' },
 ];
 
 function buildSchemas(config) {
