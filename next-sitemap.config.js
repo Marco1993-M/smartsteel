@@ -25,6 +25,17 @@ const solarCarportRegionPaths = [
   '/pretoria-solar-carports',
 ];
 
+const redirectedSolarCarportRegionPaths = [
+  '/bloemfontein/solar-carports',
+  '/cape-town/solar-carports',
+  '/centurion/solar-carports',
+  '/durban/solar-carports',
+  '/johannesburg/solar-carports',
+  '/midrand/solar-carports',
+  '/polokwane/solar-carports',
+  '/pretoria/solar-carports',
+];
+
 const legacyRegionWarehousePaths = [
   '/bloemfontein-warehouses',
   '/cape-town-warehouses',
@@ -42,6 +53,25 @@ const legacyRegionWarehousePaths = [
   '/hoedspruit-warehouses',
   '/hermanus-warehouses',
   '/rustenburg-warehouses',
+];
+
+const redirectedRegionWarehousePaths = [
+  '/bloemfontein/warehouses',
+  '/cape-town/warehouses',
+  '/centurion/warehouses',
+  '/durban/warehouses',
+  '/east-london/warehouses',
+  '/gqeberha/warehouses',
+  '/hermanus/warehouses',
+  '/hoedspruit/warehouses',
+  '/johannesburg/warehouses',
+  '/middelburg/warehouses',
+  '/midrand/warehouses',
+  '/nelspruit/warehouses',
+  '/polokwane/warehouses',
+  '/pretoria/warehouses',
+  '/roodepoort/warehouses',
+  '/rustenburg/warehouses',
 ];
 
 const highPriorityPages = new Set([
@@ -85,7 +115,15 @@ module.exports = {
     '/case-studies/eco-home',
     '/warehouse-cost/[size]',
     '/[city]/solar-carports',
+    ...redirectedSolarCarportRegionPaths,
+    ...redirectedRegionWarehousePaths,
     '/warehouses/[slug]',
+    '/lightweight-steel-warehouses',
+    '/steel',
+    '/architect-advantages',
+    '/recent',
+    '/resources',
+    '/sustainability',
   ],
   transform: async (config, path) => {
     if (path.includes('[') || path.includes(']')) {
