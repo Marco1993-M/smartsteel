@@ -1,16 +1,18 @@
 import HomePageClient from './HomePageClient';
 
 export const metadata = {
-  title: 'Smart Steel | Steel Warehouses, CFLC Kits & LSF Systems',
+  title: {
+    absolute: 'Lightweight Steel Warehouses South Africa | Smart Steel',
+  },
   description:
-    'Smart Steel helps South African clients compare steel warehouses, CFLC DIY kits, and custom LSF systems with clearer pricing, tools, and enquiry paths.',
+    'Smart Steel supplies lightweight steel warehouse systems across South Africa, with estimate tools, lip channel kit options, and guidance for choosing the right steel structure.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Smart Steel | Steel Warehouses, CFLC Kits & LSF Systems',
+    title: 'Lightweight Steel Warehouses South Africa | Smart Steel',
     description:
-      'Explore Smart Steel steel warehouses, CFLC DIY kits, and custom LSF systems built for South African projects.',
+      'Smart Steel supplies lightweight steel warehouse systems across South Africa, with estimate tools, lip channel kit options, and guidance for choosing the right steel structure.',
     url: 'https://www.smartsteel.co.za/',
     siteName: 'Smart Steel',
     locale: 'en_ZA',
@@ -20,15 +22,15 @@ export const metadata = {
         url: '/og-warehouse.jpg',
         width: 1200,
         height: 630,
-        alt: 'Smart Steel steel warehouses, CFLC kits and LSF systems',
+        alt: 'Smart Steel lightweight steel warehouse systems in South Africa',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Smart Steel | Steel Warehouses, CFLC Kits & LSF Systems',
+    title: 'Lightweight Steel Warehouses South Africa | Smart Steel',
     description:
-      'Steel warehouses, CFLC DIY kits, and custom LSF systems for South African projects.',
+      'Estimate, compare, and plan lightweight steel warehouse systems for South African projects.',
     images: ['/og-warehouse.jpg'],
   },
 };
