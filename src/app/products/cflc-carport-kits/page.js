@@ -4,22 +4,46 @@ import { cflcCarportSelections } from "../cflc-diy-warehouse-kits/cflcCatalogueD
 
 const SITE_URL = "https://www.smartsteel.co.za"
 const PAGE_PATH = "/products/cflc-carport-kits"
+const SHARE_IMAGE = `${SITE_URL}/CFLC_carport.webp`
 
 export const metadata = {
-  title: "CFLC Carport Kits | Smart Steel",
+  title: "CFLC Carport Kits | Lip Channel Carports South Africa",
   description:
-    "Browse Smart Steel CFLC and lip channel carport kits for single and double carports, with clear sizes, practical starting prices, and an easy enquiry process.",
+    "Browse Smart Steel CFLC and lip channel carport kits in South Africa, including single, double, three-bay, and four-bay carport options with practical pricing and a clearer enquiry path.",
+  keywords: [
+    "CFLC carport kits",
+    "lip channel carports",
+    "steel carport kits South Africa",
+    "single carport kit",
+    "double carport kit",
+    "carport pricing South Africa",
+  ],
   alternates: {
     canonical: PAGE_PATH,
   },
   openGraph: {
-    title: "CFLC Carport Kits | Smart Steel",
+    title: "CFLC Carport Kits | Lip Channel Carports South Africa",
     description:
-      "Compare Smart Steel CFLC and lip channel carport kits with practical sizes, clear starting prices, and a simple enquiry process.",
+      "Compare Smart Steel CFLC and lip channel carport kits for single, double, three-bay, and four-bay parking cover in South Africa.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
     type: "website",
+    images: [
+      {
+        url: SHARE_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: "Smart Steel CFLC and lip channel carport kits",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CFLC Carport Kits | Lip Channel Carports South Africa",
+    description:
+      "Compare Smart Steel CFLC and lip channel carport kits for single, double, three-bay, and four-bay parking cover in South Africa.",
+    images: [SHARE_IMAGE],
   },
 }
 
@@ -88,7 +112,7 @@ const supportLinks = [
   {
     title: "Use the estimator",
     description: "Check a starting budget before you send an enquiry.",
-    href: "/tools/estimator",
+    href: "/tools/cflc-carport-estimator",
   },
 ]
 
@@ -127,10 +151,10 @@ export default function CflcCarportKitsPage() {
                   Browse carport sizes
                 </Link>
                 <Link
-                  href="/contact"
+                  href="/tools/cflc-carport-estimator"
                   className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
                 >
-                  Request a carport kit
+                  Estimate your carport kit
                 </Link>
               </div>
             </div>
@@ -267,13 +291,13 @@ export default function CflcCarportKitsPage() {
 
                   <div className="mt-6 flex flex-wrap gap-3">
                     <Link
-                      href="/contact"
+                      href={`/tools/cflc-carport-estimator?size=${item.id === "3x6-carport" ? "single" : "double"}`}
                       className="rounded-full bg-[#da1a33] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
                     >
-                      Request this carport kit
+                      Estimate this carport kit
                     </Link>
                     <Link
-                      href="/tools/estimator"
+                      href={`/tools/cflc-carport-estimator?size=${item.id === "3x6-carport" ? "single" : "double"}`}
                       className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
                     >
                       Check a budget
