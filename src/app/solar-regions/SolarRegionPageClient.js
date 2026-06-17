@@ -13,6 +13,11 @@ import {
 export default function SolarRegionPageClient({ citySlug }) {
   const content = buildSolarRegionContent(citySlug);
   const [selectedWidth, setSelectedWidth] = useState(SOLAR_CARPORT_WIDTHS[0]);
+  const galleryImages = [
+    { src: "/solar_carport_hero.webp", alt: `Smart Steel solar carport in ${content.name}` },
+    { src: "/solar_carport_1.webp", alt: `Solar carport parking view in ${content.name}` },
+    { src: "/solar_carport_2.webp", alt: `Solar carport structure detail in ${content.name}` },
+  ];
 
   const regionLinks = useMemo(
     () =>
@@ -87,42 +92,43 @@ export default function SolarRegionPageClient({ citySlug }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
 
-      <section className="relative flex min-h-[92vh] items-start justify-center overflow-hidden bg-black px-6 text-center text-white">
+      <section className="relative overflow-hidden bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-6 py-10">
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white via-white/90 to-transparent" />
+        <div className="mx-auto max-w-6xl">
+          <div className="relative mt-6 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
         <Image
           src={content.heroImage}
           alt={`Solar carports in ${content.name}`}
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-cover object-center opacity-[0.98]"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/25 to-black/60" />
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white via-white/90 to-transparent md:h-40" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0b0b0b] to-transparent" />
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.88),rgba(255,255,255,0.72))]" />
 
-        <div className="relative z-10 mx-auto mt-24 flex w-full max-w-5xl flex-col items-center md:mt-32">
-          <div className="mb-6 w-full max-w-[90vw] rounded-full border border-white/60 bg-white/10 backdrop-blur sm:max-w-md md:max-w-3xl">
+        <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center text-center">
+          <div className="mb-6 w-full max-w-[90vw] rounded-full border border-slate-300/80 bg-white/70 backdrop-blur sm:max-w-md md:max-w-3xl">
             <div className="px-4 py-2">
-              <p className="text-xs font-semibold leading-snug text-white sm:text-sm md:text-base">
+              <p className="text-xs font-semibold leading-snug text-slate-700 sm:text-sm md:text-base">
                 {content.heroLabel}
               </p>
             </div>
           </div>
 
-          <h1 className="max-w-5xl text-4xl font-bold leading-tight text-white sm:text-5xl md:text-6xl">
+          <h1 className="max-w-5xl text-4xl font-bold leading-tight text-slate-950 sm:text-5xl md:text-6xl">
             Solar Carports in {content.name}
           </h1>
-          <p className="mt-4 max-w-3xl text-base text-white/90 sm:text-lg md:text-xl">
+          <p className="mt-4 max-w-3xl text-base text-slate-600 sm:text-lg md:text-xl">
             Covered parking structures designed to add solar value, improve site usability, and
             create stronger long-term energy infrastructure in {content.name}.
           </p>
 
-          <div className="mt-8 flex items-center gap-4">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href={content.pricePath}
-              className="inline-flex items-center justify-center rounded-full border border-black bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black"
+              className="inline-flex items-center justify-center rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-[#bf172d]"
             >
-              Request a Quote
+              Estimate your solar carport
             </Link>
             <a
               href={`https://wa.me/27828464555?text=Hi%20Smart%20Steel%2C%20I%E2%80%99d%20like%20a%20quote%20for%20a%20solar%20carport%20in%20${encodeURIComponent(
@@ -139,17 +145,19 @@ export default function SolarRegionPageClient({ citySlug }) {
             </a>
           </div>
 
-          <div className="mt-4 rounded-full border border-white/50 bg-white/10 px-4 py-1 backdrop-blur">
-            <p className="text-sm text-white">{content.lastUpdated}</p>
+          <div className="mt-4 rounded-full border border-slate-300 bg-white/70 px-4 py-1 backdrop-blur">
+            <p className="text-sm text-slate-600">{content.lastUpdated}</p>
           </div>
 
           <div className="mt-16 grid w-full gap-4 md:grid-cols-3">
             {content.proofStats.map((stat) => (
-              <div key={stat.label} className="rounded-3xl border border-white/20 bg-white/10 p-5 text-left backdrop-blur">
-                <p className="text-2xl font-bold sm:text-3xl">{stat.value}</p>
-                <p className="mt-2 text-sm text-white/85">{stat.label}</p>
+              <div key={stat.label} className="rounded-3xl border border-slate-200 bg-white/80 p-5 text-left backdrop-blur">
+                <p className="text-2xl font-bold text-slate-950 sm:text-3xl">{stat.value}</p>
+                <p className="mt-2 text-sm text-slate-600">{stat.label}</p>
               </div>
             ))}
+          </div>
+        </div>
           </div>
         </div>
       </section>
@@ -185,6 +193,35 @@ export default function SolarRegionPageClient({ citySlug }) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#da1a33]">
+              Recent Solar Carport Photos
+            </p>
+            <h2 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
+              Real project images help show the product clearly
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {galleryImages.map((image) => (
+              <div
+                key={image.src}
+                className="relative h-56 overflow-hidden rounded-[1.75rem] border border-gray-200 bg-white shadow-sm"
+              >
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  sizes="33vw"
+                  className="object-cover object-center"
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -272,7 +309,7 @@ export default function SolarRegionPageClient({ citySlug }) {
                     href={`/tools/solar-carport-estimator?width=${selectedWidth}&length=${length}`}
                     className="font-semibold text-[#da1a33]"
                   >
-                    Request quote
+                    Estimate this size
                   </Link>
                   <Link href="/solar" className="text-gray-500 underline">
                     Solar overview
@@ -342,12 +379,12 @@ export default function SolarRegionPageClient({ citySlug }) {
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#da1a33]">
-              Internal Guides
+              Useful Pages
             </p>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">Plan the project in more detail</h2>
+            <h2 className="mt-4 text-3xl font-bold text-gray-900">Compare related solar and steel pages</h2>
             <p className="mt-3 text-lg text-gray-600">
-              Use these related pages to compare solar carports, steel systems, and other Smart
-              Steel services before requesting a final quote.
+              Use these pages to compare solar carports, explore related structures, and move into
+              the right next step for your project.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-4">
@@ -395,11 +432,11 @@ export default function SolarRegionPageClient({ citySlug }) {
           Ready To Price Your Project
         </p>
         <h2 className="mb-4 mt-4 text-3xl font-bold md:text-4xl">
-          Get a solar carport quote in {content.name}
+          Estimate your solar carport in {content.name}
         </h2>
         <p className="mx-auto mb-8 max-w-2xl text-white/75">
-          Plan the parking layout, discuss the solar scope, and get a proposal that suits your
-          region, site, and commercial goals.
+          Start with a clearer budget, then send your details through if you would like help with
+          the next step.
         </p>
         <div className="flex justify-center gap-4">
           <Link

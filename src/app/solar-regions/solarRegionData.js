@@ -9,7 +9,7 @@ const solarRegionPages = {
     name: "Pretoria",
     province: "Gauteng",
     legacySlug: "pretoria-solar-carports",
-    heroImage: "/images/solar-carport.webp",
+    heroImage: "/solar_carport_hero.webp",
     nearby: ["Centurion", "Midrand", "Rosslyn"],
     localZones: ["Menlyn", "Centurion", "Silverton", "Rosslyn", "Montana"],
     description:
@@ -26,7 +26,7 @@ const solarRegionPages = {
     name: "Centurion",
     province: "Gauteng",
     legacySlug: "centurion-solar-carports",
-    heroImage: "/images/solar-carport.webp",
+    heroImage: "/solar_carport_hero.webp",
     nearby: ["Pretoria", "Midrand", "Irene"],
     localZones: ["Irene", "Highveld", "Samrand", "Route 21", "Eco Park"],
     description:
@@ -43,7 +43,7 @@ const solarRegionPages = {
     name: "Johannesburg",
     province: "Gauteng",
     legacySlug: "johannesburg-solar-carports",
-    heroImage: "/images/solar-carport.webp",
+    heroImage: "/solar_carport_hero.webp",
     nearby: ["Roodepoort", "Midrand", "Sandton"],
     localZones: ["Sandton", "Rosebank", "City Deep", "Aeroton", "Wadeville"],
     description:
@@ -60,7 +60,7 @@ const solarRegionPages = {
     name: "Midrand",
     province: "Gauteng",
     legacySlug: "midrand-solar-carports",
-    heroImage: "/images/solar-carport.webp",
+    heroImage: "/solar_carport_hero.webp",
     nearby: ["Centurion", "Johannesburg", "Kempton Park"],
     localZones: ["Waterfall", "Randjespark", "Kyalami", "Halfway House", "Olifantsfontein"],
     description:
@@ -77,7 +77,7 @@ const solarRegionPages = {
     name: "Cape Town",
     province: "Western Cape",
     legacySlug: "cape-town-solar-carports",
-    heroImage: "/images/solar-carport.webp",
+    heroImage: "/solar_carport_hero.webp",
     nearby: ["Bellville", "Brackenfell", "Somerset West"],
     localZones: ["Century City", "Epping", "Montague Gardens", "Bellville", "Brackenfell"],
     description:
@@ -94,7 +94,7 @@ const solarRegionPages = {
     name: "Durban",
     province: "KwaZulu-Natal",
     legacySlug: "durban-solar-carports",
-    heroImage: "/images/solar-carport.webp",
+    heroImage: "/solar_carport_hero.webp",
     nearby: ["Pinetown", "Umhlanga", "Amanzimtoti"],
     localZones: ["Umhlanga", "Springfield", "Pinetown", "Mobeni", "Prospecton"],
     description:
@@ -111,7 +111,7 @@ const solarRegionPages = {
     name: "Bloemfontein",
     province: "Free State",
     legacySlug: "bloemfontein-solar-carports",
-    heroImage: "/images/solar-carport.webp",
+    heroImage: "/solar_carport_hero.webp",
     nearby: ["Bainsvlei", "Botshabelo", "Thaba Nchu"],
     localZones: ["Westdene", "Hamilton", "Bainsvlei", "Langenhoven Park", "Estoire"],
     description:
@@ -128,7 +128,7 @@ const solarRegionPages = {
     name: "Polokwane",
     province: "Limpopo",
     legacySlug: "polokwane-solar-carports",
-    heroImage: "/images/solar-carport.webp",
+    heroImage: "/solar_carport_hero.webp",
     nearby: ["Mokopane", "Tzaneen", "Seshego"],
     localZones: ["Laboria", "Nirvana", "Mankweng", "Seshego", "Mokopane"],
     description:
@@ -174,7 +174,7 @@ export function buildSolarRegionHubMetadata() {
       type: "website",
       images: [
         {
-          url: "/images/solar-carport.webp",
+          url: "/solar_carport_hero.webp",
           alt: "Solar carport regions in South Africa",
         },
       ],
@@ -183,7 +183,7 @@ export function buildSolarRegionHubMetadata() {
       card: "summary_large_image",
       title,
       description,
-      images: ["/images/solar-carport.webp"],
+      images: ["/solar_carport_hero.webp"],
     },
   };
 }
@@ -248,7 +248,7 @@ export function buildSolarRegionContent(citySlug) {
 
   return {
     ...config,
-    pricePath: "/contact",
+    pricePath: "/tools/solar-carport-estimator",
     lastUpdated: "Updated April 20, 2026",
     faqItems,
     proofStats: [
@@ -327,7 +327,7 @@ export function buildSolarRegionContent(citySlug) {
       { href: "/solar", label: "Main solar page" },
       { href: "/warehouse-regions", label: "Warehouse regions hub" },
       { href: "/warehouses", label: "Warehouse systems" },
-      { href: "/contact", label: "Request a project quote" },
+      { href: "/tools/solar-carport-estimator", label: "Estimate your solar carport" },
     ],
     sizeBlurb: `Typical solar carport layouts in ${config.name} range from compact single-bay coverage to wider multi-bay parking structures depending on the site and power goals.`,
   };
