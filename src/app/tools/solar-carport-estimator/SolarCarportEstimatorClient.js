@@ -26,6 +26,12 @@ const SOLAR_CARPORT_LENGTH_OPTIONS = [
   { value: 6, label: "Single Row (6m)" },
   { value: 12, label: "Double Row (12m)" },
 ]
+const PROCEED_TIMING_OPTIONS = [
+  { value: "ready_now", label: "Ready now" },
+  { value: "within_30_days", label: "Within 30 days" },
+  { value: "one_to_three_months", label: "1 to 3 months" },
+  { value: "just_pricing", label: "Just pricing for now" },
+]
 
 function formatDimension(value) {
   return `${Number(value)}m`
@@ -51,6 +57,7 @@ function buildEstimatorNotes({ estimate, formState, enquiryNotes }) {
     `Indicative area: ${estimate.labels.area}`,
     `Modules: ${estimate.labels.modules}`,
     `Delivery: ${estimate.labels.delivery}`,
+    formState.proceedTiming ? `Looking to proceed: ${PROCEED_TIMING_OPTIONS.find((option) => option.value === formState.proceedTiming)?.label || formState.proceedTiming}` : null,
     formState.projectNotes?.trim() ? `Project notes: ${formState.projectNotes.trim()}` : null,
     enquiryNotes?.trim() ? `Client notes: ${enquiryNotes.trim()}` : null,
     `Selected width: ${formatDimension(formState.width)}`,
@@ -83,6 +90,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     scope: SOLAR_SCOPE_OPTIONS.some((option) => option.value === initialScope)
       ? initialScope
       : "supply_only",
+    proceedTiming: "",
     projectNotes: "",
   })
   const [showEnquiryForm, setShowEnquiryForm] = useState(false)
@@ -450,6 +458,22 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                       value={enquiryState.phone}
                       onChange={(event) => handleEnquiryChange("phone", event.target.value)}
                     />
+                  </label>
+
+                  <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
+                    How soon are you looking to proceed?
+                    <select
+                      className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      value={formState.proceedTiming}
+                      onChange={(event) => handleFieldChange("proceedTiming", event.target.value)}
+                    >
+                      <option value="">Select if you would like to</option>
+                      {PROCEED_TIMING_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </label>
 
                   <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
