@@ -3,6 +3,7 @@ import Link from "next/link"
 
 const SITE_URL = "https://www.smartsteel.co.za"
 const PAGE_PATH = "/products/cflc-solar-carports"
+const SHARE_IMAGE = `${SITE_URL}/solar_carport_hero.webp`
 
 export const metadata = {
   title: "CFLC Solar Carports | Smart Steel",
@@ -19,6 +20,21 @@ export const metadata = {
     siteName: "Smart Steel",
     locale: "en_ZA",
     type: "website",
+    images: [
+      {
+        url: SHARE_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: "Smart Steel CFLC solar carport",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CFLC Solar Carports | Smart Steel",
+    description:
+      "Compare Smart Steel CFLC solar carports for covered parking, solar-ready layouts, and practical steel parking structures.",
+    images: [SHARE_IMAGE],
   },
 }
 
