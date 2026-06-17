@@ -83,7 +83,7 @@ const supportLinks = [
   {
     title: "Talk to Smart Steel",
     description: "Send your layout or parking requirement if you want help with the next step.",
-    href: "/contact",
+    href: "/tools/solar-carport-estimator",
   },
 ]
 
@@ -121,10 +121,10 @@ export default function CflcSolarCarportsPage() {
                   View solar carports
                 </Link>
                 <Link
-                  href="/contact"
+                  href="/tools/solar-carport-estimator"
                   className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
                 >
-                  Request a solar carport quote
+                  Estimate your solar carport
                 </Link>
               </div>
             </div>
@@ -238,10 +238,10 @@ export default function CflcSolarCarportsPage() {
                 Explore solar carport regions
               </Link>
               <Link
-                href="/contact"
+                href="/tools/solar-carport-estimator"
                 className="rounded-full border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
               >
-                Request a quote
+                Estimate your solar carport
               </Link>
             </div>
           </div>

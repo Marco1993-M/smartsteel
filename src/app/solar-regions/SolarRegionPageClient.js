@@ -268,7 +268,10 @@ export default function SolarRegionPageClient({ citySlug }) {
                 </p>
                 <p className="mt-1 text-sm text-gray-500">{selectedWidth * length} m² covered parking</p>
                 <div className="mt-4 flex items-center justify-between text-sm">
-                  <Link href="/contact" className="font-semibold text-[#da1a33]">
+                  <Link
+                    href={`/tools/solar-carport-estimator?width=${selectedWidth}&length=${length}`}
+                    className="font-semibold text-[#da1a33]"
+                  >
                     Request quote
                   </Link>
                   <Link href="/solar" className="text-gray-500 underline">
@@ -399,8 +402,11 @@ export default function SolarRegionPageClient({ citySlug }) {
           region, site, and commercial goals.
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/contact" className="rounded-full bg-white px-6 py-3 font-semibold text-black">
-            Request Quote
+          <Link
+            href="/tools/solar-carport-estimator"
+            className="rounded-full bg-white px-6 py-3 font-semibold text-black"
+          >
+            Estimate your solar carport
           </Link>
           <a href="tel:+27828464555" className="rounded-full border border-white px-6 py-3">
             Call Us

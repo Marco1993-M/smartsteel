@@ -262,10 +262,10 @@ export default function SolarClient() {
                 Explore solar carports
               </Link>
               <Link
-                href="/contact"
+                href="/tools/solar-carport-estimator"
                 className="rounded-full border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-900 transition hover:border-[#da1a33] hover:text-[#da1a33]"
               >
-                Request a solar quote
+                Estimate your solar carport
               </Link>
             </div>
 
@@ -633,10 +633,10 @@ export default function SolarClient() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/contact"
+              href="/tools/solar-carport-estimator"
               className="rounded-full bg-white px-6 py-3 font-semibold text-[#da1a33] transition hover:bg-black hover:text-white"
             >
-              Contact Smart Steel
+              Estimate your solar carport
             </Link>
             <Link
               href="/solar-carports"

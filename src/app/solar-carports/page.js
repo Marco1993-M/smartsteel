@@ -190,10 +190,10 @@ export default function SolarCarportsHubPage() {
                 View solar overview
               </Link>
               <Link
-                href="/contact"
+                href="/tools/solar-carport-estimator"
                 className="rounded-full border border-white px-5 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-black"
               >
-                Request a quote
+                Estimate your solar carport
               </Link>
             </div>
           </div>
