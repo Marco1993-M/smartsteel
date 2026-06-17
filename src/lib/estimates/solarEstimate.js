@@ -37,10 +37,10 @@ export const SOLAR_SCOPE_OPTIONS = [
 
 export const SOLAR_ESTIMATE_MATERIALS = {
   "Solar carport": {
-    primarySteelRate: 1480,
-    secondarySteelRate: 255,
-    hardwareRate: 120,
-    installationRate: 360,
+    primarySteelRate: 420,
+    secondarySteelRate: 180,
+    hardwareRate: 80,
+    installationRate: 200,
     moduleSupportRate: 145,
   },
   "Solar ground mount": {
