@@ -483,6 +483,7 @@ export default function KanbanPage() {
   const [isAddingLead, setIsAddingLead] = useState(false)
   const [showPricesDrawer, setShowPricesDrawer] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [showMobileAdminPanel, setShowMobileAdminPanel] = useState(false)
   const [statusFilter, setStatusFilter] = useState("all")
   const [assigneeFilter, setAssigneeFilter] = useState("all")
   const [metricFilter, setMetricFilter] = useState("all")
@@ -1721,7 +1722,55 @@ export default function KanbanPage() {
               </div>
             </div>
 
-            <div className="grid gap-2 sm:flex sm:flex-wrap sm:gap-3">
+            <div className="sm:hidden">
+              <div className="grid gap-2">
+                <button
+                  className="inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+                  onClick={() => setIsAddingLead(true)}
+                >
+                  + New Lead
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowMobileAdminPanel((current) => !current)}
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                >
+                  {showMobileAdminPanel ? "Hide tools" : "Show tools"}
+                </button>
+              </div>
+              {showMobileAdminPanel ? (
+                <div className="mt-2 grid gap-2">
+                  <button
+                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    onClick={handleLogout}
+                  >
+                    Sign out
+                  </button>
+                  <button
+                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    onClick={() => setShowPricesDrawer(true)}
+                  >
+                    Prices & Templates
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!GENERAL_GOOGLE_SHEET_URL) {
+                        alert("Add your shared Google Sheet URL in src/app/kanban/page.js to enable this shortcut.")
+                        return
+                      }
+                      window.open(GENERAL_GOOGLE_SHEET_URL, "_blank", "noopener,noreferrer")
+                    }}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                  >
+                    <Link2 size={16} />
+                    General Sheet
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="hidden sm:flex sm:flex-wrap sm:gap-3">
               <button
                 className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto sm:py-2"
                 onClick={handleLogout}
@@ -2272,29 +2321,37 @@ export default function KanbanPage() {
         {crmView === "pipeline" && (
         <>
         <div ref={boardSectionRef} className="scroll-mt-20 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">Pipeline view</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Search quickly, filter fast, and move leads without extra scrolling.
+              </p>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex-1">
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Search leads
-              </label>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search by name, phone, email, request or notes"
+                placeholder="Search leads"
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
+                aria-label="Search leads"
               />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 hidden text-sm font-medium text-slate-700 sm:block">
                   Pipeline stage
                 </label>
                 <select
                   value={statusFilter}
                   onChange={(event) => setStatusFilter(event.target.value)}
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
+                  aria-label="Pipeline stage"
                 >
                   {STATUS_OPTIONS.map((status) => (
                     <option key={status} value={status}>
@@ -2305,13 +2362,14 @@ export default function KanbanPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 hidden text-sm font-medium text-slate-700 sm:block">
                   Assigned to
                 </label>
                 <select
                   value={assigneeFilter}
                   onChange={(event) => setAssigneeFilter(event.target.value)}
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
+                  aria-label="Assigned to"
                 >
                   {assigneeOptions.map((option) => (
                     <option key={option} value={option}>
