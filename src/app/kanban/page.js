@@ -60,6 +60,10 @@ const CRM_VIEW_OPTIONS = [
   { key: "quotes", label: "Quotes", helper: "Manage priced work and quoted momentum" },
   { key: "insights", label: "Insights", helper: "Check workload and risk" },
 ]
+const LEAD_FLOW_VIEW_OPTIONS = [
+  { key: "month", label: "Month" },
+  { key: "week", label: "Week" },
+]
 const GENERAL_GOOGLE_SHEET_URL = ""
 
 const emptyLead = {
@@ -247,6 +251,69 @@ function getTomorrowIsoDate() {
   tomorrow.setDate(tomorrow.getDate() + 1)
   tomorrow.setHours(9, 0, 0, 0)
   return tomorrow.toISOString()
+}
+
+function getStartOfDay(dateValue) {
+  const date = new Date(dateValue)
+  date.setHours(0, 0, 0, 0)
+  return date
+}
+
+function getStartOfWeek(dateValue) {
+  const date = getStartOfDay(dateValue)
+  const day = date.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  date.setDate(date.getDate() + diff)
+  return date
+}
+
+function getStartOfMonth(dateValue) {
+  const date = getStartOfDay(dateValue)
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function getStartOfQuarter(dateValue) {
+  const date = getStartOfDay(dateValue)
+  const quarterStartMonth = Math.floor(date.getMonth() / 3) * 3
+  return new Date(date.getFullYear(), quarterStartMonth, 1)
+}
+
+function addDays(dateValue, days) {
+  const date = new Date(dateValue)
+  date.setDate(date.getDate() + days)
+  return date
+}
+
+function addMonths(dateValue, months) {
+  const date = new Date(dateValue)
+  date.setMonth(date.getMonth() + months)
+  return date
+}
+
+function addQuarters(dateValue, quarters) {
+  return addMonths(dateValue, quarters * 3)
+}
+
+function countLeadsCreatedBetween(leads, startDate, endDate) {
+  const start = startDate.getTime()
+  const end = endDate.getTime()
+
+  return leads.filter((lead) => {
+    if (!lead.created_at) return false
+    const createdAt = new Date(lead.created_at).getTime()
+    return createdAt >= start && createdAt < end
+  }).length
+}
+
+function getChangeLabel(currentValue, previousValue) {
+  if (previousValue === 0 && currentValue === 0) return "No change"
+  if (previousValue === 0) return `+${currentValue} from last period`
+
+  const diff = currentValue - previousValue
+  const percentage = Math.round((diff / previousValue) * 100)
+
+  if (diff === 0) return "No change"
+  return `${diff > 0 ? "+" : ""}${diff} (${diff > 0 ? "+" : ""}${percentage}%) vs last period`
 }
 
 function parseQuoteValue(value) {
@@ -484,6 +551,7 @@ export default function KanbanPage() {
   const [showPricesDrawer, setShowPricesDrawer] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [showMobileAdminPanel, setShowMobileAdminPanel] = useState(false)
+  const [leadFlowView, setLeadFlowView] = useState("month")
   const [statusFilter, setStatusFilter] = useState("all")
   const [assigneeFilter, setAssigneeFilter] = useState("all")
   const [metricFilter, setMetricFilter] = useState("all")
@@ -1479,6 +1547,72 @@ export default function KanbanPage() {
     }
   }, [leads])
 
+  const leadFlowSummary = useMemo(() => {
+    const now = new Date()
+    const currentWeekStart = getStartOfWeek(now)
+    const nextWeekStart = addDays(currentWeekStart, 7)
+    const previousWeekStart = addDays(currentWeekStart, -7)
+
+    const currentMonthStart = getStartOfMonth(now)
+    const nextMonthStart = addMonths(currentMonthStart, 1)
+    const previousMonthStart = addMonths(currentMonthStart, -1)
+
+    const currentQuarterStart = getStartOfQuarter(now)
+    const nextQuarterStart = addQuarters(currentQuarterStart, 1)
+    const previousQuarterStart = addQuarters(currentQuarterStart, -1)
+
+    const currentWeek = countLeadsCreatedBetween(leads, currentWeekStart, nextWeekStart)
+    const previousWeek = countLeadsCreatedBetween(leads, previousWeekStart, currentWeekStart)
+    const currentMonth = countLeadsCreatedBetween(leads, currentMonthStart, nextMonthStart)
+    const previousMonth = countLeadsCreatedBetween(leads, previousMonthStart, currentMonthStart)
+    const currentQuarter = countLeadsCreatedBetween(leads, currentQuarterStart, nextQuarterStart)
+    const previousQuarter = countLeadsCreatedBetween(leads, previousQuarterStart, currentQuarterStart)
+
+    return {
+      currentWeek,
+      previousWeek,
+      currentMonth,
+      previousMonth,
+      currentQuarter,
+      previousQuarter,
+    }
+  }, [leads])
+
+  const leadFlowCards = useMemo(() => {
+    const isMonthView = leadFlowView === "month"
+    const currentValue = isMonthView ? leadFlowSummary.currentMonth : leadFlowSummary.currentWeek
+    const previousValue = isMonthView ? leadFlowSummary.previousMonth : leadFlowSummary.previousWeek
+
+    return [
+      {
+        label: isMonthView ? "New leads this month" : "New leads this week",
+        value: currentValue,
+        helper: isMonthView
+          ? "All new leads created this month."
+          : "All new leads created this week.",
+        tone: "border-slate-200 bg-white",
+      },
+      {
+        label: isMonthView ? "Previous month" : "Previous week",
+        value: previousValue,
+        helper: getChangeLabel(currentValue, previousValue),
+        tone: "border-sky-200 bg-sky-50",
+      },
+      {
+        label: "This quarter",
+        value: leadFlowSummary.currentQuarter,
+        helper: "New leads created this quarter so far.",
+        tone: "border-amber-200 bg-amber-50",
+      },
+      {
+        label: "Previous quarter",
+        value: leadFlowSummary.previousQuarter,
+        helper: getChangeLabel(leadFlowSummary.currentQuarter, leadFlowSummary.previousQuarter),
+        tone: "border-emerald-200 bg-emerald-50",
+      },
+    ]
+  }, [leadFlowSummary, leadFlowView])
+
   const quotedLeads = useMemo(() => {
     return [...leads]
       .filter((lead) => normalizeStatus(lead.status) === "quoted")
@@ -1806,6 +1940,48 @@ export default function KanbanPage() {
             </div>
           </div>
         </div>
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Lead flow
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                New lead momentum for the team
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Quick visibility on lead volume this week, this month, and against previous periods.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {LEAD_FLOW_VIEW_OPTIONS.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setLeadFlowView(option.key)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    leadFlowView === option.key
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {leadFlowCards.map((card) => (
+              <div key={card.label} className={`rounded-2xl border p-4 ${card.tone}`}>
+                <p className="text-sm font-semibold text-slate-900">{card.label}</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">{card.value}</p>
+                <p className="mt-2 text-sm text-slate-600">{card.helper}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
