@@ -59,6 +59,26 @@ const evaluationPoints = [
   },
 ]
 
+const buyerChecklist = [
+  "Know whether you need a standard-size kit or a larger engineered system.",
+  "Ask exactly what is included and what is excluded from the price.",
+  "Check lead times for pricing, production, and delivery.",
+  "Look for real South African project experience and practical support.",
+]
+
+const systemComparison = [
+  {
+    title: "Standard kit systems",
+    description:
+      "Usually better for simpler storage, workshop, agricultural, and self-build style projects where standard sizes and quicker comparison matter most.",
+  },
+  {
+    title: "Larger engineered systems",
+    description:
+      "Usually better when span, layout, loading, or site requirements are more custom and the project needs a stronger engineered route from the start.",
+  },
+]
+
 const supplierQuestions = [
   "What type of steel warehouse system do you recommend for my project, and why?",
   "What exactly is included in the quoted price?",
@@ -127,10 +147,38 @@ export default function SteelWarehouseSupplierGuidePage() {
                 How to Choose a Steel Warehouse Supplier in South Africa
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                If you are comparing warehouse suppliers, the goal is not just to find a low price.
-                It is to find a supplier that explains the right structure clearly, prices it
-                properly, and helps you move forward with confidence.
+                If you are comparing warehouse suppliers, the goal is not just to find a low
+                price. It is to choose a supplier that explains the right structure clearly, prices
+                it properly, and helps you avoid expensive mistakes later.
               </p>
+
+              <div className="mt-8 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#da1a33]">
+                    Start here
+                  </p>
+                  <p className="mt-3 text-lg font-semibold text-slate-950">
+                    The right supplier should help you understand the system first, not just send a number.
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                    Most buying mistakes happen when price is compared before the supplier, structure
+                    type, and real scope are properly understood.
+                  </p>
+                </div>
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Buyer checklist
+                  </p>
+                  <div className="mt-3 space-y-3">
+                    {buyerChecklist.map((item) => (
+                      <div key={item} className="flex items-start gap-3 text-sm text-slate-700">
+                        <span className="mt-1 h-2 w-2 rounded-full bg-[#da1a33]" />
+                        <p>{item}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -141,6 +189,18 @@ export default function SteelWarehouseSupplierGuidePage() {
               matters even more in South Africa, where delivery, local project conditions, and the
               right type of system can change the outcome of the build quite quickly.
             </p>
+
+            <div className="mt-8 grid gap-4 lg:grid-cols-2">
+              {systemComparison.map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5"
+                >
+                  <h2 className="text-xl font-semibold text-slate-950">{item.title}</h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
+                </div>
+              ))}
+            </div>
 
             <div className="mt-8 space-y-8">
               {evaluationPoints.map((point) => (
@@ -210,6 +270,24 @@ export default function SteelWarehouseSupplierGuidePage() {
               That kind of clarity does not just help with pricing. It helps you understand whether
               you are looking at the right type of structure in the first place.
             </p>
+
+            <div className="mt-6 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+              <p className="text-sm font-semibold text-slate-950">What good support feels like</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl bg-white p-4 text-sm leading-6 text-slate-700">
+                  Clear size and system comparisons before you request a final quote.
+                </div>
+                <div className="rounded-2xl bg-white p-4 text-sm leading-6 text-slate-700">
+                  Practical pricing tools that help you start with the right budget range.
+                </div>
+                <div className="rounded-2xl bg-white p-4 text-sm leading-6 text-slate-700">
+                  Straight answers about what is included, excluded, and still project-specific.
+                </div>
+                <div className="rounded-2xl bg-white p-4 text-sm leading-6 text-slate-700">
+                  A clearer path into either a standard kit or a more custom warehouse solution.
+                </div>
+              </div>
+            </div>
           </section>
 
           <section className="mt-8 rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-sm sm:p-8">
