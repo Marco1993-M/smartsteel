@@ -120,16 +120,24 @@ export const cflcLaunchRanges = LAUNCH_SPANS.map((span) => {
 })
 
 export const cflcCatalogueMetadata = {
-  title: "CFLC Warehouse Kits | Smart Steel",
+  title: "Steel Warehouse Kits South Africa | Smart Steel",
   description:
-    "Browse Smart Steel CFLC warehouse kits in practical repeatable sizes, including 6m, 10m, and 12m span options built for easy enquiries and a clearer lip channel steel buying experience.",
+    "Browse steel warehouse kits in South Africa from Smart Steel, including practical 6m, 10m, and 12m span options for self-build, storage, workshop, and utility projects.",
+  keywords: [
+    "steel warehouse kits south africa",
+    "self-build warehouse",
+    "DIY steel warehouse kits",
+    "warehouse kits",
+    "lip channel warehouse kits",
+    "steel shed kits south africa",
+  ],
   alternates: {
     canonical: CATEGORY_PATH,
   },
   openGraph: {
-    title: "CFLC Warehouse Kits | Smart Steel",
+    title: "Steel Warehouse Kits South Africa | Smart Steel",
     description:
-      "Explore Smart Steel CFLC warehouse kits in practical sizes for smaller-span value, easy enquiries, and a clearer lip channel steel buying experience.",
+      "Explore Smart Steel steel warehouse kits in practical sizes for self-build, storage, workshop, and utility projects.",
     url: `${SITE_URL}${CATEGORY_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -138,7 +146,7 @@ export const cflcCatalogueMetadata = {
 }
 
 export const cflcCatalogueIntroPoints = [
-  "CFLC suits clients who want a practical lip channel steel kit for smaller warehouses, covered work areas, and simpler product enquiries.",
+  "These warehouse kits suit clients who want a practical steel building kit for smaller warehouses, covered work areas, and simpler enquiries.",
   "The range focuses on standard warehouse kit sizes that are easier to compare before you enquire.",
   "These prices give you a useful guide before final delivery, finish, and project details are confirmed.",
 ]

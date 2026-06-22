@@ -39,6 +39,11 @@ const productQuestions = [
 
 const supportLinks = [
   {
+    title: "Read the self-build guide",
+    description: "Use the self-build warehouse guide if you want a clearer picture of planning, foundations, assembly, and common mistakes.",
+    href: "/news/self-build-steel-warehouse-kits-south-africa",
+  },
+  {
     title: "Browse CFLC carport kits",
     description: "See the dedicated carport page if you want single and double carport sizes first.",
     href: "/products/cflc-carport-kits",
@@ -85,11 +90,11 @@ export default function CflcDiyWarehouseKitsPage() {
                 CFLC Warehouse Kits
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                CFLC warehouse kits built for easier lip channel warehouse comparison
+                Steel warehouse kits for self-build storage, workshop, and utility projects
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Compare practical CFLC and lip channel warehouse kit sizes. Choose a size, see the
-                product details clearly, and request the warehouse kit that fits your project.
+                Compare practical steel warehouse kit sizes, see the details clearly, and request
+                the option that fits your storage, workshop, poultry, or covered work area project.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link

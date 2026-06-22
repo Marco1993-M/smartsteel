@@ -4,6 +4,15 @@ export const metadata = {
   title: "Steel Warehouses South Africa | LSF & CFLC Warehouse Systems",
   description:
     "Explore steel warehouses in South Africa from Smart Steel. Compare LSF and CFLC warehouse systems, understand pricing, and choose between a custom warehouse or practical lipped channel kit options.",
+  keywords: [
+    "steel warehouses south africa",
+    "warehouse supplier south africa",
+    "warehouse kits south africa",
+    "self-build warehouse",
+    "DIY steel warehouse kits",
+    "lip channel warehouse",
+    "light steel warehouse",
+  ],
   alternates: {
     canonical: "/warehouses",
   },
@@ -129,6 +138,11 @@ const finalQuestions = [
 ]
 
 const clusterLinks = [
+  {
+    title: "Self-build warehouse guide",
+    description: "Read the practical guide if you are comparing DIY steel warehouse kits and planning to build your own structure.",
+    href: "/news/self-build-steel-warehouse-kits-south-africa",
+  },
   {
     title: "LSF warehouse systems",
     description: "See the custom warehouse page if you need more flexibility in size, cladding, and layout.",

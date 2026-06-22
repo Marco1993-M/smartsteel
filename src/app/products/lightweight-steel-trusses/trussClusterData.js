@@ -4,12 +4,12 @@ const BASE_PATH = '/products/lightweight-steel-trusses';
 export const trussClusterPages = {
   pillar: {
     slug: '',
-    title: 'Lightweight Steel Roof Trusses South Africa | Smart Steel',
-    heading: 'Lightweight steel roof trusses built for straighter, stronger roofing',
+    title: 'Light Steel Roof Trusses South Africa | Smart Steel',
+    heading: 'Light steel roof trusses for straighter, stronger roofing',
     description:
-      'Explore Smart Steel lightweight steel roof trusses for homes, schools, churches, warehouses, and commercial roofs across South Africa.',
+      'Explore light steel roof trusses in South Africa for houses, schools, churches, warehouses, and commercial roofs with Smart Steel.',
     intro:
-      'Smart Steel supplies lightweight steel roof trusses for buyers who want cleaner roof lines, consistent structural performance, termite resistance, and faster installation.',
+      'Smart Steel supplies light steel roof trusses for buyers who want cleaner roof lines, consistent structural performance, termite resistance, and faster installation.',
     audience: 'homeowners, builders, architects, developers, and commercial buyers',
     keyPoints: [
       'Ideal for residential, commercial, and institutional roofing projects',
@@ -324,6 +324,14 @@ export function buildTrussMetadata(slug = '') {
   return {
     title: page.title,
     description: page.description,
+    keywords: [
+      'light steel trusses',
+      'light steel roof trusses',
+      'lightweight steel roof trusses',
+      'steel roof trusses south africa',
+      'roof truss prices',
+      'steel trusses vs timber',
+    ],
     alternates: {
       canonical: page.path,
     },

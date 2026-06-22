@@ -2,16 +2,25 @@ import Image from "next/image"
 import Link from "next/link"
 
 export const metadata = {
-  title: "Steel Building Products | Smart Steel",
+  title: "Steel Building Products South Africa | Smart Steel",
   description:
-    "Browse Smart Steel steel building products, including LSF warehouses, CFLC warehouse kits, CFLC carport kits, solar carports, trusses, and bracketry.",
+    "Browse steel building products in South Africa from Smart Steel, including warehouses, warehouse kits, carport kits, solar carports, ground mounts, and trusses.",
+  keywords: [
+    "steel building products south africa",
+    "steel warehouses",
+    "warehouse kits",
+    "carport kits",
+    "solar carports",
+    "solar ground mounts",
+    "light steel trusses",
+  ],
   alternates: {
     canonical: "/products",
   },
   openGraph: {
-    title: "Steel Building Products | Smart Steel",
+    title: "Steel Building Products South Africa | Smart Steel",
     description:
-      "Explore Smart Steel steel building products with clear pages for warehouses, warehouse kits, carport kits, solar carports, trusses, and bracketry.",
+      "Explore Smart Steel steel building products with dedicated pages for warehouses, warehouse kits, carport kits, solar carports, ground mounts, and trusses.",
     url: "https://www.smartsteel.co.za/products",
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -113,12 +122,12 @@ export default function ProductsHubPage() {
                 Products
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Choose the product page that matches your project
+                Steel building products in South Africa, grouped by what you need
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Start with LSF warehouses for custom warehouse projects, CFLC warehouse kits for
-                standard-size storage buildings, CFLC carport kits for parking cover, and solar
-                carports for energy-linked parking structures.
+                Start with warehouse systems for storage buildings, carport kits for parking cover,
+                solar carports for covered parking with energy value, ground mounts for solar
+                fields, and trusses for roof structure enquiries.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link

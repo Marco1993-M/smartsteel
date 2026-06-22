@@ -6,6 +6,17 @@ import Link from 'next/link';
 
 const articles = [
   {
+    slug: 'self-build-steel-warehouse-kits-south-africa',
+    category: 'Buyer guides',
+    date: '22 June 2026',
+    readTime: '5 min read',
+    title: 'Self-build steel warehouse kits in South Africa',
+    excerpt:
+      'A practical guide to planning a self-build steel warehouse kit, including site prep, foundations, assembly, pricing, and the most common mistakes.',
+    image: '/warehouse.jpg',
+    featured: true,
+  },
+  {
     slug: 'how-to-choose-a-steel-warehouse-supplier-in-south-africa',
     category: 'Buyer guides',
     date: '22 June 2026',
@@ -14,7 +25,6 @@ const articles = [
     excerpt:
       'A practical guide to comparing warehouse suppliers, pricing clarity, lead times, structural systems, and support before you commit.',
     image: '/warehouse.jpg',
-    featured: true,
   },
   {
     slug: 'resilient-outcomes-of-lightweight-steel',
@@ -64,7 +74,7 @@ export default function NewsPage() {
   return (
     <main className="max-w-7xl mx-auto px-6 py-16">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
-        <h1 className="text-3xl font-semibold mb-4 md:mb-0">News & Events</h1>
+        <h1 className="text-3xl font-semibold mb-4 md:mb-0">Buyer Guides, Articles & Updates</h1>
         <div className="w-full md:w-auto">
           <select
             value={sortBy}

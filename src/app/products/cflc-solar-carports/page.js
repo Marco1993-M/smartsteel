@@ -6,16 +6,24 @@ const PAGE_PATH = "/products/cflc-solar-carports"
 const SHARE_IMAGE = `${SITE_URL}/solar_carport_hero.webp`
 
 export const metadata = {
-  title: "CFLC Solar Carports | Smart Steel",
+  title: "Solar Carports South Africa | Smart Steel",
   description:
-    "Explore Smart Steel CFLC solar carports for covered parking, solar-ready layouts, and practical steel parking structures built for South African sites.",
+    "Explore solar carports in South Africa with Smart Steel. Compare covered parking structures, solar-ready layouts, commercial applications, and start with a faster estimate.",
+  keywords: [
+    "solar carports south africa",
+    "solar carport",
+    "solar panel carport",
+    "solar powered carport",
+    "commercial solar carport",
+    "carport with solar",
+  ],
   alternates: {
     canonical: PAGE_PATH,
   },
   openGraph: {
-    title: "CFLC Solar Carports | Smart Steel",
+    title: "Solar Carports South Africa | Smart Steel",
     description:
-      "Compare Smart Steel CFLC solar carports for covered parking, solar-ready layouts, and practical steel parking structures.",
+      "Compare solar carports for covered parking, solar-ready layouts, and commercial parking projects across South Africa.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -31,9 +39,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CFLC Solar Carports | Smart Steel",
+    title: "Solar Carports South Africa | Smart Steel",
     description:
-      "Compare Smart Steel CFLC solar carports for covered parking, solar-ready layouts, and practical steel parking structures.",
+      "Compare solar carports for covered parking, solar-ready layouts, and commercial parking projects across South Africa.",
     images: [SHARE_IMAGE],
   },
 }
@@ -120,14 +128,15 @@ export default function CflcSolarCarportsPage() {
           <div className="relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-                CFLC Solar Carports
+                Solar Carports
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Solar carports for covered parking and solar-ready project planning
+                Solar carports in South Africa for covered parking and solar-ready layouts
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Explore practical steel solar carports for offices, schools, business parks, and
-                parking areas that need covered bays with long-term solar value.
+                Explore steel solar carports for offices, schools, business parks, estates, and
+                commercial parking areas that need shade, stronger site value, and space for solar
+                panel integration.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link

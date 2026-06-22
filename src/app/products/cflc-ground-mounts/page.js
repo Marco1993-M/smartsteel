@@ -50,16 +50,24 @@ const groundMountExamples = [
 })
 
 export const metadata = {
-  title: "CFLC Ground Mounts | Smart Steel",
+  title: "Solar Ground Mount Structures South Africa | Smart Steel",
   description:
-    "Explore Smart Steel CFLC ground mounts for solar projects, including scalable 30-panel structure units, steel finish choices, and practical enquiry options.",
+    "Explore solar ground mount structures in South Africa with Smart Steel. Compare practical steel support options, panel-count starting points, and the main price drivers.",
+  keywords: [
+    "solar ground mount",
+    "solar ground mount south africa",
+    "ground mount solar system",
+    "solar mount system",
+    "solar ground mount structure",
+    "ground mounted solar panels",
+  ],
   alternates: {
     canonical: PAGE_PATH,
   },
   openGraph: {
-    title: "CFLC Ground Mounts | Smart Steel",
+    title: "Solar Ground Mount Structures South Africa | Smart Steel",
     description:
-      "Compare Smart Steel CFLC ground mounts for solar projects, with scalable panel structures and practical enquiry options.",
+      "Compare solar ground mount structures, scalable panel layouts, and practical enquiry options with Smart Steel.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -69,7 +77,7 @@ export const metadata = {
 
 const quickAnswers = [
   {
-    question: "What is a CFLC ground mount?",
+    question: "What is a solar ground mount?",
     answer:
       "It is a steel structure that supports solar panels on the ground instead of on a roof or carport.",
   },
@@ -131,22 +139,22 @@ export default function CflcGroundMountsPage() {
           <div className="relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-                CFLC Ground Mounts
+                Solar Ground Mounts
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                CFLC ground mounts for practical solar structure enquiries
+                Solar ground mount structures for practical solar field layouts
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Explore scalable steel ground mount structures for solar projects. This page gives
-                you a clear starting point for panel count, structure size, and the next enquiry
-                step.
+                Explore scalable steel ground mount structures for solar projects across South
+                Africa. Use this page to compare likely panel counts, starting sizes, and the main
+                factors that change price.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="#ground-mount-options"
                   className="rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
                 >
-                  View ground mount options
+                  View solar ground mounts
                 </Link>
                 <Link
                   href="/contact"
