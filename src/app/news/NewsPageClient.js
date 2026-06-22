@@ -6,6 +6,17 @@ import Link from 'next/link';
 
 const articles = [
   {
+    slug: 'how-to-choose-a-steel-warehouse-supplier-in-south-africa',
+    category: 'Buyer guides',
+    date: '22 June 2026',
+    readTime: '4 min read',
+    title: 'How to choose a steel warehouse supplier in South Africa',
+    excerpt:
+      'A practical guide to comparing warehouse suppliers, pricing clarity, lead times, structural systems, and support before you commit.',
+    image: '/warehouse.jpg',
+    featured: true,
+  },
+  {
     slug: 'resilient-outcomes-of-lightweight-steel',
     category: 'Industry news',
     date: '2 July 2025',
@@ -14,7 +25,6 @@ const articles = [
     excerpt:
       'Framing made from lightweight steel offers a resilient and reliable solution for modern construction.',
     image: '/news1.jpg',
-    featured: true,
   },
   {
     slug: 'smart-steel-unveils-new-modular-warehouses',
@@ -75,7 +85,7 @@ export default function NewsPage() {
         <aside className="col-span-1">
           <h2 className="text-lg font-semibold mb-4">Filter by Category</h2>
           <ul className="space-y-2 text-sm text-gray-700">
-            {['All', 'Industry news', 'Company news'].map((category) => (
+            {['All', 'Buyer guides', 'Industry news', 'Company news'].map((category) => (
               <li key={category}>
                 <button
                   onClick={() => setSelectedCategory(category)}
