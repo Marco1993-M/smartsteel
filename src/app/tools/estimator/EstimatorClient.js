@@ -68,7 +68,6 @@ export default function EstimatorPage() {
   useEffect(() => {
     if (isLcssWarehouse) {
       setWidth((current) => (LCSS_WAREHOUSE_WIDTH_OPTIONS.includes(current) ? current : 6));
-      setCladdingInstalled(false);
       setDistance(0);
       setUsingMyLocation(false);
       setLocationError(null);
@@ -78,6 +77,12 @@ export default function EstimatorPage() {
     }
     setEstimate(null);
   }, [isLcssWarehouse]);
+
+  useEffect(() => {
+    if (isLcssWarehouse && cladding === 'None' && claddingInstalled) {
+      setCladdingInstalled(false);
+    }
+  }, [cladding, claddingInstalled, isLcssWarehouse]);
 
   const estimatePreview = useMemo(
     () =>
@@ -130,8 +135,9 @@ export default function EstimatorPage() {
       width,
       length,
       height: wallHeight,
-      cladding: isLcssWarehouse ? steelFinish : cladding,
-      cladding_installed: isLcssWarehouse ? 'N/A' : claddingInstalled ? 'Yes' : 'No',
+      cladding: cladding,
+      cladding_installed: claddingInstalled ? 'Yes' : 'No',
+      steel_finish: steelFinish,
       delivery_distance: distance,
     };
 
@@ -160,7 +166,7 @@ export default function EstimatorPage() {
           delivery_distance: distance,
           allocated_to: allocatedTo,
           status: 'new',
-          cladding: isLcssWarehouse ? steelFinish : cladding,
+          cladding,
           estimate_request: estimate.summary.estimateRequest,
           lead_source: "Estimator",
           product_type: productType,
@@ -326,6 +332,32 @@ export default function EstimatorPage() {
                   </label>
 
                   <label className="block font-semibold text-gray-700">
+                    Cladding
+                    <select
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                      value={cladding}
+                      onChange={(e) => setCladding(e.target.value)}
+                    >
+                      {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="block font-semibold text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={claddingInstalled}
+                      onChange={(e) => setCladdingInstalled(e.target.checked)}
+                      className="mr-2"
+                      disabled={cladding === 'None'}
+                    />
+                    Include Cladding Installation
+                  </label>
+
+                  <label className="block font-semibold text-gray-700">
                     Gable Type
                     <select
                       className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
@@ -397,8 +429,7 @@ export default function EstimatorPage() {
               ) : (
                 <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-900">
                   This CFLC estimate gives you a practical starting point for the structure price.
-                  Delivery, sheeting, and installation can still be added once your full project
-                  details are confirmed.
+                  Delivery can still be added once your full project details are confirmed.
                 </div>
               )}
 
@@ -441,7 +472,7 @@ export default function EstimatorPage() {
                       This estimate gives you a clear starting budget for a CFLC warehouse.
                     </p>
                     <p className="mt-2 text-xs text-gray-500">
-                      Final pricing is confirmed once the full design scope, sheeting, delivery, and project details are reviewed.
+                      Final pricing is confirmed once the full design scope, delivery, and project details are reviewed.
                     </p>
                   </div>
                 )}
