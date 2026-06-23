@@ -188,6 +188,13 @@ export function calculateLcssWarehouseEstimate(input) {
   const totalSteelKg = totalColumnKg + totalRafterKg + totalBraceKg
 
   const steelRatePerTon = steelFinish === "Galv" ? LCSS_GALV_RATE_PER_TON : LCSS_MILD_RATE_PER_TON
+  const steelRatePerKg = steelRatePerTon / 1000
+  const columnUnitRate = columnKg * steelRatePerKg
+  const rafterUnitRate = span.rafterKgPerPortal * steelRatePerKg
+  const braceUnitRate = span.braceKgPerLength * 2 * steelRatePerKg
+  const totalColumnCost = totalColumnKg * steelRatePerKg
+  const totalRafterCost = totalRafterKg * steelRatePerKg
+  const totalBraceCost = totalBraceKg * steelRatePerKg
   const steelCost = totalSteelKg * (steelRatePerTon / 1000)
 
   const roofPurlins = Math.ceil(span.trussLength / 1) * 2
@@ -223,32 +230,24 @@ export function calculateLcssWarehouseEstimate(input) {
       label: `Columns (${span.columnSection})`,
       quantity: portals * quantity,
       unit: "portals",
-      unitRate: columnKg,
-      total: totalColumnKg * quantity,
+      unitRate: columnUnitRate,
+      total: totalColumnCost * quantity,
     }),
     buildLineItem({
       code: "lcss_rafters",
       label: `Rafters (${span.rafterSection})`,
       quantity: portals * quantity,
       unit: "portals",
-      unitRate: span.rafterKgPerPortal,
-      total: totalRafterKg * quantity,
+      unitRate: rafterUnitRate,
+      total: totalRafterCost * quantity,
     }),
     buildLineItem({
       code: "lcss_bracing",
       label: `X-bracing (${span.braceSection})`,
       quantity: (Math.floor(bays / 4) + 1) * quantity,
       unit: "brace sets",
-      unitRate: span.braceKgPerLength * 2,
-      total: totalBraceKg * quantity,
-    }),
-    buildLineItem({
-      code: "lcss_steel_cost",
-      label: `${steelFinish} CFLC steel`,
-      quantity: roundMoney((totalSteelKg * quantity) / 1000),
-      unit: "tons",
-      unitRate: steelRatePerTon,
-      total: steelCost * quantity,
+      unitRate: braceUnitRate,
+      total: totalBraceCost * quantity,
     }),
     buildLineItem({
       code: "lcss_hats",
