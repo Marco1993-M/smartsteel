@@ -1,4 +1,8 @@
-import { formatCurrency } from "./warehouseEstimate"
+import {
+  formatCurrency,
+  WAREHOUSE_CLADDING_OPTIONS,
+  WAREHOUSE_MATERIALS,
+} from "./warehouseEstimate"
 
 const LCSS_BAY_SPACING = 2.5
 const LCSS_MARKUP_RATE = 0.3
@@ -9,6 +13,7 @@ const LCSS_HAT_RATE_PER_METER = 56
 const LCSS_LAP_WASTE_FACTOR = 1.04
 const LCSS_OVERALL_WASTE_FACTOR = 1.1
 const DEFAULT_WALL_HEIGHT = 3
+const LCSS_INSTALL_RATE = WAREHOUSE_MATERIALS.installRate
 
 export const LCSS_WAREHOUSE_WIDTH_OPTIONS = [3, 6, 8, 10, 12]
 export const LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS = ["Galv", "Mild"]
@@ -110,7 +115,9 @@ export function validateLcssWarehouseEstimateInput(input) {
   const length = Number(input?.length)
   const wallHeight = Number(input?.wallHeight || DEFAULT_WALL_HEIGHT)
   const quantity = Math.max(1, Math.round(Number(input?.quantity) || 1))
-  const steelFinish = input?.steelFinish || input?.cladding || "Galv"
+  const steelFinish = input?.steelFinish || "Galv"
+  const cladding = input?.cladding || "None"
+  const claddingInstalled = Boolean(input?.claddingInstalled)
   const gableMode = input?.gableMode || "sheeted_gable"
   const lengthRule = getLcssLengthRule(width, length)
 
@@ -134,6 +141,10 @@ export function validateLcssWarehouseEstimateInput(input) {
     throw new Error("Please choose Galv or Mild steel.")
   }
 
+  if (!WAREHOUSE_CLADDING_OPTIONS.includes(cladding)) {
+    throw new Error("Please choose a valid cladding option.")
+  }
+
   if (!LCSS_WAREHOUSE_GABLE_OPTIONS.some((option) => option.value === gableMode)) {
     throw new Error("Please choose a valid gable option.")
   }
@@ -144,6 +155,8 @@ export function validateLcssWarehouseEstimateInput(input) {
     wallHeight,
     quantity,
     steelFinish,
+    cladding,
+    claddingInstalled,
     gableMode,
     baySpacing: lengthRule.baySpacing,
     lengthRule: lengthRule.label,
@@ -152,7 +165,18 @@ export function validateLcssWarehouseEstimateInput(input) {
 
 export function calculateLcssWarehouseEstimate(input) {
   const normalized = validateLcssWarehouseEstimateInput(input)
-  const { width, length, wallHeight, quantity, steelFinish, gableMode, baySpacing, lengthRule } = normalized
+  const {
+    width,
+    length,
+    wallHeight,
+    quantity,
+    steelFinish,
+    cladding,
+    claddingInstalled,
+    gableMode,
+    baySpacing,
+    lengthRule,
+  } = normalized
   const span = getLcssSpanData(width)
 
   const portals = length / baySpacing + 1
@@ -178,17 +202,20 @@ export function calculateLcssWarehouseEstimate(input) {
     ) * LCSS_OVERALL_WASTE_FACTOR
 
   const hatCost = totalHatLengthMeters * LCSS_HAT_RATE_PER_METER
-  const subTotalBeforeMarkup = steelCost + hatCost
-  const markupValue = subTotalBeforeMarkup * LCSS_MARKUP_RATE
-  const totalExclVat = subTotalBeforeMarkup + markupValue
-  const vatValue = totalExclVat * LCSS_VAT_RATE
-  const totalInclVat = totalExclVat + vatValue
-
   const roofSheetingArea = span.trussLength * length * 2 * LCSS_OVERALL_WASTE_FACTOR
   const wallSheetingArea =
     (((wallHeight * length) * 2 + width * (wallHeight + span.trussHeight) * 2) *
       LCSS_OVERALL_WASTE_FACTOR)
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
+  const claddingSupplyRate = WAREHOUSE_MATERIALS.cladding[cladding]?.supply || 0
+  const claddingCost = cladding === "None" ? 0 : totalSheetingArea * claddingSupplyRate
+  const installationChargeArea = claddingInstalled && cladding !== "None" ? totalSheetingArea : 0
+  const installationCost = installationChargeArea * LCSS_INSTALL_RATE
+  const subTotalBeforeMarkup = steelCost + hatCost + claddingCost + installationCost
+  const markupValue = subTotalBeforeMarkup * LCSS_MARKUP_RATE
+  const totalExclVat = subTotalBeforeMarkup + markupValue
+  const vatValue = totalExclVat * LCSS_VAT_RATE
+  const totalInclVat = totalExclVat + vatValue
 
   const lineItems = [
     buildLineItem({
@@ -231,15 +258,33 @@ export function calculateLcssWarehouseEstimate(input) {
       unitRate: LCSS_HAT_RATE_PER_METER,
       total: hatCost * quantity,
     }),
-    buildLineItem({
-      code: "lcss_markup",
-      label: "Markup",
-      quantity: 1,
-      unit: "lot",
-      unitRate: roundMoney(markupValue * quantity),
-      total: markupValue * quantity,
-    }),
   ]
+
+  if (cladding !== "None") {
+    lineItems.push(
+      buildLineItem({
+        code: "lcss_cladding",
+        label: `${cladding} cladding`,
+        quantity: roundMoney(totalSheetingArea * quantity),
+        unit: "sqm",
+        unitRate: claddingSupplyRate,
+        total: claddingCost * quantity,
+      })
+    )
+  }
+
+  if (claddingInstalled) {
+    lineItems.push(
+      buildLineItem({
+        code: "lcss_installation",
+        label: "Cladding installation",
+        quantity: roundMoney(installationChargeArea * quantity),
+        unit: "sqm",
+        unitRate: LCSS_INSTALL_RATE,
+        total: installationCost * quantity,
+      })
+    )
+  }
 
   return {
     input: {
@@ -284,6 +329,9 @@ export function calculateLcssWarehouseEstimate(input) {
       markupMultiplier: roundMoney(1 + LCSS_MARKUP_RATE),
       estimatedTotal: roundMoney(totalExclVat * quantity),
       totalInclVat: roundMoney(totalInclVat * quantity),
+      claddingCost: roundMoney(claddingCost * quantity),
+      installationCost: roundMoney(installationCost * quantity),
+      installationChargeArea: roundMoney(installationChargeArea * quantity),
     },
     sheeting: {
       roofSheetingArea: roundMoney(roofSheetingArea * quantity),
@@ -293,12 +341,14 @@ export function calculateLcssWarehouseEstimate(input) {
     lineItems,
     summary: {
       title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m LCSS Warehouse`,
-      shortDescription: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish.toLowerCase()} steel, ${gableMode === "sheeted_gable" ? "sheeted gable" : "open gable"}`,
-      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish}, ${gableMode === "sheeted_gable" ? "sheeted gable" : "open gable"}, priced from CFLC workbook model`,
+      shortDescription: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish.toLowerCase()} steel, ${gableMode === "sheeted_gable" ? "sheeted gable" : "open gable"}${cladding !== "None" ? `, ${cladding} cladding${claddingInstalled ? " with installation" : ", supply only"}` : ""}`,
+      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish}, ${gableMode === "sheeted_gable" ? "sheeted gable" : "open gable"}${cladding !== "None" ? `, ${cladding} cladding` : ", no cladding"}${cladding !== "None" ? claddingInstalled ? ", cladding supply and installation" : ", cladding supply only" : ""}, priced from CFLC workbook model`,
       layoutNote: "",
     },
     labels: {
       steelFinish,
+      cladding,
+      installation: claddingInstalled ? "Cladding installation included" : "Structure supply only",
       gableMode: gableMode === "sheeted_gable" ? "Sheeted gable" : "Open gable",
     },
     meta: {
