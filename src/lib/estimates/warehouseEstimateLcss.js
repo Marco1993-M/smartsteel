@@ -81,6 +81,10 @@ function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100
 }
 
+function applyMarkup(value) {
+  return roundMoney(value * (1 + LCSS_MARKUP_RATE))
+}
+
 function buildLineItem({ code, label, quantity, unit, unitRate, total }) {
   return {
     code,
@@ -189,12 +193,12 @@ export function calculateLcssWarehouseEstimate(input) {
 
   const steelRatePerTon = steelFinish === "Galv" ? LCSS_GALV_RATE_PER_TON : LCSS_MILD_RATE_PER_TON
   const steelRatePerKg = steelRatePerTon / 1000
-  const columnUnitRate = columnKg * steelRatePerKg
-  const rafterUnitRate = span.rafterKgPerPortal * steelRatePerKg
-  const braceUnitRate = span.braceKgPerLength * 2 * steelRatePerKg
-  const totalColumnCost = totalColumnKg * steelRatePerKg
-  const totalRafterCost = totalRafterKg * steelRatePerKg
-  const totalBraceCost = totalBraceKg * steelRatePerKg
+  const columnUnitRate = applyMarkup(columnKg * steelRatePerKg)
+  const rafterUnitRate = applyMarkup(span.rafterKgPerPortal * steelRatePerKg)
+  const braceUnitRate = applyMarkup(span.braceKgPerLength * 2 * steelRatePerKg)
+  const totalColumnCost = applyMarkup(totalColumnKg * steelRatePerKg)
+  const totalRafterCost = applyMarkup(totalRafterKg * steelRatePerKg)
+  const totalBraceCost = applyMarkup(totalBraceKg * steelRatePerKg)
   const steelCost = totalSteelKg * (steelRatePerTon / 1000)
 
   const roofPurlins = Math.ceil(span.trussLength / 1) * 2
@@ -254,8 +258,8 @@ export function calculateLcssWarehouseEstimate(input) {
       label: "Purlins, hats and wall hats",
       quantity: roundMoney(totalHatLengthMeters * quantity),
       unit: "m",
-      unitRate: LCSS_HAT_RATE_PER_METER,
-      total: hatCost * quantity,
+      unitRate: applyMarkup(LCSS_HAT_RATE_PER_METER),
+      total: applyMarkup(hatCost * quantity),
     }),
   ]
 
@@ -266,8 +270,8 @@ export function calculateLcssWarehouseEstimate(input) {
         label: `${cladding} cladding`,
         quantity: roundMoney(totalSheetingArea * quantity),
         unit: "sqm",
-        unitRate: claddingSupplyRate,
-        total: claddingCost * quantity,
+        unitRate: applyMarkup(claddingSupplyRate),
+        total: applyMarkup(claddingCost * quantity),
       })
     )
   }
@@ -279,8 +283,8 @@ export function calculateLcssWarehouseEstimate(input) {
         label: "Cladding installation",
         quantity: roundMoney(installationChargeArea * quantity),
         unit: "sqm",
-        unitRate: LCSS_INSTALL_RATE,
-        total: installationCost * quantity,
+        unitRate: applyMarkup(LCSS_INSTALL_RATE),
+        total: applyMarkup(installationCost * quantity),
       })
     )
   }
