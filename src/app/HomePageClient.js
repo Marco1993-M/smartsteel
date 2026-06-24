@@ -84,6 +84,12 @@ const supportCategories = [
     cta: 'Explore Solar',
   },
   {
+    title: 'Steel fabrication & installation',
+    description: 'A stronger route for fabrication, erection, and steel building delivery enquiries.',
+    href: '/steel-fabrication-installation',
+    cta: 'Explore Fabrication',
+  },
+  {
     title: 'LSF trusses',
     description: 'Precision-engineered roof truss systems for residential and commercial roofing.',
     href: '/products/lightweight-steel-trusses',
