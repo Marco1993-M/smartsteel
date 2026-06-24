@@ -112,6 +112,25 @@ const trustPoints = [
   },
 ];
 
+const deliveryPillars = [
+  {
+    title: 'Design',
+    description: 'Start with the right structural route and clearer project thinking before steel is committed.',
+  },
+  {
+    title: 'Fabrication',
+    description: 'Move into fabrication with a stronger link between the steel scope and the actual building outcome.',
+  },
+  {
+    title: 'Erection',
+    description: 'Support projects that need practical installation planning, sequence, and site-fit delivery.',
+  },
+  {
+    title: 'Delivery',
+    description: 'Help clients move from steel intent to a completed building route instead of stopping at product selection.',
+  },
+];
+
 const homepageQuestions = [
   {
     question: 'Do you supply lightweight steel warehouses across South Africa?',
@@ -279,6 +298,56 @@ export default function HomePageClient() {
                   </Link>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-6 pb-8 pt-4 md:pb-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-[2rem] border border-gray-200 bg-white p-8 shadow-sm">
+            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">
+                  More Than Products
+                </p>
+                <h2 className="mt-4 text-3xl font-bold text-black md:text-4xl">
+                  Smart Steel can help design, fabricate, erect, and deliver steel building projects
+                </h2>
+                <p className="mt-5 text-lg leading-8 text-gray-700">
+                  Some clients need more than a product page. They need a company that can help
+                  shape the building route properly, align the steel scope, and support the project
+                  from planning through fabrication and site delivery.
+                </p>
+                <p className="mt-4 text-base leading-8 text-gray-700">
+                  That includes warehouse buildings, farm structures, workshops, utility buildings,
+                  solar support steel, and broader fabrication and installation enquiries across
+                  South Africa.
+                </p>
+                <div className="mt-8 flex flex-wrap gap-4">
+                  <Link
+                    href="/steel-fabrication-installation"
+                    className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-black"
+                  >
+                    Explore Fabrication & Installation
+                  </Link>
+                  <Link
+                    href="/steel-farm-buildings"
+                    className="rounded-full border border-black bg-white px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
+                  >
+                    Explore Steel Farm Buildings
+                  </Link>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {deliveryPillars.map((item) => (
+                  <div key={item.title} className="rounded-3xl border border-gray-200 bg-gray-50 p-6">
+                    <p className="text-xl font-bold text-black">{item.title}</p>
+                    <p className="mt-3 text-sm leading-7 text-gray-700">{item.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
