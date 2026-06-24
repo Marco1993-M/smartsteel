@@ -56,7 +56,7 @@ const quickAnswers = [
   {
     question: "What type of projects fit this page?",
     answer:
-      "Warehouses, farm buildings, roof structures, solar support steel, utility buildings, and selected custom steel building work all fit this route.",
+      "Warehouses, farm buildings, roof structures, solar support steel, utility buildings, and selected custom steel building work all fit this page.",
   },
   {
     question: "Do you only fabricate, or do you also install?",
@@ -74,7 +74,7 @@ const serviceCards = [
   {
     title: "Steel fabrication",
     description:
-      "A stronger route for clients who need structural steel prepared around real project dimensions, member schedules, and practical building use.",
+      "A strong option for clients who need structural steel prepared around real project dimensions, member schedules, and practical building use.",
   },
   {
     title: "Steel erection and installation",
@@ -106,7 +106,7 @@ const processSteps = [
   {
     title: "2. Align design, fabrication, and budget",
     body:
-      "Good steel projects are not only about making members. They depend on getting the structural route, practical detailing, and commercial scope aligned early so the fabricated steel matches the real project.",
+      "Good steel projects are not only about making members. They depend on getting the structural approach, practical detailing, and commercial scope aligned early so the fabricated steel matches the real project.",
   },
   {
     title: "3. Fabricate and prepare for site delivery",
@@ -134,7 +134,7 @@ const faqs = [
   {
     question: "Can you help with farm buildings and utility structures?",
     answer:
-      "Yes. Farm buildings, storage structures, workshops, and similar agricultural or operational projects are a strong fit for this route.",
+      "Yes. Farm buildings, storage structures, workshops, and similar agricultural or operational projects are a strong fit for this page.",
   },
   {
     question: "How do I start the conversation?",
@@ -146,7 +146,7 @@ const faqs = [
 const supportLinks = [
   {
     title: "Steel farm buildings",
-    description: "Use the farm buildings page if your project is agricultural, storage-led, or tied to working farm use.",
+    description: "Use the farm buildings page if your project is agricultural, storage-focused, or tied to working farm use.",
     href: "/steel-farm-buildings",
   },
   {
@@ -161,12 +161,31 @@ const supportLinks = [
   },
   {
     title: "Contact Smart Steel",
-    description: "Send your drawings, sizes, or project notes if you want the fabrication route reviewed directly.",
+    description: "Send your drawings, sizes, or project notes if you want the fabrication page reviewed directly.",
     href: "/contact",
   },
 ]
 
 export default function SteelFabricationInstallationPage() {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Steel Fabrication and Installation",
+        item: `${SITE_URL}${PAGE_PATH}`,
+      },
+    ],
+  }
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -206,6 +225,10 @@ export default function SteelFabricationInstallationPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
 
       <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
@@ -243,7 +266,7 @@ export default function SteelFabricationInstallationPage() {
                     href="/warehouses"
                     className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
                   >
-                    Explore steel building routes
+                    Explore steel building pages
                   </Link>
                 </div>
               </div>
@@ -264,7 +287,7 @@ export default function SteelFabricationInstallationPage() {
                 <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
                   <p className="text-2xl font-semibold text-slate-950">Real project fit</p>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    A better route for clients who need more than a kit and want a steel building outcome that works.
+                    A better fit for clients who need more than a kit and want a steel building outcome that works.
                   </p>
                 </div>
               </div>
@@ -315,7 +338,7 @@ export default function SteelFabricationInstallationPage() {
                 Typical Projects
               </p>
               <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-                The steel building enquiries this route is meant for
+                The steel building enquiries this page is meant for
               </h2>
               <div className="mt-5 space-y-3">
                 {projectTypes.map((item) => (
@@ -331,7 +354,7 @@ export default function SteelFabricationInstallationPage() {
                 Why This Matters
               </p>
               <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-                More than a product catalogue route
+                More than a product catalogue page
               </h2>
               <p className="mt-4 text-sm leading-6 text-slate-600">
                 Some clients are not looking for a kit. They are looking for a company that can
@@ -393,7 +416,7 @@ export default function SteelFabricationInstallationPage() {
               <p className="mt-4 text-sm leading-6 text-slate-600">
                 If you already have drawings, rough sizes, site notes, or a project location,
                 include them in the enquiry. That makes it much easier to decide whether the right
-                route is fabrication-only, fabrication and installation, or a more specific product
+                answer is fabrication-only, fabrication and installation, or a more specific product
                 or warehouse path.
               </p>
               <div className="mt-6 flex flex-col gap-3">
@@ -418,7 +441,7 @@ export default function SteelFabricationInstallationPage() {
               Related Pages
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Move into the closest route for your project
+              Explore the closest page for your project
             </h2>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {supportLinks.map((item) => (

@@ -18,12 +18,12 @@ export const locationServicePages = {
     eyebrow: "Pretoria Steel Construction",
     heroTitle: "Steel construction companies in Pretoria for practical building projects",
     heroIntro:
-      "Smart Steel supports Pretoria clients who need a steel construction company that can help shape the project properly, align the structural route, and move from design intent into fabrication and site delivery.",
+      "Smart Steel supports Pretoria clients who need a steel construction company that can help shape the project properly, align the structural approach, and move from design intent into fabrication and site delivery.",
     heroPoints: [
       {
         title: "Pretoria projects",
         description:
-          "A stronger route for buyers in Pretoria who need warehouse, farm, workshop, and utility steel building support.",
+          "A strong option for buyers in Pretoria who need warehouse, farm, workshop, and utility steel building support.",
       },
       {
         title: "Contractor thinking",
@@ -46,7 +46,7 @@ export const locationServicePages = {
       {
         question: "Are you only a product supplier?",
         answer:
-          "No. This route is for clients who need a company that can help with the building outcome, not only with product selection.",
+          "No. This page is for clients who need a company that can help with the building outcome, not only with product selection.",
       },
       {
         question: "Can you support custom projects?",
@@ -64,7 +64,7 @@ export const locationServicePages = {
       {
         title: "Steel building planning",
         description:
-          "A clearer route for projects that need the structure, layout, and commercial scope understood properly before pricing goes too far.",
+          "A clearer starting point for projects that need the structure, layout, and commercial scope understood properly before pricing goes too far.",
       },
       {
         title: "Fabrication coordination",
@@ -77,7 +77,7 @@ export const locationServicePages = {
           "A stronger fit for projects where site sequence, fit-up, access, and overall delivery matter just as much as the steel itself.",
       },
     ],
-    projectsHeading: "Pretoria steel building work this route is suited to",
+    projectsHeading: "Pretoria steel building work this page is suited to",
     projectTypes: [
       "Steel warehouse and storage buildings",
       "Farm and agricultural steel buildings",
@@ -86,17 +86,17 @@ export const locationServicePages = {
       "Project-specific structural steel building work",
       "Selected fabrication and installation enquiries",
     ],
-    localFitHeading: "Why Pretoria is a strong market for this kind of steel contractor route",
+    localFitHeading: "Why Pretoria is a strong market for this kind of steel contractor page",
     localFitParagraphs: [
       "Pretoria remains one of the stronger industrial and operational building markets in Gauteng. That makes it a natural place for clients to search for steel construction companies rather than only for product pages.",
-      "Many Pretoria buyers are not only looking for a kit. They are looking for a steel construction company that can help them understand the right route, coordinate the steel scope, and move the project toward a workable outcome.",
+      "Many Pretoria buyers are not only looking for a kit. They are looking for a steel construction company that can help them understand the right approach, coordinate the steel scope, and move the project toward a workable outcome.",
     ],
     processHeading: "How a better Pretoria steel construction process usually works",
     processSteps: [
       {
         title: "1. Understand the building need",
         body:
-          "The right starting point is a clear view of the building use, size, site, and practical requirements so the structural route is chosen correctly.",
+          "The right starting point is a clear view of the building use, size, site, and practical requirements so the structural approach is chosen correctly.",
       },
       {
         title: "2. Align the steel scope properly",
@@ -124,12 +124,12 @@ export const locationServicePages = {
       {
         question: "Can you help with warehouses and farm buildings?",
         answer:
-          "Yes. Warehouses, workshops, and farm buildings are all strong fits for this route.",
+          "Yes. Warehouses, workshops, and farm buildings are all strong fits for this page.",
       },
       {
         question: "What if my project is not a standard kit?",
         answer:
-          "That is exactly where this page helps most. It is intended for projects that need broader coordination and a more contractor-led discussion.",
+          "That is exactly where this page helps most. It is intended for projects that need broader coordination and a more hands-on contractor discussion.",
       },
       {
         question: "How do I start?",
@@ -139,9 +139,9 @@ export const locationServicePages = {
     ],
     nextStepHeading: "Send the Pretoria project brief",
     nextStepBody:
-      "If you already know the approximate building size, site area, intended use, or timeline, include that in your enquiry. It will help Smart Steel assess the right steel construction route much faster.",
+      "If you already know the approximate building size, site area, intended use, or timeline, include that in your enquiry. It will help Smart Steel assess the right steel construction approach much faster.",
     secondaryCtaHref: "/warehouses",
-    secondaryCtaLabel: "Compare steel building routes",
+    secondaryCtaLabel: "Compare steel building pages",
     supportLinks: [
       {
         title: "Steel fabrication & installation",
@@ -184,7 +184,7 @@ export const locationServicePages = {
       {
         title: "Gauteng coverage",
         description:
-          "A stronger route for Pretoria, Johannesburg, Midrand, Centurion, and wider Gauteng steel building demand.",
+          "A strong option for Pretoria, Johannesburg, Midrand, Centurion, and wider Gauteng steel building demand.",
       },
       {
         title: "Fabrication-led scope",
@@ -200,14 +200,14 @@ export const locationServicePages = {
     quickAnswersHeading: "What Gauteng fabrication clients usually ask first",
     quickAnswers: [
       {
-        question: "What type of fabrication work fits this route?",
+        question: "What type of fabrication work fits this page?",
         answer:
           "Structural steel building work, warehouse steel, farm structures, support steel, and related project-based fabrication enquiries all fit this page.",
       },
       {
         question: "Do you only fabricate steel?",
         answer:
-          "This route supports fabrication-first enquiries, but it also works when fabrication needs to align with installation and broader building scope.",
+          "This page supports fabrication-focused enquiries, but it also works when fabrication needs to align with installation and broader building scope.",
       },
       {
         question: "Why a Gauteng page specifically?",
@@ -217,7 +217,7 @@ export const locationServicePages = {
       {
         question: "Can I still use this if my project is in Pretoria?",
         answer:
-          "Yes. Pretoria is part of Gauteng, but we also have a dedicated Pretoria steel construction page if you want a more contractor-led local route.",
+          "Yes. Pretoria is part of Gauteng, but we also have a dedicated Pretoria steel construction page if you want a more local contractor-focused page.",
       },
     ],
     scopeHeading: "Where Smart Steel helps Gauteng fabrication clients most",
@@ -225,7 +225,7 @@ export const locationServicePages = {
       {
         title: "Structural steel fabrication",
         description:
-          "A better route when buyers need steel fabricated around a specific project use instead of generic product-only supply.",
+          "A better fit when buyers need steel fabricated around a specific project use instead of generic steel supply.",
       },
       {
         title: "Fabrication and erection planning",
@@ -252,7 +252,7 @@ export const locationServicePages = {
       "Gauteng clients often search for steel fabrication companies before they search for a specific building product. That is especially true when the project needs structural steel supply, coordination, and installation thinking together.",
       "This page helps Smart Steel show up for fabrication intent without losing the practical building context that makes the company different from a generic steel supplier.",
     ],
-    processHeading: "How a stronger Gauteng fabrication route usually works",
+    processHeading: "How a stronger Gauteng fabrication page usually works",
     processSteps: [
       {
         title: "1. Clarify the fabrication brief",
@@ -300,9 +300,9 @@ export const locationServicePages = {
     ],
     nextStepHeading: "Send the Gauteng fabrication brief",
     nextStepBody:
-      "If your project already has approximate sizes, intended use, site location, or early drawings, include them in the enquiry. That makes it easier to decide whether the best route is fabrication-only or broader project support.",
+      "If your project already has approximate sizes, intended use, site location, or early drawings, include them in the enquiry. That makes it easier to decide whether the best answer is fabrication-only or broader project support.",
     secondaryCtaHref: "/products",
-    secondaryCtaLabel: "Explore product routes",
+    secondaryCtaLabel: "Explore product pages",
     supportLinks: [
       {
         title: "Steel fabrication & installation",
@@ -345,7 +345,7 @@ export const locationServicePages = {
       {
         title: "Agricultural use",
         description:
-          "A stronger route for farm storage, workshops, cover buildings, feed areas, and utility structures that need practical steel performance.",
+          "A strong option for farm storage, workshops, cover buildings, feed areas, and utility structures that need practical steel performance.",
       },
       {
         title: "Working farm fit",
@@ -353,9 +353,9 @@ export const locationServicePages = {
           "Better suited to buildings that must work around vehicles, inputs, operational access, and everyday agricultural use.",
       },
       {
-        title: "Standard or project-led",
+        title: "Standard or custom scope",
         description:
-          "Useful whether the farm building route starts with a standard-size structure or needs broader fabrication and installation planning.",
+          "Useful whether the farm building starts with a standard-size structure or needs broader fabrication and installation planning.",
       },
     ],
     quickAnswersHeading: "What farm building clients usually want to know first",
@@ -363,12 +363,12 @@ export const locationServicePages = {
       {
         question: "What type of farm buildings fit this page?",
         answer:
-          "Storage sheds, workshops, machinery cover, feed and utility buildings, poultry-related structures, and other steel farm buildings all fit this route.",
+          "Storage sheds, workshops, machinery cover, feed and utility buildings, poultry-related structures, and other steel farm buildings all fit this page.",
       },
       {
         question: "Are these only standard kits?",
         answer:
-          "No. Some farm projects suit standard-size steel routes well, while others need a more project-specific structural and fabrication path.",
+          "No. Some farm projects suit standard-size steel pages well, while others need a more project-specific structural and fabrication approach.",
       },
       {
         question: "Can you help with agricultural storage and cover?",
@@ -378,7 +378,7 @@ export const locationServicePages = {
       {
         question: "Do you support projects outside Gauteng?",
         answer:
-          "Yes. Farm building demand is naturally spread across South Africa, so this page is positioned as a national agricultural route.",
+          "Yes. Farm building demand is naturally spread across South Africa, so this page is positioned as a national agricultural service page.",
       },
     ],
     scopeHeading: "Where Smart Steel helps farm building clients most",
@@ -386,7 +386,7 @@ export const locationServicePages = {
       {
         title: "Farm storage and utility buildings",
         description:
-          "A practical route for buildings that need to protect inputs, equipment, stock feed, tools, and day-to-day operational materials.",
+          "A practical option for buildings that need to protect inputs, equipment, stock feed, tools, and day-to-day operational materials.",
       },
       {
         title: "Workshops and covered work areas",
@@ -396,7 +396,7 @@ export const locationServicePages = {
       {
         title: "Project coordination",
         description:
-          "A better fit for farm clients who need more than a basic product page and want support around the building route, structure, and delivery logic.",
+          "A better fit for farm clients who need more than a basic product page and want support around the building approach, structure, and delivery logic.",
       },
     ],
     projectsHeading: "Typical steel farm building projects this page is meant for",
@@ -408,10 +408,10 @@ export const locationServicePages = {
       "Poultry and operational farm structures",
       "Selected custom agricultural steel projects",
     ],
-    localFitHeading: "Why steel farm buildings are a strong commercial route",
+    localFitHeading: "Why steel farm buildings are a strong commercial page",
     localFitParagraphs: [
       "Farm buyers are often searching for practical steel buildings rather than browsing a generic product catalogue. They want to know whether the structure will work for real agricultural use, access, storage, and weather conditions.",
-      "This page helps Smart Steel speak directly to agricultural building intent while still linking back into the wider warehouse, fabrication, and product routes where needed.",
+      "This page helps Smart Steel speak directly to agricultural building intent while still linking back into the wider warehouse, fabrication, and product pages where needed.",
     ],
     processHeading: "How a better farm building project usually gets shaped",
     processSteps: [
@@ -421,9 +421,9 @@ export const locationServicePages = {
           "The most useful starting point is understanding what the building must do on the farm, how it will be used, and what kind of access, storage, or operational flow it needs to support.",
       },
       {
-        title: "2. Choose the right structural route",
+        title: "2. Choose the right structural approach",
         body:
-          "Some agricultural buildings suit a simpler standard route, while others need broader project thinking around spans, access openings, enclosure, or overall footprint.",
+          "Some agricultural buildings suit a simpler standard structure, while others need broader project thinking around spans, access openings, enclosure, or overall footprint.",
       },
       {
         title: "3. Align fabrication, supply, and delivery",
@@ -436,7 +436,7 @@ export const locationServicePages = {
           "The best farm buildings are not only structurally sound. They are also easy to use, durable in working conditions, and practical for the way the site actually operates.",
       },
     ],
-    faqHeading: "Common questions before choosing a steel farm building route",
+    faqHeading: "Common questions before choosing a steel farm building page",
     faqs: [
       {
         question: "Do you offer steel farm buildings across South Africa?",
@@ -444,30 +444,30 @@ export const locationServicePages = {
           "Yes. Smart Steel supports agricultural and farm building enquiries across South Africa where a steel structure is the right fit.",
       },
       {
-        question: "Can this route work for storage and machinery cover?",
+        question: "Can this page work for storage and machinery cover?",
         answer:
           "Yes. Storage buildings, equipment cover, workshops, and similar working farm structures are a strong fit for this page.",
       },
       {
-        question: "What if I also need a more custom structural route?",
+        question: "What if I also need a more custom structural solution?",
         answer:
-          "That is fine. This page is intended to help farm clients start in the right lane, whether the answer is a more standard building path or a broader project-led route.",
+          "That is fine. This page is intended to help farm clients start in the right place, whether the answer is a more standard building option or a broader project-specific approach.",
       },
       {
         question: "How do I send the enquiry?",
         answer:
-          "Send the approximate size, intended farm use, location, and any drawings or notes you have so the building route can be reviewed properly.",
+          "Send the approximate size, intended farm use, location, and any drawings or notes you have so the building page can be reviewed properly.",
       },
     ],
     nextStepHeading: "Send the farm building brief",
     nextStepBody:
-      "If you already know the approximate size, storage use, machinery access needs, or farm location, include that in the enquiry. That helps Smart Steel guide you into the right steel building route faster.",
+      "If you already know the approximate size, storage use, machinery access needs, or farm location, include that in the enquiry. That helps Smart Steel guide you into the right steel building approach faster.",
     secondaryCtaHref: "/warehouses",
-    secondaryCtaLabel: "Compare steel warehouse routes",
+    secondaryCtaLabel: "Compare steel warehouse pages",
     supportLinks: [
       {
         title: "Steel fabrication & installation",
-        description: "Use the broader fabrication page if the farm project needs a more contractor-led route.",
+        description: "Use the broader fabrication page if the farm project needs a more contractor-focused page.",
         href: "/steel-fabrication-installation",
       },
       {
