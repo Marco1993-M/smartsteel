@@ -321,4 +321,165 @@ export const locationServicePages = {
       },
     ],
   },
+  farmBuildings: {
+    path: "/steel-farm-buildings",
+    metaTitle: "Steel Farm Buildings South Africa | Smart Steel",
+    metaDescription:
+      "Explore steel farm buildings in South Africa with Smart Steel. Compare agricultural storage, workshops, utility buildings, and practical steel structures for working farms.",
+    keywords: [
+      "steel farm buildings",
+      "steel farm buildings for sale",
+      "farm steel buildings south africa",
+      "agricultural steel buildings",
+      "steel farm sheds",
+      "farm storage buildings",
+    ],
+    schemaName: "Steel Farm Buildings South Africa",
+    schemaServiceType: "Steel farm buildings, agricultural steel structures, and project support",
+    areaServed: "South Africa",
+    eyebrow: "Steel Farm Buildings",
+    heroTitle: "Steel farm buildings for South African agricultural and working farm projects",
+    heroIntro:
+      "Smart Steel supports farm building projects that need practical steel structures for storage, workshops, utility use, equipment cover, and broader agricultural operations across South Africa.",
+    heroPoints: [
+      {
+        title: "Agricultural use",
+        description:
+          "A stronger route for farm storage, workshops, cover buildings, feed areas, and utility structures that need practical steel performance.",
+      },
+      {
+        title: "Working farm fit",
+        description:
+          "Better suited to buildings that must work around vehicles, inputs, operational access, and everyday agricultural use.",
+      },
+      {
+        title: "Standard or project-led",
+        description:
+          "Useful whether the farm building route starts with a standard-size structure or needs broader fabrication and installation planning.",
+      },
+    ],
+    quickAnswersHeading: "What farm building clients usually want to know first",
+    quickAnswers: [
+      {
+        question: "What type of farm buildings fit this page?",
+        answer:
+          "Storage sheds, workshops, machinery cover, feed and utility buildings, poultry-related structures, and other steel farm buildings all fit this route.",
+      },
+      {
+        question: "Are these only standard kits?",
+        answer:
+          "No. Some farm projects suit standard-size steel routes well, while others need a more project-specific structural and fabrication path.",
+      },
+      {
+        question: "Can you help with agricultural storage and cover?",
+        answer:
+          "Yes. Steel farm buildings work especially well where the project needs durable cover, simpler maintenance, and practical operational use.",
+      },
+      {
+        question: "Do you support projects outside Gauteng?",
+        answer:
+          "Yes. Farm building demand is naturally spread across South Africa, so this page is positioned as a national agricultural route.",
+      },
+    ],
+    scopeHeading: "Where Smart Steel helps farm building clients most",
+    scopeCards: [
+      {
+        title: "Farm storage and utility buildings",
+        description:
+          "A practical route for buildings that need to protect inputs, equipment, stock feed, tools, and day-to-day operational materials.",
+      },
+      {
+        title: "Workshops and covered work areas",
+        description:
+          "Useful for agricultural sites that need a reliable steel shell for repair work, servicing, fabrication support, or general farm operations.",
+      },
+      {
+        title: "Project coordination",
+        description:
+          "A better fit for farm clients who need more than a basic product page and want support around the building route, structure, and delivery logic.",
+      },
+    ],
+    projectsHeading: "Typical steel farm building projects this page is meant for",
+    projectTypes: [
+      "Farm storage buildings",
+      "Machinery and vehicle cover structures",
+      "Agricultural workshops",
+      "Feed, input, and utility buildings",
+      "Poultry and operational farm structures",
+      "Selected custom agricultural steel projects",
+    ],
+    localFitHeading: "Why steel farm buildings are a strong commercial route",
+    localFitParagraphs: [
+      "Farm buyers are often searching for practical steel buildings rather than browsing a generic product catalogue. They want to know whether the structure will work for real agricultural use, access, storage, and weather conditions.",
+      "This page helps Smart Steel speak directly to agricultural building intent while still linking back into the wider warehouse, fabrication, and product routes where needed.",
+    ],
+    processHeading: "How a better farm building project usually gets shaped",
+    processSteps: [
+      {
+        title: "1. Start with the farm use case",
+        body:
+          "The most useful starting point is understanding what the building must do on the farm, how it will be used, and what kind of access, storage, or operational flow it needs to support.",
+      },
+      {
+        title: "2. Choose the right structural route",
+        body:
+          "Some agricultural buildings suit a simpler standard route, while others need broader project thinking around spans, access openings, enclosure, or overall footprint.",
+      },
+      {
+        title: "3. Align fabrication, supply, and delivery",
+        body:
+          "Farm projects usually run better when the steel scope, member preparation, and delivery logic are aligned to the real conditions on site.",
+      },
+      {
+        title: "4. Build for practical long-term use",
+        body:
+          "The best farm buildings are not only structurally sound. They are also easy to use, durable in working conditions, and practical for the way the site actually operates.",
+      },
+    ],
+    faqHeading: "Common questions before choosing a steel farm building route",
+    faqs: [
+      {
+        question: "Do you offer steel farm buildings across South Africa?",
+        answer:
+          "Yes. Smart Steel supports agricultural and farm building enquiries across South Africa where a steel structure is the right fit.",
+      },
+      {
+        question: "Can this route work for storage and machinery cover?",
+        answer:
+          "Yes. Storage buildings, equipment cover, workshops, and similar working farm structures are a strong fit for this page.",
+      },
+      {
+        question: "What if I also need a more custom structural route?",
+        answer:
+          "That is fine. This page is intended to help farm clients start in the right lane, whether the answer is a more standard building path or a broader project-led route.",
+      },
+      {
+        question: "How do I send the enquiry?",
+        answer:
+          "Send the approximate size, intended farm use, location, and any drawings or notes you have so the building route can be reviewed properly.",
+      },
+    ],
+    nextStepHeading: "Send the farm building brief",
+    nextStepBody:
+      "If you already know the approximate size, storage use, machinery access needs, or farm location, include that in the enquiry. That helps Smart Steel guide you into the right steel building route faster.",
+    secondaryCtaHref: "/warehouses",
+    secondaryCtaLabel: "Compare steel warehouse routes",
+    supportLinks: [
+      {
+        title: "Steel fabrication & installation",
+        description: "Use the broader fabrication page if the farm project needs a more contractor-led route.",
+        href: "/steel-fabrication-installation",
+      },
+      {
+        title: "Steel construction companies in Pretoria",
+        description: "Use the Pretoria page if the project is local and needs a stronger contractor angle.",
+        href: "/steel-construction-companies-pretoria",
+      },
+      {
+        title: "Steel fabrication companies in Gauteng",
+        description: "Use the Gauteng fabrication page if the project is more fabrication-led than farm-specific.",
+        href: "/steel-fabrication-companies-gauteng",
+      },
+    ],
+  },
 }

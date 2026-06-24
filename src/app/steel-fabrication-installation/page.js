@@ -145,6 +145,11 @@ const faqs = [
 
 const supportLinks = [
   {
+    title: "Steel farm buildings",
+    description: "Use the farm buildings page if your project is agricultural, storage-led, or tied to working farm use.",
+    href: "/steel-farm-buildings",
+  },
+  {
     title: "Steel construction companies in Pretoria",
     description: "Use the Pretoria page if your enquiry is mainly around appointing a local steel construction company.",
     href: "/steel-construction-companies-pretoria",
@@ -153,11 +158,6 @@ const supportLinks = [
     title: "Steel fabrication companies in Gauteng",
     description: "Use the Gauteng page if your enquiry is primarily fabrication-led across the wider province.",
     href: "/steel-fabrication-companies-gauteng",
-  },
-  {
-    title: "Compare warehouse systems",
-    description: "Use the warehouse pages if your project is mainly a steel warehouse enquiry.",
-    href: "/warehouses",
   },
   {
     title: "Contact Smart Steel",
