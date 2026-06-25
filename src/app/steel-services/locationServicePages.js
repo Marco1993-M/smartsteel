@@ -1,4 +1,165 @@
 export const locationServicePages = {
+  structuralFabricators: {
+    path: "/structural-steel-fabricators",
+    metaTitle: "Structural Steel Fabricators South Africa | Smart Steel",
+    metaDescription:
+      "Looking for structural steel fabricators in South Africa? Smart Steel supports warehouse, farm, workshop, utility, and project-based steel building work with practical fabrication planning.",
+    keywords: [
+      "structural steel fabricators",
+      "structural steel fabrication",
+      "steel fabricators",
+      "steel fabrication services",
+      "steel fabrication contractors",
+      "structural steel company south africa",
+    ],
+    schemaName: "Structural Steel Fabricators South Africa",
+    schemaServiceType: "Structural steel fabrication, steel building support, and installation planning",
+    areaServed: "South Africa",
+    eyebrow: "Structural Steel Fabricators",
+    heroTitle: "Structural steel fabricators for South African building projects",
+    heroIntro:
+      "Smart Steel supports clients who need structural steel fabricators for real building projects, whether that means warehouse structures, farm buildings, workshops, utility buildings, or broader project-based steel work.",
+    heroPoints: [
+      {
+        title: "Project-ready steel",
+        description:
+          "A strong option for clients who need fabricated steel that fits the actual building, not just a generic supply list.",
+      },
+      {
+        title: "Practical coordination",
+        description:
+          "Useful when fabrication needs to line up with the building layout, intended use, and delivery sequence.",
+      },
+      {
+        title: "South African support",
+        description:
+          "Built for local project conditions, working across warehouse, agricultural, operational, and utility steel structures.",
+      },
+    ],
+    quickAnswersHeading: "What clients usually want to know before choosing structural steel fabricators",
+    quickAnswers: [
+      {
+        question: "What type of projects fit this page?",
+        answer:
+          "Warehouse buildings, farm structures, workshops, utility buildings, covered work areas, and broader project-based steel building enquiries all fit this page.",
+      },
+      {
+        question: "Do you only supply steel members?",
+        answer:
+          "No. This page is aimed at clients who need fabrication support tied to the real building outcome, not only raw steel supply.",
+      },
+      {
+        question: "Can you help if the project is still early?",
+        answer:
+          "Yes. Early project discussions are often the best time to align the building use, steel scope, and fabrication approach properly.",
+      },
+      {
+        question: "Do you work only in Gauteng?",
+        answer:
+          "No. Gauteng is an important market, but Smart Steel supports structural steel building enquiries across South Africa.",
+      },
+    ],
+    scopeHeading: "Where Smart Steel helps structural steel fabrication clients most",
+    scopeCards: [
+      {
+        title: "Structural steel fabrication",
+        description:
+          "A better fit for clients who need fabricated steel shaped around a real building use, footprint, and structural requirement.",
+      },
+      {
+        title: "Fabrication planning",
+        description:
+          "Useful when the steel scope needs to be reviewed properly before fabrication starts, reducing avoidable site and coordination issues later.",
+      },
+      {
+        title: "Building support",
+        description:
+          "Well suited to projects that need fabrication thinking connected to delivery, erection planning, and the way the finished building must perform.",
+      },
+    ],
+    projectsHeading: "Typical structural steel fabrication work this page is meant for",
+    projectTypes: [
+      "Warehouse and storage steel structures",
+      "Farm and agricultural steel buildings",
+      "Workshops and utility steel buildings",
+      "Covered work areas and operational structures",
+      "Steel support structures for project-specific requirements",
+      "Selected fabrication-linked building projects across South Africa",
+    ],
+    localFitHeading: "Why this page matters for structural steel fabrication searches",
+    localFitParagraphs: [
+      "Many buyers do not start by searching for a specific warehouse product. They search for structural steel fabricators because they want to know who can actually help turn the building requirement into a practical steel solution.",
+      "This page helps Smart Steel speak directly to that buying intent while still keeping the focus on real buildings, practical project support, and outcomes that make sense on site.",
+    ],
+    processHeading: "How a stronger structural steel fabrication project usually gets shaped",
+    processSteps: [
+      {
+        title: "1. Start with the building requirement",
+        body:
+          "The best place to begin is understanding what the building must do, how it will be used, and what the steel structure needs to support in practice.",
+      },
+      {
+        title: "2. Align the structural steel scope",
+        body:
+          "A better outcome usually starts with getting the members, spans, layout, and practical building logic aligned before fabrication moves too far.",
+      },
+      {
+        title: "3. Fabricate around the real project",
+        body:
+          "Fabrication should reflect the actual building brief and site realities so the steel arriving on site matches the project it is meant to serve.",
+      },
+      {
+        title: "4. Prepare for delivery and installation",
+        body:
+          "Projects usually run more smoothly when fabrication decisions are made with access, handling, erection, and final fit-up in mind.",
+      },
+    ],
+    faqHeading: "Common questions before choosing structural steel fabricators",
+    faqs: [
+      {
+        question: "Do you support structural steel fabrication across South Africa?",
+        answer:
+          "Yes. Smart Steel supports structural steel fabrication enquiries across South Africa where the project is a good fit.",
+      },
+      {
+        question: "Can you help with warehouses and workshops?",
+        answer:
+          "Yes. Warehouses, workshops, utility structures, and similar steel building projects are a strong fit for this page.",
+      },
+      {
+        question: "Is this only for large custom projects?",
+        answer:
+          "No. This page also works for practical medium-sized projects where the buyer needs real fabrication support rather than a simple off-the-shelf answer.",
+      },
+      {
+        question: "How should I send the enquiry?",
+        answer:
+          "Send the building use, approximate size, location, and any drawings or notes you have so the structural steel scope can be reviewed properly.",
+      },
+    ],
+    nextStepHeading: "Send the structural steel brief",
+    nextStepBody:
+      "If you already know the building use, approximate size, location, or early layout, include that in your enquiry. It makes it much easier to assess the fabrication scope properly.",
+    secondaryCtaHref: "/steel-fabrication-installation",
+    secondaryCtaLabel: "Explore fabrication services",
+    supportLinks: [
+      {
+        title: "Steel fabrication & installation",
+        description: "Use the broader fabrication page if your enquiry spans design, fabrication, and installation support.",
+        href: "/steel-fabrication-installation",
+      },
+      {
+        title: "Steel fabrication companies in Gauteng",
+        description: "Use the Gauteng page if your search is more location-led around fabrication companies in the province.",
+        href: "/steel-fabrication-companies-gauteng",
+      },
+      {
+        title: "Steel farm buildings",
+        description: "Use the farm buildings page if the project is agricultural, operational, or storage-focused.",
+        href: "/steel-farm-buildings",
+      },
+    ],
+  },
   pretoriaConstruction: {
     path: "/steel-construction-companies-pretoria",
     metaTitle: "Steel Construction Companies in Pretoria | Smart Steel",
@@ -143,6 +304,11 @@ export const locationServicePages = {
     secondaryCtaHref: "/warehouses",
     secondaryCtaLabel: "Compare steel building pages",
     supportLinks: [
+      {
+        title: "Structural steel fabricators",
+        description: "Use this page if your main search is for structural steel fabrication rather than a Pretoria-specific contractor.",
+        href: "/structural-steel-fabricators",
+      },
       {
         title: "Steel fabrication & installation",
         description: "Use the broader fabrication page if your enquiry is not Pretoria-specific.",
@@ -305,6 +471,11 @@ export const locationServicePages = {
     secondaryCtaLabel: "Explore product pages",
     supportLinks: [
       {
+        title: "Structural steel fabricators",
+        description: "Use this page if the enquiry is mainly about structural steel fabrication rather than Gauteng location intent.",
+        href: "/structural-steel-fabricators",
+      },
+      {
         title: "Steel fabrication & installation",
         description: "Use the broader service page if your project is not specifically Gauteng-led.",
         href: "/steel-fabrication-installation",
@@ -465,6 +636,11 @@ export const locationServicePages = {
     secondaryCtaHref: "/warehouses",
     secondaryCtaLabel: "Compare steel warehouse pages",
     supportLinks: [
+      {
+        title: "Structural steel fabricators",
+        description: "Use this page if the farm project needs a stronger structural steel fabrication discussion.",
+        href: "/structural-steel-fabricators",
+      },
       {
         title: "Steel fabrication & installation",
         description: "Use the broader fabrication page if the farm project needs a more contractor-focused page.",

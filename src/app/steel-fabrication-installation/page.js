@@ -145,6 +145,11 @@ const faqs = [
 
 const supportLinks = [
   {
+    title: "Structural steel fabricators",
+    description: "Use this page if your main search is for structural steel fabrication tied to a real building project.",
+    href: "/structural-steel-fabricators",
+  },
+  {
     title: "Steel farm buildings",
     description: "Use the farm buildings page if your project is agricultural, storage-focused, or tied to working farm use.",
     href: "/steel-farm-buildings",

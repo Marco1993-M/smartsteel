@@ -5,20 +5,20 @@ import Link from 'next/link';
 
 const proofStats = [
   { value: 'Estimate tools', label: 'Warehouse estimate tools to help you price and plan before you enquire' },
-  { value: 'Steel routes', label: 'Lip channel and custom engineered options for different project needs' },
+  { value: 'Steel options', label: 'Lip channel and custom engineered options for different project needs' },
   { value: 'SA sites', label: 'Designed for South African sites, spans, access, and practical build conditions' },
 ];
 
 const planningActions = [
   {
     title: 'Estimate your budget',
-    description: 'Start with a practical estimate route before you request a formal quote.',
+    description: 'Start with a practical estimate before you request a formal quote.',
     href: '/tools/estimator',
     cta: 'Get an Estimate',
   },
   {
     title: 'Compare warehouse systems',
-    description: 'Review the main warehouse routes and decide which structure type fits your project.',
+    description: 'Review the main warehouse options and decide which structure type fits your project.',
     href: '/warehouses',
     cta: 'Compare Systems',
   },
@@ -32,7 +32,7 @@ const planningActions = [
 
 const primaryPaths = [
   {
-    eyebrow: 'Standard Kit Route',
+    eyebrow: 'Standard Kit Option',
     title: 'Lip Channel Kits',
     backgroundImage: '/CFLC_carport.webp',
     description:
@@ -54,7 +54,7 @@ const primaryPaths = [
     ],
   },
   {
-    eyebrow: 'Custom Project Route',
+    eyebrow: 'Custom Project Option',
     title: 'Custom Engineered Warehouse Systems',
     backgroundImage: '/warehouse.jpg',
     description:
@@ -85,9 +85,15 @@ const supportCategories = [
   },
   {
     title: 'Steel fabrication & installation',
-    description: 'A stronger route for fabrication, erection, and steel building delivery enquiries.',
+    description: 'A strong option for fabrication, erection, and steel building delivery enquiries.',
     href: '/steel-fabrication-installation',
     cta: 'Explore Fabrication',
+  },
+  {
+    title: 'Structural steel fabricators',
+    description: 'For clients looking for structural steel fabrication tied to real building requirements.',
+    href: '/structural-steel-fabricators',
+    cta: 'Explore Structural Steel',
   },
   {
     title: 'LSF trusses',
@@ -107,7 +113,7 @@ const trustPoints = [
     description: 'Estimate tools, size guides, and comparison pages help buyers arrive with a stronger brief.',
   },
   {
-    title: 'Standard and custom steel routes',
+    title: 'Standard and custom steel options',
     description: 'Smart Steel separates standard lip channel kits from custom engineered warehouse systems.',
   },
 ];
@@ -115,7 +121,7 @@ const trustPoints = [
 const deliveryPillars = [
   {
     title: 'Design',
-    description: 'Start with the right structural route and clearer project thinking before steel is committed.',
+    description: 'Start with the right structural approach and clearer project thinking before steel is committed.',
   },
   {
     title: 'Fabrication',
@@ -127,7 +133,7 @@ const deliveryPillars = [
   },
   {
     title: 'Delivery',
-    description: 'Help clients move from steel intent to a completed building route instead of stopping at product selection.',
+    description: 'Help clients move from steel intent to a completed building project instead of stopping at product selection.',
   },
 ];
 
@@ -135,7 +141,7 @@ const homepageQuestions = [
   {
     question: 'Do you supply lightweight steel warehouses across South Africa?',
     answer:
-      'Yes. Smart Steel supplies lightweight steel warehouse systems and planning routes for projects across South Africa.',
+      'Yes. Smart Steel supplies lightweight steel warehouse systems and planning support for projects across South Africa.',
   },
   {
     question: 'Can I estimate a warehouse before enquiring?',
@@ -245,7 +251,7 @@ export default function HomePageClient() {
             <p className="mt-6 max-w-3xl text-lg leading-8 text-black/80 md:text-xl">
               Smart Steel supplies lightweight steel warehouse systems across South Africa,
               helping clients compare standard lip channel kits, custom engineered options,
-              and practical estimate routes before they enquire.
+              and practical estimate tools before they enquire.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
@@ -316,7 +322,7 @@ export default function HomePageClient() {
                 </h2>
                 <p className="mt-5 text-lg leading-8 text-gray-700">
                   Some clients need more than a product page. They need a company that can help
-                  shape the building route properly, align the steel scope, and support the project
+                  shape the building properly, align the steel scope, and support the project
                   from planning through fabrication and site delivery.
                 </p>
                 <p className="mt-4 text-base leading-8 text-gray-700">
@@ -357,10 +363,10 @@ export default function HomePageClient() {
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">Choose your path</p>
-            <h2 className="mt-4 text-3xl font-bold md:text-5xl">Choose the right steel warehouse path</h2>
+            <h2 className="mt-4 text-3xl font-bold md:text-5xl">Choose the right steel warehouse option</h2>
             <p className="mt-5 text-lg leading-8 text-gray-700">
               Start with lip channel kits when you want practical standard structures. Use the
-              custom engineered route when your warehouse needs more project-specific planning.
+              custom engineered option when your warehouse needs more project-specific planning.
             </p>
           </div>
 
@@ -419,10 +425,10 @@ export default function HomePageClient() {
       <section className="bg-[#0f1720] px-6 py-20 text-white">
         <div className="mx-auto max-w-6xl">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#f16b7d]">Why buyers trust the route</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#f16b7d]">Why buyers trust Smart Steel</p>
             <h2 className="mt-4 max-w-4xl text-3xl font-bold md:text-5xl">Practical planning for lightweight steel warehouse projects</h2>
             <p className="mt-6 text-lg leading-8 text-white/80">
-              Smart Steel helps buyers separate standard kit routes from custom warehouse
+              Smart Steel helps buyers separate standard kit options from custom warehouse
               requirements, so the next step is easier to choose before the formal enquiry.
             </p>
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
@@ -512,7 +518,7 @@ export default function HomePageClient() {
       <section className="bg-black px-6 py-20 text-center text-white">
         <h2 className="text-3xl font-bold md:text-5xl">Start with a clearer warehouse plan</h2>
         <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-white/75">
-          Use the estimate route for an early budget, or compare lip channel and custom
+          Use the estimator for an early budget, or compare lip channel and custom
           warehouse options before you send an enquiry.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
