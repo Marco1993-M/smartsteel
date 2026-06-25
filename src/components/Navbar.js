@@ -189,6 +189,7 @@ export default function Navbar() {
               <h3 className="text-xl font-semibold text-[#da1a33] mb-4">Fabricators</h3>
               <ul className="space-y-2">
                 <li><Link href="/steel-fabrication-installation" className="hover:underline">Steel Fabrication &amp; Installation</Link></li>
+                <li><Link href="/structural-steel-fabricators" className="hover:underline">Structural Steel Fabricators</Link></li>
                 <li><Link href="/product-advantages" className="hover:underline">Product Advantages</Link></li>
                 <li><Link href="/resources" className="hover:underline">Technical Resources</Link></li>
               </ul>

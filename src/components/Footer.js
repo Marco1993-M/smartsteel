@@ -34,6 +34,7 @@ export default function Footer() {
             <li><Link href="/warehouses" className="hover:text-[#da1a33]">Projects &amp; Systems</Link></li>
             <li><Link href="/products" className="hover:text-[#da1a33]">Products &amp; DIY Systems</Link></li>
             <li><Link href="/steel-fabrication-installation" className="hover:text-[#da1a33]">Steel Fabrication &amp; Installation</Link></li>
+            <li><Link href="/structural-steel-fabricators" className="hover:text-[#da1a33]">Structural Steel Fabricators</Link></li>
             <li><Link href="/resources" className="hover:text-[#da1a33]">Technical Resources</Link></li>
             <li><Link href="/resources" className="hover:text-[#da1a33]">Installation Guides</Link></li>
             <li><Link href="/warehouse-builder" className="hover:text-[#da1a33]">Warehouse Builder</Link></li>
