@@ -19,7 +19,7 @@ export const metadata = {
     type: 'website',
     images: [
       {
-        url: '/og-warehouse.jpg',
+        url: '/images/hero.webp',
         width: 1200,
         height: 630,
         alt: 'Smart Steel lightweight steel warehouse systems in South Africa',
@@ -31,7 +31,7 @@ export const metadata = {
     title: 'Lightweight Steel Warehouses South Africa | Smart Steel',
     description:
       'Estimate, compare, and plan lightweight steel warehouse systems for South African projects.',
-    images: ['/og-warehouse.jpg'],
+    images: ['/images/hero.webp'],
   },
 };
 

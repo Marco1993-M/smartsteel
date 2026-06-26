@@ -40,7 +40,7 @@ export const metadata = {
     type: "website",
     images: [
       {
-        url: "/og-warehouse.jpg",
+        url: "/images/hero.webp",
         width: 1200,
         height: 630,
         alt: "Smart Steel warehouses, solar carports and steel systems",
@@ -52,7 +52,7 @@ export const metadata = {
     title: "Smart Steel | Warehouses, Solar Carports & Steel Systems",
     description:
       "Explore Smart Steel lightweight steel warehouses, CFLC DIY kits, solar carports, and steel systems for South African projects.",
-    images: ["/og-warehouse.jpg"],
+    images: ["/images/hero.webp"],
   },
 };
 
