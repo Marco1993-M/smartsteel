@@ -144,19 +144,663 @@ export const locationServicePages = {
     secondaryCtaLabel: "Explore fabrication services",
     supportLinks: [
       {
+        title: "Steel fabrication services",
+        description: "Use this page if your search is mainly about fabrication services and contractors for a live building project.",
+        href: "/steel-fabrication-services",
+      },
+      {
+        title: "Steel erectors",
+        description: "Use this page if site installation, erection quality, and delivery sequence are central to the job.",
+        href: "/steel-erectors",
+      },
+      {
         title: "Steel fabrication & installation",
         description: "Use the broader fabrication page if your enquiry spans design, fabrication, and installation support.",
         href: "/steel-fabrication-installation",
       },
+    ],
+  },
+  fabricationServices: {
+    path: "/steel-fabrication-services",
+    metaTitle: "Steel Fabrication Services South Africa | Smart Steel",
+    metaDescription:
+      "Looking for steel fabrication services in South Africa? Smart Steel supports warehouse, farm, workshop, and utility building projects with practical fabrication planning and site-ready steel scope.",
+    keywords: [
+      "steel fabrication services",
+      "steel fabrication contractors",
+      "steel fabrication company",
+      "steel fabricators",
+      "structural steel fabrication",
+      "steel fabrication and erection",
+    ],
+    schemaName: "Steel Fabrication Services South Africa",
+    schemaServiceType: "Steel fabrication services, structural steel preparation, and building project support",
+    areaServed: "South Africa",
+    eyebrow: "Steel Fabrication Services",
+    heroTitle: "Steel fabrication services for South African building projects",
+    heroIntro:
+      "Smart Steel supports clients who need steel fabrication services for real building work, from warehouses and farm structures to workshops, utility buildings, and project-based steel requirements.",
+    heroPoints: [
       {
-        title: "Steel fabrication companies in Gauteng",
-        description: "Use the Gauteng page if your search is more location-led around fabrication companies in the province.",
-        href: "/steel-fabrication-companies-gauteng",
+        title: "Practical fabrication",
+        description:
+          "A strong option for projects that need steel prepared around the real building scope rather than a generic supply approach.",
       },
       {
-        title: "Steel farm buildings",
-        description: "Use the farm buildings page if the project is agricultural, operational, or storage-focused.",
-        href: "/steel-farm-buildings",
+        title: "Contractor support",
+        description:
+          "Useful when builders, developers, or project owners need a fabrication partner who understands the building outcome.",
+      },
+      {
+        title: "Site-ready thinking",
+        description:
+          "Better suited to steel work that needs to land cleanly into delivery, erection, and final building use.",
+      },
+    ],
+    quickAnswersHeading: "What clients usually want to know before choosing steel fabrication services",
+    quickAnswers: [
+      {
+        question: "What type of work fits this page?",
+        answer:
+          "Warehouse steel, farm buildings, workshops, utility buildings, covered work areas, and broader structural steel building projects all fit this page.",
+      },
+      {
+        question: "Is this only for large commercial jobs?",
+        answer:
+          "No. This page also works for practical mid-sized projects where proper fabrication support matters.",
+      },
+      {
+        question: "Can you help if I only have early drawings?",
+        answer:
+          "Yes. Early drawings, approximate sizes, and a clear use case are usually enough to start a useful fabrication discussion.",
+      },
+      {
+        question: "Do you also support installation planning?",
+        answer:
+          "Yes. Many projects need fabrication thinking connected to delivery and erection, not handled in isolation.",
+      },
+    ],
+    scopeHeading: "Where Smart Steel helps fabrication service clients most",
+    scopeCards: [
+      {
+        title: "Fabrication for real buildings",
+        description:
+          "A better fit for projects that need steel fabrication aligned to building use, layout, member logic, and site requirements.",
+      },
+      {
+        title: "Fabrication contractor support",
+        description:
+          "Useful where the client needs more than a supplier and wants help getting the steel scope understood properly before work starts.",
+      },
+      {
+        title: "Delivery-aware preparation",
+        description:
+          "Well suited to jobs where the fabrication decision-making must support smoother handover to transport, site handling, and erection.",
+      },
+    ],
+    projectsHeading: "Typical fabrication service work this page is meant for",
+    projectTypes: [
+      "Warehouse and storage building steel",
+      "Farm and agricultural structures",
+      "Workshop and utility building steel",
+      "Covered operational structures",
+      "Project-specific structural steel support",
+      "Selected steel building projects that need fabrication planning",
+    ],
+    localFitHeading: "Why clients search for fabrication services before they choose a product",
+    localFitParagraphs: [
+      "Many buyers are not starting with a kit or product search. They are trying to find a company that can help turn a building brief into a steel scope that makes sense in practice.",
+      "This page gives Smart Steel a stronger answer for service-led search intent while still keeping the copy focused on useful project outcomes.",
+    ],
+    processHeading: "How a stronger steel fabrication service project usually runs",
+    processSteps: [
+      {
+        title: "1. Understand the building use",
+        body:
+          "The best start is a clear understanding of what the building must do, how it will be used, and what the fabricated steel must support.",
+      },
+      {
+        title: "2. Review the steel scope properly",
+        body:
+          "Projects usually move better when the members, spans, connection logic, and practical building use are aligned before fabrication begins.",
+      },
+      {
+        title: "3. Prepare steel around the real brief",
+        body:
+          "Fabrication should reflect the actual project, not only a generic list. That reduces avoidable problems between the workshop and site.",
+      },
+      {
+        title: "4. Support delivery into site work",
+        body:
+          "Good fabrication services also consider how the steel will be handled, delivered, erected, and used once it reaches site.",
+      },
+    ],
+    faqHeading: "Common questions before choosing steel fabrication services",
+    faqs: [
+      {
+        question: "Do you offer steel fabrication services across South Africa?",
+        answer:
+          "Yes. Smart Steel supports steel fabrication service enquiries across South Africa where the project is a strong fit.",
+      },
+      {
+        question: "Can you help with fabrication contractors and site-ready steel?",
+        answer:
+          "Yes. This page is built for buyers who need practical fabrication support connected to a real building project.",
+      },
+      {
+        question: "What kinds of buildings do you support?",
+        answer:
+          "Warehouses, workshops, utility buildings, farm structures, and similar steel building projects are all a strong fit.",
+      },
+      {
+        question: "How should I send the enquiry?",
+        answer:
+          "Send the building use, approximate size, location, and any drawings or notes you have so the fabrication scope can be reviewed properly.",
+      },
+    ],
+    nextStepHeading: "Send the fabrication brief",
+    nextStepBody:
+      "If you already have approximate sizes, drawings, or a site location, include them in your enquiry so Smart Steel can assess the fabrication service requirement properly.",
+    secondaryCtaHref: "/structural-steel-fabricators",
+    secondaryCtaLabel: "Explore structural steel fabrication",
+    supportLinks: [
+      {
+        title: "Structural steel fabricators",
+        description: "Use this page if your search is more specifically about structural steel fabrication for the building itself.",
+        href: "/structural-steel-fabricators",
+      },
+      {
+        title: "Steel erectors",
+        description: "Use this page if the site installation and erection side of the project is just as important as fabrication.",
+        href: "/steel-erectors",
+      },
+      {
+        title: "Steel fabrication & installation",
+        description: "Use the broader service page if the project needs fabrication, coordination, and installation support together.",
+        href: "/steel-fabrication-installation",
+      },
+    ],
+  },
+  steelErectors: {
+    path: "/steel-erectors",
+    metaTitle: "Steel Erectors and Erection Services South Africa | Smart Steel",
+    metaDescription:
+      "Looking for steel erectors or steel erection services in South Africa? Smart Steel supports projects that need practical erection planning, site delivery, and steel building installation support.",
+    keywords: [
+      "steel erectors",
+      "steel erection services",
+      "steel erection company",
+      "steel fabrication and erection",
+      "structural steel erectors",
+      "steel building installation",
+    ],
+    schemaName: "Steel Erectors South Africa",
+    schemaServiceType: "Steel erection services, installation planning, and project delivery support",
+    areaServed: "South Africa",
+    eyebrow: "Steel Erectors",
+    heroTitle: "Steel erectors and erection services for South African building projects",
+    heroIntro:
+      "Smart Steel supports clients who need steel erectors and practical erection services for warehouses, farm structures, workshops, utility buildings, and broader project-based steel work.",
+    heroPoints: [
+      {
+        title: "Site-focused delivery",
+        description:
+          "A strong option for projects where installation quality, sequence, access, and final fit-up all matter.",
+      },
+      {
+        title: "Fabrication linked",
+        description:
+          "Useful when the erection plan needs to connect properly to how the steel was prepared and delivered.",
+      },
+      {
+        title: "Practical outcomes",
+        description:
+          "Better suited to projects that need more than a steel supplier and want the final building outcome considered properly.",
+      },
+    ],
+    quickAnswersHeading: "What clients usually want to know before choosing steel erectors",
+    quickAnswers: [
+      {
+        question: "What kind of projects fit this page?",
+        answer:
+          "Warehouse structures, farm buildings, workshops, covered work areas, utility buildings, and project-based steel installation enquiries all fit this page.",
+      },
+      {
+        question: "Do you only handle installation?",
+        answer:
+          "No. Many projects need erection planning connected to fabrication, delivery, and the intended building use.",
+      },
+      {
+        question: "Why does erection planning matter so much?",
+        answer:
+          "Because access, lifting, sequence, tolerances, and final fit-up can all affect how well the steel building comes together on site.",
+      },
+      {
+        question: "Can you help early in the project?",
+        answer:
+          "Yes. Early coordination usually leads to a smoother installation outcome later.",
+      },
+    ],
+    scopeHeading: "Where Smart Steel helps steel erection clients most",
+    scopeCards: [
+      {
+        title: "Erection planning",
+        description:
+          "A better fit for projects that need installation thinking in place before the steel arrives on site.",
+      },
+      {
+        title: "Site coordination",
+        description:
+          "Useful where access, sequence, working space, and overall site practicality affect the quality of the build.",
+      },
+      {
+        title: "Installation support",
+        description:
+          "Well suited to projects where final building performance depends on how cleanly the steel is erected and handed over.",
+      },
+    ],
+    projectsHeading: "Typical erection service work this page is meant for",
+    projectTypes: [
+      "Warehouse steel erection",
+      "Farm and agricultural structure installation",
+      "Workshop and utility building erection",
+      "Covered operational steel structures",
+      "Project-based structural steel installation support",
+      "Selected jobs that need fabrication and erection coordination",
+    ],
+    localFitHeading: "Why erection services deserve their own page",
+    localFitParagraphs: [
+      "A buyer searching for steel erectors is often much closer to delivery than a buyer comparing products. They want confidence that the steel can be installed properly, safely, and in the right sequence.",
+      "This page helps Smart Steel cover that site-led intent directly while still linking back into fabrication and broader steel project support.",
+    ],
+    processHeading: "How a stronger erection-led steel project usually runs",
+    processSteps: [
+      {
+        title: "1. Review the building and access conditions",
+        body:
+          "A good start is understanding the building type, access, working area, and what the steel installation needs to achieve on site.",
+      },
+      {
+        title: "2. Align fabrication with erection",
+        body:
+          "Projects run better when the way steel is made and delivered supports the way it will actually be lifted, handled, and installed.",
+      },
+      {
+        title: "3. Prepare the site sequence properly",
+        body:
+          "The installation outcome usually improves when the lifting plan, sequencing, and fit-up requirements are thought through early.",
+      },
+      {
+        title: "4. Deliver a cleaner final build",
+        body:
+          "The goal is not only to stand the steel up, but to help the finished structure come together properly for long-term use.",
+      },
+    ],
+    faqHeading: "Common questions before choosing steel erectors",
+    faqs: [
+      {
+        question: "Do you support steel erection services across South Africa?",
+        answer:
+          "Yes. Smart Steel supports erection-led steel building enquiries across South Africa where the project is a good fit.",
+      },
+      {
+        question: "Can you help with fabrication and erection together?",
+        answer:
+          "Yes. Many projects benefit from keeping fabrication and erection thinking closely connected from the start.",
+      },
+      {
+        question: "What building types do you support?",
+        answer:
+          "Warehouses, farm structures, workshops, utility buildings, and similar project-based steel work are all a strong fit.",
+      },
+      {
+        question: "How should I send the enquiry?",
+        answer:
+          "Send the building use, approximate size, location, and any drawings or site notes you have so the erection requirement can be reviewed properly.",
+      },
+    ],
+    nextStepHeading: "Send the erection brief",
+    nextStepBody:
+      "If you already know the building size, site access constraints, or installation timeline, include that in your enquiry so Smart Steel can assess the erection requirement properly.",
+    secondaryCtaHref: "/steel-fabrication-services",
+    secondaryCtaLabel: "Explore fabrication services",
+    supportLinks: [
+      {
+        title: "Steel fabrication services",
+        description: "Use this page if the project needs stronger fabrication planning before installation starts.",
+        href: "/steel-fabrication-services",
+      },
+      {
+        title: "Structural steel fabricators",
+        description: "Use this page if your search is more specifically about fabricated structural steel for the building.",
+        href: "/structural-steel-fabricators",
+      },
+      {
+        title: "Steel fabrication & installation",
+        description: "Use the broader service page if the enquiry spans planning, fabrication, delivery, and installation support.",
+        href: "/steel-fabrication-installation",
+      },
+    ],
+  },
+  steelDesignCompany: {
+    path: "/steel-design-company",
+    metaTitle: "Steel Design Company South Africa | Smart Steel",
+    metaDescription:
+      "Looking for a steel design company in South Africa? Smart Steel helps clients shape warehouse, farm, workshop, and utility building projects with practical steel design and buildable planning support.",
+    keywords: [
+      "steel design company",
+      "steel building design",
+      "structural steel design company",
+      "steel structure design",
+      "steel design south africa",
+      "steel project design",
+    ],
+    schemaName: "Steel Design Company South Africa",
+    schemaServiceType: "Steel building design support, structural planning, and fabrication-ready project coordination",
+    areaServed: "South Africa",
+    eyebrow: "Steel Design Company",
+    heroTitle: "Steel design company support for South African building projects",
+    heroIntro:
+      "Smart Steel supports clients who need practical steel design thinking for real building projects, helping shape warehouse, farm, workshop, utility, and project-based steel structures before fabrication begins.",
+    heroPoints: [
+      {
+        title: "Buildable thinking",
+        description:
+          "A strong option for clients who want steel design decisions that make sense once the project reaches fabrication and site delivery.",
+      },
+      {
+        title: "Clearer project scope",
+        description:
+          "Useful when the building brief needs to be turned into a practical structural approach before pricing runs too far.",
+      },
+      {
+        title: "Linked to outcomes",
+        description:
+          "Better suited to projects where the design logic must connect cleanly to steel preparation, delivery, and final use.",
+      },
+    ],
+    quickAnswersHeading: "What clients usually want to know before choosing a steel design company",
+    quickAnswers: [
+      {
+        question: "What kind of projects fit this page?",
+        answer:
+          "Warehouses, farm buildings, workshops, utility buildings, covered work areas, and broader steel building projects all fit this page.",
+      },
+      {
+        question: "Is this about drawings only?",
+        answer:
+          "No. This page is for clients who need design thinking that leads toward a practical steel building outcome, not only isolated design work.",
+      },
+      {
+        question: "Can you help early in planning?",
+        answer:
+          "Yes. Early planning is often the best time to align the building use, spans, openings, layout, and steel scope properly.",
+      },
+      {
+        question: "Why does design support matter?",
+        answer:
+          "Because a clearer design direction usually leads to better fabrication decisions, fewer surprises, and a smoother site outcome.",
+      },
+    ],
+    scopeHeading: "Where Smart Steel helps steel design clients most",
+    scopeCards: [
+      {
+        title: "Building layout thinking",
+        description:
+          "A better fit for clients who need help shaping the structural footprint, practical use, and steel logic of the building.",
+      },
+      {
+        title: "Fabrication-ready design",
+        description:
+          "Useful when the design conversation needs to support buildable steel preparation, not stay theoretical.",
+      },
+      {
+        title: "Project coordination",
+        description:
+          "Well suited to projects that need design, fabrication, delivery, and installation thinking connected from the beginning.",
+      },
+    ],
+    projectsHeading: "Typical steel design work this page is meant for",
+    projectTypes: [
+      "Warehouse layout and steel planning",
+      "Farm and agricultural building design support",
+      "Workshop and utility building structure planning",
+      "Covered operational steel buildings",
+      "Project-based structural steel design support",
+      "Selected projects that need practical design-to-build coordination",
+    ],
+    localFitHeading: "Why buyers search for a steel design company",
+    localFitParagraphs: [
+      "Some buyers know they need more than a product comparison. They need help shaping the building properly before fabrication and installation begin.",
+      "This page helps Smart Steel answer that intent directly, while keeping the copy focused on useful, buildable design support rather than technical jargon.",
+    ],
+    processHeading: "How a stronger steel design project usually starts",
+    processSteps: [
+      {
+        title: "1. Define what the building must do",
+        body:
+          "The right start is understanding the use case, size, access, openings, workflow, and practical needs of the building.",
+      },
+      {
+        title: "2. Shape the structural approach",
+        body:
+          "A better outcome usually comes from aligning spans, layout, roof form, access needs, and steel logic before the project is pushed into pricing or fabrication.",
+      },
+      {
+        title: "3. Prepare for fabrication reality",
+        body:
+          "Good design support should help the project move cleanly into steel preparation, delivery planning, and site execution.",
+      },
+      {
+        title: "4. Reduce costly rework later",
+        body:
+          "A clearer design direction early on often means fewer surprises, fewer scope gaps, and a better building result overall.",
+      },
+    ],
+    faqHeading: "Common questions before choosing a steel design company",
+    faqs: [
+      {
+        question: "Do you support steel design projects across South Africa?",
+        answer:
+          "Yes. Smart Steel supports steel building design enquiries across South Africa where the project is a strong fit.",
+      },
+      {
+        question: "Can you help with warehouses and farm buildings?",
+        answer:
+          "Yes. Warehouses, farm structures, workshops, utility buildings, and similar projects are all a strong fit for this page.",
+      },
+      {
+        question: "Do I need final drawings before I enquire?",
+        answer:
+          "No. An early brief, approximate size, and intended building use are often enough to begin a practical design discussion.",
+      },
+      {
+        question: "How should I send the enquiry?",
+        answer:
+          "Send the building use, approximate size, location, and any early sketches or notes you have so the steel design requirement can be reviewed properly.",
+      },
+    ],
+    nextStepHeading: "Send the steel design brief",
+    nextStepBody:
+      "If you already know the intended use, approximate dimensions, or layout needs, include that in your enquiry so Smart Steel can assess the design requirement properly.",
+    secondaryCtaHref: "/engineered-steel-buildings",
+    secondaryCtaLabel: "Explore engineered steel buildings",
+    supportLinks: [
+      {
+        title: "Engineered steel buildings",
+        description: "Use this page if your project needs a more tailored steel building outcome rather than only a general design discussion.",
+        href: "/engineered-steel-buildings",
+      },
+      {
+        title: "Structural steel fabricators",
+        description: "Use this page if the next step is mainly about getting the structural steel scope prepared properly.",
+        href: "/structural-steel-fabricators",
+      },
+      {
+        title: "Steel fabrication & installation",
+        description: "Use the broader service page if your project needs support from planning through fabrication and site delivery.",
+        href: "/steel-fabrication-installation",
+      },
+    ],
+  },
+  engineeredBuildings: {
+    path: "/engineered-steel-buildings",
+    metaTitle: "Engineered Steel Buildings South Africa | Smart Steel",
+    metaDescription:
+      "Looking for engineered steel buildings in South Africa? Smart Steel supports warehouse, farm, workshop, and utility projects that need a more tailored steel building solution.",
+    keywords: [
+      "engineered building",
+      "engineered steel buildings",
+      "engineered steel building",
+      "custom steel buildings",
+      "steel building design south africa",
+      "engineered structures south africa",
+    ],
+    schemaName: "Engineered Steel Buildings South Africa",
+    schemaServiceType: "Engineered steel building support, tailored structural planning, and project coordination",
+    areaServed: "South Africa",
+    eyebrow: "Engineered Steel Buildings",
+    heroTitle: "Engineered steel buildings for South African projects that need a tailored solution",
+    heroIntro:
+      "Smart Steel supports clients who need engineered steel buildings when a standard option is not enough, helping shape warehouse, farm, workshop, utility, and project-specific building requirements into a more tailored steel solution.",
+    heroPoints: [
+      {
+        title: "Tailored building support",
+        description:
+          "A strong option for projects that need a more specific structural approach than a standard-size building can offer.",
+      },
+      {
+        title: "Project-led thinking",
+        description:
+          "Useful when spans, openings, layout, site conditions, or intended use call for a more carefully shaped steel building solution.",
+      },
+      {
+        title: "Built for the real outcome",
+        description:
+          "Better suited to projects where design, fabrication, and installation all need to work toward the same final building result.",
+      },
+    ],
+    quickAnswersHeading: "What clients usually want to know before choosing engineered steel buildings",
+    quickAnswers: [
+      {
+        question: "What kind of projects fit this page?",
+        answer:
+          "Larger warehouses, farm buildings, workshops, utility structures, covered work areas, and other projects that need a tailored steel solution all fit this page.",
+      },
+      {
+        question: "When is a standard option not enough?",
+        answer:
+          "When the building needs more specific spans, openings, layout control, site coordination, or performance requirements than a simpler standard option can comfortably handle.",
+      },
+      {
+        question: "Can this still work for practical commercial projects?",
+        answer:
+          "Yes. This page is intended for real projects that need a stronger solution, not only for very large or highly complex buildings.",
+      },
+      {
+        question: "How early should I enquire?",
+        answer:
+          "The earlier the better, because tailored projects usually benefit from getting the building logic right before steel decisions are locked in.",
+      },
+    ],
+    scopeHeading: "Where Smart Steel helps engineered building clients most",
+    scopeCards: [
+      {
+        title: "Tailored structural planning",
+        description:
+          "A better fit for projects that need a building shaped around real use, access, openings, and layout requirements.",
+      },
+      {
+        title: "Design-to-delivery coordination",
+        description:
+          "Useful when the project needs design support, steel preparation, and installation thinking connected from the start.",
+      },
+      {
+        title: "Stronger project alignment",
+        description:
+          "Well suited to clients who want the structural direction, commercial scope, and buildability reviewed properly before committing.",
+      },
+    ],
+    projectsHeading: "Typical engineered steel building work this page is meant for",
+    projectTypes: [
+      "Tailored warehouse and storage buildings",
+      "Project-specific farm and agricultural structures",
+      "Workshops and utility buildings with more specific requirements",
+      "Covered operational buildings with unique access or layout needs",
+      "Steel buildings that need stronger design-to-build coordination",
+      "Selected projects where a standard option is not the right answer",
+    ],
+    localFitHeading: "Why engineered steel buildings deserve a dedicated page",
+    localFitParagraphs: [
+      "Some buyers are not simply choosing between products. They are trying to solve for a building that needs a more carefully shaped structural answer.",
+      "This page helps Smart Steel address that intent directly, while keeping the copy useful, commercial, and client-facing instead of overly technical.",
+    ],
+    processHeading: "How a stronger engineered steel building project usually starts",
+    processSteps: [
+      {
+        title: "1. Understand the building demands properly",
+        body:
+          "The best starting point is understanding what the building must do, how it will be used, and where a standard option may start to fall short.",
+      },
+      {
+        title: "2. Shape a more tailored steel solution",
+        body:
+          "Projects usually move better when spans, layout, openings, workflow, and structural direction are aligned before fabrication decisions are made.",
+      },
+      {
+        title: "3. Connect design to fabrication reality",
+        body:
+          "A tailored building solution still needs to move cleanly into steel preparation, delivery planning, and installation on site.",
+      },
+      {
+        title: "4. Build with fewer compromises later",
+        body:
+          "A stronger engineered starting point often means fewer forced changes later and a building that performs better in real use.",
+      },
+    ],
+    faqHeading: "Common questions before choosing engineered steel buildings",
+    faqs: [
+      {
+        question: "Do you support engineered steel buildings across South Africa?",
+        answer:
+          "Yes. Smart Steel supports engineered steel building enquiries across South Africa where a more tailored solution is the right fit.",
+      },
+      {
+        question: "Can this page work for warehouses and farm projects?",
+        answer:
+          "Yes. Warehouses, agricultural buildings, workshops, utility buildings, and similar projects are all a strong fit when they need a more tailored approach.",
+      },
+      {
+        question: "How do I know if I need this instead of a simpler option?",
+        answer:
+          "If the project needs more specific spans, access openings, layout control, or coordination than a simple standard option can provide, this page is likely the better fit.",
+      },
+      {
+        question: "How should I send the enquiry?",
+        answer:
+          "Send the building use, approximate size, location, and any early drawings or notes you have so the project can be reviewed properly.",
+      },
+    ],
+    nextStepHeading: "Send the engineered building brief",
+    nextStepBody:
+      "If you already know the building use, approximate dimensions, site location, or special requirements, include them in your enquiry so Smart Steel can assess the engineered building scope properly.",
+    secondaryCtaHref: "/warehouses",
+    secondaryCtaLabel: "Compare warehouse systems",
+    supportLinks: [
+      {
+        title: "Steel design company",
+        description: "Use this page if the first need is clearer design support before the project moves into a more tailored building solution.",
+        href: "/steel-design-company",
+      },
+      {
+        title: "Steel fabrication & installation",
+        description: "Use the broader service page if the project needs planning, fabrication, and installation support tied together.",
+        href: "/steel-fabrication-installation",
+      },
+      {
+        title: "Structural steel fabricators",
+        description: "Use this page if the next step is mainly about preparing the structural steel scope for the building.",
+        href: "/structural-steel-fabricators",
       },
     ],
   },
