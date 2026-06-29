@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useMemo, useState } from "react"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import { Dialog, Transition } from "@headlessui/react"
 import { ArrowLeft, Link2, Plus, Printer, Save, Trash2 } from "lucide-react"
 import {
@@ -406,6 +406,7 @@ export default function EstimateDrawer({
   const [formState, setFormState] = useState(() => buildInitialState(lead, latestEstimate))
   const [isSaving, setIsSaving] = useState(false)
   const [prefersSameTabPreview, setPrefersSameTabPreview] = useState(false)
+  const previousProductTypeRef = useRef(buildInitialState(lead, latestEstimate).productType)
   const isSolarEstimate = isSolarEstimateProduct(formState.productType)
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
   const isTrussEstimate = isTrussEstimateProduct(formState.productType)
@@ -428,6 +429,7 @@ export default function EstimateDrawer({
   useEffect(() => {
     const nextFormState = buildInitialState(lead, loadedEstimate)
     setFormState(nextFormState)
+    previousProductTypeRef.current = nextFormState.productType
 
     const nextPreview = calculateEstimateByProductType(nextFormState.productType, nextFormState)
     setEditableLineItems(
@@ -441,23 +443,35 @@ export default function EstimateDrawer({
 
   useEffect(() => {
     setEditableLineItems((currentItems) => {
-      const currentByCode = new Map(
-        currentItems
-          .filter((item) => !item.manual)
-          .map((item) => [item.code, item])
-      )
+      const productTypeChanged = previousProductTypeRef.current !== formState.productType
+      previousProductTypeRef.current = formState.productType
 
-      const mergedBaseItems = preview.lineItems.map((item) =>
-        buildEditableLineItem(
-          applyMarkupToLineItem(item, preview.pricing.markupMultiplier),
-          currentByCode.get(item.code)
+      if (productTypeChanged || currentItems.length === 0) {
+        return preview.lineItems.map((item) =>
+          buildEditableLineItem(applyMarkupToLineItem(item, preview.pricing.markupMultiplier), {
+            priceIncludesMarkup: true,
+          })
         )
-      )
+      }
+
+      const previewByCode = new Map(preview.lineItems.map((item) => [item.code, item]))
+      const mergedBaseItems = currentItems
+        .filter((item) => !item.manual)
+        .map((item) => {
+          const previewItem = previewByCode.get(item.code)
+          if (!previewItem) return null
+
+          return buildEditableLineItem(
+            applyMarkupToLineItem(previewItem, preview.pricing.markupMultiplier),
+            item
+          )
+        })
+        .filter(Boolean)
 
       const manualItems = currentItems.filter((item) => item.manual)
       return [...mergedBaseItems, ...manualItems]
     })
-  }, [preview.lineItems, preview.pricing.markupMultiplier])
+  }, [formState.productType, preview.lineItems, preview.pricing.markupMultiplier])
 
   useEffect(() => {
     if (typeof window === "undefined") return

@@ -293,8 +293,16 @@ const FOLLOW_UP_TEMPLATE_OPTIONS = [
   { key: "reactivation", label: "Reactivation" },
 ]
 
+function stripEstimateVersionSuffix(title) {
+  return String(title || "").replace(/\s+V\d+$/i, "").trim()
+}
+
 function getLeadFirstName(lead) {
   return normalizePersonName(lead?.name || "there") || "there"
+}
+
+function getLeadFullName(lead) {
+  return normalizePersonName([lead?.name, lead?.last_name].filter(Boolean).join(" ")) || "Client"
 }
 
 function getProjectReference(lead) {
@@ -405,6 +413,30 @@ Smart Steel`,
   }
 }
 
+function buildEstimateEmailTemplate(lead, estimate) {
+  const clientName = getLeadFullName(lead)
+  const projectReference = stripEstimateVersionSuffix(estimate?.title) || getProjectReference(lead)
+
+  return {
+    subject: `Smart Steel estimate for ${projectReference}`,
+    body: `Good day ${clientName},
+
+I trust you're doing well.
+
+Please find the attached estimate for your project.
+
+The estimate outlines the proposed scope of work and budget based on the information currently available. Should your requirements change or if you would like to explore alternative options to better suit your budget, timeline, or operational needs, we'd be happy to revise the proposal accordingly.
+
+If you have any questions regarding the estimate or would like to discuss any aspect of the project in more detail, please don't hesitate to contact us.
+
+Thank you for the opportunity to quote on your project. We appreciate your consideration and look forward to the possibility of working with you.
+
+From concept and engineering through manufacturing and installation, our goal is to deliver practical, cost-effective steel structures built to perform.
+
+Kind regards,`,
+  }
+}
+
 function getFollowUpTemplateLabel(templateKey) {
   return FOLLOW_UP_TEMPLATE_OPTIONS.find((template) => template.key === templateKey)?.label || "Follow-up"
 }
@@ -447,6 +479,8 @@ export default function LeadEditorDrawer({
   const [emailTemplateKey, setEmailTemplateKey] = useState(getSuggestedFollowUpTemplate(lead));
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
+  const [emailComposerMode, setEmailComposerMode] = useState("follow_up");
+  const [selectedEstimateEmail, setSelectedEstimateEmail] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
 
   const [formData, setFormData] = useState({
@@ -624,6 +658,8 @@ export default function LeadEditorDrawer({
     setEmailTemplateKey(suggestedTemplate)
     setEmailSubject(template.subject)
     setEmailBody(template.body)
+    setEmailComposerMode("follow_up")
+    setSelectedEstimateEmail(null)
     setShowEmailComposer(false)
     setValidationErrors({});
   }, [lead]);
@@ -746,7 +782,7 @@ export default function LeadEditorDrawer({
       return
     }
 
-    if (!emailSubject || !emailBody) {
+    if (emailComposerMode !== "follow_up" || !emailSubject || !emailBody) {
       const suggestedTemplate = getSuggestedFollowUpTemplate(formData)
       const template = buildFollowUpTemplate(suggestedTemplate, formData)
       setEmailTemplateKey(suggestedTemplate)
@@ -754,6 +790,22 @@ export default function LeadEditorDrawer({
       setEmailBody(template.body)
     }
 
+    setEmailComposerMode("follow_up")
+    setSelectedEstimateEmail(null)
+    setShowEmailComposer(true)
+  }
+
+  const openEstimateEmailComposer = (estimate) => {
+    if (!formData.email?.trim()) {
+      alert("Add an email address for this lead first.")
+      return
+    }
+
+    const template = buildEstimateEmailTemplate(formData, estimate)
+    setEmailComposerMode("estimate")
+    setSelectedEstimateEmail(estimate || null)
+    setEmailSubject(template.subject)
+    setEmailBody(template.body)
     setShowEmailComposer(true)
   }
 
@@ -764,7 +816,10 @@ export default function LeadEditorDrawer({
       if (lead?.id) {
         await addActivity({
           type: "email",
-          description: `Generated and copied a follow-up email for ${formData.name || "client"}.`,
+          description:
+            emailComposerMode === "estimate"
+              ? `Generated and copied an estimate email for ${formData.name || "client"}.`
+              : `Generated and copied a follow-up email for ${formData.name || "client"}.`,
         })
       }
     } catch (error) {
@@ -774,6 +829,20 @@ export default function LeadEditorDrawer({
   }
 
   const handleSendFollowUpEmail = async () => {
+    if (emailComposerMode === "estimate") {
+      const mailtoUrl = `mailto:${encodeURIComponent(formData.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+
+      if (lead?.id) {
+        await addActivity({
+          type: "email",
+          description: `Estimate email draft opened for ${selectedEstimateEmail?.title || "the latest estimate"}. Subject: ${emailSubject}`,
+        })
+      }
+
+      window.location.href = mailtoUrl
+      return
+    }
+
     const nextFollowUpAt = getBusinessFollowUpIsoDate(3)
     const nextAction = getWaitingSummaryForTemplate(emailTemplateKey, formData)
     const templateLabel = getFollowUpTemplateLabel(emailTemplateKey)
@@ -1588,6 +1657,13 @@ export default function LeadEditorDrawer({
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEstimateEmailComposer(estimate)}
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        Email draft
+                      </button>
                       <a
                         href={buildEstimatePreviewUrl(estimate.id)}
                         target="_blank"
@@ -1827,13 +1903,15 @@ export default function LeadEditorDrawer({
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                Follow-up email
+                                {emailComposerMode === "estimate" ? "Estimate email" : "Follow-up email"}
                               </p>
                               <h3 className="mt-1 text-lg font-semibold text-slate-900">
                                 Generate, edit, and send
                               </h3>
                               <p className="mt-1 text-sm text-slate-600">
-                                Use this as your trial run for the 10 follow-ups you need to get out quickly.
+                                {emailComposerMode === "estimate"
+                                  ? "Use this draft when sending the estimate to the client, then attach the estimate PDF before sending."
+                                  : "Use this as your trial run for the 10 follow-ups you need to get out quickly."}
                               </p>
                             </div>
                             <button
@@ -1847,20 +1925,22 @@ export default function LeadEditorDrawer({
                         </div>
 
                         <div className="space-y-4 px-4 py-4 sm:px-5">
-                          <div>
-                            <label className={fieldLabelClass}>Template</label>
-                            <select
-                              value={emailTemplateKey}
-                              onChange={(e) => applyEmailTemplate(e.target.value)}
-                              className={inputClass}
-                            >
-                              {FOLLOW_UP_TEMPLATE_OPTIONS.map((template) => (
-                                <option key={template.key} value={template.key}>
-                                  {template.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                          {emailComposerMode === "follow_up" ? (
+                            <div>
+                              <label className={fieldLabelClass}>Template</label>
+                              <select
+                                value={emailTemplateKey}
+                                onChange={(e) => applyEmailTemplate(e.target.value)}
+                                className={inputClass}
+                              >
+                                {FOLLOW_UP_TEMPLATE_OPTIONS.map((template) => (
+                                  <option key={template.key} value={template.key}>
+                                    {template.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          ) : null}
 
                           <div>
                             <label className={fieldLabelClass}>Subject</label>
@@ -1884,6 +1964,11 @@ export default function LeadEditorDrawer({
 
                           <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
                             Sending to <span className="font-semibold text-slate-900">{formData.email || "No email set"}</span>
+                            {emailComposerMode === "estimate" && selectedEstimateEmail?.title ? (
+                              <p className="mt-2">
+                                Estimate: <span className="font-semibold text-slate-900">{selectedEstimateEmail.title}</span>
+                              </p>
+                            ) : null}
                           </div>
                         </div>
 
