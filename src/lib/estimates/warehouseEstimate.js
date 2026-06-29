@@ -38,7 +38,8 @@ export const WAREHOUSE_MATERIALS = {
     IBR: { supply: 225, installed: 450 },
     Chromadek: { supply: 350, installed: 450 },
   },
-  installRate: 200,
+  structureInstallRate: 280,
+  claddingInstallRate: 80,
   deliveryRate: 19,
   competitorLowRate: 1100,
   competitorHighRate: 1400,
@@ -250,8 +251,14 @@ export function calculateWarehouseEstimateWithMaterials(
   const costScrews = totalScrews * materials.screw * quantity
   const costTopHats = totalTopHatLengthSold * materials.topHats.rate * quantity
   const costCladdingSupply = totalCladdingArea * materials.cladding[cladding].supply
-  const installationChargeArea = totalCladdingArea
-  const costInstallation = claddingInstalled ? installationChargeArea * materials.installRate : 0
+  const structureInstallationArea = totalArea
+  const claddingInstallationArea = totalCladdingArea
+  const costStructureInstallation = claddingInstalled
+    ? structureInstallationArea * materials.structureInstallRate
+    : 0
+  const costCladdingInstallation = claddingInstalled && cladding !== "None"
+    ? claddingInstallationArea * materials.claddingInstallRate
+    : 0
   const rawDeliveryCost = deliveryDistance * materials.deliveryRate
   const usesDeliveryMinimum = deliveryRequired && rawDeliveryCost < DEFAULT_DELIVERY_MINIMUM
   const deliveryCost = deliveryRequired
@@ -271,7 +278,8 @@ export function calculateWarehouseEstimateWithMaterials(
     costScrews +
     costTopHats +
     costCladdingSupply +
-    costInstallation +
+    costStructureInstallation +
+    costCladdingInstallation +
     deliveryCost +
     costRollerDoors +
     costPedestrianDoors
@@ -349,12 +357,25 @@ export function calculateWarehouseEstimateWithMaterials(
   if (claddingInstalled) {
     lineItems.push(
       buildLineItem({
-        code: "installation",
-        label: "Installation",
-        quantity: installationChargeArea,
+        code: "structure_installation",
+        label: "Structure installation",
+        quantity: structureInstallationArea,
         unit: "sqm",
-        unitRate: materials.installRate,
-        total: costInstallation,
+        unitRate: materials.structureInstallRate,
+        total: costStructureInstallation,
+      })
+    )
+  }
+
+  if (claddingInstalled && cladding !== "None") {
+    lineItems.push(
+      buildLineItem({
+        code: "cladding_installation",
+        label: "Cladding installation",
+        quantity: claddingInstallationArea,
+        unit: "sqm",
+        unitRate: materials.claddingInstallRate,
+        total: costCladdingInstallation,
       })
     )
   }
@@ -450,8 +471,11 @@ export function calculateWarehouseEstimateWithMaterials(
       estimatedTotal,
       deliveryCost: roundMoney(deliveryCost),
       claddingCost: roundMoney(costCladdingSupply),
-      installationCost: roundMoney(costInstallation),
-      installationChargeArea: roundMoney(installationChargeArea),
+      installationCost: roundMoney(costStructureInstallation + costCladdingInstallation),
+      structureInstallationCost: roundMoney(costStructureInstallation),
+      structureInstallationArea: roundMoney(structureInstallationArea),
+      claddingInstallationCost: roundMoney(costCladdingInstallation),
+      claddingInstallationArea: roundMoney(claddingInstallationArea),
       garageDoorOpeningCost: roundMoney(costRollerDoors),
       garageDoorOpeningType,
       pedestrianDoorOpeningCost: roundMoney(costPedestrianDoors),

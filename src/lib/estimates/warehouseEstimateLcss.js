@@ -13,7 +13,8 @@ const LCSS_HAT_RATE_PER_METER = 56
 const LCSS_LAP_WASTE_FACTOR = 1.04
 const LCSS_OVERALL_WASTE_FACTOR = 1.1
 const DEFAULT_WALL_HEIGHT = 3
-const LCSS_INSTALL_RATE = WAREHOUSE_MATERIALS.installRate
+const LCSS_STRUCTURE_INSTALL_RATE = WAREHOUSE_MATERIALS.structureInstallRate
+const LCSS_CLADDING_INSTALL_RATE = WAREHOUSE_MATERIALS.claddingInstallRate
 
 export const LCSS_WAREHOUSE_WIDTH_OPTIONS = [3, 6, 8, 10, 12]
 export const LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS = ["Galv", "Mild"]
@@ -220,9 +221,20 @@ export function calculateLcssWarehouseEstimate(input) {
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
   const claddingSupplyRate = WAREHOUSE_MATERIALS.cladding[cladding]?.supply || 0
   const claddingCost = cladding === "None" ? 0 : totalSheetingArea * claddingSupplyRate
-  const installationChargeArea = claddingInstalled && cladding !== "None" ? totalSheetingArea : 0
-  const installationCost = installationChargeArea * LCSS_INSTALL_RATE
-  const subTotalBeforeMarkup = steelCost + hatCost + claddingCost + installationCost
+  const totalSteelCost = steelCost * quantity
+  const totalHatCost = hatCost * quantity
+  const totalCladdingCost = claddingCost * quantity
+  const totalFloorArea = width * length * quantity
+  const totalCladdingCoverageArea = totalSheetingArea * quantity
+  const structureInstallationCost = claddingInstalled ? totalFloorArea * LCSS_STRUCTURE_INSTALL_RATE : 0
+  const claddingInstallationCost =
+    claddingInstalled && cladding !== "None" ? totalCladdingCoverageArea * LCSS_CLADDING_INSTALL_RATE : 0
+  const subTotalBeforeMarkup =
+    totalSteelCost +
+    totalHatCost +
+    totalCladdingCost +
+    structureInstallationCost +
+    claddingInstallationCost
   const markupValue = subTotalBeforeMarkup * LCSS_MARKUP_RATE
   const totalExclVat = subTotalBeforeMarkup + markupValue
   const vatValue = totalExclVat * LCSS_VAT_RATE
@@ -254,13 +266,13 @@ export function calculateLcssWarehouseEstimate(input) {
       total: totalBraceCost * quantity,
     }),
     buildLineItem({
-      code: "lcss_hats",
-      label: "Purlins, hats and wall hats",
-      quantity: roundMoney(totalHatLengthMeters * quantity),
-      unit: "m",
-      unitRate: applyMarkup(LCSS_HAT_RATE_PER_METER),
-      total: applyMarkup(hatCost * quantity),
-    }),
+        code: "lcss_hats",
+        label: "Purlins, hats and wall hats",
+        quantity: roundMoney(totalHatLengthMeters * quantity),
+        unit: "m",
+        unitRate: applyMarkup(LCSS_HAT_RATE_PER_METER),
+        total: applyMarkup(totalHatCost),
+      }),
   ]
 
   if (cladding !== "None") {
@@ -271,7 +283,7 @@ export function calculateLcssWarehouseEstimate(input) {
         quantity: roundMoney(totalSheetingArea * quantity),
         unit: "sqm",
         unitRate: applyMarkup(claddingSupplyRate),
-        total: applyMarkup(claddingCost * quantity),
+        total: applyMarkup(totalCladdingCost),
       })
     )
   }
@@ -279,12 +291,25 @@ export function calculateLcssWarehouseEstimate(input) {
   if (claddingInstalled) {
     lineItems.push(
       buildLineItem({
-        code: "lcss_installation",
-        label: "Cladding installation",
-        quantity: roundMoney(installationChargeArea * quantity),
+        code: "lcss_structure_installation",
+        label: "Structure installation",
+        quantity: roundMoney(totalFloorArea),
         unit: "sqm",
-        unitRate: applyMarkup(LCSS_INSTALL_RATE),
-        total: applyMarkup(installationCost * quantity),
+        unitRate: applyMarkup(LCSS_STRUCTURE_INSTALL_RATE),
+        total: applyMarkup(structureInstallationCost),
+      })
+    )
+  }
+
+  if (claddingInstalled && cladding !== "None") {
+    lineItems.push(
+      buildLineItem({
+        code: "lcss_cladding_installation",
+        label: "Cladding installation",
+        quantity: roundMoney(totalCladdingCoverageArea),
+        unit: "sqm",
+        unitRate: applyMarkup(LCSS_CLADDING_INSTALL_RATE),
+        total: applyMarkup(claddingInstallationCost),
       })
     )
   }
@@ -321,20 +346,23 @@ export function calculateLcssWarehouseEstimate(input) {
       totalHatLengthMeters: roundMoney(totalHatLengthMeters * quantity),
     },
     pricing: {
-      steelCost: roundMoney(steelCost * quantity),
-      hatCost: roundMoney(hatCost * quantity),
-      subTotalBeforeMarkup: roundMoney(subTotalBeforeMarkup * quantity),
+      steelCost: roundMoney(totalSteelCost),
+      hatCost: roundMoney(totalHatCost),
+      subTotalBeforeMarkup: roundMoney(subTotalBeforeMarkup),
       markupRate: LCSS_MARKUP_RATE,
-      markupValue: roundMoney(markupValue * quantity),
+      markupValue: roundMoney(markupValue),
       vatRate: LCSS_VAT_RATE,
-      vatValue: roundMoney(vatValue * quantity),
-      baseTotal: roundMoney(totalExclVat * quantity),
+      vatValue: roundMoney(vatValue),
+      baseTotal: roundMoney(totalExclVat),
       markupMultiplier: roundMoney(1 + LCSS_MARKUP_RATE),
-      estimatedTotal: roundMoney(totalExclVat * quantity),
-      totalInclVat: roundMoney(totalInclVat * quantity),
-      claddingCost: roundMoney(claddingCost * quantity),
-      installationCost: roundMoney(installationCost * quantity),
-      installationChargeArea: roundMoney(installationChargeArea * quantity),
+      estimatedTotal: roundMoney(totalExclVat),
+      totalInclVat: roundMoney(totalInclVat),
+      claddingCost: roundMoney(totalCladdingCost),
+      installationCost: roundMoney(structureInstallationCost + claddingInstallationCost),
+      structureInstallationCost: roundMoney(structureInstallationCost),
+      structureInstallationArea: roundMoney(totalFloorArea),
+      claddingInstallationCost: roundMoney(claddingInstallationCost),
+      claddingInstallationArea: roundMoney(totalCladdingCoverageArea),
     },
     sheeting: {
       roofSheetingArea: roundMoney(roofSheetingArea * quantity),
