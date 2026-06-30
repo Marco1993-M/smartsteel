@@ -1,9 +1,10 @@
 import { create } from "zustand"
 
 export const DEFAULT_WAREHOUSE_BUILDER_STATE = {
+  productType: "LSF Warehouse",
   width: 10,
   length: 20,
-  wallHeight: 4,
+  wallHeight: 3,
   roofType: "dual_pitch",
   roofPitch: 15,
   cladding: "IBR",
@@ -12,6 +13,8 @@ export const DEFAULT_WAREHOUSE_BUILDER_STATE = {
   rollerDoorCount: 1,
   garageDoorOpeningType: "single",
   pedestrianDoorCount: 1,
+  steelFinish: "Galv",
+  gableMode: "sheeted_gable",
   deliveryRequired: true,
   deliveryDistance: 50,
   province: "Gauteng",
