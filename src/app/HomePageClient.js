@@ -292,16 +292,17 @@ export default function HomePageClient() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(244,248,253,0.96)_12%,rgba(238,243,251,0.92)_32%,rgba(238,243,251,0.92)_100%)]" />
         <div className="relative z-10 mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-            <div className="rounded-[2rem] border border-black/10 bg-white/92 p-4 shadow-sm backdrop-blur-sm sm:p-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">
-                Step 1 of 3
-              </p>
-              <h2 className="mt-3 text-2xl font-bold leading-tight text-black sm:text-4xl">
-                Build and Price Your Warehouse
-              </h2>
+            <div className="space-y-4">
+              <div className="rounded-[2rem] border border-black/10 bg-white/92 p-4 shadow-sm backdrop-blur-sm sm:p-8">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">
+                  Step 1 of 3
+                </p>
+                <h2 className="mt-3 text-2xl font-bold leading-tight text-black sm:text-4xl">
+                  Build and Price Your Warehouse
+                </h2>
 
-              <div className="mt-5">
-                <div className="rounded-[1.6rem] border border-[#2d63b8] bg-[#eef4ff] px-4 py-4 shadow-sm sm:px-5 sm:py-5">
+                <div className="mt-5">
+                  <div className="rounded-[1.6rem] border border-[#2d63b8] bg-[#eef4ff] px-4 py-4 shadow-sm sm:px-5 sm:py-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">
@@ -318,7 +319,7 @@ export default function HomePageClient() {
                         {heroStep === 3 && 'Choose a starting length, then open the builder with your layout already loaded.'}
                       </p>
                     </div>
-                    <span className="inline-flex w-fit rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-black">
+                    <span className="inline-flex w-fit shrink-0 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-black">
                       Popular pick
                     </span>
                   </div>
@@ -336,14 +337,11 @@ export default function HomePageClient() {
                   </div>
 
                   {heroStep === 1 && (
-                    <div className="mt-5 rounded-[1.3rem] border border-white/90 bg-white/80 p-4">
-                      <p className="text-sm leading-7 text-gray-700">
-                        Start with a warehouse plan in three quick steps, then continue inside the full builder.
-                      </p>
+                    <div className="mt-5">
                       <button
                         type="button"
                         onClick={() => setHeroStep(2)}
-                        className="mt-4 inline-flex items-center rounded-full bg-[#ffcb13] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#e9b800]"
+                        className="inline-flex items-center rounded-full bg-[#ffcb13] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#e9b800]"
                       >
                         Build my warehouse
                       </button>
@@ -467,33 +465,32 @@ export default function HomePageClient() {
                       </div>
                     </div>
                   )}
+                  </div>
                 </div>
+              </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {heroActions.map((item) => (
-                    <Link
-                      key={item.title}
-                      href={item.href}
-                      className="rounded-[1.3rem] border border-black/10 bg-white px-4 py-4 transition hover:border-black/20 hover:bg-gray-50"
-                    >
+              <div className="grid gap-3 sm:grid-cols-2">
+                {heroActions.map((item) => (
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    className="rounded-[1.3rem] border border-black/10 bg-white/88 px-4 py-4 shadow-sm transition hover:border-black/20 hover:bg-white"
+                  >
+                    <div className="flex items-start justify-between gap-3">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">
                         {item.step}
                       </p>
-                      <div className="mt-2 flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="text-lg font-bold text-black">{item.title}</h3>
-                          <p className="mt-1 text-sm leading-6 text-gray-700">{item.description}</p>
-                        </div>
-                        <span className="rounded-full border border-black/10 bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-black">
-                          Also available
-                        </span>
-                      </div>
-                      <div className="mt-3 text-sm font-semibold text-[#da1a33]">
-                        {item.cta}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                      <span className="rounded-full border border-black/10 bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-black">
+                        Also available
+                      </span>
+                    </div>
+                    <h3 className="mt-3 text-lg font-bold text-black">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-gray-700">{item.description}</p>
+                    <div className="mt-3 text-sm font-semibold text-[#da1a33]">
+                      {item.cta}
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
 
