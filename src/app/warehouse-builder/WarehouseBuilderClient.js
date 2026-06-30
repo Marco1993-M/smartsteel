@@ -68,10 +68,10 @@ const LSF_SYSTEM_DEFAULTS = {
   wallHeight: 3,
   cladding: "IBR",
   scope: "supply_only",
-  enclosureType: "fully_enclosed",
-  rollerDoorCount: 1,
+  enclosureType: "roof_only",
+  rollerDoorCount: 0,
   garageDoorOpeningType: "single",
-  pedestrianDoorCount: 1,
+  pedestrianDoorCount: 0,
 }
 
 const CFLC_SYSTEM_DEFAULTS = {
