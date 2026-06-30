@@ -24,6 +24,20 @@ const heroActions = [
 
 const heroLengthOptions = [10, 15, 20, 25, 30];
 
+const widthDescriptors = {
+  8: 'Tighter footprint',
+  10: 'Balanced layout',
+  12: 'Wider access',
+};
+
+const lengthDescriptors = {
+  10: 'Compact',
+  15: 'Practical',
+  20: 'Popular',
+  25: 'Expanded',
+  30: 'Large format',
+};
+
 const heroTrustBullets = [
   'Compare LSF and CFLC warehouse options clearly',
   'Use the builder and estimator before requesting a formal quote',
@@ -309,6 +323,18 @@ export default function HomePageClient() {
                     </span>
                   </div>
 
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2d63b8]">
+                      Online pricing guide
+                    </span>
+                    <span className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2d63b8]">
+                      3m eave height
+                    </span>
+                    <span className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2d63b8]">
+                      South Africa ready
+                    </span>
+                  </div>
+
                   {heroStep === 1 && (
                     <div className="mt-5 rounded-[1.3rem] border border-white/90 bg-white/80 p-4">
                       <p className="text-sm leading-7 text-gray-700">
@@ -335,13 +361,25 @@ export default function HomePageClient() {
                               key={width}
                               type="button"
                               onClick={() => setSelectedWidth(width)}
-                              className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                              className={`rounded-2xl border px-3 py-3 text-left transition ${
                                 active
                                   ? 'border-[#2d63b8] bg-[#2d63b8] text-white'
                                   : 'border-black/10 bg-white text-black hover:border-[#2d63b8] hover:bg-[#f4f8ff]'
                               }`}
                             >
-                              {width}m
+                              <div className="flex items-end justify-between gap-2">
+                                <div>
+                                  <p className="text-sm font-semibold">{width}m</p>
+                                  <p className={`mt-1 text-[11px] ${active ? 'text-white/80' : 'text-gray-500'}`}>
+                                    {widthDescriptors[width]}
+                                  </p>
+                                </div>
+                                <div className="flex h-7 items-end gap-1">
+                                  <span className={`w-2 rounded-t-full ${active ? 'bg-white/70' : 'bg-[#c9d8f2]'}`} style={{ height: '45%' }} />
+                                  <span className={`w-2 rounded-t-full ${active ? 'bg-white/80' : 'bg-[#9fbae8]'}`} style={{ height: '65%' }} />
+                                  <span className={`w-2 rounded-t-full ${active ? 'bg-white' : 'bg-[#2d63b8]'}`} style={{ height: '90%' }} />
+                                </div>
+                              </div>
                             </button>
                           );
                         })}
@@ -376,13 +414,22 @@ export default function HomePageClient() {
                               key={length}
                               type="button"
                               onClick={() => setSelectedLength(length)}
-                              className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                              className={`rounded-2xl border px-3 py-3 text-left transition ${
                                 active
                                   ? 'border-[#2d63b8] bg-[#2d63b8] text-white'
                                   : 'border-black/10 bg-white text-black hover:border-[#2d63b8] hover:bg-[#f4f8ff]'
                               }`}
                             >
-                              {length}m
+                              <p className="text-sm font-semibold">{length}m</p>
+                              <p className={`mt-1 text-[11px] ${active ? 'text-white/80' : 'text-gray-500'}`}>
+                                {lengthDescriptors[length]}
+                              </p>
+                              <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/10">
+                                <div
+                                  className={`h-full rounded-full ${active ? 'bg-white/85' : 'bg-[#2d63b8]'}`}
+                                  style={{ width: `${Math.min((length / 30) * 100, 100)}%` }}
+                                />
+                              </div>
                             </button>
                           );
                         })}
@@ -460,6 +507,14 @@ export default function HomePageClient() {
               <p className="mt-6 max-w-3xl text-lg leading-8 text-black/80 md:text-xl">
                 Compare warehouse systems, use the online builder, estimate your budget, and then move into the right next step for your project.
               </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <span className="rounded-full border border-black/10 bg-white/85 px-4 py-2 text-sm font-semibold text-black shadow-sm">
+                  Used by farms, industrial sites, and growing businesses
+                </span>
+                <span className="rounded-full border border-black/10 bg-white/85 px-4 py-2 text-sm font-semibold text-black shadow-sm">
+                  Planning support across South Africa
+                </span>
+              </div>
               <ul className="mt-8 space-y-3">
                 {heroTrustBullets.map((bullet) => (
                   <li key={bullet} className="flex items-start gap-3 text-base leading-7 text-gray-800">
