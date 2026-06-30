@@ -89,6 +89,34 @@ const CFLC_SYSTEM_DEFAULTS = {
   pedestrianDoorCount: 0,
 }
 
+const WIDTH_DESCRIPTORS = {
+  8: "Compact footprint",
+  10: "Balanced layout",
+  12: "Wider access",
+}
+
+const LENGTH_DESCRIPTORS = {
+  5: "Very compact",
+  7.5: "Compact",
+  10: "Starter size",
+  12.5: "Practical",
+  15: "Popular",
+  17.5: "Growing space",
+  20: "Expanded",
+  22.5: "Larger format",
+  25: "Large format",
+  27.5: "Extra capacity",
+  30: "Extended layout",
+  32.5: "Long format",
+  35: "Large project",
+  37.5: "Extra large",
+  40: "Commercial span",
+  42.5: "Commercial plus",
+  45: "High-capacity",
+  47.5: "Large-scale",
+  50: "Maximum standard",
+}
+
 function FieldLabel({ title, hint }) {
   return (
     <div className="mb-2">
@@ -200,6 +228,40 @@ function ContactField({ label, type = "text", value, onChange, placeholder, requ
         className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-500"
       />
     </label>
+  )
+}
+
+function FootprintChoiceCard({ active, onClick, title, subtitle, bars = [] }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`min-h-[92px] rounded-2xl border px-3 py-3 text-left transition ${
+        active
+          ? "border-slate-900 bg-slate-900 text-white"
+          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+      }`}
+    >
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold">{title}</p>
+          {subtitle ? (
+            <p className={`mt-1 text-[11px] ${active ? "text-slate-200" : "text-slate-500"}`}>{subtitle}</p>
+          ) : null}
+        </div>
+        {bars.length > 0 ? (
+          <div className="flex h-7 items-end gap-1">
+            {bars.map((height, index) => (
+              <span
+                key={`${title}-${index}`}
+                className={`w-2 rounded-t-full ${active ? "bg-white/85" : "bg-[#2d63b8]"}`}
+                style={{ height }}
+              />
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </button>
   )
 }
 
@@ -508,41 +570,24 @@ export default function WarehouseBuilderClient() {
 
   const includedItems = isLcssWarehouse
     ? [
-        "Primary framing sized to your selected warehouse footprint",
-        "Indicative structural allowances based on your steel finish and gable choice",
-        "Delivery context captured for a cleaner follow-up",
+        "The main steel structure sized to your selected warehouse footprint",
+        "A practical budget allowance based on your finish and end-wall selection",
+        "Delivery context so the next conversation starts with the right project detail",
       ]
     : [
-        "Primary steel structure sized to your selected footprint",
-        "Indicative cladding, enclosure, and framed opening allowances",
-        "Delivery context captured so the next step starts with better project detail",
+        "The main steel structure sized to your selected footprint",
+        "A practical allowance for roof and wall finishes plus main openings",
+        "Delivery context so the next conversation starts with the right project detail",
       ]
 
   const stillToConfirmItems = [
-    "Final engineering, site conditions, and foundation requirements",
+    "Final engineering, foundations, and site-specific requirements",
     "Confirmed delivery distance, access, and unloading arrangements",
-    "Any changes to layout, finishes, or additional building requirements",
+    "Any changes to layout, finishes, openings, or additional building requirements",
   ]
 
-  const configSections = isLcssWarehouse
-    ? [
-        { id: "building-type", label: "Building type", icon: BuildingOffice2Icon },
-        { id: "size-style", label: "Size and style", icon: ArrowsUpDownIcon },
-        { id: "build-details", label: "Build details", icon: ShieldCheckIcon },
-        { id: "delivery", label: "Delivery", icon: TruckIcon },
-        { id: "notes", label: "Notes", icon: DocumentTextIcon },
-      ]
-    : [
-        { id: "building-type", label: "Building type", icon: BuildingOffice2Icon },
-        { id: "size-style", label: "Size and style", icon: ArrowsUpDownIcon },
-        { id: "cladding", label: "Sides and roof", icon: CubeIcon },
-        { id: "openings", label: "Doors and openings", icon: ArrowsRightLeftIcon },
-        { id: "delivery", label: "Delivery", icon: TruckIcon },
-        { id: "notes", label: "Notes", icon: DocumentTextIcon },
-      ]
-
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#fff8f6,_#ffffff_24%,_#eef3f7)] px-4 py-10 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#ffffff_12%,_#fff8f6_24%,_#ffffff_42%,_#eef3f7_100%)] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1540px]">
         <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8">
           <div className="max-w-4xl">
@@ -550,10 +595,13 @@ export default function WarehouseBuilderClient() {
               Build Your Warehouse
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              Customize your warehouse and get an instant budget guide
+              Build your warehouse and get a practical budget guide
             </h1>
+            <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
+              Shape the size, roof and wall finish, openings, and delivery details, then send a quote request with the full project context already attached.
+            </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              {["Live 3D preview", "Instant budget guide"].map((item) => (
+              {["Live 3D preview", "Factory-direct pricing guide", "Built for South African projects"].map((item) => (
                 <span
                   key={item}
                   className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600"
@@ -565,27 +613,13 @@ export default function WarehouseBuilderClient() {
           </div>
         </section>
 
-        <div className="mt-8 grid gap-6 xl:grid-cols-[360px_minmax(0,1.55fr)] xl:items-start">
-          <section className="space-y-5">
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <div className="mt-5 flex flex-wrap gap-2">
-                {configSections.map((section) => (
-                  <a
-                    key={section.id}
-                    href={`#${section.id}`}
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:border-slate-300 hover:bg-slate-100"
-                  >
-                    <section.icon className="h-3.5 w-3.5" />
-                    {section.label}
-                  </a>
-                ))}
-              </div>
-            </section>
-
+        <div className="mt-8 grid gap-6 xl:grid-cols-[440px_minmax(0,1.4fr)] xl:items-start">
+          <section className="order-2 space-y-5 xl:order-1">
             <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Configuration</h2>
+                  <h2 className="text-lg font-semibold text-slate-900">Build details</h2>
+                  <p className="mt-1 text-sm text-slate-500">Move from layout to budget in a few clear steps.</p>
                 </div>
                 <button
                   type="button"
@@ -605,6 +639,7 @@ export default function WarehouseBuilderClient() {
                   <StepLabel
                     step="Step 1"
                     title="Choose your building type"
+                    hint="Pick the warehouse system that best matches the kind of project you want to price."
                   />
                   <FieldLabel
                     title="Warehouse system"
@@ -631,58 +666,90 @@ export default function WarehouseBuilderClient() {
                   <StepLabel
                     step="Step 2"
                     title="Customize size and style"
+                    hint="Start with the footprint you have in mind. You can refine every detail as you go."
                   />
                   <FieldLabel
-                    title={isLcssWarehouse ? "CFLC warehouse size" : "Warehouse size"}
+                    title={isLcssWarehouse ? "Choose your warehouse size" : "Choose your warehouse size"}
                   />
                   <div className="grid grid-cols-3 gap-2">
                     {widthOptions.map((option) => (
-                      <button
+                      <FootprintChoiceCard
                         key={option}
-                        type="button"
+                        active={config.width === option}
                         onClick={() => updateField("width", option)}
-                        className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                          config.width === option
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-                        }`}
-                      >
-                        {option}m W
-                      </button>
+                        title={`${option}m wide`}
+                        subtitle={WIDTH_DESCRIPTORS[option] || "Warehouse width"}
+                        bars={["45%", "65%", "90%"]}
+                      />
                     ))}
                   </div>
-                  <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div className="mt-4 space-y-3">
                     <div>
                       <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Length
+                        Building length
                       </label>
                       <select
                         value={config.length}
                         onChange={(event) => updateField("length", Number(event.target.value))}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       >
                         {WAREHOUSE_LENGTH_OPTIONS.map((option) => (
                           <option key={option} value={option}>
-                            {option}m
+                            {option}m long{LENGTH_DESCRIPTORS[option] ? ` · ${LENGTH_DESCRIPTORS[option]}` : ""}
                           </option>
                         ))}
                       </select>
+                      <p className="mt-2 text-xs text-slate-500">
+                        Choose the closest starting length for your layout.
+                      </p>
                     </div>
+                    <div className="rounded-[1.4rem] border border-slate-200 bg-[linear-gradient(180deg,_#ffffff,_#f8fafc)] px-4 py-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                        Current footprint
+                      </p>
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Width</p>
+                          <p className="mt-1 text-base font-semibold text-slate-900">{config.width}m</p>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Length</p>
+                          <p className="mt-1 text-base font-semibold text-slate-900">{config.length}m</p>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Height</p>
+                          <p className="mt-1 text-base font-semibold text-slate-900">{config.wallHeight}m</p>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-slate-500">
+                        A cleaner starting point before final quoting and engineering review.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                         {isLcssWarehouse ? "Wall height" : "Eave height"}
                       </label>
-                      <select
-                        value={config.wallHeight}
-                        onChange={(event) => updateField("wallHeight", Number(event.target.value))}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                      >
+                      <div className="mt-1 grid grid-cols-3 gap-2">
                         {WAREHOUSE_HEIGHT_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => updateField("wallHeight", option)}
+                            className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                              config.wallHeight === option
+                                ? "border-slate-900 bg-slate-900 text-white"
+                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                            }`}
+                          >
                             {option}m
-                          </option>
+                          </button>
                         ))}
-                      </select>
+                      </div>
+                      <p className="mt-2 text-xs text-slate-500">
+                        3m is the standard starting point for most enquiries.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -691,9 +758,10 @@ export default function WarehouseBuilderClient() {
                   <div id="build-details" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
                     <StepLabel
                       step="Step 3"
-                      title="Set the main build details"
+                      title="Choose the main build details"
+                      hint="Tell us how you want the warehouse finished so the budget guide reflects the right direction."
                     />
-                    <FieldLabel title="CFLC assumptions" />
+                    <FieldLabel title="Finish and end-wall style" />
                     <div className="grid gap-3">
                       <div>
                         <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -740,9 +808,10 @@ export default function WarehouseBuilderClient() {
                     <div id="cladding" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
                       <StepLabel
                         step="Step 3"
-                        title="Choose the roof and side enclosure"
+                        title="Choose roof, walls, and project scope"
+                        hint="Tell us whether you need supply only or supply with installation, and how enclosed the building should be."
                       />
-                      <FieldLabel title="Project scope" />
+                      <FieldLabel title="What do you need from Smart Steel?" />
                       <div className="grid gap-3 sm:grid-cols-2">
                         {WAREHOUSE_SCOPE_OPTIONS.map((option) => (
                           <VisualChoiceCard
@@ -755,7 +824,7 @@ export default function WarehouseBuilderClient() {
                         ))}
                       </div>
                       <div className="mt-5">
-                      <FieldLabel title="Cladding and enclosure" />
+                      <FieldLabel title="Roof and wall finish" />
                       <div className="grid grid-cols-3 gap-2">
                         {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
                           <button
@@ -802,12 +871,13 @@ export default function WarehouseBuilderClient() {
                       <StepLabel
                         step="Step 4"
                         title="Set doors and openings"
+                        hint="Add the access points you already know about. You can keep this simple."
                       />
                       <FieldLabel title="Access openings" />
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                            Garage door openings
+                            Roller door openings
                           </label>
                           <input
                             type="number"
@@ -822,7 +892,7 @@ export default function WarehouseBuilderClient() {
                         </div>
                         <div>
                           <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                            Pedestrian door openings
+                            Personnel door openings
                           </label>
                           <input
                             type="number"
@@ -839,7 +909,7 @@ export default function WarehouseBuilderClient() {
                       {config.rollerDoorCount > 0 ? (
                         <div className="mt-3">
                           <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                            Garage opening size
+                            Roller door opening size
                           </label>
                           <div className="mt-1 grid gap-3 sm:grid-cols-3">
                             {WAREHOUSE_GARAGE_OPENING_OPTIONS.map((option) => (
@@ -862,8 +932,9 @@ export default function WarehouseBuilderClient() {
                   <StepLabel
                     step={isLcssWarehouse ? "Step 4" : "Step 5"}
                     title="Add delivery details"
+                    hint="Location helps us keep the follow-up practical and relevant to your project."
                   />
-                  <FieldLabel title="Delivery" />
+                  <FieldLabel title="Delivery and location" />
                   <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                     <input
                       type="checkbox"
@@ -911,6 +982,7 @@ export default function WarehouseBuilderClient() {
                   <StepLabel
                     step={isLcssWarehouse ? "Step 5" : "Step 6"}
                     title="Add anything we should know"
+                    hint="A few useful notes here can save time when we review your quote request."
                   />
                   <FieldLabel title="Project notes" />
                   <textarea
@@ -928,16 +1000,28 @@ export default function WarehouseBuilderClient() {
               <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <div className="max-w-2xl">
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-                    Send My Design
+                    Request Your Quote
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-                    Send this {systemLabel.toLowerCase()} enquiry to Smart Steel
+                    Send this {systemLabel.toLowerCase()} request to Smart Steel
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Send the design details through and we&apos;ll review the project with the right context from the start.
+                    Send your layout, budget guide, and project details through and we&apos;ll review the enquiry with the right context from the start.
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    The more accurate the contact details, location, and notes, the easier it is for us to respond well.
+                    The more accurate the contact details, location, and notes, the easier it is for us to turn this into a useful next step.
+                  </p>
+                </div>
+
+                <div className="mt-5 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Quote request summary
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-slate-900">
+                    {systemLabel} · {config.width}m x {config.length}m x {config.wallHeight}m
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Indicative budget: {formatCurrency(budgetValue)}
                   </p>
                 </div>
 
@@ -977,9 +1061,9 @@ export default function WarehouseBuilderClient() {
                       disabled={submitting}
                       className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {submitting ? "Sending enquiry..." : "Send My Design"}
+                      {submitting ? "Sending request..." : "Request my quote"}
                     </button>
-                    <p className="text-sm text-slate-500">We&apos;ll use this information to review your project and respond properly.</p>
+                    <p className="text-sm text-slate-500">We&apos;ll use this information to review your project and come back with the right next step.</p>
                   </div>
                   {submitError ? (
                     <p className="md:col-span-2 text-sm text-red-600">{submitError}</p>
@@ -993,10 +1077,10 @@ export default function WarehouseBuilderClient() {
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                   <div className="max-w-2xl">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
-                      Design Received
+                      Quote Request Received
                     </p>
                     <h2 className="mt-2 text-2xl font-semibold text-emerald-950">
-                      Your {systemLabel.toLowerCase()} enquiry is now with Smart Steel
+                      Your {systemLabel.toLowerCase()} request is now with Smart Steel
                     </h2>
                     <p className="mt-3 text-sm leading-6 text-emerald-900/80">
                       We&apos;ve received your design details, indicative budget, and project notes so we can review the enquiry properly.
@@ -1041,9 +1125,9 @@ export default function WarehouseBuilderClient() {
                   <div className="rounded-[1.5rem] border border-emerald-200 bg-white p-4 shadow-sm">
                     <p className="text-sm font-semibold text-slate-900">What happens next</p>
                     <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
-                      <p>1. Smart Steel reviews the structure size and your project notes.</p>
-                      <p>2. We review the design details and project requirements you&apos;ve shared.</p>
-                      <p>3. You get a follow-up with the next step or a refined quotation path.</p>
+                      <p>1. Smart Steel reviews your size, layout, and location details.</p>
+                      <p>2. We check the scope, access, and any notes you&apos;ve added.</p>
+                      <p>3. We follow up with the right next step, whether that&apos;s refining the layout or preparing a formal quote.</p>
                     </div>
                     <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
                       This budget is still indicative only and will be refined once the team confirms
@@ -1070,12 +1154,12 @@ export default function WarehouseBuilderClient() {
             ) : null}
           </section>
 
-          <aside className="space-y-5 xl:sticky xl:top-6">
+          <aside className="order-1 space-y-5 xl:order-2 xl:sticky xl:top-6">
             <div className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Live warehouse preview</p>
-                  <p className="text-sm text-slate-500">Rotate and zoom</p>
+                  <p className="text-sm text-slate-500">Rotate, zoom, and keep an eye on the footprint as you edit.</p>
                 </div>
                 <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                   {systemLabel} · {roofTypeLabel}
@@ -1097,26 +1181,15 @@ export default function WarehouseBuilderClient() {
                     : `${scopeLabel} · ${enclosureLabel}`}
                 </p>
               </div>
-            </div>
-
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900">Design snapshot</h2>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {summaryItems.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                      {item.label}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-slate-900">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-              {estimate.summary.layoutNote ? (
-                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                  {estimate.summary.layoutNote}
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-[1.3rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+                  Built to help you compare options before a formal quote.
                 </div>
-              ) : null}
-            </section>
+                <div className="rounded-[1.3rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+                  Stronger inputs now mean a better follow-up from the Smart Steel team.
+                </div>
+              </div>
+            </div>
 
             <section className="rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-sm sm:p-6">
               <div className="flex flex-col gap-5">
@@ -1132,6 +1205,9 @@ export default function WarehouseBuilderClient() {
                   <p className="mt-3 text-4xl font-semibold sm:text-5xl">
                     {formatCurrency(budgetValue)}
                   </p>
+                  <p className="mt-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-6 text-slate-200">
+                    This is designed to help you plan with confidence before the final quotation stage.
+                  </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <button
@@ -1139,14 +1215,14 @@ export default function WarehouseBuilderClient() {
                     onClick={() => setShowLeadForm((open) => !open)}
                     className="inline-flex items-center justify-center rounded-2xl bg-[#da1a33] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
                   >
-                    {showLeadForm ? "Hide enquiry form" : "Send this design to Smart Steel"}
+                    {showLeadForm ? "Hide quote form" : "Request my quote"}
                   </button>
                   <button
                     type="button"
                     onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                     className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
                   >
-                    Refine this design
+                    Keep editing
                   </button>
                 </div>
               </div>
@@ -1196,11 +1272,11 @@ export default function WarehouseBuilderClient() {
 
             <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold text-slate-900">What happens next</h2>
-              <p className="mt-1 text-sm text-slate-500">A quick summary of what happens after you send your enquiry.</p>
+              <p className="mt-1 text-sm text-slate-500">A quick summary of what happens after you request your quote.</p>
               <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                <p>1. You send your design enquiry to Smart Steel.</p>
-                <p>2. We review the size, layout, and project details you&apos;ve shared.</p>
-                <p>3. We follow up with the next practical step, whether that&apos;s refining the design or preparing a quotation.</p>
+                <p>1. You send your layout, budget guide, and project details to Smart Steel.</p>
+                <p>2. We review the size, layout, access, and delivery context you&apos;ve shared.</p>
+                <p>3. We follow up with the right next step, whether that&apos;s refining the layout or preparing a formal quote.</p>
               </div>
             </section>
           </aside>
