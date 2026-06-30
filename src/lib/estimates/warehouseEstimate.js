@@ -12,9 +12,9 @@ export const WAREHOUSE_SCOPE_OPTIONS = [
   { value: "supply_install", label: "Supply + installation" },
 ]
 export const WAREHOUSE_GARAGE_OPENING_OPTIONS = [
-  { value: "single", label: "Single door opening" },
-  { value: "double", label: "Double door opening" },
-  { value: "custom", label: "Custom opening" },
+  { value: "single", label: "2500mm (Single)" },
+  { value: "double", label: "5000mm (Double)" },
+  { value: "custom", label: "Custom" },
 ]
 export const WAREHOUSE_ENCLOSURE_OPTIONS = [
   { value: "roof_only", label: "Roof only" },
