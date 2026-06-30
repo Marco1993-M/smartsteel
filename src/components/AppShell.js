@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Navbar from "./Navbar"
@@ -27,8 +28,15 @@ export default function AppShell({ children }) {
             </p>
             <Link
               href="/warehouse-builder"
-              className="inline-flex shrink-0 items-center rounded-full bg-[#ffcb13] px-4 py-2 text-sm font-semibold text-black transition hover:bg-[#e9b800] sm:px-5 sm:py-2.5"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#ffcb13] px-4 py-2 text-sm font-semibold text-black transition hover:bg-[#e9b800] sm:px-5 sm:py-2.5"
             >
+              <Image
+                src="/3d.png"
+                alt=""
+                width={18}
+                height={18}
+                className="h-[18px] w-[18px]"
+              />
               Build my warehouse
             </Link>
           </div>
