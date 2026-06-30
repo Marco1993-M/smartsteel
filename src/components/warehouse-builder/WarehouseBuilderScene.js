@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber"
 import { OrbitControls } from "@react-three/drei"
 import { RotateCw } from "lucide-react"
 import { useMemo } from "react"
+import { DoubleSide, Path, Shape } from "three"
 
 function WarehouseMesh({
   width,
@@ -73,22 +74,81 @@ function WarehouseMesh({
     const step = ribCount === 1 ? 0 : l / (ribCount - 1)
     return Array.from({ length: ribCount }, (_, index) => -l / 2 + index * step)
   }, [l, length])
+  const garageDoorOpeningWidth =
+    garageDoorOpeningType === "double" ? Math.min(0.92, w * 0.3) : garageDoorOpeningType === "custom" ? Math.min(1.08, w * 0.34) : Math.min(0.58, w * 0.18)
 
   const endWallRibPositions = useMemo(() => {
     const ribCount = Math.max(4, Math.round(width / 1.5))
     const step = ribCount === 1 ? 0 : w / (ribCount - 1)
     return Array.from({ length: ribCount }, (_, index) => -w / 2 + index * step)
   }, [w, width])
+  const gableShape = useMemo(() => {
+    const shape = new Shape()
+    shape.moveTo(-w / 2, 0)
+    shape.lineTo(0, ridgeRise)
+    shape.lineTo(w / 2, 0)
+    shape.closePath()
+    return shape
+  }, [ridgeRise, w])
+  const frontWallShape = useMemo(() => {
+    const shape = new Shape()
+    shape.moveTo(-w / 2, 0)
+    shape.lineTo(w / 2, 0)
+    shape.lineTo(w / 2, h)
+    shape.lineTo(-w / 2, h)
+    shape.closePath()
 
-  const wallColor = cladding === "Chromadek" ? "#dde5ec" : "#cfd8e3"
+    frontDoorPositions.forEach((x) => {
+      const hole = new Path()
+      const halfWidth = garageDoorOpeningWidth / 2
+      const openingHeight = h * 0.72
+      hole.moveTo(x - halfWidth, 0)
+      hole.lineTo(x + halfWidth, 0)
+      hole.lineTo(x + halfWidth, openingHeight)
+      hole.lineTo(x - halfWidth, openingHeight)
+      hole.closePath()
+      shape.holes.push(hole)
+    })
+
+    return shape
+  }, [frontDoorPositions, garageDoorOpeningWidth, h, w])
+  const rearWallShape = useMemo(() => {
+    const shape = new Shape()
+    shape.moveTo(-w / 2, 0)
+    shape.lineTo(w / 2, 0)
+    shape.lineTo(w / 2, h)
+    shape.lineTo(-w / 2, h)
+    shape.closePath()
+
+    pedestrianDoorPositions.forEach((x) => {
+      const hole = new Path()
+      const halfWidth = 0.18 / 2
+      const openingHeight = h * 0.54
+      hole.moveTo(x - halfWidth, 0)
+      hole.lineTo(x + halfWidth, 0)
+      hole.lineTo(x + halfWidth, openingHeight)
+      hole.lineTo(x - halfWidth, openingHeight)
+      hole.closePath()
+      shape.holes.push(hole)
+    })
+
+    return shape
+  }, [h, pedestrianDoorPositions, w])
+  const frontOpeningRanges = useMemo(
+    () => frontDoorPositions.map((x) => [x - garageDoorOpeningWidth / 2, x + garageDoorOpeningWidth / 2]),
+    [frontDoorPositions, garageDoorOpeningWidth]
+  )
+  const rearOpeningRanges = useMemo(
+    () => pedestrianDoorPositions.map((x) => [x - 0.09, x + 0.09]),
+    [pedestrianDoorPositions]
+  )
+
   const roofColor = cladding === "Chromadek" ? "#a61b22" : "#b91c1c"
+  const wallColor = roofColor
   const steelColor = "#707d8f"
   const roofHalfSpan = Math.sqrt((w / 2) ** 2 + ridgeRise ** 2)
   const roofAngle = Math.atan2(ridgeRise, w / 2)
   const hasCladding = cladding !== "None"
-  const personHeight = 1.75 * scale
-  const personX = Math.min(w * 0.22, 0.42)
-  const personZ = Math.max(-l / 2 + 0.35, -0.85)
   const columnThickness = 0.042
   const rafterThickness = 0.028
   const roofSheetThickness = 0.018
@@ -97,8 +157,6 @@ function WarehouseMesh({
   const braceThickness = 0.018
   const roofRibThickness = 0.009
   const wallRibThickness = 0.008
-  const garageDoorOpeningWidth =
-    garageDoorOpeningType === "double" ? Math.min(0.92, w * 0.3) : garageDoorOpeningType === "custom" ? Math.min(1.08, w * 0.34) : Math.min(0.58, w * 0.18)
 
   const concreteMaterialProps = {
     color: "#d9e1e8",
@@ -274,13 +332,13 @@ function WarehouseMesh({
 
       {hasCladding && enclosureType === "fully_enclosed" ? (
         <>
-          <mesh position={[0, h / 2, -l / 2]} receiveShadow>
-            <boxGeometry args={[w, h, wallSheetThickness]} />
-            <meshPhysicalMaterial {...wallMaterialProps} />
+          <mesh position={[0, 0, -l / 2]} receiveShadow>
+            <shapeGeometry args={[frontWallShape]} />
+            <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[0, h / 2, l / 2]} receiveShadow>
-            <boxGeometry args={[w, h, wallSheetThickness]} />
-            <meshPhysicalMaterial {...wallMaterialProps} />
+          <mesh position={[0, 0, l / 2]} receiveShadow>
+            <shapeGeometry args={[rearWallShape]} />
+            <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
           <mesh position={[-w / 2, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
@@ -290,16 +348,32 @@ function WarehouseMesh({
             <boxGeometry args={[wallSheetThickness, h, l]} />
             <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
+          <mesh position={[0, h, -l / 2 - wallSheetThickness * 0.52]} receiveShadow>
+            <shapeGeometry args={[gableShape]} />
+            <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
+          </mesh>
+          <mesh
+            position={[0, h, l / 2 + wallSheetThickness * 0.52]}
+            rotation={[0, Math.PI, 0]}
+            receiveShadow
+          >
+            <shapeGeometry args={[gableShape]} />
+            <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
+          </mesh>
           {endWallRibPositions.map((x) => (
             <group key={`end-rib-${x}`}>
-              <mesh position={[x, h / 2, -l / 2 - wallSheetThickness * 0.35]} receiveShadow>
-                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
-                <meshPhysicalMaterial {...wallMaterialProps} />
-              </mesh>
-              <mesh position={[x, h / 2, l / 2 + wallSheetThickness * 0.35]} receiveShadow>
-                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
-                <meshPhysicalMaterial {...wallMaterialProps} />
-              </mesh>
+              {!frontOpeningRanges.some(([start, end]) => x > start && x < end) ? (
+                <mesh position={[x, h / 2, -l / 2 - wallSheetThickness * 0.35]} receiveShadow>
+                  <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
+                  <meshPhysicalMaterial {...wallMaterialProps} />
+                </mesh>
+              ) : null}
+              {!rearOpeningRanges.some(([start, end]) => x > start && x < end) ? (
+                <mesh position={[x, h / 2, l / 2 + wallSheetThickness * 0.35]} receiveShadow>
+                  <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
+                  <meshPhysicalMaterial {...wallMaterialProps} />
+                </mesh>
+              ) : null}
             </group>
           ))}
           {sideRibPositions.map((z) => (
@@ -342,50 +416,6 @@ function WarehouseMesh({
         </>
       ) : null}
 
-      {frontDoorPositions.map((x) => (
-        <mesh key={`roller-${x}`} position={[x, h * 0.38, -l / 2 - 0.025]}>
-          <boxGeometry args={[garageDoorOpeningWidth, h * 0.72, 0.03]} />
-          <meshPhysicalMaterial color="#1f2937" metalness={0.22} roughness={0.48} />
-        </mesh>
-      ))}
-
-      {pedestrianDoorPositions.map((x) => (
-        <mesh key={`ped-${x}`} position={[x, h * 0.27, l / 2 + 0.025]}>
-          <boxGeometry args={[0.18, h * 0.54, 0.03]} />
-          <meshPhysicalMaterial color="#526276" metalness={0.18} roughness={0.52} />
-        </mesh>
-      ))}
-
-      <group position={[personX, 0, personZ]}>
-        <mesh position={[0, personHeight * 0.84, 0]} castShadow>
-          <sphereGeometry args={[0.09, 20, 20]} />
-          <meshStandardMaterial color="#f1c7a3" roughness={0.92} />
-        </mesh>
-        <mesh position={[0, personHeight * 0.56, 0]} castShadow>
-          <capsuleGeometry args={[0.1, personHeight * 0.34, 8, 16]} />
-          <meshStandardMaterial color="#2563eb" roughness={0.84} />
-        </mesh>
-        <mesh position={[-0.17, personHeight * 0.56, 0]} rotation={[0, 0, 0.18]} castShadow>
-          <capsuleGeometry args={[0.028, personHeight * 0.22, 6, 12]} />
-          <meshStandardMaterial color="#f1c7a3" roughness={0.9} />
-        </mesh>
-        <mesh position={[0.17, personHeight * 0.56, 0]} rotation={[0, 0, -0.18]} castShadow>
-          <capsuleGeometry args={[0.028, personHeight * 0.22, 6, 12]} />
-          <meshStandardMaterial color="#f1c7a3" roughness={0.9} />
-        </mesh>
-        <mesh position={[-0.06, personHeight * 0.19, 0]} rotation={[0, 0, 0.08]} castShadow>
-          <capsuleGeometry args={[0.035, personHeight * 0.28, 6, 12]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.86} />
-        </mesh>
-        <mesh position={[0.06, personHeight * 0.19, 0]} rotation={[0, 0, -0.08]} castShadow>
-          <capsuleGeometry args={[0.035, personHeight * 0.28, 6, 12]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.86} />
-        </mesh>
-        <mesh position={[0, personHeight * 0.36, 0.075]} castShadow>
-          <boxGeometry args={[0.11, 0.11, 0.03]} />
-          <meshStandardMaterial color="#f8fafc" roughness={0.88} />
-        </mesh>
-      </group>
     </group>
   )
 }
