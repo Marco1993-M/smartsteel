@@ -62,9 +62,27 @@ function WarehouseMesh({
     })
   }, [pedestrianDoorCount, w])
 
-  const wallColor = enclosureType === "roof_only" ? "#f8fafc" : "#d7dee6"
-  const roofColor = "#b91c1c"
-  const steelColor = "#667085"
+  const roofRibPositions = useMemo(() => {
+    const ribCount = Math.max(6, Math.round(length / 1.2))
+    const step = ribCount === 1 ? 0 : l / (ribCount - 1)
+    return Array.from({ length: ribCount }, (_, index) => -l / 2 + index * step)
+  }, [l, length])
+
+  const sideRibPositions = useMemo(() => {
+    const ribCount = Math.max(5, Math.round(length / 1.5))
+    const step = ribCount === 1 ? 0 : l / (ribCount - 1)
+    return Array.from({ length: ribCount }, (_, index) => -l / 2 + index * step)
+  }, [l, length])
+
+  const endWallRibPositions = useMemo(() => {
+    const ribCount = Math.max(4, Math.round(width / 1.5))
+    const step = ribCount === 1 ? 0 : w / (ribCount - 1)
+    return Array.from({ length: ribCount }, (_, index) => -w / 2 + index * step)
+  }, [w, width])
+
+  const wallColor = cladding === "Chromadek" ? "#dde5ec" : "#cfd8e3"
+  const roofColor = cladding === "Chromadek" ? "#a61b22" : "#b91c1c"
+  const steelColor = "#707d8f"
   const roofHalfSpan = Math.sqrt((w / 2) ** 2 + ridgeRise ** 2)
   const roofAngle = Math.atan2(ridgeRise, w / 2)
   const hasCladding = cladding !== "None"
@@ -77,30 +95,80 @@ function WarehouseMesh({
   const ridgeThickness = 0.022
   const wallSheetThickness = 0.022
   const braceThickness = 0.018
+  const roofRibThickness = 0.009
+  const wallRibThickness = 0.008
   const garageDoorOpeningWidth =
     garageDoorOpeningType === "double" ? Math.min(0.92, w * 0.3) : garageDoorOpeningType === "custom" ? Math.min(1.08, w * 0.34) : Math.min(0.58, w * 0.18)
+
+  const concreteMaterialProps = {
+    color: "#d9e1e8",
+    roughness: 0.96,
+    metalness: 0.02,
+  }
+
+  const slabMaterialProps = {
+    color: "#eef3f7",
+    roughness: 0.9,
+    metalness: 0.01,
+  }
+
+  const frameMaterialProps = {
+    color: steelColor,
+    metalness: 0.72,
+    roughness: 0.34,
+  }
+
+  const braceMaterialProps = {
+    color: "#97a6b8",
+    metalness: 0.58,
+    roughness: 0.4,
+  }
+
+  const roofMaterialProps = {
+    color: roofColor,
+    metalness: 0.44,
+    roughness: 0.42,
+    clearcoat: 0.18,
+    clearcoatRoughness: 0.4,
+  }
+
+  const wallMaterialProps = {
+    color: wallColor,
+    metalness: 0.22,
+    roughness: 0.58,
+    clearcoat: 0.08,
+    clearcoatRoughness: 0.48,
+  }
+
+  const ridgeMaterialProps = {
+    color: "#7f1d1d",
+    metalness: 0.4,
+    roughness: 0.44,
+    clearcoat: 0.16,
+    clearcoatRoughness: 0.38,
+  }
 
   return (
     <group position={[0, -0.55, 0]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[9, 9]} />
-        <meshStandardMaterial color="#dbe4eb" />
+        <meshPhysicalMaterial {...concreteMaterialProps} />
       </mesh>
 
       <mesh position={[0, 0.01, 0]} receiveShadow>
         <boxGeometry args={[w + 0.25, 0.02, l + 0.25]} />
-        <meshStandardMaterial color="#f8fafc" />
+        <meshPhysicalMaterial {...slabMaterialProps} />
       </mesh>
 
       {framePositions.map((z) => (
         <group key={z} position={[0, 0, z]}>
           <mesh position={[-w / 2, h / 2, 0]} castShadow>
             <boxGeometry args={[columnThickness, h, columnThickness]} />
-            <meshStandardMaterial color={steelColor} metalness={0.25} roughness={0.55} />
+            <meshPhysicalMaterial {...frameMaterialProps} />
           </mesh>
           <mesh position={[w / 2, h / 2, 0]} castShadow>
             <boxGeometry args={[columnThickness, h, columnThickness]} />
-            <meshStandardMaterial color={steelColor} metalness={0.25} roughness={0.55} />
+            <meshPhysicalMaterial {...frameMaterialProps} />
           </mesh>
           <mesh
             position={[-w / 4, h + ridgeRise / 2, 0]}
@@ -108,7 +176,7 @@ function WarehouseMesh({
             castShadow
           >
             <boxGeometry args={[roofHalfSpan, rafterThickness, rafterThickness]} />
-            <meshStandardMaterial color={steelColor} metalness={0.25} roughness={0.55} />
+            <meshPhysicalMaterial {...frameMaterialProps} />
           </mesh>
           <mesh
             position={[w / 4, h + ridgeRise / 2, 0]}
@@ -116,11 +184,11 @@ function WarehouseMesh({
             castShadow
           >
             <boxGeometry args={[roofHalfSpan, rafterThickness, rafterThickness]} />
-            <meshStandardMaterial color={steelColor} metalness={0.25} roughness={0.55} />
+            <meshPhysicalMaterial {...frameMaterialProps} />
           </mesh>
           <mesh position={[0, h + ridgeRise, 0]} castShadow>
             <boxGeometry args={[rafterThickness * 1.1, rafterThickness * 1.1, rafterThickness * 1.1]} />
-            <meshStandardMaterial color={steelColor} metalness={0.25} roughness={0.55} />
+            <meshPhysicalMaterial {...frameMaterialProps} />
           </mesh>
         </group>
       ))}
@@ -143,7 +211,7 @@ function WarehouseMesh({
                   castShadow
                 >
                   <boxGeometry args={[braceThickness, braceThickness, braceLength]} />
-                  <meshStandardMaterial color="#94a3b8" metalness={0.22} roughness={0.56} />
+                  <meshPhysicalMaterial {...braceMaterialProps} />
                 </mesh>
                 <mesh
                   position={[0, h / 2, 0]}
@@ -151,7 +219,7 @@ function WarehouseMesh({
                   castShadow
                 >
                   <boxGeometry args={[braceThickness, braceThickness, braceLength]} />
-                  <meshStandardMaterial color="#94a3b8" metalness={0.22} roughness={0.56} />
+                  <meshPhysicalMaterial {...braceMaterialProps} />
                 </mesh>
               </group>
             ))}
@@ -167,7 +235,7 @@ function WarehouseMesh({
             receiveShadow
           >
             <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
-            <meshStandardMaterial color={roofColor} metalness={0.12} roughness={0.65} />
+            <meshPhysicalMaterial {...roofMaterialProps} />
           </mesh>
           <mesh
             position={[w / 4, h + ridgeRise / 2, 0]}
@@ -175,11 +243,31 @@ function WarehouseMesh({
             receiveShadow
           >
             <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
-            <meshStandardMaterial color={roofColor} metalness={0.12} roughness={0.65} />
+            <meshPhysicalMaterial {...roofMaterialProps} />
           </mesh>
+          {roofRibPositions.map((z) => (
+            <group key={`roof-rib-${z}`}>
+              <mesh
+                position={[-w / 4, h + ridgeRise / 2 + roofSheetThickness * 0.55, z]}
+                rotation={[0, 0, roofAngle]}
+                receiveShadow
+              >
+                <boxGeometry args={[roofHalfSpan + 0.05, roofRibThickness, roofRibThickness]} />
+                <meshPhysicalMaterial {...roofMaterialProps} />
+              </mesh>
+              <mesh
+                position={[w / 4, h + ridgeRise / 2 + roofSheetThickness * 0.55, z]}
+                rotation={[0, 0, -roofAngle]}
+                receiveShadow
+              >
+                <boxGeometry args={[roofHalfSpan + 0.05, roofRibThickness, roofRibThickness]} />
+                <meshPhysicalMaterial {...roofMaterialProps} />
+              </mesh>
+            </group>
+          ))}
           <mesh position={[0, h + ridgeRise + 0.015, 0]} receiveShadow>
             <boxGeometry args={[0.045, ridgeThickness, l + 0.08]} />
-            <meshStandardMaterial color="#7f1d1d" metalness={0.14} roughness={0.62} />
+            <meshPhysicalMaterial {...ridgeMaterialProps} />
           </mesh>
         </>
       ) : null}
@@ -188,20 +276,44 @@ function WarehouseMesh({
         <>
           <mesh position={[0, h / 2, -l / 2]} receiveShadow>
             <boxGeometry args={[w, h, wallSheetThickness]} />
-            <meshStandardMaterial color={wallColor} />
+            <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
           <mesh position={[0, h / 2, l / 2]} receiveShadow>
             <boxGeometry args={[w, h, wallSheetThickness]} />
-            <meshStandardMaterial color={wallColor} />
+            <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
           <mesh position={[-w / 2, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
-            <meshStandardMaterial color={wallColor} />
+            <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
           <mesh position={[w / 2, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
-            <meshStandardMaterial color={wallColor} />
+            <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
+          {endWallRibPositions.map((x) => (
+            <group key={`end-rib-${x}`}>
+              <mesh position={[x, h / 2, -l / 2 - wallSheetThickness * 0.35]} receiveShadow>
+                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
+                <meshPhysicalMaterial {...wallMaterialProps} />
+              </mesh>
+              <mesh position={[x, h / 2, l / 2 + wallSheetThickness * 0.35]} receiveShadow>
+                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
+                <meshPhysicalMaterial {...wallMaterialProps} />
+              </mesh>
+            </group>
+          ))}
+          {sideRibPositions.map((z) => (
+            <group key={`side-rib-${z}`}>
+              <mesh position={[-w / 2 - wallSheetThickness * 0.35, h / 2, z]} receiveShadow>
+                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
+                <meshPhysicalMaterial {...wallMaterialProps} />
+              </mesh>
+              <mesh position={[w / 2 + wallSheetThickness * 0.35, h / 2, z]} receiveShadow>
+                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
+                <meshPhysicalMaterial {...wallMaterialProps} />
+              </mesh>
+            </group>
+          ))}
         </>
       ) : null}
 
@@ -209,26 +321,38 @@ function WarehouseMesh({
         <>
           <mesh position={[-w / 2, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
-            <meshStandardMaterial color={wallColor} />
+            <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
           <mesh position={[w / 2, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
-            <meshStandardMaterial color={wallColor} />
+            <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
+          {sideRibPositions.map((z) => (
+            <group key={`open-side-rib-${z}`}>
+              <mesh position={[-w / 2 - wallSheetThickness * 0.35, h / 2, z]} receiveShadow>
+                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
+                <meshPhysicalMaterial {...wallMaterialProps} />
+              </mesh>
+              <mesh position={[w / 2 + wallSheetThickness * 0.35, h / 2, z]} receiveShadow>
+                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
+                <meshPhysicalMaterial {...wallMaterialProps} />
+              </mesh>
+            </group>
+          ))}
         </>
       ) : null}
 
       {frontDoorPositions.map((x) => (
         <mesh key={`roller-${x}`} position={[x, h * 0.38, -l / 2 - 0.025]}>
           <boxGeometry args={[garageDoorOpeningWidth, h * 0.72, 0.03]} />
-          <meshStandardMaterial color="#111827" />
+          <meshPhysicalMaterial color="#1f2937" metalness={0.22} roughness={0.48} />
         </mesh>
       ))}
 
       {pedestrianDoorPositions.map((x) => (
         <mesh key={`ped-${x}`} position={[x, h * 0.27, l / 2 + 0.025]}>
           <boxGeometry args={[0.18, h * 0.54, 0.03]} />
-          <meshStandardMaterial color="#475569" />
+          <meshPhysicalMaterial color="#526276" metalness={0.18} roughness={0.52} />
         </mesh>
       ))}
 
@@ -267,7 +391,7 @@ function WarehouseMesh({
 }
 
 export default function WarehouseBuilderScene(props) {
-  const { width, length, wallHeight } = props
+  const { width, length, wallHeight, className = "" } = props
   const scale = 0.18
   const w = width * scale
   const l = length * scale
@@ -282,7 +406,7 @@ export default function WarehouseBuilderScene(props) {
   const maxDistance = Math.max(8.5, Math.sqrt(w ** 2 + l ** 2) * 1.55)
 
   return (
-    <div className="relative h-[320px] w-full overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff,_#e2e8f0_68%)] shadow-inner sm:h-[420px] lg:h-[560px]">
+    <div className={`relative h-[360px] w-full overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff,_#e2e8f0_68%)] shadow-inner sm:h-[460px] lg:h-[640px] ${className}`}>
       <div className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur">
         <RotateCw className="h-3.5 w-3.5" />
         Drag to rotate
