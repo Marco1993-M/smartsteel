@@ -279,7 +279,7 @@ export default function HomePageClient() {
         />
       ))}
 
-      <section className="relative overflow-hidden px-6 pb-14 pt-24 md:pb-18 md:pt-28">
+      <section className="relative overflow-hidden px-4 pb-12 pt-24 sm:px-6 md:pb-18 md:pt-28">
         <Image
           src="/warehouse-13m.jpg"
           alt="Smart Steel lightweight steel warehouse systems in South Africa"
@@ -292,45 +292,45 @@ export default function HomePageClient() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(244,248,253,0.96)_12%,rgba(238,243,251,0.92)_32%,rgba(238,243,251,0.92)_100%)]" />
         <div className="relative z-10 mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-            <div className="rounded-[2rem] border border-black/10 bg-white/92 p-6 shadow-sm backdrop-blur-sm sm:p-8">
+            <div className="rounded-[2rem] border border-black/10 bg-white/92 p-4 shadow-sm backdrop-blur-sm sm:p-8">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">
                 Step 1 of 3
               </p>
-              <h2 className="mt-3 text-3xl font-bold leading-tight text-black sm:text-4xl">
+              <h2 className="mt-3 text-2xl font-bold leading-tight text-black sm:text-4xl">
                 Build and Price Your Warehouse
               </h2>
 
-              <div className="mt-6">
-                <div className="rounded-[1.6rem] border border-[#2d63b8] bg-[#eef4ff] px-5 py-5 shadow-sm">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
+              <div className="mt-5">
+                <div className="rounded-[1.6rem] border border-[#2d63b8] bg-[#eef4ff] px-4 py-4 shadow-sm sm:px-5 sm:py-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">
                         Step {heroStep} of 3
                       </p>
-                      <h3 className="mt-2 text-2xl font-bold text-black">
+                      <h3 className="mt-2 text-xl font-bold text-black sm:text-2xl">
                         {heroStep === 1 && 'Build my warehouse'}
                         {heroStep === 2 && 'Choose your width'}
                         {heroStep === 3 && 'Choose your length'}
                       </h3>
-                      <p className="mt-2 text-sm leading-7 text-gray-700">
+                      <p className="mt-2 text-sm leading-6 text-gray-700 sm:leading-7">
                         {heroStep === 1 && 'Start with a practical warehouse size and refine the rest inside the builder.'}
                         {heroStep === 2 && 'Pick a starting width for your warehouse. You can still adjust it inside the builder.'}
                         {heroStep === 3 && 'Choose a starting length, then open the builder with your layout already loaded.'}
                       </p>
                     </div>
-                    <span className="rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-black">
+                    <span className="inline-flex w-fit rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-black">
                       Popular pick
                     </span>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2d63b8]">
+                  <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+                    <span className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2d63b8]">
                       Online pricing guide
                     </span>
-                    <span className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2d63b8]">
+                    <span className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2d63b8]">
                       3m eave height
                     </span>
-                    <span className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2d63b8]">
+                    <span className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2d63b8]">
                       South Africa ready
                     </span>
                   </div>
@@ -361,20 +361,20 @@ export default function HomePageClient() {
                               key={width}
                               type="button"
                               onClick={() => setSelectedWidth(width)}
-                              className={`rounded-2xl border px-3 py-3 text-left transition ${
+                              className={`min-h-[128px] rounded-2xl border px-3 py-3 text-left transition sm:min-h-0 ${
                                 active
                                   ? 'border-[#2d63b8] bg-[#2d63b8] text-white'
                                   : 'border-black/10 bg-white text-black hover:border-[#2d63b8] hover:bg-[#f4f8ff]'
                               }`}
                             >
-                              <div className="flex items-end justify-between gap-2">
+                              <div className="flex h-full flex-col justify-between gap-3 sm:flex-row sm:items-end sm:gap-2">
                                 <div>
                                   <p className="text-sm font-semibold">{width}m</p>
                                   <p className={`mt-1 text-[11px] ${active ? 'text-white/80' : 'text-gray-500'}`}>
                                     {widthDescriptors[width]}
                                   </p>
                                 </div>
-                                <div className="flex h-7 items-end gap-1">
+                                <div className="hidden h-7 items-end gap-1 sm:flex">
                                   <span className={`w-2 rounded-t-full ${active ? 'bg-white/70' : 'bg-[#c9d8f2]'}`} style={{ height: '45%' }} />
                                   <span className={`w-2 rounded-t-full ${active ? 'bg-white/80' : 'bg-[#9fbae8]'}`} style={{ height: '65%' }} />
                                   <span className={`w-2 rounded-t-full ${active ? 'bg-white' : 'bg-[#2d63b8]'}`} style={{ height: '90%' }} />
