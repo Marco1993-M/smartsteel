@@ -2,11 +2,43 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
+import { WAREHOUSE_WIDTH_OPTIONS } from '../lib/estimates/warehouseEstimate';
 
-const proofStats = [
-  { value: 'Estimate tools', label: 'Warehouse estimate tools to help you price and plan before you enquire' },
-  { value: 'Steel options', label: 'Lip channel and custom engineered options for different project needs' },
-  { value: 'SA sites', label: 'Designed for South African sites, spans, access, and practical build conditions' },
+const heroActions = [
+  {
+    step: 'Also available',
+    title: 'Lip Channel Kits',
+    description: 'Explore practical kit options for carports, ground mounts, and standard structures.',
+    href: '/products',
+    cta: 'Explore kit options',
+  },
+  {
+    step: 'Also available',
+    title: 'Solar Carports',
+    description: 'Covered parking and solar-ready steel support systems for commercial and private sites.',
+    href: '/products/cflc-solar-carports',
+    cta: 'View solar carports',
+  },
+];
+
+const heroLengthOptions = [10, 15, 20, 25, 30];
+
+const heroTrustBullets = [
+  'Compare LSF and CFLC warehouse options clearly',
+  'Use the builder and estimator before requesting a formal quote',
+  'Support for standard kits, custom structures, fabrication, and installation',
+  'Practical planning for South African sites, delivery, and project conditions',
+];
+
+const heroGallery = [
+  { src: '/warehouse-13m.jpg', alt: 'Large steel warehouse frontage with wide access opening', span: 'lg:col-span-4' },
+  { src: '/warehouse.jpg', alt: 'Smart Steel warehouse project for commercial use', span: 'lg:col-span-5' },
+  { src: '/solar_carport_hero.webp', alt: 'Solar carport structure used for covered parking and solar support', span: 'lg:col-span-3' },
+  { src: '/images/5x8mF.jpg', alt: 'Compact steel warehouse project in a practical footprint', span: 'lg:col-span-3' },
+  { src: '/atkv.jpg', alt: 'Completed ATKV steel structure project', span: 'lg:col-span-3' },
+  { src: '/solar_carport_1.webp', alt: 'Solar carport installation showing steel support framing', span: 'lg:col-span-3' },
+  { src: '/solar_car_port_1.jpg', alt: 'Steel carport and solar-ready support structure', span: 'lg:col-span-3' },
 ];
 
 const planningActions = [
@@ -219,6 +251,10 @@ const structuredData = [
 ];
 
 export default function HomePageClient() {
+  const [heroStep, setHeroStep] = useState(1);
+  const [selectedWidth, setSelectedWidth] = useState(WAREHOUSE_WIDTH_OPTIONS[1] ?? 10);
+  const [selectedLength, setSelectedLength] = useState(heroLengthOptions[2] ?? 20);
+
   return (
     <main className="font-sans text-gray-900">
       {structuredData.map((schema) => (
@@ -229,9 +265,9 @@ export default function HomePageClient() {
         />
       ))}
 
-      <section className="relative overflow-hidden px-6 pb-20 pt-28 md:pb-24 md:pt-32">
+      <section className="relative overflow-hidden px-6 pb-14 pt-24 md:pb-18 md:pt-28">
         <Image
-          src="/images/hero.webp"
+          src="/warehouse-13m.jpg"
           alt="Smart Steel lightweight steel warehouse systems in South Africa"
           fill
           priority
@@ -239,48 +275,219 @@ export default function HomePageClient() {
           sizes="100vw"
           className="object-cover object-center"
         />
-        <div className="absolute inset-0 bg-white/72" />
-        <div className="relative z-10 mx-auto max-w-6xl">
-          <div className="max-w-4xl">
-            <div className="inline-flex rounded-full border border-black bg-white/85 px-4 py-2 text-sm font-semibold text-black">
-              Lightweight steel warehouse supplier and planning support
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(244,248,253,0.96)_12%,rgba(238,243,251,0.92)_32%,rgba(238,243,251,0.92)_100%)]" />
+        <div className="relative z-10 mx-auto max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
+            <div className="rounded-[2rem] border border-black/10 bg-white/92 p-6 shadow-sm backdrop-blur-sm sm:p-8">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">
+                Step 1 of 3
+              </p>
+              <h2 className="mt-3 text-3xl font-bold leading-tight text-black sm:text-4xl">
+                Build and Price Your Warehouse
+              </h2>
+
+              <div className="mt-6">
+                <div className="rounded-[1.6rem] border border-[#2d63b8] bg-[#eef4ff] px-5 py-5 shadow-sm">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">
+                        Step {heroStep} of 3
+                      </p>
+                      <h3 className="mt-2 text-2xl font-bold text-black">
+                        {heroStep === 1 && 'Build my warehouse'}
+                        {heroStep === 2 && 'Choose your width'}
+                        {heroStep === 3 && 'Choose your length'}
+                      </h3>
+                      <p className="mt-2 text-sm leading-7 text-gray-700">
+                        {heroStep === 1 && 'Start with a practical warehouse size and refine the rest inside the builder.'}
+                        {heroStep === 2 && 'Pick a starting width for your warehouse. You can still adjust it inside the builder.'}
+                        {heroStep === 3 && 'Choose a starting length, then open the builder with your layout already loaded.'}
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-black">
+                      Popular pick
+                    </span>
+                  </div>
+
+                  {heroStep === 1 && (
+                    <div className="mt-5 rounded-[1.3rem] border border-white/90 bg-white/80 p-4">
+                      <p className="text-sm leading-7 text-gray-700">
+                        Start with a warehouse plan in three quick steps, then continue inside the full builder.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setHeroStep(2)}
+                        className="mt-4 inline-flex items-center rounded-full bg-[#ffcb13] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#e9b800]"
+                      >
+                        Build my warehouse
+                      </button>
+                    </div>
+                  )}
+
+                  {heroStep === 2 && (
+                    <div className="mt-5 rounded-[1.3rem] border border-white/90 bg-white/80 p-4">
+                      <div className="grid grid-cols-3 gap-2">
+                        {WAREHOUSE_WIDTH_OPTIONS.map((width) => {
+                          const active = selectedWidth === width;
+
+                          return (
+                            <button
+                              key={width}
+                              type="button"
+                              onClick={() => setSelectedWidth(width)}
+                              className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                                active
+                                  ? 'border-[#2d63b8] bg-[#2d63b8] text-white'
+                                  : 'border-black/10 bg-white text-black hover:border-[#2d63b8] hover:bg-[#f4f8ff]'
+                              }`}
+                            >
+                              {width}m
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setHeroStep(1)}
+                          className="inline-flex items-center rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-50"
+                        >
+                          Back
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setHeroStep(3)}
+                          className="inline-flex items-center rounded-full bg-[#ffcb13] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#e9b800]"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {heroStep === 3 && (
+                    <div className="mt-5 rounded-[1.3rem] border border-white/90 bg-white/80 p-4">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                        {heroLengthOptions.map((length) => {
+                          const active = selectedLength === length;
+
+                          return (
+                            <button
+                              key={length}
+                              type="button"
+                              onClick={() => setSelectedLength(length)}
+                              className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                                active
+                                  ? 'border-[#2d63b8] bg-[#2d63b8] text-white'
+                                  : 'border-black/10 bg-white text-black hover:border-[#2d63b8] hover:bg-[#f4f8ff]'
+                              }`}
+                            >
+                              {length}m
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-sm text-gray-700">
+                          Starting point:{' '}
+                          <span className="font-semibold text-black">
+                            {selectedWidth}m x {selectedLength}m
+                          </span>
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setHeroStep(2)}
+                            className="inline-flex items-center rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-50"
+                          >
+                            Back
+                          </button>
+                          <Link
+                            href={{
+                              pathname: '/warehouse-builder',
+                              query: {
+                                productType: 'LSF Warehouse',
+                                width: selectedWidth,
+                                length: selectedLength,
+                              },
+                            }}
+                            className="inline-flex items-center rounded-full bg-[#ffcb13] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#e9b800]"
+                          >
+                            Open builder
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {heroActions.map((item) => (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className="rounded-[1.3rem] border border-black/10 bg-white px-4 py-4 transition hover:border-black/20 hover:bg-gray-50"
+                    >
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">
+                        {item.step}
+                      </p>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-lg font-bold text-black">{item.title}</h3>
+                          <p className="mt-1 text-sm leading-6 text-gray-700">{item.description}</p>
+                        </div>
+                        <span className="rounded-full border border-black/10 bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-black">
+                          Also available
+                        </span>
+                      </div>
+                      <div className="mt-3 text-sm font-semibold text-[#da1a33]">
+                        {item.cta}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
-            <h1 className="mt-6 max-w-4xl text-4xl font-bold leading-tight text-black md:text-6xl">
-              Lightweight steel warehouses for South African projects
-            </h1>
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-black/80 md:text-xl">
-              Smart Steel supplies lightweight steel warehouse systems across South Africa,
-              helping clients compare standard lip channel kits, custom engineered options,
-              and practical estimate tools before they enquire.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link
-                href="/tools/estimator"
-                className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-black"
-              >
-                Get a Warehouse Estimate
-              </Link>
-              <Link
-                href="/products"
-                className="rounded-full border border-black bg-white px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
-              >
-                Explore Lip Channel Kits
-              </Link>
-            </div>
-            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-black/75">
-              <span>Warehouse estimate tools</span>
-              <span className="hidden text-black/30 md:inline">•</span>
-              <span>Lip channel and custom engineered options</span>
-              <span className="hidden text-black/30 md:inline">•</span>
-              <span>Designed for South African sites</span>
+
+            <div>
+              <div className="inline-flex rounded-full border border-black/10 bg-white/90 px-4 py-2 text-sm font-semibold text-black shadow-sm">
+                Lightweight steel warehouse supplier and planning support
+              </div>
+              <h1 className="mt-6 max-w-4xl text-4xl font-bold leading-tight text-black md:text-6xl">
+                Lightweight steel warehouses for South African projects
+              </h1>
+              <p className="mt-6 max-w-3xl text-lg leading-8 text-black/80 md:text-xl">
+                Compare warehouse systems, use the online builder, estimate your budget, and then move into the right next step for your project.
+              </p>
+              <ul className="mt-8 space-y-3">
+                {heroTrustBullets.map((bullet) => (
+                  <li key={bullet} className="flex items-start gap-3 text-base leading-7 text-gray-800">
+                    <span className="mt-1 text-[#2d63b8]">✓</span>
+                    <span>{bullet}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-14 grid gap-4 md:grid-cols-3">
-            {proofStats.map((stat) => (
-              <div key={stat.label} className="rounded-3xl border border-black/10 bg-white/85 p-6 shadow-sm backdrop-blur-sm">
-                <p className="text-2xl font-bold text-black md:text-3xl">{stat.value}</p>
-                <p className="mt-2 text-sm leading-7 text-gray-700">{stat.label}</p>
+      <section className="bg-[#eef3fb] px-6 pb-10">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-12">
+            {heroGallery.map((item) => (
+              <div
+                key={item.src}
+                className={`relative overflow-hidden rounded-[1.7rem] border border-white/70 bg-white/70 shadow-sm ${item.span} min-h-[190px]`}
+              >
+                <Image
+                  src={item.src}
+                  alt={item.alt}
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover object-center"
+                />
               </div>
             ))}
           </div>

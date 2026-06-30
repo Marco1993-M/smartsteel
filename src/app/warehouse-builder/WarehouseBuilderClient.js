@@ -1,7 +1,8 @@
 "use client"
 
 import Image from "next/image"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import {
   ArrowsRightLeftIcon,
   ArrowsUpDownIcon,
@@ -64,7 +65,7 @@ const LSF_SYSTEM_DEFAULTS = {
   productType: "LSF Warehouse",
   width: 10,
   length: 20,
-  wallHeight: 4,
+  wallHeight: 3,
   cladding: "IBR",
   scope: "supply_only",
   enclosureType: "fully_enclosed",
@@ -207,6 +208,7 @@ function getSystemLabel(productType) {
 }
 
 export default function WarehouseBuilderClient() {
+  const searchParams = useSearchParams()
   const config = useWarehouseBuilderStore()
   const updateField = useWarehouseBuilderStore((state) => state.updateField)
   const patchFields = useWarehouseBuilderStore((state) => state.patchFields)
@@ -237,6 +239,42 @@ export default function WarehouseBuilderClient() {
   const steelFinishLabel = config.steelFinish || "Galv"
   const gableModeLabel =
     LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === config.gableMode)?.label || config.gableMode
+
+  useEffect(() => {
+    const widthParam = Number(searchParams.get("width"))
+    const lengthParam = Number(searchParams.get("length"))
+    const productTypeParam = searchParams.get("productType")
+
+    const nextProductType =
+      productTypeParam === "LCSS Warehouse" || productTypeParam === "LSF Warehouse"
+        ? productTypeParam
+        : null
+
+    const nextWidthOptions =
+      nextProductType === "LCSS Warehouse" ? LCSS_WAREHOUSE_WIDTH_OPTIONS : WAREHOUSE_WIDTH_OPTIONS
+
+    const nextValues = {}
+
+    if (nextProductType && nextProductType !== config.productType) {
+      Object.assign(nextValues, nextProductType === "LCSS Warehouse" ? CFLC_SYSTEM_DEFAULTS : LSF_SYSTEM_DEFAULTS)
+    }
+
+    if (Number.isFinite(widthParam) && nextWidthOptions.includes(widthParam)) {
+      nextValues.width = widthParam
+    }
+
+    if (Number.isFinite(lengthParam) && WAREHOUSE_LENGTH_OPTIONS.includes(lengthParam)) {
+      nextValues.length = lengthParam
+    }
+
+    if (Object.keys(nextValues).length > 0) {
+      patchFields(nextValues)
+      setSubmitted(false)
+      setSubmissionResult(null)
+      setShowLeadForm(false)
+      setSubmitError("")
+    }
+  }, [searchParams, config.productType, patchFields])
 
   const estimateInput = useMemo(() => {
     if (isLcssWarehouse) {

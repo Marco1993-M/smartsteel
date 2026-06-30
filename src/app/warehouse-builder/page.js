@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import WarehouseBuilderClient from "./WarehouseBuilderClient"
 
 export const metadata = {
@@ -25,5 +26,9 @@ export const metadata = {
 }
 
 export default function WarehouseBuilderPage() {
-  return <WarehouseBuilderClient />
+  return (
+    <Suspense fallback={null}>
+      <WarehouseBuilderClient />
+    </Suspense>
+  )
 }
