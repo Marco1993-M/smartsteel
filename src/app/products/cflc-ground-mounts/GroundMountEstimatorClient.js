@@ -49,6 +49,16 @@ const STEP_CONFIG = [
   },
 ]
 
+function reportGroundMountLeadConversion() {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return
+
+  window.gtag("event", "conversion", {
+    send_to: "AW-17629050810/8i3TCP-Wv8kcELrvl9ZB",
+    value: 1.0,
+    currency: "ZAR",
+  })
+}
+
 function formatDimension(value) {
   return `${Number(value)}m`
 }
@@ -184,6 +194,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
         throw new Error(payload?.error || "Could not save the solar ground mount enquiry.")
       }
 
+      reportGroundMountLeadConversion()
       setSubmitSuccess(
         "Your solar ground mount enquiry has been saved. The Smart Steel team can now review it in the CRM and follow up with the next step."
       )
