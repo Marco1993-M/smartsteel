@@ -74,7 +74,7 @@ function applyGroundMountDefaults(previousState) {
     wallHeight: 0,
     steelFinish: "ZAM",
     includeStructureLabour: false,
-    includeSolarBrackets: true,
+    includeSolarBrackets: false,
     includeTransport: false,
     transportTrips: 0,
     claddingInstalled: false,
@@ -143,7 +143,7 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
     nextState.transportTrips = Math.max(0, Math.round(Number(previousState.transportTrips) || 0))
     nextState.includeStructureLabour = Boolean(previousState.includeStructureLabour)
     nextState.includeSolarBrackets =
-      typeof previousState.includeSolarBrackets === "boolean" ? previousState.includeSolarBrackets : true
+      typeof previousState.includeSolarBrackets === "boolean" ? previousState.includeSolarBrackets : false
     nextState.includeTransport =
       typeof previousState.includeTransport === "boolean" ? previousState.includeTransport : false
     nextState.steelFinish = previousState.steelFinish || "Galv"
@@ -1060,7 +1060,7 @@ export default function EstimateDrawer({
                         <div>
                           <label className="block text-sm font-medium text-slate-700">Hardware basis</label>
                           <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
-                            Support hardware included
+                            Structure only by default
                           </div>
                         </div>
                       </div>
