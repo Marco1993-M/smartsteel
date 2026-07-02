@@ -330,6 +330,14 @@ function buildEditableLineItemsFromEstimate(previewLineItems, estimate, markupMu
   })
 }
 
+function hasLineItemOverrides(item, previewLabel) {
+  return (
+    Number(item.quantity) !== Number(item.originalQuantity) ||
+    Number(item.unitRate) !== Number(item.originalUnitRate) ||
+    item.label !== previewLabel
+  )
+}
+
 function openEstimateDocument(url) {
   if (!url || typeof window === "undefined") return
   const prefersSameTab =
@@ -484,10 +492,16 @@ export default function EstimateDrawer({
           const previewItem = previewByCode.get(item.code)
           if (!previewItem) return null
 
-          return buildEditableLineItem(
-            applyMarkupToLineItem(previewItem, preview.pricing.markupMultiplier),
-            item
-          )
+          const pricedPreviewItem = applyMarkupToLineItem(previewItem, preview.pricing.markupMultiplier)
+
+          if (!hasLineItemOverrides(item, pricedPreviewItem.label)) {
+            return buildEditableLineItem(pricedPreviewItem, {
+              id: item.id || previewItem.code,
+              priceIncludesMarkup: true,
+            })
+          }
+
+          return buildEditableLineItem(pricedPreviewItem, item)
         })
         .filter(Boolean)
 
