@@ -2,27 +2,25 @@ import { formatCurrency } from "./warehouseEstimate"
 
 const DEFAULT_MARKUP = 1.32
 const DEFAULT_DELIVERY_MINIMUM = 1350
-const CFLC_GROUND_MOUNT_STRUCTURE_PANEL_UNIT = 30
-const CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_UNIT = 720
-const CFLC_GROUND_MOUNT_BOLTS_PER_UNIT = 180
-const CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_PANELS_PER_UNIT = 30
-const CFLC_GROUND_MOUNT_SOLAR_RAIL_METERS_PER_UNIT = 69
-const CFLC_GROUND_MOUNT_END_BRACKETS_PER_UNIT = 12
-const CFLC_GROUND_MOUNT_MIDDLE_BRACKETS_PER_UNIT = 54
-const CFLC_GROUND_MOUNT_INSTALL_PANELS_PER_UNIT = 30
-const CFLC_GROUND_MOUNT_GALV_RATE_PER_TON = 21500
-const CFLC_GROUND_MOUNT_MILD_RATE_PER_TON = 15000
+export const GROUND_MOUNT_PANELS_PER_BAY = 6
+export const GROUND_MOUNT_BAY_WIDTH_METERS = 2.4
+export const GROUND_MOUNT_ROW_LENGTH_METERS = 6
+export const GROUND_MOUNT_MAX_BAYS_PER_ROW = 10
+const CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_PANEL = 24
+const CFLC_GROUND_MOUNT_BOLTS_PER_PANEL = 6
+const CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_PER_PANEL = 1
+const CFLC_GROUND_MOUNT_END_BRACKETS_PER_PANEL = 0.4
+const CFLC_GROUND_MOUNT_MIDDLE_BRACKETS_PER_PANEL = 1.8
+const CFLC_GROUND_MOUNT_INSTALL_PANELS_PER_PANEL = 1
 const CFLC_GROUND_MOUNT_ZAM_RATE_PER_TON = 20600
 const CFLC_GROUND_MOUNT_BOLT_RATE = 15
 const CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_RATE_PER_PANEL = 250
-// The workbook's solar-rail rate cell is currently zero, so we keep the live rate until that row is confirmed.
-const CFLC_GROUND_MOUNT_SOLAR_RAIL_RATE_PER_METER = 80
+const CFLC_GROUND_MOUNT_SOLAR_RAIL_EQUIVALENT_RATE_PER_PANEL = 184
 const CFLC_GROUND_MOUNT_END_BRACKET_RATE = 25
 const CFLC_GROUND_MOUNT_MIDDLE_BRACKET_RATE = 30
 const CFLC_GROUND_MOUNT_INSTALL_RATE_PER_PANEL = 375
 const CFLC_GROUND_MOUNT_TRANSPORT_RATE_PER_KM = 26
 const CFLC_GROUND_MOUNT_VAT_RATE = 0.15
-const CFLC_GROUND_MOUNT_STEEL_FINISHES = ["Galv", "Mild", "ZAM"]
 
 export const SOLAR_PRODUCT_TYPE_OPTIONS = [
   { value: "Solar carport", label: "Solar carport" },
@@ -79,6 +77,26 @@ function formatDimension(value) {
   return `${Number(value)}m`
 }
 
+export function getGroundMountLayout(panelCount) {
+  const requestedPanels = Math.max(1, Math.round(Number(panelCount) || 0))
+  const bayCount = Math.max(1, Math.ceil(requestedPanels / GROUND_MOUNT_PANELS_PER_BAY))
+  const pricedPanelCount = bayCount * GROUND_MOUNT_PANELS_PER_BAY
+  const rows = Math.max(1, Math.ceil(bayCount / GROUND_MOUNT_MAX_BAYS_PER_ROW))
+  const baysPerRow = Math.min(GROUND_MOUNT_MAX_BAYS_PER_ROW, bayCount)
+  const width = roundMoney(baysPerRow * GROUND_MOUNT_BAY_WIDTH_METERS)
+  const length = roundMoney(rows * GROUND_MOUNT_ROW_LENGTH_METERS)
+
+  return {
+    requestedPanels,
+    bayCount,
+    pricedPanelCount,
+    rows,
+    baysPerRow,
+    width,
+    length,
+  }
+}
+
 function getCflcGroundMountMarkupRate(panelCount) {
   if (panelCount < 500) return 0.3
   if (panelCount < 1501) return 0.25
@@ -90,12 +108,13 @@ export function validateSolarEstimateInput(input) {
   const productType = input?.productType || "Solar carport"
   const width = Number(input?.width)
   const length = Number(input?.length)
-  const wallHeight = Number(input?.wallHeight || 3)
+  const wallHeight =
+    input?.wallHeight === 0 ? 0 : Number(input?.wallHeight || 3)
   const quantity = Math.max(1, Math.round(Number(input?.quantity) || 1))
   const moduleCount = Math.max(0, Math.round(Number(input?.moduleCount) || 0))
   const deliveryDistance = Math.max(Number(input?.deliveryDistance) || 0, 0)
   const scope = input?.scope || (input?.claddingInstalled ? "supply_install" : "supply_only")
-  const steelFinish = input?.steelFinish || "Galv"
+  const steelFinish = productType === "Solar ground mount" ? "ZAM" : input?.steelFinish || "Galv"
   const transportTrips = Math.max(0, Math.round(Number(input?.transportTrips) || 0))
   const includeStructureLabour =
     typeof input?.includeStructureLabour === "boolean" ? input.includeStructureLabour : false
@@ -118,16 +137,12 @@ export function validateSolarEstimateInput(input) {
     throw new Error("Please enter a valid structure length.")
   }
 
-  if (!Number.isFinite(wallHeight) || wallHeight <= 0) {
+  if (!Number.isFinite(wallHeight) || (productType === "Solar ground mount" ? wallHeight < 0 : wallHeight <= 0)) {
     throw new Error("Please enter a valid clearance height.")
   }
 
   if (!SOLAR_SCOPE_OPTIONS.some((option) => option.value === scope)) {
     throw new Error("Please choose a valid project scope.")
-  }
-
-  if (productType === "Solar ground mount" && !CFLC_GROUND_MOUNT_STEEL_FINISHES.includes(steelFinish)) {
-    throw new Error("Please choose Galv, Mild, or ZAM steel for the CFLC ground mount.")
   }
 
   return {
@@ -167,47 +182,44 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   } = normalized
 
   const totalPanels = moduleCount * quantity
-  const structureUnits = Math.max(1, Math.ceil(totalPanels / CFLC_GROUND_MOUNT_STRUCTURE_PANEL_UNIT))
+  const layout = getGroundMountLayout(totalPanels)
+  const pricedPanelCount = layout.pricedPanelCount
+  const layoutWidth = layout.width
+  const layoutLength = layout.length
+  const structureUnits = layout.bayCount
   const markupRate = getCflcGroundMountMarkupRate(totalPanels)
   const markupMultiplier = roundMoney(1 + markupRate)
-  const steelRatePerTon =
-    steelFinish === "Galv"
-      ? CFLC_GROUND_MOUNT_GALV_RATE_PER_TON
-      : steelFinish === "Mild"
-        ? CFLC_GROUND_MOUNT_MILD_RATE_PER_TON
-        : CFLC_GROUND_MOUNT_ZAM_RATE_PER_TON
+  const steelRatePerTon = CFLC_GROUND_MOUNT_ZAM_RATE_PER_TON
 
-  const structureSteelCostPerUnit =
-    CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_UNIT * (steelRatePerTon / 1000)
-  const structureSteelCost = structureSteelCostPerUnit * structureUnits
+  const structureSteelWeightKg = pricedPanelCount * CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_PANEL
+  const structureSteelCost =
+    structureSteelWeightKg * (steelRatePerTon / 1000)
 
-  const boltsQuantity = CFLC_GROUND_MOUNT_BOLTS_PER_UNIT * structureUnits
+  const boltsQuantity = Math.round(pricedPanelCount * CFLC_GROUND_MOUNT_BOLTS_PER_PANEL)
   const boltsCost = boltsQuantity * CFLC_GROUND_MOUNT_BOLT_RATE
 
   const structureLabourQuantity = includeStructureLabour
-    ? CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_PANELS_PER_UNIT * structureUnits
+    ? Math.round(pricedPanelCount * CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_PER_PANEL)
     : 0
   const structureLabourCost =
     structureLabourQuantity * CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_RATE_PER_PANEL
 
-  const solarRailQuantity = includeSolarBrackets
-    ? CFLC_GROUND_MOUNT_SOLAR_RAIL_METERS_PER_UNIT * structureUnits
-    : 0
-  const solarRailCost = solarRailQuantity * CFLC_GROUND_MOUNT_SOLAR_RAIL_RATE_PER_METER
-
   const endBracketQuantity = includeSolarBrackets
-    ? CFLC_GROUND_MOUNT_END_BRACKETS_PER_UNIT * structureUnits
+    ? Math.round(pricedPanelCount * CFLC_GROUND_MOUNT_END_BRACKETS_PER_PANEL)
     : 0
   const endBracketCost = endBracketQuantity * CFLC_GROUND_MOUNT_END_BRACKET_RATE
 
   const middleBracketQuantity = includeSolarBrackets
-    ? CFLC_GROUND_MOUNT_MIDDLE_BRACKETS_PER_UNIT * structureUnits
+    ? Math.round(pricedPanelCount * CFLC_GROUND_MOUNT_MIDDLE_BRACKETS_PER_PANEL)
+    : 0
+  const bracketSystemAllowanceCost = includeSolarBrackets
+    ? pricedPanelCount * CFLC_GROUND_MOUNT_SOLAR_RAIL_EQUIVALENT_RATE_PER_PANEL
     : 0
   const middleBracketCost =
-    middleBracketQuantity * CFLC_GROUND_MOUNT_MIDDLE_BRACKET_RATE
+    middleBracketQuantity * CFLC_GROUND_MOUNT_MIDDLE_BRACKET_RATE + bracketSystemAllowanceCost
 
   const panelInstallationQuantity = claddingInstalled
-    ? CFLC_GROUND_MOUNT_INSTALL_PANELS_PER_UNIT * structureUnits
+    ? Math.round(pricedPanelCount * CFLC_GROUND_MOUNT_INSTALL_PANELS_PER_PANEL)
     : 0
   const panelInstallationCost =
     panelInstallationQuantity * CFLC_GROUND_MOUNT_INSTALL_RATE_PER_PANEL
@@ -222,7 +234,6 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
     structureSteelCost +
     boltsCost +
     structureLabourCost +
-    solarRailCost +
     endBracketCost +
     middleBracketCost +
     panelInstallationCost +
@@ -235,10 +246,8 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   const lineItems = [
     buildLineItem({
       code: "ground-mount-structure-steel",
-      label: `${steelFinish} CFLC ground mount structure steel`,
-      quantity: roundMoney(
-        (CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_UNIT * structureUnits) / 1000
-      ),
+      label: `${steelFinish} solar ground mount structure steel`,
+      quantity: roundMoney(structureSteelWeightKg / 1000),
       unit: "tons",
       unitRate: steelRatePerTon,
       total: structureSteelCost,
@@ -269,14 +278,6 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   if (includeSolarBrackets) {
     lineItems.push(
       buildLineItem({
-        code: "ground-mount-solar-rail",
-        label: "Solar rail",
-        quantity: solarRailQuantity,
-        unit: "m",
-        unitRate: CFLC_GROUND_MOUNT_SOLAR_RAIL_RATE_PER_METER,
-        total: solarRailCost,
-      }),
-      buildLineItem({
         code: "ground-mount-end-brackets",
         label: "End brackets",
         quantity: endBracketQuantity,
@@ -286,10 +287,13 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
       }),
       buildLineItem({
         code: "ground-mount-middle-brackets",
-        label: "Middle brackets",
+        label: "Middle brackets and support hardware",
         quantity: middleBracketQuantity,
         unit: "no",
-        unitRate: CFLC_GROUND_MOUNT_MIDDLE_BRACKET_RATE,
+        unitRate:
+          middleBracketQuantity > 0
+            ? middleBracketCost / middleBracketQuantity
+            : CFLC_GROUND_MOUNT_MIDDLE_BRACKET_RATE,
         total: middleBracketCost,
       })
     )
@@ -325,21 +329,18 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
     SOLAR_SCOPE_OPTIONS.find((option) => option.value === scope)?.label || "Supply only"
   const title =
     totalPanels > 0
-      ? `${totalPanels} panel CFLC solar ground mount`
-      : "CFLC solar ground mount"
+      ? `${totalPanels} panel solar ground mount`
+      : "Solar ground mount"
 
   const estimateRequestParts = [
-    "CFLC solar ground mount",
+    "Solar ground mount",
     `${totalPanels || moduleCount || "0"} panels total`,
-    `${structureUnits} x 30-panel structures`,
+    `${layout.bayCount} x 6-panel bays`,
+    `${layout.width}m wide`,
+    `${layout.length}m long`,
     `${steelFinish} steel`,
     scopeLabel,
   ]
-
-  if (width > 0 && length > 0) {
-    estimateRequestParts.push(`${formatDimension(width)} wide`)
-    estimateRequestParts.push(`${formatDimension(length)} long`)
-  }
 
   if (wallHeight > 0) {
     estimateRequestParts.push(`${formatDimension(wallHeight)} clearance height`)
@@ -355,7 +356,7 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
     summary: {
       title,
       estimateRequest: estimateRequestParts.join(" · "),
-      layoutNote: "",
+      layoutNote: `Priced in ${layout.bayCount} bay${layout.bayCount === 1 ? "" : "s"} of 6 panels each.`,
     },
     pricing: {
       baseTotal: roundMoney(baseTotal),
@@ -369,15 +370,17 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
       totalInclVat,
     },
     totals: {
-      area: roundMoney(width * length),
-      totalArea: roundMoney(width * length * quantity),
+      area: roundMoney(layoutWidth * layoutLength),
+      totalArea: roundMoney(layoutWidth * layoutLength * quantity),
       totalModules: totalPanels,
       structureUnits,
+      bayCount: layout.bayCount,
+      pricedPanels: layout.pricedPanelCount,
     },
     labels: {
       area:
-        width > 0 && length > 0
-          ? `${roundMoney(width * length * quantity)} m²`
+        layoutWidth > 0 && layoutLength > 0
+          ? `${roundMoney(layoutWidth * layoutLength * quantity)} m²`
           : "Not specified",
       scope: scopeLabel,
       delivery:
@@ -390,7 +393,7 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
     meta: {
       productType,
       productGroup: "solar",
-      sourceModel: "CFLC solar ground mount workbook",
+      sourceModel: "CFLC solar ground mount bay model",
     },
   }
 }
