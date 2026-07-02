@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import AppShell from "../components/AppShell";
 import AnnouncementBanner from "../components/AnnouncementBanner";
@@ -61,6 +62,21 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17629050810"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-base-tag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = window.gtag || gtag;
+            gtag('js', new Date());
+            gtag('config', 'AW-17629050810');
+          `}
+        </Script>
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/*<AnnouncementBanner />*/}
         <AppShell>{children}</AppShell>
