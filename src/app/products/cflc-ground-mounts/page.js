@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import Script from "next/script"
 import GroundMountEstimatorClient from "./GroundMountEstimatorClient"
 import {
   calculateSolarEstimate,
@@ -24,7 +25,7 @@ const groundMountExamples = examplePanelCounts.map((panelCount) => {
     wallHeight: 0,
     scope: "supply_only",
     includeStructureLabour: false,
-    includeSolarBrackets: true,
+    includeSolarBrackets: false,
     includeTransport: false,
     transportTrips: 0,
     deliveryDistance: 0,
@@ -276,12 +277,25 @@ const breadcrumbSchema = {
 
 export default function CflcGroundMountsPage() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#ffffff_12%,_#f8fafc_30%,_#fff7f5_100%)] px-4 py-10 sm:px-6 lg:px-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+    <>
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=AW-17629050810"
+        strategy="afterInteractive"
+      />
+      <Script id="google-ads-ground-mounts" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'AW-17629050810');
+        `}
+      </Script>
+      <main className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#ffffff_12%,_#f8fafc_30%,_#fff7f5_100%)] px-4 py-10 sm:px-6 lg:px-8">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
-      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-7xl">
         <section className="relative mt-6 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
           <Image
             src="/solar_ground_mount.webp"
@@ -502,7 +516,8 @@ export default function CflcGroundMountsPage() {
             ))}
           </div>
         </section>
-      </div>
-    </main>
+        </div>
+      </main>
+    </>
   )
 }

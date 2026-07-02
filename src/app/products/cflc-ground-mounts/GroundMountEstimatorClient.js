@@ -109,7 +109,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
         deliveryDistance: 0,
         scope: "supply_only",
         includeStructureLabour: false,
-        includeSolarBrackets: true,
+        includeSolarBrackets: false,
         includeTransport: false,
         transportTrips: 0,
       }),
