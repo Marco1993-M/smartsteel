@@ -329,17 +329,16 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
     SOLAR_SCOPE_OPTIONS.find((option) => option.value === scope)?.label || "Supply only"
   const title =
     totalPanels > 0
-      ? `${totalPanels} panel solar ground mount`
-      : "Solar ground mount"
+      ? `${totalPanels} Panel Solar Ground Mount Structure`
+      : "Solar Ground Mount Structure"
 
   const estimateRequestParts = [
-    "Solar ground mount",
+    "Solar ground mount structure",
     `${totalPanels || moduleCount || "0"} panels total`,
     `${layout.bayCount} x 6-panel bays`,
-    `${layout.width}m wide`,
-    `${layout.length}m long`,
-    `${steelFinish} steel`,
-    scopeLabel,
+    `${layout.width}m x ${layout.length}m layout`,
+    `${steelFinish} corrosion-resistant steel`,
+    "Structure-only starting budget",
   ]
 
   if (wallHeight > 0) {

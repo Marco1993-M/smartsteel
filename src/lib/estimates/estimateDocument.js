@@ -68,6 +68,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
     estimate?.product_type_display ||
     productType
   const solarProduct = isSolarProduct(productType)
+  const groundMountProduct = productType === "Solar ground mount"
   const trussProduct = isTrussProduct(productType)
   const roofStyleLabel = getRoofStyleLabel(input.roofStyle)
   const layoutNote =
@@ -78,6 +79,8 @@ export function buildEstimateDisplayModel(estimate, lead) {
       : ""
   const quotationTitle = trussProduct
     ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} ${roofStyleLabel} ${productTypeLabel} Quotation`
+    : groundMountProduct
+      ? `${quantity > 1 ? `${quantity} x ` : ""}${totalModuleCount || moduleCount} Panel ${productTypeLabel} Quotation`
     : hasDimensions
       ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} x ${formatDimension(input.length)} ${productTypeLabel} Quotation`
       : `${productTypeLabel} Quotation`
@@ -103,12 +106,12 @@ export function buildEstimateDisplayModel(estimate, lead) {
       ]
     : solarProduct
     ? [
-        { label: "Width", value: formatDimension(input.width) },
-        { label: "Length", value: formatDimension(input.length) },
-        { label: "Clearance", value: formatDimension(input.wallHeight) },
+        { label: groundMountProduct ? "Layout width" : "Width", value: formatDimension(input.width) },
+        { label: groundMountProduct ? "Layout length" : "Length", value: formatDimension(input.length) },
+        { label: groundMountProduct ? "Structure basis" : "Clearance", value: groundMountProduct ? "Structure-only starting budget" : formatDimension(input.wallHeight) },
         { label: "Quantity", value: `${quantity}` },
         {
-          label: "Area",
+          label: groundMountProduct ? "Layout area" : "Area",
           value:
             area > 0
               ? quantity > 1
@@ -117,7 +120,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
               : "Not specified",
         },
         {
-          label: "Modules",
+          label: groundMountProduct ? "Panel count" : "Modules",
           value: totalModuleCount > 0 ? `${totalModuleCount}` : "Not specified",
         },
         {
@@ -129,7 +132,13 @@ export function buildEstimateDisplayModel(estimate, lead) {
         },
         {
           label: "Installation",
-          value: input.claddingInstalled ? "Included" : "Structure supply only",
+          value: groundMountProduct
+            ? input.claddingInstalled
+              ? "Included"
+              : "Reviewed after enquiry"
+            : input.claddingInstalled
+              ? "Included"
+              : "Structure supply only",
         },
       ]
     : [
