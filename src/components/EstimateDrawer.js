@@ -10,6 +10,7 @@ import {
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../lib/estimates/warehouseEstimate"
 import {
+  getGroundMountLayout,
   SOLAR_PRODUCT_TYPE_OPTIONS,
 } from "../lib/estimates/solarEstimate"
 import {
@@ -42,7 +43,6 @@ const INTERNAL_PRODUCT_LABELS = [
 const LCSS_ALLOWED_WIDTHS = [3, 6, 8, 10, 12]
 const LCSS_ALLOWED_STEEL_FINISHES = ["Galv", "Mild"]
 const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable"]
-const GROUND_MOUNT_STEEL_FINISHES = ["Galv", "Mild", "ZAM"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
 
 function roundMoney(value) {
@@ -59,6 +59,26 @@ function isValidLcssLength(width, length) {
 
   if (normalizedWidth === 3 && normalizedLength === 6) return true
   return Math.abs(normalizedLength / 2.5 - Math.round(normalizedLength / 2.5)) <= 0.0001
+}
+
+function applyGroundMountDefaults(previousState) {
+  const moduleCount = Math.max(1, Number(previousState.moduleCount) || 30)
+  const layout = getGroundMountLayout(moduleCount)
+
+  return {
+    ...previousState,
+    useCustomSize: true,
+    moduleCount,
+    width: layout.width,
+    length: layout.length,
+    wallHeight: 0,
+    steelFinish: "ZAM",
+    includeStructureLabour: false,
+    includeSolarBrackets: true,
+    includeTransport: false,
+    transportTrips: 0,
+    claddingInstalled: false,
+  }
 }
 
 function buildProductTypeAdjustedState(previousState, nextProductType) {
@@ -126,9 +146,12 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
       typeof previousState.includeSolarBrackets === "boolean" ? previousState.includeSolarBrackets : true
     nextState.includeTransport =
       typeof previousState.includeTransport === "boolean" ? previousState.includeTransport : false
-    nextState.steelFinish = GROUND_MOUNT_STEEL_FINISHES.includes(previousState.steelFinish)
-      ? previousState.steelFinish
-      : "Galv"
+    nextState.steelFinish = previousState.steelFinish || "Galv"
+
+    if (nextProductType === "Solar ground mount") {
+      return applyGroundMountDefaults(nextState)
+    }
+
     return nextState
   }
 
@@ -517,11 +540,18 @@ export default function EstimateDrawer({
   )
 
   const handleChange = (field, value) => {
-    setFormState((prev) =>
-      field === "productType"
-        ? buildProductTypeAdjustedState(prev, value)
-        : { ...prev, [field]: value }
-    )
+    setFormState((prev) => {
+      const nextState =
+        field === "productType"
+          ? buildProductTypeAdjustedState(prev, value)
+          : { ...prev, [field]: value }
+
+      if ((field === "moduleCount" || field === "productType") && nextState.productType === "Solar ground mount") {
+        return applyGroundMountDefaults(nextState)
+      }
+
+      return nextState
+    })
   }
 
   const updateLineItem = (id, updates) => {
@@ -767,9 +797,13 @@ export default function EstimateDrawer({
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className="block text-sm font-medium text-slate-700">
-                          {isTrussEstimate ? "Span" : isGroundMountEstimate ? "Width / footprint" : isSolarEstimate ? "Width / span" : "Width"}
+                          {isTrussEstimate ? "Span" : isGroundMountEstimate ? "Calculated width" : isSolarEstimate ? "Width / span" : "Width"}
                         </label>
-                        {formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
+                        {isGroundMountEstimate ? (
+                          <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
+                            {formState.width}m
+                          </div>
+                        ) : formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
                           <input
                             type="number"
                             min="0.1"
@@ -796,9 +830,13 @@ export default function EstimateDrawer({
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-slate-700">
-                          {isTrussEstimate ? "Building length" : isGroundMountEstimate ? "Length / footprint" : isSolarEstimate ? "Length" : "Length / depth"}
+                          {isTrussEstimate ? "Building length" : isGroundMountEstimate ? "Calculated length" : isSolarEstimate ? "Length" : "Length / depth"}
                         </label>
-                        {formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
+                        {isGroundMountEstimate ? (
+                          <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
+                            {formState.length}m
+                          </div>
+                        ) : formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
                           <input
                             type="number"
                             min="0.1"
@@ -872,19 +910,25 @@ export default function EstimateDrawer({
                   ) : (
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                          <label className="block text-sm font-medium text-slate-700">
-                            {isGroundMountEstimate ? "Frame height" : isSolarEstimate ? "Clearance height" : "Height"}
-                          </label>
-                        <input
-                          type="number"
-                          min="0.1"
-                          step="0.1"
-                          value={formState.wallHeight}
-                          onChange={(event) =>
-                            handleChange("wallHeight", Math.max(0.1, Number(event.target.value) || 0.1))
-                          }
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        />
+                        <label className="block text-sm font-medium text-slate-700">
+                          {isGroundMountEstimate ? "Estimate basis" : isSolarEstimate ? "Clearance height" : "Height"}
+                        </label>
+                        {isGroundMountEstimate ? (
+                          <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
+                            Structure-only baseline
+                          </div>
+                        ) : (
+                          <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            value={formState.wallHeight}
+                            onChange={(event) =>
+                              handleChange("wallHeight", Math.max(0.1, Number(event.target.value) || 0.1))
+                            }
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          />
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-slate-700">Quantity</label>
@@ -964,94 +1008,47 @@ export default function EstimateDrawer({
                     )}
                     <div>
                       <label className="block text-sm font-medium text-slate-700">
-                        Delivery distance (km)
+                        {isGroundMountEstimate ? "Calculated layout" : "Delivery distance (km)"}
                       </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formState.deliveryDistance}
-                        onChange={(event) =>
-                          handleChange("deliveryDistance", Number(event.target.value) || 0)
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                      />
+                      {isGroundMountEstimate ? (
+                        <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
+                          {preview.totals?.bayCount || 0} bay{preview.totals?.bayCount === 1 ? "" : "s"} · {preview.totals?.pricedPanels || 0} priced panels
+                        </div>
+                      ) : (
+                        <input
+                          type="number"
+                          min="0"
+                          value={formState.deliveryDistance}
+                          onChange={(event) =>
+                            handleChange("deliveryDistance", Number(event.target.value) || 0)
+                          }
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      )}
                     </div>
                   </div>
                   ) : null}
 
                   {isGroundMountEstimate ? (
                     <>
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                        This CRM estimate now follows the same panel-count pricing logic as the public
+                        ground mount estimator. Panel count drives the layout automatically, ZAM steel is
+                        standard, and the quote starts from a structure-only baseline for faster pricing.
+                      </div>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
                           <label className="block text-sm font-medium text-slate-700">Steel finish</label>
-                          <select
-                            value={formState.steelFinish}
-                            onChange={(event) => handleChange("steelFinish", event.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                          >
-                            {GROUND_MOUNT_STEEL_FINISHES.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
+                            ZAM
+                          </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700">Transport trips</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={formState.transportTrips}
-                            onChange={(event) =>
-                              handleChange("transportTrips", Math.max(0, Number(event.target.value) || 0))
-                            }
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                          />
+                          <label className="block text-sm font-medium text-slate-700">Hardware basis</label>
+                          <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
+                            Support hardware included
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={formState.includeStructureLabour}
-                            onChange={(event) =>
-                              handleChange("includeStructureLabour", event.target.checked)
-                            }
-                          />
-                          Include structure labour
-                        </label>
-                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={formState.includeSolarBrackets}
-                            onChange={(event) =>
-                              handleChange("includeSolarBrackets", event.target.checked)
-                            }
-                          />
-                          Include rail and brackets
-                        </label>
-                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={formState.includeTransport}
-                            onChange={(event) =>
-                              handleChange("includeTransport", event.target.checked)
-                            }
-                          />
-                          Include transport
-                        </label>
-                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={formState.claddingInstalled}
-                            onChange={(event) =>
-                              handleChange("claddingInstalled", event.target.checked)
-                            }
-                          />
-                          Include panel installation
-                        </label>
                       </div>
                     </>
                   ) : null}
