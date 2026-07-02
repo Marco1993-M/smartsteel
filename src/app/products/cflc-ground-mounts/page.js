@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Link from "next/link"
-import Script from "next/script"
 import GroundMountEstimatorClient from "./GroundMountEstimatorClient"
 import {
   calculateSolarEstimate,
@@ -277,20 +276,7 @@ const breadcrumbSchema = {
 
 export default function CflcGroundMountsPage() {
   return (
-    <>
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=AW-17629050810"
-        strategy="afterInteractive"
-      />
-      <Script id="google-ads-ground-mounts" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'AW-17629050810');
-        `}
-      </Script>
-      <main className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#ffffff_12%,_#f8fafc_30%,_#fff7f5_100%)] px-4 py-10 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#ffffff_12%,_#f8fafc_30%,_#fff7f5_100%)] px-4 py-10 sm:px-6 lg:px-8">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
@@ -518,6 +504,5 @@ export default function CflcGroundMountsPage() {
         </section>
         </div>
       </main>
-    </>
   )
 }
