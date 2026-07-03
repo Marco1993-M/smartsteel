@@ -277,6 +277,7 @@ function buildEditableLineItem(item, overrides = {}) {
     originalTotal: roundMoney(item.total ?? quantity * unitRate),
     manual: Boolean(overrides.manual),
     priceIncludesMarkup,
+    userEdited: Boolean(overrides.userEdited),
     overrideReason: overrides.overrideReason || "",
   }
 }
@@ -298,6 +299,7 @@ function applyMarkupToLineItem(item, markupMultiplier) {
 
 function buildEditableLineItemsFromEstimate(previewLineItems, estimate, markupMultiplier) {
   const savedItems = Array.isArray(estimate?.line_items) ? estimate.line_items : []
+  const savedOriginalItems = Array.isArray(estimate?.original_line_items) ? estimate.original_line_items : []
 
   if (savedItems.length === 0) {
     return previewLineItems.map((item) =>
@@ -308,17 +310,30 @@ function buildEditableLineItemsFromEstimate(previewLineItems, estimate, markupMu
   }
 
   const previewByCode = new Map(previewLineItems.map((item) => [item.code, item]))
+  const savedOriginalByCode = new Map(savedOriginalItems.map((item) => [item.code, item]))
 
   return savedItems.map((savedItem) => {
     const previewItem = previewByCode.get(savedItem.code)
     const normalizedSavedItem = savedItem.priceIncludesMarkup
       ? savedItem
       : applyMarkupToLineItem(savedItem, markupMultiplier)
+    const matchingOriginalItem = savedOriginalByCode.get(savedItem.code)
+    const normalizedOriginalItem = matchingOriginalItem
+      ? applyMarkupToLineItem(matchingOriginalItem, markupMultiplier)
+      : null
+    const savedItemWasEdited = normalizedOriginalItem
+      ? Number(normalizedSavedItem.quantity ?? 0) !== Number(normalizedOriginalItem.quantity ?? 0) ||
+        Number(normalizedSavedItem.unitRate ?? 0) !== Number(normalizedOriginalItem.unitRate ?? 0) ||
+        String(normalizedSavedItem.label || "") !== String(normalizedOriginalItem.label || "")
+      : Boolean(savedItem.manual)
 
     if (previewItem) {
       return buildEditableLineItem(
         applyMarkupToLineItem(previewItem, markupMultiplier),
-        normalizedSavedItem
+        {
+          ...normalizedSavedItem,
+          userEdited: savedItemWasEdited,
+        }
       )
     }
 
@@ -326,11 +341,14 @@ function buildEditableLineItemsFromEstimate(previewLineItems, estimate, markupMu
       ...normalizedSavedItem,
       id: savedItem.id || savedItem.code,
       manual: true,
+      userEdited: true,
     })
   })
 }
 
 function hasLineItemOverrides(item, previewLabel) {
+  if (!item.userEdited) return false
+
   return (
     Number(item.quantity) !== Number(item.originalQuantity) ||
     Number(item.unitRate) !== Number(item.originalUnitRate) ||
@@ -578,6 +596,7 @@ export default function EstimateDrawer({
           quantity: Number(nextItem.quantity) || 0,
           unitRate: Number(nextItem.unitRate) || 0,
           total: roundMoney((Number(nextItem.quantity) || 0) * (Number(nextItem.unitRate) || 0)),
+          userEdited: true,
         }
       })
     )
@@ -600,6 +619,7 @@ export default function EstimateDrawer({
         originalTotal: 0,
         manual: true,
         priceIncludesMarkup: true,
+        userEdited: true,
         overrideReason: "Added manually",
       },
     ])
