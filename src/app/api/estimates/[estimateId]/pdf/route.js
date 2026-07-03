@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server"
-import { launchEstimatePdfBrowser } from "../../../../../lib/estimates/pdf"
+import {
+  launchEstimatePdfBrowser,
+  renderDocumentPdf,
+} from "../../../../../lib/estimates/pdf"
 import { supabaseServer } from "../../../../../lib/supabase-server"
 
 export const runtime = "nodejs"
@@ -90,30 +93,13 @@ export async function GET(request, { params }) {
   }
 
   const pdfUrl = new URL(`/quotes/${estimate.share_token}?pdf=1`, request.url).toString()
-  let browser = null
 
   try {
-    browser = await launchEstimatePdfBrowser()
-    const page = await browser.newPage()
-
-    await page.goto(pdfUrl, {
-      waitUntil: "networkidle0",
-      timeout: 45000,
-    })
-
-    await page.emulateMediaType("print")
-    await page.waitForSelector(".estimate-sheet", { timeout: 15000 })
-
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      preferCSSPageSize: true,
-      margin: {
-        top: "0",
-        right: "0",
-        bottom: "0",
-        left: "0",
-      },
+    const browser = await launchEstimatePdfBrowser()
+    const pdfBuffer = await renderDocumentPdf({
+      browser,
+      url: pdfUrl,
+      readySelector: ".estimate-sheet",
     })
 
     await storePdfBuffer(storagePath, pdfBuffer)
@@ -133,7 +119,5 @@ export async function GET(request, { params }) {
       { error: pdfError?.message || "Could not generate the quote PDF." },
       { status: 500 }
     )
-  } finally {
-    await browser?.close()
   }
 }
