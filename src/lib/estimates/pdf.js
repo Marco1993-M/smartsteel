@@ -12,6 +12,22 @@ const LOCAL_BROWSER_PATHS = [
   "/usr/bin/chromium",
 ].filter(Boolean)
 
+const PDF_PAGE_VIEWPORT = {
+  width: 1440,
+  height: 2200,
+  deviceScaleFactor: 1,
+}
+
+function getPdfBrowserStore() {
+  if (!globalThis.__SMARTSTEEL_PDF_BROWSER_STORE__) {
+    globalThis.__SMARTSTEEL_PDF_BROWSER_STORE__ = {
+      browserPromise: null,
+    }
+  }
+
+  return globalThis.__SMARTSTEEL_PDF_BROWSER_STORE__
+}
+
 function findLocalBrowserPath() {
   return LOCAL_BROWSER_PATHS.find((candidate) => {
     try {
@@ -22,6 +38,23 @@ function findLocalBrowserPath() {
   })
 }
 
+async function launchServerlessBrowser() {
+  const executablePath = await chromium.executablePath()
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath,
+    headless: true,
+  })
+
+  browser.on("disconnected", () => {
+    const store = getPdfBrowserStore()
+    store.browserPromise = null
+  })
+
+  return browser
+}
+
 export async function launchEstimatePdfBrowser() {
   const isServerless =
     Boolean(process.env.VERCEL) ||
@@ -29,14 +62,26 @@ export async function launchEstimatePdfBrowser() {
     Boolean(process.env.AWS_EXECUTION_ENV)
 
   if (isServerless) {
-    const executablePath = await chromium.executablePath()
+    const store = getPdfBrowserStore()
 
-    return puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath,
-      headless: true,
-    })
+    if (!store.browserPromise) {
+      store.browserPromise = launchServerlessBrowser().catch((error) => {
+        store.browserPromise = null
+        throw error
+      })
+    }
+
+    const browser = await store.browserPromise
+
+    if (!browser?.connected) {
+      store.browserPromise = launchServerlessBrowser().catch((error) => {
+        store.browserPromise = null
+        throw error
+      })
+      return store.browserPromise
+    }
+
+    return browser
   }
 
   const executablePath = findLocalBrowserPath()
@@ -51,10 +96,39 @@ export async function launchEstimatePdfBrowser() {
     executablePath,
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    defaultViewport: {
-      width: 1440,
-      height: 2200,
-      deviceScaleFactor: 1,
-    },
+    defaultViewport: PDF_PAGE_VIEWPORT,
   })
+}
+
+export async function renderDocumentPdf({ browser, url, readySelector }) {
+  const page = await browser.newPage()
+
+  try {
+    await page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    })
+
+    await page.emulateMediaType("print")
+    await page.waitForSelector(readySelector, { timeout: 15000 })
+    await page.evaluate(async () => {
+      if (document.fonts?.ready) {
+        await document.fonts.ready
+      }
+    })
+
+    return await page.pdf({
+      format: "A4",
+      printBackground: true,
+      preferCSSPageSize: true,
+      margin: {
+        top: "0",
+        right: "0",
+        bottom: "0",
+        left: "0",
+      },
+    })
+  } finally {
+    await page.close().catch(() => {})
+  }
 }
