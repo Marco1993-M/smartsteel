@@ -62,7 +62,7 @@ function isValidLcssLength(width, length) {
 }
 
 function applyGroundMountDefaults(previousState) {
-  const moduleCount = Math.max(1, Number(previousState.moduleCount) || 30)
+  const moduleCount = Math.max(1, Number(previousState.moduleCount) || 36)
   const layout = getGroundMountLayout(moduleCount)
 
   return {
