@@ -11,7 +11,7 @@ const SITE_URL = "https://www.smartsteel.co.za"
 const PAGE_PATH = "/products/cflc-ground-mounts"
 const SHARE_IMAGE = `${SITE_URL}/solar_ground_mount.webp`
 
-const examplePanelCounts = [6, 12, 30, 60]
+const examplePanelCounts = [6, 12, 36, 60]
 
 const groundMountExamples = examplePanelCounts.map((panelCount) => {
   const layout = getGroundMountLayout(panelCount)
@@ -42,7 +42,7 @@ const groundMountExamples = examplePanelCounts.map((panelCount) => {
 })
 
 const heroBenchmarkExample =
-  groundMountExamples.find((item) => item.panelCount === 30) || groundMountExamples[0]
+  groundMountExamples.find((item) => item.panelCount === 36) || groundMountExamples[0]
 
 export const metadata = {
   title: "Solar Ground Mount Structures South Africa | Smart Steel",
@@ -102,7 +102,7 @@ const quickAnswers = [
   {
     question: "How is the structure priced?",
     answer:
-      "The solar ground mount system is priced in 6-panel bays. If your panel count falls between sizes, the estimate rounds up to the next practical bay.",
+      "The solar ground mount system now uses a modular 6-panel expansion layout for smaller sizes, with a standard 36-panel option for larger starting structures.",
   },
   {
     question: "What steel finish is used?",
@@ -188,7 +188,7 @@ const faqs = [
   {
     question: "How many panels fit on one bay?",
     answer:
-      "The current pricing model works in 6-panel bays, then scales the structure up in practical groups from there.",
+      "Smaller layouts use a 6-panel modular expansion system, while larger starting layouts can move onto the standard 36-panel structure.",
   },
   {
     question: "Do I need the exact final panel count before I enquire?",

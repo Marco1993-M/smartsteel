@@ -88,7 +88,7 @@ function buildEstimatorNotes({ estimate, formState, enquiryNotes, layout }) {
 export default function GroundMountEstimatorClient({ variant = "section" }) {
   const [currentStep, setCurrentStep] = useState(1)
   const [formState, setFormState] = useState({
-    panelCount: 30,
+    panelCount: 36,
     province: "Gauteng",
     needsInstallationReview: false,
     proceedTiming: "",
