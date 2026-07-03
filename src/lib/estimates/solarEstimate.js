@@ -3,6 +3,7 @@ import { formatCurrency } from "./warehouseEstimate"
 const DEFAULT_MARKUP = 1.32
 const DEFAULT_DELIVERY_MINIMUM = 1350
 export const GROUND_MOUNT_PANELS_PER_BAY = 6
+export const GROUND_MOUNT_STANDARD_PANEL_COUNT = 36
 export const GROUND_MOUNT_BAY_WIDTH_METERS = 2.4
 export const GROUND_MOUNT_ROW_LENGTH_METERS = 6
 export const GROUND_MOUNT_MAX_BAYS_PER_ROW = 10
@@ -12,15 +13,60 @@ const CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_PER_PANEL = 1
 const CFLC_GROUND_MOUNT_END_BRACKETS_PER_PANEL = 0.4
 const CFLC_GROUND_MOUNT_MIDDLE_BRACKETS_PER_PANEL = 1.8
 const CFLC_GROUND_MOUNT_INSTALL_PANELS_PER_PANEL = 1
-const CFLC_GROUND_MOUNT_ZAM_RATE_PER_TON = 23690
+const CFLC_GROUND_MOUNT_ZAM_RATE_PER_TON = 28840
 const CFLC_GROUND_MOUNT_BOLT_RATE = 15
 const CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_RATE_PER_PANEL = 250
 const CFLC_GROUND_MOUNT_SOLAR_RAIL_EQUIVALENT_RATE_PER_PANEL = 184
+const CFLC_GROUND_MOUNT_BRACKET_ASSEMBLY_RATE = 150
 const CFLC_GROUND_MOUNT_END_BRACKET_RATE = 25
 const CFLC_GROUND_MOUNT_MIDDLE_BRACKET_RATE = 30
 const CFLC_GROUND_MOUNT_INSTALL_RATE_PER_PANEL = 375
 const CFLC_GROUND_MOUNT_TRANSPORT_RATE_PER_KM = 26
 const CFLC_GROUND_MOUNT_VAT_RATE = 0.15
+
+const MODULAR_6_GROUND_MOUNT_TEMPLATE = {
+  checkpoints: {
+    6: {
+      panelCount: 6,
+      structureSteelWeightKg: 83.1172,
+      boltsQuantity: 40,
+      spliceBracketQuantity: 0,
+    },
+    12: {
+      panelCount: 12,
+      structureSteelWeightKg: 158.9095,
+      boltsQuantity: 60,
+      spliceBracketQuantity: 4,
+    },
+    18: {
+      panelCount: 18,
+      structureSteelWeightKg: 234.7,
+      boltsQuantity: 80,
+      spliceBracketQuantity: 8,
+    },
+  },
+  baseBay: {
+    panelCount: 6,
+    structureSteelWeightKg: 98.7055,
+    boltsQuantity: 40,
+    spliceBracketQuantity: 0,
+  },
+  expansionBay: {
+    panelCount: 6,
+    structureSteelWeightKg: 67.99725,
+    boltsQuantity: 20,
+    spliceBracketQuantity: 4,
+  },
+}
+
+const STANDARD_36_GROUND_MOUNT_TEMPLATE = {
+  panelCount: 36,
+  structureSteelWeightKg: 632.1387,
+  boltsQuantity: 110,
+  bracketAssemblyQuantity: 10,
+  endBracketQuantity: 18,
+  middleBracketQuantity: 66,
+}
 
 export const SOLAR_PRODUCT_TYPE_OPTIONS = [
   { value: "Solar carport", label: "Solar carport" },
@@ -102,6 +148,116 @@ function getCflcGroundMountMarkupRate(panelCount) {
   if (panelCount < 1501) return 0.25
   if (panelCount < 5001) return 0.2
   return 0.15
+}
+
+function getGroundMountMarkupRate(panelCount, templateType) {
+  if (templateType === "modular") {
+    if (panelCount < 500) return 0.35
+    if (panelCount < 1501) return 0.3
+    if (panelCount < 5001) return 0.25
+    return 0.2
+  }
+
+  return getCflcGroundMountMarkupRate(panelCount)
+}
+
+function buildModularGroundMountTemplate(totalPanels, includeSolarBrackets) {
+  const checkpoint = MODULAR_6_GROUND_MOUNT_TEMPLATE.checkpoints[totalPanels]
+
+  if (checkpoint) {
+    return {
+      templateType: "modular",
+      structureSteelWeightKg: checkpoint.structureSteelWeightKg,
+      boltsQuantity: checkpoint.boltsQuantity,
+      bracketAssemblyQuantity: checkpoint.spliceBracketQuantity,
+      endBracketQuantity: includeSolarBrackets
+        ? Math.round(totalPanels * CFLC_GROUND_MOUNT_END_BRACKETS_PER_PANEL)
+        : 0,
+      middleBracketQuantity: includeSolarBrackets
+        ? Math.round(totalPanels * CFLC_GROUND_MOUNT_MIDDLE_BRACKETS_PER_PANEL)
+        : 0,
+      standardStructureCount: 0,
+      modularBayCount: totalPanels / GROUND_MOUNT_PANELS_PER_BAY,
+    }
+  }
+
+  const bayCount = Math.max(1, Math.ceil(totalPanels / GROUND_MOUNT_PANELS_PER_BAY))
+  const additionalBayCount = Math.max(0, bayCount - 1)
+
+  return {
+    templateType: "modular",
+    structureSteelWeightKg:
+      MODULAR_6_GROUND_MOUNT_TEMPLATE.baseBay.structureSteelWeightKg +
+      additionalBayCount * MODULAR_6_GROUND_MOUNT_TEMPLATE.expansionBay.structureSteelWeightKg,
+    boltsQuantity:
+      MODULAR_6_GROUND_MOUNT_TEMPLATE.baseBay.boltsQuantity +
+      additionalBayCount * MODULAR_6_GROUND_MOUNT_TEMPLATE.expansionBay.boltsQuantity,
+    bracketAssemblyQuantity:
+      MODULAR_6_GROUND_MOUNT_TEMPLATE.baseBay.spliceBracketQuantity +
+      additionalBayCount * MODULAR_6_GROUND_MOUNT_TEMPLATE.expansionBay.spliceBracketQuantity,
+    endBracketQuantity: includeSolarBrackets
+      ? Math.round(totalPanels * CFLC_GROUND_MOUNT_END_BRACKETS_PER_PANEL)
+      : 0,
+    middleBracketQuantity: includeSolarBrackets
+      ? Math.round(totalPanels * CFLC_GROUND_MOUNT_MIDDLE_BRACKETS_PER_PANEL)
+      : 0,
+    standardStructureCount: 0,
+    modularBayCount: bayCount,
+  }
+}
+
+function getGroundMountStructureTemplate(totalPanels, includeSolarBrackets) {
+  if (totalPanels === GROUND_MOUNT_STANDARD_PANEL_COUNT) {
+    return {
+      templateType: "standard_36",
+      structureSteelWeightKg: STANDARD_36_GROUND_MOUNT_TEMPLATE.structureSteelWeightKg,
+      boltsQuantity: STANDARD_36_GROUND_MOUNT_TEMPLATE.boltsQuantity,
+      bracketAssemblyQuantity: includeSolarBrackets
+        ? STANDARD_36_GROUND_MOUNT_TEMPLATE.bracketAssemblyQuantity
+        : 0,
+      endBracketQuantity: includeSolarBrackets
+        ? STANDARD_36_GROUND_MOUNT_TEMPLATE.endBracketQuantity
+        : 0,
+      middleBracketQuantity: includeSolarBrackets
+        ? STANDARD_36_GROUND_MOUNT_TEMPLATE.middleBracketQuantity
+        : 0,
+      standardStructureCount: 1,
+      modularBayCount: 0,
+    }
+  }
+
+  if (totalPanels < GROUND_MOUNT_STANDARD_PANEL_COUNT) {
+    return buildModularGroundMountTemplate(totalPanels, includeSolarBrackets)
+  }
+
+  const standardStructureCount = Math.floor(totalPanels / GROUND_MOUNT_STANDARD_PANEL_COUNT)
+  const remainderPanels = totalPanels % GROUND_MOUNT_STANDARD_PANEL_COUNT
+  const remainderTemplate =
+    remainderPanels > 0 ? buildModularGroundMountTemplate(remainderPanels, includeSolarBrackets) : null
+
+  return {
+    templateType: remainderTemplate ? "hybrid" : "standard_36",
+    structureSteelWeightKg:
+      standardStructureCount * STANDARD_36_GROUND_MOUNT_TEMPLATE.structureSteelWeightKg +
+      Number(remainderTemplate?.structureSteelWeightKg || 0),
+    boltsQuantity:
+      standardStructureCount * STANDARD_36_GROUND_MOUNT_TEMPLATE.boltsQuantity +
+      Number(remainderTemplate?.boltsQuantity || 0),
+    bracketAssemblyQuantity:
+      (includeSolarBrackets
+        ? standardStructureCount * STANDARD_36_GROUND_MOUNT_TEMPLATE.bracketAssemblyQuantity
+        : 0) + Number(remainderTemplate?.bracketAssemblyQuantity || 0),
+    endBracketQuantity:
+      (includeSolarBrackets
+        ? standardStructureCount * STANDARD_36_GROUND_MOUNT_TEMPLATE.endBracketQuantity
+        : 0) + Number(remainderTemplate?.endBracketQuantity || 0),
+    middleBracketQuantity:
+      (includeSolarBrackets
+        ? standardStructureCount * STANDARD_36_GROUND_MOUNT_TEMPLATE.middleBracketQuantity
+        : 0) + Number(remainderTemplate?.middleBracketQuantity || 0),
+    standardStructureCount,
+    modularBayCount: remainderTemplate?.modularBayCount || 0,
+  }
 }
 
 export function validateSolarEstimateInput(input) {
@@ -187,16 +343,18 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   const layoutWidth = layout.width
   const layoutLength = layout.length
   const structureUnits = layout.bayCount
-  const markupRate = getCflcGroundMountMarkupRate(totalPanels)
+  const structureTemplate = getGroundMountStructureTemplate(pricedPanelCount, includeSolarBrackets)
+  const markupRate = getGroundMountMarkupRate(totalPanels, structureTemplate.templateType)
   const markupMultiplier = roundMoney(1 + markupRate)
   const steelRatePerTon = CFLC_GROUND_MOUNT_ZAM_RATE_PER_TON
-
-  const structureSteelWeightKg = pricedPanelCount * CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_PANEL
+  const structureSteelWeightKg = structureTemplate.structureSteelWeightKg
   const structureSteelCost =
     structureSteelWeightKg * (steelRatePerTon / 1000)
 
-  const boltsQuantity = Math.round(pricedPanelCount * CFLC_GROUND_MOUNT_BOLTS_PER_PANEL)
+  const boltsQuantity = structureTemplate.boltsQuantity
   const boltsCost = boltsQuantity * CFLC_GROUND_MOUNT_BOLT_RATE
+  const bracketAssemblyQuantity = structureTemplate.bracketAssemblyQuantity
+  const bracketAssemblyCost = bracketAssemblyQuantity * CFLC_GROUND_MOUNT_BRACKET_ASSEMBLY_RATE
 
   const structureLabourQuantity = includeStructureLabour
     ? Math.round(pricedPanelCount * CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_PER_PANEL)
@@ -204,15 +362,12 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   const structureLabourCost =
     structureLabourQuantity * CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_RATE_PER_PANEL
 
-  const endBracketQuantity = includeSolarBrackets
-    ? Math.round(pricedPanelCount * CFLC_GROUND_MOUNT_END_BRACKETS_PER_PANEL)
-    : 0
+  const endBracketQuantity = structureTemplate.endBracketQuantity
   const endBracketCost = endBracketQuantity * CFLC_GROUND_MOUNT_END_BRACKET_RATE
 
-  const middleBracketQuantity = includeSolarBrackets
-    ? Math.round(pricedPanelCount * CFLC_GROUND_MOUNT_MIDDLE_BRACKETS_PER_PANEL)
-    : 0
-  const bracketSystemAllowanceCost = includeSolarBrackets
+  const middleBracketQuantity = structureTemplate.middleBracketQuantity
+  const bracketSystemAllowanceCost =
+    includeSolarBrackets && structureTemplate.templateType === "modular"
     ? pricedPanelCount * CFLC_GROUND_MOUNT_SOLAR_RAIL_EQUIVALENT_RATE_PER_PANEL
     : 0
   const middleBracketCost =
@@ -233,6 +388,7 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   const baseTotal =
     structureSteelCost +
     boltsCost +
+    bracketAssemblyCost +
     structureLabourCost +
     endBracketCost +
     middleBracketCost +
@@ -271,6 +427,19 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
         unit: "panels",
         unitRate: CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_RATE_PER_PANEL,
         total: structureLabourCost,
+      })
+    )
+  }
+
+  if (bracketAssemblyQuantity > 0) {
+    lineItems.push(
+      buildLineItem({
+        code: "ground-mount-brackets",
+        label: "Purlin splice brackets",
+        quantity: bracketAssemblyQuantity,
+        unit: "no",
+        unitRate: CFLC_GROUND_MOUNT_BRACKET_ASSEMBLY_RATE,
+        total: bracketAssemblyCost,
       })
     )
   }
@@ -335,7 +504,11 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   const estimateRequestParts = [
     "Solar ground mount structure",
     `${totalPanels || moduleCount || "0"} panels total`,
-    `${layout.bayCount} x 6-panel bays`,
+    structureTemplate.templateType === "standard_36"
+      ? "Standard 36-panel layout"
+      : structureTemplate.templateType === "hybrid"
+        ? `${structureTemplate.standardStructureCount} x 36-panel standard + ${structureTemplate.modularBayCount} modular bay${structureTemplate.modularBayCount === 1 ? "" : "s"}`
+        : `${structureTemplate.modularBayCount} modular bay${structureTemplate.modularBayCount === 1 ? "" : "s"} from the 6-panel expansion system`,
     `${layout.width}m x ${layout.length}m layout`,
     `${steelFinish} corrosion-resistant steel`,
     "Structure-only starting budget",
@@ -355,7 +528,12 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
     summary: {
       title,
       estimateRequest: estimateRequestParts.join(" · "),
-      layoutNote: `Priced in ${layout.bayCount} bay${layout.bayCount === 1 ? "" : "s"} of 6 panels each.`,
+      layoutNote:
+        structureTemplate.templateType === "standard_36"
+          ? "Priced on the standard 36-panel ground mount structure."
+          : structureTemplate.templateType === "hybrid"
+            ? `Priced with ${structureTemplate.standardStructureCount} standard 36-panel structure${structureTemplate.standardStructureCount === 1 ? "" : "s"} plus ${structureTemplate.modularBayCount} modular bay${structureTemplate.modularBayCount === 1 ? "" : "s"}.`
+            : `Priced in ${structureTemplate.modularBayCount} modular bay${structureTemplate.modularBayCount === 1 ? "" : "s"} from the 6-panel expansion system.`,
     },
     pricing: {
       baseTotal: roundMoney(baseTotal),
@@ -375,6 +553,9 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
       structureUnits,
       bayCount: layout.bayCount,
       pricedPanels: layout.pricedPanelCount,
+      templateType: structureTemplate.templateType,
+      standardStructureCount: structureTemplate.standardStructureCount,
+      modularBayCount: structureTemplate.modularBayCount,
     },
     labels: {
       area:
@@ -388,6 +569,12 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
           : "Not included",
       modules: totalPanels > 0 ? `${totalPanels}` : "Not specified",
       steelFinish,
+      structureType:
+        structureTemplate.templateType === "standard_36"
+          ? "Standard 36-panel structure"
+          : structureTemplate.templateType === "hybrid"
+            ? "36-panel standard plus modular expansion"
+            : "Modular 6-panel expansion layout",
     },
     meta: {
       productType,
