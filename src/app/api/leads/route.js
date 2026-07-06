@@ -20,19 +20,25 @@ function buildBuilderNotes(payload) {
   const lines = [
     "Warehouse Builder submission",
     payload.productType ? `System: ${payload.productType === "LCSS Warehouse" ? "CFLC Warehouse" : payload.productType}` : null,
-    isLcssWarehouse ? `Steel finish: ${payload.steelFinish}` : `Scope: ${payload.scopeLabel}`,
+    "Budget basis: Supply only",
+    payload.intendedUse ? `Intended use: ${payload.intendedUse}` : null,
+    payload.projectStage ? `Project stage: ${payload.projectStage}` : null,
+    payload.targetTimeline ? `Target timeline: ${payload.targetTimeline}` : null,
+    `Installation support requested: ${payload.installationInterest ? "Yes" : "No"}`,
+    isLcssWarehouse ? `Steel finish: ${payload.steelFinish}` : null,
     isLcssWarehouse ? `Gable type: ${payload.gableModeLabel}` : `Enclosure: ${payload.enclosureLabel}`,
     isLcssWarehouse ? null : `Cladding: ${payload.cladding}`,
     `Roof: ${payload.roofTypeLabel}`,
     isLcssWarehouse ? null : `Garage door openings: ${payload.rollerDoorCount}`,
     isLcssWarehouse ? null : payload.garageDoorOpeningTypeLabel ? `Garage opening size: ${payload.garageDoorOpeningTypeLabel}` : null,
     isLcssWarehouse ? null : `Pedestrian door openings: ${payload.pedestrianDoorCount}`,
-    `Delivery required: ${payload.deliveryRequired ? "Yes" : "No"}`,
     payload.province ? `Province: ${payload.province}` : null,
     payload.location ? `Location: ${payload.location}` : null,
+    `Delivery support requested: ${payload.deliveryRequired ? "Yes" : "No"}`,
+    payload.deliveryRequired && payload.deliveryDistance ? `Estimated delivery distance: ${payload.deliveryDistance}km` : null,
     payload.userNotes ? `Client notes: ${payload.userNotes}` : null,
     payload.summaryNote ? `System note: ${payload.summaryNote}` : null,
-    `Indicative budget: ${payload.priceLabel}`,
+    `Supply-only budget guide: ${payload.priceLabel}`,
   ].filter(Boolean)
 
   return lines.join("\n")
@@ -112,6 +118,20 @@ export async function POST(request) {
       )
     }
 
+    if (isBuilderSubmission && !body?.projectStage) {
+      return NextResponse.json(
+        { error: "Project stage is required for warehouse builder submissions." },
+        { status: 400 }
+      )
+    }
+
+    if (isBuilderSubmission && !String(body?.location || "").trim()) {
+      return NextResponse.json(
+        { error: "Project location is required for warehouse builder submissions." },
+        { status: 400 }
+      )
+    }
+
     const insertPayload = isBuilderSubmission
       ? {
           name: body.name,
@@ -125,7 +145,7 @@ export async function POST(request) {
           lead_source: "Warehouse Builder",
           product_type: body.productType || "LSF Warehouse",
           next_action:
-            "Call builder lead, confirm scope and site details, then load configuration into estimate workflow.",
+            "Review builder project, confirm scope and site details, then decide the right next step.",
           follow_up_at: getNextBusinessMorningIso(),
           quote_value: body.estimatedTotal || null,
           created_at: new Date().toISOString(),

@@ -13,7 +13,6 @@ import {
   ShieldCheckIcon,
   Squares2X2Icon,
   TruckIcon,
-  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline"
 import WarehouseBuilderScene from "../../components/warehouse-builder/WarehouseBuilderScene"
 import { calculateEstimateByProductType } from "../../lib/estimates/estimateFactory"
@@ -24,7 +23,6 @@ import {
   WAREHOUSE_GARAGE_OPENING_OPTIONS,
   WAREHOUSE_HEIGHT_OPTIONS,
   WAREHOUSE_LENGTH_OPTIONS,
-  WAREHOUSE_SCOPE_OPTIONS,
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../../lib/estimates/warehouseEstimate"
 import {
@@ -49,14 +47,14 @@ const PROVINCES = [
 const WAREHOUSE_SYSTEM_OPTIONS = [
   {
     value: "LSF Warehouse",
-    label: "LSF Warehouse",
-    description: "Modular warehouse pricing with scope, cladding, enclosure, and opening selections.",
+    label: "Custom Engineered Warehouse",
+    description: "Project-specific lightweight steel route for larger or more tailored warehouse requirements.",
     icon: BuildingOffice2Icon,
   },
   {
     value: "LCSS Warehouse",
-    label: "CFLC Warehouse",
-    description: "A practical cold formed steel warehouse option with a simple design path.",
+    label: "Lip Channel Warehouse Kit",
+    description: "Cold-formed lip channel steel option for practical standard warehouse structures.",
     icon: Squares2X2Icon,
   },
 ]
@@ -68,10 +66,13 @@ const LSF_SYSTEM_DEFAULTS = {
   wallHeight: 3,
   cladding: "IBR",
   scope: "supply_only",
+  installationInterest: false,
   enclosureType: "roof_only",
   rollerDoorCount: 0,
   garageDoorOpeningType: "single",
   pedestrianDoorCount: 0,
+  deliveryRequired: false,
+  deliveryDistance: 0,
 }
 
 const CFLC_SYSTEM_DEFAULTS = {
@@ -83,11 +84,39 @@ const CFLC_SYSTEM_DEFAULTS = {
   gableMode: "sheeted_gable",
   cladding: "IBR",
   scope: "supply_only",
+  installationInterest: false,
   enclosureType: "fully_enclosed",
   rollerDoorCount: 0,
   garageDoorOpeningType: "single",
   pedestrianDoorCount: 0,
+  deliveryRequired: false,
+  deliveryDistance: 0,
 }
+
+const INTENDED_USE_OPTIONS = [
+  "Storage",
+  "Workshop",
+  "Agricultural",
+  "Commercial / retail",
+  "Industrial",
+  "Vehicle / equipment cover",
+  "Other",
+]
+
+const PROJECT_STAGE_OPTIONS = [
+  "Early planning",
+  "Comparing options",
+  "Ready to request a formal quote",
+  "Ready to order soon",
+]
+
+const TARGET_TIMELINE_OPTIONS = [
+  "As soon as possible",
+  "1-3 months",
+  "3-6 months",
+  "6+ months",
+  "Not sure yet",
+]
 
 const WIDTH_DESCRIPTORS = {
   8: "Compact footprint",
@@ -266,7 +295,7 @@ function FootprintChoiceCard({ active, onClick, title, subtitle, bars = [] }) {
 }
 
 function getSystemLabel(productType) {
-  return productType === "LCSS Warehouse" ? "CFLC Warehouse" : "LSF Warehouse"
+  return productType === "LCSS Warehouse" ? "Lip Channel Warehouse Kit" : "Custom Engineered Warehouse"
 }
 
 export default function WarehouseBuilderClient() {
@@ -290,7 +319,6 @@ export default function WarehouseBuilderClient() {
   const isLcssWarehouse = config.productType === "LCSS Warehouse"
   const systemLabel = getSystemLabel(config.productType)
   const widthOptions = isLcssWarehouse ? LCSS_WAREHOUSE_WIDTH_OPTIONS : WAREHOUSE_WIDTH_OPTIONS
-  const scopeLabel = WAREHOUSE_SCOPE_OPTIONS.find((option) => option.value === config.scope)?.label || config.scope
   const enclosureLabel =
     WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === config.enclosureType)?.label ||
     config.enclosureType
@@ -351,7 +379,10 @@ export default function WarehouseBuilderClient() {
 
     return {
       ...config,
-      claddingInstalled: config.scope === "supply_install",
+      scope: "supply_only",
+      deliveryRequired: false,
+      deliveryDistance: 0,
+      claddingInstalled: false,
     }
   }, [config, isLcssWarehouse])
 
@@ -400,6 +431,16 @@ export default function WarehouseBuilderClient() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (!config.projectStage) {
+      setSubmitError("Please choose your project stage before sending the project for review.")
+      return
+    }
+
+    if (!config.location.trim()) {
+      setSubmitError("Please add the town, suburb, or site area for this project.")
+      return
+    }
+
     setSubmitting(true)
     setSubmitError("")
 
@@ -413,10 +454,14 @@ export default function WarehouseBuilderClient() {
           productType: config.productType,
           systemLabel,
           userNotes: config.notes,
+          intendedUse: config.intendedUse,
+          projectStage: config.projectStage,
+          targetTimeline: config.targetTimeline,
           province: config.province,
           location: config.location,
-          scope: isLcssWarehouse ? null : config.scope,
-          scopeLabel: isLcssWarehouse ? null : scopeLabel,
+          scope: "supply_only",
+          scopeLabel: "Supply only",
+          installationInterest: config.installationInterest,
           enclosureType: isLcssWarehouse ? null : config.enclosureType,
           enclosureLabel: isLcssWarehouse ? null : enclosureLabel,
           roofType: config.roofType,
@@ -443,7 +488,8 @@ export default function WarehouseBuilderClient() {
             roofType: config.roofType,
             roofPitch: config.roofPitch,
             cladding: config.cladding,
-            scope: config.scope,
+            scope: "supply_only",
+            installationInterest: config.installationInterest,
             enclosureType: config.enclosureType,
             rollerDoorCount: config.rollerDoorCount,
             garageDoorOpeningType: config.garageDoorOpeningType,
@@ -454,11 +500,15 @@ export default function WarehouseBuilderClient() {
             deliveryDistance: config.deliveryRequired ? config.deliveryDistance : 0,
             province: config.province,
             location: config.location,
+            intendedUse: config.intendedUse,
+            projectStage: config.projectStage,
+            targetTimeline: config.targetTimeline,
             notes: config.notes,
           },
           summary: {
             systemLabel,
-            scopeLabel: isLcssWarehouse ? null : scopeLabel,
+            scopeLabel: "Supply only",
+            installationInterest: config.installationInterest,
             enclosureLabel: isLcssWarehouse ? null : enclosureLabel,
             roofTypeLabel,
             priceLabel: formatCurrency(budgetValue),
@@ -499,20 +549,15 @@ export default function WarehouseBuilderClient() {
         { label: "Height", value: `${config.wallHeight}m wall height` },
         { label: "Steel finish", value: steelFinishLabel },
         { label: "Gable type", value: gableModeLabel },
-        {
-          label: "Delivery",
-          value: config.deliveryRequired
-            ? `${config.province}${config.location ? `, ${config.location}` : ""}`
-            : "Collection / no delivery",
-        },
+        { label: "Project stage", value: config.projectStage || "Not selected" },
       ]
     : [
         { label: "System", value: systemLabel },
         { label: "Warehouse", value: `${config.width}m x ${config.length}m` },
         { label: "Height", value: `${config.wallHeight}m eave` },
         { label: "Cladding", value: config.cladding },
-        { label: "Scope", value: scopeLabel },
         { label: "Enclosure", value: enclosureLabel },
+        { label: "Project stage", value: config.projectStage || "Not selected" },
       ]
 
   const budgetItems = isLcssWarehouse
@@ -524,7 +569,7 @@ export default function WarehouseBuilderClient() {
       ]
     : [
         { label: "Size", value: `${config.width}m x ${config.length}m x ${config.wallHeight}m` },
-        { label: "Scope", value: scopeLabel },
+        { label: "Budget basis", value: "Supply only" },
         { label: "Enclosure", value: enclosureLabel },
         {
           label: "Access",
@@ -537,11 +582,12 @@ export default function WarehouseBuilderClient() {
         { label: "System", value: systemLabel },
         { label: "Steel finish", value: steelFinishLabel },
         { label: "Gable type", value: gableModeLabel },
+        { label: "Use", value: config.intendedUse || "Not supplied" },
+        { label: "Stage", value: config.projectStage },
+        { label: "Timeline", value: config.targetTimeline },
         {
-          label: "Delivery",
-          value: config.deliveryRequired
-            ? `${config.province}${config.location ? `, ${config.location}` : ""}`
-            : "Collection / no delivery",
+          label: "Project location",
+          value: `${config.province}${config.location ? `, ${config.location}` : ""}`,
         },
         {
           label: "Status",
@@ -549,18 +595,19 @@ export default function WarehouseBuilderClient() {
         },
       ]
     : [
-        { label: "Scope", value: scopeLabel },
+        { label: "Budget basis", value: "Supply only" },
         { label: "Enclosure", value: enclosureLabel },
         { label: "Cladding", value: config.cladding },
         {
           label: "Openings",
           value: `${config.rollerDoorCount} garage${config.rollerDoorCount > 0 ? ` (${garageDoorOpeningTypeLabel})` : ""} / ${config.pedestrianDoorCount} pedestrian`,
         },
+        { label: "Use", value: config.intendedUse || "Not supplied" },
+        { label: "Stage", value: config.projectStage },
+        { label: "Timeline", value: config.targetTimeline },
         {
-          label: "Delivery",
-          value: config.deliveryRequired
-            ? `${config.province}${config.location ? `, ${config.location}` : ""}`
-            : "Collection / no delivery",
+          label: "Project location",
+          value: `${config.province}${config.location ? `, ${config.location}` : ""}`,
         },
         {
           label: "Status",
@@ -572,18 +619,18 @@ export default function WarehouseBuilderClient() {
     ? [
         "The main steel structure sized to your selected warehouse footprint",
         "A practical budget allowance based on your finish and end-wall selection",
-        "Delivery context so the next conversation starts with the right project detail",
+        "Project context so the next conversation starts with the right detail",
       ]
     : [
         "The main steel structure sized to your selected footprint",
         "A practical allowance for roof and wall finishes plus main openings",
-        "Delivery context so the next conversation starts with the right project detail",
+        "Project context so the next conversation starts with the right detail",
       ]
 
   const stillToConfirmItems = [
     "Final engineering, foundations, and site-specific requirements",
-    "Confirmed delivery distance, access, and unloading arrangements",
-    "Any changes to layout, finishes, openings, or additional building requirements",
+    "Delivery and installation support, if requested",
+    "Any changes to layout, finishes, openings, access, or additional building requirements",
   ]
 
   return (
@@ -592,16 +639,17 @@ export default function WarehouseBuilderClient() {
         <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8">
           <div className="max-w-4xl">
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#da1a33]">
-              Build Your Warehouse
+              Warehouse Builder
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              Build your warehouse and get a practical budget guide
+              Plan your warehouse and send a stronger project request
             </h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-              Shape the size, roof and wall finish, openings, and delivery details, then send a quote request with the full project context already attached.
+              Use the Smart Steel warehouse builder to choose a system, size, site context,
+              and supply-only budget guide before our team reviews the project.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              {["Live 3D preview", "Factory-direct pricing guide", "Built for South African projects"].map((item) => (
+              {["Live 3D preview", "Supply-only budget guide", "Built for South African projects"].map((item) => (
                 <span
                   key={item}
                   className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600"
@@ -618,7 +666,7 @@ export default function WarehouseBuilderClient() {
             <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Build details</h2>
+                  <h2 className="text-lg font-semibold text-slate-900">Plan details</h2>
                   <p className="mt-1 text-sm text-slate-500">Move from layout to budget in a few clear steps.</p>
                 </div>
                 <button
@@ -639,7 +687,7 @@ export default function WarehouseBuilderClient() {
                   <StepLabel
                     step="Step 1"
                     title="Choose your building type"
-                    hint="Pick the warehouse system that best matches the kind of project you want to price."
+                    hint="Pick the warehouse system that best matches the kind of project you want to plan."
                   />
                   <FieldLabel
                     title="Warehouse system"
@@ -808,20 +856,20 @@ export default function WarehouseBuilderClient() {
                     <div id="cladding" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
                       <StepLabel
                         step="Step 3"
-                        title="Choose roof, walls, and project scope"
-                        hint="Tell us whether you need supply only or supply with installation, and how enclosed the building should be."
+                        title="Choose roof, walls, and enclosure"
+                        hint="The budget guide stays supply-only. Installation support can be requested for review later."
                       />
-                      <FieldLabel title="What do you need from Smart Steel?" />
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {WAREHOUSE_SCOPE_OPTIONS.map((option) => (
-                          <VisualChoiceCard
-                            key={option.value}
-                            icon={option.value === "supply_install" ? WrenchScrewdriverIcon : CubeIcon}
-                            title={option.label}
-                            active={config.scope === option.value}
-                            onClick={() => updateField("scope", option.value)}
-                          />
-                        ))}
+                      <div className="rounded-[1.4rem] border border-slate-200 bg-white px-4 py-4">
+                        <div className="flex items-start gap-3">
+                          <CubeIcon className="mt-0.5 h-5 w-5 text-slate-500" />
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">Supply-only budget basis</p>
+                            <p className="mt-1 text-sm leading-6 text-slate-500">
+                              This guide prices the supplied structure and selected finishes.
+                              Installation is reviewed separately after submission.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                       <div className="mt-5">
                       <FieldLabel title="Roof and wall finish" />
@@ -928,21 +976,90 @@ export default function WarehouseBuilderClient() {
                   </>
                 )}
 
-                <div id="delivery" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+                <div id="project-context" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
                   <StepLabel
                     step={isLcssWarehouse ? "Step 4" : "Step 5"}
-                    title="Add delivery details"
-                    hint="Location helps us keep the follow-up practical and relevant to your project."
+                    title="Tell us about the project"
+                    hint="These details help us understand how serious and practical the enquiry is before we follow up."
                   />
-                  <FieldLabel title="Delivery and location" />
-                  <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={config.deliveryRequired}
-                      onChange={(event) => updateField("deliveryRequired", event.target.checked)}
-                    />
-                    Delivery required
-                  </label>
+                  <div className="grid gap-3">
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Intended use
+                      </label>
+                      <select
+                        value={config.intendedUse}
+                        onChange={(event) => updateField("intendedUse", event.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="">Select intended use</option>
+                        {INTENDED_USE_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Project stage required
+                      </label>
+                      <select
+                        value={config.projectStage}
+                        onChange={(event) => {
+                          updateField("projectStage", event.target.value)
+                          if (submitError) setSubmitError("")
+                        }}
+                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="">Select project stage</option>
+                        {PROJECT_STAGE_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Target timeline
+                      </label>
+                      <select
+                        value={config.targetTimeline}
+                        onChange={(event) => updateField("targetTimeline", event.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        {TARGET_TIMELINE_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={config.installationInterest}
+                        onChange={(event) => updateField("installationInterest", event.target.checked)}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="block font-semibold text-slate-900">I may need installation support</span>
+                        <span className="mt-1 block leading-6 text-slate-500">
+                          Installation is reviewed separately after submission and is not included in this budget guide.
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div id="delivery" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+                  <StepLabel
+                    step={isLcssWarehouse ? "Step 5" : "Step 6"}
+                    title="Add project location"
+                    hint="Location helps us qualify the project and keep the follow-up practical."
+                  />
+                  <FieldLabel title="Project location" hint="Town, suburb, or site area is required before submission." />
                   <div className="mt-3 grid gap-3">
                     <select
                       value={config.province}
@@ -958,10 +1075,27 @@ export default function WarehouseBuilderClient() {
                     <input
                       type="text"
                       value={config.location}
-                      onChange={(event) => updateField("location", event.target.value)}
-                      placeholder="Town, suburb, or project location"
+                      onChange={(event) => {
+                        updateField("location", event.target.value)
+                        if (submitError) setSubmitError("")
+                      }}
+                      placeholder="Town, suburb, or site area"
                       className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
                     />
+                    <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={config.deliveryRequired}
+                        onChange={(event) => updateField("deliveryRequired", event.target.checked)}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="block font-semibold text-slate-900">I may need delivery support</span>
+                        <span className="mt-1 block leading-6 text-slate-500">
+                          Delivery is reviewed separately after submission and is not included in this budget guide.
+                        </span>
+                      </span>
+                    </label>
                     {config.deliveryRequired ? (
                       <input
                         type="number"
@@ -971,7 +1105,7 @@ export default function WarehouseBuilderClient() {
                         onChange={(event) =>
                           updateField("deliveryDistance", Math.max(0, Number(event.target.value) || 0))
                         }
-                        placeholder="Estimated delivery distance (km)"
+                        placeholder="Estimated delivery distance, if known (km)"
                         className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
                       />
                     ) : null}
@@ -980,9 +1114,9 @@ export default function WarehouseBuilderClient() {
 
                 <div id="notes" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
                   <StepLabel
-                    step={isLcssWarehouse ? "Step 5" : "Step 6"}
+                    step={isLcssWarehouse ? "Step 6" : "Step 7"}
                     title="Add anything we should know"
-                    hint="A few useful notes here can save time when we review your quote request."
+                    hint="A few useful notes here can save time when we review your project."
                   />
                   <FieldLabel title="Project notes" />
                   <textarea
@@ -1015,13 +1149,13 @@ export default function WarehouseBuilderClient() {
 
                 <div className="mt-5 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Quote request summary
+                    Project review summary
                   </p>
                   <p className="mt-2 text-lg font-semibold text-slate-900">
                     {systemLabel} · {config.width}m x {config.length}m x {config.wallHeight}m
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
-                    Indicative budget: {formatCurrency(budgetValue)}
+                    Supply-only budget guide: {formatCurrency(budgetValue)}
                   </p>
                 </div>
 
@@ -1061,7 +1195,7 @@ export default function WarehouseBuilderClient() {
                       disabled={submitting}
                       className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {submitting ? "Sending request..." : "Request my quote"}
+                      {submitting ? "Sending project..." : "Send my project for review"}
                     </button>
                     <p className="text-sm text-slate-500">We&apos;ll use this information to review your project and come back with the right next step.</p>
                   </div>
@@ -1077,18 +1211,18 @@ export default function WarehouseBuilderClient() {
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                   <div className="max-w-2xl">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
-                      Quote Request Received
+                      Project Request Received
                     </p>
                     <h2 className="mt-2 text-2xl font-semibold text-emerald-950">
-                      Your {systemLabel.toLowerCase()} request is now with Smart Steel
+                      Your {systemLabel.toLowerCase()} project is now with Smart Steel
                     </h2>
                     <p className="mt-3 text-sm leading-6 text-emerald-900/80">
-                      We&apos;ve received your design details, indicative budget, and project notes so we can review the enquiry properly.
+                      We&apos;ve received your planning details, supply-only budget guide, and project notes so we can review the enquiry properly.
                     </p>
                   </div>
                   <div className="rounded-[1.5rem] border border-emerald-200 bg-white px-5 py-4 text-left shadow-sm lg:min-w-[260px]">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-600">
-                      Indicative Budget
+                      Supply-only Budget Guide
                     </p>
                     <p className="mt-2 text-3xl font-semibold text-slate-950">
                       {formatCurrency(budgetValue)}
@@ -1126,12 +1260,12 @@ export default function WarehouseBuilderClient() {
                     <p className="text-sm font-semibold text-slate-900">What happens next</p>
                     <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
                       <p>1. Smart Steel reviews your size, layout, and location details.</p>
-                      <p>2. We check the scope, access, and any notes you&apos;ve added.</p>
-                      <p>3. We follow up with the right next step, whether that&apos;s refining the layout or preparing a formal quote.</p>
+                      <p>2. We check the project stage, location, access, and any notes you&apos;ve added.</p>
+                      <p>3. We follow up with the right next step, whether that&apos;s refining the plan or preparing a formal quote.</p>
                     </div>
                     <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                      This budget is still indicative only and will be refined once the team confirms
-                      project scope, access, delivery, and final building requirements.
+                      This supply-only budget is still indicative and will be refined once the team confirms
+                      project scope, access, and final building requirements. Delivery and installation are reviewed separately.
                     </div>
                     {submissionResult?.submissionWarning ? (
                       <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -1178,12 +1312,12 @@ export default function WarehouseBuilderClient() {
                 <p className="mt-1 text-sm text-slate-500">
                   {isLcssWarehouse
                     ? `${steelFinishLabel} finish · ${gableModeLabel}`
-                    : `${scopeLabel} · ${enclosureLabel}`}
+                    : `Supply only · ${enclosureLabel}`}
                 </p>
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 <div className="rounded-[1.3rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-                  Built to help you compare options before a formal quote.
+                  Built to help you compare options before a project review.
                 </div>
                 <div className="rounded-[1.3rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
                   Stronger inputs now mean a better follow-up from the Smart Steel team.
@@ -1195,7 +1329,7 @@ export default function WarehouseBuilderClient() {
               <div className="flex flex-col gap-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
-                    Estimated project budget
+                    Supply-only budget guide
                   </p>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
                     {isLcssWarehouse
@@ -1206,7 +1340,7 @@ export default function WarehouseBuilderClient() {
                     {formatCurrency(budgetValue)}
                   </p>
                   <p className="mt-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-6 text-slate-200">
-                    This is designed to help you plan with confidence before the final quotation stage.
+                    Delivery and installation are reviewed separately after submission.
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -1215,7 +1349,7 @@ export default function WarehouseBuilderClient() {
                     onClick={() => setShowLeadForm((open) => !open)}
                     className="inline-flex items-center justify-center rounded-2xl bg-[#da1a33] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
                   >
-                    {showLeadForm ? "Hide quote form" : "Request my quote"}
+                    {showLeadForm ? "Hide review form" : "Send my project for review"}
                   </button>
                   <button
                     type="button"
@@ -1239,8 +1373,9 @@ export default function WarehouseBuilderClient() {
               </div>
 
               <p className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-6 text-slate-200">
-                Indicative budget only. Final pricing still depends on confirmed scope, delivery,
-                site access, and final design review by the Smart Steel team.
+                Supply-only budget guide only. Final pricing still depends on confirmed scope,
+                site access, and final design review by the Smart Steel team. Delivery and
+                installation are reviewed separately when requested.
               </p>
               <div className="mt-5 grid gap-4">
                 <div>
@@ -1272,11 +1407,11 @@ export default function WarehouseBuilderClient() {
 
             <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold text-slate-900">What happens next</h2>
-              <p className="mt-1 text-sm text-slate-500">A quick summary of what happens after you request your quote.</p>
+              <p className="mt-1 text-sm text-slate-500">A quick summary of what happens after you send the project for review.</p>
               <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
                 <p>1. You send your layout, budget guide, and project details to Smart Steel.</p>
-                <p>2. We review the size, layout, access, and delivery context you&apos;ve shared.</p>
-                <p>3. We follow up with the right next step, whether that&apos;s refining the layout or preparing a formal quote.</p>
+                <p>2. We review the size, layout, project stage, location, and support preferences you&apos;ve shared.</p>
+                <p>3. We follow up with the right next step, whether that&apos;s refining the plan or preparing a formal quote.</p>
               </div>
             </section>
           </aside>

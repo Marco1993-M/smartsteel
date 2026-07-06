@@ -2,16 +2,16 @@ import { Suspense } from "react"
 import WarehouseBuilderClient from "./WarehouseBuilderClient"
 
 export const metadata = {
-  title: "Warehouse Builder South Africa | Design A Steel Warehouse",
+  title: "Warehouse Builder South Africa | Plan A Steel Warehouse",
   description:
-    "Design a steel warehouse online with the Smart Steel warehouse builder. See an indicative budget and send a structured South African warehouse enquiry.",
+    "Plan a steel warehouse online with the Smart Steel warehouse builder. See a supply-only budget guide and send a structured South African project request.",
   alternates: {
     canonical: "/warehouse-builder",
   },
   openGraph: {
-    title: "Warehouse Builder South Africa | Design A Steel Warehouse",
+    title: "Warehouse Builder South Africa | Plan A Steel Warehouse",
     description:
-      "Shape a Smart Steel warehouse online, see an indicative budget, and send a structured enquiry.",
+      "Plan a Smart Steel warehouse online, see a supply-only budget guide, and send a structured project request.",
     url: "https://www.smartsteel.co.za/warehouse-builder",
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -21,7 +21,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Warehouse Builder South Africa | Smart Steel",
     description:
-      "Design a steel warehouse online and send a stronger enquiry with the Smart Steel builder.",
+      "Plan a steel warehouse online and send a stronger project request with the Smart Steel builder.",
   },
 }
 
