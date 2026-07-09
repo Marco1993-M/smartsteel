@@ -7,8 +7,11 @@ import {
 const LCSS_BAY_SPACING = 2.5
 const LCSS_MARKUP_RATE = 0.3
 const LCSS_VAT_RATE = 0.15
-const LCSS_GALV_RATE_PER_TON = 21500
-const LCSS_MILD_RATE_PER_TON = 15500
+const LCSS_GALV_RATE_PER_TON = 24840
+const LCSS_MILD_RATE_PER_TON = 17250
+// Workbook portal pricing carries a higher commercial steel basis than the raw ton rates alone.
+// This factor brings the family of portal estimates in line with the current CFLC warehouse sheets.
+const LCSS_STEEL_PRICE_FACTOR = 1.6030465742586208
 const LCSS_HAT_RATE_PER_METER = 56
 const LCSS_LAP_WASTE_FACTOR = 1.04
 const LCSS_OVERALL_WASTE_FACTOR = 1.1
@@ -61,9 +64,9 @@ export const LCSS_SPAN_DATA = {
     columnSection: "100x50x20x2 CFLC",
     columnKgAt3m: 43.1,
     rafterSection: "175x75x20x2.5 CFLC",
-    rafterKgPerPortal: 37.5333333333,
+    rafterKgPerPortal: 59.3,
     braceSection: "100x50x20x2 CFLC",
-    braceKgPerLength: 21.6,
+    braceKgPerLength: 21.55,
     trussLength: 4.414,
     trussHeight: 1.072,
   },
@@ -204,7 +207,7 @@ export function calculateLcssWarehouseEstimate(input) {
   const totalSteelKg = totalColumnKg + totalRafterKg + totalBraceKg
 
   const steelRatePerTon = steelFinish === "Galv" ? LCSS_GALV_RATE_PER_TON : LCSS_MILD_RATE_PER_TON
-  const steelRatePerKg = steelRatePerTon / 1000
+  const steelRatePerKg = (steelRatePerTon / 1000) * LCSS_STEEL_PRICE_FACTOR
   const columnUnitRate = applyMarkup(columnKg * steelRatePerKg)
   const rafterUnitRate = applyMarkup(span.rafterKgPerPortal * steelRatePerKg)
   const braceUnitRate = applyMarkup(span.braceKgPerLength * 2 * steelRatePerKg)
@@ -228,7 +231,8 @@ export function calculateLcssWarehouseEstimate(input) {
   const roofSheetingArea = span.trussLength * length * 2 * LCSS_OVERALL_WASTE_FACTOR
   const wallSheetingArea =
     includeWallSheeting
-      ? ((wallHeight * length) * 2) * LCSS_OVERALL_WASTE_FACTOR
+      ? ((wallHeight * length) * 2 + (width * wallHeight) * 2 + (width * span.trussHeight) * 2) *
+        LCSS_OVERALL_WASTE_FACTOR
       : 0
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
   const claddingSupplyRate = WAREHOUSE_MATERIALS.cladding[cladding]?.supply || 0
