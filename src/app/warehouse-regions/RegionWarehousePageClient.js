@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import WarehouseCatalogue from "@/components/warehouse-catalogue";
+import WarehouseCatalogue from "../../components/warehouse-catalogue.js";
 import {
   REGION_WAREHOUSE_LENGTHS,
   REGION_WAREHOUSE_WIDTHS,
