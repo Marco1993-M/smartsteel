@@ -81,7 +81,7 @@ const CFLC_SYSTEM_DEFAULTS = {
   length: 20,
   wallHeight: 3,
   steelFinish: "Galv",
-  gableMode: "sheeted_gable",
+  gableMode: "fully_enclosed",
   cladding: "IBR",
   scope: "supply_only",
   installationInterest: false,
@@ -196,22 +196,6 @@ function RoofEnclosureThumbnail({ variant = "roof_only", active = false }) {
   )
 }
 
-function GableThumbnail({ variant = "sheeted_gable", active = false }) {
-  return (
-    <div className={`relative h-20 rounded-[1.2rem] border ${active ? "border-white/10 bg-white/10" : "border-slate-200 bg-slate-50"}`}>
-      <div className={`absolute left-1/2 top-[25px] h-[7px] w-[62px] -translate-x-1/2 -rotate-[18deg] rounded-full ${active ? "bg-white/90" : "bg-[#94a3b8]"}`} />
-      <div className={`absolute left-1/2 top-[25px] h-[7px] w-[62px] -translate-x-1/2 rotate-[18deg] rounded-full ${active ? "bg-white/90" : "bg-[#94a3b8]"}`} />
-      <div className={`absolute left-[calc(50%-24px)] top-[31px] h-9 w-[5px] rounded-full ${active ? "bg-white/80" : "bg-slate-400"}`} />
-      <div className={`absolute left-[calc(50%+19px)] top-[31px] h-9 w-[5px] rounded-full ${active ? "bg-white/80" : "bg-slate-400"}`} />
-      {variant === "sheeted_gable" ? (
-        <div className={`absolute left-1/2 top-[37px] h-5 w-[38px] -translate-x-1/2 rounded-md ${active ? "bg-white/55" : "bg-slate-200"}`} />
-      ) : (
-        <div className={`absolute left-1/2 top-[39px] h-[2px] w-[38px] -translate-x-1/2 ${active ? "bg-white/55" : "bg-slate-300"}`} />
-      )}
-    </div>
-  )
-}
-
 function VisualChoiceCard({ icon: Icon, title, subtitle, active, onClick, thumbnail }) {
   return (
     <button
@@ -279,7 +263,7 @@ function FootprintChoiceCard({ active, onClick, title, subtitle, bars = [] }) {
           ) : null}
         </div>
         {bars.length > 0 ? (
-          <div className="flex h-7 items-end gap-1">
+          <div className="hidden h-7 shrink-0 items-end gap-1 sm:flex">
             {bars.map((height, index) => (
               <span
                 key={`${title}-${index}`}
@@ -374,6 +358,7 @@ export default function WarehouseBuilderClient() {
         wallHeight: config.wallHeight,
         steelFinish: config.steelFinish,
         gableMode: config.gableMode,
+        cladding: "IBR",
       }
     }
 
@@ -402,7 +387,7 @@ export default function WarehouseBuilderClient() {
         wallHeight: config.wallHeight,
         roofPitch: 15,
         cladding: "IBR",
-        enclosureType: config.gableMode === "open_gable" ? "open_sides" : "fully_enclosed",
+        enclosureType: config.gableMode === "roof_only" ? "roof_only" : "fully_enclosed",
         rollerDoorCount: 0,
         garageDoorOpeningType: "single",
         pedestrianDoorCount: 0,
@@ -549,7 +534,7 @@ export default function WarehouseBuilderClient() {
         { label: "Warehouse", value: `${config.width}m x ${config.length}m` },
         { label: "Height", value: `${config.wallHeight}m wall height` },
         { label: "Steel finish", value: steelFinishLabel },
-        { label: "Gable type", value: gableModeLabel },
+        { label: "Sheeting type", value: gableModeLabel },
         { label: "Project stage", value: config.projectStage || "Not selected" },
       ]
     : [
@@ -566,7 +551,7 @@ export default function WarehouseBuilderClient() {
         { label: "Size", value: `${config.width}m x ${config.length}m x ${config.wallHeight}m` },
         { label: "System", value: systemLabel },
         { label: "Steel finish", value: steelFinishLabel },
-        { label: "Gable type", value: gableModeLabel },
+        { label: "Sheeting type", value: gableModeLabel },
       ]
     : [
         { label: "Size", value: `${config.width}m x ${config.length}m x ${config.wallHeight}m` },
@@ -582,7 +567,7 @@ export default function WarehouseBuilderClient() {
     ? [
         { label: "System", value: systemLabel },
         { label: "Steel finish", value: steelFinishLabel },
-        { label: "Gable type", value: gableModeLabel },
+        { label: "Sheeting type", value: gableModeLabel },
         { label: "Use", value: config.intendedUse || "Not supplied" },
         { label: "Stage", value: config.projectStage },
         { label: "Timeline", value: config.targetTimeline },
@@ -810,7 +795,7 @@ export default function WarehouseBuilderClient() {
                       title="Choose the main build details"
                       hint="Tell us how you want the warehouse finished so the budget guide reflects the right direction."
                     />
-                    <FieldLabel title="Finish and end-wall style" />
+                    <FieldLabel title="Finish and sheeting style" />
                     <div className="grid gap-3">
                       <div>
                         <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -830,17 +815,17 @@ export default function WarehouseBuilderClient() {
                       </div>
                       <div>
                         <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                          Gable type
+                          Sheeting type
                         </label>
                         <div className="mt-1 grid gap-3 sm:grid-cols-2">
                           {LCSS_WAREHOUSE_GABLE_OPTIONS.map((option) => (
                             <VisualChoiceCard
                               key={option.value}
-                              icon={option.value === "open_gable" ? ArrowsRightLeftIcon : HomeModernIcon}
+                              icon={option.value === "roof_only" ? HomeModernIcon : ShieldCheckIcon}
                               title={option.label}
                               active={config.gableMode === option.value}
                               thumbnail={
-                                <GableThumbnail
+                                <RoofEnclosureThumbnail
                                   variant={option.value}
                                   active={config.gableMode === option.value}
                                 />

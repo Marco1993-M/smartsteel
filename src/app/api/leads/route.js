@@ -26,7 +26,7 @@ function buildBuilderNotes(payload) {
     payload.targetTimeline ? `Target timeline: ${payload.targetTimeline}` : null,
     `Installation support requested: ${payload.installationInterest ? "Yes" : "No"}`,
     isLcssWarehouse ? `Steel finish: ${payload.steelFinish}` : null,
-    isLcssWarehouse ? `Gable type: ${payload.gableModeLabel}` : `Enclosure: ${payload.enclosureLabel}`,
+    isLcssWarehouse ? `Sheeting type: ${payload.gableModeLabel}` : `Enclosure: ${payload.enclosureLabel}`,
     isLcssWarehouse ? null : `Cladding: ${payload.cladding}`,
     `Roof: ${payload.roofTypeLabel}`,
     isLcssWarehouse ? null : `Garage door openings: ${payload.rollerDoorCount}`,
