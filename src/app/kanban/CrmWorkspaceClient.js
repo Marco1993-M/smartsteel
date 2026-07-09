@@ -4,17 +4,17 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Link2 } from "lucide-react"
-import KanbanBoard from "../../components/KanbanBoard"
-import LeadEditorDrawer from "../../components/LeadEditorDrawer"
-import PricesDrawer from "../../components/PricesDrawer"
-import EstimateDrawer from "../../components/EstimateDrawer"
-import InvoiceDrawer from "../../components/InvoiceDrawer"
-import UpcomingTasks from "../../components/UpcomingTasks"
+import KanbanBoard from "../../components/KanbanBoard.js"
+import LeadEditorDrawer from "../../components/LeadEditorDrawer.js"
+import PricesDrawer from "../../components/PricesDrawer.js"
+import EstimateDrawer from "../../components/EstimateDrawer.js"
+import InvoiceDrawer from "../../components/InvoiceDrawer.js"
+import UpcomingTasks from "../../components/UpcomingTasks.js"
 import {
   formatCrmStatusLabel,
   getLeadSop,
   getLeadStageValidationMessage,
-} from "../../lib/crmSop"
+} from "../../lib/crmSop.js"
 import {
   getOpportunitySummary,
   LEAD_SOURCE_OPTIONS,
@@ -22,8 +22,8 @@ import {
   OPPORTUNITY_QUICK_VIEWS,
   PRODUCT_TYPE_OPTIONS,
   TEAM_MEMBERS,
-} from "../../lib/crmReferenceData"
-import { supabase } from "../../lib/supabase"
+} from "../../lib/crmReferenceData.js"
+import { supabase } from "../../lib/supabase.js"
 
 const STATUS_OPTIONS = ["all", "new", "contacted", "quoted", "won", "lost"]
 const PRODUCT_LINE_FILTER_OPTIONS = ["all", "atlas", "lsf", "general"]
