@@ -14,7 +14,7 @@ import {
   formatCrmStatusLabel,
   getLeadSop,
   getLeadStageValidationMessage,
-} from "../../lib/crmSop.js"
+} from "./crmSop.js"
 import {
   getOpportunitySummary,
   LEAD_SOURCE_OPTIONS,
@@ -22,8 +22,8 @@ import {
   OPPORTUNITY_QUICK_VIEWS,
   PRODUCT_TYPE_OPTIONS,
   TEAM_MEMBERS,
-} from "../../lib/crmReferenceData.js"
-import { supabase } from "../../lib/supabase.js"
+} from "./crmReferenceData.js"
+import { supabase } from "./supabase.js"
 
 const STATUS_OPTIONS = ["all", "new", "contacted", "quoted", "won", "lost"]
 const PRODUCT_LINE_FILTER_OPTIONS = ["all", "atlas", "lsf", "general"]
