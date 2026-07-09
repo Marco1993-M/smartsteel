@@ -1,5 +1,5 @@
-import CrmWorkspace from "../../../components/crm/CrmWorkspace.js"
+import CrmWorkspacePage from "../../kanban/CrmWorkspacePage.js"
 
 export default function SmartSteelOsCrmPage() {
-  return <CrmWorkspace mode="os" />
+  return <CrmWorkspacePage mode="os" />
 }
