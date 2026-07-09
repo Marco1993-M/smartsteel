@@ -9,9 +9,6 @@ const LCSS_MARKUP_RATE = 0.3
 const LCSS_VAT_RATE = 0.15
 const LCSS_GALV_RATE_PER_TON = 24840
 const LCSS_MILD_RATE_PER_TON = 17250
-// Workbook portal pricing carries a higher commercial steel basis than the raw ton rates alone.
-// This factor brings the family of portal estimates in line with the current CFLC warehouse sheets.
-const LCSS_STEEL_PRICE_FACTOR = 1.6030465742586208
 const LCSS_HAT_RATE_PER_METER = 56
 const LCSS_LAP_WASTE_FACTOR = 1.04
 const LCSS_OVERALL_WASTE_FACTOR = 1.1
@@ -46,19 +43,31 @@ export const LCSS_SPAN_DATA = {
     // and scale the 6m rafter rule proportionally to keep the commercial model consistent.
     rafterKgPerPortal: 21.1,
     braceSection: "100x50x20x2 CFLC",
-    braceKgPerLength: 21.6,
+    xBraceKgPerSet: 21.6 * 2,
+    aBraceSection: null,
+    aBraceKgPerPortal: 0,
     trussLength: 1.553,
     trussHeight: 0.402,
+    roofPurlinRows: 4,
+    longWallHatRowsAt3m: 1,
+    gableHatRowsAt3m: 0,
+    steelPriceFactor: 2.346719236482527,
   },
   6: {
     columnSection: "100x50x20x2 CFLC",
     columnKgAt3m: 43.1,
     rafterSection: "175x75x20x2.5 CFLC",
-    rafterKgPerPortal: 42.2,
+    rafterKgPerPortal: 45.2,
     braceSection: "100x50x20x2 CFLC",
-    braceKgPerLength: 21.6,
+    xBraceKgPerSet: 0,
+    aBraceSection: null,
+    aBraceKgPerPortal: 0,
     trussLength: 3.106,
     trussHeight: 0.804,
+    roofPurlinRows: 8,
+    longWallHatRowsAt3m: 1,
+    gableHatRowsAt3m: 0,
+    steelPriceFactor: 2.346719236482527,
   },
   8: {
     columnSection: "100x50x20x2 CFLC",
@@ -66,29 +75,47 @@ export const LCSS_SPAN_DATA = {
     rafterSection: "175x75x20x2.5 CFLC",
     rafterKgPerPortal: 59.3,
     braceSection: "100x50x20x2 CFLC",
-    braceKgPerLength: 21.55,
+    xBraceKgPerSet: 21.55 * 2,
+    aBraceSection: null,
+    aBraceKgPerPortal: 0,
     trussLength: 4.414,
     trussHeight: 1.072,
+    roofPurlinRows: 10,
+    longWallHatRowsAt3m: 4,
+    gableHatRowsAt3m: 0,
+    steelPriceFactor: 1.6030465742586208,
   },
   10: {
     columnSection: "100x50x20x2 CFLC",
     columnKgAt3m: 43.1,
     rafterSection: "175x75x20x2.5 CFLC",
-    rafterKgPerPortal: 70.4,
+    rafterKgPerPortal: 73.4,
     braceSection: "100x50x20x2 CFLC",
-    braceKgPerLength: 21.6,
+    xBraceKgPerSet: 21.55 * 2,
+    aBraceSection: "175x75x20x2.5 CFLC",
+    aBraceKgPerPortal: 10.935,
     trussLength: 5.176,
     trussHeight: 1.34,
+    roofPurlinRows: 12,
+    longWallHatRowsAt3m: 4,
+    gableHatRowsAt3m: 6,
+    steelPriceFactor: 1.538404684156578,
   },
   12: {
     columnSection: "100x50x20x2 CFLC",
     columnKgAt3m: 43.1,
     rafterSection: "200x75x20x2.5 CFLC",
-    rafterKgPerPortal: 36.24,
+    rafterKgPerPortal: 93.6,
     braceSection: "100x50x20x2 CFLC",
-    braceKgPerLength: 21.6,
+    xBraceKgPerSet: 0,
+    aBraceSection: "200x75x20x2.5 CFLC",
+    aBraceKgPerPortal: 10.935,
     trussLength: 6.212,
     trussHeight: 1.608,
+    roofPurlinRows: 14,
+    longWallHatRowsAt3m: 1,
+    gableHatRowsAt3m: 0,
+    steelPriceFactor: 1.582284997582463,
   },
 }
 
@@ -113,6 +140,12 @@ function buildLineItem({ code, label, quantity, unit, unitRate, total }) {
 
 function getLcssSpanData(width) {
   return LCSS_SPAN_DATA[Number(width)] || null
+}
+
+function scaleWorkbookHatRows(baseRows, wallHeight) {
+  if (baseRows <= 0) return 0
+  if (baseRows === 1) return 1
+  return Math.max(1, Math.round((baseRows * wallHeight) / 3))
 }
 
 function getLcssLengthRule(width, length) {
@@ -203,23 +236,26 @@ export function calculateLcssWarehouseEstimate(input) {
   const columnKg = span.columnKgAt3m * (wallHeight / 3)
   const totalColumnKg = portals * columnKg
   const totalRafterKg = portals * span.rafterKgPerPortal
-  const totalBraceKg = span.braceKgPerLength * 2 * (Math.floor(bays / 4) + 1)
-  const totalSteelKg = totalColumnKg + totalRafterKg + totalBraceKg
+  const xBraceSets = span.xBraceKgPerSet > 0 ? Math.floor(bays / 4) + 1 : 0
+  const totalXBraceKg = xBraceSets * span.xBraceKgPerSet
+  const totalABraceKg = portals * (span.aBraceKgPerPortal || 0)
+  const totalSteelKg = totalColumnKg + totalRafterKg + totalXBraceKg + totalABraceKg
 
   const steelRatePerTon = steelFinish === "Galv" ? LCSS_GALV_RATE_PER_TON : LCSS_MILD_RATE_PER_TON
-  const steelRatePerKg = (steelRatePerTon / 1000) * LCSS_STEEL_PRICE_FACTOR
-  const columnUnitRate = applyMarkup(columnKg * steelRatePerKg)
-  const rafterUnitRate = applyMarkup(span.rafterKgPerPortal * steelRatePerKg)
-  const braceUnitRate = applyMarkup(span.braceKgPerLength * 2 * steelRatePerKg)
-  const totalColumnCost = applyMarkup(totalColumnKg * steelRatePerKg)
-  const totalRafterCost = applyMarkup(totalRafterKg * steelRatePerKg)
-  const totalBraceCost = applyMarkup(totalBraceKg * steelRatePerKg)
-  const steelCost = totalSteelKg * (steelRatePerTon / 1000)
+  const steelRatePerKg = (steelRatePerTon / 1000) * span.steelPriceFactor
+  const columnUnitRate = columnKg * steelRatePerKg
+  const rafterUnitRate = span.rafterKgPerPortal * steelRatePerKg
+  const xBraceUnitRate = span.xBraceKgPerSet * steelRatePerKg
+  const aBraceUnitRate = (span.aBraceKgPerPortal || 0) * steelRatePerKg
+  const totalColumnCost = totalColumnKg * steelRatePerKg
+  const totalRafterCost = totalRafterKg * steelRatePerKg
+  const totalXBraceCost = totalXBraceKg * steelRatePerKg
+  const totalABraceCost = totalABraceKg * steelRatePerKg
 
-  const roofPurlins = Math.ceil(span.trussLength / 1) * 2
+  const roofPurlins = span.roofPurlinRows
   const includeWallSheeting = gableMode === "fully_enclosed"
-  const longWallHats = includeWallSheeting ? Math.ceil(wallHeight / 1) + 1 : 0
-  const gableHats = 0
+  const longWallHats = scaleWorkbookHatRows(span.longWallHatRowsAt3m || 0, wallHeight)
+  const gableHats = scaleWorkbookHatRows(span.gableHatRowsAt3m || 0, wallHeight)
 
   const totalHatLengthMeters =
     (
@@ -237,6 +273,7 @@ export function calculateLcssWarehouseEstimate(input) {
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
   const claddingSupplyRate = WAREHOUSE_MATERIALS.cladding[cladding]?.supply || 0
   const claddingCost = cladding === "None" ? 0 : totalSheetingArea * claddingSupplyRate
+  const steelCost = totalColumnCost + totalRafterCost + totalXBraceCost + totalABraceCost
   const totalSteelCost = steelCost * quantity
   const totalHatCost = hatCost * quantity
   const totalCladdingCost = claddingCost * quantity
@@ -273,23 +310,44 @@ export function calculateLcssWarehouseEstimate(input) {
       unitRate: rafterUnitRate,
       total: totalRafterCost * quantity,
     }),
-    buildLineItem({
-      code: "lcss_bracing",
-      label: `X-bracing (${span.braceSection})`,
-      quantity: (Math.floor(bays / 4) + 1) * quantity,
-      unit: "brace sets",
-      unitRate: braceUnitRate,
-      total: totalBraceCost * quantity,
-    }),
-    buildLineItem({
-        code: "lcss_hats",
-        label: "Purlins, hats and wall hats",
-        quantity: roundMoney(totalHatLengthMeters * quantity),
-        unit: "m",
-        unitRate: applyMarkup(LCSS_HAT_RATE_PER_METER),
-        total: applyMarkup(totalHatCost),
-      }),
   ]
+
+  if (xBraceSets > 0) {
+    lineItems.push(
+      buildLineItem({
+        code: "lcss_bracing",
+        label: `X-bracing (${span.braceSection})`,
+        quantity: xBraceSets * quantity,
+        unit: "brace sets",
+        unitRate: xBraceUnitRate,
+        total: totalXBraceCost * quantity,
+      })
+    )
+  }
+
+  if (span.aBraceKgPerPortal > 0) {
+    lineItems.push(
+      buildLineItem({
+        code: "lcss_a_bracing",
+        label: `A-bracing (${span.aBraceSection})`,
+        quantity: portals * quantity,
+        unit: "portal braces",
+        unitRate: aBraceUnitRate,
+        total: totalABraceCost * quantity,
+      })
+    )
+  }
+
+  lineItems.push(
+    buildLineItem({
+      code: "lcss_hats",
+      label: "Purlins, hats and wall hats",
+      quantity: roundMoney(totalHatLengthMeters * quantity),
+      unit: "m",
+      unitRate: LCSS_HAT_RATE_PER_METER,
+      total: totalHatCost,
+    })
+  )
 
   if (cladding !== "None") {
     lineItems.push(
@@ -298,8 +356,8 @@ export function calculateLcssWarehouseEstimate(input) {
         label: `${cladding} cladding`,
         quantity: roundMoney(totalSheetingArea * quantity),
         unit: "sqm",
-        unitRate: applyMarkup(claddingSupplyRate),
-        total: applyMarkup(totalCladdingCost),
+        unitRate: claddingSupplyRate,
+        total: totalCladdingCost,
       })
     )
   }
@@ -311,8 +369,8 @@ export function calculateLcssWarehouseEstimate(input) {
         label: "Structure installation",
         quantity: roundMoney(totalFloorArea),
         unit: "sqm",
-        unitRate: applyMarkup(LCSS_STRUCTURE_INSTALL_RATE),
-        total: applyMarkup(structureInstallationCost),
+        unitRate: LCSS_STRUCTURE_INSTALL_RATE,
+        total: structureInstallationCost,
       })
     )
   }
@@ -324,8 +382,8 @@ export function calculateLcssWarehouseEstimate(input) {
         label: "Cladding installation",
         quantity: roundMoney(totalCladdingCoverageArea),
         unit: "sqm",
-        unitRate: applyMarkup(LCSS_CLADDING_INSTALL_RATE),
-        total: applyMarkup(claddingInstallationCost),
+        unitRate: LCSS_CLADDING_INSTALL_RATE,
+        total: claddingInstallationCost,
       })
     )
   }
@@ -357,7 +415,8 @@ export function calculateLcssWarehouseEstimate(input) {
       columnKg,
       totalColumnKg: roundMoney(totalColumnKg * quantity),
       totalRafterKg: roundMoney(totalRafterKg * quantity),
-      totalBraceKg: roundMoney(totalBraceKg * quantity),
+      totalXBraceKg: roundMoney(totalXBraceKg * quantity),
+      totalABraceKg: roundMoney(totalABraceKg * quantity),
       totalSteelKg: roundMoney(totalSteelKg * quantity),
       totalHatLengthMeters: roundMoney(totalHatLengthMeters * quantity),
     },
