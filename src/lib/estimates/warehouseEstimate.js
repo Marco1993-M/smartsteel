@@ -2,6 +2,9 @@ const BAY_LENGTH = 2.5
 const DEFAULT_MARKUP = 1.32
 const DEFAULT_DELIVERY_MINIMUM = 1350
 const DEFAULT_WALL_HEIGHT = 3
+const ROOF_PURLIN_SPACING = 0.9
+const WALL_GIRT_SPACING = 0.9
+const GABLE_GIRT_SPACING = 0.95
 
 export const WAREHOUSE_WIDTH_OPTIONS = [8, 10, 12]
 export const WAREHOUSE_LENGTH_OPTIONS = Array.from({ length: 19 }, (_, index) => 5 + index * 2.5)
@@ -223,15 +226,28 @@ export function calculateWarehouseEstimateWithMaterials(
   const totalPostBrackets = totalColumns
   const totalRidgeBrackets = totalTrusses
   const trussLength = interpolateTrussLength(width, materials)
+  const roofHalfSpan = Math.sqrt((width / 2) ** 2 + (Math.tan((roofPitch * Math.PI) / 180) * (width / 2)) ** 2)
 
-  const totalTopHatLengthMeters = materials.topHats.rows * effectiveLength
+  const roofRise = Math.tan((roofPitch * Math.PI) / 180) * (width / 2)
+  const roofPurlinRowsPerSlope = Math.max(4, Math.ceil(roofHalfSpan / ROOF_PURLIN_SPACING) + 1)
+  const sideWallRowsPerSide =
+    enclosureType === "roof_only" ? 0 : Math.max(3, Math.ceil(wallHeight / WALL_GIRT_SPACING) + 1)
+  const gableWallRowsPerEnd =
+    enclosureType === "fully_enclosed"
+      ? Math.max(3, Math.ceil((wallHeight + roofRise) / GABLE_GIRT_SPACING) + 1)
+      : 0
+
+  const roofPurlinLengthMeters = roofPurlinRowsPerSlope * effectiveLength * 2
+  const sideWallGirtLengthMeters = sideWallRowsPerSide * effectiveLength * 2
+  const gableWallGirtLengthMeters = gableWallRowsPerEnd * width * 2
+  const totalTopHatLengthMeters =
+    roofPurlinLengthMeters + sideWallGirtLengthMeters + gableWallGirtLengthMeters
   const topHatUnitsNeeded = Math.ceil(totalTopHatLengthMeters / materials.topHats.length)
   const totalTopHatLengthSold = topHatUnitsNeeded * materials.topHats.length
 
   const area = width * length
   const totalArea = area * quantity
   const wallArea = 2 * (width + length) * wallHeight
-  const roofHalfSpan = Math.sqrt((width / 2) ** 2 + (Math.tan((roofPitch * Math.PI) / 180) * (width / 2)) ** 2)
   const roofArea = roofHalfSpan * 2 * length
   const sideWallArea = 2 * length * wallHeight
   const gableWallArea = 2 * width * wallHeight
@@ -333,7 +349,7 @@ export function calculateWarehouseEstimateWithMaterials(
     }),
     buildLineItem({
       code: "top_hats",
-      label: "Top hats",
+      label: "Purlins / top hats",
       quantity: topHatUnitsNeeded * quantity,
       unit: "lengths",
       unitRate: materials.topHats.length * materials.topHats.rate,
@@ -463,6 +479,12 @@ export function calculateWarehouseEstimateWithMaterials(
       totalRidgeBrackets: totalRidgeBrackets * quantity,
       topHatUnitsNeeded: topHatUnitsNeeded * quantity,
       totalTopHatLengthSold: roundMoney(totalTopHatLengthSold * quantity),
+      roofPurlinRowsPerSlope,
+      sideWallRowsPerSide,
+      gableWallRowsPerEnd,
+      roofPurlinLengthMeters: roundMoney(roofPurlinLengthMeters * quantity),
+      sideWallGirtLengthMeters: roundMoney(sideWallGirtLengthMeters * quantity),
+      gableWallGirtLengthMeters: roundMoney(gableWallGirtLengthMeters * quantity),
       trussLength: roundMoney(trussLength),
     },
     pricing: {
