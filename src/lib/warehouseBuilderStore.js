@@ -15,7 +15,7 @@ export const DEFAULT_WAREHOUSE_BUILDER_STATE = {
   garageDoorOpeningType: "single",
   pedestrianDoorCount: 0,
   steelFinish: "Galv",
-  gableMode: "sheeted_gable",
+  gableMode: "fully_enclosed",
   deliveryRequired: false,
   deliveryDistance: 0,
   province: "Gauteng",
