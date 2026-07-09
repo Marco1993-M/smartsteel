@@ -216,8 +216,7 @@ export function calculateLcssWarehouseEstimate(input) {
   const roofPurlins = Math.ceil(span.trussLength / 1) * 2
   const includeWallSheeting = gableMode === "fully_enclosed"
   const longWallHats = includeWallSheeting ? Math.ceil(wallHeight / 1) + 1 : 0
-  const gableHats =
-    includeWallSheeting ? Math.ceil((wallHeight + span.trussHeight) / 1) + 1 : 0
+  const gableHats = 0
 
   const totalHatLengthMeters =
     (
@@ -229,8 +228,7 @@ export function calculateLcssWarehouseEstimate(input) {
   const roofSheetingArea = span.trussLength * length * 2 * LCSS_OVERALL_WASTE_FACTOR
   const wallSheetingArea =
     includeWallSheeting
-      ? (((wallHeight * length) * 2 + width * (wallHeight + span.trussHeight) * 2) *
-          LCSS_OVERALL_WASTE_FACTOR)
+      ? ((wallHeight * length) * 2) * LCSS_OVERALL_WASTE_FACTOR
       : 0
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
   const claddingSupplyRate = WAREHOUSE_MATERIALS.cladding[cladding]?.supply || 0
