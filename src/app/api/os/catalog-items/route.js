@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server"
-import { supabaseServer } from "../../../../lib/supabase-server"
+import { requireOsAuth } from "lib/osRouteAuth"
+import { supabaseServer } from "lib/supabase-server"
 import {
   CATALOG_ITEM_KIND_OPTIONS,
   CATALOG_ITEM_STATUS_OPTIONS,
   getFallbackCatalogItems,
   isSchemaMissingError,
-} from "../../../../lib/osPhase1bData"
+} from "lib/osPhase1bData"
 
 export const runtime = "nodejs"
 
@@ -29,6 +30,11 @@ function normalizeCatalogItem(row) {
 }
 
 export async function GET(request) {
+  const authResponse = await requireOsAuth(request)
+  if (authResponse) {
+    return authResponse
+  }
+
   const { searchParams } = new URL(request.url)
   const platformKey = String(searchParams.get("platform") || "").trim().toLowerCase()
   const kind = String(searchParams.get("kind") || "").trim().toLowerCase()
@@ -63,6 +69,11 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const authResponse = await requireOsAuth(request)
+  if (authResponse) {
+    return authResponse
+  }
+
   const body = await request.json()
   const platformKey = String(body?.platformKey || "").trim().toLowerCase()
   const kind = String(body?.kind || "").trim().toLowerCase()
@@ -119,6 +130,11 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
+  const authResponse = await requireOsAuth(request)
+  if (authResponse) {
+    return authResponse
+  }
+
   const body = await request.json()
   const id = String(body?.id || "").trim()
 

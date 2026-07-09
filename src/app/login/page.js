@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { supabase } from "../../lib/supabase"
@@ -11,6 +11,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [redirectTo, setRedirectTo] = useState("/kanban")
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const nextRedirect = new URLSearchParams(window.location.search).get("redirect")
+    if (nextRedirect) {
+      setRedirectTo(nextRedirect)
+    }
+  }, [])
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -28,7 +38,7 @@ export default function LoginPage() {
       return
     }
 
-    router.replace("/kanban")
+    router.replace(redirectTo)
   }
 
   return (
