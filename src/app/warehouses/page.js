@@ -197,8 +197,14 @@ export default function WarehousesHubPage() {
                   Build your warehouse
                 </Link>
                 <Link
-                  href="/products/cflc-diy-warehouse-kits"
+                  href="/tools/estimator"
                   className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
+                >
+                  Use the quick estimator
+                </Link>
+                <Link
+                  href="/products/cflc-diy-warehouse-kits"
+                  className="rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
                 >
                   Browse CFLC kits
                 </Link>

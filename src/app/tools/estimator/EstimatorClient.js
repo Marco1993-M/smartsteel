@@ -8,6 +8,7 @@ import { supabase } from "../../../lib/supabase";
 import {
   formatCurrency,
   WAREHOUSE_CLADDING_OPTIONS,
+  WAREHOUSE_ENCLOSURE_OPTIONS,
   WAREHOUSE_LENGTH_OPTIONS,
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../../../lib/estimates/warehouseEstimate";
@@ -30,6 +31,26 @@ const getNextAllocation = () => {
 };
 
 const BASE_COORDS = { lat: -25.7239, lng: 28.2297 };
+const LSF_ESTIMATOR_DEFAULTS = {
+  width: 10,
+  length: 20,
+  wallHeight: 3,
+  cladding: "IBR",
+  claddingInstalled: false,
+  enclosureType: "roof_only",
+  distance: 0,
+  deliveryRequired: false,
+};
+
+const CFLC_ESTIMATOR_DEFAULTS = {
+  width: 8,
+  length: 20,
+  wallHeight: 3,
+  cladding: "IBR",
+  claddingInstalled: false,
+  steelFinish: "Galv",
+  gableMode: "fully_enclosed",
+};
 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -45,16 +66,27 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
+function getEstimateTotalValue(estimate) {
+  return (
+    estimate?.pricing?.estimatedTotal ??
+    estimate?.pricing?.baseTotal ??
+    estimate?.pricing?.totalInclVat ??
+    0
+  );
+}
+
 export default function EstimatorPage() {
   const [productType, setProductType] = useState('LSF Warehouse');
-  const [width, setWidth] = useState(8);
-  const [length, setLength] = useState(10);
-  const [wallHeight, setWallHeight] = useState(3);
-  const [cladding, setCladding] = useState('None'); // ✅ renamed
-  const [claddingInstalled, setCladdingInstalled] = useState(false); // ✅ renamed
-  const [steelFinish, setSteelFinish] = useState('Galv');
-  const [gableMode, setGableMode] = useState('sheeted_gable');
-  const [distance, setDistance] = useState(0);
+  const [width, setWidth] = useState(LSF_ESTIMATOR_DEFAULTS.width);
+  const [length, setLength] = useState(LSF_ESTIMATOR_DEFAULTS.length);
+  const [wallHeight, setWallHeight] = useState(LSF_ESTIMATOR_DEFAULTS.wallHeight);
+  const [cladding, setCladding] = useState(LSF_ESTIMATOR_DEFAULTS.cladding);
+  const [claddingInstalled, setCladdingInstalled] = useState(LSF_ESTIMATOR_DEFAULTS.claddingInstalled);
+  const [enclosureType, setEnclosureType] = useState(LSF_ESTIMATOR_DEFAULTS.enclosureType);
+  const [steelFinish, setSteelFinish] = useState(CFLC_ESTIMATOR_DEFAULTS.steelFinish);
+  const [gableMode, setGableMode] = useState(CFLC_ESTIMATOR_DEFAULTS.gableMode);
+  const [distance, setDistance] = useState(LSF_ESTIMATOR_DEFAULTS.distance);
+  const [deliveryRequired, setDeliveryRequired] = useState(LSF_ESTIMATOR_DEFAULTS.deliveryRequired);
   const [usingMyLocation, setUsingMyLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
   const [name, setName] = useState('');
@@ -67,13 +99,26 @@ export default function EstimatorPage() {
 
   useEffect(() => {
     if (isLcssWarehouse) {
-      setWidth((current) => (LCSS_WAREHOUSE_WIDTH_OPTIONS.includes(current) ? current : 6));
+      setWidth(CFLC_ESTIMATOR_DEFAULTS.width);
+      setLength(CFLC_ESTIMATOR_DEFAULTS.length);
+      setWallHeight(CFLC_ESTIMATOR_DEFAULTS.wallHeight);
+      setCladding(CFLC_ESTIMATOR_DEFAULTS.cladding);
+      setCladdingInstalled(CFLC_ESTIMATOR_DEFAULTS.claddingInstalled);
+      setSteelFinish(CFLC_ESTIMATOR_DEFAULTS.steelFinish);
+      setGableMode(CFLC_ESTIMATOR_DEFAULTS.gableMode);
       setDistance(0);
+      setDeliveryRequired(false);
       setUsingMyLocation(false);
       setLocationError(null);
     } else {
-      setWidth((current) => (WAREHOUSE_WIDTH_OPTIONS.includes(current) ? current : 8));
-      setWallHeight(3);
+      setWidth(LSF_ESTIMATOR_DEFAULTS.width);
+      setLength(LSF_ESTIMATOR_DEFAULTS.length);
+      setWallHeight(LSF_ESTIMATOR_DEFAULTS.wallHeight);
+      setCladding(LSF_ESTIMATOR_DEFAULTS.cladding);
+      setCladdingInstalled(LSF_ESTIMATOR_DEFAULTS.claddingInstalled);
+      setEnclosureType(LSF_ESTIMATOR_DEFAULTS.enclosureType);
+      setDistance(LSF_ESTIMATOR_DEFAULTS.distance);
+      setDeliveryRequired(LSF_ESTIMATOR_DEFAULTS.deliveryRequired);
     }
     setEstimate(null);
   }, [isLcssWarehouse]);
@@ -92,12 +137,16 @@ export default function EstimatorPage() {
         wallHeight,
         cladding,
         claddingInstalled,
+        enclosureType,
         deliveryDistance: distance,
+        deliveryRequired,
         steelFinish,
         gableMode,
       }),
-    [cladding, claddingInstalled, distance, gableMode, length, productType, steelFinish, wallHeight, width]
+    [cladding, claddingInstalled, deliveryRequired, distance, enclosureType, gableMode, length, productType, steelFinish, wallHeight, width]
   );
+
+  const estimateTotal = getEstimateTotalValue(estimatePreview);
 
   const handleEstimate = () => {
     setEstimate(estimatePreview);
@@ -128,9 +177,7 @@ export default function EstimatorPage() {
       from_name: name,
       from_email: email,
       phone_number: phone,
-      estimate: formatCurrency(
-        isLcssWarehouse ? estimate.pricing.totalInclVat : estimate.pricing.estimatedTotal
-      ),
+      estimate: formatCurrency(getEstimateTotalValue(estimate)),
       product_type: productType,
       width,
       length,
@@ -171,14 +218,14 @@ export default function EstimatorPage() {
           lead_source: "Estimator",
           product_type: productType,
           next_action: "Review estimator enquiry and send formal quote",
-          quote_value: isLcssWarehouse ? estimate.pricing.totalInclVat : estimate.pricing.estimatedTotal,
+          quote_value: getEstimateTotalValue(estimate),
           created_at: new Date().toISOString(),
         },
       ]);
 
       if (error) throw error;
 
-      alert(`Thanks, ${name}! Your estimate of ${formatCurrency(isLcssWarehouse ? estimate.pricing.totalInclVat : estimate.pricing.estimatedTotal)} was submitted.`);
+      alert(`Thanks, ${name}! Your estimate of ${formatCurrency(getEstimateTotalValue(estimate))} was submitted.`);
 
       // reset
       setIsSending(false);
@@ -231,15 +278,15 @@ export default function EstimatorPage() {
             <Image src="/Logo.png" alt="Smart Steel Logo" width={160} height={64} className="h-16 w-auto object-contain" />
           </div>
           <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
-            Smart Steel Warehouse Estimator
+            Smart Steel Quick Warehouse Estimator
           </h1>
           <h4 className="text-1xl font-regular mb-6 text-center text-gray-900">
-            Choose your warehouse system, then price the right structure path
+            Run a fast budget check, then move into the full 3D builder when you want a more visual layout
           </h4>
           <div className="mb-6 rounded-xl border border-red-100 bg-red-50 p-4 text-center">
             <p className="text-sm font-semibold text-gray-900">Want to shape the building visually first?</p>
             <Link href="/warehouse-builder" className="mt-2 inline-block text-sm font-semibold text-[#da1a33] underline underline-offset-4">
-              Try the Smart Steel Warehouse Builder
+              Open the Smart Steel warehouse builder
             </Link>
           </div>
 
@@ -249,12 +296,12 @@ export default function EstimatorPage() {
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <p className="text-sm font-semibold text-gray-900">Warehouse system</p>
                 <p className="mt-1 text-sm text-gray-600">
-                  Start by choosing the system you want priced. The estimator will then switch to the relevant commercial logic.
+                  Choose the structure path you want priced. This quick estimator uses the same core pricing logic as the warehouse builder.
                 </p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   {[
-                    { value: 'LSF Warehouse', label: 'LSF Warehouse' },
-                    { value: 'LCSS Warehouse', label: 'CFLC Warehouse' },
+                    { value: 'LSF Warehouse', label: 'Custom engineered warehouse' },
+                    { value: 'LCSS Warehouse', label: 'Lip channel warehouse' },
                   ].map((option) => (
                     <button
                       key={option.value}
@@ -358,7 +405,7 @@ export default function EstimatorPage() {
                   </label>
 
                   <label className="block font-semibold text-gray-700">
-                    Gable Type
+                    Sheeting type
                     <select
                       className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
                       value={gableMode}
@@ -371,9 +418,35 @@ export default function EstimatorPage() {
                       ))}
                     </select>
                   </label>
+
+                  <label className="block font-semibold text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={claddingInstalled}
+                      onChange={(e) => setCladdingInstalled(e.target.checked)}
+                      className="mr-2"
+                      disabled={cladding === 'None'}
+                    />
+                    Add installation budget guide
+                  </label>
                 </>
               ) : (
                 <>
+                  <label className="block font-semibold text-gray-700">
+                    Enclosure
+                    <select
+                      className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                      value={enclosureType}
+                      onChange={(e) => setEnclosureType(e.target.value)}
+                    >
+                      {WAREHOUSE_ENCLOSURE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
                   <label className="block font-semibold text-gray-700">
                     Cladding
                     <select
@@ -396,40 +469,61 @@ export default function EstimatorPage() {
                       onChange={(e) => setCladdingInstalled(e.target.checked)}
                       className="mr-2"
                     />
-                    Include Installation for Structure
+                    Add installation budget guide
                   </label>
                 </>
               )}
 
               {!isLcssWarehouse ? (
-                <label className="block font-semibold text-gray-700">
-                  Delivery Distance (km)
-                  <div className="flex space-x-2 items-center mt-1">
+                <>
+                  <label className="block font-semibold text-gray-700">
                     <input
-                      type="number"
-                      min={0}
-                      className="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
-                      value={distance}
-                      onChange={handleDistanceChange}
-                      disabled={usingMyLocation}
-                      placeholder="Enter distance or use location"
+                      type="checkbox"
+                      checked={deliveryRequired}
+                      onChange={(e) => {
+                        setDeliveryRequired(e.target.checked);
+                        if (!e.target.checked) {
+                          setDistance(0);
+                          setUsingMyLocation(false);
+                          setLocationError(null);
+                        }
+                      }}
+                      className="mr-2"
                     />
-                    <button
-                      type="button"
-                      onClick={handleUseMyLocation}
-                      className="rounded bg-red-600 text-white px-3 py-2 hover:bg-red-700 transition"
-                    >
-                      Use My Location
-                    </button>
-                  </div>
-                  {locationError && (
-                    <p className="text-sm text-red-600 mt-1">{locationError}</p>
-                  )}
-                </label>
+                    Add delivery budget guide
+                  </label>
+
+                  {deliveryRequired ? (
+                    <label className="block font-semibold text-gray-700">
+                      Delivery Distance (km)
+                      <div className="mt-1 flex items-center space-x-2">
+                        <input
+                          type="number"
+                          min={0}
+                          className="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-black focus:ring focus:ring-black focus:ring-opacity-20"
+                          value={distance}
+                          onChange={handleDistanceChange}
+                          disabled={usingMyLocation}
+                          placeholder="Enter distance or use location"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleUseMyLocation}
+                          className="rounded bg-red-600 px-3 py-2 text-white transition hover:bg-red-700"
+                        >
+                          Use My Location
+                        </button>
+                      </div>
+                      {locationError && (
+                        <p className="mt-1 text-sm text-red-600">{locationError}</p>
+                      )}
+                    </label>
+                  ) : null}
+                </>
               ) : (
                 <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-900">
-                  This CFLC estimate gives you a practical starting point for the structure price.
-                  Delivery can still be added once your full project details are confirmed.
+                  This quick lip channel estimate gives you a practical structure budget guide.
+                  Delivery can still be added once your project details are confirmed.
                 </div>
               )}
 
@@ -445,10 +539,14 @@ export default function EstimatorPage() {
             {estimate !== null && (
               <section className="bg-gray-50 rounded-lg p-5 shadow-inner text-center">
                 <h2 className="text-xl font-semibold mb-1 text-gray-800">
-                  {isLcssWarehouse ? 'Estimated Cost (incl. VAT)' : 'Estimated Cost'}
+                  Indicative budget excl. VAT
                 </h2>
                 <p className="text-4xl font-extrabold text-green-600">
-                  {formatCurrency(isLcssWarehouse ? estimate.pricing.totalInclVat : estimate.pricing.estimatedTotal)}
+                  {formatCurrency(
+                    estimate.pricing.estimatedTotal ??
+                    estimate.pricing.baseTotal ??
+                    estimate.pricing.totalInclVat
+                  )}
                 </p>
 
                 {!isLcssWarehouse && estimate.marketComparison ? (
@@ -467,12 +565,12 @@ export default function EstimatorPage() {
                   </>
                 ) : (
                   <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3 text-left text-sm text-gray-700">
-                    <p className="font-semibold text-gray-900">CFLC warehouse summary</p>
+                    <p className="font-semibold text-gray-900">Lip channel warehouse summary</p>
                     <p className="mt-1">
-                      This estimate gives you a clear starting budget for a CFLC warehouse.
+                      This estimate gives you a clear starting budget for a lip channel warehouse.
                     </p>
                     <p className="mt-2 text-xs text-gray-500">
-                      Final pricing is confirmed once the full design scope, delivery, and project details are reviewed.
+                      Final pricing is still confirmed once the full design scope, delivery, and project details are reviewed.
                     </p>
                   </div>
                 )}
@@ -483,7 +581,7 @@ export default function EstimatorPage() {
             {/* Lead Capture Form Card */}
             {estimate !== null && (
               <form onSubmit={handleSubmit} className="bg-white rounded-lg p-5 shadow-md space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Get Your Estimate</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Send this estimate to Smart Steel</h2>
 
                 <label className="block text-gray-700 font-medium">
                   Name

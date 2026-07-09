@@ -1,16 +1,16 @@
 import EstimatorClient from "./EstimatorClient";
 
 export const metadata = {
-  title: "Steel Warehouse Estimator South Africa | Smart Steel",
+  title: "Quick Steel Warehouse Estimator South Africa | Smart Steel",
   description:
-    "Calculate an indicative steel warehouse cost online in South Africa. Compare LSF and CFLC warehouse pricing with the Smart Steel estimator.",
+    "Run a quick steel warehouse budget check online in South Africa. Compare custom LSF and lip channel warehouse pricing with the Smart Steel estimator.",
   alternates: {
     canonical: "/tools/estimator",
   },
   openGraph: {
-    title: "Steel Warehouse Estimator South Africa | Smart Steel",
+    title: "Quick Steel Warehouse Estimator South Africa | Smart Steel",
     description:
-      "Calculate an indicative LSF or CFLC steel warehouse cost online and choose the right Smart Steel warehouse path.",
+      "Run a quick LSF or lip channel steel warehouse budget check online and choose the right Smart Steel warehouse path.",
     url: "https://www.smartsteel.co.za/tools/estimator",
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -18,9 +18,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Steel Warehouse Estimator South Africa | Smart Steel",
+    title: "Quick Steel Warehouse Estimator South Africa | Smart Steel",
     description:
-      "Calculate an indicative LSF or CFLC steel warehouse cost online with the Smart Steel estimator.",
+      "Run a quick LSF or lip channel steel warehouse budget check online with the Smart Steel estimator.",
   },
 };
 
