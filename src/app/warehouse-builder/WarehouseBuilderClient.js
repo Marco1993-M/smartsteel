@@ -391,7 +391,8 @@ export default function WarehouseBuilderClient() {
     [config.productType, estimateInput]
   )
 
-  const budgetValue = estimate.pricing.totalInclVat ?? estimate.pricing.estimatedTotal
+  const budgetValue =
+    estimate.pricing.estimatedTotal ?? estimate.pricing.baseTotal ?? estimate.pricing.totalInclVat
 
   const sceneProps = useMemo(() => {
     if (isLcssWarehouse) {
@@ -1155,7 +1156,7 @@ export default function WarehouseBuilderClient() {
                     {systemLabel} · {config.width}m x {config.length}m x {config.wallHeight}m
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
-                    Supply-only budget guide: {formatCurrency(budgetValue)}
+                    Supply-only budget guide excl. VAT: {formatCurrency(budgetValue)}
                   </p>
                 </div>
 
@@ -1222,7 +1223,7 @@ export default function WarehouseBuilderClient() {
                   </div>
                   <div className="rounded-[1.5rem] border border-emerald-200 bg-white px-5 py-4 text-left shadow-sm lg:min-w-[260px]">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-600">
-                      Supply-only Budget Guide
+                      Supply-only Budget Guide Excl. VAT
                     </p>
                     <p className="mt-2 text-3xl font-semibold text-slate-950">
                       {formatCurrency(budgetValue)}
@@ -1329,7 +1330,7 @@ export default function WarehouseBuilderClient() {
               <div className="flex flex-col gap-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
-                    Supply-only budget guide
+                    Supply-only budget guide excl. VAT
                   </p>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
                     {isLcssWarehouse
