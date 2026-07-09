@@ -42,7 +42,7 @@ const INTERNAL_PRODUCT_LABELS = [
 ]
 const LCSS_ALLOWED_WIDTHS = [3, 6, 8, 10, 12]
 const LCSS_ALLOWED_STEEL_FINISHES = ["Galv", "Mild"]
-const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable"]
+const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable", "roof_only", "fully_enclosed"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
 
 function roundMoney(value) {
@@ -107,7 +107,7 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
       : "Galv"
     nextState.gableMode = LCSS_ALLOWED_GABLE_MODES.includes(previousState.gableMode)
       ? previousState.gableMode
-      : "sheeted_gable"
+      : "fully_enclosed"
     return nextState
   }
 
