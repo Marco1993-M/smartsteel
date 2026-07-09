@@ -105,6 +105,10 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
     nextState.steelFinish = LCSS_ALLOWED_STEEL_FINISHES.includes(previousState.steelFinish)
       ? previousState.steelFinish
       : "Galv"
+    nextState.cladding =
+      WAREHOUSE_CLADDING_OPTIONS.includes(previousState.cladding) && previousState.cladding !== "None"
+        ? previousState.cladding
+        : "IBR"
     nextState.gableMode = LCSS_ALLOWED_GABLE_MODES.includes(previousState.gableMode)
       ? previousState.gableMode
       : "fully_enclosed"
@@ -206,7 +210,10 @@ function buildInitialState(lead, estimate) {
     roofPitch: Math.max(1, Number(latestInput.roofPitch || 15)),
     trussSpacing: Math.max(0.1, Number(latestInput.trussSpacing || 1.2)),
     moduleCount: Math.max(0, Number(latestInput.moduleCount || 0)),
-    cladding: latestInput.cladding || lead?.cladding || "None",
+    cladding:
+      isLcssEstimateProduct(productType)
+        ? latestInput.cladding || lead?.cladding || "IBR"
+        : latestInput.cladding || lead?.cladding || "None",
     claddingInstalled:
       typeof latestInput.claddingInstalled === "boolean"
         ? latestInput.claddingInstalled
