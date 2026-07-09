@@ -391,7 +391,7 @@ function WarehouseMesh({
         </>
       ) : null}
 
-      {hasCladding && enclosureType === "open_sides" ? (
+      {hasCladding && (enclosureType === "open_sides" || enclosureType === "side_walls") ? (
         <>
           <mesh position={[-w / 2, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
