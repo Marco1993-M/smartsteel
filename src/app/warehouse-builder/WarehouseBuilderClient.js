@@ -387,7 +387,7 @@ export default function WarehouseBuilderClient() {
         wallHeight: config.wallHeight,
         roofPitch: 15,
         cladding: "IBR",
-        enclosureType: config.gableMode === "roof_only" ? "roof_only" : "fully_enclosed",
+        enclosureType: config.gableMode === "roof_only" ? "roof_only" : "side_walls",
         rollerDoorCount: 0,
         garageDoorOpeningType: "single",
         pedestrianDoorCount: 0,
@@ -604,7 +604,7 @@ export default function WarehouseBuilderClient() {
   const includedItems = isLcssWarehouse
     ? [
         "The main steel structure sized to your selected warehouse footprint",
-        "A practical budget allowance based on your finish and end-wall selection",
+        "A practical budget allowance based on your finish and sheeting selection",
         "Project context so the next conversation starts with the right detail",
       ]
     : [
@@ -826,7 +826,7 @@ export default function WarehouseBuilderClient() {
                               active={config.gableMode === option.value}
                               thumbnail={
                                 <RoofEnclosureThumbnail
-                                  variant={option.value}
+                                  variant={option.value === "fully_enclosed" ? "open_sides" : option.value}
                                   active={config.gableMode === option.value}
                                 />
                               }
@@ -1319,7 +1319,7 @@ export default function WarehouseBuilderClient() {
                   </p>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
                     {isLcssWarehouse
-                      ? "A fast guide based on your selected size, wall height, steel finish, and gable type."
+                      ? "A fast guide based on your selected size, wall height, steel finish, and sheeting choice."
                       : "A fast commercial guide based on your current structure, enclosure, and opening selections."}
                   </p>
                   <p className="mt-3 text-4xl font-semibold sm:text-5xl">
