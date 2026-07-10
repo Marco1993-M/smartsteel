@@ -31,6 +31,8 @@ const NEXT_ACTION_STORAGE_KEY = "smartsteel.crm.next-actions"
 const CRM_FALLBACK_STORAGE_KEY = "smartsteel.crm.custom-fields"
 const CRM_ESTIMATES_STORAGE_KEY = "smartsteel.crm.estimates"
 const CRM_INVOICES_STORAGE_KEY = "smartsteel.crm.invoices"
+const CRM_LEADS_SNAPSHOT_STORAGE_KEY = "smartsteel.crm.leads-snapshot"
+const CRM_TASKS_SNAPSHOT_STORAGE_KEY = "smartsteel.crm.tasks-snapshot"
 const CRM_FALLBACK_FIELDS = [
   "next_action",
   "lead_source",
@@ -169,6 +171,36 @@ function writeStoredInvoices(data) {
   window.localStorage.setItem(CRM_INVOICES_STORAGE_KEY, JSON.stringify(data))
 }
 
+function readLeadSnapshots() {
+  if (typeof window === "undefined") return []
+
+  try {
+    return JSON.parse(window.localStorage.getItem(CRM_LEADS_SNAPSHOT_STORAGE_KEY) || "[]")
+  } catch {
+    return []
+  }
+}
+
+function writeLeadSnapshots(data) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(CRM_LEADS_SNAPSHOT_STORAGE_KEY, JSON.stringify(data))
+}
+
+function readTaskSnapshots() {
+  if (typeof window === "undefined") return []
+
+  try {
+    return JSON.parse(window.localStorage.getItem(CRM_TASKS_SNAPSHOT_STORAGE_KEY) || "[]")
+  } catch {
+    return []
+  }
+}
+
+function writeTaskSnapshots(data) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(CRM_TASKS_SNAPSHOT_STORAGE_KEY, JSON.stringify(data))
+}
+
 function withFallbackNextAction(lead, nextActions) {
   if (!lead?.id) return normalizeLead(lead)
 
@@ -217,6 +249,16 @@ function parseMissingColumn(error) {
   if (directMatch?.[1] && directMatch[1].toLowerCase() !== "of") return directMatch[1]
 
   return null
+}
+
+function isNetworkLoadError(error) {
+  const message = String(error?.message || error || "")
+  return (
+    /load failed/i.test(message) ||
+    /failed to fetch/i.test(message) ||
+    /network/i.test(message) ||
+    /fetch failed/i.test(message)
+  )
 }
 
 function getLeadFreshnessDate(lead) {
@@ -500,6 +542,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const [invoicingLead, setInvoicingLead] = useState(null)
   const [dailyTasks, setDailyTasks] = useState([])
   const [tasksLoading, setTasksLoading] = useState(true)
+  const [crmLoadWarning, setCrmLoadWarning] = useState("")
 
   const fetchLeads = async () => {
     setLoading(true)
@@ -510,6 +553,11 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
     if (error) {
       console.error("Error fetching leads:", error)
+      const cachedLeads = readLeadSnapshots()
+      if (cachedLeads.length > 0) {
+        setLeads(cachedLeads)
+      }
+      setCrmLoadWarning("Live CRM connection issue. Showing cached lead data where available.")
     } else {
       const fallbackActions = readLocalNextActions()
       const fallbackFields = readFallbackFields()
@@ -524,6 +572,12 @@ export default function CrmWorkspace({ mode = "legacy" }) {
           withFallbackFields(withFallbackNextAction(lead, fallbackActions), fallbackFields)
         )
       )
+      writeLeadSnapshots(
+        (data || []).map((lead) =>
+          withFallbackFields(withFallbackNextAction(lead, fallbackActions), fallbackFields)
+        )
+      )
+      setCrmLoadWarning("")
     }
 
     setLoading(false)
@@ -539,8 +593,14 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
     if (error) {
       console.error("Error fetching daily tasks:", error)
+      const cachedTasks = readTaskSnapshots()
+      if (cachedTasks.length > 0) {
+        setDailyTasks(cachedTasks)
+      }
+      setCrmLoadWarning((current) => current || "Live CRM connection issue. Showing cached data where available.")
     } else {
       setDailyTasks(data || [])
+      writeTaskSnapshots(data || [])
     }
 
     setTasksLoading(false)
@@ -1005,71 +1065,27 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       shared_at: new Date().toISOString(),
     }
 
+    const buildLocalEstimate = () =>
+      isEstimateUpdate
+        ? {
+            ...(existingForLead.find((estimate) => estimate.id === estimateDraft.id) || {}),
+            ...estimatePayload,
+            id: estimateDraft.id,
+            created_at:
+              existingForLead.find((estimate) => estimate.id === estimateDraft.id)?.created_at ||
+              new Date().toISOString(),
+          }
+        : {
+            id: `local-${leadId}-${Date.now()}`,
+            created_at: new Date().toISOString(),
+            ...estimatePayload,
+          }
+
     let savedEstimate = null
     let estimateInsertPayload = { ...estimatePayload }
-    let insertResult = isEstimateUpdate
-      ? await supabase
-          .from("estimates")
-          .update(estimateInsertPayload)
-          .eq("id", estimateDraft.id)
-          .select()
-      : await supabase.from("estimates").insert([estimateInsertPayload]).select()
+    let insertResult = null
 
-    while (insertResult.error) {
-      const message = insertResult.error.message || ""
-      const missingColumn = parseMissingColumn(insertResult.error)
-
-      if (!isEstimateUpdate && (/estimates_lead_version_idx/i.test(message) || /duplicate key value/i.test(message))) {
-        const { data: existingDbEstimates } = await supabase
-          .from("estimates")
-          .select("id, version_no")
-          .eq("lead_id", leadId)
-
-        const nextVersion = getNextEstimateVersion([
-          ...existingForLead,
-          ...(existingDbEstimates || []),
-        ])
-
-        estimatePayload = {
-          ...estimatePayload,
-          version_no: nextVersion,
-          title: `${estimateBaseTitle} V${nextVersion}`,
-        }
-        estimateInsertPayload = { ...estimatePayload }
-        insertResult = await supabase.from("estimates").insert([estimateInsertPayload]).select()
-        continue
-      }
-
-      if (/relation .*estimates.* does not exist/i.test(message) || /Could not find the table/i.test(message)) {
-        savedEstimate = isEstimateUpdate
-          ? {
-              ...(existingForLead.find((estimate) => estimate.id === estimateDraft.id) || {}),
-              ...estimatePayload,
-              id: estimateDraft.id,
-              created_at:
-                existingForLead.find((estimate) => estimate.id === estimateDraft.id)?.created_at ||
-                new Date().toISOString(),
-            }
-          : {
-              id: `local-${leadId}-${Date.now()}`,
-              created_at: new Date().toISOString(),
-              ...estimatePayload,
-            }
-        setStoredEstimatesForLead(
-          leadId,
-          isEstimateUpdate
-            ? existingForLead.map((estimate) => (estimate.id === savedEstimate.id ? savedEstimate : estimate))
-            : [savedEstimate, ...existingForLead]
-        )
-        break
-      }
-
-      if (!missingColumn || !["share_token", "shared_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url", "product_type_display", "original_line_items"].includes(missingColumn)) {
-        alert("Error saving estimate: " + insertResult.error.message)
-        return false
-      }
-
-      delete estimateInsertPayload[missingColumn]
+    try {
       insertResult = isEstimateUpdate
         ? await supabase
             .from("estimates")
@@ -1077,6 +1093,70 @@ export default function CrmWorkspace({ mode = "legacy" }) {
             .eq("id", estimateDraft.id)
             .select()
         : await supabase.from("estimates").insert([estimateInsertPayload]).select()
+
+      while (insertResult.error) {
+        const message = insertResult.error.message || ""
+        const missingColumn = parseMissingColumn(insertResult.error)
+
+        if (!isEstimateUpdate && (/estimates_lead_version_idx/i.test(message) || /duplicate key value/i.test(message))) {
+          const { data: existingDbEstimates } = await supabase
+            .from("estimates")
+            .select("id, version_no")
+            .eq("lead_id", leadId)
+
+          const nextVersion = getNextEstimateVersion([
+            ...existingForLead,
+            ...(existingDbEstimates || []),
+          ])
+
+          estimatePayload = {
+            ...estimatePayload,
+            version_no: nextVersion,
+            title: `${estimateBaseTitle} V${nextVersion}`,
+          }
+          estimateInsertPayload = { ...estimatePayload }
+          insertResult = await supabase.from("estimates").insert([estimateInsertPayload]).select()
+          continue
+        }
+
+        if (/relation .*estimates.* does not exist/i.test(message) || /Could not find the table/i.test(message)) {
+          savedEstimate = buildLocalEstimate()
+          setStoredEstimatesForLead(
+            leadId,
+            isEstimateUpdate
+              ? existingForLead.map((estimate) => (estimate.id === savedEstimate.id ? savedEstimate : estimate))
+              : [savedEstimate, ...existingForLead]
+          )
+          break
+        }
+
+        if (!missingColumn || !["share_token", "shared_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url", "product_type_display", "original_line_items"].includes(missingColumn)) {
+          alert("Error saving estimate: " + insertResult.error.message)
+          return false
+        }
+
+        delete estimateInsertPayload[missingColumn]
+        insertResult = isEstimateUpdate
+          ? await supabase
+              .from("estimates")
+              .update(estimateInsertPayload)
+              .eq("id", estimateDraft.id)
+              .select()
+          : await supabase.from("estimates").insert([estimateInsertPayload]).select()
+      }
+    } catch (error) {
+      if (!isNetworkLoadError(error)) {
+        throw error
+      }
+
+      savedEstimate = buildLocalEstimate()
+      setStoredEstimatesForLead(
+        leadId,
+        isEstimateUpdate
+          ? existingForLead.map((estimate) => (estimate.id === savedEstimate.id ? savedEstimate : estimate))
+          : [savedEstimate, ...existingForLead]
+      )
+      alert("Live save connection dropped. The estimate was saved locally and can be retried once Supabase is stable.")
     }
 
     if (!savedEstimate && !insertResult.error) {
@@ -1788,6 +1868,11 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
       <div className={`mx-auto max-w-7xl space-y-5 overflow-x-hidden sm:space-y-6 ${isOsCrmRoute ? "mt-0" : "mt-12 sm:mt-16"}`}>
+        {crmLoadWarning ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
+            {crmLoadWarning}
+          </div>
+        ) : null}
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-2">
