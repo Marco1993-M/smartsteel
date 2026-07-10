@@ -1,7 +1,7 @@
 "use client"
 
 import { Canvas } from "@react-three/fiber"
-import { OrbitControls } from "@react-three/drei"
+import { ContactShadows, OrbitControls } from "@react-three/drei"
 import { RotateCw } from "lucide-react"
 import { useMemo } from "react"
 import { DoubleSide, Path, Shape } from "three"
@@ -208,13 +208,13 @@ function WarehouseMesh({
 
   return (
     <group position={[0, -0.55, 0]}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <mesh position={[0, -0.035, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[9, 9]} />
         <meshPhysicalMaterial {...concreteMaterialProps} />
       </mesh>
 
-      <mesh position={[0, 0.01, 0]} receiveShadow>
-        <boxGeometry args={[w + 0.25, 0.02, l + 0.25]} />
+      <mesh position={[0, 0.016, 0]} receiveShadow>
+        <boxGeometry args={[w + 0.25, 0.032, l + 0.25]} />
         <meshPhysicalMaterial {...slabMaterialProps} />
       </mesh>
 
@@ -436,22 +436,38 @@ export default function WarehouseBuilderScene(props) {
   const maxDistance = Math.max(8.5, Math.sqrt(w ** 2 + l ** 2) * 1.55)
 
   return (
-    <div className={`relative h-[360px] w-full overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff,_#e2e8f0_68%)] shadow-inner sm:h-[460px] lg:h-[640px] ${className}`}>
+    <div className={`relative h-[360px] w-full overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)] shadow-inner sm:h-[460px] lg:h-[640px] ${className}`}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0))]" />
       <div className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur">
         <RotateCw className="h-3.5 w-3.5" />
         Drag to rotate
       </div>
+      <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur">
+        Live 3D build view
+      </div>
       <Canvas camera={{ position: cameraPosition, fov: 40 }} shadows>
-        <ambientLight intensity={1.28} />
+        <color attach="background" args={["#edf3f8"]} />
+        <fog attach="fog" args={["#edf3f8", 8.5, 14]} />
+        <ambientLight intensity={1.15} />
         <directionalLight
           position={[5.5, 7.5, 4.8]}
-          intensity={1.45}
+          intensity={1.5}
           castShadow
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
-        <directionalLight position={[-4.5, 4.5, -3.2]} intensity={0.42} />
+        <directionalLight position={[-4.5, 4.5, -3.2]} intensity={0.48} />
+        <spotLight position={[0, 6.4, 2.6]} angle={0.42} penumbra={0.6} intensity={0.46} />
         <WarehouseMesh {...props} />
+        <ContactShadows
+          position={[0, -0.53, 0]}
+          opacity={0.3}
+          scale={7.4}
+          blur={2.2}
+          far={3.2}
+          resolution={1024}
+          color="#98a5b5"
+        />
         <OrbitControls
           enablePan={false}
           target={orbitTarget}
