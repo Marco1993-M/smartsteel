@@ -991,8 +991,10 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       lead_id: leadId,
       version_no: initialVersion,
       product_type: estimateDraft.product_type,
+      product_type_display: estimateDraft.product_type_display || estimateDraft.product_type || "",
       title: `${estimateBaseTitle} V${initialVersion}`,
       input_data: estimateDraft.input_data,
+      original_line_items: estimateDraft.original_line_items || [],
       line_items: estimateDraft.line_items,
       subtotal: estimateDraft.subtotal,
       markup_multiplier: estimateDraft.markup_multiplier,
@@ -1062,7 +1064,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         break
       }
 
-      if (!missingColumn || !["share_token", "shared_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url"].includes(missingColumn)) {
+      if (!missingColumn || !["share_token", "shared_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url", "product_type_display", "original_line_items"].includes(missingColumn)) {
         alert("Error saving estimate: " + insertResult.error.message)
         return false
       }
