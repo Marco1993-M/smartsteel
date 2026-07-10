@@ -3,6 +3,12 @@ import { supabaseServer } from "../../../lib/supabase-server"
 
 export const runtime = "nodejs"
 
+const FALLBACK_RECIPIENTS = [
+  "stefan@smartsteel.co.za",
+  "niel@smartsteel.co.za",
+  "info@smartsteel.co.za",
+]
+
 function getNextBusinessMorningIso() {
   const date = new Date()
   date.setHours(9, 0, 0, 0)
@@ -94,9 +100,97 @@ function buildGenericLeadPayload(payload) {
   }
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
+function buildFallbackLeadEmailHtml({ body, insertPayload, reason }) {
+  const leadName = [insertPayload?.name, insertPayload?.last_name].filter(Boolean).join(" ").trim() || "Unknown lead"
+  const configurationJson = body?.configuration
+    ? `<pre style="white-space: pre-wrap; margin: 0; font-size: 12px; line-height: 1.5;">${escapeHtml(JSON.stringify(body.configuration, null, 2))}</pre>`
+    : "Not supplied"
+  const summaryJson = body?.summary
+    ? `<pre style="white-space: pre-wrap; margin: 0; font-size: 12px; line-height: 1.5;">${escapeHtml(JSON.stringify(body.summary, null, 2))}</pre>`
+    : "Not supplied"
+
+  return `
+    <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.5;">
+      <h2 style="margin-bottom: 8px;">Website lead fallback capture</h2>
+      <p style="margin: 0 0 16px;">
+        Supabase lead save failed, so this enquiry was captured by the fallback email route.
+      </p>
+      <table style="border-collapse: collapse; width: 100%; max-width: 760px;">
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Client</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(leadName)}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(insertPayload?.email || "Not supplied")}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(insertPayload?.phone || "Not supplied")}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Lead source</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(insertPayload?.lead_source || "Website")}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Product type</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(insertPayload?.product_type || "General Enquiry")}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Estimate request</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(insertPayload?.estimate_request || "Not supplied")}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Quote value</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(insertPayload?.quote_value || "Not supplied")}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Next action</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(insertPayload?.next_action || "Not supplied")}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${escapeHtml(insertPayload?.notes || "Not supplied")}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Fallback reason</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(reason || "Unknown error")}</td></tr>
+      </table>
+      <h3 style="margin: 20px 0 8px;">Configuration</h3>
+      ${configurationJson}
+      <h3 style="margin: 20px 0 8px;">Summary</h3>
+      ${summaryJson}
+    </div>
+  `
+}
+
+async function sendFallbackLeadNotification({ body, insertPayload, reason }) {
+  const resendApiKey = process.env.RESEND_API_KEY
+  const fromEmail =
+    process.env.CRM_NOTIFICATION_FROM || "Smart Steel CRM <crm@smartsteel.co.za>"
+
+  if (!resendApiKey) {
+    return {
+      success: false,
+      reason: "Missing RESEND_API_KEY",
+    }
+  }
+
+  const leadName = [insertPayload?.name, insertPayload?.last_name].filter(Boolean).join(" ").trim() || "Unknown lead"
+  const subject = `Fallback website lead: ${leadName}`
+
+  const resendResponse = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: fromEmail,
+      to: FALLBACK_RECIPIENTS,
+      subject,
+      html: buildFallbackLeadEmailHtml({ body, insertPayload, reason }),
+    }),
+  })
+
+  if (!resendResponse.ok) {
+    return {
+      success: false,
+      reason: await resendResponse.text(),
+    }
+  }
+
+  const responsePayload = await resendResponse.json().catch(() => null)
+  return {
+    success: true,
+    reference: responsePayload?.id || null,
+  }
+}
+
 export async function POST(request) {
+  let body = null
   try {
-    const body = await request.json()
+    body = await request.json()
     const isBuilderSubmission =
       Boolean(body?.configuration) ||
       Boolean(body?.summary) ||
@@ -156,7 +250,34 @@ export async function POST(request) {
 
     if (error) {
       console.error("Lead insert error:", error)
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      const fallbackResult = await sendFallbackLeadNotification({
+        body,
+        insertPayload,
+        reason: error.message,
+      })
+
+      if (fallbackResult.success) {
+        return NextResponse.json(
+          {
+            lead: null,
+            builderSubmission: null,
+            fallbackSaved: true,
+            fallbackReference: fallbackResult.reference,
+            submissionWarning:
+              "Supabase was unavailable, so this enquiry was captured by the fallback route and sent to the Smart Steel team for manual follow-up.",
+          },
+          { status: 200 }
+        )
+      }
+
+      return NextResponse.json(
+        {
+          error: "Could not save the lead to Supabase, and the fallback capture also failed.",
+          supabaseError: error.message,
+          fallbackError: fallbackResult.reason,
+        },
+        { status: 503 }
+      )
     }
 
     const lead = data?.[0] || null
@@ -191,6 +312,29 @@ export async function POST(request) {
     )
   } catch (error) {
     console.error("Lead API error:", error)
+    if (body?.name && body?.email) {
+      const insertPayload = buildGenericLeadPayload(body)
+      const fallbackResult = await sendFallbackLeadNotification({
+        body,
+        insertPayload,
+        reason: error?.message || "Unexpected API error",
+      })
+
+      if (fallbackResult.success) {
+        return NextResponse.json(
+          {
+            lead: null,
+            builderSubmission: null,
+            fallbackSaved: true,
+            fallbackReference: fallbackResult.reference,
+            submissionWarning:
+              "The enquiry could not be stored in the live CRM, but it was captured by the fallback route and sent to the Smart Steel team for manual follow-up.",
+          },
+          { status: 200 }
+        )
+      }
+    }
+
     return NextResponse.json(
       { error: error?.message || "Could not save the lead." },
       { status: 500 }
