@@ -7,6 +7,7 @@ import {
   ArrowsRightLeftIcon,
   ArrowsUpDownIcon,
   BuildingOffice2Icon,
+  ChevronDownIcon,
   CheckBadgeIcon,
   CubeIcon,
   DocumentTextIcon,
@@ -310,6 +311,7 @@ export default function WarehouseBuilderClient() {
   const [submitError, setSubmitError] = useState("")
   const [budgetDelta, setBudgetDelta] = useState(0)
   const [budgetPulse, setBudgetPulse] = useState(false)
+  const [activeMobileSceneControl, setActiveMobileSceneControl] = useState(null)
   const [leadForm, setLeadForm] = useState({
     name: "",
     lastName: "",
@@ -331,6 +333,35 @@ export default function WarehouseBuilderClient() {
   const steelFinishLabel = config.steelFinish || "Galv"
   const gableModeLabel =
     LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === config.gableMode)?.label || config.gableMode
+  const mobileSceneSummary = isLcssWarehouse
+    ? `${config.width}m x ${config.length}m · ${gableModeLabel}`
+    : `${config.width}m x ${config.length}m · ${enclosureLabel}`
+  const mobileSceneControls = [
+    {
+      key: "system",
+      label: "System",
+      shortLabel: "Type",
+      icon: BuildingOffice2Icon,
+    },
+    {
+      key: "width",
+      label: "Width",
+      shortLabel: `${config.width}m`,
+      icon: ArrowsRightLeftIcon,
+    },
+    {
+      key: "length",
+      label: "Length",
+      shortLabel: `${config.length}m`,
+      icon: ArrowsUpDownIcon,
+    },
+    {
+      key: "enclosure",
+      label: isLcssWarehouse ? "Sheeting" : "Walls",
+      shortLabel: isLcssWarehouse ? gableModeLabel : enclosureLabel,
+      icon: isLcssWarehouse ? HomeModernIcon : ShieldCheckIcon,
+    },
+  ]
 
   useEffect(() => {
     const widthParam = Number(searchParams.get("width"))
@@ -1362,7 +1393,160 @@ export default function WarehouseBuilderClient() {
                 </div>
               </div>
 
-              <WarehouseBuilderScene {...sceneProps} className="lg:h-[720px] xl:h-[780px]" />
+              <div className="relative">
+                <WarehouseBuilderScene {...sceneProps} className="lg:h-[720px] xl:h-[780px]" />
+
+                <div className="pointer-events-none absolute inset-x-3 bottom-3 z-20 xl:hidden">
+                  <div className="flex items-end justify-between gap-2">
+                    <div className="pointer-events-auto relative min-w-0 max-w-[calc(100%-3.5rem)] rounded-full border border-slate-200/90 bg-white/94 px-3 py-2 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] backdrop-blur">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <p className="shrink-0 text-sm font-semibold text-slate-950">
+                          {formatCurrency(budgetValue)} <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400">excl. VAT</span>
+                        </p>
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                        <p className="truncate text-xs text-slate-500">{mobileSceneSummary}</p>
+                      </div>
+                      {budgetPulse && budgetDelta !== 0 ? (
+                        <div className="pointer-events-none absolute left-2 top-full mt-1.5 inline-flex items-center gap-1 rounded-full bg-slate-950 px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm">
+                          <span className="text-slate-300">Updated</span>
+                          <span>{budgetDelta > 0 ? "+" : "-"}{formatCurrency(Math.abs(budgetDelta))}</span>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="pointer-events-auto flex flex-col gap-2 transition-all duration-200 ease-out">
+                      {mobileSceneControls
+                        .filter((control) => !activeMobileSceneControl || control.key !== activeMobileSceneControl)
+                        .map((control) => {
+                        const Icon = control.icon
+                        const isActive = activeMobileSceneControl === control.key
+
+                        return (
+                          <button
+                            key={control.key}
+                            type="button"
+                            onClick={() =>
+                              setActiveMobileSceneControl((current) =>
+                                current === control.key ? null : control.key
+                              )
+                            }
+                            className={`flex h-11 w-11 items-center justify-center rounded-full border shadow-sm backdrop-blur transition ${
+                              isActive
+                                ? "border-slate-900 bg-slate-900 text-white"
+                                : "border-slate-200/90 bg-white/94 text-slate-700"
+                            }`}
+                            aria-label={control.label}
+                            title={control.label}
+                          >
+                            <Icon className="h-4.5 w-4.5" />
+                          </button>
+                        )
+                        })}
+                    </div>
+                  </div>
+
+                  {activeMobileSceneControl ? (
+                    <div className="pointer-events-auto mt-2 rounded-[1.2rem] border border-slate-200/90 bg-white/95 p-3 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] backdrop-blur">
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            {mobileSceneControls.find((item) => item.key === activeMobileSceneControl)?.label}
+                          </p>
+                          <p className="truncate text-xs text-slate-500">
+                            {mobileSceneControls.find((item) => item.key === activeMobileSceneControl)?.shortLabel}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMobileSceneControl(null)}
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-600"
+                        >
+                          Close
+                          <ChevronDownIcon className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+
+                      {activeMobileSceneControl === "system" ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          {WAREHOUSE_SYSTEM_OPTIONS.map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => {
+                                applySystem(option.value)
+                                setActiveMobileSceneControl(null)
+                              }}
+                              className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                                config.productType === option.value
+                                  ? "border-slate-900 bg-slate-900 text-white"
+                                  : "border-slate-200 bg-white text-slate-700"
+                              }`}
+                            >
+                              {option.value === "LCSS Warehouse" ? "Lip channel" : "Engineered"}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {activeMobileSceneControl === "width" ? (
+                        <div className="grid grid-cols-3 gap-2">
+                          {widthOptions.map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => {
+                                updateField("width", option)
+                                setActiveMobileSceneControl(null)
+                              }}
+                              className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                                config.width === option
+                                  ? "border-slate-900 bg-slate-900 text-white"
+                                  : "border-slate-200 bg-white text-slate-700"
+                              }`}
+                            >
+                              {option}m
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {activeMobileSceneControl === "length" ? (
+                        <select
+                          value={config.length}
+                          onChange={(event) => {
+                            updateField("length", Number(event.target.value))
+                            setActiveMobileSceneControl(null)
+                          }}
+                          className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"
+                        >
+                          {WAREHOUSE_LENGTH_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}m long
+                            </option>
+                          ))}
+                        </select>
+                      ) : null}
+
+                      {activeMobileSceneControl === "enclosure" ? (
+                        <select
+                          value={isLcssWarehouse ? config.gableMode : config.enclosureType}
+                          onChange={(event) => {
+                            updateField(isLcssWarehouse ? "gableMode" : "enclosureType", event.target.value)
+                            setActiveMobileSceneControl(null)
+                          }}
+                          className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"
+                        >
+                          {(isLcssWarehouse ? LCSS_WAREHOUSE_GABLE_OPTIONS : WAREHOUSE_ENCLOSURE_OPTIONS).map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-3">
