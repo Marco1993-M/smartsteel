@@ -3,7 +3,7 @@
 import { Canvas } from "@react-three/fiber"
 import { ContactShadows, OrbitControls } from "@react-three/drei"
 import { RotateCw } from "lucide-react"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { DoubleSide, Path, Shape } from "three"
 
 function WarehouseMesh({
@@ -62,12 +62,6 @@ function WarehouseMesh({
       return offset
     })
   }, [pedestrianDoorCount, w])
-
-  const roofRibPositions = useMemo(() => {
-    const ribCount = Math.max(6, Math.round(length / 1.2))
-    const step = ribCount === 1 ? 0 : l / (ribCount - 1)
-    return Array.from({ length: ribCount }, (_, index) => -l / 2 + index * step)
-  }, [l, length])
 
   const sideRibPositions = useMemo(() => {
     const ribCount = Math.max(5, Math.round(length / 1.5))
@@ -149,14 +143,38 @@ function WarehouseMesh({
   const roofHalfSpan = Math.sqrt((w / 2) ** 2 + ridgeRise ** 2)
   const roofAngle = Math.atan2(ridgeRise, w / 2)
   const hasCladding = cladding !== "None"
+  const halfRoofPanelSpan = roofHalfSpan / 2
   const columnThickness = 0.042
   const rafterThickness = 0.028
   const roofSheetThickness = 0.018
   const ridgeThickness = 0.022
   const wallSheetThickness = 0.022
   const braceThickness = 0.018
-  const roofRibThickness = 0.009
   const wallRibThickness = 0.008
+  const roofMajorRibWidth = 0.04
+  const roofMajorRibHeight = 0.026
+  const roofMinorRibWidth = 0.018
+  const roofMinorRibHeight = 0.01
+  const roofPanelSpacing = 0.18
+
+  const roofMajorRibOffsets = useMemo(() => {
+    const usableSpan = Math.max(halfRoofPanelSpan - 0.05, 0.12)
+    const count = Math.max(5, Math.floor((usableSpan * 2) / roofPanelSpacing))
+    const start = -usableSpan
+
+    return Array.from({ length: count + 1 }, (_, index) => start + index * roofPanelSpacing).filter(
+      (offset) => Math.abs(offset) < usableSpan + 0.001
+    )
+  }, [halfRoofPanelSpan])
+
+  const roofMinorRibOffsets = useMemo(() => {
+    if (roofMajorRibOffsets.length < 2) return []
+
+    return roofMajorRibOffsets
+      .slice(0, -1)
+      .map((offset, index) => offset + (roofMajorRibOffsets[index + 1] - offset) / 2)
+      .filter((offset) => Math.abs(offset) < halfRoofPanelSpan - 0.04)
+  }, [halfRoofPanelSpan, roofMajorRibOffsets])
 
   const concreteMaterialProps = {
     color: "#d9e1e8",
@@ -287,42 +305,42 @@ function WarehouseMesh({
 
       {hasCladding ? (
         <>
-          <mesh
-            position={[-w / 4, h + ridgeRise / 2, 0]}
-            rotation={[0, 0, roofAngle]}
-            receiveShadow
-          >
-            <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
-            <meshPhysicalMaterial {...roofMaterialProps} />
-          </mesh>
-          <mesh
-            position={[w / 4, h + ridgeRise / 2, 0]}
-            rotation={[0, 0, -roofAngle]}
-            receiveShadow
-          >
-            <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
-            <meshPhysicalMaterial {...roofMaterialProps} />
-          </mesh>
-          {roofRibPositions.map((z) => (
-            <group key={`roof-rib-${z}`}>
-              <mesh
-                position={[-w / 4, h + ridgeRise / 2 + roofSheetThickness * 0.55, z]}
-                rotation={[0, 0, roofAngle]}
-                receiveShadow
-              >
-                <boxGeometry args={[roofHalfSpan + 0.05, roofRibThickness, roofRibThickness]} />
+          <group position={[-w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, roofAngle]}>
+            <mesh receiveShadow>
+              <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
+              <meshPhysicalMaterial {...roofMaterialProps} />
+            </mesh>
+            {roofMajorRibOffsets.map((offset) => (
+              <mesh key={`left-major-rib-${offset}`} position={[offset, roofMajorRibHeight * 0.55, 0]} receiveShadow>
+                <boxGeometry args={[roofMajorRibWidth, roofMajorRibHeight, l + 0.08]} />
                 <meshPhysicalMaterial {...roofMaterialProps} />
               </mesh>
-              <mesh
-                position={[w / 4, h + ridgeRise / 2 + roofSheetThickness * 0.55, z]}
-                rotation={[0, 0, -roofAngle]}
-                receiveShadow
-              >
-                <boxGeometry args={[roofHalfSpan + 0.05, roofRibThickness, roofRibThickness]} />
+            ))}
+            {roofMinorRibOffsets.map((offset) => (
+              <mesh key={`left-minor-rib-${offset}`} position={[offset, roofMinorRibHeight * 0.8, 0]} receiveShadow>
+                <boxGeometry args={[roofMinorRibWidth, roofMinorRibHeight, l + 0.08]} />
                 <meshPhysicalMaterial {...roofMaterialProps} />
               </mesh>
-            </group>
-          ))}
+            ))}
+          </group>
+          <group position={[w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, -roofAngle]}>
+            <mesh receiveShadow>
+              <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
+              <meshPhysicalMaterial {...roofMaterialProps} />
+            </mesh>
+            {roofMajorRibOffsets.map((offset) => (
+              <mesh key={`right-major-rib-${offset}`} position={[offset, roofMajorRibHeight * 0.55, 0]} receiveShadow>
+                <boxGeometry args={[roofMajorRibWidth, roofMajorRibHeight, l + 0.08]} />
+                <meshPhysicalMaterial {...roofMaterialProps} />
+              </mesh>
+            ))}
+            {roofMinorRibOffsets.map((offset) => (
+              <mesh key={`right-minor-rib-${offset}`} position={[offset, roofMinorRibHeight * 0.8, 0]} receiveShadow>
+                <boxGeometry args={[roofMinorRibWidth, roofMinorRibHeight, l + 0.08]} />
+                <meshPhysicalMaterial {...roofMaterialProps} />
+              </mesh>
+            ))}
+          </group>
           <mesh position={[0, h + ridgeRise + 0.015, 0]} receiveShadow>
             <boxGeometry args={[0.045, ridgeThickness, l + 0.08]} />
             <meshPhysicalMaterial {...ridgeMaterialProps} />
@@ -422,6 +440,7 @@ function WarehouseMesh({
 
 export default function WarehouseBuilderScene(props) {
   const { width, length, wallHeight, className = "" } = props
+  const [hasInteracted, setHasInteracted] = useState(false)
   const scale = 0.18
   const w = width * scale
   const l = length * scale
@@ -436,16 +455,25 @@ export default function WarehouseBuilderScene(props) {
   const maxDistance = Math.max(8.5, Math.sqrt(w ** 2 + l ** 2) * 1.55)
 
   return (
-    <div className={`relative h-[360px] w-full overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)] shadow-inner sm:h-[460px] lg:h-[640px] ${className}`}>
+    <div className={`relative h-[min(46vh,320px)] w-full touch-none overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)] shadow-inner sm:h-[460px] lg:h-[640px] ${className}`}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0))]" />
-      <div className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur">
+      <div
+        className={`pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur transition-all duration-500 ${
+          hasInteracted ? "translate-y-[-0.5rem] opacity-0" : "translate-y-0 opacity-100"
+        }`}
+      >
         <RotateCw className="h-3.5 w-3.5" />
         Drag to rotate
       </div>
-      <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur">
+      <div className="pointer-events-none absolute bottom-4 left-4 z-10 hidden rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur xl:block">
         Live 3D build view
       </div>
-      <Canvas camera={{ position: cameraPosition, fov: 40 }} shadows>
+      <Canvas
+        camera={{ position: cameraPosition, fov: 40 }}
+        shadows
+        style={{ touchAction: "none" }}
+        onPointerDown={() => setHasInteracted(true)}
+      >
         <color attach="background" args={["#edf3f8"]} />
         <fog attach="fog" args={["#edf3f8", 8.5, 14]} />
         <ambientLight intensity={1.15} />
