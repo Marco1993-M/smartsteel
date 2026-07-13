@@ -3,7 +3,7 @@ import Link from "next/link"
 
 const SITE_URL = "https://www.smartsteel.co.za"
 const PAGE_PATH = "/products/cflc-solar-carports"
-const SHARE_IMAGE = `${SITE_URL}/solar_carport_hero.webp`
+const SHARE_IMAGE = `${SITE_URL}/atlas-solar-carports-share.png`
 
 export const metadata = {
   title: "Atlas Solar Carports South Africa | Smart Steel",
