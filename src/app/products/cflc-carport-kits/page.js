@@ -132,7 +132,10 @@ export default function CflcCarportKitsPage() {
           <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.74))]" />
           <div className="relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
+              <span className="inline-flex rounded-full border border-[#1c5b57]/25 bg-[#eaf3f1] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1c5b57]">
+                Atlas System
+              </span>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
                 CFLC Carport Kits
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">

@@ -95,7 +95,7 @@ export default function EstimatorPage() {
   const [estimate, setEstimate] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const isLcssWarehouse = productType === 'LCSS Warehouse';
-  const productTypeLabel = isLcssWarehouse ? 'CFLC Warehouse' : 'LSF Warehouse';
+  const productTypeLabel = isLcssWarehouse ? 'Atlas Lip Channel Warehouse' : 'LSF Warehouse';
 
   useEffect(() => {
     if (isLcssWarehouse) {
@@ -301,7 +301,7 @@ export default function EstimatorPage() {
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   {[
                     { value: 'LSF Warehouse', label: 'Custom engineered warehouse' },
-                    { value: 'LCSS Warehouse', label: 'Lip channel warehouse' },
+                    { value: 'LCSS Warehouse', label: 'Atlas lip channel warehouse' },
                   ].map((option) => (
                     <button
                       key={option.value}

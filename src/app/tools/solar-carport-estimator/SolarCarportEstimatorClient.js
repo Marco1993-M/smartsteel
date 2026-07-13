@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { calculateSolarEstimate, formatCurrency, SOLAR_SCOPE_OPTIONS } from "../../../lib/estimates/solarEstimate"
+import { calculateSolarEstimate, formatCurrency } from "../../../lib/estimates/solarEstimate"
 
 const DEFAULT_CLEARANCE_HEIGHT = 2.4
 const DEFAULT_SOLAR_PANEL_WATTAGE = 550
@@ -26,6 +26,8 @@ const SOLAR_CARPORT_LENGTH_OPTIONS = [
   { value: 6, label: "Single Row (6m)" },
   { value: 12, label: "Double Row (12m)" },
 ]
+const QUICK_PARKING_OPTIONS = SOLAR_CARPORT_WIDTH_OPTIONS.filter((option) => option.parkingCount <= 4)
+const EXTENDED_PARKING_OPTIONS = SOLAR_CARPORT_WIDTH_OPTIONS.filter((option) => option.parkingCount > 4)
 const PROCEED_TIMING_OPTIONS = [
   { value: "ready_now", label: "Ready now" },
   { value: "within_30_days", label: "Within 30 days" },
@@ -58,7 +60,6 @@ function buildEstimatorNotes({ estimate, formState, enquiryNotes }) {
     `Modules: ${estimate.labels.modules}`,
     `Delivery: ${estimate.labels.delivery}`,
     formState.proceedTiming ? `Looking to proceed: ${PROCEED_TIMING_OPTIONS.find((option) => option.value === formState.proceedTiming)?.label || formState.proceedTiming}` : null,
-    formState.projectNotes?.trim() ? `Project notes: ${formState.projectNotes.trim()}` : null,
     enquiryNotes?.trim() ? `Client notes: ${enquiryNotes.trim()}` : null,
     `Selected width: ${formatDimension(formState.width)}`,
     `Selected length: ${formatDimension(formState.length)}`,
@@ -72,8 +73,6 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   const initialWidth = Number(initialInput.width)
   const initialLength = Number(initialInput.length)
   const initialQuantity = Number(initialInput.quantity)
-  const initialDeliveryDistance = Number(initialInput.deliveryDistance)
-  const initialScope = initialInput.scope
   const defaultWidth = SOLAR_CARPORT_WIDTH_OPTIONS.some((option) => option.width === initialWidth)
     ? initialWidth
     : 5
@@ -86,12 +85,9 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     wallHeight: DEFAULT_CLEARANCE_HEIGHT,
     quantity: initialQuantity > 0 ? initialQuantity : 1,
     moduleCount: calculateEstimatedPanelCount(defaultWidth, defaultLength),
-    deliveryDistance: initialDeliveryDistance >= 0 ? initialDeliveryDistance : 0,
-    scope: SOLAR_SCOPE_OPTIONS.some((option) => option.value === initialScope)
-      ? initialScope
-      : "supply_only",
+    deliveryDistance: 0,
+    scope: "supply_only",
     proceedTiming: "",
-    projectNotes: "",
   })
   const [showEnquiryForm, setShowEnquiryForm] = useState(false)
   const [enquiryState, setEnquiryState] = useState({
@@ -206,152 +202,140 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_30%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#f3f0e9_17rem,#f3f0e9_100%)] px-4 pb-10 pt-24 text-[#121a20] sm:px-6 sm:pt-28 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <section className="rounded-[2.25rem] border border-slate-200 bg-white px-6 py-10 shadow-sm sm:px-8 lg:px-10">
+        <section className="border border-[#121a20]/15 bg-[linear-gradient(145deg,#ffffff_0%,#faf9f5_50%,#ebe8dd_100%)] px-6 py-10 shadow-sm sm:px-8 lg:px-10">
           <div className="max-w-4xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-              Solar Carport Estimator
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center border border-[#d9a441] font-mono text-sm font-semibold text-[#1c5b57]">A</span>
+              <div>
+                <p className="text-sm font-semibold tracking-[0.2em]">ATLAS SYSTEM</p>
+                <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#121a20]/55">Developed by Smart Steel</p>
+              </div>
+            </div>
+            <p className="mt-8 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">
+              Atlas Solar Carport Estimator
             </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              Estimate a solar carport before you enquire
+            <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[#121a20] sm:text-5xl">
+              Price your Atlas solar carport before you enquire.
             </h1>
-            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-              Get a clearer starting budget for a Smart Steel solar carport before you speak to the
-              team. If the estimate looks right, you can send your details through for the next
-              step and the enquiry will be saved in our CRM.
+            <p className="mt-5 max-w-3xl text-base leading-7 text-[#121a20]/70 sm:text-lg">
+              Choose the parking layout and see a practical structure-only starting budget immediately. No contact details are needed until you decide to continue.
             </p>
+            <Link
+              href="/products"
+              className="mt-5 inline-flex border-b border-[#1c5b57]/35 pb-1 text-sm font-semibold text-[#1c5b57] transition hover:border-[#1c5b57] hover:text-[#121a20]"
+            >
+              Explore all Smart Steel products
+            </Link>
           </div>
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Your Details
+          <div className="border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1c5b57]">
+              Step 1: Your starting layout
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Choose the main solar carport details
+              Choose the parking layout
             </h2>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm font-semibold text-slate-700">
-                Parking size
+            <div className="mt-6">
+              <p className="text-sm font-semibold text-slate-700">How many parking bays do you need?</p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                {QUICK_PARKING_OPTIONS.map((option) => {
+                  const isSelected = formState.width === option.width
+                  return (
+                    <button
+                      key={option.parkingCount}
+                      type="button"
+                      onClick={() => handleFieldChange("width", option.width)}
+                      className={`min-h-[104px] border p-4 text-left transition ${
+                        isSelected
+                          ? "border-[#1c5b57] bg-[#1c5b57] text-[#f3f0e9] shadow-[0_16px_30px_-24px_rgba(18,26,32,0.8)]"
+                          : "border-slate-200 bg-[#f7f8f7] text-[#121a20] hover:border-[#1c5b57]"
+                      }`}
+                    >
+                      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isSelected ? "text-[#d9a441]" : "text-[#1c5b57]"}`}>{option.parkingCount === 1 ? "Single" : option.parkingCount === 2 ? "Double" : `${option.parkingCount} bays`}</p>
+                      <p className="mt-3 text-xl font-semibold">{option.width}m wide</p>
+                    </button>
+                  )
+                })}
+              </div>
+              <label className="mt-4 block text-sm font-semibold text-slate-700">
+                Need more parking bays?
                 <select
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
-                  value={formState.width}
-                  onChange={(event) => handleFieldChange("width", Number(event.target.value))}
+                  className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                  value={EXTENDED_PARKING_OPTIONS.some((option) => option.width === formState.width) ? formState.width : ""}
+                  onChange={(event) => {
+                    if (event.target.value) handleFieldChange("width", Number(event.target.value))
+                  }}
                 >
-                  {SOLAR_CARPORT_WIDTH_OPTIONS.map((option) => (
-                    <option key={option.parkingCount} value={option.width}>
-                      {option.label}
-                    </option>
+                  <option value="">Choose 5 to 20 parking bays</option>
+                  {EXTENDED_PARKING_OPTIONS.map((option) => (
+                    <option key={option.parkingCount} value={option.width}>{option.label}</option>
                   ))}
                 </select>
-              </label>
-
-              <label className="text-sm font-semibold text-slate-700">
-                Parking layout
-                <select
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
-                  value={formState.length}
-                  onChange={(event) => handleFieldChange("length", Number(event.target.value))}
-                >
-                  {SOLAR_CARPORT_LENGTH_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="text-sm font-semibold text-slate-700">
-                Number of structures
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
-                  value={formState.quantity}
-                  onChange={(event) =>
-                    handleFieldChange("quantity", Math.max(1, Number(event.target.value) || 1))
-                  }
-                />
-              </label>
-
-              <label className="text-sm font-semibold text-slate-700">
-                Estimated solar panels per structure
-                <div className="mt-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
-                  <p className="text-sm font-semibold text-slate-900">{formState.moduleCount} panels</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Based on a standard {DEFAULT_SOLAR_PANEL_WATTAGE}W panel layout.
-                  </p>
-                </div>
-              </label>
-
-              <label className="text-sm font-semibold text-slate-700">
-                Delivery distance (km)
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
-                  value={formState.deliveryDistance}
-                  onChange={(event) =>
-                    handleFieldChange("deliveryDistance", Math.max(0, Number(event.target.value) || 0))
-                  }
-                />
               </label>
             </div>
 
-            <label className="mt-4 block text-sm font-semibold text-slate-700">
-              Project notes
-              <textarea
-                rows={4}
-                placeholder="Add any useful notes, site details, or special requirements."
-                className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
-                value={formState.projectNotes}
-                onChange={(event) => handleFieldChange("projectNotes", event.target.value)}
-              />
-            </label>
-
-            <div className="mt-4">
-              <p className="text-sm font-semibold text-slate-700">Scope</p>
+            <div className="mt-6">
+              <p className="text-sm font-semibold text-slate-700">How should the parking run?</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {SOLAR_SCOPE_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleFieldChange("scope", option.value)}
-                    className={`rounded-2xl border px-4 py-4 text-left text-sm font-semibold transition ${
-                      formState.scope === option.value
-                        ? "border-slate-950 bg-slate-950 text-white"
-                        : "border-slate-300 bg-white text-slate-900 hover:border-slate-500"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+                {SOLAR_CARPORT_LENGTH_OPTIONS.map((option) => {
+                  const isSelected = formState.length === option.value
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handleFieldChange("length", option.value)}
+                      className={`border p-4 text-left transition ${
+                        isSelected
+                          ? "border-[#1c5b57] bg-[#1c5b57] text-[#f3f0e9]"
+                          : "border-slate-200 bg-[#f7f8f7] text-[#121a20] hover:border-[#1c5b57]"
+                      }`}
+                    >
+                      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isSelected ? "text-[#d9a441]" : "text-[#1c5b57]"}`}>{option.label}</p>
+                      <p className="mt-2 text-sm leading-5 opacity-75">{option.value === 6 ? "One practical parking row" : "Parking on both sides of the structure"}</p>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
-            <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 text-sm leading-6 text-slate-600">
-              This estimate is a starting point. Final pricing still depends on layout, structural
-              detailing, foundations, solar scope, and site conditions. A minimum clearance height
-              of 2.4m is included as standard. Estimated panel quantities are based on a standard{" "}
-              {DEFAULT_SOLAR_PANEL_WATTAGE}W panel layout.
+            <div className="mt-6 grid gap-3 sm:grid-cols-[0.8fr_1.2fr]">
+              <div className="border border-slate-200 bg-white p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1c5b57]">Structures</p>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <button type="button" onClick={() => handleFieldChange("quantity", Math.max(1, formState.quantity - 1))} className="grid h-9 w-9 place-items-center rounded-full border border-slate-300 text-lg font-semibold text-[#121a20] transition hover:border-[#1c5b57]" aria-label="Remove structure">-</button>
+                  <p className="text-lg font-semibold">{formState.quantity}</p>
+                  <button type="button" onClick={() => handleFieldChange("quantity", formState.quantity + 1)} className="grid h-9 w-9 place-items-center rounded-full border border-slate-300 text-lg font-semibold text-[#121a20] transition hover:border-[#1c5b57]" aria-label="Add structure">+</button>
+                </div>
+              </div>
+              <div className="border border-[#1c5b57]/20 bg-[#eaf3f1] p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1c5b57]">Estimated solar capacity</p>
+                <p className="mt-2 text-lg font-semibold text-[#121a20]">{formState.moduleCount} panels per structure</p>
+                <p className="mt-1 text-xs leading-5 text-[#121a20]/60">Based on a standard {DEFAULT_SOLAR_PANEL_WATTAGE}W panel layout.</p>
+              </div>
+            </div>
+
+            <div className="mt-6 border border-slate-200 bg-slate-50 p-5 text-sm leading-6 text-slate-600">
+              This is a structure-only starting guide. Delivery, foundations, installation, electrical scope, and site conditions are reviewed properly after enquiry. A minimum clearance height of 2.4m is included as standard. Estimated panel quantities are based on a standard {DEFAULT_SOLAR_PANEL_WATTAGE}W panel layout.
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Estimate
+          <div className="border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1c5b57]">
+              Step 2: Your starting budget
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Your estimated solar carport budget
+              Your Atlas solar carport estimate
             </h2>
 
-            <div className="mt-6 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-950 text-white">
+            <div className="mt-6 overflow-hidden border border-[#121a20] bg-[#121a20] text-white">
               <div className="px-6 py-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
-                  Indicative budget
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d9a441]">
+                  Structure-only starting budget
                 </p>
                 <p className="mt-3 text-4xl font-semibold">
                   {formatCurrency(estimate.pricing.estimatedTotal)}
@@ -363,7 +347,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="border border-slate-200 bg-slate-50 px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Size
                 </p>
@@ -371,32 +355,32 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   {formatDimension(formState.width)} x {formatDimension(formState.length)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="border border-slate-200 bg-slate-50 px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Structures
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-900">{formState.quantity}</p>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="border border-slate-200 bg-slate-50 px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Solar panels
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-900">{estimate.labels.modules}</p>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="border border-slate-200 bg-slate-50 px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Scope
+                  Estimate scope
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-900">{estimate.labels.scope}</p>
               </div>
             </div>
 
-            <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-white p-5">
+            <div className="mt-6 border border-slate-200 bg-white p-5">
               <p className="text-sm font-semibold text-slate-900">Included in this estimate</p>
               <div className="mt-4 space-y-3">
                 {estimate.lineItems.map((item) => (
                   <div key={item.code} className="flex items-start gap-3 text-sm">
-                    <span className="mt-1 h-2 w-2 rounded-full bg-[#da1a33]" />
+                    <span className="mt-1 h-2 w-2 rounded-full bg-[#1c5b57]" />
                     <p className="font-medium text-slate-900">{item.label}</p>
                   </div>
                 ))}
@@ -407,7 +391,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               <button
                 type="button"
                 onClick={() => setShowEnquiryForm((current) => !current)}
-                className="rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
+                className="rounded-full bg-[#d9a441] px-6 py-3 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f]"
               >
                 {showEnquiryForm ? "Hide contact form" : "Continue with this estimate"}
               </button>
@@ -420,7 +404,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             </div>
 
             {showEnquiryForm ? (
-              <form onSubmit={handleSubmit} className="mt-8 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
+              <form onSubmit={handleSubmit} className="mt-8 border border-slate-200 bg-slate-50 p-6">
                 <h3 className="text-lg font-semibold text-slate-950">
                   Send your details to Smart Steel
                 </h3>
@@ -434,7 +418,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                     Name
                     <input
                       type="text"
-                      className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={enquiryState.name}
                       onChange={(event) => handleEnquiryChange("name", event.target.value)}
                     />
@@ -444,7 +428,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                     Email
                     <input
                       type="email"
-                      className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={enquiryState.email}
                       onChange={(event) => handleEnquiryChange("email", event.target.value)}
                     />
@@ -454,7 +438,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                     Phone
                     <input
                       type="text"
-                      className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={enquiryState.phone}
                       onChange={(event) => handleEnquiryChange("phone", event.target.value)}
                     />
@@ -463,7 +447,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
                     How soon are you looking to proceed?
                     <select
-                      className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={formState.proceedTiming}
                       onChange={(event) => handleFieldChange("proceedTiming", event.target.value)}
                     >
@@ -480,7 +464,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                     Anything else we should know?
                     <textarea
                       rows={4}
-                      className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={enquiryState.notes}
                       onChange={(event) => handleEnquiryChange("notes", event.target.value)}
                     />
@@ -505,6 +489,31 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                 </div>
               </form>
             ) : null}
+          </div>
+        </section>
+
+        <section className="grid gap-8 border-t border-[#121a20]/15 py-14 sm:py-18 lg:grid-cols-[0.8fr_1.2fr] lg:py-20">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1c5b57]">
+              The Atlas design approach
+            </p>
+            <h2 className="mt-4 max-w-md text-3xl font-semibold tracking-[-0.04em] text-[#121a20] sm:text-4xl">
+              Practical solar parking, built around a repeatable system.
+            </h2>
+          </div>
+          <div className="max-w-2xl text-base leading-7 text-[#121a20]/70 sm:text-lg">
+            <p>
+              Atlas solar carports use modular layouts and bolted assembly principles to create a practical starting point for covered parking with solar capacity above it. The structure is designed for clear planning, adaptable bay configurations, and a more considered route from early budget to a site-specific proposal.
+            </p>
+            <p className="mt-5">
+              The online estimate gives you a transparent structure-only guide first. Smart Steel then reviews foundations, delivery, installation, access, and final project requirements with you before confirming the full scope.
+            </p>
+            <Link
+              href="/products/cflc-solar-carports"
+              className="mt-6 inline-flex border-b border-[#1c5b57]/35 pb-1 text-sm font-semibold text-[#1c5b57] transition hover:border-[#1c5b57] hover:text-[#121a20]"
+            >
+              Learn more about Atlas solar carports
+            </Link>
           </div>
         </section>
       </div>

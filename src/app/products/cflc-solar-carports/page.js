@@ -6,293 +6,268 @@ const PAGE_PATH = "/products/cflc-solar-carports"
 const SHARE_IMAGE = `${SITE_URL}/solar_carport_hero.webp`
 
 export const metadata = {
-  title: "Solar Carports South Africa | Smart Steel",
+  title: "Atlas Solar Carports South Africa | Smart Steel",
   description:
-    "Explore solar carports in South Africa with Smart Steel. Compare covered parking structures, solar-ready layouts, commercial applications, and start with a faster estimate.",
+    "Price an Atlas solar carport online with Smart Steel. Create covered parking and solar-ready infrastructure for commercial sites, estates, schools, farms, and operational vehicle areas.",
   keywords: [
+    "Atlas solar carports",
     "solar carports south africa",
-    "solar carport",
+    "solar carport price south africa",
     "solar panel carport",
-    "solar powered carport",
     "commercial solar carport",
-    "carport with solar",
+    "solar parking structures",
+    "carport with solar panels",
   ],
-  alternates: {
-    canonical: PAGE_PATH,
-  },
+  alternates: { canonical: PAGE_PATH },
   openGraph: {
-    title: "Solar Carports South Africa | Smart Steel",
+    title: "Atlas Solar Carports | Smart Steel",
     description:
-      "Compare solar carports for covered parking, solar-ready layouts, and commercial parking projects across South Africa.",
+      "Plan covered parking and solar-ready infrastructure with an Atlas solar carport. Start with an online estimate before you enquire.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
     type: "website",
-    images: [
-      {
-        url: SHARE_IMAGE,
-        width: 1200,
-        height: 630,
-        alt: "Smart Steel CFLC solar carport",
-      },
-    ],
+    images: [{ url: SHARE_IMAGE, width: 1200, height: 630, alt: "Atlas solar carport by Smart Steel" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Solar Carports South Africa | Smart Steel",
-    description:
-      "Compare solar carports for covered parking, solar-ready layouts, and commercial parking projects across South Africa.",
+    title: "Atlas Solar Carports | Smart Steel",
+    description: "Price an Atlas solar carport online before you enquire.",
     images: [SHARE_IMAGE],
   },
 }
 
-const quickAnswers = [
+const proofPoints = [
+  ["Modular parking bays", "Build the layout around practical parking requirements, then extend the structure around the way the site needs to work."],
+  ["Bolted system", "Atlas uses repeatable components and bolted assembly principles for a clearer structural route from planning into site review."],
+  ["Solar-ready by design", "Plan the steel structure around panel support from the start, then use the online estimator for a clearer first budget."],
+]
+
+const applications = [
   {
-    question: "What is a solar carport?",
-    answer:
-      "A solar carport is a steel parking structure designed to create covered parking while also supporting solar panels.",
+    title: "Commercial parking",
+    description: "Turn office, retail, business park, and visitor parking into useful covered space with solar potential.",
+    image: "/solar_carport_hero.webp",
+    alt: "Atlas solar carport over commercial parking",
   },
   {
-    question: "Who are these structures best for?",
-    answer:
-      "They work well for offices, schools, business parks, retail sites, estates, and other projects where parking cover and energy value both matter.",
+    title: "Schools and campuses",
+    description: "A visible infrastructure upgrade for staff, visitors, and day-to-day operational parking areas.",
+    image: "/solar_carport_1.webp",
+    alt: "Atlas solar carport structural detail",
   },
   {
-    question: "Do you only supply the steel structure?",
-    answer:
-      "Smart Steel can help with structure-only enquiries as well as broader solar-ready planning, depending on the project.",
-  },
-  {
-    question: "How do I start?",
-    answer:
-      "Start with the solar carport page, compare the project examples, and then send your enquiry with the parking layout or site details if you have them.",
+    title: "Fleets and operational sites",
+    description: "A repeatable route for vehicle cover where layout, circulation, and longer-term energy planning need to work together.",
+    image: "/solar_carport_2.webp",
+    alt: "Atlas solar carport over vehicle parking",
   },
 ]
 
-const productCards = [
+const processSteps = [
+  ["01", "Choose the parking layout", "Start with the number of parking spaces and whether the bays need a single or double row."],
+  ["02", "See a starting budget", "The estimator gives you a practical structure-only guide before delivery, foundations, and site conditions are reviewed."],
+  ["03", "Send a stronger enquiry", "Continue with your layout already defined, so the Smart Steel team can review the real project requirements with you."],
+]
+
+const faqs = [
   {
-    title: "Commercial parking solar carports",
-    description:
-      "A good fit for offices, retail parking, and business campuses that need covered bays with a stronger long-term energy story.",
+    question: "What is an Atlas solar carport?",
+    answer:
+      "An Atlas solar carport is a modular steel parking structure designed to provide covered vehicle bays while supporting a solar-ready roof layout. It is part of the Atlas modular infrastructure platform developed by Smart Steel.",
   },
   {
-    title: "School and campus solar carports",
-    description:
-      "Useful where covered parking, durability, and visible solar infrastructure need to work together on one site.",
+    question: "What makes the Atlas system different?",
+    answer:
+      "Atlas is built around repeatable components, practical parking layouts, and bolted assembly principles. This creates a clearer structural starting point before Smart Steel reviews the specific site, foundations, delivery, installation, and final project scope.",
   },
   {
-    title: "Fleet and operational parking solar carports",
-    description:
-      "A practical option for larger vehicle areas where parking cover, repeatability, and solar-ready planning all matter.",
+    question: "Can I get an estimate before I enquire?",
+    answer:
+      "Yes. Use the online Atlas solar carport estimator to choose a starting parking layout and receive a practical budget guide before you send an enquiry.",
+  },
+  {
+    question: "Are the solar panels included?",
+    answer:
+      "The estimator focuses on the steel structure and solar-ready support layout. Solar panels, electrical design, foundations, delivery, and installation can be reviewed around your project requirements.",
+  },
+  {
+    question: "Who are Atlas solar carports for?",
+    answer:
+      "They are suited to commercial sites, schools, estates, farms, fleet areas, and other parking layouts where covered bays and solar potential should work together.",
   },
 ]
 
-const galleryImages = [
-  { src: "/solar_carport_hero.webp", alt: "Smart Steel solar carport overview" },
-  { src: "/solar_carport_1.webp", alt: "Smart Steel solar carport side view" },
-  { src: "/solar_carport_2.webp", alt: "Smart Steel solar carport detail view" },
+const relatedPages = [
+  ["Atlas carports", "Explore non-solar parking cover for projects that do not need panel support.", "/products/cflc-carport-kits", "View Atlas carports"],
+  ["Atlas ground mounts", "Price a standalone solar structure when the array does not need to sit over parking.", "/products/cflc-ground-mounts", "View ground mounts"],
+  ["Atlas warehouse system", "Explore the wider Atlas platform for modular warehouse and infrastructure structures.", "/warehouses/cflc", "Explore Atlas W-Series"],
 ]
 
-const supportLinks = [
-  {
-    title: "Explore solar carport regions",
-    description: "Compare the regional solar carport pages if your project is location-specific.",
-    href: "/solar-carports",
-  },
-  {
-    title: "Explore CFLC carport kits",
-    description: "See the non-solar carport page if you need parking cover without the solar element.",
-    href: "/products/cflc-carport-kits",
-  },
-  {
-    title: "Talk to Smart Steel",
-    description: "Send your layout or parking requirement if you want help with the next step.",
-    href: "/tools/solar-carport-estimator",
-  },
-]
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: { "@type": "Answer", text: item.answer },
+  })),
+}
 
-export default function CflcSolarCarportsPage() {
+function Arrow() {
+  return <span aria-hidden="true" className="text-lg leading-none">↗</span>
+}
+
+export default function AtlasSolarCarportsPage() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <section className="relative mt-6 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
-          <Image
-            src="/solar_carport_hero.webp"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center opacity-[0.98]"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.88),rgba(255,255,255,0.72))]" />
-          <div className="relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-                Solar Carports
-              </p>
-              <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Solar carports in South Africa for covered parking and solar-ready layouts
+    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#f3f0e9_17rem,#f3f0e9_100%)] pb-16 pt-24 text-[#121a20] sm:pt-28">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+
+      <section className="mx-4 overflow-hidden border border-[#121a20]/15 bg-[linear-gradient(145deg,#ffffff_0%,#faf9f5_48%,#ebe8dd_100%)] shadow-sm sm:mx-6 lg:mx-8">
+        <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
+          <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(18,26,32,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(18,26,32,0.06)_1px,transparent_1px)] [background-size:42px_42px]" />
+          <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full border border-[#d9a441]/45" />
+          <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-3">
+                <span className="grid h-9 w-9 place-items-center border border-[#d9a441] font-mono text-sm font-semibold text-[#1c5b57]">A</span>
+                <div>
+                  <p className="text-sm font-semibold tracking-[0.2em]">ATLAS SYSTEM</p>
+                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#121a20]/55">Developed by Smart Steel</p>
+                </div>
+              </div>
+              <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas Solar Carports</p>
+              <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-5xl lg:text-6xl">
+                Atlas solar carports for parking that works harder.
               </h1>
-              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Explore steel solar carports for offices, schools, business parks, estates, and
-                commercial parking areas that need shade, stronger site value, and space for solar
-                panel integration.
+              <p className="mt-6 max-w-2xl text-base leading-7 text-[#121a20]/70 sm:text-lg">
+                Atlas solar carports give commercial sites a practical way to add everyday parking cover while creating a solar-ready structure around repeatable components and bolted assembly principles.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="#solar-carports"
-                  className="rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
-                >
-                  View solar carports
+                <Link href="/tools/solar-carport-estimator" className="inline-flex items-center justify-center bg-[#d9a441] px-6 py-3.5 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f]">
+                  Price my solar carport <span className="ml-2 text-lg leading-none">→</span>
                 </Link>
-                <Link
-                  href="/tools/solar-carport-estimator"
-                  className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
-                >
-                  Estimate your solar carport
-                </Link>
+                <a href="#how-it-works" className="inline-flex items-center justify-center border border-[#121a20]/20 bg-white/75 px-6 py-3.5 text-sm font-semibold text-[#121a20] transition hover:border-[#121a20] hover:bg-white">
+                  How Atlas works
+                </a>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#121a20]/65">
+                <span className="border border-[#121a20]/15 bg-white/75 px-3 py-2">No contact details to see a starting estimate</span>
+                <span className="border border-[#121a20]/15 bg-white/75 px-3 py-2">Structure-only guide</span>
+                <span className="border border-[#121a20]/15 bg-white/75 px-3 py-2">Site review for delivery and installation</span>
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Covered parking</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Create better parking cover for everyday use, not just a temporary shade solution.
-                </p>
-              </div>
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Solar-ready layouts</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Plan the structure and the solar intent together from the start.
-                </p>
-              </div>
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Commercial sites</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  A strong fit for offices, schools, estates, business parks, and operational parking.
-                </p>
+            <div className="relative min-h-[340px] overflow-hidden border border-[#121a20]/15 bg-[#1c5b57] sm:min-h-[400px]">
+              <Image src="/solar_carport_hero.webp" alt="Atlas solar carport structure by Smart Steel" fill priority sizes="(min-width: 1024px) 44vw, 100vw" className="object-cover" />
+              <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(18,26,32,0.05),rgba(18,26,32,0.77))]" />
+              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d9a441]">Atlas solar structure</p>
+                <p className="mt-3 max-w-md text-2xl font-semibold leading-tight text-[#f3f0e9]">Parking cover and solar potential, designed as one practical structure.</p>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Quick Answers
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              A few useful answers before you enquire
-            </h2>
+      <section className="mx-auto max-w-7xl px-5 pt-8 sm:px-8 lg:px-10">
+        <div className="grid overflow-hidden border border-[#121a20]/15 bg-white sm:grid-cols-3">
+          {proofPoints.map(([title, description], index) => (
+            <div key={title} className="border-b border-[#121a20]/10 px-5 py-6 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 sm:px-7">
+              <p className="font-mono text-xs text-[#1c5b57]">0{index + 1}</p>
+              <h2 className="mt-4 text-lg font-semibold tracking-[-0.025em]">{title}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#121a20]/65">{description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="how-it-works" className="mx-auto max-w-7xl scroll-mt-24 px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">A clearer route to enquiry</p>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.045em] sm:text-4xl">Start with the parking layout, not a generic form.</h2>
           </div>
-          <div className="mt-6 grid gap-4 lg:grid-cols-4">
-            {quickAnswers.map((item) => (
-              <div key={item.question} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-base font-semibold text-slate-950">{item.question}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{item.answer}</p>
+          <p className="max-w-2xl text-base leading-7 text-[#121a20]/65">The Atlas estimator is designed to make the first commercial conversation more useful. Pick the parking requirement, see the structural direction, then send an enquiry with stronger project context already in place.</p>
+        </div>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {processSteps.map(([number, title, description]) => (
+            <div key={number} className="border border-[#121a20]/15 bg-white p-6 shadow-[0_22px_44px_-42px_rgba(18,26,32,0.75)] sm:p-7">
+              <p className="font-mono text-xs text-[#d9a441]">{number}</p>
+              <h3 className="mt-8 text-2xl font-semibold tracking-[-0.04em]">{title}</h3>
+              <p className="mt-4 text-sm leading-6 text-[#121a20]/65">{description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Where Atlas fits</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Built around how the parking area needs to work.</h2>
+          </div>
+          <Link href="/tools/solar-carport-estimator" className="inline-flex items-center gap-2 text-sm font-semibold text-[#1c5b57] hover:text-[#121a20]">Start my estimate <Arrow /></Link>
+        </div>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {applications.map((item) => (
+            <article key={item.title} className="overflow-hidden border border-[#121a20]/15 bg-white shadow-[0_22px_44px_-42px_rgba(18,26,32,0.75)]">
+              <div className="relative h-60 overflow-hidden bg-[#1c5b57]">
+                <Image src={item.image} alt={item.alt} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,26,32,0.03),rgba(18,26,32,0.55))]" />
               </div>
+              <div className="p-6">
+                <h3 className="text-2xl font-semibold tracking-[-0.04em]">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#121a20]/65">{item.description}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="grid gap-6 border border-[#121a20]/15 bg-[#121a20] p-6 text-[#f3f0e9] sm:p-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#d9a441]">Designed as an Atlas system</p>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.045em] sm:text-4xl">A better starting point than a standard carport with panels added later.</h2>
+          </div>
+          <div>
+            <p className="max-w-2xl text-base leading-7 text-white/68">Atlas brings the parking layout, modular structural system, bolted assembly method, and solar-ready purpose into one clearer conversation. You start with a practical estimate, then Smart Steel reviews the site, foundations, delivery, installation, and final requirements with you.</p>
+            <Link href="/tools/solar-carport-estimator" className="mt-7 inline-flex items-center justify-center bg-[#d9a441] px-6 py-3.5 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f]">Price my Atlas solar carport <span className="ml-2 text-lg leading-none">→</span></Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="grid gap-8 border-t border-[#121a20]/15 py-12 lg:grid-cols-[0.7fr_1.3fr]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Questions before you price</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em]">The practical details buyers ask first.</h2>
+          </div>
+          <div className="divide-y divide-[#121a20]/15 border-y border-[#121a20]/15">
+            {faqs.map((item) => (
+              <details key={item.question} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-5 text-base font-semibold marker:content-none">
+                  {item.question}<span className="text-xl text-[#1c5b57] transition group-open:rotate-45">+</span>
+                </summary>
+                <p className="max-w-2xl pt-3 text-sm leading-6 text-[#121a20]/65">{item.answer}</p>
+              </details>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="solar-carports" className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Solar Carport Options
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              The main solar carport project types we support
-            </h2>
-          </div>
-          <div className="mt-6 grid gap-5 lg:grid-cols-3">
-            {productCards.map((item, index) => (
-              <div key={item.title} className="overflow-hidden rounded-[1.85rem] border border-slate-200 bg-slate-50 shadow-sm">
-                <div className="relative h-60">
-                  <Image
-                    src={galleryImages[index % galleryImages.length].src}
-                    alt={galleryImages[index % galleryImages.length].alt}
-                    fill
-                    sizes="(min-width: 1024px) 33vw, 100vw"
-                    className="object-cover object-center"
-                  />
-                </div>
-                <div className="p-5">
-                  <h3 className="text-xl font-semibold text-slate-950">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Recent Solar Carport Photos
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Real project images help show the product clearly
-            </h2>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              {galleryImages.map((image) => (
-                <div key={image.src} className="relative h-40 overflow-hidden rounded-[1.5rem] border border-slate-200">
-                  <Image src={image.src} alt={image.alt} fill sizes="33vw" className="object-cover object-center" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Next Step
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Move into the right solar carport page or send your enquiry
-            </h2>
-            <p className="mt-4 text-sm leading-6 text-slate-600">
-              If your project is tied to a specific city, the regional solar carport pages will
-              help you compare that next step more clearly. If you are ready to enquire, send the
-              parking layout or site information you already have.
-            </p>
-            <div className="mt-6 flex flex-col gap-3">
-              <Link
-                href="/solar-carports"
-                className="rounded-full bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
-              >
-                Explore solar carport regions
-              </Link>
-              <Link
-                href="/tools/solar-carport-estimator"
-                className="rounded-full border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-              >
-                Estimate your solar carport
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-            More Help
-          </p>
-          <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-            Explore related pages
-          </h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {supportLinks.map((item) => (
-              <Link
-                key={item.title}
-                href={item.href}
-                className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
-              >
-                <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      </div>
+      <section className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+        <div className="grid gap-px overflow-hidden border border-[#121a20]/15 bg-[#121a20]/15 md:grid-cols-3">
+          {relatedPages.map(([title, description, href, cta]) => (
+            <Link key={title} href={href} className="group bg-white p-6 transition hover:bg-[#f3f0e9] sm:p-7">
+              <p className="text-lg font-semibold tracking-[-0.025em]">{title}</p>
+              <p className="mt-3 min-h-[72px] text-sm leading-6 text-[#121a20]/65">{description}</p>
+              <p className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#1c5b57]">{cta} <Arrow /></p>
+            </Link>
+          ))}
+        </div>
+      </section>
     </main>
   )
 }

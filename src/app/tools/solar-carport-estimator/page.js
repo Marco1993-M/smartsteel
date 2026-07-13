@@ -5,16 +5,16 @@ const PAGE_PATH = "/tools/solar-carport-estimator"
 const SHARE_IMAGE = `${SITE_URL}/solar_carport_hero.webp`
 
 export const metadata = {
-  title: "Solar Carport Estimator | Smart Steel",
+  title: "Atlas Solar Carport Estimator | Smart Steel",
   description:
-    "Estimate a Smart Steel solar carport online with a clearer starting budget before you send your enquiry through.",
+    "Price an Atlas solar carport online with Smart Steel. Choose your parking layout and get a practical structure-only starting budget before you enquire.",
   alternates: {
     canonical: PAGE_PATH,
   },
   openGraph: {
-    title: "Solar Carport Estimator | Smart Steel",
+    title: "Atlas Solar Carport Estimator | Smart Steel",
     description:
-      "Use the Smart Steel solar carport estimator for a quicker budget starting point before you enquire.",
+      "Choose an Atlas solar carport parking layout and get a structure-only starting budget before you enquire.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -24,15 +24,15 @@ export const metadata = {
         url: SHARE_IMAGE,
         width: 1200,
         height: 630,
-        alt: "Smart Steel solar carport estimator",
+        alt: "Atlas solar carport estimator by Smart Steel",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Solar Carport Estimator | Smart Steel",
+    title: "Atlas Solar Carport Estimator | Smart Steel",
     description:
-      "Use the Smart Steel solar carport estimator for a quicker budget starting point before you enquire.",
+      "Get an Atlas solar carport structure-only starting budget before you enquire.",
     images: [SHARE_IMAGE],
   },
 }

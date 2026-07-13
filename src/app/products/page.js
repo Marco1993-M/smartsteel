@@ -1,298 +1,240 @@
 import Image from "next/image"
 import Link from "next/link"
 
+const SITE_URL = "https://www.smartsteel.co.za"
+const PAGE_PATH = "/products"
+
 export const metadata = {
   title: "Steel Building Products South Africa | Smart Steel",
   description:
-    "Browse steel building products in South Africa from Smart Steel, including warehouses, warehouse kits, carport kits, solar carports, ground mounts, and trusses.",
+    "Find the right steel structure for your project: LSF warehouses, Atlas modular warehouse systems, lip channel carports, solar carports, ground mounts, and lightweight steel trusses.",
   keywords: [
     "steel building products south africa",
     "steel warehouses",
-    "warehouse kits",
-    "carport kits",
+    "Atlas warehouse system",
+    "lip channel warehouse kits",
+    "steel carports",
     "solar carports",
     "solar ground mounts",
-    "light steel trusses",
+    "lightweight steel trusses",
   ],
-  alternates: {
-    canonical: "/products",
-  },
+  alternates: { canonical: PAGE_PATH },
   openGraph: {
-    title: "Steel Building Products South Africa | Smart Steel",
+    title: "Steel Building Products | Smart Steel",
     description:
-      "Explore Smart Steel steel building products with dedicated pages for warehouses, warehouse kits, carport kits, solar carports, ground mounts, and trusses.",
-    url: "https://www.smartsteel.co.za/products",
+      "Choose a warehouse, carport, solar structure, or truss system and continue into the right Smart Steel product page.",
+    url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
     type: "website",
+    images: [{ url: `${SITE_URL}/warehouse.jpg`, width: 1200, height: 630, alt: "Smart Steel warehouse structures" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Steel Building Products | Smart Steel",
+    description: "Find the right steel structure for your project with Smart Steel.",
+    images: [`${SITE_URL}/warehouse.jpg`],
   },
 }
 
-const mainProducts = [
+const warehouseOptions = [
   {
-    eyebrow: "Custom warehouse option",
+    number: "01",
+    eyebrow: "Custom warehouse projects",
     title: "LSF Warehouses",
     description:
-      "Start here if you need a larger custom warehouse, a broader scope, or more flexibility around layout and project details.",
+      "For larger or more tailored warehouse projects where the layout, span, scope, and project details need more flexibility.",
     href: "/warehouses/lsf",
     cta: "Explore LSF warehouses",
-    backgroundImage: "/warehouse.jpg",
+    image: "/warehouse-13m.jpg",
+    imageAlt: "Smart Steel LSF warehouse structure",
+    detail: "Custom-engineered route",
+    tone: "lsf",
   },
   {
-    eyebrow: "Standard-size warehouse kits",
-    title: "CFLC Warehouse Kits",
+    number: "02",
+    eyebrow: "Modular warehouse system",
+    title: "Atlas W-Series",
     description:
-      "Browse practical lip channel warehouse kits with clear sizes, useful starting prices, and a simpler enquiry process.",
+      "For practical warehouse, workshop, agricultural, poultry, and storage buildings built around defined 8m, 10m, and 12m spans.",
     href: "/products/cflc-diy-warehouse-kits",
-    cta: "Explore CFLC warehouse kits",
-    backgroundImage: "/warehouse.jpg",
+    cta: "Choose an Atlas model",
+    image: "/CFLC.webp",
+    imageAlt: "Atlas cold-formed lip channel steel profile",
+    detail: "W08, W10, and W12 models",
+    tone: "atlas",
   },
+]
+
+const structureOptions = [
   {
-    eyebrow: "Parking and cover kits",
-    title: "CFLC Carport Kits",
-    description:
-      "Compare single and double lip channel carport kits for parking cover, side shelter, and smaller everyday steel cover projects.",
+    eyebrow: "Parking cover",
+    system: "Atlas System",
+    title: "Lip Channel Carports",
+    description: "Practical steel carports for single, double, and larger parking cover projects.",
     href: "/products/cflc-carport-kits",
-    cta: "Explore CFLC carport kits",
-    backgroundImage: "/CFLC_carport.webp",
+    cta: "Explore carports",
+    image: "/CFLC_carport.webp",
+    imageAlt: "Smart Steel lip channel carport",
   },
   {
-    eyebrow: "Solar parking structures",
-    title: "CFLC Solar Carports",
-    description:
-      "Explore steel solar carport pages for covered parking, solar-ready layouts, and commercial parking projects across South Africa.",
+    eyebrow: "Solar parking",
+    system: "Atlas System",
+    title: "Solar Carports",
+    description: "Covered parking structures designed to carry solar panels, with an online starting estimate.",
     href: "/products/cflc-solar-carports",
-    cta: "Explore CFLC solar carports",
-    backgroundImage: "/images/solar-carport.webp",
+    cta: "Price a solar carport",
+    image: "/solar_carport_hero.webp",
+    imageAlt: "Smart Steel solar carport structure",
   },
   {
-    eyebrow: "Ground-mounted solar structures",
-    title: "CFLC Ground Mounts",
-    description:
-      "Explore practical CFLC ground mount structures for solar projects that need scalable steel support away from buildings and parking areas.",
+    eyebrow: "Solar fields and farms",
+    system: "Atlas System",
+    title: "Solar Ground Mounts",
+    description: "ZAM steel ground mount structures for practical solar arrays, priced by panel count.",
     href: "/products/cflc-ground-mounts",
-    cta: "Explore CFLC ground mounts",
-    backgroundImage: "/solar_ground_mount.webp",
+    cta: "Price a ground mount",
+    image: "/solar_ground_mount.webp",
+    imageAlt: "Smart Steel solar ground mount structure",
   },
 ]
 
-const moreProducts = [
-  {
-    title: "Lightweight Steel Trusses",
-    description:
-      "A dedicated product page for roof truss enquiries when you want a simpler starting point.",
-    href: "/products/lightweight-steel-trusses",
-    cta: "Explore trusses",
-  },
-  {
-    title: "Bracketry",
-    description:
-      "A growing product lane for repeatable steel bracketry and related trade enquiries.",
-    href: "/contact",
-    cta: "Ask about bracketry",
-  },
+const nextStepCards = [
+  ["Need a warehouse?", "Choose LSF for a tailored project or Atlas for a defined modular starting point.", "/warehouses", "Compare warehouse systems"],
+  ["Ready to price it?", "Use the right online estimator to arrive at a more useful starting budget before you enquire.", "/warehouse-builder", "Open the warehouse builder"],
+  ["Need a roof structure?", "Explore lightweight steel trusses for a separate roof structure enquiry.", "/products/lightweight-steel-trusses", "Explore steel trusses"],
 ]
 
-const quickAnswers = [
-  {
-    question: "Do I start here or on the warehouse pages?",
-    answer:
-      "Use this page if you want to compare the main product options quickly. Use the warehouse pages if you already know you need a more custom warehouse discussion.",
-  },
-  {
-    question: "What is the difference between LSF and CFLC?",
-    answer:
-      "LSF suits broader custom warehouse projects. CFLC works well when you want a practical lip channel kit in a standard size.",
-  },
-  {
-    question: "What if I am not sure which family fits my project?",
-    answer:
-      "Start with the closest product option, then move into the warehouse pages, estimator, or contact page if you need help narrowing it down.",
-  },
-]
+function Arrow() {
+  return <span aria-hidden="true" className="text-lg leading-none">↗</span>
+}
 
 export default function ProductsHubPage() {
+  const collectionSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Smart Steel Products",
+    url: `${SITE_URL}${PAGE_PATH}`,
+    description: metadata.description,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: [...warehouseOptions, ...structureOptions].map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: item.title,
+        url: `${SITE_URL}${item.href}`,
+      })),
+    },
+  }
+
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <section className="rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
-          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-                Products
-              </p>
-              <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Steel building products in South Africa, grouped by what you need
-              </h1>
-              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Start with warehouse systems for storage buildings, carport kits for parking cover,
-                solar carports for covered parking with energy value, ground mounts for solar
-                fields, and trusses for roof structure enquiries.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="#families"
-                  className="rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
-                >
-                  Browse products
-                </Link>
-                <Link
-                  href="/warehouses"
-                  className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
-                >
-                  Compare warehouse pages
-                </Link>
-              </div>
-            </div>
+    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#f6f7f8_15rem,#f6f7f8_100%)] pb-14 pt-24 font-sans text-[#121a20] sm:pt-28">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
 
-            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Clear product pages</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Explore dedicated pages for warehouses, carports, solar carports, and other steel products.
-                </p>
-              </div>
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Practical options</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Compare practical steel options for storage, parking cover, workshops, and related projects.
-                </p>
-              </div>
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Easier to compare</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  See the main Smart Steel product options more clearly before you request a quote or ask a question.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Quick Answers
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              A better starting point for the Smart Steel product pages
-            </h2>
-          </div>
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            {quickAnswers.map((item) => (
-              <div key={item.question} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-base font-semibold text-slate-950">{item.question}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{item.answer}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section id="families" className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Main Products
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Start with the page that best matches what you need
-            </h2>
-            <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base">
-              These are the main Smart Steel product pages for warehouses, carports, and related
-              steel structures. Each one now points to a dedicated page instead of mixing unlike
-              products together on one screen.
+      <section className="mx-4 overflow-hidden rounded-[2rem] border border-black/10 bg-white/92 shadow-sm sm:mx-6 lg:mx-8">
+        <div className="relative mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#d21f35]">Smart Steel Product Hub</p>
+            <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-[0.97] tracking-[-0.055em] text-[#121a20] sm:text-6xl">
+              Start with what you need to build.
+            </h1>
+            <p className="mt-6 max-w-2xl text-base leading-7 text-[#121a20]/68 sm:text-lg">
+              Find the right steel structure, price a practical starting point where available, and continue into a focused product page built around your project.
             </p>
           </div>
 
-          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {mainProducts.map((item) => (
-              <Link
-                key={item.title}
-                href={item.href}
-                className="relative overflow-hidden rounded-[1.85rem] border border-slate-200 bg-slate-50 p-6 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
-              >
-                <Image
-                  src={item.backgroundImage}
-                  alt=""
-                  fill
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  className="object-cover object-center opacity-[0.98]"
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(248,250,252,0.9),rgba(255,255,255,0.76))]" />
-                <div className="relative z-10">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#da1a33]">
-                    {item.eyebrow}
-                  </p>
-                  <h3 className="mt-4 text-2xl font-semibold text-slate-950">{item.title}</h3>
-                  <p className="mt-4 max-w-xl text-sm leading-6 text-slate-600">{item.description}</p>
-                  <div className="mt-6 flex items-center justify-between">
-                    <p className="text-sm font-semibold text-[#da1a33]">{item.cta}</p>
-                    <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-                      Open
-                    </span>
-                  </div>
+          <nav aria-label="Product categories" className="mt-10 grid overflow-hidden rounded-[1.5rem] border border-black/10 bg-slate-50 sm:grid-cols-3">
+            <a href="#warehouses" className="group border-b border-[#121a20]/15 px-5 py-5 transition hover:bg-white sm:border-b-0 sm:border-r">
+              <p className="font-mono text-xs text-[#d21f35]">01</p>
+              <p className="mt-2 font-semibold">Warehouses</p>
+              <p className="mt-1 text-sm text-[#121a20]/60">LSF and Atlas W-Series</p>
+            </a>
+            <a href="#structures" className="group border-b border-[#121a20]/15 px-5 py-5 transition hover:bg-white sm:border-b-0 sm:border-r">
+              <p className="font-mono text-xs text-[#d21f35]">02</p>
+              <p className="mt-2 font-semibold">Cover and solar</p>
+              <p className="mt-1 text-sm text-[#121a20]/60">Carports and solar structures</p>
+            </a>
+            <Link href="/products/lightweight-steel-trusses" className="group px-5 py-5 transition hover:bg-white">
+              <p className="font-mono text-xs text-[#d21f35]">03</p>
+              <p className="mt-2 font-semibold">Roof structures</p>
+              <p className="mt-1 text-sm text-[#121a20]/60">Lightweight steel trusses</p>
+            </Link>
+          </nav>
+        </div>
+      </section>
+
+      <section id="warehouses" className="mx-auto max-w-7xl scroll-mt-24 px-5 pt-14 sm:px-8 sm:pt-20 lg:px-10">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#d21f35]">Warehouse systems</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Choose the warehouse route that fits the project.</h2>
+          </div>
+          <Link href="/warehouses" className="inline-flex items-center gap-2 text-sm font-semibold text-[#d21f35] hover:text-[#121a20]">Compare warehouse systems <Arrow /></Link>
+        </div>
+
+        <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          {warehouseOptions.map((item) => (
+            <Link
+              key={item.title}
+              href={item.href}
+              className={`group relative min-h-[430px] overflow-hidden rounded-[2rem] border p-6 shadow-sm transition hover:-translate-y-1 sm:p-8 ${item.tone === "lsf" ? "border-[#121a20] bg-[#121a20] text-white" : "border-[#1c5b57] bg-[#1c5b57] text-[#f7f5ef]"}`}
+            >
+              <Image src={item.image} alt={item.imageAlt} fill sizes="(min-width: 1024px) 50vw, 100vw" className={`object-cover transition duration-500 group-hover:scale-[1.03] ${item.tone === "atlas" ? "object-center opacity-40" : "opacity-30"}`} />
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(18,26,32,0.88),rgba(18,26,32,0.42))]" />
+              <div className="relative z-10 flex h-full flex-col">
+                <div className="flex items-start justify-between gap-5">
+                  <p className={`font-mono text-xs ${item.tone === "lsf" ? "text-[#f14c5d]" : "text-[#d9a441]"}`}>{item.number}</p>
+                  <span className="border border-white/25 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80">{item.detail}</span>
                 </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+                <div className="mt-auto max-w-xl">
+                  <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${item.tone === "lsf" ? "text-[#f14c5d]" : "text-[#d9a441]"}`}>{item.eyebrow}</p>
+                  <h3 className="mt-4 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">{item.title}</h3>
+                  <p className="mt-5 max-w-lg text-base leading-7 text-white/76">{item.description}</p>
+                  <p className={`mt-8 inline-flex items-center gap-2 border-b pb-2 text-sm font-semibold ${item.tone === "lsf" ? "border-[#f14c5d] text-[#ffadb6]" : "border-[#d9a441] text-[#f6d37c]"}`}>{item.cta} <Arrow /></p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              More Products
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Other products
-            </h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              {moreProducts.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
-                >
-                  <h3 className="text-lg font-semibold text-slate-950">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
-                  <p className="mt-5 text-sm font-semibold text-[#da1a33]">{item.cta}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
+      <section id="structures" className="mx-auto max-w-7xl scroll-mt-24 px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#d21f35]">Cover and solar structures</p>
+          <h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Choose the structure around the way your site works.</h2>
+        </div>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {structureOptions.map((item) => (
+            <Link key={item.title} href={item.href} className="group overflow-hidden rounded-[1.7rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#1c5b57]">
+              <div className="relative h-56 overflow-hidden bg-slate-100">
+                <Image src={item.image} alt={item.imageAlt} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition duration-500 group-hover:scale-[1.04]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,26,32,0.02),rgba(18,26,32,0.46))]" />
+                <p className="absolute bottom-4 left-5 text-xs font-semibold uppercase tracking-[0.18em] text-white">{item.eyebrow}</p>
+              </div>
+              <div className="p-5 sm:p-6">
+                <span className="inline-flex rounded-full border border-[#1c5b57]/25 bg-[#eaf3f1] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1c5b57]">
+                  {item.system}
+                </span>
+                <h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[#121a20]">{item.title}</h3>
+                <p className="mt-3 min-h-[72px] text-sm leading-6 text-[#121a20]/65">{item.description}</p>
+                <p className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#d21f35]">{item.cta} <Arrow /></p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Need Help Choosing?
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Move into the right next step
-            </h2>
-            <p className="mt-4 text-sm leading-6 text-slate-600">
-              If you are still unsure which option fits your project, the warehouse pages and the
-              estimator are the best next step. They make it easier to compare sizes, pricing, and
-              project scope before you enquire.
-            </p>
-            <div className="mt-6 flex flex-col gap-3">
-              <Link
-                href="/warehouses"
-                className="rounded-full bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
-              >
-                Compare warehouse pages
-              </Link>
-              <Link
-                href="/tools/estimator"
-                className="rounded-full border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-              >
-                Use the estimator
-              </Link>
-              <Link
-                href="/contact"
-                className="rounded-full border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-              >
-                Talk to Smart Steel
-              </Link>
-            </div>
-          </div>
-        </section>
-      </div>
+      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="grid gap-px overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-200 shadow-sm lg:grid-cols-3">
+          {nextStepCards.map(([title, description, href, cta]) => (
+            <Link key={title} href={href} className="group bg-[#f6f7f8] p-6 transition hover:bg-white sm:p-8">
+              <p className="text-lg font-semibold tracking-[-0.025em] text-[#121a20]">{title}</p>
+              <p className="mt-3 min-h-[72px] text-sm leading-6 text-[#121a20]/65">{description}</p>
+              <p className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#d21f35]">{cta} <Arrow /></p>
+            </Link>
+          ))}
+        </div>
+      </section>
     </main>
   )
 }

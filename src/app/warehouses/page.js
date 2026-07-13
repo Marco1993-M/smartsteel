@@ -1,9 +1,9 @@
 import Link from "next/link"
 
 export const metadata = {
-  title: "Steel Warehouses South Africa | LSF & CFLC Warehouse Systems",
+  title: "Steel Warehouses South Africa | LSF & Atlas Lip Channel Systems",
   description:
-    "Explore steel warehouses in South Africa from Smart Steel. Compare LSF and CFLC warehouse systems, understand pricing, and choose between a custom warehouse or practical lipped channel kit options.",
+    "Explore steel warehouses in South Africa from Smart Steel. Compare LSF and Atlas lip channel warehouse systems, understand pricing, and choose between a custom warehouse or practical lipped channel kit options.",
   keywords: [
     "steel warehouses south africa",
     "warehouse supplier south africa",
@@ -19,7 +19,7 @@ export const metadata = {
   openGraph: {
     title: "Steel Warehouses South Africa | Smart Steel",
     description:
-      "Compare LSF and CFLC steel warehouse systems, understand what affects pricing, and start the right warehouse option for your project.",
+      "Compare LSF and Atlas lip channel warehouse systems, understand what affects pricing, and start the right warehouse option for your project.",
     url: "https://www.smartsteel.co.za/warehouses",
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -36,12 +36,12 @@ const quickAnswers = [
   {
     question: "Do you offer custom and standard options?",
     answer:
-      "Yes. Smart Steel offers custom LSF warehouse systems as well as CFLC and lip channel kits in standard sizes.",
+      "Yes. Smart Steel offers custom LSF warehouse systems as well as Atlas lip channel kits in standard sizes.",
   },
   {
-    question: "What is the difference between LSF and CFLC?",
+    question: "What is the difference between LSF and Atlas?",
     answer:
-      "LSF is better suited to custom warehouse projects, while CFLC gives you a practical cold formed lip channel option for standard sizes and simpler supply enquiries.",
+      "LSF is better suited to custom warehouse projects, while Atlas gives you a practical cold formed lip channel option for standard sizes and simpler supply enquiries.",
   },
   {
     question: "How do I get a price?",
@@ -64,7 +64,7 @@ const systems = [
     cta: "Explore LSF systems",
   },
   {
-    title: "CFLC and lip channel warehouse options",
+    title: "Atlas lip channel warehouse options",
     description:
       "Best for practical, repeatable steel building sizes for smaller warehouses, covers, and utility structures.",
     bullets: [
@@ -73,7 +73,7 @@ const systems = [
       "A simpler option when you want supply-only kit pricing first",
     ],
     href: "/products/cflc-diy-warehouse-kits",
-    cta: "Browse CFLC kits",
+    cta: "Browse Atlas kits",
   },
 ]
 
@@ -81,7 +81,7 @@ const pricingFactors = [
   "span and overall building width",
   "building length and number of bays",
   "wall height and ridge height",
-  "LSF or CFLC / lip channel structural system",
+  "LSF or Atlas lip channel structural system",
   "cladding, openings, and finish choices",
   "delivery, installation, and site-specific requirements",
 ]
@@ -118,12 +118,12 @@ const finalQuestions = [
   {
     question: "Can I choose between a custom system and a standard kit?",
     answer:
-      "Yes. You can choose a custom LSF warehouse system or start with a CFLC and lip channel kit in a standard size.",
+      "Yes. You can choose a custom LSF warehouse system or start with an Atlas lip channel kit in a standard size.",
   },
   {
-    question: "Is CFLC suitable for DIY-friendly projects?",
+    question: "Are Atlas warehouse kits suitable for self-build projects?",
     answer:
-      "Yes. The CFLC and lip channel range works well for DIY-friendly projects when standard sizes and supply-only options make sense.",
+      "Yes. The Atlas lip channel range works well for self-build projects when standard sizes and supply-only options make sense.",
   },
   {
     question: "Can Smart Steel help with pricing before final quoting?",
@@ -149,13 +149,13 @@ const clusterLinks = [
     href: "/warehouses/lsf",
   },
   {
-    title: "CFLC warehouse systems",
-    description: "Understand how CFLC and lip channel steel suits practical warehouse and cover projects.",
+    title: "Atlas warehouse systems",
+    description: "Understand how Atlas lip channel steel suits practical warehouse and cover projects.",
     href: "/warehouses/cflc",
   },
   {
-    title: "CFLC DIY kits",
-    description: "Browse standard-size CFLC kits if you want a simpler supply-only starting point.",
+    title: "Atlas warehouse kits",
+    description: "Browse standard-size Atlas kits if you want a simpler supply-only starting point.",
     href: "/products/cflc-diy-warehouse-kits",
   },
   {
@@ -184,7 +184,7 @@ export default function WarehousesHubPage() {
                 Steel warehouses in South Africa
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Smart Steel offers custom LSF warehouse systems as well as CFLC and lip
+                Smart Steel offers custom LSF warehouse systems as well as Atlas lip
                 channel options in practical standard sizes. Use this page to compare the systems,
                 understand what affects pricing, and decide which warehouse option suits your
                 project best.
@@ -206,7 +206,7 @@ export default function WarehousesHubPage() {
                   href="/products/cflc-diy-warehouse-kits"
                   className="rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
                 >
-                  Browse CFLC kits
+                  Browse Atlas kits
                 </Link>
               </div>
             </div>
@@ -215,7 +215,7 @@ export default function WarehousesHubPage() {
               <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
                 <p className="text-2xl font-semibold text-slate-950">Custom or standard sizes</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Compare a custom LSF warehouse with a CFLC and lip channel kit in a standard
+                  Compare a custom LSF warehouse with an Atlas lip channel kit in a standard
                   size.
                 </p>
               </div>
@@ -248,7 +248,7 @@ export default function WarehousesHubPage() {
 
         <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-            LSF vs CFLC
+            LSF vs Atlas
           </p>
           <h2 className="mt-3 text-2xl font-semibold text-slate-950">
             Which warehouse system fits your project?
@@ -282,7 +282,7 @@ export default function WarehousesHubPage() {
               How To Choose
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              How do I choose between LSF and CFLC?
+              How do I choose between LSF and Atlas?
             </h2>
             <div className="mt-5 space-y-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
@@ -291,7 +291,7 @@ export default function WarehousesHubPage() {
                 tailored scope.
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
-                Choose <span className="font-semibold text-slate-900">CFLC / lip channel</span>{" "}
+                Choose <span className="font-semibold text-slate-900">Atlas lip channel</span>{" "}
                 if you want standard sizes, simpler pricing, and a practical steel kit that is
                 easier to compare.
               </div>
@@ -332,7 +332,7 @@ export default function WarehousesHubPage() {
                 href="/products/cflc-diy-warehouse-kits"
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-slate-300 hover:bg-white"
               >
-                <p className="text-sm font-semibold text-slate-900">Browse CFLC Kits</p>
+                <p className="text-sm font-semibold text-slate-900">Browse Atlas Kits</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   Best if you want a simpler lip channel kit in a standard size.
                 </p>
@@ -466,7 +466,7 @@ export default function WarehousesHubPage() {
             Start your warehouse project with the right system
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">
-            Use the builder if you want to shape a custom warehouse, browse the CFLC and lip
+            Use the builder if you want to shape a custom warehouse, browse the Atlas lip
             channel kit range if you want to compare standard sizes, or talk to Smart Steel if you
             want help choosing.
           </p>

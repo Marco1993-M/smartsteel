@@ -296,7 +296,10 @@ export default function CflcGroundMountsPage() {
             <GroundMountEstimatorClient variant="hero" />
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
+              <span className="inline-flex rounded-full border border-[#1c5b57]/25 bg-[#eaf3f1] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1c5b57]">
+                Atlas System
+              </span>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
                 Solar Ground Mounts
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">

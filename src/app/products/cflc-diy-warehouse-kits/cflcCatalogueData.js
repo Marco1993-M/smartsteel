@@ -1,5 +1,6 @@
 import { formatCurrency } from "../../../lib/estimates/warehouseEstimate"
 import { calculateLcssWarehouseEstimate } from "../../../lib/estimates/warehouseEstimateLcss"
+import { ATLAS_W_SERIES } from "../../../lib/atlasProductData"
 
 const SITE_URL = "https://www.smartsteel.co.za"
 const CATEGORY_PATH = "/products/cflc-diy-warehouse-kits"
@@ -82,7 +83,7 @@ function buildKit(width, length) {
   })
 
   return {
-    title: `${width}m x ${length}m CFLC kit`,
+    title: `${width}m x ${length}m Atlas warehouse kit`,
     width,
     length,
     path: CATEGORY_PATH,
@@ -120,13 +121,14 @@ export const cflcLaunchRanges = LAUNCH_SPANS.map((span) => {
 })
 
 export const cflcCatalogueMetadata = {
-  title: "Steel Warehouse Kits South Africa | Smart Steel",
+  title: "Atlas Lip Channel Warehouse Kits South Africa | Smart Steel",
   description:
-    "Browse steel warehouse kits in South Africa from Smart Steel, including practical 6m, 10m, and 12m span options for self-build, storage, workshop, and utility projects.",
+    "Browse Atlas W-Series modular warehouse kits in South Africa from Smart Steel, including practical W08, W10, and W12 options for storage, workshops, agriculture, and commercial projects.",
   keywords: [
     "steel warehouse kits south africa",
     "self-build warehouse",
     "DIY steel warehouse kits",
+    "Atlas lip channel warehouse kits",
     "warehouse kits",
     "lip channel warehouse kits",
     "steel shed kits south africa",
@@ -135,9 +137,9 @@ export const cflcCatalogueMetadata = {
     canonical: CATEGORY_PATH,
   },
   openGraph: {
-    title: "Steel Warehouse Kits South Africa | Smart Steel",
+    title: "Atlas Lip Channel Warehouse Kits | Smart Steel",
     description:
-      "Explore Smart Steel steel warehouse kits in practical sizes for self-build, storage, workshop, and utility projects.",
+      "Explore Smart Steel Atlas W-Series modular warehouse kits in practical sizes for storage, workshop, agricultural, and commercial projects.",
     url: `${SITE_URL}${CATEGORY_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -156,19 +158,23 @@ export const cflcStarterKits = STARTER_KITS.map(buildStarterKit)
 function buildFeaturedSelection({
   id,
   title,
+  modelCode,
   family,
   bestFor,
-  productType = "DIY supply only",
+  productType = "Supply-only guide",
   priceFrom,
   width,
   length,
   weight,
   packInfo,
   leadTime = DEFAULT_LEAD_TIME,
+  ctaHref = "/contact",
+  ctaLabel = "Request this product",
 }) {
   return {
     id,
     title,
+    modelCode,
     family,
     bestFor,
     productType,
@@ -181,12 +187,13 @@ function buildFeaturedSelection({
     leadTime,
     included: DEFAULT_INCLUDED,
     excluded: DEFAULT_EXCLUDED,
-    ctaHref: "/contact",
-    ctaLabel: "Request this product",
+    ctaHref,
+    ctaLabel,
   }
 }
 
-function buildWarehouseFeaturedSelection({ width, length, family, bestFor, packInfo }) {
+function buildWarehouseFeaturedSelection({ modelCode, width, length, family, bestFor, packInfo }) {
+  const model = ATLAS_W_SERIES.find((item) => item.code === modelCode)
   const estimate = calculateLcssWarehouseEstimate({
     ...DEFAULT_PRODUCT_INPUT,
     width,
@@ -194,8 +201,8 @@ function buildWarehouseFeaturedSelection({ width, length, family, bestFor, packI
   })
 
   return buildFeaturedSelection({
-    id: `${width}x${length}`,
-    title: `${width}m x ${length}m CFLC warehouse kit`,
+    id: `${modelCode.toLowerCase()}-${width}x${length}`,
+    title: `Atlas ${model?.code || modelCode} · ${width}m x ${length}m`,
     family,
     bestFor,
     width,
@@ -203,6 +210,9 @@ function buildWarehouseFeaturedSelection({ width, length, family, bestFor, packI
     priceFrom: formatCurrency(estimate.pricing.totalInclVat),
     weight: `${estimate.materials.totalSteelKg}kg steel before optional extras`,
     packInfo,
+    modelCode,
+    ctaHref: `/warehouse-builder?productType=LCSS%20Warehouse&width=${width}&length=${length}`,
+    ctaLabel: "Configure this model",
   })
 }
 
@@ -230,49 +240,55 @@ export const cflcFeaturedSelections = [
     packInfo: "Estimated 2 bundles. Main bundle approximately 3.2m x 1.0m x 0.5m.",
   }),
   buildWarehouseFeaturedSelection({
-    width: 6,
+    modelCode: "W08",
+    width: 8,
     length: 10,
-    family: "6m span warehouse kits",
-    bestFor: "Smaller storage buildings, workshops, and practical utility warehouse use.",
+    family: "Atlas W08 · 8m span",
+    bestFor: "Compact storage buildings, workshops, agricultural utility space, and covered work areas.",
     packInfo:
       "Estimated 2 bundles. Structural bundle approximately 3.2m x 1.1m x 0.7m plus a long hat/purlin bundle.",
   }),
   buildWarehouseFeaturedSelection({
-    width: 6,
-    length: 15,
-    family: "6m span warehouse kits",
+    modelCode: "W08",
+    width: 8,
+    length: 20,
+    family: "Atlas W08 · 8m span",
     bestFor: "Longer workshops, farm utility buildings, and compact warehouse expansion space.",
     packInfo:
       "Estimated flat-packed structural bundle plus one longer hat/purlin bundle for the extended depth.",
   }),
   buildWarehouseFeaturedSelection({
+    modelCode: "W10",
     width: 10,
     length: 10,
-    family: "10m span warehouse kits",
+    family: "Atlas W10 · 10m span",
     bestFor: "Operational storage, wider workshop space, and covered work areas that need more width.",
     packInfo:
       "Estimated flat-packed structural and purlin bundles for collection or arranged delivery.",
   }),
   buildWarehouseFeaturedSelection({
+    modelCode: "W10",
     width: 10,
     length: 20,
-    family: "10m span warehouse kits",
+    family: "Atlas W10 · 10m span",
     bestFor: "Mid-range storage, equipment cover, and commercial workshop or yard support space.",
     packInfo:
       "Estimated flat-packed structural and purlin bundles for collection or arranged delivery.",
   }),
   buildWarehouseFeaturedSelection({
+    modelCode: "W12",
     width: 12,
     length: 10,
-    family: "12m span warehouse kits",
+    family: "Atlas W12 · 12m span",
     bestFor: "Wider warehouse and agricultural storage projects that need a stronger footprint from the start.",
     packInfo:
       "Estimated flat-packed structural and purlin bundles for collection or arranged delivery.",
   }),
   buildWarehouseFeaturedSelection({
+    modelCode: "W12",
     width: 12,
     length: 20,
-    family: "12m span warehouse kits",
+    family: "Atlas W12 · 12m span",
     bestFor: "Larger warehouse, commercial storage, and agricultural cover projects.",
     packInfo:
       "Estimated flat-packed structural and purlin bundles for collection or arranged delivery.",
