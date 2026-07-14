@@ -28,6 +28,9 @@ export const DOCUMENT_TYPE_OPTIONS = [
 ]
 export const CATALOG_ITEM_KIND_OPTIONS = ["component", "module"]
 export const CATALOG_ITEM_STATUS_OPTIONS = ["active", "draft", "needs_review"]
+export const BOM_STATUS_OPTIONS = ["draft", "needs_review", "approved", "superseded"]
+export const BOM_LINE_SCOPE_OPTIONS = ["standard", "optional", "project_specific"]
+export const BOM_UNIT_OPTIONS = ["each", "m", "m2", "kg", "set", "pack"]
 
 const FAMILY_SOURCE = {
   atlas: ATLAS_FAMILIES,
@@ -244,6 +247,49 @@ const DEFAULT_CATALOG_ITEMS = {
   },
 }
 
+const DEFAULT_BOMS = {
+  atlas: [
+    {
+      id: "atlas-bom-warehouse-8m-r1",
+      platformKey: "atlas",
+      productFamilyKey: "warehouses",
+      productFamilyName: "Atlas Warehouses",
+      code: "ATL-WH-8M-SHELL",
+      title: "8m Atlas warehouse shell",
+      description: "Starting material structure for an 8m Atlas warehouse before project-specific openings, cladding, and site scope are added.",
+      revisionCode: "R1",
+      status: "approved",
+      owner: "Marco",
+      lines: [
+        { id: "atlas-bom-warehouse-1", lineNumber: 10, category: "Primary framing", description: "Warehouse primary frame set", componentName: "Warehouse primary frame set", quantity: 1, unit: "set", wasteFactor: 0, scope: "standard", notes: "Confirm span, bay count, and eave height before issue." },
+        { id: "atlas-bom-warehouse-2", lineNumber: 20, category: "Secondary steel", description: "Roof purlin and girt pack", componentName: "Roof purlin and girt pack", quantity: 1, unit: "set", wasteFactor: 0.05, scope: "standard", notes: "Adjust for enclosure and wall support requirements." },
+        { id: "atlas-bom-warehouse-3", lineNumber: 30, category: "Cladding", description: "Roof sheeting allowance", componentName: "", quantity: 1, unit: "m2", wasteFactor: 0.08, scope: "optional", notes: "Confirm coverage from roof geometry." },
+      ],
+      createdAt: "2026-07-13T09:00:00.000Z",
+      updatedAt: "2026-07-13T09:00:00.000Z",
+    },
+    {
+      id: "atlas-bom-solar-2bay-r1",
+      platformKey: "atlas",
+      productFamilyKey: "solar",
+      productFamilyName: "Atlas Solar Structures",
+      code: "ATL-SC-2BAY-6M",
+      title: "Two-bay Atlas solar carport",
+      description: "Standard structure-only starting BOM for a two-bay, single-row solar carport. Foundations, delivery, and installation remain project-reviewed items.",
+      revisionCode: "R1",
+      status: "needs_review",
+      owner: "Stefan",
+      lines: [
+        { id: "atlas-bom-solar-1", lineNumber: 10, category: "Primary framing", description: "Solar carport primary steel structure", componentName: "", quantity: 1, unit: "set", wasteFactor: 0, scope: "standard", notes: "Confirm parking arrangement and clearance." },
+        { id: "atlas-bom-solar-2", lineNumber: 20, category: "Connections and fittings", description: "Solar bracket support kit", componentName: "Solar bracket support kit", quantity: 1, unit: "set", wasteFactor: 0.02, scope: "standard", notes: "Panel supplier rails are not included in Atlas structure scope." },
+        { id: "atlas-bom-solar-3", lineNumber: 30, category: "Site scope", description: "Foundation and anchor review", componentName: "", quantity: 1, unit: "each", wasteFactor: 0, scope: "project_specific", notes: "Price after site and foundation review." },
+      ],
+      createdAt: "2026-07-13T09:00:00.000Z",
+      updatedAt: "2026-07-13T09:00:00.000Z",
+    },
+  ],
+}
+
 function getFocusStatus(focus) {
   if (String(focus || "").toLowerCase().includes("priority")) return "active"
   if (String(focus || "").toLowerCase().includes("growth")) return "needs_review"
@@ -280,6 +326,10 @@ export function getFallbackDocuments(platformKey) {
 
 export function getFallbackCatalogItems(platformKey, kind) {
   return DEFAULT_CATALOG_ITEMS[platformKey]?.[kind] || []
+}
+
+export function getFallbackBoms(platformKey) {
+  return DEFAULT_BOMS[platformKey] || []
 }
 
 export function isSchemaMissingError(error) {
