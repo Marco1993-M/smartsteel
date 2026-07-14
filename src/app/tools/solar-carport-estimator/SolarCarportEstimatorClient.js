@@ -8,6 +8,7 @@ const DEFAULT_CLEARANCE_HEIGHT = 2.4
 const DEFAULT_SOLAR_PANEL_WATTAGE = 550
 const DEFAULT_SOLAR_PANEL_LENGTH_METERS = 2.278
 const DEFAULT_SOLAR_PANEL_WIDTH_METERS = 1.134
+const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
 const SOLAR_CARPORT_WIDTH_OPTIONS = Array.from({ length: 20 }, (_, index) => {
   const parkingCount = index + 1
   const width = parkingCount === 1 ? 3 : 5 + (parkingCount - 2) * 2.5
@@ -115,6 +116,17 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     [formState]
   )
 
+  const whatsappMessage = [
+    "Hi Smart Steel, I'd like to discuss an Atlas solar carport.",
+    "",
+    `Layout: ${formState.quantity} ${formState.quantity === 1 ? "structure" : "structures"}, ${formatDimension(formState.width)} wide x ${formatDimension(formState.length)}`,
+    `Estimated panel capacity: ${formState.moduleCount} panels per structure`,
+    `Structure-only starting budget: ${formatCurrency(estimate.pricing.estimatedTotal)} excl. VAT`,
+    "",
+    "Please get in touch with me about the next step.",
+  ].join("\n")
+  const whatsappHref = `https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`
+
   const handleFieldChange = (field, value) => {
     setFormState((current) => {
       const nextState = {
@@ -202,7 +214,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#f3f0e9_17rem,#f3f0e9_100%)] px-4 pb-10 pt-24 text-[#121a20] sm:px-6 sm:pt-28 lg:px-8">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#f3f0e9_17rem,#f3f0e9_100%)] px-4 pb-28 pt-24 text-[#121a20] sm:px-6 sm:pt-28 lg:px-8 lg:pb-10">
       <div className="mx-auto max-w-6xl">
         <section className="border border-[#121a20]/15 bg-[linear-gradient(145deg,#ffffff_0%,#faf9f5_50%,#ebe8dd_100%)] px-6 py-10 shadow-sm sm:px-8 lg:px-10">
           <div className="max-w-4xl">
@@ -405,6 +417,14 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               >
                 {showEnquiryForm ? "Hide contact form" : "Continue with this estimate"}
               </button>
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full border border-[#1c5b57] bg-white px-6 py-3 text-sm font-semibold text-[#1c5b57] transition hover:bg-[#eaf3f1]"
+              >
+                Send via WhatsApp
+              </a>
               <Link
                 href="/solar"
                 className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
@@ -526,6 +546,31 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             </Link>
           </div>
         </section>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[#121a20]/15 bg-white/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_28px_-24px_rgba(18,26,32,0.7)] backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1c5b57]">
+              Current guide
+            </p>
+            <p className="mt-0.5 truncate text-lg font-semibold tracking-[-0.03em] text-[#121a20]">
+              {formatCurrency(estimate.pricing.estimatedTotal)}
+              <span className="ml-1 text-xs font-medium tracking-normal text-[#121a20]/55">excl. VAT</span>
+            </p>
+          </div>
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex shrink-0 items-center gap-2 bg-[#25D366] px-4 py-3 text-sm font-semibold text-[#0b2715] shadow-sm transition hover:bg-[#1fbd58]"
+          >
+            <svg viewBox="0 0 32 32" aria-hidden="true" className="h-5 w-5 fill-current">
+              <path d="M16 3.2a12.7 12.7 0 0 0-10.9 19.2L3.5 28.8l6.6-1.7A12.8 12.8 0 1 0 16 3.2Zm0 23.2a10.4 10.4 0 0 1-5.3-1.5l-.4-.2-3.9 1 1-3.8-.3-.4A10.4 10.4 0 1 1 16 26.4Zm5.7-7.8c-.3-.1-1.7-.9-2-.9s-.5-.1-.7.2-.8.9-.9 1.1-.4.3-.7.1a8.5 8.5 0 0 1-2.5-1.5 9.4 9.4 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5s0-.4 0-.5l-.9-2.1c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.4 1 2.8 1.2 3 .2.3.3.5a12 12 0 0 0 4.6 4c.6.3 1 .5 1.4.6.6.2 1.2.2 1.6.1.5-.1 1.7-.7 1.9-1.4s.2-1.2.1-1.4-.3-.2-.6-.4Z" />
+            </svg>
+            WhatsApp
+          </a>
+        </div>
       </div>
     </main>
   )
