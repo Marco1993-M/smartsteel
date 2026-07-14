@@ -2,7 +2,7 @@ import SolarCarportEstimatorClient from "./SolarCarportEstimatorClient"
 
 const SITE_URL = "https://www.smartsteel.co.za"
 const PAGE_PATH = "/tools/solar-carport-estimator"
-const SHARE_IMAGE = `${SITE_URL}/solar_carport_hero.webp`
+const SHARE_IMAGE = `${SITE_URL}/atlas-solar-carports-share.png`
 
 export const metadata = {
   title: "Atlas Solar Carport Estimator | Smart Steel",

@@ -256,8 +256,18 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                           : "border-slate-200 bg-[#f7f8f7] text-[#121a20] hover:border-[#1c5b57]"
                       }`}
                     >
-                      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isSelected ? "text-[#d9a441]" : "text-[#1c5b57]"}`}>{option.parkingCount === 1 ? "Single" : option.parkingCount === 2 ? "Double" : `${option.parkingCount} bays`}</p>
-                      <p className="mt-3 text-xl font-semibold">{option.width}m wide</p>
+                      <div className="flex h-7 items-center gap-1" aria-hidden="true">
+                        {Array.from({ length: option.parkingCount }, (_, index) => (
+                          <img
+                            key={index}
+                            src="/car.png"
+                            alt=""
+                            className={`h-6 w-6 object-contain ${isSelected ? "brightness-0 invert" : ""}`}
+                          />
+                        ))}
+                      </div>
+                      <p className={`mt-3 text-xs font-semibold uppercase tracking-[0.16em] ${isSelected ? "text-[#d9a441]" : "text-[#1c5b57]"}`}>{option.label.replace(/ \(.+\)/, "")}</p>
+                      <p className="mt-2 text-xl font-semibold">{option.width}m wide</p>
                     </button>
                   )
                 })}
