@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
+import WeeklySchedule from "./WeeklySchedule"
 import { OS_SECTIONS, OS_STATUS_META } from "../../lib/osNavigation"
 import {
   ATLAS_WORKSPACE_PRIORITIES,
@@ -194,6 +195,8 @@ export default function OsDashboard() {
 
   return (
     <div className="space-y-4 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6">
+      <WeeklySchedule />
+
       <section className="relative overflow-hidden rounded-[1.8rem] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_30%),linear-gradient(135deg,_#ffffff,_#f8fafc_52%,_#e2e8f0)] p-4 shadow-sm sm:rounded-[2rem] sm:p-6 lg:p-8">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_380px]">
           <div>
@@ -228,7 +231,7 @@ export default function OsDashboard() {
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/70 bg-white/75 p-4 shadow-sm backdrop-blur sm:rounded-[1.8rem] sm:p-5">
+          <div className="hidden rounded-[1.5rem] border border-white/70 bg-white/75 p-4 shadow-sm backdrop-blur sm:rounded-[1.8rem] sm:p-5 xl:block">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               This week
             </p>
@@ -274,7 +277,7 @@ export default function OsDashboard() {
         </section>
       ) : null}
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {[
           {
             label: "Product families",
@@ -425,7 +428,7 @@ export default function OsDashboard() {
               {OS_STATUS_META.active_build.label}
             </span>
           </div>
-          <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:mt-5 sm:gap-3">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Families</p>
               <p className="mt-2 text-3xl font-bold text-slate-950">{loading ? "..." : atlasFamilies.length}</p>
@@ -462,7 +465,7 @@ export default function OsDashboard() {
               {OS_STATUS_META.active_build.label}
             </span>
           </div>
-          <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:mt-5 sm:gap-3">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Families</p>
               <p className="mt-2 text-3xl font-bold text-slate-950">{loading ? "..." : lsfFamilies.length}</p>

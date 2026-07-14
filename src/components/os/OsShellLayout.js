@@ -14,8 +14,8 @@ export default function OsShellLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
-        <div className="rounded-3xl border border-white/10 bg-white/5 px-8 py-6 text-sm text-slate-200 shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_32%,_#e2e8f0_100%)] px-4 text-slate-900">
+        <div className="rounded-3xl border border-slate-200 bg-white/90 px-8 py-6 text-sm text-slate-600 shadow-sm">
           Loading Smart Steel OS...
         </div>
       </div>
@@ -25,7 +25,7 @@ export default function OsShellLayout({ children }) {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-16 text-slate-900 sm:pt-20">
+    <div className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_24%,_#eef3f7_100%)] pt-16 text-slate-900 sm:pt-20">
       <div className="grid min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="border-b border-white/10 bg-[linear-gradient(180deg,_#0f172a,_#111827)] text-white lg:border-b-0 lg:border-r">
           <div className="px-4 py-4 sm:p-6">
