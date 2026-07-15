@@ -36,6 +36,16 @@ const PROCEED_TIMING_OPTIONS = [
   { value: "just_pricing", label: "Just pricing for now" },
 ]
 
+function reportAtlasSolarCarportConversion() {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return
+
+  window.gtag("event", "conversion", {
+    send_to: "AW-17629050810/hIhiCNzz6tAcELrvl9ZB",
+    value: 1.0,
+    currency: "ZAR",
+  })
+}
+
 function formatDimension(value) {
   return `${Number(value)}m`
 }
@@ -195,6 +205,8 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       if (!response.ok) {
         throw new Error(payload?.error || "Could not save the solar carport enquiry.")
       }
+
+      reportAtlasSolarCarportConversion()
 
       setSubmitSuccess(
         "Your solar carport enquiry has been saved. The Smart Steel team can now pick it up in the CRM and follow up properly."
@@ -421,6 +433,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                 href={whatsappHref}
                 target="_blank"
                 rel="noreferrer"
+                onClick={reportAtlasSolarCarportConversion}
                 className="rounded-full border border-[#1c5b57] bg-white px-6 py-3 text-sm font-semibold text-[#1c5b57] transition hover:bg-[#eaf3f1]"
               >
                 Send via WhatsApp
@@ -563,6 +576,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             href={whatsappHref}
             target="_blank"
             rel="noreferrer"
+            onClick={reportAtlasSolarCarportConversion}
             className="inline-flex shrink-0 items-center gap-2 bg-[#25D366] px-4 py-3 text-sm font-semibold text-[#0b2715] shadow-sm transition hover:bg-[#1fbd58]"
           >
             <svg viewBox="0 0 32 32" aria-hidden="true" className="h-5 w-5 fill-current">
