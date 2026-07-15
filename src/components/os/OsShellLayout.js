@@ -2,11 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 import { useSupabaseAuth } from "../../lib/supabaseAuth"
 import { OS_SECTIONS, OS_STATUS_META, getOsSection } from "../../lib/osNavigation"
 
 export default function OsShellLayout({ children }) {
   const pathname = usePathname()
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, loading } = useSupabaseAuth(
     `/login?redirect=${encodeURIComponent(pathname || "/os")}`
   )
@@ -25,22 +27,32 @@ export default function OsShellLayout({ children }) {
   if (!user) return null
 
   return (
-    <div className="min-h-screen max-w-full overflow-x-hidden bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_24%,_#eef3f7_100%)] pt-16 text-slate-900 sm:pt-20">
-      <div className="grid min-h-[calc(100vh-4rem)] min-w-0 sm:min-h-[calc(100vh-5rem)] lg:grid-cols-[260px_minmax(0,1fr)]">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_24%,_#eef3f7_100%)] text-slate-900">
+      <div className="grid min-h-screen min-w-0 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="min-w-0 max-w-full overflow-hidden border-b border-white/10 bg-[linear-gradient(180deg,_#0f172a,_#111827)] text-white lg:border-b-0 lg:border-r">
-          <div className="px-4 py-4 sm:p-6">
-            <Link href="/os" className="block">
+          <div className="flex items-center justify-between gap-4 px-4 py-3 lg:block lg:p-6">
+            <Link href="/os" className="block" onClick={() => setMobileNavOpen(false)}>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">
                 Smart Steel OS
               </p>
-              <h1 className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl">Operating System</h1>
-              <p className="mt-1.5 hidden text-sm leading-6 text-slate-300 sm:block">
+              <h1 className="mt-1.5 hidden text-xl font-bold tracking-tight lg:block lg:text-2xl">Operating System</h1>
+              <p className="mt-1 text-sm font-semibold text-white lg:hidden">{activeSection.label}</p>
+              <p className="mt-1.5 hidden text-sm leading-6 text-slate-300 lg:block">
                 Dashboard-first operating surface for CRM, product systems, partners, and manufacturing.
               </p>
             </Link>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen((current) => !current)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/15 lg:hidden"
+              aria-expanded={mobileNavOpen}
+              aria-controls="os-mobile-navigation"
+            >
+              {mobileNavOpen ? "Close" : "OS menu"}
+            </button>
           </div>
 
-          <nav className="flex min-w-0 max-w-full gap-2 overflow-x-auto px-3 pb-3 lg:block lg:space-y-1 lg:overflow-visible lg:px-4 lg:pb-6">
+          <nav id="os-mobile-navigation" className={`${mobileNavOpen ? "grid" : "hidden"} min-w-0 max-w-full grid-cols-2 gap-2 px-3 pb-3 lg:block lg:space-y-1 lg:overflow-visible lg:px-4 lg:pb-6`}>
             {OS_SECTIONS.map((section) => {
               const isActive =
                 pathname === section.href || (section.href !== "/os" && pathname?.startsWith(`${section.href}/`))
@@ -49,7 +61,8 @@ export default function OsShellLayout({ children }) {
                 <Link
                   key={section.key}
                   href={section.href}
-                  className={`min-w-fit rounded-2xl px-3.5 py-2.5 transition lg:block lg:px-4 lg:py-3 ${
+                  onClick={() => setMobileNavOpen(false)}
+                  className={`min-w-0 rounded-xl px-3 py-2.5 transition lg:block lg:rounded-2xl lg:px-4 lg:py-3 ${
                     isActive
                       ? "bg-white text-slate-950 shadow-sm"
                       : "bg-white/5 text-slate-200 hover:bg-white/10"
@@ -59,7 +72,7 @@ export default function OsShellLayout({ children }) {
                     <p className="text-sm font-semibold whitespace-nowrap">{section.label}</p>
                     {section.status ? (
                       <span
-                        className={`hidden rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] sm:inline-flex ${
+                        className={`hidden rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] lg:inline-flex ${
                           isActive ? "border-slate-200 bg-slate-100 text-slate-600" : OS_STATUS_META[section.status]?.badgeClassName
                         }`}
                       >
@@ -77,16 +90,16 @@ export default function OsShellLayout({ children }) {
         </aside>
 
         <main className="min-w-0 max-w-full overflow-x-hidden bg-slate-50">
-          <div className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-6 sm:py-4">
+          <div className="border-b border-slate-200 bg-white px-4 py-2.5 shadow-sm sm:px-6 sm:py-4">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                   {activeSection.label}
                 </p>
-                <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                <h2 className="mt-0.5 text-lg font-bold tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">
                   {activeSection.label === "Dashboard" ? "Smart Steel OS Dashboard" : `${activeSection.label} Workspace`}
                 </h2>
-                <p className="mt-1.5 max-w-3xl text-sm leading-6 text-slate-600">
+                <p className="mt-1.5 hidden max-w-3xl text-sm leading-6 text-slate-600 sm:block">
                   {activeSection.description}
                 </p>
               </div>
