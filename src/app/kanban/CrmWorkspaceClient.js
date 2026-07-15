@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Link2 } from "lucide-react"
 import KanbanBoard from "../../components/KanbanBoard.js"
@@ -19,7 +18,6 @@ import {
   getOpportunitySummary,
   LEAD_SOURCE_OPTIONS,
   matchesOpportunityQuickView,
-  OPPORTUNITY_QUICK_VIEWS,
   PRODUCT_TYPE_OPTIONS,
   TEAM_MEMBERS,
 } from "./crmReferenceData.js"
@@ -532,7 +530,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const [productLineFilter, setProductLineFilter] = useState("all")
   const [opportunityQuickView, setOpportunityQuickView] = useState("all")
   const [metricFilter, setMetricFilter] = useState("all")
-  const [ownershipView, setOwnershipView] = useState("mine")
+  const [ownershipView, setOwnershipView] = useState("all")
   const [crmView, setCrmView] = useState("pipeline")
   const [nextActionFallbacks, setNextActionFallbacks] = useState({})
   const [fallbackFieldValues, setFallbackFieldValues] = useState({})
@@ -1528,29 +1526,6 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     })
   }, [assigneeFilter, currentTeamMember, leads, metricFilter, opportunityQuickView, ownershipView, productLineFilter, searchTerm, statusFilter])
 
-  const productLineSummary = useMemo(() => {
-    const base = {
-      atlas: { key: "atlas", label: "Atlas line", total: 0, quoted: 0, won: 0, value: 0, tone: "border-sky-200 bg-sky-50" },
-      lsf: { key: "lsf", label: "LSF line", total: 0, quoted: 0, won: 0, value: 0, tone: "border-emerald-200 bg-emerald-50" },
-      general: { key: "general", label: "General line", total: 0, quoted: 0, won: 0, value: 0, tone: "border-slate-200 bg-white" },
-    }
-
-    leads.forEach((lead) => {
-      const line = getOpportunitySummary(lead).line.toLowerCase()
-      const bucket = base[line] || base.general
-      bucket.total += 1
-      if (normalizeStatus(lead.status) === "quoted") {
-        bucket.quoted += 1
-        bucket.value += parseQuoteValue(lead.quote_value)
-      }
-      if (normalizeStatus(lead.status) === "won") {
-        bucket.won += 1
-      }
-    })
-
-    return [base.atlas, base.lsf, base.general]
-  }, [leads])
-
   const metrics = useMemo(() => {
     const todayCount = leads.filter((lead) => isSameDay(lead.follow_up_at)).length
     const overdueCount = leads.filter((lead) => isBeforeToday(lead.follow_up_at)).length
@@ -1665,11 +1640,6 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       },
     ]
   }, [currentTeamMember, leads, ownershipView])
-
-  const metricFilterLabel = useMemo(() => {
-    const match = metrics.find((metric) => metric.key === metricFilter)
-    return match?.label || "All leads"
-  }, [metricFilter, metrics])
 
   const handleMetricShortcut = (nextMetricFilter) => {
     if (!METRIC_FILTER_OPTIONS.includes(nextMetricFilter)) return
@@ -1883,136 +1853,112 @@ export default function CrmWorkspace({ mode = "legacy" }) {
             {crmLoadWarning}
           </div>
         ) : null}
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-                {isOsCrmRoute ? "CRM" : "Smart Steel OS"}
-              </p>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                {isOsCrmRoute ? "Smart Steel CRM Workspace" : "Smart Steel Sales Workspace"}
-              </h1>
-              <p className="text-sm leading-6 text-slate-600 sm:text-base">
-                {isOsCrmRoute
-                  ? "Work the pipeline, follow up opportunities, manage quotes, and keep the commercial team moving from one focused CRM screen."
-                  : "Manage leads, opportunity flow, quotes, and team accountability from one commercial workspace."}
-              </p>
-              {isOsCrmRoute ? (
-                <div className="pt-1">
-                  <Link
-                    href="/os"
-                    className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-                  >
-                    Back to OS dashboard
-                  </Link>
-                </div>
-              ) : null}
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setOwnershipView("mine")}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    ownershipView === "mine"
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  My Work{currentTeamMember ? `: ${currentTeamMember}` : ""}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOwnershipView("all")}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    ownershipView === "all"
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  Whole Team
-                </button>
-              </div>
+        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">CRM</p>
+              <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Sales pipeline</h1>
             </div>
-
-            <div className="sm:hidden">
-              <div className="grid gap-2">
-                <button
-                  className="inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
-                  onClick={() => setIsAddingLead(true)}
-                >
-                  + New Lead
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowMobileAdminPanel((current) => !current)}
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                >
-                  {showMobileAdminPanel ? "Hide tools" : "Show tools"}
-                </button>
-              </div>
-              {showMobileAdminPanel ? (
-                <div className="mt-2 grid gap-2">
-                  <button
-                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                    onClick={handleLogout}
-                  >
-                    Sign out
-                  </button>
-                  <button
-                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                    onClick={() => setShowPricesDrawer(true)}
-                  >
-                    Prices & Templates
-                  </button>
-                  {GENERAL_GOOGLE_SHEET_URL ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        window.open(GENERAL_GOOGLE_SHEET_URL, "_blank", "noopener,noreferrer")
-                      }}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                    >
-                      <Link2 size={16} />
-                      General Sheet
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-
-            <div className="hidden sm:flex sm:flex-wrap sm:gap-3">
+            <div className="flex shrink-0 items-center gap-2">
               <button
-                className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto sm:py-2"
-                onClick={handleLogout}
+                type="button"
+                onClick={() => setShowMobileAdminPanel((current) => !current)}
+                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
               >
-                Sign out
+                Tools
               </button>
               <button
-                className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto sm:py-2"
-                onClick={() => setShowPricesDrawer(true)}
-              >
-                Prices & Templates
-              </button>
-              {GENERAL_GOOGLE_SHEET_URL ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.open(GENERAL_GOOGLE_SHEET_URL, "_blank", "noopener,noreferrer")
-                  }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto sm:py-2"
-                >
-                  <Link2 size={16} />
-                  General Sheet
-                </button>
-              ) : null}
-              <button
-                className="inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 sm:w-auto sm:py-2"
+                type="button"
                 onClick={() => setIsAddingLead(true)}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
               >
                 + New Lead
               </button>
             </div>
           </div>
-        </div>
+
+          {showMobileAdminPanel ? (
+            <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-200 pt-3">
+              <button type="button" onClick={() => setShowPricesDrawer(true)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                Prices & Templates
+              </button>
+              {GENERAL_GOOGLE_SHEET_URL ? (
+                <button type="button" onClick={() => window.open(GENERAL_GOOGLE_SHEET_URL, "_blank", "noopener,noreferrer")} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                  <Link2 size={16} /> General Sheet
+                </button>
+              ) : null}
+              <button type="button" onClick={handleLogout} className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                Sign out
+              </button>
+            </div>
+          ) : null}
+
+          <div className="mt-4 flex gap-2 overflow-x-auto border-t border-slate-200 pt-4">
+            {CRM_VIEW_OPTIONS.map((view) => (
+              <button
+                key={view.key}
+                type="button"
+                onClick={() => setCrmView(view.key)}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  crmView === view.key ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                {view.label}
+              </button>
+            ))}
+          </div>
+
+          {crmView === "pipeline" ? (
+            <>
+              <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-end">
+                <div className="flex-1">
+                  <label className="sr-only" htmlFor="crm-pipeline-search">Search opportunities</label>
+                  <input
+                    id="crm-pipeline-search"
+                    type="text"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search opportunities"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-base shadow-sm outline-none transition focus:border-slate-500 sm:text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2 lg:w-[380px]">
+                  <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-500" aria-label="Pipeline stage">
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>{status === "all" ? "All stages" : formatStatusLabel(status)}</option>
+                    ))}
+                  </select>
+                  <select value={productLineFilter} onChange={(event) => setProductLineFilter(event.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-500" aria-label="Product line">
+                    {PRODUCT_LINE_FILTER_OPTIONS.map((option) => (
+                      <option key={option} value={option}>{option === "all" ? "All lines" : option.toUpperCase()}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                <p>Showing <span className="font-semibold text-slate-900">{filteredLeads.length}</span> of {leads.length} opportunities</p>
+                {(searchTerm || statusFilter !== "all" || productLineFilter !== "all" || opportunityQuickView !== "all" || metricFilter !== "all") ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchTerm("")
+                      setStatusFilter("all")
+                      setAssigneeFilter("all")
+                      setProductLineFilter("all")
+                      setOpportunityQuickView("all")
+                      setMetricFilter("all")
+                      setOwnershipView("all")
+                    }}
+                    className="font-semibold text-slate-700 underline underline-offset-4"
+                  >
+                    Clear filters
+                  </button>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+        </section>
 
         {!isOsCrmRoute ? (
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-sm">
@@ -2147,7 +2093,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                   </p>
                 </div>
                 <p className="text-sm text-slate-500">
-                  {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s view` : "Whole team"}
+                  All CRM records
                 </p>
               </div>
 
@@ -2230,7 +2176,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                   <h2 className="mt-1 text-lg font-semibold text-slate-900">Where response discipline is slipping</h2>
                 </div>
                 <p className="text-sm text-slate-500">
-                  {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s queue` : "Whole team"} priority watch
+                  Priority watch
                 </p>
               </div>
               <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -2269,7 +2215,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s queue` : "Open items"}
+                Open items
               </p>
               <p className="mt-1 text-3xl font-bold text-slate-900">{todaysWork.total}</p>
             </div>
@@ -2626,217 +2572,19 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
         {crmView === "pipeline" && (
         <>
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Pipeline focus
-              </p>
-              <h2 className="mt-1 text-lg font-semibold text-slate-900">
-                Where current opportunity volume is sitting
-              </h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Choose a line and jump into the right view before you move opportunities on the board.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {productLineSummary.map((line) => (
-                <button
-                  key={line.key}
-                  type="button"
-                  onClick={() => {
-                    setCrmView("pipeline")
-                    setProductLineFilter(line.key)
-                    window.setTimeout(() => {
-                      boardSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                    }, 60)
-                  }}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                    productLineFilter === line.key
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  {line.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4">
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-              Quick views
-            </span>
-            <button
-              type="button"
-              onClick={() => setOpportunityQuickView("all")}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                opportunityQuickView === "all"
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              All opportunities
-            </button>
-            {OPPORTUNITY_QUICK_VIEWS.map((view) => (
-              <button
-                key={view.key}
-                type="button"
-                onClick={() => {
-                  setOpportunityQuickView(view.key)
-                  window.setTimeout(() => {
-                    boardSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                  }, 60)
-                }}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  opportunityQuickView === view.key
-                    ? "bg-slate-900 text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                {view.label}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <div ref={boardSectionRef} className="scroll-mt-20 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900">Pipeline view</h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Search quickly, filter fast, and move commercial opportunities without extra scrolling.
-              </p>
-              {opportunityQuickView === "stalled" ? (
-                <p className="mt-2 text-sm font-medium text-amber-700">
-                  This review groups overdue follow-ups, leads without a clear next step, stale opportunities, and unassigned work in one place.
-                </p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="flex-1">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search opportunities"
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
-                aria-label="Search opportunities"
-              />
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 lg:w-[560px]">
-              <div>
-                <label className="mb-1 hidden text-sm font-medium text-slate-700 sm:block">
-                  Pipeline stage
-                </label>
-                <select
-                  value={statusFilter}
-                  onChange={(event) => setStatusFilter(event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
-                  aria-label="Pipeline stage"
-                >
-                  {STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status}>
-                      {status === "all" ? "All stages" : formatStatusLabel(status)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 hidden text-sm font-medium text-slate-700 sm:block">
-                  Assigned to
-                </label>
-                <select
-                  value={assigneeFilter}
-                  onChange={(event) => setAssigneeFilter(event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
-                  aria-label="Assigned to"
-                >
-                  {assigneeOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option === "all" ? "Everyone" : option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 hidden text-sm font-medium text-slate-700 sm:block">
-                  Product line
-                </label>
-                <select
-                  value={productLineFilter}
-                  onChange={(event) => setProductLineFilter(event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-slate-500"
-                  aria-label="Product line"
-                >
-                  {PRODUCT_LINE_FILTER_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option === "all" ? "All lines" : option.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-600">
-            <p>
-              Showing <span className="font-semibold text-slate-900">{filteredLeads.length}</span>{" "}
-              of <span className="font-semibold text-slate-900">{leads.length}</span> opportunities
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              {metricFilter !== "all" && (
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                  Shortcut: {metricFilterLabel}
-                </span>
-              )}
-              {productLineFilter !== "all" && (
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                  Line: {productLineFilter.toUpperCase()}
-                </span>
-              )}
-              {opportunityQuickView !== "all" && (
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                  View: {OPPORTUNITY_QUICK_VIEWS.find((item) => item.key === opportunityQuickView)?.label || "Custom"}
-                </span>
-              )}
-              {(searchTerm || statusFilter !== "all" || assigneeFilter !== "all" || productLineFilter !== "all" || opportunityQuickView !== "all" || metricFilter !== "all" || ownershipView !== "mine") && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchTerm("")
-                    setStatusFilter("all")
-                    setAssigneeFilter("all")
-                    setProductLineFilter("all")
-                    setOpportunityQuickView("all")
-                    setMetricFilter("all")
-                    setOwnershipView("mine")
-                  }}
-                  className="font-medium text-slate-700 underline underline-offset-4"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
         {loading ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+          <div ref={boardSectionRef} className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
             Loading opportunities...
           </div>
         ) : (
-        <KanbanBoard
-          leads={filteredLeads}
-          onEditLead={setEditingLead}
-          onLeadStatusChange={handleLeadStatusChange}
-          onCreateEstimate={handleOpenEstimate}
-        />
+        <div ref={boardSectionRef} className="scroll-mt-20">
+          <KanbanBoard
+            leads={filteredLeads}
+            onEditLead={setEditingLead}
+            onLeadStatusChange={handleLeadStatusChange}
+            onCreateEstimate={handleOpenEstimate}
+          />
+        </div>
         )}
         </>
         )}
