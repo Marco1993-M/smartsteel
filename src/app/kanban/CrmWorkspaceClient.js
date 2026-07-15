@@ -544,6 +544,16 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const [tasksLoading, setTasksLoading] = useState(true)
   const [crmLoadWarning, setCrmLoadWarning] = useState("")
 
+  useEffect(() => {
+    if (!isOsCrmRoute || typeof window === "undefined") return
+
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("newLead") !== "1") return
+
+    setIsAddingLead(true)
+    window.history.replaceState({}, "", window.location.pathname)
+  }, [isOsCrmRoute])
+
   const fetchLeads = async () => {
     setLoading(true)
     const { data, error } = await supabase
