@@ -25,9 +25,9 @@ export default function OsShellLayout({ children }) {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_24%,_#eef3f7_100%)] pt-16 text-slate-900 sm:pt-20">
-      <div className="grid min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="border-b border-white/10 bg-[linear-gradient(180deg,_#0f172a,_#111827)] text-white lg:border-b-0 lg:border-r">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_24%,_#eef3f7_100%)] pt-16 text-slate-900 sm:pt-20">
+      <div className="grid min-h-[calc(100vh-4rem)] min-w-0 sm:min-h-[calc(100vh-5rem)] lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="min-w-0 max-w-full overflow-hidden border-b border-white/10 bg-[linear-gradient(180deg,_#0f172a,_#111827)] text-white lg:border-b-0 lg:border-r">
           <div className="px-4 py-4 sm:p-6">
             <Link href="/os" className="block">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">
@@ -40,7 +40,7 @@ export default function OsShellLayout({ children }) {
             </Link>
           </div>
 
-          <nav className="flex gap-2 overflow-x-auto px-3 pb-3 lg:block lg:space-y-1 lg:overflow-visible lg:px-4 lg:pb-6">
+          <nav className="flex min-w-0 max-w-full gap-2 overflow-x-auto px-3 pb-3 lg:block lg:space-y-1 lg:overflow-visible lg:px-4 lg:pb-6">
             {OS_SECTIONS.map((section) => {
               const isActive =
                 pathname === section.href || (section.href !== "/os" && pathname?.startsWith(`${section.href}/`))
@@ -76,10 +76,10 @@ export default function OsShellLayout({ children }) {
           </nav>
         </aside>
 
-        <main className="bg-slate-50">
+        <main className="min-w-0 max-w-full overflow-x-hidden bg-slate-50">
           <div className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-6 sm:py-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
+            <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                   {activeSection.label}
                 </p>

@@ -194,7 +194,7 @@ export default function OsDashboard() {
   const nextSections = OS_SECTIONS.filter((section) => section.status === "active_build")
 
   return (
-    <div className="space-y-4 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6">
+    <div className="max-w-full space-y-4 overflow-x-hidden px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6">
       <WeeklySchedule />
 
       <section className="relative overflow-hidden rounded-[1.8rem] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_30%),linear-gradient(135deg,_#ffffff,_#f8fafc_52%,_#e2e8f0)] p-4 shadow-sm sm:rounded-[2rem] sm:p-6 lg:p-8">
@@ -212,19 +212,19 @@ export default function OsDashboard() {
             <div className="mt-4 flex flex-col gap-2 sm:mt-6 sm:flex-row sm:flex-wrap sm:gap-3">
               <Link
                 href="/os/crm"
-                className="inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
               >
                 Open CRM
               </Link>
               <Link
                 href="/os/atlas"
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              className="inline-flex w-full items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"
               >
                 Open Atlas
               </Link>
               <Link
                 href="/os/lsf"
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              className="inline-flex w-full items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"
               >
                 Open LSF line
               </Link>

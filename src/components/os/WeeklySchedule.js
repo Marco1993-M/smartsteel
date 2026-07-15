@@ -143,10 +143,10 @@ export default function WeeklySchedule() {
           const isMobileFocus = isActive || (!activeDate && isToday)
 
           return (
-            <div key={dateKey} className={`min-h-[184px] shrink-0 border p-2.5 transition lg:min-h-[210px] lg:w-auto lg:p-4 ${isMobileFocus ? "w-[154px]" : "w-[42px]"} ${isToday ? "border-sky-300 bg-sky-50/60" : "border-slate-200 bg-slate-50/60"}`}>
+            <div key={dateKey} className={`min-h-[184px] shrink-0 border transition lg:min-h-[210px] lg:w-auto lg:p-4 ${isMobileFocus ? "w-[144px] p-2.5" : "w-[38px] p-1"} ${isToday ? "border-sky-300 bg-sky-50/60" : "border-slate-200 bg-slate-50/60"}`}>
               <button type="button" onClick={() => setActiveDate(isActive ? "" : dateKey)} className="flex w-full items-start justify-between gap-3 text-left">
                 <div>
-                  <p className={`text-[10px] font-semibold uppercase tracking-[0.1em] lg:text-xs lg:tracking-[0.16em] ${isToday ? "text-sky-700" : "text-slate-500"}`}>{isToday ? "Today" : dayLabel.weekday}</p>
+                  <p className={`text-[9px] font-semibold uppercase tracking-[0.04em] lg:text-xs lg:tracking-[0.16em] ${isToday ? "text-sky-700" : "text-slate-500"}`}>{isToday ? "Today" : dayLabel.weekday}</p>
                   <p className={`mt-1 font-semibold text-slate-900 ${isMobileFocus ? "text-sm" : "hidden"} lg:block lg:text-sm`}>{dayLabel.date}</p>
                 </div>
                 <span className={`${isMobileFocus ? "grid" : "hidden"} h-7 w-7 place-items-center rounded-full border border-slate-300 bg-white text-lg leading-none text-slate-500 transition hover:border-slate-400 lg:grid`}>+</span>
