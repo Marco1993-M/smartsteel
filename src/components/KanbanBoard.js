@@ -4,6 +4,7 @@ import { useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
 import { Edit3, FileText, GripVertical } from "lucide-react"
 import { formatCrmStatusLabel, getLeadNextBestAction } from "../lib/crmSop"
+import { getOpportunitySummary } from "../lib/crmReferenceData"
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
 
@@ -46,6 +47,15 @@ function formatCreatedAtLabel(createdAt) {
   })
 }
 
+function formatZar(value) {
+  const parsed = Number(String(value || 0).replace(/[^0-9.-]/g, ""))
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 0,
+  }).format(Number.isFinite(parsed) ? parsed : 0)
+}
+
 function getClientFollowUpStateLabel(state) {
   switch (String(state || "").trim()) {
     case "awaiting_reply":
@@ -57,6 +67,29 @@ function getClientFollowUpStateLabel(state) {
   }
 }
 
+function isOlderQuotedLead(lead) {
+  if (normalizeStatus(lead.status) !== "quoted") return false
+
+  const followUpDate = lead.follow_up_at ? new Date(lead.follow_up_at) : null
+  const endOfToday = new Date()
+  endOfToday.setHours(23, 59, 59, 999)
+
+  // A future follow-up is still active work and must remain in view.
+  if (followUpDate && Number.isFinite(followUpDate.getTime()) && followUpDate > endOfToday) return false
+
+  const activityDate = new Date(lead.last_activity_at || lead.updated_at || lead.created_at || 0)
+  if (!Number.isFinite(activityDate.getTime())) return false
+
+  const latestWorkingDate =
+    followUpDate && Number.isFinite(followUpDate.getTime()) && followUpDate > activityDate
+      ? followUpDate
+      : activityDate
+
+  const shelfDate = new Date(endOfToday)
+  shelfDate.setDate(shelfDate.getDate() - 30)
+  return latestWorkingDate < shelfDate
+}
+
 export default function KanbanBoard({
   leads,
   onEditLead,
@@ -64,9 +97,17 @@ export default function KanbanBoard({
   onCreateEstimate,
 }) {
   const [mobileStage, setMobileStage] = useState(statuses[0])
+  const [showOlderQuoted, setShowOlderQuoted] = useState(false)
 
-  const getStageLeads = (status) =>
+  const getAllStageLeads = (status) =>
     leads.filter((lead) => normalizeStatus(lead.status) === status)
+
+  const olderQuotedLeads = getAllStageLeads("quoted").filter(isOlderQuotedLead)
+  const getStageLeads = (status) => {
+    const stageLeads = getAllStageLeads(status)
+    if (status !== "quoted" || showOlderQuoted) return stageLeads
+    return stageLeads.filter((lead) => !isOlderQuotedLead(lead))
+  }
 
   const mobileStageLeads = getStageLeads(mobileStage)
 
@@ -82,7 +123,7 @@ export default function KanbanBoard({
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-2 md:hidden">
         {statuses.map((status) => {
-          const count = getStageLeads(status).length
+          const count = getAllStageLeads(status).length
           const isActive = mobileStage === status
 
           return (
@@ -116,6 +157,9 @@ export default function KanbanBoard({
           leads={mobileStageLeads}
           onEditLead={onEditLead}
           onCreateEstimate={onCreateEstimate}
+          shelvedCount={mobileStage === "quoted" ? olderQuotedLeads.length : 0}
+          showShelf={showOlderQuoted}
+          onToggleShelf={() => setShowOlderQuoted((current) => !current)}
           draggable={false}
         />
       </div>
@@ -136,6 +180,9 @@ export default function KanbanBoard({
                 leads={getStageLeads(status)}
                 onEditLead={onEditLead}
                 onCreateEstimate={onCreateEstimate}
+                shelvedCount={status === "quoted" ? olderQuotedLeads.length : 0}
+                showShelf={showOlderQuoted}
+                onToggleShelf={() => setShowOlderQuoted((current) => !current)}
                 draggable
               />
             </div>
@@ -146,7 +193,17 @@ export default function KanbanBoard({
   )
 }
 
-function KanbanColumn({ id, title, leads, onEditLead, onCreateEstimate, draggable = true }) {
+function KanbanColumn({
+  id,
+  title,
+  leads,
+  onEditLead,
+  onCreateEstimate,
+  shelvedCount = 0,
+  showShelf = false,
+  onToggleShelf,
+  draggable = true,
+}) {
   const { setNodeRef } = useDroppable({ id })
 
   return (
@@ -162,6 +219,17 @@ function KanbanColumn({ id, title, leads, onEditLead, onCreateEstimate, draggabl
           {leads.length}
         </span>
       </div>
+
+      {id === "quoted" && shelvedCount > 0 ? (
+        <button
+          type="button"
+          onClick={onToggleShelf}
+          className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-left text-xs font-semibold text-amber-900 transition hover:bg-amber-100"
+        >
+          <span>{showShelf ? "Hide older quotes" : `Older quoted (${shelvedCount})`}</span>
+          <span aria-hidden="true">{showShelf ? "−" : "+"}</span>
+        </button>
+      ) : null}
 
       <div className="space-y-2">
         {leads.length === 0 ? (
@@ -196,6 +264,8 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
   const nextBestAction = getLeadNextBestAction(lead)
   const followUpLabel = formatFollowUpLabel(lead.follow_up_at)
   const createdAtLabel = formatCreatedAtLabel(lead.created_at)
+  const opportunitySummary = getOpportunitySummary(lead)
+  const hasQuoteValue = String(lead.quote_value || "").trim().length > 0
 
   return (
     <div
@@ -211,9 +281,17 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
           <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">
             {lead.name} {lead.last_name}
           </p>
-          <p className="mt-0.5 truncate text-xs text-slate-500">
-            {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <span className="rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-700">
+              {opportunitySummary.line}
+            </span>
+            <span className="rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              {opportunitySummary.family}
+            </span>
+            <p className="truncate text-xs text-slate-500">
+              {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
+            </p>
+          </div>
         </div>
         <span
           className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold ${
@@ -237,6 +315,29 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         </p>
       </button>
 
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-slate-200 bg-white/85 p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Quote value
+          </p>
+          <p className="mt-1 text-sm font-bold text-slate-900">
+            {isQuoted
+              ? hasQuoteValue
+                ? formatZar(lead.quote_value)
+                : "Missing"
+              : "Not quoted"}
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white/85 p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Follow-up
+          </p>
+          <p className="mt-1 text-sm font-bold text-slate-900">
+            {clientFollowUpStateLabel || followUpLabel}
+          </p>
+        </div>
+      </div>
+
       <div className="mt-2 rounded-xl bg-slate-900 px-3 py-2 text-left text-white">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">
           Best next move
@@ -250,9 +351,6 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
           Added: {createdAtLabel}
         </span>
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
-          Follow-up: {followUpLabel}
-        </span>
         {clientFollowUpStateLabel && (
           <span className="rounded-full bg-sky-100 px-2 py-1 text-sky-700">
             {clientFollowUpStateLabel}
@@ -260,7 +358,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         )}
         {isQuoted && (
           <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-700">
-            {lead.quote_value ? `R ${lead.quote_value}` : "Quote value missing"}
+            {hasQuoteValue ? formatZar(lead.quote_value) : "Quote value missing"}
           </span>
         )}
         {draggable ? (
