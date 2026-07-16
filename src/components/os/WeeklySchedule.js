@@ -84,7 +84,8 @@ export default function WeeklySchedule() {
       setActiveDate(toDateKey(new Date()))
       setNote("")
       window.setTimeout(() => {
-        document.getElementById(`schedule-note-${toDateKey(new Date())}`)?.focus()
+        const prefix = window.innerWidth < 1024 ? "schedule-note-mobile" : "schedule-note"
+        document.getElementById(`${prefix}-${toDateKey(new Date())}`)?.focus()
       }, 100)
     }
 
@@ -201,6 +202,10 @@ export default function WeeklySchedule() {
     }
   }
 
+  const focusedDay = days.find((day) => toDateKey(day) === focusedDate) || days[0]
+  const focusedDayLabel = formatDay(focusedDay)
+  const focusedItems = records.filter((record) => record.date === focusedDate)
+
   return (
     <section id="weekly-note-board" className="min-w-0 max-w-full scroll-mt-4 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -216,39 +221,115 @@ export default function WeeklySchedule() {
       {error ? <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
 
       <div
-        className="mt-4 flex min-w-0 touch-pan-y gap-1.5 overflow-hidden lg:grid lg:grid-cols-5 lg:gap-3 lg:overflow-visible"
+        className="mt-4 touch-pan-y lg:hidden"
         onTouchStart={handleSwipeStart}
         onTouchEnd={handleSwipeEnd}
       >
+        <div className="grid grid-cols-5 gap-1.5">
+          {days.map((day) => {
+            const dateKey = toDateKey(day)
+            const dayLabel = formatDay(day)
+            const dayItems = records.filter((record) => record.date === dateKey)
+            const isToday = dateKey === todayKey
+            const isFocused = dateKey === focusedDate
+
+            return (
+              <button
+                key={dateKey}
+                type="button"
+                onClick={() => {
+                  setActiveDate(dateKey)
+                  setNote("")
+                }}
+                className={`relative min-w-0 rounded-xl border px-1 py-2.5 text-center transition ${
+                  isFocused
+                    ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                    : isToday
+                      ? "border-sky-300 bg-sky-50 text-sky-800"
+                      : "border-slate-200 bg-slate-50 text-slate-600"
+                }`}
+              >
+                <span className="block truncate text-[10px] font-bold uppercase tracking-[0.08em]">{isToday ? "Today" : dayLabel.weekday}</span>
+                <span className="mt-1 block text-sm font-bold">{day.getDate()}</span>
+                {dayItems.length ? (
+                  <span className={`absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-bold ${isFocused ? "bg-sky-400 text-slate-950" : "bg-slate-900 text-white"}`}>
+                    {dayItems.length}
+                  </span>
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{focusedDayLabel.weekday}</p>
+              <p className="mt-1 text-base font-bold text-slate-900">{focusedDayLabel.date}</p>
+            </div>
+            <span className="text-xs font-semibold text-slate-500">{focusedItems.length || "No"} reminder{focusedItems.length === 1 ? "" : "s"}</span>
+          </div>
+
+          <div className="mt-3 space-y-2">
+            {loading ? <p className="text-sm text-slate-400">Loading...</p> : null}
+            {!loading && focusedItems.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 bg-white p-3 text-sm text-slate-500">Nothing scheduled.</p> : null}
+            {!loading && focusedItems.map((item) => (
+              <div key={item.id} className="rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm">
+                {editingId === item.id ? (
+                  <form onSubmit={(event) => { event.preventDefault(); if (editingTitle.trim()) updateNote(item.id, { title: editingTitle }) }} className="flex gap-2">
+                    <input autoFocus value={editingTitle} onChange={(event) => setEditingTitle(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-2 text-base outline-none" />
+                    <button type="submit" disabled={saving || !editingTitle.trim()} className="text-xs font-semibold text-sky-700">Save</button>
+                  </form>
+                ) : (
+                  <div className="flex items-start gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
+                    <p className="min-w-0 flex-1 text-sm leading-6 text-slate-800">{item.title}</p>
+                    <button type="button" onClick={() => updateNote(item.id, { completed: true })} disabled={saving} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 disabled:opacity-40" aria-label={`Complete ${item.title}`}>✓</button>
+                    <button type="button" onClick={() => { setEditingId(item.id); setEditingTitle(item.title) }} disabled={saving} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sky-50 text-sky-700 disabled:opacity-40" aria-label={`Edit ${item.title}`}>✎</button>
+                    <button type="button" onClick={() => deleteNote(item.id)} disabled={saving} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-rose-50 text-rose-600 disabled:opacity-40" aria-label={`Delete ${item.title}`}>×</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {activeDate === focusedDate ? (
+            <form onSubmit={addNote} className="mt-3 border-t border-slate-200 pt-3">
+              <label className="sr-only" htmlFor={`schedule-note-mobile-${focusedDate}`}>Add note for {focusedDayLabel.date}</label>
+              <input id={`schedule-note-mobile-${focusedDate}`} autoFocus value={note} onChange={(event) => setNote(event.target.value)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-base outline-none focus:border-slate-500" placeholder="Add a reminder" />
+              <div className="mt-2 flex gap-2">
+                <button type="button" onClick={() => { setActiveDate(""); setNote("") }} className="flex-1 rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-semibold text-slate-700">Cancel</button>
+                <button type="submit" disabled={saving || !note.trim()} className="flex-1 rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving ? "Saving..." : "Add"}</button>
+              </div>
+            </form>
+          ) : (
+            <button type="button" onClick={() => setActiveDate(focusedDate)} className="mt-3 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">+ Add reminder</button>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4 hidden grid-cols-5 gap-3 lg:grid">
         {days.map((day) => {
           const dateKey = toDateKey(day)
           const dayItems = records.filter((record) => record.date === dateKey)
           const dayLabel = formatDay(day)
           const isToday = dateKey === todayKey
           const isActive = activeDate === dateKey
-          const isMobileFocus = focusedDate === dateKey
 
           return (
             <div
               key={dateKey}
               onClick={(event) => openDay(event, dateKey)}
-              className={`min-h-[184px] min-w-0 shrink-0 cursor-pointer border transition lg:min-h-[210px] lg:w-auto lg:p-4 ${isMobileFocus ? "w-[36%] p-2.5" : "w-[13%] p-0"} ${isActive ? "ring-2 ring-sky-400 ring-offset-1" : ""} ${isToday ? "border-sky-300 bg-sky-50/60" : "border-slate-200 bg-slate-50/60"}`}
+              className={`min-h-[210px] min-w-0 cursor-pointer border p-4 transition ${isActive ? "ring-2 ring-sky-400 ring-offset-1" : ""} ${isToday ? "border-sky-300 bg-sky-50/60" : "border-slate-200 bg-slate-50/60"}`}
             >
-              <button type="button" onClick={() => setActiveDate(isActive ? "" : dateKey)} className={`flex w-full items-start justify-between gap-3 text-left ${isMobileFocus ? "" : "min-h-11 px-1"}`}>
+              <button type="button" onClick={() => setActiveDate(isActive ? "" : dateKey)} className="flex w-full items-start justify-between gap-3 text-left">
                 <div>
-                  <p className={`text-[9px] font-semibold uppercase tracking-[0.04em] lg:text-xs lg:tracking-[0.16em] ${isToday ? "text-sky-700" : "text-slate-500"}`}>{isToday ? "Today" : dayLabel.weekday}</p>
-                  <p className={`mt-1 font-semibold text-slate-900 ${isMobileFocus ? "text-sm" : "hidden"} lg:block lg:text-sm`}>{dayLabel.date}</p>
+                  <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isToday ? "text-sky-700" : "text-slate-500"}`}>{isToday ? "Today" : dayLabel.weekday}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{dayLabel.date}</p>
                 </div>
-                <span className={`${isMobileFocus ? "grid" : "hidden"} h-7 w-7 place-items-center rounded-full border border-slate-300 bg-white text-lg leading-none text-slate-500 transition hover:border-slate-400 lg:grid`}>+</span>
+                <span className="grid h-7 w-7 place-items-center rounded-full border border-slate-300 bg-white text-lg leading-none text-slate-500 transition hover:border-slate-400">+</span>
               </button>
-
-              {!isMobileFocus && dayItems.length > 0 ? (
-                <span className="mx-auto mt-2 grid h-5 w-5 place-items-center rounded-full bg-slate-900 text-[10px] font-semibold text-white lg:hidden">
-                  {dayItems.length}
-                </span>
-              ) : null}
-
-              <div className={`mt-4 space-y-2 ${isMobileFocus ? "block" : "hidden"} lg:block`}>
+              <div className="mt-4 space-y-2">
                 {loading ? <p className="text-sm text-slate-400">Loading...</p> : null}
                 {!loading && dayItems.map((item) => (
                   <div key={item.id} className="group rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
