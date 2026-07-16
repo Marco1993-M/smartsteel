@@ -908,9 +908,9 @@ export default function LeadEditorDrawer({
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="relative flex h-full w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-xl sm:w-[450px] sm:max-w-[450px]">
+            <Dialog.Panel className="relative flex h-full w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl sm:w-[min(96vw,960px)] sm:max-w-[960px]">
               {/* Header */}
-<div className="sticky top-0 z-10 flex flex-col justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:px-6 sm:py-4">
+<div className="sticky top-0 z-20 flex flex-col justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:px-6 sm:py-4">
   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
     {/* Back Button */}
     <button onClick={backHandler} className="shrink-0 rounded-full p-2 hover:bg-gray-100">
@@ -923,7 +923,7 @@ export default function LeadEditorDrawer({
         Lead workspace
       </p>
       <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
-        <Dialog.Title className="text-lg font-semibold text-slate-900 sm:text-xl">
+        <Dialog.Title className="text-lg font-bold tracking-tight text-slate-950 sm:text-2xl">
           {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
         </Dialog.Title>
         {!isNew && (
@@ -952,7 +952,7 @@ export default function LeadEditorDrawer({
 	  <div className="flex flex-wrap gap-2 sm:flex-nowrap">
       <button
         type="button"
-        className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100"
+        className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
         onClick={() => onCreateEstimate?.(lead)}
         title="Create estimate"
       >
@@ -961,7 +961,7 @@ export default function LeadEditorDrawer({
 	    {/* Call */}
     <button
       type="button"
-      className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100"
+      className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
       onClick={async () => {
         const description = `Called ${formData.name}`;
         addActivity({ type: "call", description });
@@ -975,7 +975,7 @@ export default function LeadEditorDrawer({
     {/* Email */}
     <button
       type="button"
-      className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100"
+      className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
       onClick={openEmailComposer}
       title="Create follow-up email"
     >
@@ -985,7 +985,7 @@ export default function LeadEditorDrawer({
     {/* WhatsApp */}
     <button
       type="button"
-      className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100"
+      className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
       onClick={async () => {
         const description = `Messaged ${formData.name} on WhatsApp`;
         addActivity({ type: "whatsapp", description });
@@ -1001,6 +1001,23 @@ export default function LeadEditorDrawer({
 
 
 </div>
+
+              <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <div className="rounded-xl bg-slate-100 px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Opportunity</p>
+                    <p className="mt-1 truncate text-sm font-bold text-slate-900">{opportunitySummary.line} · {opportunitySummary.family}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-100 px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Next move</p>
+                    <p className="mt-1 truncate text-sm font-bold text-slate-900">{formData.next_action || nextBestAction.shortLabel}</p>
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl bg-slate-950 px-3 py-2.5 text-white">
+                    <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Quote value</p><p className="mt-1 text-sm font-bold">{String(formData.quote_value || "").trim() ? formatZar(formData.quote_value) : "Not quoted"}</p></div>
+                    <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${getStatusBadgeClass(formData.status)}`}>{formatStatusLabel(formData.status)}</span>
+                  </div>
+                </div>
+              </div>
 
               {/* Scrollable Body */}
 <div className="flex-1 overflow-y-auto w-full max-w-full bg-slate-50">
@@ -1033,13 +1050,13 @@ export default function LeadEditorDrawer({
     </div>
   )}
   <Tab.Group>
-    <Tab.List className="flex overflow-x-auto border-b border-slate-200 bg-white px-2 no-scrollbar -webkit-overflow-scrolling-touch sm:px-4">
+    <Tab.List className="sticky top-0 z-20 flex gap-2 overflow-x-auto border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur no-scrollbar -webkit-overflow-scrolling-touch sm:px-5">
       {["Opportunity", "Execution", "Quotes", "Notes", "Activity"].map((tab) => (
         <Tab
           key={tab}
           className={({ selected }) =>
-            `flex-shrink-0 rounded-t-xl px-4 py-3 text-sm font-medium whitespace-nowrap ${
-              selected ? "border-b-2 border-red-600 text-red-600" : "text-slate-500"
+            `flex-shrink-0 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${
+              selected ? "bg-slate-950 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`
           }
         >
@@ -1047,7 +1064,7 @@ export default function LeadEditorDrawer({
         </Tab>
       ))}
     </Tab.List>
-    <Tab.Panels className="space-y-4 w-full max-w-full p-0">
+    <Tab.Panels className="mx-auto w-full max-w-5xl space-y-4 p-0">
       {/* Details Panel */}
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
         <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#fff1f2)] p-4 shadow-sm">
@@ -2060,21 +2077,25 @@ export default function LeadEditorDrawer({
                   )}
 
                   {/* Footer */}
-                  <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-2 border-t bg-white p-4 sm:flex-row sm:justify-end">
-                    {!isNew && (
+                  <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 p-4 backdrop-blur sm:px-6">
+                    <div className="mx-auto flex max-w-5xl flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        {!isNew && (
+                          <button
+                            onClick={() => onDelete(lead.id)}
+                            className="inline-flex w-full items-center justify-center gap-1 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 sm:w-auto"
+                          >
+                            <Trash2 size={16} /> Delete lead
+                          </button>
+                        )}
+                      </div>
                       <button
-                        onClick={() => onDelete(lead.id)}
-                        className="inline-flex items-center justify-center gap-1 rounded-lg border border-red-200 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-800"
+                        onClick={handleSaveClick}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
                       >
-                        <Trash2 size={16} /> Delete
+                        <Save size={16} /> {isNew ? "Add lead" : "Save changes"}
                       </button>
-                    )}
-                    <button
-                      onClick={handleSaveClick}
-                      className="inline-flex items-center justify-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                    >
-                      <Save size={16} /> {isNew ? "Add Lead" : "Save"}
-                    </button>
+                    </div>
                   </div>
                 </Tab.Group>
               </div>

@@ -462,6 +462,8 @@ export default function EstimateDrawer({
   const [formState, setFormState] = useState(() => buildInitialState(lead, latestEstimate))
   const [isSaving, setIsSaving] = useState(false)
   const [prefersSameTabPreview, setPrefersSameTabPreview] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [revisionMode, setRevisionMode] = useState("new")
   const previousProductTypeRef = useRef(buildInitialState(lead, latestEstimate).productType)
   const isSolarEstimate = isSolarEstimateProduct(formState.productType)
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
@@ -495,6 +497,8 @@ export default function EstimateDrawer({
         nextPreview.pricing.markupMultiplier
       )
     )
+    setHasUnsavedChanges(false)
+    setRevisionMode("new")
   }, [lead, loadedEstimate])
 
   useEffect(() => {
@@ -579,6 +583,7 @@ export default function EstimateDrawer({
   )
 
   const handleChange = (field, value) => {
+    setHasUnsavedChanges(true)
     setFormState((prev) => {
       const nextState =
         field === "productType"
@@ -594,6 +599,7 @@ export default function EstimateDrawer({
   }
 
   const updateLineItem = (id, updates) => {
+    setHasUnsavedChanges(true)
     setEditableLineItems((current) =>
       current.map((item) => {
         if (item.id !== id) return item
@@ -610,6 +616,7 @@ export default function EstimateDrawer({
   }
 
   const addManualItem = () => {
+    setHasUnsavedChanges(true)
     const id = `manual-${Date.now()}`
     setEditableLineItems((current) => [
       ...current,
@@ -633,7 +640,23 @@ export default function EstimateDrawer({
   }
 
   const removeLineItem = (id) => {
+    setHasUnsavedChanges(true)
     setEditableLineItems((current) => current.filter((item) => item.id !== id))
+  }
+
+  const requestClose = () => {
+    if (hasUnsavedChanges && !window.confirm("Close this estimate and discard unsaved changes?")) return
+    onClose()
+  }
+
+  const loadEstimateVersion = (estimateId) => {
+    if (estimateId === loadedEstimate?.id) return
+    if (hasUnsavedChanges && !window.confirm("Load another estimate version and discard unsaved changes?")) return
+    setLoadedEstimateId(estimateId)
+  }
+
+  const scrollToEstimateSection = (sectionId) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
   const handleCopyShareLink = async (shareToken) => {
@@ -658,6 +681,7 @@ export default function EstimateDrawer({
     setIsSaving(false)
 
     if (savedEstimate) {
+      setHasUnsavedChanges(false)
       onClose()
     }
   }
@@ -678,6 +702,7 @@ export default function EstimateDrawer({
     setIsSaving(false)
 
     if (savedEstimate?.id) {
+      setHasUnsavedChanges(false)
       openEstimateDocument(
         isLocalEstimateId(savedEstimate.id)
           ? buildEstimatePreviewUrl(savedEstimate.id)
@@ -709,6 +734,7 @@ export default function EstimateDrawer({
     setIsSaving(false)
 
     if (savedEstimate?.id && openAfterSave) {
+      setHasUnsavedChanges(false)
       openEstimateDocument(
         isLocalEstimateId(savedEstimate.id)
           ? buildEstimatePreviewUrl(savedEstimate.id)
@@ -721,13 +747,24 @@ export default function EstimateDrawer({
     }
 
     if (savedEstimate) {
+      setHasUnsavedChanges(false)
       onClose()
     }
   }
 
+  const handlePrimarySave = () =>
+    revisionMode === "update" && canUpdateLoadedEstimate
+      ? handleUpdateLoadedEstimate(false)
+      : handleSave()
+
+  const handlePrimarySaveAndOpen = () =>
+    revisionMode === "update" && canUpdateLoadedEstimate
+      ? handleUpdateLoadedEstimate(true)
+      : handleSaveAndOpen()
+
   return (
     <Transition.Root show={!!lead} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
+      <Dialog as="div" className="relative z-50" onClose={requestClose}>
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <div className="fixed inset-0 flex justify-end">
           <Transition.Child
@@ -739,34 +776,69 @@ export default function EstimateDrawer({
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex h-full w-screen max-w-full flex-col overflow-hidden bg-white shadow-xl sm:w-[520px] sm:max-w-[520px]">
-              <div className="sticky top-0 z-10 border-b bg-white px-4 py-3 sm:px-6 sm:py-4">
-                <div className="flex items-center justify-between gap-3">
+            <Dialog.Panel className="flex h-full w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl sm:w-[min(96vw,1120px)] sm:max-w-[1120px]">
+              <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex min-w-0 items-center gap-3">
-                    <button onClick={onClose} className="shrink-0 rounded-full p-2 transition hover:bg-gray-100">
+                    <button onClick={requestClose} className="shrink-0 rounded-full p-2 transition hover:bg-gray-100">
                       <ArrowLeft size={20} />
                     </button>
                     <div className="min-w-0">
-                      <Dialog.Title className="text-lg font-semibold text-slate-900 sm:text-xl">
-                        {canUpdateLoadedEstimate ? "Edit Estimate" : "Create Estimate"}
+                      <Dialog.Title className="text-lg font-bold tracking-tight text-slate-950 sm:text-2xl">
+                        Estimate workspace
                       </Dialog.Title>
                       <p className="truncate text-sm text-slate-500">
                         {lead?.name} {lead?.last_name} · {canUpdateLoadedEstimate ? `Loaded version ${loadedEstimate?.version_no}` : `New version ${nextVersion}`}
                       </p>
                     </div>
                   </div>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:flex lg:items-center">
+                    {sortedEstimates.length ? (
+                      <select
+                        value={loadedEstimate?.id || ""}
+                        onChange={(event) => loadEstimateVersion(event.target.value)}
+                        className="min-h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700"
+                        aria-label="Loaded estimate version"
+                      >
+                        {sortedEstimates.map((estimate) => (
+                          <option key={estimate.id} value={estimate.id}>V{estimate.version_no} · {estimate.title}</option>
+                        ))}
+                      </select>
+                    ) : null}
+                    {canUpdateLoadedEstimate ? (
+                      <div className="flex rounded-xl bg-slate-100 p-1">
+                        <button type="button" onClick={() => setRevisionMode("new")} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${revisionMode === "new" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}>New revision</button>
+                        <button type="button" onClick={() => setRevisionMode("update")} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${revisionMode === "update" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}>Update V{loadedEstimate?.version_no}</button>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
-                <div className="space-y-6">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-900">Estimate type</p>
-                    <p className="mt-1 text-sm text-slate-600">
-                      Choose the structure category first, then shape the estimate inputs for that product.
-                    </p>
+              <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex gap-2 overflow-x-auto">
+                    {[
+                      ["estimate-scope", "1. Scope"],
+                      ["estimate-pricing", "2. Pricing"],
+                      ...(sortedEstimates.length ? [["estimate-history", "3. History"]] : []),
+                    ].map(([id, label]) => (
+                      <button key={id} type="button" onClick={() => scrollToEstimateSection(id)} className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400">{label}</button>
+                    ))}
                   </div>
+                  <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-950 px-4 py-2.5 text-white sm:min-w-[250px]">
+                    <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Estimate excl. VAT</p><p className="mt-0.5 text-xl font-bold">{formatCurrency(estimatedTotal)}</p></div>
+                    {hasOverrides ? <span className="rounded-full bg-amber-400/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-amber-200">Adjusted</span> : null}
+                  </div>
+                </div>
+              </div>
 
+              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+                <div className="mx-auto max-w-5xl space-y-6">
+                  <div id="estimate-scope" className="scroll-mt-36">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Scope</p>
+                    <h2 className="mt-1 text-xl font-bold text-slate-950">Define what we are pricing</h2>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700">Product type</label>
                     <select
@@ -782,30 +854,31 @@ export default function EstimateDrawer({
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700">Estimate name</label>
-                    <input
-                      type="text"
-                      value={formState.estimateName}
-                      onChange={(event) => handleChange("estimateName", event.target.value)}
-                      placeholder={buildDefaultEstimateTitle(preview.summary.title, formState.productTypeLabel)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700">Client-facing product label</label>
-                    <input
-                      type="text"
-                      value={formState.productTypeLabel}
-                      onChange={(event) => handleChange("productTypeLabel", event.target.value)}
-                      placeholder={formState.productType}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    />
-                    <p className="mt-1 text-xs text-slate-500">
-                      Use this when the quote should say something more specific than the internal product type.
-                    </p>
-                  </div>
+                  <details className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-slate-700">Estimate title and client label</summary>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Estimate name</label>
+                        <input
+                          type="text"
+                          value={formState.estimateName}
+                          onChange={(event) => handleChange("estimateName", event.target.value)}
+                          placeholder={buildDefaultEstimateTitle(preview.summary.title, formState.productTypeLabel)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Client-facing product label</label>
+                        <input
+                          type="text"
+                          value={formState.productTypeLabel}
+                          onChange={(event) => handleChange("productTypeLabel", event.target.value)}
+                          placeholder={formState.productType}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                      </div>
+                    </div>
+                  </details>
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
                     {!isSolarEstimate && !isTrussEstimate ? (
@@ -1128,11 +1201,11 @@ export default function EstimateDrawer({
                     />
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <div id="estimate-pricing" className="scroll-mt-36 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                       <div>
-                        <p className="text-sm font-medium text-slate-700">Estimated total</p>
-                        <p className="mt-2 text-3xl font-bold text-emerald-600">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Sell total excl. VAT</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-950">
                           {formatCurrency(estimatedTotal)}
                         </p>
                       </div>
@@ -1284,7 +1357,7 @@ export default function EstimateDrawer({
                   </div>
 
                   {sortedEstimates.length > 0 && (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <div id="estimate-history" className="scroll-mt-36 rounded-2xl border border-slate-200 bg-white p-5">
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="text-sm font-medium text-slate-900">Saved estimate versions</p>
@@ -1320,7 +1393,7 @@ export default function EstimateDrawer({
                             </div>
                             <button
                               type="button"
-                              onClick={() => setLoadedEstimateId(estimate.id)}
+                              onClick={() => loadEstimateVersion(estimate.id)}
                               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
                             >
                               <Save size={16} />
@@ -1363,43 +1436,39 @@ export default function EstimateDrawer({
                 </div>
               </div>
 
-              <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-2 border-t bg-white px-4 py-3 sm:flex-row sm:justify-end sm:px-6 sm:py-4">
+              <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
+                <div className="mx-auto flex max-w-5xl flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="hidden text-xs text-slate-500 sm:block">
+                  {hasUnsavedChanges ? "Unsaved changes" : revisionMode === "update" ? `Updating version ${loadedEstimate?.version_no}` : `Saving as version ${nextVersion}`}
+                </div>
+                <div className="flex flex-col-reverse gap-2 sm:flex-row">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={requestClose}
                   className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                 >
-                  Cancel
+                  Close
                 </button>
                 <button
                   type="button"
-                  onClick={handleSaveAndOpen}
+                  onClick={handlePrimarySaveAndOpen}
                   disabled={isSaving}
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Printer size={16} />
-                  {isSaving ? "Saving..." : canUpdateLoadedEstimate ? "Save New Version & Open PDF" : "Save & Open PDF"}
+                  {isSaving ? "Saving..." : "Save & open PDF"}
                 </button>
-                {canUpdateLoadedEstimate ? (
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateLoadedEstimate(false)}
-                    disabled={isSaving}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Save size={16} />
-                    {isSaving ? "Saving..." : `Update Loaded V${loadedEstimate?.version_no}`}
-                  </button>
-                ) : null}
                 <button
                   type="button"
-                  onClick={handleSave}
+                  onClick={handlePrimarySave}
                   disabled={isSaving}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Save size={16} />
-                  {isSaving ? "Saving..." : canUpdateLoadedEstimate ? "Save New Version" : "Save Estimate"}
+                  {isSaving ? "Saving..." : revisionMode === "update" && canUpdateLoadedEstimate ? `Update V${loadedEstimate?.version_no}` : `Save V${nextVersion}`}
                 </button>
+                </div>
+                </div>
               </div>
             </Dialog.Panel>
           </Transition.Child>
