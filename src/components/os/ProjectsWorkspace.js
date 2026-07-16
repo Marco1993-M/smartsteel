@@ -5,10 +5,10 @@ import { useEffect, useState } from "react"
 const STORAGE_KEY = "smart-solutions-project-operations-v1"
 
 const COMPANY_OPTIONS = [
-  { key: "smart-steel", label: "Smart Steel", accent: "#e31d2b", reportName: "Smart Steel Site Record", contact: "info@smartsteel.co.za" },
-  { key: "atlas", label: "Atlas", accent: "#e7ad19", reportName: "Atlas System Site Record", contact: "info@smartsteel.co.za" },
-  { key: "lsf", label: "LSF", accent: "#2f6bc2", reportName: "Smart Steel LSF Site Record", contact: "info@smartsteel.co.za" },
-  { key: "pequeno", label: "Pequeno", accent: "#c45734", reportName: "Pequeno Project Site Record", contact: "info@pequenohome.com" },
+  { key: "smart-steel", label: "Smart Steel", prefix: "SS", accent: "#e31d2b", reportName: "Smart Steel Site Record", contact: "info@smartsteel.co.za" },
+  { key: "atlas", label: "Atlas", prefix: "ATL", accent: "#e7ad19", reportName: "Atlas System Site Record", contact: "info@smartsteel.co.za" },
+  { key: "lsf", label: "LSF", prefix: "LSF", accent: "#2f6bc2", reportName: "Smart Steel LSF Site Record", contact: "info@smartsteel.co.za" },
+  { key: "pequeno", label: "Pequeno", prefix: "PEQ", accent: "#c45734", reportName: "Pequeno Project Site Record", contact: "info@pequenohome.com" },
 ]
 
 const VISIT_TYPES = [
@@ -147,6 +147,19 @@ function getVisitProgress(visit) {
   return { completed, total: required.length, percent: Math.round((completed / required.length) * 100) }
 }
 
+function getNextProjectNumber(projects, companyKey) {
+  const year = new Date().getFullYear()
+  const company = COMPANY_OPTIONS.find((item) => item.key === companyKey) || COMPANY_OPTIONS[0]
+  const prefix = `${company.prefix}-${year}-`
+  const highestSequence = projects.reduce((highest, project) => {
+    if (!project.projectNumber?.startsWith(prefix)) return highest
+    const sequence = Number(project.projectNumber.slice(prefix.length))
+    return Number.isFinite(sequence) ? Math.max(highest, sequence) : highest
+  }, 0)
+
+  return `${prefix}${String(highestSequence + 1).padStart(3, "0")}`
+}
+
 function compressImage(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -220,10 +233,17 @@ export default function ProjectsWorkspace() {
   const company = COMPANY_OPTIONS.find((item) => item.key === activeProject?.companyKey) || COMPANY_OPTIONS[0]
   const visibleProjects = projects.filter((project) => showArchived ? project.archived : !project.archived)
   const progress = activeVisit ? getVisitProgress(activeVisit) : null
+  const nextProjectNumber = getNextProjectNumber(projects, projectForm.companyKey)
 
   function addProject(event) {
     event.preventDefault()
-    const next = { ...projectForm, id: `project-${Date.now()}`, createdAt: new Date().toISOString(), visits: [] }
+    const next = {
+      ...projectForm,
+      projectNumber: getNextProjectNumber(projects, projectForm.companyKey),
+      id: `project-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      visits: [],
+    }
     setProjects((current) => [next, ...current])
     setProjectForm(emptyProject)
     setShowProjectForm(false)
@@ -438,7 +458,7 @@ export default function ProjectsWorkspace() {
       {showProjectForm ? <form onSubmit={addProject} className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 p-5 sm:p-7"><h2 className="text-xl font-bold text-slate-950">Create a project record</h2><div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="Operating company"><select className={inputClass} value={projectForm.companyKey} onChange={(e) => setProjectForm((f) => ({ ...f, companyKey: e.target.value }))}>{COMPANY_OPTIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}</select></Field>
         <Field label="Project name"><input required className={inputClass} value={projectForm.name} onChange={(e) => setProjectForm((f) => ({ ...f, name: e.target.value }))} /></Field>
-        <Field label="Project number"><input required className={inputClass} value={projectForm.projectNumber} onChange={(e) => setProjectForm((f) => ({ ...f, projectNumber: e.target.value }))} /></Field>
+        <Field label="Project number"><div className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900">{nextProjectNumber}</div><p className="mt-1.5 text-xs text-slate-500">Generated automatically when the project is created.</p></Field>
         <Field label="Client"><input required className={inputClass} value={projectForm.clientName} onChange={(e) => setProjectForm((f) => ({ ...f, clientName: e.target.value }))} /></Field>
         <Field label="System or project type"><input className={inputClass} value={projectForm.system} onChange={(e) => setProjectForm((f) => ({ ...f, system: e.target.value }))} /></Field>
         <Field label="Site address"><input required className={inputClass} value={projectForm.address} onChange={(e) => setProjectForm((f) => ({ ...f, address: e.target.value }))} /></Field>
@@ -466,7 +486,7 @@ export default function ProjectsWorkspace() {
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <Field label="Operating company"><select className={inputClass} value={editProjectForm.companyKey} onChange={(e) => setEditProjectForm((form) => ({ ...form, companyKey: e.target.value }))}>{COMPANY_OPTIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}</select></Field>
                   <Field label="Project name"><input required className={inputClass} value={editProjectForm.name} onChange={(e) => setEditProjectForm((form) => ({ ...form, name: e.target.value }))} /></Field>
-                  <Field label="Project number"><input required className={inputClass} value={editProjectForm.projectNumber} onChange={(e) => setEditProjectForm((form) => ({ ...form, projectNumber: e.target.value }))} /></Field>
+                  <Field label="Project number"><input readOnly className={`${inputClass} cursor-not-allowed bg-slate-100 text-slate-500`} value={editProjectForm.projectNumber} /><p className="mt-1.5 text-xs text-slate-500">Stable project reference</p></Field>
                   <Field label="Client"><input required className={inputClass} value={editProjectForm.clientName} onChange={(e) => setEditProjectForm((form) => ({ ...form, clientName: e.target.value }))} /></Field>
                   <Field label="System or project type"><input className={inputClass} value={editProjectForm.system} onChange={(e) => setEditProjectForm((form) => ({ ...form, system: e.target.value }))} /></Field>
                   <Field label="Site address"><input required className={inputClass} value={editProjectForm.address} onChange={(e) => setEditProjectForm((form) => ({ ...form, address: e.target.value }))} /></Field>
