@@ -51,6 +51,11 @@ export default function OsDashboard() {
           {error}
         </section>
       ) : null}
+      {dashboard?.warnings?.length ? (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {dashboard.warnings.join(" ")}
+        </section>
+      ) : null}
 
       <section className="grid w-full min-w-0 max-w-full gap-4 overflow-hidden xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="w-full min-w-0 max-w-full overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
@@ -95,7 +100,7 @@ export default function OsDashboard() {
             <Link href="/os/crm?newLead=1" className="min-w-0 max-w-full rounded-2xl bg-white px-4 py-3 text-center text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
               New lead
             </Link>
-            <a href="#weekly-note-board" className="min-w-0 max-w-full rounded-2xl border border-white/25 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10">
+            <a href="#weekly-note-board" onClick={() => window.dispatchEvent(new Event("os:add-reminder"))} className="min-w-0 max-w-full rounded-2xl border border-white/25 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10">
               Add reminder
             </a>
             <Link href="/os/crm" className="min-w-0 max-w-full rounded-2xl border border-white/25 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10">

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 const STORAGE_KEY = "smart-solutions-project-operations-v1"
 
@@ -211,22 +212,100 @@ export default function ProjectsWorkspace() {
   const [reportPreview, setReportPreview] = useState(false)
   const [editingProject, setEditingProject] = useState(false)
   const [editProjectForm, setEditProjectForm] = useState(emptyProject)
+  const [syncReady, setSyncReady] = useState(false)
+  const [saveState, setSaveState] = useState("Loading")
+  const [saveError, setSaveError] = useState("")
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY)
-      if (stored) setProjects(JSON.parse(stored).map(normalizeProject))
-    } catch {
-      setProjects([])
-    } finally {
-      setReady(true)
+    async function loadProjects() {
+      let localProjects = []
+      try {
+        const stored = window.localStorage.getItem(STORAGE_KEY)
+        if (stored) localProjects = JSON.parse(stored).map(normalizeProject)
+      } catch {
+        localProjects = []
+      }
+
+      try {
+        const response = await fetch("/api/os/projects", {
+          cache: "no-store",
+          headers: await getOsAuthHeaders(),
+        })
+        const payload = await response.json()
+        if (!response.ok) throw new Error(payload.error || "Could not load shared projects.")
+
+        if (!payload.schemaReady) {
+          setProjects(localProjects)
+          setSaveState("Local only")
+          setSaveError("Run the Projects SQL to enable shared records.")
+        } else if (payload.records?.length) {
+          setProjects(payload.records.map(normalizeProject))
+          setSaveState("Saved")
+        } else if (localProjects.length) {
+          const migrationResponse = await fetch("/api/os/projects", {
+            method: "PUT",
+            headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ records: localProjects }),
+          })
+          const migrationPayload = await migrationResponse.json()
+          if (!migrationResponse.ok) throw new Error(migrationPayload.error || "Could not migrate local projects.")
+          setProjects((migrationPayload.records || localProjects).map(normalizeProject))
+          setSaveState("Saved")
+        } else {
+          setProjects([])
+          setSaveState("Saved")
+        }
+      } catch (loadError) {
+        setProjects(localProjects)
+        setSaveState("Offline")
+        setSaveError(loadError.message)
+      } finally {
+        setReady(true)
+        setSyncReady(true)
+      }
     }
+
+    loadProjects()
   }, [])
 
   useEffect(() => {
-    if (!ready) return
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects))
+    if (!ready || typeof window === "undefined") return
+    const projectId = new URLSearchParams(window.location.search).get("projectId")
+    if (!projectId || !projects.some((project) => project.id === projectId)) return
+    setActiveProjectId(projectId)
+    window.history.replaceState({}, "", window.location.pathname)
   }, [projects, ready])
+
+  useEffect(() => {
+    if (!ready || !syncReady) return
+
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects))
+    } catch {
+      setSaveError("This browser could not keep the local project backup.")
+    }
+
+    if (!projects.length || saveState === "Local only") return
+    setSaveState("Saving")
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/api/os/projects", {
+          method: "PUT",
+          headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ records: projects }),
+        })
+        const payload = await response.json()
+        if (!response.ok) throw new Error(payload.error || "Could not save shared projects.")
+        setSaveState("Saved")
+        setSaveError("")
+      } catch (saveFailure) {
+        setSaveState("Offline")
+        setSaveError(saveFailure.message)
+      }
+    }, 700)
+
+    return () => window.clearTimeout(timer)
+  }, [projects, ready, syncReady])
 
   const activeProject = projects.find((project) => project.id === activeProjectId) || null
   const activeVisit = activeProject?.visits?.find((visit) => visit.id === activeVisitId) || null
@@ -312,6 +391,25 @@ export default function ProjectsWorkspace() {
     setEditingProject(false)
   }
 
+  function updateRecordState(nextState) {
+    if (!activeVisit) return
+    const currentProgress = getVisitProgress(activeVisit)
+    if (["Ready for review", "Issued"].includes(nextState) && currentProgress.percent < 100) {
+      window.alert("Complete the inspector, summary, and every checklist item before moving this record forward.")
+      return
+    }
+    if (nextState === "Superseded" && activeVisit.recordState !== "Issued") {
+      window.alert("Only an issued record can be superseded.")
+      return
+    }
+
+    updateVisit((visit) => ({
+      ...visit,
+      recordState: nextState,
+      issuedAt: nextState === "Issued" ? new Date().toISOString() : visit.issuedAt || null,
+    }))
+  }
+
   if (!ready) return <div className="p-6 text-sm text-slate-500">Loading projects...</div>
 
   if (activeVisit && activeProject && reportPreview) {
@@ -390,7 +488,7 @@ export default function ProjectsWorkspace() {
               <Field label="Inspector"><input className={inputClass} value={activeVisit.inspector} onChange={(e) => updateVisit((v) => ({ ...v, inspector: e.target.value }))} placeholder="Your name" /></Field>
               <Field label="Weather"><input className={inputClass} value={activeVisit.weather} onChange={(e) => updateVisit((v) => ({ ...v, weather: e.target.value }))} placeholder="Clear, light wind" /></Field>
               <Field label="Outcome"><select className={inputClass} value={activeVisit.outcome} onChange={(e) => updateVisit((v) => ({ ...v, outcome: e.target.value }))}><option>Open</option><option>Accepted</option><option>Accepted with actions</option><option>Reinspection required</option></select></Field>
-              <Field label="Record state"><select className={inputClass} value={activeVisit.recordState} onChange={(e) => updateVisit((v) => ({ ...v, recordState: e.target.value }))}>{RECORD_STATES.map((state) => <option key={state}>{state}</option>)}</select></Field>
+              <Field label="Record state"><select className={inputClass} value={activeVisit.recordState} onChange={(e) => updateRecordState(e.target.value)}>{RECORD_STATES.map((state) => <option key={state}>{state}</option>)}</select></Field>
             </div>
           </header>
 
@@ -451,8 +549,12 @@ export default function ProjectsWorkspace() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Smart Solutions project operations</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Projects and site records</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Create practical site-visit records, capture findings, assign actions, and keep each report under the correct company and system.</p></div>
-          <button type="button" onClick={() => setShowProjectForm((current) => !current)} className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">{showProjectForm ? "Close" : "+ New project"}</button>
+          <div className="flex items-center gap-3">
+            <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${saveState === "Saved" ? "bg-emerald-100 text-emerald-700" : saveState === "Saving" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-800"}`}>{saveState}</span>
+            <button type="button" onClick={() => setShowProjectForm((current) => !current)} className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">{showProjectForm ? "Close" : "+ New project"}</button>
+          </div>
         </div>
+        {saveError ? <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{saveError}</p> : null}
       </section>
 
       {showProjectForm ? <form onSubmit={addProject} className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 p-5 sm:p-7"><h2 className="text-xl font-bold text-slate-950">Create a project record</h2><div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -484,7 +586,7 @@ export default function ProjectsWorkspace() {
                   <button type="button" onClick={() => setEditingProject(false)} className="text-sm font-semibold text-slate-500">Cancel</button>
                 </div>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <Field label="Operating company"><select className={inputClass} value={editProjectForm.companyKey} onChange={(e) => setEditProjectForm((form) => ({ ...form, companyKey: e.target.value }))}>{COMPANY_OPTIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}</select></Field>
+                  <Field label="Operating company"><input readOnly className={`${inputClass} cursor-not-allowed bg-slate-100 text-slate-500`} value={COMPANY_OPTIONS.find((item) => item.key === editProjectForm.companyKey)?.label || editProjectForm.companyKey} /><p className="mt-1.5 text-xs text-slate-500">Company identity and numbering stay fixed after creation.</p></Field>
                   <Field label="Project name"><input required className={inputClass} value={editProjectForm.name} onChange={(e) => setEditProjectForm((form) => ({ ...form, name: e.target.value }))} /></Field>
                   <Field label="Project number"><input readOnly className={`${inputClass} cursor-not-allowed bg-slate-100 text-slate-500`} value={editProjectForm.projectNumber} /><p className="mt-1.5 text-xs text-slate-500">Stable project reference</p></Field>
                   <Field label="Client"><input required className={inputClass} value={editProjectForm.clientName} onChange={(e) => setEditProjectForm((form) => ({ ...form, clientName: e.target.value }))} /></Field>

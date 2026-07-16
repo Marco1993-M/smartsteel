@@ -45,6 +45,8 @@ export default function WeeklySchedule() {
   const [error, setError] = useState("")
   const [activeDate, setActiveDate] = useState("")
   const [note, setNote] = useState("")
+  const [editingId, setEditingId] = useState("")
+  const [editingTitle, setEditingTitle] = useState("")
   const swipeStart = useRef(null)
 
   const days = useMemo(() => Array.from({ length: 5 }, (_, index) => addDays(weekStart, index)), [weekStart])
@@ -74,6 +76,21 @@ export default function WeeklySchedule() {
 
     loadSchedule()
   }, [endKey, startKey])
+
+  useEffect(() => {
+    function openToday() {
+      const currentWeek = startOfWeek(new Date())
+      setWeekStart(currentWeek)
+      setActiveDate(toDateKey(new Date()))
+      setNote("")
+      window.setTimeout(() => {
+        document.getElementById(`schedule-note-${toDateKey(new Date())}`)?.focus()
+      }, 100)
+    }
+
+    window.addEventListener("os:add-reminder", openToday)
+    return () => window.removeEventListener("os:add-reminder", openToday)
+  }, [])
 
   function changeWeek(offset) {
     setActiveDate("")
@@ -159,6 +176,31 @@ export default function WeeklySchedule() {
     }
   }
 
+  async function updateNote(id, patch) {
+    setSaving(true)
+    setError("")
+    try {
+      const response = await fetch("/api/os/schedule", {
+        method: "PATCH",
+        headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ id, ...patch }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "Could not update this reminder.")
+      if (payload.completed) {
+        setRecords((current) => current.filter((record) => record.id !== id))
+      } else {
+        setRecords((current) => current.map((record) => record.id === id ? payload.record : record))
+      }
+      setEditingId("")
+      setEditingTitle("")
+    } catch (updateError) {
+      setError(updateError.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <section id="weekly-note-board" className="min-w-0 max-w-full scroll-mt-4 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -209,10 +251,21 @@ export default function WeeklySchedule() {
               <div className={`mt-4 space-y-2 ${isMobileFocus ? "block" : "hidden"} lg:block`}>
                 {loading ? <p className="text-sm text-slate-400">Loading...</p> : null}
                 {!loading && dayItems.map((item) => (
-                  <div key={item.id} className="group flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
+                  <div key={item.id} className="group rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
+                    {editingId === item.id ? (
+                      <form onSubmit={(event) => { event.preventDefault(); if (editingTitle.trim()) updateNote(item.id, { title: editingTitle }) }} className="flex gap-2">
+                        <input autoFocus value={editingTitle} onChange={(event) => setEditingTitle(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1.5 text-base outline-none sm:text-sm" />
+                        <button type="submit" disabled={saving || !editingTitle.trim()} className="text-xs font-semibold text-sky-700">Save</button>
+                      </form>
+                    ) : (
+                    <div className="flex items-start gap-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
                     <p className="min-w-0 flex-1 text-sm leading-5 text-slate-800">{item.title}</p>
+                    <button type="button" onClick={() => updateNote(item.id, { completed: true })} disabled={saving} className="text-slate-400 transition hover:text-emerald-600 disabled:opacity-40" aria-label={`Complete ${item.title}`}>✓</button>
+                    <button type="button" onClick={() => { setEditingId(item.id); setEditingTitle(item.title) }} disabled={saving} className="text-slate-400 transition hover:text-sky-600 disabled:opacity-40" aria-label={`Edit ${item.title}`}>✎</button>
                     <button type="button" onClick={() => deleteNote(item.id)} disabled={saving} className="-mr-1 text-slate-300 transition hover:text-rose-600 disabled:opacity-40" aria-label={`Delete ${item.title}`}>×</button>
+                    </div>
+                    )}
                   </div>
                 ))}
               </div>

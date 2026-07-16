@@ -11,31 +11,15 @@ import {
   getLeadSop,
   getLeadStageBlockers,
 } from "../lib/crmSop"
+import {
+  getOpportunitySummary,
+  LEAD_SOURCE_OPTIONS,
+  PRODUCT_TYPE_OPTIONS,
+  TEAM_MEMBERS,
+} from "../lib/crmReferenceData"
 import { addBusinessDays, format, isToday, isYesterday } from "date-fns";
 
 const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
-const LEAD_SOURCE_OPTIONS = [
-  "Website form",
-  "Warehouse Builder",
-  "Estimator",
-  "WhatsApp",
-  "Phone call",
-  "Referral",
-  "Google Ads",
-  "Organic search",
-  "Repeat client",
-];
-const PRODUCT_TYPE_OPTIONS = [
-  "LSF Warehouse",
-  "LCSS Warehouse",
-  "Solar carport",
-  "Solar ground mount",
-  "Solar structure",
-  "LSF trusses",
-  "CFLC trusses",
-  "Bracketry",
-  "Other",
-];
 
 const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", "LCSS Warehouse"]
 const TRUSS_PRODUCT_TYPES = ["LSF trusses", "CFLC trusses"]
@@ -467,6 +451,7 @@ export default function LeadEditorDrawer({
   onBack,
   onCreateEstimate,
   onCreateInvoice,
+  onCreateProject,
 }) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
@@ -482,6 +467,8 @@ export default function LeadEditorDrawer({
   const [emailComposerMode, setEmailComposerMode] = useState("follow_up");
   const [selectedEstimateEmail, setSelectedEstimateEmail] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [projectHandoffError, setProjectHandoffError] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -522,6 +509,7 @@ export default function LeadEditorDrawer({
   const fieldLabelClass = "mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500";
   const inputClass = "block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-0";
   const sectionClass = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
+  const opportunitySummary = getOpportunitySummary(formData)
 
   // Fetch notes and activities from Supabase
   useEffect(() => {
@@ -1016,9 +1004,37 @@ export default function LeadEditorDrawer({
 
               {/* Scrollable Body */}
 <div className="flex-1 overflow-y-auto w-full max-w-full bg-slate-50">
+  {!isNew && normalizeStatus(formData.status) === "won" && (
+    <div className="border-b border-emerald-200 bg-emerald-50 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Won handoff</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">Move this client into Projects with the current scope already loaded.</p>
+        </div>
+        <button
+          type="button"
+          disabled={creatingProject}
+          onClick={async () => {
+            setCreatingProject(true)
+            setProjectHandoffError("")
+            try {
+              await onCreateProject?.({ ...lead, ...formData })
+            } catch (error) {
+              setProjectHandoffError(error.message || "Could not create the project.")
+              setCreatingProject(false)
+            }
+          }}
+          className="shrink-0 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-50"
+        >
+          {creatingProject ? "Creating..." : "Create project"}
+        </button>
+      </div>
+      {projectHandoffError ? <p className="mt-2 text-sm text-rose-700">{projectHandoffError}</p> : null}
+    </div>
+  )}
   <Tab.Group>
     <Tab.List className="flex overflow-x-auto border-b border-slate-200 bg-white px-2 no-scrollbar -webkit-overflow-scrolling-touch sm:px-4">
-      {["Overview", "Tasks & Links", "Estimates", "Notes", "Activity"].map((tab) => (
+      {["Opportunity", "Execution", "Quotes", "Notes", "Activity"].map((tab) => (
         <Tab
           key={tab}
           className={({ selected }) =>
@@ -1136,6 +1152,54 @@ export default function LeadEditorDrawer({
             </div>
           )}
         </div>
+
+        <section className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#eef2ff)] p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Opportunity view
+              </p>
+              <h3 className="mt-1 text-base font-semibold text-slate-900">
+                {opportunitySummary.title}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                {opportunitySummary.description}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
+                {opportunitySummary.line} line
+              </span>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
+                {opportunitySummary.family}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Product lane</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{opportunitySummary.lane}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Current owner</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{opportunitySummary.owner}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Commercial stage</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{formatStatusLabel(formData.status)}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Quote state</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{opportunitySummary.quoteState}</p>
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Current next step</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">{opportunitySummary.nextAction}</p>
+          </div>
+        </section>
 
         <section className={sectionClass}>
           <div className="mb-4">
@@ -1308,6 +1372,9 @@ export default function LeadEditorDrawer({
             {validationErrors.product_type && (
               <p className="mt-1 text-xs text-red-600">{validationErrors.product_type}</p>
             )}
+            <p className="mt-1 text-xs text-slate-500">
+              This places the work into the correct Smart Steel line and working lane.
+            </p>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -1330,7 +1397,7 @@ export default function LeadEditorDrawer({
         <div className="mt-4">
           <label className={`${fieldLabelClass} mb-2`}>Allocated To</label>
           <div className="flex gap-2 flex-wrap">
-            {["Stefan", "Niel", "Victor", "Marco"].map((member) => {
+            {TEAM_MEMBERS.map((member) => {
               const colors = {
                 Stefan: "bg-red-200",
                 Niel: "bg-blue-200",
