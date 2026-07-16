@@ -161,12 +161,8 @@ export default function WeeklySchedule() {
 
   return (
     <section id="weekly-note-board" className="min-w-0 max-w-full scroll-mt-4 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Weekly note board</p>
-          <h3 className="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Keep the week in view</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Tap anywhere on a day to add a reminder. Swipe across the week on mobile to move between weeks.</p>
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Reminders</h3>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => changeWeek(-7)} className="grid h-9 w-9 place-items-center rounded-full border border-slate-300 text-lg font-semibold text-slate-700 transition hover:bg-slate-50" aria-label="Previous week">&larr;</button>
           <button type="button" onClick={returnToCurrentWeek} className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">This week</button>
@@ -174,7 +170,7 @@ export default function WeeklySchedule() {
         </div>
       </div>
 
-      <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{formatWeekRange(weekStart)}</p>
+      <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{formatWeekRange(weekStart)}</p>
       {error ? <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
 
       <div

@@ -196,6 +196,8 @@ export default function ProjectsWorkspace() {
   const [visitType, setVisitType] = useState(VISIT_TYPES[0].label)
   const [showArchived, setShowArchived] = useState(false)
   const [reportPreview, setReportPreview] = useState(false)
+  const [editingProject, setEditingProject] = useState(false)
+  const [editProjectForm, setEditProjectForm] = useState(emptyProject)
 
   useEffect(() => {
     try {
@@ -271,8 +273,23 @@ export default function ProjectsWorkspace() {
 
   function archiveProject(projectId) {
     setProjects((current) => current.map((project) => project.id === projectId ? { ...project, archived: !project.archived } : project))
+    setEditingProject(false)
     setActiveProjectId(null)
     setActiveVisitId(null)
+  }
+
+  function beginProjectEdit() {
+    if (!activeProject) return
+    setEditProjectForm({ ...emptyProject, ...activeProject })
+    setEditingProject(true)
+  }
+
+  function saveProjectEdit(event) {
+    event.preventDefault()
+    setProjects((current) => current.map((project) => project.id === activeProjectId
+      ? { ...project, ...editProjectForm, id: project.id, visits: project.visits, archived: project.archived }
+      : project))
+    setEditingProject(false)
   }
 
   if (!ready) return <div className="p-6 text-sm text-slate-500">Loading projects...</div>
@@ -433,9 +450,72 @@ export default function ProjectsWorkspace() {
       </div><button type="submit" className="mt-5 rounded-full bg-sky-700 px-5 py-3 text-sm font-semibold text-white">Create project</button></form> : null}
 
       <div className="mt-5 grid min-w-0 gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"><div className="flex items-center justify-between gap-4"><div><h2 className="text-lg font-bold text-slate-950">Project register</h2><button type="button" onClick={() => setShowArchived((current) => !current)} className="mt-1 text-xs font-semibold text-slate-500 hover:text-slate-900">{showArchived ? "Show active projects" : `Archived (${projects.filter((project) => project.archived).length})`}</button></div><span className="text-sm text-slate-500">{visibleProjects.length}</span></div><div className="mt-4 space-y-2">{visibleProjects.length ? visibleProjects.map((project) => { const brand = COMPANY_OPTIONS.find((item) => item.key === project.companyKey) || COMPANY_OPTIONS[0]; return <button key={project.id} type="button" onClick={() => { setActiveProjectId(project.id); setActiveVisitId(null) }} className={`w-full rounded-xl border p-4 text-left transition ${activeProjectId === project.id ? "border-sky-400 bg-sky-50" : "border-slate-200 hover:border-slate-300"}`}><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{project.name}</p><p className="mt-1 text-sm text-slate-600">{project.clientName} · {project.projectNumber}</p></div><span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white" style={{ backgroundColor: brand.accent }}>{brand.label}</span></div><p className="mt-3 text-xs text-slate-500">{project.system} · {project.visits?.length || 0} site records</p></button> }) : <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center"><p className="font-semibold text-slate-800">{showArchived ? "No archived projects" : "No projects yet"}</p><p className="mt-1 text-sm text-slate-500">{showArchived ? "Archived projects can be restored from here." : "Create the project you plan to visit next week."}</p></div>}</div></section>
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"><div className="flex items-center justify-between gap-4"><div><h2 className="text-lg font-bold text-slate-950">Project register</h2><button type="button" onClick={() => setShowArchived((current) => !current)} className="mt-1 text-xs font-semibold text-slate-500 hover:text-slate-900">{showArchived ? "Show active projects" : `Archived (${projects.filter((project) => project.archived).length})`}</button></div><span className="text-sm text-slate-500">{visibleProjects.length}</span></div><div className="mt-4 space-y-2">{visibleProjects.length ? visibleProjects.map((project) => { const brand = COMPANY_OPTIONS.find((item) => item.key === project.companyKey) || COMPANY_OPTIONS[0]; return <button key={project.id} type="button" onClick={() => { setActiveProjectId(project.id); setActiveVisitId(null); setEditingProject(false) }} className={`w-full rounded-xl border p-4 text-left transition ${activeProjectId === project.id ? "border-sky-400 bg-sky-50" : "border-slate-200 hover:border-slate-300"}`}><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{project.name}</p><p className="mt-1 text-sm text-slate-600">{project.clientName} · {project.projectNumber}</p></div><span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white" style={{ backgroundColor: brand.accent }}>{brand.label}</span></div><p className="mt-3 text-xs text-slate-500">{project.system} · {project.visits?.length || 0} site records</p></button> }) : <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center"><p className="font-semibold text-slate-800">{showArchived ? "No archived projects" : "No projects yet"}</p><p className="mt-1 text-sm text-slate-500">{showArchived ? "Archived projects can be restored from here." : "Create the project you plan to visit next week."}</p></div>}</div></section>
 
-        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">{activeProject ? <><div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{company.label} · {activeProject.system}</p><h2 className="mt-1 text-2xl font-bold text-slate-950">{activeProject.name}</h2><p className="mt-2 text-sm text-slate-600">{activeProject.address}</p>{activeProject.scope ? <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">{activeProject.scope}</p> : null}</div><button type="button" onClick={() => archiveProject(activeProject.id)} className="self-start text-xs font-semibold text-slate-500 hover:text-rose-600">{activeProject.archived ? "Restore project" : "Archive project"}</button></div><div className="mt-6 rounded-xl bg-slate-50 p-4"><p className="text-sm font-bold text-slate-900">Start a site record</p><div className="mt-3 flex flex-col gap-3 sm:flex-row"><select className={inputClass} value={visitType} onChange={(e) => setVisitType(e.target.value)}>{VISIT_TYPES.map((item) => <option key={item.label} value={item.label}>{item.recordType} · {item.label}</option>)}</select><button type="button" onClick={startVisit} className="shrink-0 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white">Start record</button></div></div><div className="mt-6"><h3 className="font-bold text-slate-950">Site-record history</h3><div className="mt-3 space-y-2">{activeProject.visits?.length ? activeProject.visits.map((visit) => <button key={visit.id} type="button" onClick={() => setActiveVisitId(visit.id)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-slate-200 p-4 text-left hover:border-sky-300"><div><p className="font-semibold text-slate-900">{visit.visitType}</p><p className="mt-1 text-xs text-slate-500">{visit.recordType} · {visit.visitNumber} · {visit.date}</p></div><div className="text-right"><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{visit.recordState}</span><p className="mt-2 text-xs text-slate-500">{getVisitProgress(visit).percent}% complete</p></div></button>) : <p className="text-sm text-slate-500">No site records have been created for this project.</p>}</div></div></> : <div className="flex min-h-72 items-center justify-center text-center"><div><p className="text-lg font-bold text-slate-900">Select a project</p><p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">Its site visits, inspections, actions, and reports will appear here.</p></div></div>}</section>
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          {activeProject ? (
+            editingProject ? (
+              <form onSubmit={saveProjectEdit}>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">Edit project</p>
+                    <h2 className="mt-1 text-2xl font-bold text-slate-950">{activeProject.name}</h2>
+                  </div>
+                  <button type="button" onClick={() => setEditingProject(false)} className="text-sm font-semibold text-slate-500">Cancel</button>
+                </div>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <Field label="Operating company"><select className={inputClass} value={editProjectForm.companyKey} onChange={(e) => setEditProjectForm((form) => ({ ...form, companyKey: e.target.value }))}>{COMPANY_OPTIONS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}</select></Field>
+                  <Field label="Project name"><input required className={inputClass} value={editProjectForm.name} onChange={(e) => setEditProjectForm((form) => ({ ...form, name: e.target.value }))} /></Field>
+                  <Field label="Project number"><input required className={inputClass} value={editProjectForm.projectNumber} onChange={(e) => setEditProjectForm((form) => ({ ...form, projectNumber: e.target.value }))} /></Field>
+                  <Field label="Client"><input required className={inputClass} value={editProjectForm.clientName} onChange={(e) => setEditProjectForm((form) => ({ ...form, clientName: e.target.value }))} /></Field>
+                  <Field label="System or project type"><input className={inputClass} value={editProjectForm.system} onChange={(e) => setEditProjectForm((form) => ({ ...form, system: e.target.value }))} /></Field>
+                  <Field label="Site address"><input required className={inputClass} value={editProjectForm.address} onChange={(e) => setEditProjectForm((form) => ({ ...form, address: e.target.value }))} /></Field>
+                  <Field label="Site contact"><input className={inputClass} value={editProjectForm.siteContact} onChange={(e) => setEditProjectForm((form) => ({ ...form, siteContact: e.target.value }))} /></Field>
+                  <Field label="Contractor"><input className={inputClass} value={editProjectForm.contractor} onChange={(e) => setEditProjectForm((form) => ({ ...form, contractor: e.target.value }))} /></Field>
+                  <Field label="Project manager"><input className={inputClass} value={editProjectForm.projectManager} onChange={(e) => setEditProjectForm((form) => ({ ...form, projectManager: e.target.value }))} /></Field>
+                  <Field label="Project scope" wide><textarea rows={3} className={inputClass} value={editProjectForm.scope} onChange={(e) => setEditProjectForm((form) => ({ ...form, scope: e.target.value }))} /></Field>
+                  <Field label="Drawing and document references" wide><textarea rows={3} className={inputClass} value={editProjectForm.references} onChange={(e) => setEditProjectForm((form) => ({ ...form, references: e.target.value }))} /></Field>
+                </div>
+                <button type="submit" className="mt-5 rounded-full bg-sky-700 px-5 py-3 text-sm font-semibold text-white">Save project details</button>
+              </form>
+            ) : (
+              <>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{company.label} · {activeProject.system}</p>
+                    <h2 className="mt-1 text-2xl font-bold text-slate-950">{activeProject.name}</h2>
+                    <p className="mt-2 text-sm text-slate-600">{activeProject.address}</p>
+                    {activeProject.scope ? <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">{activeProject.scope}</p> : null}
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="button" onClick={beginProjectEdit} className="text-xs font-semibold text-sky-700 hover:text-sky-900">Edit details</button>
+                    <button type="button" onClick={() => archiveProject(activeProject.id)} className="text-xs font-semibold text-slate-500 hover:text-rose-600">{activeProject.archived ? "Restore project" : "Archive project"}</button>
+                  </div>
+                </div>
+                <div className="mt-6 rounded-xl bg-slate-50 p-4">
+                  <p className="text-sm font-bold text-slate-900">Start a site record</p>
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                    <select className={inputClass} value={visitType} onChange={(e) => setVisitType(e.target.value)}>{VISIT_TYPES.map((item) => <option key={item.label} value={item.label}>{item.recordType} · {item.label}</option>)}</select>
+                    <button type="button" onClick={startVisit} className="shrink-0 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white">Start record</button>
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <h3 className="font-bold text-slate-950">Site-record history</h3>
+                  <div className="mt-3 space-y-2">
+                    {activeProject.visits?.length ? activeProject.visits.map((visit) => (
+                      <button key={visit.id} type="button" onClick={() => setActiveVisitId(visit.id)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-slate-200 p-4 text-left hover:border-sky-300">
+                        <div><p className="font-semibold text-slate-900">{visit.visitType}</p><p className="mt-1 text-xs text-slate-500">{visit.recordType} · {visit.visitNumber} · {visit.date}</p></div>
+                        <div className="text-right"><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{visit.recordState}</span><p className="mt-2 text-xs text-slate-500">{getVisitProgress(visit).percent}% complete</p></div>
+                      </button>
+                    )) : <p className="text-sm text-slate-500">No site records have been created for this project.</p>}
+                  </div>
+                </div>
+              </>
+            )
+          ) : (
+            <div className="flex min-h-72 items-center justify-center text-center"><div><p className="text-lg font-bold text-slate-900">Select a project</p><p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">Its site visits, inspections, actions, and reports will appear here.</p></div></div>
+          )}
+        </section>
       </div>
     </div>
   )
