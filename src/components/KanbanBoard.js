@@ -302,19 +302,6 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         </span>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onEditLead(lead)}
-        className="w-full rounded-xl border border-slate-200 bg-white/85 p-2 text-left transition hover:border-slate-300"
-      >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-          Next action
-        </p>
-        <p className="mt-1 line-clamp-2 text-xs font-medium leading-5 text-slate-700">
-          {lead.next_action || "Open this lead and capture the next step."}
-        </p>
-      </button>
-
       <div className="mt-2 grid grid-cols-2 gap-2">
         <div className="rounded-xl border border-slate-200 bg-white/85 p-2.5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
@@ -338,29 +325,19 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         </div>
       </div>
 
-      <div className="mt-2 rounded-xl bg-slate-900 px-3 py-2 text-left text-white">
+      <button type="button" onClick={() => onEditLead(lead)} className="mt-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-left text-white transition hover:bg-slate-800">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">
-          Best next move
+          Next move
         </p>
         <p className="mt-1 line-clamp-2 text-xs font-medium leading-5 text-white">
-          {nextBestAction.shortLabel}
+          {lead.next_action || nextBestAction.shortLabel}
         </p>
-      </div>
+      </button>
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
         <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
           Added: {createdAtLabel}
         </span>
-        {clientFollowUpStateLabel && (
-          <span className="rounded-full bg-sky-100 px-2 py-1 text-sky-700">
-            {clientFollowUpStateLabel}
-          </span>
-        )}
-        {isQuoted && (
-          <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-700">
-            {hasQuoteValue ? formatZar(lead.quote_value) : "Quote value missing"}
-          </span>
-        )}
         {draggable ? (
           <div
             className="ml-auto inline-flex cursor-grab items-center justify-center rounded-full bg-slate-100 px-2 py-1 text-slate-500 transition hover:text-slate-700"
