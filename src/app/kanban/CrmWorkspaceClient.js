@@ -22,6 +22,7 @@ import {
   TEAM_MEMBERS,
 } from "./crmReferenceData.js"
 import { supabase } from "./supabase.js"
+import { getOsAuthHeaders } from "../../lib/osClientAuth.js"
 
 const STATUS_OPTIONS = ["all", "new", "contacted", "quoted", "won", "lost"]
 const PRODUCT_LINE_FILTER_OPTIONS = ["all", "atlas", "lsf", "general"]
@@ -667,6 +668,48 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.replace("/login")
+  }
+
+  const handleCreateProjectFromLead = async (lead) => {
+    const productType = String(lead?.product_type || "")
+    const normalizedProduct = productType.toLowerCase()
+    const companyKey = normalizedProduct.includes("lsf") || normalizedProduct.includes("lightweight")
+      ? "lsf"
+      : normalizedProduct.includes("atlas") ||
+          normalizedProduct.includes("cflc") ||
+          normalizedProduct.includes("lcss") ||
+          normalizedProduct.includes("lip channel") ||
+          normalizedProduct.includes("carport") ||
+          normalizedProduct.includes("ground mount")
+        ? "atlas"
+        : "smart-steel"
+    const clientName = [lead?.name, lead?.last_name].filter(Boolean).join(" ").trim() || "Client"
+    const estimates = leadEstimates[lead.id] || []
+    const latestEstimate = estimates[0]
+
+    const response = await fetch("/api/os/projects", {
+      method: "POST",
+      headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        sourceLeadId: lead.id,
+        companyKey,
+        name: `${clientName} - ${productType || "Project"}`,
+        clientName,
+        system: productType,
+        siteContact: [lead.phone, lead.email].filter(Boolean).join(" · "),
+        projectManager: lead.allocated_to,
+        scope: lead.estimate_request || lead.notes || "",
+        references: latestEstimate
+          ? `${latestEstimate.title || "Estimate"}${latestEstimate.version_no ? ` · V${latestEstimate.version_no}` : ""}`
+          : "",
+      }),
+    })
+    const payload = await response.json()
+    if (!response.ok) throw new Error(payload.error || "Could not create the project.")
+
+    setEditingLead(null)
+    router.push(`/os/projects?projectId=${encodeURIComponent(payload.record.id)}`)
+    return payload
   }
 
   const persistFallbackNextAction = (leadId, nextAction) => {
@@ -2613,6 +2656,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
           onDelete={handleDeleteLead}
           onCreateEstimate={handleOpenEstimate}
           onCreateInvoice={handleOpenInvoice}
+          onCreateProject={handleCreateProjectFromLead}
         />
       )}
 
