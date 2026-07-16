@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 function toDateKey(date) {
@@ -45,6 +45,7 @@ export default function WeeklySchedule() {
   const [error, setError] = useState("")
   const [activeDate, setActiveDate] = useState("")
   const [note, setNote] = useState("")
+  const swipeStart = useRef(null)
 
   const days = useMemo(() => Array.from({ length: 5 }, (_, index) => addDays(weekStart, index)), [weekStart])
   const startKey = toDateKey(days[0])
@@ -84,6 +85,28 @@ export default function WeeklySchedule() {
     setActiveDate("")
     setNote("")
     setWeekStart(startOfWeek(new Date()))
+  }
+
+  function handleSwipeStart(event) {
+    const touch = event.touches[0]
+    swipeStart.current = { x: touch.clientX, y: touch.clientY }
+  }
+
+  function handleSwipeEnd(event) {
+    if (!swipeStart.current) return
+    const touch = event.changedTouches[0]
+    const deltaX = touch.clientX - swipeStart.current.x
+    const deltaY = touch.clientY - swipeStart.current.y
+    swipeStart.current = null
+
+    if (Math.abs(deltaX) < 55 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.25) return
+    changeWeek(deltaX < 0 ? 7 : -7)
+  }
+
+  function openDay(event, dateKey) {
+    if (event.target.closest("button, input, form, a, select, textarea")) return
+    setActiveDate(dateKey)
+    setNote("")
   }
 
   async function addNote(event) {
@@ -137,12 +160,12 @@ export default function WeeklySchedule() {
   }
 
   return (
-    <section id="weekly-note-board" className="scroll-mt-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+    <section id="weekly-note-board" className="min-w-0 max-w-full scroll-mt-4 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Weekly note board</p>
           <h3 className="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Keep the week in view</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Click a day to add a short call, meeting, or reminder. Empty days stay empty.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Tap anywhere on a day to add a reminder. Swipe across the week on mobile to move between weeks.</p>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => changeWeek(-7)} className="grid h-9 w-9 place-items-center rounded-full border border-slate-300 text-lg font-semibold text-slate-700 transition hover:bg-slate-50" aria-label="Previous week">&larr;</button>
@@ -154,7 +177,11 @@ export default function WeeklySchedule() {
       <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{formatWeekRange(weekStart)}</p>
       {error ? <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
 
-      <div className="mt-4 flex gap-2 overflow-hidden lg:grid lg:grid-cols-5 lg:gap-3 lg:overflow-visible">
+      <div
+        className="mt-4 flex min-w-0 touch-pan-y gap-1.5 overflow-hidden lg:grid lg:grid-cols-5 lg:gap-3 lg:overflow-visible"
+        onTouchStart={handleSwipeStart}
+        onTouchEnd={handleSwipeEnd}
+      >
         {days.map((day) => {
           const dateKey = toDateKey(day)
           const dayItems = records.filter((record) => record.date === dateKey)
@@ -164,7 +191,11 @@ export default function WeeklySchedule() {
           const isMobileFocus = focusedDate === dateKey
 
           return (
-            <div key={dateKey} className={`min-h-[184px] shrink-0 border transition lg:min-h-[210px] lg:w-auto lg:p-4 ${isMobileFocus ? "w-[128px] p-2.5" : "w-[44px] p-0"} ${isToday ? "border-sky-300 bg-sky-50/60" : "border-slate-200 bg-slate-50/60"}`}>
+            <div
+              key={dateKey}
+              onClick={(event) => openDay(event, dateKey)}
+              className={`min-h-[184px] min-w-0 shrink-0 cursor-pointer border transition lg:min-h-[210px] lg:w-auto lg:p-4 ${isMobileFocus ? "w-[36%] p-2.5" : "w-[13%] p-0"} ${isActive ? "ring-2 ring-sky-400 ring-offset-1" : ""} ${isToday ? "border-sky-300 bg-sky-50/60" : "border-slate-200 bg-slate-50/60"}`}
+            >
               <button type="button" onClick={() => setActiveDate(isActive ? "" : dateKey)} className={`flex w-full items-start justify-between gap-3 text-left ${isMobileFocus ? "" : "min-h-11 px-1"}`}>
                 <div>
                   <p className={`text-[9px] font-semibold uppercase tracking-[0.04em] lg:text-xs lg:tracking-[0.16em] ${isToday ? "text-sky-700" : "text-slate-500"}`}>{isToday ? "Today" : dayLabel.weekday}</p>

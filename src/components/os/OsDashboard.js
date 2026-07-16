@@ -43,7 +43,7 @@ export default function OsDashboard() {
   const pulse = dashboard?.pulse || { newLeadsThisWeek: 0, activeQuotes: 0 }
 
   return (
-    <div className="max-w-full space-y-4 overflow-x-hidden px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6">
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
       <WeeklySchedule />
 
       {error ? (
@@ -52,8 +52,8 @@ export default function OsDashboard() {
         </section>
       ) : null}
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <section className="grid w-full min-w-0 max-w-full gap-4 overflow-hidden xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="w-full min-w-0 max-w-full overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Today&apos;s focus</p>
@@ -72,13 +72,13 @@ export default function OsDashboard() {
                 <Link
                   key={item.id}
                   href={item.href}
-                  className={`flex items-center justify-between gap-4 rounded-2xl border px-4 py-3.5 transition hover:brightness-[0.99] ${priorityTone(item.tone)}`}
+                  className={`flex w-full min-w-0 max-w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border px-4 py-3.5 transition hover:brightness-[0.99] ${priorityTone(item.tone)}`}
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{item.title}</p>
-                    <p className="mt-1 text-sm leading-5 opacity-80">{item.helper}</p>
+                    <p className="break-words text-sm font-semibold">{item.title}</p>
+                    <p className="mt-1 max-w-full break-words text-sm leading-5 opacity-80">{item.helper}</p>
                   </div>
-                  <span aria-hidden="true" className="text-lg font-semibold">&rarr;</span>
+                  <span aria-hidden="true" className="shrink-0 text-lg font-semibold">&rarr;</span>
                 </Link>
               ))
             ) : (
@@ -89,16 +89,16 @@ export default function OsDashboard() {
           </div>
         </div>
 
-        <aside className="rounded-3xl border border-slate-200 bg-slate-950 p-4 text-white shadow-sm sm:p-6">
+        <aside className="w-full min-w-0 max-w-full overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-4 text-white shadow-sm sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Quick actions</p>
           <div className="mt-4 grid gap-2">
-            <Link href="/os/crm?newLead=1" className="rounded-2xl bg-white px-4 py-3 text-center text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
+            <Link href="/os/crm?newLead=1" className="min-w-0 max-w-full rounded-2xl bg-white px-4 py-3 text-center text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
               New lead
             </Link>
-            <a href="#weekly-note-board" className="rounded-2xl border border-white/25 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10">
+            <a href="#weekly-note-board" className="min-w-0 max-w-full rounded-2xl border border-white/25 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10">
               Add reminder
             </a>
-            <Link href="/os/crm" className="rounded-2xl border border-white/25 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10">
+            <Link href="/os/crm" className="min-w-0 max-w-full rounded-2xl border border-white/25 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10">
               Open CRM
             </Link>
           </div>

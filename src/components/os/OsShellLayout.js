@@ -27,9 +27,9 @@ export default function OsShellLayout({ children }) {
   if (!user) return null
 
   return (
-    <div className="min-h-screen max-w-full overflow-x-hidden bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_24%,_#eef3f7_100%)] text-slate-900">
-      <div className="grid min-h-screen min-w-0 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="min-w-0 max-w-full overflow-hidden border-b border-white/10 bg-[linear-gradient(180deg,_#0f172a,_#111827)] text-white lg:border-b-0 lg:border-r">
+    <div className="min-h-screen w-full min-w-0 max-w-[100vw] overflow-x-hidden bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_24%,_#eef3f7_100%)] text-slate-900">
+      <div className="grid min-h-screen w-full min-w-0 max-w-full lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="w-full min-w-0 max-w-full overflow-hidden border-b border-white/10 bg-[linear-gradient(180deg,_#0f172a,_#111827)] text-white lg:w-auto lg:border-b-0 lg:border-r">
           <div className="flex items-center justify-between gap-4 px-4 py-3 lg:block lg:p-6">
             <Link href="/os" className="block" onClick={() => setMobileNavOpen(false)}>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">
@@ -89,7 +89,7 @@ export default function OsShellLayout({ children }) {
           </nav>
         </aside>
 
-        <main className="min-w-0 max-w-full overflow-x-hidden bg-slate-50">
+        <main className="w-full min-w-0 max-w-full overflow-x-hidden bg-slate-50">
           <div className="border-b border-slate-200 bg-white px-4 py-2.5 shadow-sm sm:px-6 sm:py-4">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
