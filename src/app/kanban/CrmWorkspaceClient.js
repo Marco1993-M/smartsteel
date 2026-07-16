@@ -546,11 +546,26 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     if (!isOsCrmRoute || typeof window === "undefined") return
 
     const params = new URLSearchParams(window.location.search)
-    if (params.get("newLead") !== "1") return
-
-    setIsAddingLead(true)
-    window.history.replaceState({}, "", window.location.pathname)
+    if (params.get("newLead") === "1") {
+      setIsAddingLead(true)
+      window.history.replaceState({}, "", window.location.pathname)
+    }
   }, [isOsCrmRoute])
+
+  useEffect(() => {
+    if (!isOsCrmRoute || loading || typeof window === "undefined") return
+
+    const params = new URLSearchParams(window.location.search)
+    const leadId = params.get("leadId")
+    if (!leadId) return
+
+    const lead = leads.find((item) => String(item.id) === leadId)
+    if (lead) {
+      setCrmView("pipeline")
+      setEditingLead(lead)
+      window.history.replaceState({}, "", window.location.pathname)
+    }
+  }, [isOsCrmRoute, leads, loading])
 
   const fetchLeads = async () => {
     setLoading(true)

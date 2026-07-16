@@ -32,7 +32,7 @@ function buildPriorities(leads, tasks, documents) {
       title: `Follow up with ${leadName(lead)}`,
       helper: lead.next_action || "The follow-up date has passed.",
       tone: "urgent",
-      href: "/os/crm",
+      href: `/os/crm?leadId=${encodeURIComponent(lead.id)}`,
     }))
 
   const dueTasks = tasks.map((task) => ({
@@ -60,7 +60,7 @@ function buildPriorities(leads, tasks, documents) {
       title: `Review new lead: ${leadName(lead)}`,
       helper: lead.next_action || "Confirm requirements and the next step.",
       tone: "neutral",
-      href: "/os/crm",
+      href: `/os/crm?leadId=${encodeURIComponent(lead.id)}`,
     }))
 
   return [...overdueFollowUps, ...dueTasks, ...reviews, ...newLeads].slice(0, 3)
@@ -76,11 +76,13 @@ export async function GET(request) {
     supabaseServer.from("os_documents").select("id, title, platform_key, status").eq("status", "needs_review").limit(10),
   ])
 
-  if (leadsResult.error) return NextResponse.json({ error: leadsResult.error.message }, { status: 500 })
-  if (tasksResult.error) return NextResponse.json({ error: tasksResult.error.message }, { status: 500 })
+  const warnings = []
+  if (leadsResult.error) warnings.push("CRM priorities are temporarily unavailable.")
+  if (tasksResult.error) warnings.push("Reminders are temporarily unavailable.")
+  if (documentsResult.error) warnings.push("Document reviews are temporarily unavailable.")
 
-  const leads = leadsResult.data || []
-  const tasks = tasksResult.data || []
+  const leads = leadsResult.error ? [] : leadsResult.data || []
+  const tasks = tasksResult.error ? [] : tasksResult.data || []
   const documents = documentsResult.error ? [] : documentsResult.data || []
   const weekStart = startOfCurrentWeek()
 
@@ -90,5 +92,6 @@ export async function GET(request) {
       newLeadsThisWeek: leads.filter((lead) => lead.created_at && lead.created_at >= weekStart).length,
       activeQuotes: leads.filter((lead) => String(lead.status || "").toLowerCase() === "quoted").length,
     },
+    warnings,
   })
 }

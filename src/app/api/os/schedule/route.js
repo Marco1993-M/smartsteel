@@ -80,3 +80,27 @@ export async function DELETE(request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
 }
+
+export async function PATCH(request) {
+  const authResponse = await requireOsAuth(request)
+  if (authResponse) return authResponse
+
+  const body = await request.json()
+  const id = String(body?.id || "").trim()
+  if (!id) return NextResponse.json({ error: "A schedule item is required." }, { status: 400 })
+
+  const updatePayload = {}
+  if (typeof body?.title === "string" && body.title.trim()) updatePayload.title = body.title.trim()
+  if (typeof body?.completed === "boolean") updatePayload.completed = body.completed
+  if (!Object.keys(updatePayload).length) return NextResponse.json({ error: "Nothing to update." }, { status: 400 })
+
+  const { data, error } = await supabaseServer
+    .from("tasks")
+    .update(updatePayload)
+    .eq("id", id)
+    .select("id, title, due_date, completed")
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ record: normalizeTask(data), completed: Boolean(data.completed) })
+}
