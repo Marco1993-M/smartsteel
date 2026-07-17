@@ -22,12 +22,10 @@ function formatDate(value) {
   })
 }
 
-function buildHtml({ eventType, lead, actor, summary, changedFields }) {
+function buildHtml({ eventType, lead, estimate, actor, summary }) {
   const leadName = [lead?.name, lead?.last_name].filter(Boolean).join(" ") || "Unknown lead"
   const headingMap = {
-    new_lead: "New CRM Lead",
-    lead_updated: "CRM Lead Updated",
-    status_changed: "CRM Status Updated",
+    estimate_sent: "Estimate Sent",
   }
 
   return `
@@ -43,9 +41,10 @@ function buildHtml({ eventType, lead, actor, summary, changedFields }) {
         <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Next Action</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${lead?.next_action || "Not set"}</td></tr>
         <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Follow-up</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${formatDate(lead?.follow_up_at)}</td></tr>
         <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Quote Value</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(lead?.quote_value)}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Expected Close</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${formatDate(lead?.expected_close_date)}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Changed Fields</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${(changedFields || []).join(", ") || "General update"}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Updated By</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${actor || "Smart Steel CRM"}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Estimate</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${estimate?.title || "Not set"}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Version</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${estimate?.version_no || "Not set"}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Sent To</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${estimate?.recipient || lead?.email || "Not set"}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Sent By</strong></td><td style="padding: 8px; border: 1px solid #e2e8f0;">${actor || "Smart Steel CRM"}</td></tr>
       </table>
       ${
         lead?.estimate_request
@@ -59,6 +58,14 @@ function buildHtml({ eventType, lead, actor, summary, changedFields }) {
 export async function POST(request) {
   try {
     const body = await request.json()
+
+    if (body?.eventType !== "estimate_sent") {
+      return Response.json(
+        { skipped: true, reason: "CRM email notifications are limited to confirmed estimate sends." },
+        { status: 200 }
+      )
+    }
+
     const resendApiKey = process.env.RESEND_API_KEY
     const fromEmail =
       process.env.CRM_NOTIFICATION_FROM || "Smart Steel CRM <crm@smartsteel.co.za>"
@@ -72,9 +79,7 @@ export async function POST(request) {
 
     const leadName = [body?.lead?.name, body?.lead?.last_name].filter(Boolean).join(" ") || "Unknown lead"
     const subjectMap = {
-      new_lead: `New CRM lead: ${leadName}`,
-      lead_updated: `CRM update: ${leadName}`,
-      status_changed: `CRM status changed: ${leadName}`,
+      estimate_sent: `Estimate sent: ${leadName}${body?.estimate?.version_no ? ` · V${body.estimate.version_no}` : ""}`,
     }
 
     const resendResponse = await fetch("https://api.resend.com/emails", {
