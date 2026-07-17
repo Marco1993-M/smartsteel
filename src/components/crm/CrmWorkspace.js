@@ -1201,15 +1201,13 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     const currentLead = leads.find((lead) => lead.id === leadId)
     const updatedLead = normalizeLead({
       ...currentLead,
-      status: "quoted",
       quote_value: estimateDraft.total,
       product_type: estimateDraft.product_type || currentLead?.product_type,
-      next_action: "Send estimate to client and follow up",
+      next_action: `Review and send Estimate V${estimatePayload.version_no} to the client.`,
       estimate_request: estimateDraft.estimate_request,
     })
 
     const updatePayload = {
-      status: "quoted",
       quote_value: estimateDraft.total,
       product_type: updatedLead.product_type,
       next_action: updatedLead.next_action,
@@ -1256,18 +1254,9 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         lead_id: leadId,
         type: "update",
         user_name: "System",
-        description: `Estimate V${estimatePayload.version_no} ${isEstimateUpdate ? "updated" : "created"} for ${formatStatusLabel(updatedLead.status)} stage.`,
+        description: `Estimate V${estimatePayload.version_no} ${isEstimateUpdate ? "updated" : "prepared"}. It has not been marked as sent.`,
         timestamp: new Date().toISOString(),
       },
-      currentLead?.status !== "quoted"
-        ? {
-            lead_id: leadId,
-            type: "status",
-            user_name: "System",
-            description: `Status changed from ${formatStatusLabel(currentLead?.status)} to Quoted`,
-            timestamp: new Date().toISOString(),
-          }
-        : null,
     ])
 
     await sendCrmNotification({
@@ -1275,10 +1264,10 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       lead: updatedLead,
       previousLead: currentLead,
       actor: user?.email || "Smart Steel CRM",
-      changedFields: ["status", "quote_value", "next_action"],
+      changedFields: ["quote_value", "next_action"],
       summary: isEstimateUpdate
         ? `Estimate V${estimatePayload.version_no} updated and lead quote data refreshed.`
-        : `Estimate V${estimatePayload.version_no} created and lead moved to quoted.`,
+        : `Estimate V${estimatePayload.version_no} prepared and ready for review before sending.`,
     })
 
     setEditingLead(updatedLead)

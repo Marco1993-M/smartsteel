@@ -458,6 +458,22 @@ function getWaitingSummaryForTemplate(templateKey, lead) {
   }
 }
 
+function getGuidedLeadAction(nextBestAction, lead, latestEstimate) {
+  const title = String(nextBestAction?.title || "").toLowerCase()
+  const nextAction = String(lead?.next_action || "").toLowerCase()
+
+  if (latestEstimate && /review and send estimate|send estimate/.test(nextAction)) {
+    return { type: "estimate_email", label: `Review and send Estimate V${latestEstimate.version_no || 1}` }
+  }
+  if (/prepare the estimate/.test(title)) return { type: "estimate", label: "Open estimate builder" }
+  if (/request missing project info/.test(title)) return { type: "missing_info_email", label: "Prepare information request" }
+  if (/follow up|revive quote momentum/.test(title)) return { type: "follow_up_email", label: "Prepare follow-up email" }
+  if (/call and qualify/.test(title)) return { type: "call", label: "Call client" }
+  if (/start handover/.test(title)) return { type: "project", label: "Prepare project handoff" }
+  if (/no action needed|hold until/.test(title)) return { type: "wait", label: nextBestAction.shortLabel }
+  return { type: "details", label: "Review lead details" }
+}
+
 const NEW_LEAD_PRODUCT_OPTIONS = [
   { value: "LSF Warehouse", label: "LSF Warehouse", note: "Engineered warehouse", icon: Building2 },
   { value: "LCSS Warehouse", label: "Atlas Warehouse", note: "Lip channel system", icon: Building2 },
@@ -644,6 +660,8 @@ export default function LeadEditorDrawer({
   const [emailBody, setEmailBody] = useState("");
   const [emailComposerMode, setEmailComposerMode] = useState("follow_up");
   const [selectedEstimateEmail, setSelectedEstimateEmail] = useState(null);
+  const [emailDraftOpened, setEmailDraftOpened] = useState(false);
+  const [confirmingEmailSent, setConfirmingEmailSent] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectHandoffError, setProjectHandoffError] = useState("");
@@ -688,6 +706,8 @@ export default function LeadEditorDrawer({
   const inputClass = "block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-0";
   const sectionClass = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
   const opportunitySummary = getOpportunitySummary(formData)
+  const latestEstimate = savedEstimates[0] || null
+  const guidedAction = getGuidedLeadAction(nextBestAction, formData, latestEstimate)
 
   // Fetch notes and activities from Supabase
   useEffect(() => {
@@ -826,6 +846,8 @@ export default function LeadEditorDrawer({
     setEmailBody(template.body)
     setEmailComposerMode("follow_up")
     setSelectedEstimateEmail(null)
+    setEmailDraftOpened(false)
+    setConfirmingEmailSent(false)
     setShowEmailComposer(false)
     setValidationErrors({});
   }, [lead]);
@@ -942,14 +964,14 @@ export default function LeadEditorDrawer({
     setEmailBody(template.body)
   }
 
-  const openEmailComposer = () => {
+  const openEmailComposer = (templateOverride = "") => {
     if (!formData.email?.trim()) {
       alert("Add an email address for this lead first.")
       return
     }
 
-    if (emailComposerMode !== "follow_up" || !emailSubject || !emailBody) {
-      const suggestedTemplate = getSuggestedFollowUpTemplate(formData)
+    if (emailComposerMode !== "follow_up" || !emailSubject || !emailBody || templateOverride) {
+      const suggestedTemplate = templateOverride || getSuggestedFollowUpTemplate(formData)
       const template = buildFollowUpTemplate(suggestedTemplate, formData)
       setEmailTemplateKey(suggestedTemplate)
       setEmailSubject(template.subject)
@@ -958,6 +980,7 @@ export default function LeadEditorDrawer({
 
     setEmailComposerMode("follow_up")
     setSelectedEstimateEmail(null)
+    setEmailDraftOpened(false)
     setShowEmailComposer(true)
   }
 
@@ -972,6 +995,7 @@ export default function LeadEditorDrawer({
     setSelectedEstimateEmail(estimate || null)
     setEmailSubject(template.subject)
     setEmailBody(template.body)
+    setEmailDraftOpened(false)
     setShowEmailComposer(true)
   }
 
@@ -994,66 +1018,47 @@ export default function LeadEditorDrawer({
     }
   }
 
-  const handleSendFollowUpEmail = async () => {
-    if (emailComposerMode === "estimate") {
-      const mailtoUrl = `mailto:${encodeURIComponent(formData.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
-
-      if (lead?.id) {
-        await addActivity({
-          type: "email",
-          description: `Estimate email draft opened for ${selectedEstimateEmail?.title || "the latest estimate"}. Subject: ${emailSubject}`,
-        })
-      }
-
-      window.location.href = mailtoUrl
-      return
-    }
-
-    const nextFollowUpAt = getBusinessFollowUpIsoDate(3)
-    const nextAction = getWaitingSummaryForTemplate(emailTemplateKey, formData)
-    const templateLabel = getFollowUpTemplateLabel(emailTemplateKey)
+  const handleOpenEmailDraft = () => {
     const mailtoUrl = `mailto:${encodeURIComponent(formData.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+    setEmailDraftOpened(true)
+    window.location.href = mailtoUrl
+  }
 
-    setFormData((prev) => ({
-      ...prev,
+  const handleConfirmEmailSent = async () => {
+    if (!lead?.id || confirmingEmailSent) return
+
+    setConfirmingEmailSent(true)
+    const nextFollowUpAt = getBusinessFollowUpIsoDate(3)
+    const isEstimateEmail = emailComposerMode === "estimate"
+    const estimateLabel = selectedEstimateEmail?.title || "the latest estimate"
+    const templateLabel = getFollowUpTemplateLabel(emailTemplateKey)
+    const nextAction = isEstimateEmail
+      ? `Awaiting the client's review of ${estimateLabel}. Follow up if no reply.`
+      : getWaitingSummaryForTemplate(emailTemplateKey, formData)
+    const updatedLead = {
+      ...formData,
+      status: isEstimateEmail ? "quoted" : formData.status,
+      quote_value: isEstimateEmail
+        ? selectedEstimateEmail?.total || formData.quote_value
+        : formData.quote_value,
       client_follow_up_state: "awaiting_reply",
       follow_up_at: nextFollowUpAt,
       next_action: nextAction,
-    }))
-
-    if (lead?.id) {
-      let updateResult = await supabase
-        .from("leads")
-        .update({
-          client_follow_up_state: "awaiting_reply",
-          follow_up_at: nextFollowUpAt,
-          next_action: nextAction,
-        })
-        .eq("id", lead.id)
-
-      if (updateResult.error) {
-        const message = updateResult.error.message || ""
-        if (/client_follow_up_state/i.test(message)) {
-          updateResult = await supabase
-            .from("leads")
-            .update({
-              follow_up_at: nextFollowUpAt,
-              next_action: nextAction,
-            })
-            .eq("id", lead.id)
-        }
-      }
-
-      if (updateResult.error) {
-        console.error("Error updating follow-up date:", updateResult.error)
-      }
-
-      await addActivity({
-        type: "email",
-        description: `Follow-up email opened (${templateLabel}). Subject: ${emailSubject}. Waiting for: ${nextAction}`,
-      })
     }
-    window.location.href = mailtoUrl
+
+    const saved = await onSave(updatedLead)
+    if (!saved) {
+      setConfirmingEmailSent(false)
+      return
+    }
+
+    await supabase.from("lead_activities").insert([{
+      lead_id: lead.id,
+      type: "email",
+      user_name: "System",
+      description: `${isEstimateEmail ? `${estimateLabel} sent` : `Follow-up email sent (${templateLabel})`}. Subject: ${emailSubject}\n\nEmail copy:\n${emailBody}`,
+      timestamp: new Date().toISOString(),
+    }])
   }
 
   const handleMarkWaitingOnClient = async () => {
@@ -1070,6 +1075,34 @@ export default function LeadEditorDrawer({
       ...updatedLead,
       client_follow_up_state: "client_will_revert",
     })
+  }
+
+  const handleGuidedAction = () => {
+    switch (guidedAction.type) {
+      case "estimate_email":
+        openEstimateEmailComposer(latestEstimate)
+        break
+      case "estimate":
+        onCreateEstimate?.({ ...lead, ...formData })
+        break
+      case "missing_info_email":
+        openEmailComposer("missing_info")
+        break
+      case "follow_up_email":
+        openEmailComposer(normalizeStatus(formData.status) === "quoted" ? "estimate_follow_up" : "enquiry_follow_up")
+        break
+      case "call":
+        window.location.href = `tel:${formData.phone || ""}`
+        break
+      case "project":
+        onCreateProject?.({ ...lead, ...formData })
+        break
+      case "details":
+        document.getElementById("lead-editor-details")?.scrollIntoView({ behavior: "smooth", block: "start" })
+        break
+      default:
+        break
+    }
   }
 
   return (
@@ -1274,6 +1307,14 @@ export default function LeadEditorDrawer({
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Best next move</p>
                 <h3 className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">{nextBestAction.title}</h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">{nextBestAction.reason}</p>
+                <button
+                  type="button"
+                  disabled={guidedAction.type === "wait"}
+                  onClick={handleGuidedAction}
+                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-amber-200 disabled:cursor-default disabled:bg-white/10 disabled:text-slate-400"
+                >
+                  {guidedAction.label}
+                </button>
               </div>
               <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${leadSop.isComplete ? "bg-emerald-400/20 text-emerald-200" : "bg-amber-300/15 text-amber-200"}`}>
                 {leadSop.completionLabel}
@@ -1342,7 +1383,7 @@ export default function LeadEditorDrawer({
           </div>
         </section>
 
-        <section className={sectionClass}>
+        <section id="lead-editor-details" className={`${sectionClass} scroll-mt-24`}>
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">1</span>
             <div>
@@ -2133,8 +2174,8 @@ export default function LeadEditorDrawer({
                               </h3>
                               <p className="mt-1 text-sm text-slate-600">
                                 {emailComposerMode === "estimate"
-                                  ? "Use this draft when sending the estimate to the client, then attach the estimate PDF before sending."
-                                  : "Use this as your trial run for the 10 follow-ups you need to get out quickly."}
+                                  ? "Review the message, attach the correct estimate PDF, and confirm only after it has been sent."
+                                  : "Review and edit the prepared message before opening it in your email app."}
                               </p>
                             </div>
                             <button
@@ -2205,12 +2246,25 @@ export default function LeadEditorDrawer({
                           </button>
                           <button
                             type="button"
-                            onClick={handleSendFollowUpEmail}
-                            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+                            onClick={handleOpenEmailDraft}
+                            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                           >
-                            Open email draft
+                            Open email app
+                          </button>
+                          <button
+                            type="button"
+                            disabled={confirmingEmailSent}
+                            onClick={handleConfirmEmailSent}
+                            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50"
+                          >
+                            {confirmingEmailSent ? "Saving..." : "Confirm email sent"}
                           </button>
                         </div>
+                        <p className="px-4 pb-4 text-xs leading-5 text-slate-500 sm:px-5">
+                          {emailDraftOpened
+                            ? "Your email app was opened. Confirm only after you have reviewed and sent the message."
+                            : "Review the draft first. Opening the email app does not change the pipeline."}
+                        </p>
                       </div>
                     </div>
                   )}
