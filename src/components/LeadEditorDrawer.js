@@ -2,7 +2,22 @@
 
 import { useState, useEffect, useMemo, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
-import { Phone, Mail, MessageSquare, Trash2, Save, ArrowLeft, FileText, Link2 } from "lucide-react"
+import {
+  ArrowLeft,
+  Building2,
+  CarFront,
+  Component,
+  FileText,
+  Link2,
+  Mail,
+  MessageSquare,
+  PanelsTopLeft,
+  Phone,
+  Save,
+  Shapes,
+  Sun,
+  Trash2,
+} from "lucide-react"
 import { supabase } from "../lib/supabase" 
 import {
   formatCrmStatusLabel,
@@ -441,6 +456,169 @@ function getWaitingSummaryForTemplate(templateKey, lead) {
     default:
       return `Awaiting the client's reply regarding ${projectReference}.`
   }
+}
+
+const NEW_LEAD_PRODUCT_OPTIONS = [
+  { value: "LSF Warehouse", label: "LSF Warehouse", note: "Engineered warehouse", icon: Building2 },
+  { value: "LCSS Warehouse", label: "Atlas Warehouse", note: "Lip channel system", icon: Building2 },
+  { value: "Solar carport", label: "Solar Carport", note: "Parking and solar", icon: CarFront },
+  { value: "Solar ground mount", label: "Ground Mount", note: "Open-site solar", icon: PanelsTopLeft },
+  { value: "LSF trusses", label: "Steel Trusses", note: "Roof structure", icon: Shapes },
+  { value: "Bracketry", label: "Bracketry", note: "Standard or custom", icon: Component },
+  { value: "Other", label: "Custom Project", note: "Something different", icon: Sun },
+]
+
+const NEW_LEAD_NEXT_ACTIONS = [
+  "Contact client and confirm project requirements.",
+  "Request drawings, dimensions or site information.",
+  "Prepare a starting estimate.",
+  "Arrange a site meeting or project call.",
+]
+
+function NewLeadIntake({ formData, handleChange, validationErrors, inputClass, fieldLabelClass, onSave }) {
+  const setProductType = (productType) => {
+    handleChange("product_type", productType)
+    if (!formData.next_action) {
+      handleChange("next_action", NEW_LEAD_NEXT_ACTIONS[0])
+    }
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col bg-slate-50">
+      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-600">Fast lead intake</p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Capture the opportunity, not the paperwork.</h2>
+            </div>
+            <p className="max-w-xs text-sm leading-5 text-slate-500">Enough detail for the next person to understand the enquiry and act immediately.</p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.35fr]">
+            <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">1</span>
+                <div>
+                  <h3 className="font-bold text-slate-950">Who is enquiring?</h3>
+                  <p className="text-xs text-slate-500">Name and one reliable contact method.</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className={fieldLabelClass}>Client name</label>
+                  <input
+                    autoFocus
+                    type="text"
+                    value={formData.name || ""}
+                    onChange={(event) => handleChange("name", event.target.value)}
+                    placeholder="First and last name"
+                    className={inputClass}
+                  />
+                  {validationErrors.name ? <p className="mt-1 text-xs text-red-600">{validationErrors.name}</p> : null}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <div>
+                    <label className={fieldLabelClass}>Phone</label>
+                    <input type="tel" value={formData.phone || ""} onChange={(event) => handleChange("phone", event.target.value)} placeholder="Contact number" className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={fieldLabelClass}>Email</label>
+                    <input type="email" value={formData.email || ""} onChange={(event) => handleChange("email", event.target.value)} placeholder="Email address" className={inputClass} />
+                  </div>
+                </div>
+                {validationErrors.contact ? <p className="text-xs text-red-600">{validationErrors.contact}</p> : null}
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">2</span>
+                <div>
+                  <h3 className="font-bold text-slate-950">What do they need?</h3>
+                  <p className="text-xs text-slate-500">Choose the closest product, then capture the brief.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {NEW_LEAD_PRODUCT_OPTIONS.map((option) => {
+                  const Icon = option.icon
+                  const selected = formData.product_type === option.value
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setProductType(option.value)}
+                      className={`min-h-[112px] rounded-2xl border p-3 text-left transition ${selected ? "border-slate-950 bg-slate-950 text-white shadow-md" : "border-slate-200 bg-slate-50 text-slate-900 hover:border-slate-400 hover:bg-white"}`}
+                    >
+                      <Icon size={22} strokeWidth={1.8} className={selected ? "text-amber-300" : "text-red-600"} />
+                      <p className="mt-3 text-sm font-bold leading-4">{option.label}</p>
+                      <p className={`mt-1 text-[11px] leading-4 ${selected ? "text-slate-300" : "text-slate-500"}`}>{option.note}</p>
+                    </button>
+                  )
+                })}
+              </div>
+              {validationErrors.product_type ? <p className="mt-2 text-xs text-red-600">{validationErrors.product_type}</p> : null}
+              <div className="mt-3">
+                <label className={fieldLabelClass}>Project brief</label>
+                <textarea
+                  value={formData.estimate_request || ""}
+                  onChange={(event) => handleChange("estimate_request", event.target.value)}
+                  placeholder="What is the client looking for? Include dimensions, location or timing if known."
+                  rows={3}
+                  className={`${inputClass} min-h-[92px] resize-none`}
+                />
+              </div>
+            </section>
+          </div>
+
+          <section className="mt-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">3</span>
+              <div>
+                <h3 className="font-bold text-slate-950">Route the next move</h3>
+                <p className="text-xs text-slate-500">Make ownership and follow-through clear from the start.</p>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className={fieldLabelClass}>Lead source</label>
+                <select value={formData.lead_source || ""} onChange={(event) => handleChange("lead_source", event.target.value)} className={inputClass}>
+                  <option value="">Select source</option>
+                  {LEAD_SOURCE_OPTIONS.map((source) => <option key={source} value={source}>{source}</option>)}
+                </select>
+                {validationErrors.lead_source ? <p className="mt-1 text-xs text-red-600">{validationErrors.lead_source}</p> : null}
+              </div>
+              <div>
+                <label className={fieldLabelClass}>Allocated to</label>
+                <select value={formData.allocated_to || ""} onChange={(event) => handleChange("allocated_to", event.target.value)} className={inputClass}>
+                  <option value="">Choose team member</option>
+                  {TEAM_MEMBERS.map((member) => <option key={member} value={member}>{member}</option>)}
+                </select>
+                {validationErrors.allocated_to ? <p className="mt-1 text-xs text-red-600">{validationErrors.allocated_to}</p> : null}
+              </div>
+              <div>
+                <label className={fieldLabelClass}>Next action</label>
+                <select value={formData.next_action || ""} onChange={(event) => handleChange("next_action", event.target.value)} className={inputClass}>
+                  <option value="">Choose next action</option>
+                  {NEW_LEAD_NEXT_ACTIONS.map((action) => <option key={action} value={action}>{action}</option>)}
+                </select>
+                {validationErrors.next_action ? <p className="mt-1 text-xs text-red-600">{validationErrors.next_action}</p> : null}
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+          <p className="hidden text-sm text-slate-500 sm:block">The full workspace opens after the lead is saved.</p>
+          <button type="button" onClick={onSave} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 sm:w-auto">
+            <Save size={16} /> Add lead
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function LeadEditorDrawer({
@@ -1002,7 +1180,18 @@ export default function LeadEditorDrawer({
 
 </div>
 
-              <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
+              {isNew ? (
+                <NewLeadIntake
+                  formData={formData}
+                  handleChange={handleChange}
+                  validationErrors={validationErrors}
+                  inputClass={inputClass}
+                  fieldLabelClass={fieldLabelClass}
+                  onSave={handleSaveClick}
+                />
+              ) : null}
+
+              <div className={`${isNew ? "hidden" : ""} border-b border-slate-200 bg-white px-4 py-3 sm:px-6`}>
                 <div className="grid gap-2 sm:grid-cols-3">
                   <div className="rounded-xl bg-slate-100 px-3 py-2.5">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Opportunity</p>
@@ -1013,14 +1202,25 @@ export default function LeadEditorDrawer({
                     <p className="mt-1 truncate text-sm font-bold text-slate-900">{formData.next_action || nextBestAction.shortLabel}</p>
                   </div>
                   <div className="flex items-center justify-between rounded-xl bg-slate-950 px-3 py-2.5 text-white">
-                    <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Quote value</p><p className="mt-1 text-sm font-bold">{String(formData.quote_value || "").trim() ? formatZar(formData.quote_value) : "Not quoted"}</p></div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                        {isNew ? "Lead source" : "Quote value"}
+                      </p>
+                      <p className="mt-1 text-sm font-bold">
+                        {isNew
+                          ? formData.lead_source || "Not selected"
+                          : String(formData.quote_value || "").trim()
+                            ? formatZar(formData.quote_value)
+                            : "Not quoted"}
+                      </p>
+                    </div>
                     <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${getStatusBadgeClass(formData.status)}`}>{formatStatusLabel(formData.status)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Scrollable Body */}
-<div className="flex-1 overflow-y-auto w-full max-w-full bg-slate-50">
+<div className={`${isNew ? "hidden" : "flex-1"} overflow-y-auto w-full max-w-full bg-slate-50`}>
   {!isNew && normalizeStatus(formData.status) === "won" && (
     <div className="border-b border-emerald-200 bg-emerald-50 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1051,7 +1251,7 @@ export default function LeadEditorDrawer({
   )}
   <Tab.Group>
     <Tab.List className="sticky top-0 z-20 flex gap-2 overflow-x-auto border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur no-scrollbar -webkit-overflow-scrolling-touch sm:px-5">
-      {["Opportunity", "Execution", "Quotes", "Notes", "Activity"].map((tab) => (
+      {["Overview", "Follow-up", "Estimates", "Notes", "Activity"].map((tab) => (
         <Tab
           key={tab}
           className={({ selected }) =>
@@ -1067,161 +1267,88 @@ export default function LeadEditorDrawer({
     <Tab.Panels className="mx-auto w-full max-w-5xl space-y-4 p-0">
       {/* Details Panel */}
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
-        <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#fff1f2)] p-4 shadow-sm">
-          {!isNew && (
-            <div className="mb-4 rounded-2xl border border-slate-200 bg-white/80 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Date added
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-800">{createdAtLabel}</p>
-            </div>
-          )}
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                SOP next step
-              </p>
-              <h3 className="mt-1 text-base font-semibold text-slate-900">
-                {leadSop.nextStep}
-              </h3>
-              <p className="mt-1 text-sm leading-5 text-slate-600">{leadSop.goal}</p>
-            </div>
-            <span
-              className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
-                leadSop.isComplete
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-amber-100 text-amber-700"
-              }`}
-            >
-              {leadSop.completionLabel}
-            </span>
-          </div>
-
-          <div className="mt-3 grid gap-2">
-            {leadSop.checklist.map((item) => (
-              <div key={item.key} className="flex items-center gap-2 text-sm">
-                <span
-                  className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
-                    item.done ? "bg-emerald-100 text-emerald-700" : "bg-white text-slate-400"
-                  }`}
-                >
-                  {item.done ? "✓" : "•"}
-                </span>
-                <span className={item.done ? "text-slate-400 line-through" : "text-slate-700"}>
-                  {item.label}
-                </span>
+        <div className="grid gap-4 lg:grid-cols-[1.35fr_0.85fr]">
+          <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-sm sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Best next move</p>
+                <h3 className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">{nextBestAction.title}</h3>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">{nextBestAction.reason}</p>
               </div>
-            ))}
-          </div>
-
-          <div className="mt-4 rounded-2xl bg-slate-900 p-4 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
-              Best next move
-            </p>
-            <h3 className="mt-1 text-base font-semibold text-white">
-              {nextBestAction.title}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-slate-200">
-              {nextBestAction.reason}
-            </p>
-          </div>
-
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Quick next actions
-            </p>
-            <div className="flex flex-wrap gap-2">
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${leadSop.isComplete ? "bg-emerald-400/20 text-emerald-200" : "bg-amber-300/15 text-amber-200"}`}>
+                {leadSop.completionLabel}
+              </span>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2">
               {leadSop.actions.map((action) => (
-                <button
-                  key={action.label}
-                  type="button"
-                  onClick={() => applySopAction(action)}
-                  className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
-                >
+                <button key={action.label} type="button" onClick={() => applySopAction(action)} className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20">
                   {action.label}
                 </button>
               ))}
             </div>
-          </div>
-
-          {!isNew && (
-            <div className="mt-4 border-t border-slate-200 pt-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                One-tap logged actions
-              </p>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="mt-5 border-t border-white/10 pt-4">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Log an update</p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[
-                  { key: "called_client", label: "Called client" },
+                  { key: "called_client", label: "Called" },
                   { key: "requested_info", label: "Requested info" },
                   { key: "sent_quote", label: "Sent quote" },
                   { key: "follow_tomorrow", label: "Tomorrow" },
                 ].map((action) => (
-                  <button
-                    key={action.key}
-                    type="button"
-                    onClick={() => handleQuickLogAction(action.key)}
-                    className="rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
-                  >
+                  <button key={action.key} type="button" onClick={() => handleQuickLogAction(action.key)} className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-900 transition hover:bg-slate-100">
                     {action.label}
                   </button>
                 ))}
               </div>
             </div>
-          )}
+          </section>
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-red-600">Lead readiness</p>
+                <h3 className="mt-1 font-bold text-slate-950">{leadSop.nextStep}</h3>
+              </div>
+              <p className="text-xs text-slate-400">Added {createdAtLabel}</p>
+            </div>
+            <div className="mt-4 space-y-2.5">
+              {leadSop.checklist.map((item) => (
+                <div key={item.key} className="flex items-center gap-2.5 text-sm">
+                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"}`}>{item.done ? "✓" : "·"}</span>
+                  <span className={item.done ? "text-slate-400 line-through" : "text-slate-700"}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
 
-        <section className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#eef2ff)] p-4 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Opportunity view
-              </p>
-              <h3 className="mt-1 text-base font-semibold text-slate-900">
-                {opportunitySummary.title}
-              </h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                {opportunitySummary.description}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
-                {opportunitySummary.line} line
-              </span>
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
-                {opportunitySummary.family}
-              </span>
-            </div>
+        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Product", opportunitySummary.lane],
+              ["Owner", opportunitySummary.owner],
+              ["Stage", formatStatusLabel(formData.status)],
+              ["Quote", opportunitySummary.quoteState],
+            ].map(([label, value]) => (
+              <div key={label} className="border-b border-slate-100 pb-3 last:border-0 sm:border-b-0 sm:border-r sm:pb-0 sm:pr-4 sm:last:border-r-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+                <p className="mt-1 text-sm font-bold text-slate-900">{value}</p>
+              </div>
+            ))}
           </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Product lane</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{opportunitySummary.lane}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Current owner</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{opportunitySummary.owner}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Commercial stage</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{formatStatusLabel(formData.status)}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Quote state</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{opportunitySummary.quoteState}</p>
-            </div>
-          </div>
-
-          <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Current next step</p>
-            <p className="mt-2 text-sm leading-6 text-slate-700">{opportunitySummary.nextAction}</p>
+          <div className="mt-4 rounded-2xl bg-slate-100 px-4 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Current next action</p>
+            <p className="mt-1 text-sm font-semibold text-slate-800">{opportunitySummary.nextAction}</p>
           </div>
         </section>
 
         <section className={sectionClass}>
-          <div className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Client & brief</p>
-            <h3 className="mt-1 text-base font-semibold text-slate-900">Who is this lead and what do they need?</h3>
+          <div className="mb-4 flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">1</span>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Client</p>
+              <h3 className="mt-0.5 text-base font-semibold text-slate-900">Contact details</h3>
+            </div>
           </div>
           <div className="space-y-4">
             <div>
@@ -1263,12 +1390,15 @@ export default function LeadEditorDrawer({
         </section>
 
         <section className={sectionClass}>
-          <div className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Project scope</p>
-            <h3 className="mt-1 text-base font-semibold text-slate-900">{scopeConfig.title}</h3>
+          <div className="mb-4 flex items-start gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">2</span>
+            <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Project scope</p>
+            <h3 className="mt-0.5 text-base font-semibold text-slate-900">{scopeConfig.title}</h3>
             <p className="mt-1 text-sm leading-6 text-slate-600">
               {scopeConfig.note}
             </p>
+            </div>
           </div>
           {scopeConfig.showSizeSelectors ? (
             <>
@@ -1353,6 +1483,13 @@ export default function LeadEditorDrawer({
         </section>
 
         <section className={sectionClass}>
+        <div className="mb-4 flex items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">3</span>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Lead direction</p>
+            <h3 className="mt-0.5 text-base font-semibold text-slate-900">Ownership and commercial stage</h3>
+          </div>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={fieldLabelClass}>Lead Source</label>
@@ -1394,23 +1531,25 @@ export default function LeadEditorDrawer({
             </p>
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={fieldLabelClass}>Quote Value</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.quote_value || ""}
-              onChange={(e) => handleChange("quote_value", e.target.value)}
-              placeholder="0.00"
-              className={inputClass}
-            />
-            {validationErrors.quote_value && (
-              <p className="mt-1 text-xs text-red-600">{validationErrors.quote_value}</p>
-            )}
+        {!isNew && (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={fieldLabelClass}>Quote Value</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.quote_value || ""}
+                onChange={(e) => handleChange("quote_value", e.target.value)}
+                placeholder="0.00"
+                className={inputClass}
+              />
+              {validationErrors.quote_value && (
+                <p className="mt-1 text-xs text-red-600">{validationErrors.quote_value}</p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
         <div className="mt-4">
           <label className={`${fieldLabelClass} mb-2`}>Allocated To</label>
           <div className="flex gap-2 flex-wrap">
@@ -1441,7 +1580,7 @@ export default function LeadEditorDrawer({
             <p className="mt-1 text-xs text-red-600">{validationErrors.allocated_to}</p>
           )}
         </div>
-        <div>
+        <div className="mt-4">
           <label className={fieldLabelClass}>Status</label>
           <select
             value={normalizeStatus(formData.status)}

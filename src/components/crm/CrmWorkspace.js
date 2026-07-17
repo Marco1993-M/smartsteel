@@ -88,6 +88,24 @@ function normalizeLead(lead) {
   }
 }
 
+function buildLeadPersistencePayload(lead) {
+  const optionalNumericFields = ["quote_value", "width", "length"]
+  const payload = { ...lead }
+
+  optionalNumericFields.forEach((field) => {
+    const value = payload[field]
+    if (value === "" || value === undefined || value === null) {
+      payload[field] = null
+      return
+    }
+
+    const numericValue = Number(value)
+    payload[field] = Number.isFinite(numericValue) ? numericValue : null
+  })
+
+  return payload
+}
+
 function stripEstimateVersionSuffix(title) {
   return String(title || "").replace(/\s+V\d+$/i, "").trim()
 }
@@ -742,11 +760,12 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       : null
 
     const persistLead = async (payload) => {
+      const persistencePayload = buildLeadPersistencePayload(payload)
       if (isNew) {
-        return supabase.from("leads").insert([payload]).select()
+        return supabase.from("leads").insert([persistencePayload]).select()
       }
 
-      return supabase.from("leads").update(payload).eq("id", normalizedLead.id)
+      return supabase.from("leads").update(persistencePayload).eq("id", normalizedLead.id)
     }
 
     if (isNew) {
@@ -759,7 +778,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         unsupportedFields.push(missingColumn)
         const fallbackPayload = { ...normalizedLead }
         unsupportedFields.forEach((field) => delete fallbackPayload[field])
-        response = await supabase.from("leads").insert([fallbackPayload]).select()
+        response = await supabase.from("leads").insert([buildLeadPersistencePayload(fallbackPayload)]).select()
       }
 
       if (response.error) {
