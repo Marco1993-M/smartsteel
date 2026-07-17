@@ -253,6 +253,31 @@ function formatZar(value) {
   }).format(Number.isFinite(parsed) ? parsed : 0)
 }
 
+function normalizeEstimateStatus(status) {
+  const normalized = String(status || "prepared").trim().toLowerCase()
+  return normalized === "draft" ? "prepared" : normalized
+}
+
+function formatEstimateStatus(status) {
+  const normalized = normalizeEstimateStatus(status)
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+}
+
+function getEstimateStatusClass(status) {
+  switch (normalizeEstimateStatus(status)) {
+    case "sent":
+      return "bg-sky-100 text-sky-700"
+    case "accepted":
+      return "bg-emerald-100 text-emerald-700"
+    case "declined":
+      return "bg-rose-100 text-rose-700"
+    case "superseded":
+      return "bg-slate-200 text-slate-600"
+    default:
+      return "bg-amber-100 text-amber-700"
+  }
+}
+
 function buildEstimatePreviewUrl(estimateId) {
   if (!estimateId) return ""
   return `/kanban/estimates/${estimateId}`
@@ -654,6 +679,7 @@ export default function LeadEditorDrawer({
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [savedEstimates, setSavedEstimates] = useState([]);
   const [loadingEstimates, setLoadingEstimates] = useState(false);
+  const [emailEvents, setEmailEvents] = useState([]);
   const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [emailTemplateKey, setEmailTemplateKey] = useState(getSuggestedFollowUpTemplate(lead));
   const [emailSubject, setEmailSubject] = useState("");
@@ -750,6 +776,34 @@ export default function LeadEditorDrawer({
 
     fetchActivities();
   }, [lead?.id]);
+
+  useEffect(() => {
+    if (!lead?.id) {
+      setEmailEvents([])
+      return
+    }
+
+    const fetchEmailEvents = async () => {
+      const { data, error } = await supabase
+        .from("crm_email_events")
+        .select("*")
+        .eq("lead_id", lead.id)
+        .order("sent_at", { ascending: false })
+
+      if (error) {
+        if (/crm_email_events|schema cache|does not exist/i.test(error.message || "")) {
+          setEmailEvents([])
+          return
+        }
+        console.error("Error fetching CRM email history:", error)
+        return
+      }
+
+      setEmailEvents(data || [])
+    }
+
+    fetchEmailEvents()
+  }, [lead?.id])
 
   useEffect(() => {
     if (!lead?.id) {
@@ -1052,12 +1106,119 @@ export default function LeadEditorDrawer({
       return
     }
 
+    const sentAt = new Date().toISOString()
+    const senderName = formData.allocated_to || "Smart Steel"
+
+    if (isEstimateEmail && selectedEstimateEmail?.id && !String(selectedEstimateEmail.id).startsWith("local-")) {
+      let estimateUpdate = await supabase
+        .from("estimates")
+        .update({ status: "sent", sent_at: sentAt, sent_by_name: senderName })
+        .eq("id", selectedEstimateEmail.id)
+
+      if (estimateUpdate.error && /sent_at|sent_by_name|schema cache/i.test(estimateUpdate.error.message || "")) {
+        estimateUpdate = await supabase
+          .from("estimates")
+          .update({ status: "sent" })
+          .eq("id", selectedEstimateEmail.id)
+      }
+
+      if (estimateUpdate.error) {
+        console.error("Error marking estimate as sent:", estimateUpdate.error)
+      } else {
+        await supabase
+          .from("estimates")
+          .update({ status: "superseded" })
+          .eq("lead_id", lead.id)
+          .neq("id", selectedEstimateEmail.id)
+          .in("status", ["draft", "prepared", "sent"])
+      }
+    }
+
+    const followUpNumber = emailEvents.filter((event) => event.email_type === "follow_up").length + 1
+    const emailType = isEstimateEmail
+      ? "estimate"
+      : emailTemplateKey === "missing_info"
+        ? "information_request"
+        : emailTemplateKey === "reactivation"
+          ? "reactivation"
+          : "follow_up"
+
+    const emailEvent = {
+      estimate_id: isEstimateEmail && selectedEstimateEmail?.id && !String(selectedEstimateEmail.id).startsWith("local-")
+        ? selectedEstimateEmail.id
+        : null,
+      lead_id: lead.id,
+      estimate_version: isEstimateEmail ? Number(selectedEstimateEmail?.version_no || 0) || null : null,
+      email_type: emailType,
+      recipient: formData.email,
+      subject: emailSubject,
+      body: emailBody,
+      sent_at: sentAt,
+      sent_by_name: senderName,
+      follow_up_number: emailType === "follow_up" ? followUpNumber : 0,
+      channel: "email",
+    }
+
+    const emailEventResult = await supabase.from("crm_email_events").insert([emailEvent]).select()
+    if (!emailEventResult.error && emailEventResult.data?.[0]) {
+      setEmailEvents((current) => [emailEventResult.data[0], ...current])
+    } else if (emailEventResult.error && !/crm_email_events|schema cache|does not exist/i.test(emailEventResult.error.message || "")) {
+      console.error("Error saving CRM email event:", emailEventResult.error)
+    }
+
     await supabase.from("lead_activities").insert([{
       lead_id: lead.id,
       type: "email",
       user_name: "System",
       description: `${isEstimateEmail ? `${estimateLabel} sent` : `Follow-up email sent (${templateLabel})`}. Subject: ${emailSubject}\n\nEmail copy:\n${emailBody}`,
       timestamp: new Date().toISOString(),
+    }])
+  }
+
+  const handleEstimateOutcome = async (estimate, outcome) => {
+    if (!estimate?.id || String(estimate.id).startsWith("local-")) {
+      alert("This estimate must be saved online before its outcome can be recorded.")
+      return
+    }
+
+    const now = new Date().toISOString()
+    const declineReason = outcome === "declined"
+      ? window.prompt("Why was this estimate declined? Leave blank if the reason is not yet known.", "")
+      : ""
+
+    if (outcome === "declined" && declineReason === null) return
+
+    const updatePayload = outcome === "accepted"
+      ? { status: "accepted", accepted_at: now }
+      : { status: "declined", declined_at: now, decline_reason: declineReason || null }
+
+    const { error } = await supabase.from("estimates").update(updatePayload).eq("id", estimate.id)
+    if (error) {
+      alert("Could not update the estimate outcome: " + error.message)
+      return
+    }
+
+    const updatedLead = outcome === "accepted"
+      ? {
+          ...formData,
+          status: "won",
+          quote_value: estimate.total || formData.quote_value,
+          client_follow_up_state: "",
+          follow_up_at: null,
+          next_action: "Confirm order administration and prepare the project handoff.",
+        }
+      : {
+          ...formData,
+          next_action: "Review the client's feedback and decide whether to revise the estimate or close the opportunity.",
+        }
+
+    await onSave(updatedLead)
+    await supabase.from("lead_activities").insert([{
+      lead_id: lead.id,
+      type: "status",
+      user_name: "System",
+      description: `${estimate.title || `Estimate V${estimate.version_no}`} marked ${outcome}${declineReason ? `: ${declineReason}` : "."}`,
+      timestamp: now,
     }])
   }
 
@@ -1836,6 +1997,47 @@ export default function LeadEditorDrawer({
             </div>
           </div>
         </section>
+
+        <section className={sectionClass}>
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Commercial timeline</p>
+              <h4 className="mt-1 text-base font-semibold text-slate-900">Confirmed client emails</h4>
+            </div>
+            <span className="text-xs text-slate-400">{emailEvents.length} recorded</span>
+          </div>
+          <div className="mt-4 space-y-3">
+            {emailEvents.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                Confirmed estimate and follow-up emails will appear here after the lifecycle migration is active.
+              </p>
+            ) : emailEvents.map((event) => (
+              <div key={event.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{event.subject}</p>
+                    <p className="mt-1 text-xs capitalize text-slate-500">
+                      {event.email_type === "estimate"
+                        ? `Estimate V${event.estimate_version || "-"}`
+                        : event.email_type === "follow_up"
+                          ? `Follow-up ${event.follow_up_number || ""}`
+                          : String(event.email_type || "Email").replaceAll("_", " ")}
+                      {` · ${event.recipient}`}
+                    </p>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {new Date(event.sent_at || event.created_at).toLocaleString()}
+                    {event.sent_by_name ? ` · ${event.sent_by_name}` : ""}
+                  </p>
+                </div>
+                <details className="mt-3">
+                  <summary className="cursor-pointer text-xs font-semibold text-slate-600">View sent copy</summary>
+                  <p className="mt-3 whitespace-pre-wrap rounded-xl bg-white p-3 text-sm leading-6 text-slate-700">{event.body}</p>
+                </details>
+              </div>
+            ))}
+          </div>
+        </section>
       </Tab.Panel>
 
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
@@ -1884,8 +2086,10 @@ export default function LeadEditorDrawer({
               <p className="mt-2 text-2xl font-bold text-slate-900">{savedEstimates.length}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latest status</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{formatStatusLabel(formData.status)}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latest estimate</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">
+                {latestEstimate ? formatEstimateStatus(latestEstimate.status) : "No estimate"}
+              </p>
             </div>
           </div>
         </section>
@@ -1910,15 +2114,23 @@ export default function LeadEditorDrawer({
                 <div key={estimate.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{estimate.title}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-slate-900">{estimate.title}</p>
+                        <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${getEstimateStatusClass(estimate.status)}`}>
+                          {formatEstimateStatus(estimate.status)}
+                        </span>
+                      </div>
                       <p className="mt-1 text-sm text-slate-600">
                         Version {estimate.version_no} · {formatZar(estimate.total || 0)}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {estimate.created_at
-                          ? new Date(estimate.created_at).toLocaleString()
-                          : "Saved estimate"}
+                        {estimate.sent_at
+                          ? `Sent ${new Date(estimate.sent_at).toLocaleString()}${estimate.sent_by_name ? ` by ${estimate.sent_by_name}` : ""}`
+                          : estimate.prepared_at || estimate.created_at
+                            ? `Prepared ${new Date(estimate.prepared_at || estimate.created_at).toLocaleString()}`
+                            : "Saved estimate"}
                       </p>
+                      {estimate.decline_reason ? <p className="mt-2 text-xs text-rose-700">Reason: {estimate.decline_reason}</p> : null}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -1953,6 +2165,24 @@ export default function LeadEditorDrawer({
                         >
                           Share view
                         </a>
+                      ) : null}
+                      {normalizeEstimateStatus(estimate.status) === "sent" ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleEstimateOutcome(estimate, "accepted")}
+                            className="rounded-xl bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-200"
+                          >
+                            Mark accepted
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEstimateOutcome(estimate, "declined")}
+                            className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                          >
+                            Mark declined
+                          </button>
+                        </>
                       ) : null}
                     </div>
                   </div>
