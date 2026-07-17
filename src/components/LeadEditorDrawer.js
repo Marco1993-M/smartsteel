@@ -1166,6 +1166,29 @@ export default function LeadEditorDrawer({
       console.error("Error saving CRM email event:", emailEventResult.error)
     }
 
+    if (isEstimateEmail) {
+      try {
+        await fetch("/api/crm-notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventType: "estimate_sent",
+            lead: updatedLead,
+            estimate: {
+              id: selectedEstimateEmail?.id,
+              title: estimateLabel,
+              version_no: selectedEstimateEmail?.version_no,
+              recipient: formData.email,
+            },
+            actor: senderName,
+            summary: `${estimateLabel} was confirmed as sent to ${formData.email}.`,
+          }),
+        })
+      } catch (error) {
+        console.error("Error sending estimate notification:", error)
+      }
+    }
+
     await supabase.from("lead_activities").insert([{
       lead_id: lead.id,
       type: "email",
