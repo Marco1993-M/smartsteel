@@ -1145,6 +1145,9 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       markup_multiplier: estimateDraft.markup_multiplier,
       total: estimateDraft.total,
       notes: estimateDraft.notes || "",
+      status: "prepared",
+      prepared_at: new Date().toISOString(),
+      sent_at: null,
       created_by: user?.id || null,
       share_token: shareToken,
       shared_at: new Date().toISOString(),
@@ -1183,6 +1186,16 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         const message = insertResult.error.message || ""
         const missingColumn = parseMissingColumn(insertResult.error)
 
+        if (/estimates_status_check|violates check constraint/i.test(message) && estimateInsertPayload.status === "prepared") {
+          estimateInsertPayload.status = "draft"
+          delete estimateInsertPayload.prepared_at
+          delete estimateInsertPayload.sent_at
+          insertResult = isEstimateUpdate
+            ? await supabase.from("estimates").update(estimateInsertPayload).eq("id", estimateDraft.id).select()
+            : await supabase.from("estimates").insert([estimateInsertPayload]).select()
+          continue
+        }
+
         if (!isEstimateUpdate && (/estimates_lead_version_idx/i.test(message) || /duplicate key value/i.test(message))) {
           const { data: existingDbEstimates } = await supabase
             .from("estimates")
@@ -1215,7 +1228,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
           break
         }
 
-        if (!missingColumn || !["share_token", "shared_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url", "product_type_display", "original_line_items"].includes(missingColumn)) {
+        if (!missingColumn || !["share_token", "shared_at", "prepared_at", "sent_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url", "product_type_display", "original_line_items"].includes(missingColumn)) {
           alert("Error saving estimate: " + insertResult.error.message)
           return false
         }
