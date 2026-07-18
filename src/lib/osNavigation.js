@@ -18,6 +18,15 @@ export const OS_SECTIONS = [
     items: ["Leads", "Customers", "Opportunities", "Quotes", "Activities"],
   },
   {
+    key: "projects",
+    label: "Projects",
+    href: "/os/projects",
+    description: "Site visits, inspections, project actions, files, and sign-off records.",
+    status: "active_build",
+    phaseLabel: "Field trial",
+    items: ["Active Projects", "Site Visits", "Inspections", "Actions", "Files", "Reports", "Checklists"],
+  },
+  {
     key: "atlas",
     label: "Atlas (CFLC)",
     href: "/os/atlas",
@@ -57,9 +66,9 @@ export const OS_SECTIONS = [
     key: "analytics",
     label: "Analytics",
     href: "/os/analytics",
-    description: "Sales, product, and operating performance visibility.",
-    status: "scaffolded",
-    phaseLabel: "Later phase",
+    description: "Commercial growth, conversion, product demand, and marketing performance.",
+    status: "active_build",
+    phaseLabel: "CRM foundation live",
     items: [],
   },
   {
