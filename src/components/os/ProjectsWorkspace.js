@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 const STORAGE_KEY = "smart-solutions-project-operations-v1"
@@ -169,7 +169,7 @@ function compressImage(file) {
       const image = new Image()
       image.onerror = reject
       image.onload = () => {
-        const maxDimension = 1600
+        const maxDimension = 1200
         const scale = Math.min(1, maxDimension / Math.max(image.width, image.height))
         const canvas = document.createElement("canvas")
         canvas.width = Math.round(image.width * scale)
@@ -178,7 +178,7 @@ function compressImage(file) {
         resolve({
           id: `photo-${Date.now()}-${file.name}`,
           name: file.name,
-          src: canvas.toDataURL("image/jpeg", 0.76),
+          src: canvas.toDataURL("image/jpeg", 0.7),
           caption: "",
           linkedItem: "",
         })
@@ -200,6 +200,21 @@ function Field({ label, children, wide = false }) {
 
 const inputClass = "mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 sm:text-sm"
 
+function SaveStateBadge({ state }) {
+  const tone = state === "Saved"
+    ? "bg-emerald-100 text-emerald-700"
+    : state === "Saving"
+      ? "bg-sky-100 text-sky-700"
+      : "bg-amber-100 text-amber-800"
+
+  return (
+    <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${tone}`}>
+      <span className={`h-2 w-2 rounded-full ${state === "Saved" ? "bg-emerald-500" : state === "Saving" ? "animate-pulse bg-sky-500" : "bg-amber-500"}`} />
+      {state}
+    </span>
+  )
+}
+
 export default function ProjectsWorkspace() {
   const [projects, setProjects] = useState([])
   const [ready, setReady] = useState(false)
@@ -215,6 +230,8 @@ export default function ProjectsWorkspace() {
   const [syncReady, setSyncReady] = useState(false)
   const [saveState, setSaveState] = useState("Loading")
   const [saveError, setSaveError] = useState("")
+  const [photoState, setPhotoState] = useState("")
+  const saveSequence = useRef(0)
 
   useEffect(() => {
     async function loadProjects() {
@@ -287,6 +304,8 @@ export default function ProjectsWorkspace() {
 
     if (!projects.length || saveState === "Local only") return
     setSaveState("Saving")
+    const sequence = saveSequence.current + 1
+    saveSequence.current = sequence
     const timer = window.setTimeout(async () => {
       try {
         const response = await fetch("/api/os/projects", {
@@ -296,16 +315,30 @@ export default function ProjectsWorkspace() {
         })
         const payload = await response.json()
         if (!response.ok) throw new Error(payload.error || "Could not save shared projects.")
-        setSaveState("Saved")
-        setSaveError("")
+        if (sequence === saveSequence.current) {
+          setSaveState("Saved")
+          setSaveError("")
+        }
       } catch (saveFailure) {
-        setSaveState("Offline")
-        setSaveError(saveFailure.message)
+        if (sequence === saveSequence.current) {
+          setSaveState("Offline")
+          setSaveError(saveFailure.message)
+        }
       }
     }, 700)
 
     return () => window.clearTimeout(timer)
   }, [projects, ready, syncReady])
+
+  useEffect(() => {
+    if (saveState !== "Saving") return
+    const protectUnsavedSync = (event) => {
+      event.preventDefault()
+      event.returnValue = ""
+    }
+    window.addEventListener("beforeunload", protectUnsavedSync)
+    return () => window.removeEventListener("beforeunload", protectUnsavedSync)
+  }, [saveState])
 
   const activeProject = projects.find((project) => project.id === activeProjectId) || null
   const activeVisit = activeProject?.visits?.find((visit) => visit.id === activeVisitId) || null
@@ -356,11 +389,19 @@ export default function ProjectsWorkspace() {
     }))
   }
 
-  function addPhotos(event) {
+  async function addPhotos(event) {
     const files = Array.from(event.target.files || [])
     if (!files.length) return
-    Promise.all(files.map(compressImage)).then((photos) => updateVisit((visit) => ({ ...visit, photos: [...visit.photos, ...photos] })))
     event.target.value = ""
+    setPhotoState(`Preparing ${files.length} photo${files.length === 1 ? "" : "s"}...`)
+    try {
+      const photos = await Promise.all(files.map(compressImage))
+      updateVisit((visit) => ({ ...visit, photos: [...visit.photos, ...photos] }))
+      setPhotoState(`${files.length} photo${files.length === 1 ? "" : "s"} added`)
+      window.setTimeout(() => setPhotoState(""), 2500)
+    } catch {
+      setPhotoState("A photo could not be added. Please try it again.")
+    }
   }
 
   function addChecklistItem() {
@@ -463,8 +504,9 @@ export default function ProjectsWorkspace() {
   if (activeVisit && activeProject) {
     return (
       <div className="mx-auto w-full max-w-6xl p-3 sm:p-6 lg:p-8">
-        <div className="print:hidden">
-          <button type="button" onClick={() => setActiveVisitId(null)} className="text-sm font-semibold text-slate-600 hover:text-slate-950">← Back to project</button>
+        <div className="sticky top-0 z-20 -mx-1 flex items-center justify-between gap-3 bg-slate-50/95 px-1 py-2 backdrop-blur print:hidden">
+          <button type="button" onClick={() => setActiveVisitId(null)} className="min-h-11 text-sm font-semibold text-slate-600 hover:text-slate-950">← Back to project</button>
+          <SaveStateBadge state={saveState} />
         </div>
         <article className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm print:mt-0 print:border-0 print:shadow-none">
           <header className="border-b border-slate-200 p-5 sm:p-8" style={{ borderTop: `6px solid ${company.accent}` }}>
@@ -504,9 +546,16 @@ export default function ProjectsWorkspace() {
                     {item.custom ? <input className="min-w-0 flex-1 border-0 p-0 font-semibold text-slate-900 outline-none" value={item.label} onChange={(e) => updateVisit((visit) => ({ ...visit, items: visit.items.map((current, i) => i === index ? { ...current, label: e.target.value } : current) }))} /> : <p className="font-semibold text-slate-900">{index + 1}. {item.label}</p>}
                     {item.custom ? <button type="button" onClick={() => updateVisit((visit) => ({ ...visit, items: visit.items.filter((_, i) => i !== index) }))} className="print:hidden text-xs font-semibold text-rose-600">Remove</button> : null}
                   </div>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-[180px_1fr]">
-                    <select className={inputClass} value={item.status} onChange={(e) => updateVisit((visit) => ({ ...visit, items: visit.items.map((current, i) => i === index ? { ...current, status: e.target.value } : current) }))}><option>Not checked</option><option>Pass</option><option>Attention required</option><option>Not applicable</option></select>
-                    <input className={inputClass} value={item.note} onChange={(e) => updateVisit((visit) => ({ ...visit, items: visit.items.map((current, i) => i === index ? { ...current, note: e.target.value } : current) }))} placeholder="Add a finding or note" />
+                  <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.2fr)]">
+                    <div className="grid grid-cols-3 gap-2" aria-label={`Result for ${item.label}`}>
+                      {["Pass", "Attention required", "Not applicable"].map((status) => {
+                        const selected = item.status === status
+                        const shortLabel = status === "Attention required" ? "Attention" : status === "Not applicable" ? "N/A" : status
+                        const selectedTone = status === "Pass" ? "border-emerald-600 bg-emerald-600 text-white" : status === "Attention required" ? "border-amber-500 bg-amber-400 text-slate-950" : "border-slate-700 bg-slate-700 text-white"
+                        return <button key={status} type="button" onClick={() => updateVisit((visit) => ({ ...visit, items: visit.items.map((current, i) => i === index ? { ...current, status: selected ? "Not checked" : status } : current) }))} className={`min-h-11 rounded-xl border px-2 py-2 text-xs font-semibold transition ${selected ? selectedTone : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"}`} aria-pressed={selected}>{shortLabel}</button>
+                      })}
+                    </div>
+                    <input className={`${inputClass} mt-0`} value={item.note} onChange={(e) => updateVisit((visit) => ({ ...visit, items: visit.items.map((current, i) => i === index ? { ...current, note: e.target.value } : current) }))} placeholder="Add a finding or note" />
                   </div>
                 </div>
               ))}
@@ -534,7 +583,7 @@ export default function ProjectsWorkspace() {
               )) : <p className="text-sm text-slate-500">No follow-up actions recorded.</p>}
             </div>
 
-            <div className="mt-8"><h2 className="text-xl font-bold text-slate-950">Site photos</h2><label className="print:hidden mt-3 inline-flex cursor-pointer rounded-full bg-sky-600 px-5 py-3 text-sm font-semibold text-white"><input type="file" accept="image/*" capture="environment" multiple className="sr-only" onChange={addPhotos} />Add photos</label></div>
+            <div className="mt-8"><h2 className="text-xl font-bold text-slate-950">Site photos</h2><div className="mt-3 flex flex-wrap items-center gap-3"><label className="print:hidden inline-flex min-h-11 cursor-pointer items-center rounded-full bg-sky-600 px-5 py-3 text-sm font-semibold text-white"><input type="file" accept="image/*" capture="environment" multiple className="sr-only" onChange={addPhotos} />Add photos</label>{photoState ? <p className={`text-xs font-semibold ${photoState.includes("could not") ? "text-rose-700" : "text-slate-500"}`}>{photoState}</p> : null}</div></div>
             {activeVisit.photos.length ? <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{activeVisit.photos.map((photo, index) => <figure key={photo.id} className="overflow-hidden rounded-xl border border-slate-200"><img src={photo.src} alt={photo.caption || photo.name} className="aspect-[4/3] w-full object-cover" /><div className="space-y-2 p-2"><input className="w-full border-0 px-1 py-1 text-sm outline-none" value={photo.caption} onChange={(e) => updateVisit((v) => ({ ...v, photos: v.photos.map((p, i) => i === index ? { ...p, caption: e.target.value } : p) }))} placeholder="Photo caption" /><select className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs" value={photo.linkedItem} onChange={(e) => updateVisit((v) => ({ ...v, photos: v.photos.map((p, i) => i === index ? { ...p, linkedItem: e.target.value } : p) }))}><option value="">General photo</option>{activeVisit.items.map((item) => <option key={item.label} value={item.label}>{item.label}</option>)}</select><div className="flex items-center justify-between"><div className="flex gap-2"><button type="button" disabled={index === 0} onClick={() => updateVisit((v) => { const photos = [...v.photos]; [photos[index - 1], photos[index]] = [photos[index], photos[index - 1]]; return { ...v, photos } })} className="text-xs font-semibold disabled:opacity-30">←</button><button type="button" disabled={index === activeVisit.photos.length - 1} onClick={() => updateVisit((v) => { const photos = [...v.photos]; [photos[index], photos[index + 1]] = [photos[index + 1], photos[index]]; return { ...v, photos } })} className="text-xs font-semibold disabled:opacity-30">→</button></div><button type="button" onClick={() => updateVisit((v) => ({ ...v, photos: v.photos.filter((_, i) => i !== index) }))} className="text-xs font-semibold text-rose-600">Delete</button></div></div></figure>)}</div> : null}
 
             <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4"><Field label="Acknowledged by"><input className={inputClass} value={activeVisit.acknowledgement} onChange={(e) => updateVisit((v) => ({ ...v, acknowledgement: e.target.value }))} placeholder="Client, contractor, or site representative" /></Field><p className="mt-3 text-xs leading-5 text-slate-500">This field records who received or reviewed the site findings. Formal digital signatures will follow in the production data phase.</p></div>
@@ -550,7 +599,7 @@ export default function ProjectsWorkspace() {
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Smart Solutions project operations</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Projects and site records</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Create practical site-visit records, capture findings, assign actions, and keep each report under the correct company and system.</p></div>
           <div className="flex items-center gap-3">
-            <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${saveState === "Saved" ? "bg-emerald-100 text-emerald-700" : saveState === "Saving" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-800"}`}>{saveState}</span>
+            <SaveStateBadge state={saveState} />
             <button type="button" onClick={() => setShowProjectForm((current) => !current)} className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">{showProjectForm ? "Close" : "+ New project"}</button>
           </div>
         </div>

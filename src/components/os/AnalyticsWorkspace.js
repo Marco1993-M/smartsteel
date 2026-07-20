@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { ArrowUpRight, Banknote, CircleCheck, Send, Users } from "lucide-react"
+import { ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Send, Users } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 const PERIODS = [
@@ -17,6 +17,15 @@ function formatCurrency(value) {
     currency: "ZAR",
     maximumFractionDigits: 0,
   }).format(Number(value || 0))
+}
+
+function formatNumber(value, maximumFractionDigits = 0) {
+  return new Intl.NumberFormat("en-ZA", { maximumFractionDigits }).format(Number(value || 0))
+}
+
+function formatSyncDate(value) {
+  if (!value) return "Not synced yet"
+  return `Updated ${new Date(value).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
 }
 
 function ChangeBadge({ value, dark = false }) {
@@ -126,6 +135,76 @@ function RankedList({ items, emptyLabel, accent = "sky" }) {
   )
 }
 
+function MarketingMetric({ label, value, icon: Icon, helper }) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-slate-200/80 bg-white/80 p-3.5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">{label}</p>
+        <Icon className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+      </div>
+      <p className="mt-2 truncate text-xl font-bold tracking-tight text-slate-950">{value}</p>
+      {helper ? <p className="mt-1 truncate text-[11px] text-slate-500">{helper}</p> : null}
+    </div>
+  )
+}
+
+function MarketingSourceCard({ connection, metrics, type }) {
+  const isSearch = type === "search"
+  const connected = connection?.status === "connected"
+  const syncing = connection?.status === "syncing"
+  const hasData = connected && (metrics?.impressions > 0 || metrics?.clicks > 0 || metrics?.cost > 0)
+  const SourceIcon = isSearch ? Search : Megaphone
+  const title = isSearch ? "Google Search Console" : "Google Ads"
+  const accent = isSearch ? "text-sky-700 bg-sky-100" : "text-amber-800 bg-amber-100"
+
+  return (
+    <article className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(145deg,_#ffffff,_#f8fafc)] shadow-[0_10px_35px_rgba(15,23,42,0.05)]">
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${accent}`}><SourceIcon className="h-5 w-5" aria-hidden="true" /></span>
+            <div className="min-w-0">
+              <h3 className="truncate text-lg font-bold text-slate-950">{title}</h3>
+              <p className="mt-0.5 truncate text-xs text-slate-500">{connection?.accountLabel || (isSearch ? "Organic search performance" : "Paid campaign performance")}</p>
+            </div>
+          </div>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${connected ? "bg-emerald-100 text-emerald-700" : syncing ? "bg-sky-100 text-sky-700" : connection?.status === "error" ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600"}`}>
+            {connected ? "Connected" : syncing ? "Syncing" : connection?.status === "error" ? "Needs attention" : "Ready to connect"}
+          </span>
+        </div>
+
+        {hasData ? (
+          <div className="mt-5 grid grid-cols-2 gap-2.5">
+            {isSearch ? (
+              <>
+                <MarketingMetric label="Impressions" value={formatNumber(metrics.impressions)} icon={Eye} helper={`${metrics.changes.impressions >= 0 ? "+" : ""}${metrics.changes.impressions}%`} />
+                <MarketingMetric label="Clicks" value={formatNumber(metrics.clicks)} icon={MousePointerClick} helper={`${metrics.ctr}% CTR`} />
+                <MarketingMetric label="Average position" value={metrics.averagePosition ?? "—"} icon={Search} />
+                <MarketingMetric label="Organic leads" value="Next" icon={Users} helper="Attribution wave" />
+              </>
+            ) : (
+              <>
+                <MarketingMetric label="Spend" value={formatCurrency(metrics.cost)} icon={Banknote} helper={`${metrics.changes.cost >= 0 ? "+" : ""}${metrics.changes.cost}%`} />
+                <MarketingMetric label="Conversions" value={formatNumber(metrics.conversions, 1)} icon={CircleCheck} helper={`${metrics.changes.conversions >= 0 ? "+" : ""}${metrics.changes.conversions}%`} />
+                <MarketingMetric label="Cost / conversion" value={formatCurrency(metrics.costPerConversion)} icon={MousePointerClick} />
+                <MarketingMetric label="ROAS" value={`${metrics.roas}x`} icon={ArrowUpRight} />
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-4">
+            <p className="text-sm font-semibold text-slate-800">{connection?.status === "error" ? connection.lastError || "The last sync needs attention." : "The reporting surface is ready."}</p>
+            <p className="mt-1.5 text-xs leading-5 text-slate-500">{isSearch ? "Connect the Smart Steel property to bring clicks, impressions, CTR, and search position into this page." : "Connect the advertising account to bring spend, conversions, cost per lead, and campaign return into this page."}</p>
+          </div>
+        )}
+
+        <p className="mt-4 text-[11px] font-medium text-slate-400">{formatSyncDate(connection?.lastSyncedAt)}</p>
+      </div>
+      <div className={`h-1 ${isSearch ? "bg-sky-500" : "bg-amber-400"}`} />
+    </article>
+  )
+}
+
 export default function AnalyticsWorkspace() {
   const [days, setDays] = useState(30)
   const [data, setData] = useState(null)
@@ -157,6 +236,7 @@ export default function AnalyticsWorkspace() {
 
   const metrics = data?.metrics
   const maxFunnel = Math.max(1, ...(data?.funnel || []).map((item) => item.value))
+  const marketingConnections = Object.fromEntries((data?.marketing?.connections || []).map((connection) => [connection.source, connection]))
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
@@ -198,6 +278,20 @@ export default function AnalyticsWorkspace() {
             <MetricCard eyebrow="Estimates sent" value={metrics.sentCount} helper={`${metrics.preparedCount} prepared`} changeValue={metrics.changes.sent} icon={Send} />
             <MetricCard eyebrow="Won opportunities" value={metrics.wonCount} helper={`${metrics.winRate}% of new leads`} changeValue={metrics.changes.won} tone="green" icon={CircleCheck} />
             <MetricCard eyebrow="Won value excl. VAT" value={formatCurrency(metrics.wonValue)} helper={`${formatCurrency(metrics.pipelineValue)} active pipeline`} changeValue={metrics.changes.wonValue} tone="dark" icon={Banknote} />
+          </section>
+
+          <section>
+            <div className="mb-3 flex flex-wrap items-end justify-between gap-3 px-1 sm:mb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Marketing performance</p>
+                <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Search demand and paid growth</h2>
+              </div>
+              {!data.marketing?.schemaReady ? <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">Analytics SQL required</span> : null}
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <MarketingSourceCard connection={marketingConnections.search_console} metrics={data.marketing?.searchConsole} type="search" />
+              <MarketingSourceCard connection={marketingConnections.google_ads} metrics={data.marketing?.googleAds} type="ads" />
+            </div>
           </section>
 
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
