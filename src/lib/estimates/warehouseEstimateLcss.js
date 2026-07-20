@@ -267,8 +267,7 @@ export function calculateLcssWarehouseEstimate(input) {
   const roofSheetingArea = span.trussLength * length * 2 * LCSS_OVERALL_WASTE_FACTOR
   const wallSheetingArea =
     includeWallSheeting
-      ? ((wallHeight * length) * 2 + (width * wallHeight) * 2 + (width * span.trussHeight) * 2) *
-        LCSS_OVERALL_WASTE_FACTOR
+      ? (wallHeight * length) * 2 * LCSS_OVERALL_WASTE_FACTOR
       : 0
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
   const claddingSupplyRate = WAREHOUSE_MATERIALS.cladding[cladding]?.supply || 0
