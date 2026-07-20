@@ -210,16 +210,16 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
       id="ground-mount-estimator"
       className={isHeroVariant ? "w-full" : "mt-8 max-w-3xl"}
     >
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="border border-[#121a20]/20 bg-white p-5 shadow-[0_24px_50px_-42px_rgba(18,26,32,0.8)] sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1c5b57]">
               {isHeroVariant ? "Build and Price Online" : "Instant Estimator"}
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">{activeStep.title}</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">{activeStep.description}</p>
           </div>
-          <div className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
+          <div className="shrink-0 border border-[#121a20]/15 bg-[#f3f0e9] px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#121a20]/70">
             {activeStep.label}
           </div>
         </div>
@@ -228,14 +228,14 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
           {STEP_CONFIG.map((item) => (
             <div
               key={item.step}
-              className={`h-2 flex-1 rounded-full ${
-                item.step <= currentStep ? "bg-[#da1a33]" : "bg-slate-200"
+              className={`h-1 flex-1 ${
+                item.step <= currentStep ? "bg-[#d9a441]" : "bg-[#121a20]/10"
               }`}
             />
           ))}
         </div>
 
-        <div className="mt-6 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+        <div className="mt-6 border border-[#121a20]/12 bg-[#f3f0e9]/65 p-5">
           {currentStep === 1 ? (
             <div className="space-y-5">
               <label className="block text-sm font-semibold text-slate-700">
@@ -244,7 +244,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                   type="number"
                   min="1"
                   step="1"
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                  className="mt-2 block w-full border border-[#121a20]/25 bg-white px-4 py-3 text-base font-semibold text-[#121a20] outline-none transition focus:border-[#1c5b57] focus:ring-2 focus:ring-[#1c5b57]/15"
                   value={formState.panelCount}
                   onChange={(event) =>
                     handleFieldChange("panelCount", Math.max(1, Number(event.target.value) || 1))
@@ -252,7 +252,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                 />
               </label>
 
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+              <div className="border-l-2 border-[#d9a441] bg-white px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Estimate basis
                 </p>
@@ -270,7 +270,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
               <label className="block text-sm font-semibold text-slate-700">
                 Province
                 <select
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                  className="mt-2 block w-full border border-[#121a20]/25 bg-white px-4 py-3 text-sm font-medium text-[#121a20] outline-none focus:border-[#1c5b57]"
                   value={formState.province}
                   onChange={(event) => handleFieldChange("province", event.target.value)}
                 >
@@ -287,7 +287,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                 <input
                   type="text"
                   placeholder="Town, city, or site location"
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                  className="mt-2 block w-full border border-[#121a20]/25 bg-white px-4 py-3 text-sm font-medium text-[#121a20] outline-none focus:border-[#1c5b57]"
                   value={formState.projectLocation}
                   onChange={(event) => handleFieldChange("projectLocation", event.target.value)}
                 />
@@ -298,16 +298,16 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                 <textarea
                   rows={3}
                   placeholder="Add any useful site notes or project requirements."
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                  className="mt-2 block w-full border border-[#121a20]/25 bg-white px-4 py-3 text-sm font-medium text-[#121a20] outline-none focus:border-[#1c5b57]"
                   value={formState.projectNotes}
                   onChange={(event) => handleFieldChange("projectNotes", event.target.value)}
                 />
               </label>
 
-              <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+              <label className="flex items-start gap-3 border border-[#121a20]/15 bg-white px-4 py-4">
                 <input
                   type="checkbox"
-                  className="mt-1 h-4 w-4 rounded border-slate-300 text-[#da1a33] focus:ring-[#da1a33]"
+                  className="mt-1 h-4 w-4 border-slate-300 text-[#1c5b57] focus:ring-[#1c5b57]"
                   checked={formState.needsInstallationReview}
                   onChange={(event) => handleFieldChange("needsInstallationReview", event.target.checked)}
                 />
@@ -331,7 +331,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                   Name
                   <input
                     type="text"
-                    className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                    className="mt-2 block w-full border border-[#121a20]/25 bg-white px-4 py-3 text-sm font-medium text-[#121a20] outline-none focus:border-[#1c5b57]"
                     value={enquiryState.name}
                     onChange={(event) => handleEnquiryChange("name", event.target.value)}
                   />
@@ -341,7 +341,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                   Email
                   <input
                     type="email"
-                    className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                    className="mt-2 block w-full border border-[#121a20]/25 bg-white px-4 py-3 text-sm font-medium text-[#121a20] outline-none focus:border-[#1c5b57]"
                     value={enquiryState.email}
                     onChange={(event) => handleEnquiryChange("email", event.target.value)}
                   />
@@ -352,7 +352,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                 Phone
                 <input
                   type="text"
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                  className="mt-2 block w-full border border-[#121a20]/25 bg-white px-4 py-3 text-sm font-medium text-[#121a20] outline-none focus:border-[#1c5b57]"
                   value={enquiryState.phone}
                   onChange={(event) => handleEnquiryChange("phone", event.target.value)}
                 />
@@ -361,7 +361,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
               <label className="block text-sm font-semibold text-slate-700">
                 How soon are you looking to proceed?
                 <select
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                  className="mt-2 block w-full border border-[#121a20]/25 bg-white px-4 py-3 text-sm font-medium text-[#121a20] outline-none focus:border-[#1c5b57]"
                   value={formState.proceedTiming}
                   onChange={(event) => handleFieldChange("proceedTiming", event.target.value)}
                 >
@@ -378,7 +378,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                 Anything else we should know?
                 <textarea
                   rows={3}
-                  className="mt-2 block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                  className="mt-2 block w-full border border-[#121a20]/25 bg-white px-4 py-3 text-sm font-medium text-[#121a20] outline-none focus:border-[#1c5b57]"
                   value={enquiryState.notes}
                   onChange={(event) => handleEnquiryChange("notes", event.target.value)}
                 />
@@ -391,14 +391,14 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                 <button
                   type="button"
                   onClick={goBack}
-                  className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white"
+                  className="border border-[#121a20]/25 px-6 py-3 text-sm font-semibold transition hover:border-[#121a20] hover:bg-white"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+                  className="bg-[#d9a441] px-6 py-3 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting ? "Saving enquiry..." : "Send enquiry"}
                 </button>
@@ -408,16 +408,16 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+          <div className="border border-[#121a20]/15 bg-[#121a20] px-4 py-4 text-white">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Indicative budget
             </p>
-            <p className="mt-2 text-2xl font-semibold text-slate-950">
+            <p className="mt-2 text-2xl font-semibold">
               {formatCurrency(estimate.pricing.estimatedTotal)}
             </p>
-            <p className="mt-1 text-xs text-slate-500">Excl. VAT · structure only</p>
+            <p className="mt-1 text-xs text-white/60">Excl. VAT · structure only</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+          <div className="border border-[#121a20]/15 bg-white px-4 py-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Current plan
             </p>
@@ -436,7 +436,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
               <button
                 type="button"
                 onClick={goBack}
-                className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                className="border border-[#121a20]/25 px-6 py-3 text-sm font-semibold transition hover:border-[#121a20] hover:bg-white"
               >
                 Back
               </button>
@@ -444,13 +444,13 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
             <button
               type="button"
               onClick={goNext}
-              className="rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
+              className="bg-[#d9a441] px-6 py-3 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f]"
             >
               Next
             </button>
             <Link
               href="/contact"
-              className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              className="border border-[#121a20]/25 px-6 py-3 text-sm font-semibold transition hover:border-[#121a20] hover:bg-white"
             >
               Talk to Smart Steel
             </Link>
