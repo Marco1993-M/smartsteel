@@ -19,6 +19,7 @@ function normalizeLine(row) {
     description: row.description,
     componentId: row.catalog_item_id || null,
     componentName: row.os_catalog_items?.title || "",
+    componentCode: row.os_catalog_items?.component_code || row.metadata?.sourceCode || "",
     quantity: Number(row.quantity || 0),
     unit: row.unit || "each",
     wasteFactor: Number(row.waste_factor || 0),
@@ -53,7 +54,7 @@ function normalizeBom(row) {
 async function getBomRecords(platformKey) {
   return supabaseServer
     .from("os_boms")
-    .select("*, product_families(id, key, name), os_bom_lines(*, os_catalog_items(id, title, category))")
+    .select("*, product_families(id, key, name), os_bom_lines(*, os_catalog_items(id, title, category, component_code))")
     .eq("platform_key", platformKey)
     .order("updated_at", { ascending: false })
 }
@@ -109,7 +110,7 @@ export async function POST(request) {
   const { data, error } = await supabaseServer
     .from("os_boms")
     .insert([payload])
-    .select("*, product_families(id, key, name), os_bom_lines(*, os_catalog_items(id, title, category))")
+    .select("*, product_families(id, key, name), os_bom_lines(*, os_catalog_items(id, title, category, component_code))")
     .single()
 
   if (error) {
@@ -143,7 +144,7 @@ export async function PATCH(request) {
       .from("os_boms")
       .update({ status: body.status })
       .eq("id", bomId)
-      .select("*, product_families(id, key, name), os_bom_lines(*, os_catalog_items(id, title, category))")
+      .select("*, product_families(id, key, name), os_bom_lines(*, os_catalog_items(id, title, category, component_code))")
       .single()
 
     if (error) {
@@ -211,7 +212,7 @@ export async function PATCH(request) {
 
   const { data, error } = await supabaseServer
     .from("os_boms")
-    .select("*, product_families(id, key, name), os_bom_lines(*, os_catalog_items(id, title, category))")
+    .select("*, product_families(id, key, name), os_bom_lines(*, os_catalog_items(id, title, category, component_code))")
     .eq("id", bomId)
     .single()
 

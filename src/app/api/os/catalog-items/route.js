@@ -13,6 +13,7 @@ export const runtime = "nodejs"
 function normalizeCatalogItem(row) {
   return {
     id: row.id,
+    componentCode: row.component_code || "",
     platformKey: row.platform_key,
     kind: row.kind,
     category: row.category || "",
@@ -100,6 +101,7 @@ export async function POST(request) {
     kind,
     category: String(body?.category || "").trim() || null,
     title,
+    component_code: String(body?.componentCode || "").trim().toUpperCase() || null,
     summary: String(body?.summary || "").trim() || null,
     status,
     owner: String(body?.owner || "").trim() || null,
@@ -123,6 +125,9 @@ export async function POST(request) {
       )
     }
 
+    if (/component_code|schema cache/i.test(error.message || "")) {
+      return NextResponse.json({ error: "Run the Atlas component ID SQL before registering coded components." }, { status: 409 })
+    }
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
@@ -146,6 +151,10 @@ export async function PATCH(request) {
 
   if (body?.status && CATALOG_ITEM_STATUS_OPTIONS.includes(body.status)) {
     updatePayload.status = body.status
+  }
+
+  if (body?.componentCode !== undefined) {
+    updatePayload.component_code = String(body.componentCode || "").trim().toUpperCase() || null
   }
 
   if (Object.keys(updatePayload).length === 0) {
