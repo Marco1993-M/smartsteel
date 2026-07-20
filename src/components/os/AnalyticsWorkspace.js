@@ -148,13 +148,15 @@ function MarketingMetric({ label, value, icon: Icon, helper }) {
   )
 }
 
-function MarketingSourceCard({ connection, metrics, type }) {
+function MarketingSourceCard({ connection, metrics, type, schemaReady, syncingSource, onSync }) {
   const isSearch = type === "search"
   const connected = connection?.status === "connected"
   const syncing = connection?.status === "syncing"
   const hasData = connected && (metrics?.impressions > 0 || metrics?.clicks > 0 || metrics?.cost > 0)
   const SourceIcon = isSearch ? Search : Megaphone
   const title = isSearch ? "Google Search Console" : "Google Ads"
+  const source = isSearch ? "search_console" : "google_ads"
+  const isSyncingNow = syncingSource === source
   const accent = isSearch ? "text-sky-700 bg-sky-100" : "text-amber-800 bg-amber-100"
 
   return (
@@ -198,7 +200,12 @@ function MarketingSourceCard({ connection, metrics, type }) {
           </div>
         )}
 
-        <p className="mt-4 text-[11px] font-medium text-slate-400">{formatSyncDate(connection?.lastSyncedAt)}</p>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[11px] font-medium text-slate-400">{formatSyncDate(connection?.lastSyncedAt)}</p>
+          <button type="button" disabled={!schemaReady || Boolean(syncingSource)} onClick={() => onSync(source)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50">
+            {isSyncingNow ? "Syncing..." : connected ? "Sync now" : "Check connection"}
+          </button>
+        </div>
       </div>
       <div className={`h-1 ${isSearch ? "bg-sky-500" : "bg-amber-400"}`} />
     </article>
@@ -210,6 +217,9 @@ export default function AnalyticsWorkspace() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [syncingSource, setSyncingSource] = useState("")
+  const [syncMessage, setSyncMessage] = useState("")
 
   useEffect(() => {
     let active = true
@@ -232,7 +242,28 @@ export default function AnalyticsWorkspace() {
     }
     loadAnalytics()
     return () => { active = false }
-  }, [days])
+  }, [days, refreshKey])
+
+  async function syncMarketingSource(source) {
+    setSyncingSource(source)
+    setSyncMessage("")
+    const route = source === "search_console" ? "search-console" : "google-ads"
+    try {
+      const response = await fetch(`/api/os/analytics/sync/${route}`, {
+        method: "POST",
+        headers: await getOsAuthHeaders(),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "The sync could not be completed.")
+      setSyncMessage(`${source === "search_console" ? "Search Console" : "Google Ads"} updated with ${payload.imported || 0} daily records.`)
+      setRefreshKey((current) => current + 1)
+    } catch (syncError) {
+      setSyncMessage(syncError.message)
+      setRefreshKey((current) => current + 1)
+    } finally {
+      setSyncingSource("")
+    }
+  }
 
   const metrics = data?.metrics
   const maxFunnel = Math.max(1, ...(data?.funnel || []).map((item) => item.value))
@@ -289,9 +320,10 @@ export default function AnalyticsWorkspace() {
               {!data.marketing?.schemaReady ? <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">Analytics SQL required</span> : null}
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
-              <MarketingSourceCard connection={marketingConnections.search_console} metrics={data.marketing?.searchConsole} type="search" />
-              <MarketingSourceCard connection={marketingConnections.google_ads} metrics={data.marketing?.googleAds} type="ads" />
+              <MarketingSourceCard connection={marketingConnections.search_console} metrics={data.marketing?.searchConsole} type="search" schemaReady={data.marketing?.schemaReady} syncingSource={syncingSource} onSync={syncMarketingSource} />
+              <MarketingSourceCard connection={marketingConnections.google_ads} metrics={data.marketing?.googleAds} type="ads" schemaReady={data.marketing?.schemaReady} syncingSource={syncingSource} onSync={syncMarketingSource} />
             </div>
+            {syncMessage ? <p className={`mt-3 rounded-xl px-4 py-3 text-sm ${syncMessage.includes("updated with") ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{syncMessage}</p> : null}
           </section>
 
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
