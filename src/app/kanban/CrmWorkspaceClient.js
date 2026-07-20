@@ -1081,6 +1081,47 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     setInvoicingLead(lead)
   }
 
+  const handleEstimateStatusChange = async (lead, estimate, status) => {
+    if (!estimate?.id || String(estimate.id).startsWith("local-")) {
+      alert("This estimate must be saved online before its status can be confirmed.")
+      return false
+    }
+
+    const now = new Date().toISOString()
+    const statusPayload = { status }
+    if (status === "prepared") statusPayload.prepared_at = estimate.prepared_at || now
+    if (status === "sent") statusPayload.sent_at = estimate.sent_at || now
+    if (status === "accepted") statusPayload.accepted_at = estimate.accepted_at || now
+
+    const { data: updatedRows, error } = await supabase
+      .from("estimates")
+      .update(statusPayload)
+      .eq("id", estimate.id)
+      .select()
+
+    if (error) {
+      alert("Could not update estimate status: " + error.message)
+      return false
+    }
+
+    const updatedEstimate = updatedRows?.[0] || { ...estimate, ...statusPayload }
+    const leadId = String(lead.id)
+    setStoredEstimatesForLead(
+      leadId,
+      (leadEstimates[leadId] || []).map((item) =>
+        item.id === estimate.id ? updatedEstimate : item
+      )
+    )
+    await logLeadActivity({
+      lead_id: lead.id,
+      type: "estimate_status",
+      user_name: user?.email || "Smart Steel CRM",
+      description: `Estimate V${estimate.version_no || 1} confirmed as ${status}.`,
+      timestamp: now,
+    })
+    return updatedEstimate
+  }
+
   const handleSnoozeLeadToTomorrow = async (lead) => {
     const followUpAt = getTomorrowIsoDate()
     const { error } = await supabase
@@ -2678,6 +2719,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
           onCreateEstimate={handleOpenEstimate}
           onCreateInvoice={handleOpenInvoice}
           onCreateProject={handleCreateProjectFromLead}
+          onEstimateStatusChange={handleEstimateStatusChange}
         />
       )}
 
