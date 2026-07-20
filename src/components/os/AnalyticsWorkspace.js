@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Send, Users } from "lucide-react"
+import { ArrowRight, ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Send, Target, TrendingUp, Users } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 const PERIODS = [
@@ -52,6 +52,89 @@ function MetricCard({ eyebrow, value, helper, changeValue, tone = "white", icon:
       <p className="mt-2 truncate text-xs text-slate-400 sm:text-sm">{helper}</p>
       {changeValue !== undefined ? <div className="mt-3"><ChangeBadge value={changeValue} dark /></div> : null}
     </article>
+  )
+}
+
+function GrowthSignals({ data }) {
+  const metrics = data.metrics
+  const topProduct = data.products?.[0]
+  const topSource = data.sources?.[0]
+  const signals = [
+    {
+      label: "Lead growth",
+      value: `${metrics.changes.leads > 0 ? "+" : ""}${metrics.changes.leads}%`,
+      target: "Target: positive growth",
+      healthy: metrics.changes.leads >= 0,
+      note: metrics.changes.leads >= 0 ? "Demand is holding above the previous period." : "New demand has softened versus the previous period.",
+    },
+    {
+      label: "Leads receiving estimates",
+      value: `${metrics.quoteRate}%`,
+      target: "Working target: 50%+",
+      healthy: metrics.quoteRate >= 50,
+      note: metrics.quoteRate >= 50 ? "At least half of new leads are reaching an estimate." : "More qualified leads need to progress to an estimate.",
+    },
+    {
+      label: "Lead-to-win conversion",
+      value: `${metrics.winRate}%`,
+      target: "Working target: 15%+",
+      healthy: metrics.winRate >= 15,
+      note: metrics.winRate >= 15 ? "The current cohort is converting at a healthy starting rate." : "Review quote fit and follow-up quality for this cohort.",
+    },
+    {
+      label: "Follow-up discipline",
+      value: data.attention.overdueFollowUps === 0 ? "Clear" : `${data.attention.overdueFollowUps} overdue`,
+      target: "Target: zero overdue",
+      healthy: data.attention.overdueFollowUps === 0,
+      note: data.attention.overdueFollowUps === 0 ? "Every active follow-up is currently accounted for." : "These leads need attention before more demand is added.",
+    },
+  ]
+  const healthyCount = signals.filter((signal) => signal.healthy).length
+  const priority = signals.find((signal) => !signal.healthy)
+
+  return (
+    <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_310px]">
+        <div className="p-5 sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Growth signals</p>
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Performance against our KPIs</h2>
+            </div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700">
+              <Target className="h-3.5 w-3.5" aria-hidden="true" /> {healthyCount} of {signals.length} on track
+            </span>
+          </div>
+          <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 sm:grid-cols-2 xl:grid-cols-4">
+            {signals.map((signal) => (
+              <article key={signal.label} className="min-w-0 bg-white p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className={`h-2.5 w-2.5 rounded-full ${signal.healthy ? "bg-emerald-500" : "bg-amber-400"}`} aria-hidden="true" />
+                  <span className={`text-[10px] font-bold uppercase tracking-[0.12em] ${signal.healthy ? "text-emerald-700" : "text-amber-800"}`}>{signal.healthy ? "On track" : "Needs focus"}</span>
+                </div>
+                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{signal.label}</p>
+                <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{signal.value}</p>
+                <p className="mt-1 text-[11px] font-semibold text-slate-500">{signal.target}</p>
+                <p className="mt-3 text-xs leading-5 text-slate-600">{signal.note}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+        <aside className="flex flex-col justify-between bg-[linear-gradient(150deg,_#082f49,_#0f172a)] p-5 text-white sm:p-7">
+          <div>
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-400 text-slate-950"><TrendingUp className="h-5 w-5" aria-hidden="true" /></span>
+            <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-300">Recommended action</p>
+            <h3 className="mt-2 text-xl font-bold leading-tight text-white">{priority ? priority.label : "Protect the momentum"}</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-300">{priority?.note || `${topProduct?.label || "The leading product"} is creating the strongest demand. Keep response time and estimate quality consistent.`}</p>
+          </div>
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="text-xs text-slate-400">Leading signal</p>
+            <p className="mt-1 text-sm font-semibold text-white">{topProduct?.label || "Product demand pending"}{topSource ? ` via ${topSource.label}` : ""}</p>
+            <Link href="/os/crm" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-sky-300 transition hover:text-white">Review the pipeline <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          </div>
+        </aside>
+      </div>
+    </section>
   )
 }
 
@@ -365,6 +448,8 @@ export default function AnalyticsWorkspace() {
         <section className="rounded-3xl border border-slate-200 bg-white px-5 py-12 text-center text-sm text-slate-500 shadow-sm">Loading commercial performance...</section>
       ) : (
         <>
+          <GrowthSignals data={data} />
+
           <section>
             <div className="mb-3 flex flex-wrap items-end justify-between gap-3 px-1 sm:mb-4">
               <div>
