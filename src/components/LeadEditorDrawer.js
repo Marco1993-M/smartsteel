@@ -35,6 +35,12 @@ import {
 import { addBusinessDays, format, isToday, isYesterday } from "date-fns";
 
 const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
+const ESTIMATE_STATUS_OPTIONS = [
+  { value: "prepared", label: "Prepared" },
+  { value: "sent", label: "Sent" },
+  { value: "accepted", label: "Accepted" },
+  { value: "declined", label: "Declined" },
+]
 
 const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", "LCSS Warehouse"]
 const TRUSS_PRODUCT_TYPES = ["LSF trusses", "CFLC trusses"]
@@ -671,6 +677,7 @@ export default function LeadEditorDrawer({
   onCreateEstimate,
   onCreateInvoice,
   onCreateProject,
+  onEstimateStatusChange,
 }) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
@@ -691,6 +698,7 @@ export default function LeadEditorDrawer({
   const [validationErrors, setValidationErrors] = useState({});
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectHandoffError, setProjectHandoffError] = useState("");
+  const [updatingEstimateStatus, setUpdatingEstimateStatus] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -734,6 +742,18 @@ export default function LeadEditorDrawer({
   const opportunitySummary = getOpportunitySummary(formData)
   const latestEstimate = savedEstimates[0] || null
   const guidedAction = getGuidedLeadAction(nextBestAction, formData, latestEstimate)
+
+  const confirmLatestEstimateStatus = async (event) => {
+    if (!latestEstimate || !onEstimateStatusChange) return
+    setUpdatingEstimateStatus(true)
+    const updatedEstimate = await onEstimateStatusChange(formData, latestEstimate, event.target.value)
+    if (updatedEstimate) {
+      setSavedEstimates((current) => current.map((estimate) =>
+        estimate.id === updatedEstimate.id ? updatedEstimate : estimate
+      ))
+    }
+    setUpdatingEstimateStatus(false)
+  }
 
   // Fetch notes and activities from Supabase
   useEffect(() => {
@@ -2110,9 +2130,21 @@ export default function LeadEditorDrawer({
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latest estimate</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">
-                {latestEstimate ? formatEstimateStatus(latestEstimate.status) : "No estimate"}
-              </p>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="min-w-0 truncate text-sm font-semibold text-slate-900">
+                  {latestEstimate ? `V${latestEstimate.version_no || 1}` : "No estimate"}
+                </p>
+                <select
+                  value={latestEstimate ? normalizeEstimateStatus(latestEstimate.status) : ""}
+                  onChange={confirmLatestEstimateStatus}
+                  disabled={!latestEstimate || !onEstimateStatusChange || updatingEstimateStatus}
+                  className="max-w-[130px] rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-slate-400 disabled:cursor-not-allowed disabled:text-slate-400"
+                  aria-label="Latest estimate status"
+                >
+                  {!latestEstimate ? <option value="">Not prepared</option> : null}
+                  {ESTIMATE_STATUS_OPTIONS.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
+                </select>
+              </div>
             </div>
           </div>
         </section>

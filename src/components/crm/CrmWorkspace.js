@@ -564,10 +564,14 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
   const fetchLeads = async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false })
+    const [{ data, error }, estimatesResult] = await Promise.all([
+      supabase.from("leads").select("*").order("created_at", { ascending: false }),
+      supabase
+        .from("estimates")
+        .select("*")
+        .order("version_no", { ascending: false })
+        .order("created_at", { ascending: false }),
+    ])
 
     if (error) {
       console.error("Error fetching leads:", error)
@@ -581,9 +585,15 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       const fallbackFields = readFallbackFields()
       const fallbackEstimates = readStoredEstimates()
       const fallbackInvoices = readStoredInvoices()
+      const liveEstimates = (estimatesResult.data || []).reduce((grouped, estimate) => {
+        const leadId = String(estimate.lead_id || "")
+        if (!leadId) return grouped
+        grouped[leadId] = [...(grouped[leadId] || []), estimate]
+        return grouped
+      }, {})
       setNextActionFallbacks(fallbackActions)
       setFallbackFieldValues(fallbackFields)
-      setLeadEstimates(fallbackEstimates)
+      setLeadEstimates(estimatesResult.error ? fallbackEstimates : { ...fallbackEstimates, ...liveEstimates })
       setLeadInvoices(fallbackInvoices)
       setLeads(
         (data || []).map((lead) =>
@@ -932,7 +942,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       })
     }
     setEditingLead(null)
-    return true
+    return updatedEstimate
   }
 
   const handleDeleteLead = async (id) => {
@@ -1013,6 +1023,47 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
   const handleOpenInvoice = (lead) => {
     setInvoicingLead(lead)
+  }
+
+  const handleEstimateStatusChange = async (lead, estimate, status) => {
+    if (!estimate?.id || String(estimate.id).startsWith("local-")) {
+      alert("This estimate must be saved online before its status can be confirmed.")
+      return false
+    }
+
+    const now = new Date().toISOString()
+    const statusPayload = { status }
+    if (status === "prepared") statusPayload.prepared_at = estimate.prepared_at || now
+    if (status === "sent") statusPayload.sent_at = estimate.sent_at || now
+    if (status === "accepted") statusPayload.accepted_at = estimate.accepted_at || now
+
+    const { data: updatedRows, error } = await supabase
+      .from("estimates")
+      .update(statusPayload)
+      .eq("id", estimate.id)
+      .select()
+
+    if (error) {
+      alert("Could not update estimate status: " + error.message)
+      return false
+    }
+
+    const updatedEstimate = updatedRows?.[0] || { ...estimate, ...statusPayload }
+    const leadId = String(lead.id)
+    setStoredEstimatesForLead(
+      leadId,
+      (leadEstimates[leadId] || []).map((item) =>
+        item.id === estimate.id ? updatedEstimate : item
+      )
+    )
+    await logLeadActivity({
+      lead_id: lead.id,
+      type: "estimate_status",
+      user_name: user?.email || "Smart Steel CRM",
+      description: `Estimate V${estimate.version_no || 1} confirmed as ${status}.`,
+      timestamp: now,
+    })
+    return true
   }
 
   const handleSnoozeLeadToTomorrow = async (lead) => {
@@ -2861,6 +2912,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
           onDelete={handleDeleteLead}
           onCreateEstimate={handleOpenEstimate}
           onCreateInvoice={handleOpenInvoice}
+          onEstimateStatusChange={handleEstimateStatusChange}
         />
       )}
 

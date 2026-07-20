@@ -7,7 +7,6 @@ import { formatCrmStatusLabel, getLeadNextBestAction } from "../lib/crmSop"
 import { getOpportunitySummary } from "../lib/crmReferenceData"
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
-
 const teamColors = {
   Stefan: "bg-red-100",
   Niel: "bg-blue-100",
