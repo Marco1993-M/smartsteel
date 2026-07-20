@@ -24,6 +24,8 @@ function normalizeLine(row) {
     wasteFactor: Number(row.waste_factor || 0),
     scope: row.scope || "standard",
     notes: row.notes || "",
+    quantityRule: row.metadata?.quantityRule || "",
+    sourceCode: row.metadata?.sourceCode || "",
   }
 }
 
@@ -184,6 +186,10 @@ export async function PATCH(request) {
         waste_factor: wasteFactor,
         scope,
         notes: String(body?.notes || "").trim() || null,
+        metadata: {
+          quantityRule: String(body?.quantityRule || "").trim(),
+          sourceCode: String(body?.sourceCode || "").trim(),
+        },
       },
     ])
 

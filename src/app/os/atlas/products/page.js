@@ -1,6 +1,5 @@
-import ProductFamiliesWorkspace from "../../../../components/os/ProductFamiliesWorkspace"
-import { ATLAS_PRODUCT_RULES } from "../../../../lib/osProductData"
+import AtlasWarehouseProductWorkspace from "../../../../components/os/AtlasWarehouseProductWorkspace"
 
 export default function AtlasProductsPage() {
-  return <ProductFamiliesWorkspace platformKey="atlas" rules={ATLAS_PRODUCT_RULES} />
+  return <AtlasWarehouseProductWorkspace />
 }

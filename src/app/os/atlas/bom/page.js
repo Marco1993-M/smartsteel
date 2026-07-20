@@ -1,5 +1,5 @@
-import AtlasBomWorkspace from "../../../../components/os/AtlasBomWorkspace"
+import AtlasWarehouseBomWorkspace from "../../../../components/os/AtlasWarehouseBomWorkspace"
 
 export default function AtlasBomPage() {
-  return <AtlasBomWorkspace />
+  return <AtlasWarehouseBomWorkspace />
 }
