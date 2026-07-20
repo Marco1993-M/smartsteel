@@ -7,385 +7,285 @@ const PAGE_PATH = "/products/cflc-carport-kits"
 const SHARE_IMAGE = `${SITE_URL}/CFLC_carport.webp`
 
 export const metadata = {
-  title: "CFLC Carport Kits | Lip Channel Carports South Africa",
+  title: "Atlas Carports South Africa | Lip Channel Carport Kits",
   description:
-    "Browse Smart Steel CFLC and lip channel carport kits in South Africa, including single, double, three-bay, and four-bay carport options with practical pricing and a clearer enquiry path.",
+    "Compare Atlas modular lip channel carports for single, double, and multi-bay parking cover in South Africa. See standard sizes and get an online estimate.",
   keywords: [
-    "CFLC carport kits",
+    "Atlas carports",
     "lip channel carports",
-    "steel carport kits South Africa",
+    "carport kits South Africa",
+    "steel carport kits",
     "single carport kit",
     "double carport kit",
-    "carport pricing South Africa",
+    "carport prices South Africa",
   ],
-  alternates: {
-    canonical: PAGE_PATH,
-  },
+  alternates: { canonical: PAGE_PATH },
   openGraph: {
-    title: "CFLC Carport Kits | Lip Channel Carports South Africa",
+    title: "Atlas Carports | Smart Steel",
     description:
-      "Compare Smart Steel CFLC and lip channel carport kits for single, double, three-bay, and four-bay parking cover in South Africa.",
+      "Plan a practical Atlas carport around standard parking sizes, modular components, and a clear online starting estimate.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
     type: "website",
-    images: [
-      {
-        url: SHARE_IMAGE,
-        width: 1200,
-        height: 630,
-        alt: "Smart Steel CFLC and lip channel carport kits",
-      },
-    ],
+    images: [{ url: SHARE_IMAGE, width: 1200, height: 630, alt: "Atlas steel carport by Smart Steel" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CFLC Carport Kits | Lip Channel Carports South Africa",
-    description:
-      "Compare Smart Steel CFLC and lip channel carport kits for single, double, three-bay, and four-bay parking cover in South Africa.",
+    title: "Atlas Carports | Smart Steel",
+    description: "Compare Atlas lip channel carport kits and get an online starting estimate.",
     images: [SHARE_IMAGE],
   },
 }
 
-const quickAnswers = [
+const proofPoints = [
+  ["Modular parking cover", "Start with a practical parking bay, then expand the layout as the site or vehicle requirement grows."],
+  ["Bolted Atlas system", "Repeatable lip channel components and bolted connections create a clearer route from supply to assembly."],
+  ["Price before you enquire", "Choose the closest standard size and see a useful structure-only budget guide before sharing your details."],
+]
+
+const processSteps = [
+  ["01", "Choose the parking size", "Select the number of vehicles or the closest footprint for your site."],
+  ["02", "See a starting estimate", "Review a practical structure-only budget and adjust the quantity or delivery requirement."],
+  ["03", "Send the project details", "Submit the selected layout so the Smart Steel team can confirm scope, lead time, and final pricing."],
+]
+
+const included = ["Main frame", "Bracing", "Purlins / top hats", "Connection fasteners", "Drawings / installation guide"]
+const excluded = ["Roof sheeting", "Concrete and foundations", "Delivery", "Installation", "Gutters and downpipes"]
+
+const faqs = [
   {
-    question: "What sizes are available?",
+    question: "What is an Atlas carport?",
     answer:
-      "The current standard range starts with a 3m x 6m single carport kit and a 5m x 6m double carport kit.",
+      "An Atlas carport is a modular steel parking structure developed by Smart Steel. It uses repeatable lip channel components and bolted assembly principles to create practical single, double, and larger parking layouts.",
   },
   {
-    question: "Is sheeting included?",
+    question: "Can I see a carport price before I enquire?",
     answer:
-      "No. The standard carport kit price covers the steel structure only unless cladding or other extras are added separately.",
+      "Yes. The online estimator gives you a structure-only starting budget for the selected carport size before you send an enquiry.",
   },
   {
-    question: "Is it suitable for DIY projects?",
+    question: "Does the standard carport price include roof sheeting?",
     answer:
-      "Yes. These CFLC and lip channel carport kits are designed as practical supply-only kits with clear sizes and straightforward parts.",
+      "No. The standard starting price covers the steel structure. Roof sheeting and other project items can be reviewed separately for the finish and site requirements you choose.",
   },
   {
-    question: "What happens after I enquire?",
+    question: "Can Atlas carports be extended?",
     answer:
-      "Smart Steel confirms the size, finish, and project details with you, then finalises the quote and lead time.",
-  },
-]
-
-const included = [
-  "Main frame",
-  "Bracing",
-  "Purlins / hats",
-  "Fasteners",
-  "Drawings / installation guide",
-]
-
-const excluded = [
-  "Sheeting",
-  "Flashings",
-  "Concrete / foundations",
-  "Delivery",
-  "Installation",
-  "Gutters and downpipes",
-]
-
-const galleryImages = [
-  { src: "/CFLC_carport.webp", alt: "Smart Steel CFLC carport overview" },
-  { src: "/CFLC_carport.webp", alt: "Smart Steel CFLC carport structure view" },
-  { src: "/CFLC_carport.webp", alt: "Smart Steel CFLC carport detail view" },
-]
-
-const supportLinks = [
-  {
-    title: "Browse all products",
-    description: "Go back to the products hub if you want to compare carports, kits, and other product categories.",
-    href: "/products",
+      "Atlas is based on a modular approach. Larger and multi-bay layouts can be reviewed around the parking requirement, available space, and final project scope.",
   },
   {
-    title: "Explore CFLC warehouse kits",
-    description: "See the wider CFLC kit range if you need more than a carport or shade cover.",
-    href: "/products/cflc-diy-warehouse-kits",
-  },
-  {
-    title: "Compare warehouse systems",
-    description: "Use the warehouse pages if your project is moving beyond a standard carport size.",
-    href: "/warehouses",
-  },
-  {
-    title: "Use the estimator",
-    description: "Check a starting budget before you send an enquiry.",
-    href: "/tools/cflc-carport-estimator",
+    question: "Is installation included?",
+    answer:
+      "Installation, foundations, and delivery are reviewed separately because access, location, ground conditions, and the final scope can affect these costs.",
   },
 ]
 
-export default function CflcCarportKitsPage() {
+const relatedPages = [
+  ["Atlas solar carports", "Combine covered parking with a solar-ready support structure.", "/products/cflc-solar-carports", "Explore solar carports"],
+  ["Atlas W-Series", "Explore modular Atlas warehouse systems for larger enclosed or roof-only structures.", "/warehouses/cflc", "View Atlas warehouses"],
+  ["Smart Steel product hub", "Compare the wider warehouse, carport, and solar structure range.", "/products", "Browse all products"],
+]
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: { "@type": "Answer", text: item.answer },
+  })),
+}
+
+const collectionSchema = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "Atlas Carports",
+  description: metadata.description,
+  url: `${SITE_URL}${PAGE_PATH}`,
+  provider: { "@type": "Organization", name: "Smart Steel", url: SITE_URL },
+}
+
+function Arrow() {
+  return <span aria-hidden="true" className="text-lg leading-none">↗</span>
+}
+
+export default function AtlasCarportsPage() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <section className="relative mt-6 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
-          <Image
-            src="/CFLC_carport.webp"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center opacity-[0.98]"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.74))]" />
-          <div className="relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <div>
-              <span className="inline-flex rounded-full border border-[#1c5b57]/25 bg-[#eaf3f1] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1c5b57]">
-                Atlas System
-              </span>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-                CFLC Carport Kits
-              </p>
-              <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                CFLC and lip channel carport kits made easier to compare
+    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#f3f0e9_17rem,#f3f0e9_100%)] pb-16 pt-24 text-[#121a20] sm:pt-28">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
+
+      <section className="mx-4 overflow-hidden border border-[#121a20]/15 bg-[linear-gradient(145deg,#ffffff_0%,#faf9f5_48%,#ebe8dd_100%)] shadow-sm sm:mx-6 lg:mx-8">
+        <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
+          <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(18,26,32,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(18,26,32,0.06)_1px,transparent_1px)] [background-size:42px_42px]" />
+          <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full border border-[#d9a441]/45" />
+          <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-3">
+                <span className="grid h-9 w-9 place-items-center border border-[#d9a441] font-mono text-sm font-semibold text-[#1c5b57]">A</span>
+                <div>
+                  <p className="text-sm font-semibold tracking-[0.2em]">ATLAS SYSTEM</p>
+                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#121a20]/55">Developed by Smart Steel</p>
+                </div>
+              </div>
+              <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas Carports</p>
+              <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-5xl lg:text-6xl">
+                Practical parking cover, built the Atlas way.
               </h1>
-              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-                Compare practical steel carport kits for single and double parking cover, side
-                shelter, and smaller utility cover projects. See the standard sizes, get a clear
-                starting price, and request the kit that fits your project.
+              <p className="mt-6 max-w-2xl text-base leading-7 text-[#121a20]/70 sm:text-lg">
+                Atlas carports use modular lip channel steel components and bolted connections to create clear, practical parking cover for homes, businesses, farms, and operational sites.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="#carport-sizes"
-                  className="rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
-                >
-                  Browse carport sizes
+                <Link href="/tools/cflc-carport-estimator" className="inline-flex items-center justify-center bg-[#d9a441] px-6 py-3.5 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f]">
+                  Price my carport <span className="ml-2 text-lg leading-none">→</span>
                 </Link>
-                <Link
-                  href="/tools/cflc-carport-estimator"
-                  className="rounded-full border border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white"
-                >
-                  Estimate your carport kit
-                </Link>
+                <a href="#carport-sizes" className="inline-flex items-center justify-center border border-[#121a20]/20 bg-white/75 px-6 py-3.5 text-sm font-semibold transition hover:border-[#121a20] hover:bg-white">
+                  Compare standard sizes
+                </a>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#121a20]/65">
+                <span className="border border-[#121a20]/15 bg-white/75 px-3 py-2">Online starting estimate</span>
+                <span className="border border-[#121a20]/15 bg-white/75 px-3 py-2">Structure-only guide</span>
+                <span className="border border-[#121a20]/15 bg-white/75 px-3 py-2">Single to multi-bay layouts</span>
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Single and double carports</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Standard sizes for one vehicle, two vehicles, and compact shelter projects.
-                </p>
-              </div>
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">Clear starting prices</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  A practical price guide before final delivery, finish, and project details are confirmed.
-                </p>
-              </div>
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 px-5 py-5">
-                <p className="text-2xl font-semibold text-slate-950">DIY supply only</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  A simpler way to buy a practical steel cover kit without a bigger custom process.
-                </p>
+            <div className="relative min-h-[340px] overflow-hidden border border-[#121a20]/15 bg-[#1c5b57] sm:min-h-[400px]">
+              <Image src="/CFLC_carport.webp" alt="Atlas lip channel steel carport by Smart Steel" fill priority sizes="(min-width: 1024px) 44vw, 100vw" className="object-cover" />
+              <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(18,26,32,0.04),rgba(18,26,32,0.76))]" />
+              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d9a441]">Atlas modular structure</p>
+                <p className="mt-3 max-w-md text-2xl font-semibold leading-tight text-[#f3f0e9]">A repeatable steel system for everyday parking and useful covered space.</p>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Quick Answers
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              A few useful answers before you choose a carport size
-            </h2>
+      <section className="mx-auto max-w-7xl px-5 pt-8 sm:px-8 lg:px-10">
+        <div className="grid overflow-hidden border border-[#121a20]/15 bg-white sm:grid-cols-3">
+          {proofPoints.map(([title, description], index) => (
+            <div key={title} className="border-b border-[#121a20]/10 px-5 py-6 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 sm:px-7">
+              <p className="font-mono text-xs text-[#1c5b57]">0{index + 1}</p>
+              <h2 className="mt-4 text-lg font-semibold tracking-[-0.025em]">{title}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#121a20]/65">{description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="carport-sizes" className="mx-auto max-w-7xl scroll-mt-24 px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Standard starting sizes</p>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.045em] sm:text-4xl">Choose the closest parking requirement.</h2>
+            <p className="mt-4 text-base leading-7 text-[#121a20]/65">Use a standard layout as the starting point. Larger or repeated bays can be reviewed around the way your site needs to work.</p>
           </div>
-          <div className="mt-6 grid gap-4 lg:grid-cols-4">
-            {quickAnswers.map((item) => (
-              <div key={item.question} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-base font-semibold text-slate-950">{item.question}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{item.answer}</p>
-              </div>
+          <Link href="/tools/cflc-carport-estimator" className="inline-flex items-center gap-2 text-sm font-semibold text-[#1c5b57] hover:text-[#121a20]">Open the estimator <Arrow /></Link>
+        </div>
+
+        <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          {cflcCarportSelections.map((item) => {
+            const size = item.id === "3x6-carport" ? "single" : "double"
+            return (
+              <article key={item.id} className="grid overflow-hidden border border-[#121a20]/15 bg-white shadow-[0_22px_44px_-42px_rgba(18,26,32,0.75)] sm:grid-cols-[0.78fr_1.22fr]">
+                <div className="relative min-h-64 bg-[#1c5b57] sm:min-h-full">
+                  <Image src="/CFLC_carport.webp" alt={`${item.title} Atlas carport`} fill sizes="(min-width: 1024px) 22vw, 100vw" className="object-cover" />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,26,32,0.04),rgba(18,26,32,0.5))]" />
+                  <span className="absolute left-4 top-4 border border-white/30 bg-[#121a20]/75 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">Atlas carport</span>
+                </div>
+                <div className="flex flex-col p-6">
+                  <p className="font-mono text-xs uppercase tracking-[0.16em] text-[#1c5b57]">{item.size}</p>
+                  <h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em]">{item.title.replace("CFLC", "Atlas")}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[#121a20]/65">{item.bestFor}</p>
+                  <div className="mt-6 border-y border-[#121a20]/10 py-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#121a20]/45">Structure from</p>
+                    <p className="mt-1 text-3xl font-semibold tracking-[-0.04em]">{item.priceFrom}</p>
+                  </div>
+                  <Link href={`/tools/cflc-carport-estimator?size=${size}`} className="mt-6 inline-flex items-center justify-between bg-[#d9a441] px-5 py-3.5 text-sm font-semibold transition hover:bg-[#ebbd5f]">
+                    Estimate this layout <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">From size to scope</p>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.045em] sm:text-4xl">A quicker route to a useful carport enquiry.</h2>
+          </div>
+          <p className="max-w-2xl text-base leading-7 text-[#121a20]/65">The Atlas estimator replaces the generic enquiry form with a simple first decision: how much parking cover do you need? Your selected layout then carries into the enquiry.</p>
+        </div>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {processSteps.map(([number, title, description]) => (
+            <div key={number} className="border border-[#121a20]/15 bg-white p-6 sm:p-7">
+              <p className="font-mono text-xs text-[#d9a441]">{number}</p>
+              <h3 className="mt-8 text-2xl font-semibold tracking-[-0.04em]">{title}</h3>
+              <p className="mt-4 text-sm leading-6 text-[#121a20]/65">{description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="grid border border-[#121a20]/15 bg-white lg:grid-cols-2">
+          <div className="border-b border-[#121a20]/10 p-6 sm:p-8 lg:border-b-0 lg:border-r">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1c5b57]">Included in the structure</p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {included.map((item) => <li key={item} className="border-l-2 border-[#d9a441] pl-3 text-sm leading-6">{item}</li>)}
+            </ul>
+          </div>
+          <div className="p-6 sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1c5b57]">Reviewed around your project</p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {excluded.map((item) => <li key={item} className="border-l-2 border-[#121a20]/20 pl-3 text-sm leading-6 text-[#121a20]/70">{item}</li>)}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Common questions</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">What to know before you choose a carport.</h2>
+          </div>
+          <div className="border-t border-[#121a20]/15">
+            {faqs.map((item) => (
+              <details key={item.question} className="group border-b border-[#121a20]/15 py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
+                  {item.question}<span className="text-xl text-[#d9a441] transition group-open:rotate-45">+</span>
+                </summary>
+                <p className="max-w-2xl pt-4 text-sm leading-6 text-[#121a20]/65">{item.answer}</p>
+              </details>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="carport-sizes" className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Standard Carport Sizes
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Compare the current CFLC carport kits
-            </h2>
-            <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base">
-              These standard carport kits give you a clear starting point for parking cover,
-              smaller utility shelter, and practical everyday steel cover projects.
-            </p>
-          </div>
+      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="grid gap-4 md:grid-cols-3">
+          {relatedPages.map(([title, description, href, label]) => (
+            <Link key={title} href={href} className="group border border-[#121a20]/15 bg-white p-6 transition hover:border-[#d9a441]">
+              <h2 className="text-xl font-semibold tracking-[-0.03em]">{title}</h2>
+              <p className="mt-3 text-sm leading-6 text-[#121a20]/65">{description}</p>
+              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#1c5b57] group-hover:text-[#121a20]">{label} <Arrow /></span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-          <div className="mt-6 grid gap-5 lg:grid-cols-2">
-            {cflcCarportSelections.map((item, index) => (
-              <div
-                key={item.id}
-                className="overflow-hidden rounded-[1.85rem] border border-slate-200 bg-slate-50 shadow-sm"
-              >
-                <div className="relative h-72">
-                  <Image
-                    src={galleryImages[index % galleryImages.length].src}
-                    alt={galleryImages[index % galleryImages.length].alt}
-                    fill
-                    sizes="(min-width: 1024px) 50vw, 100vw"
-                    className="object-cover object-center"
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08),rgba(15,23,42,0.35))]" />
-                  <div className="absolute left-5 top-5">
-                    <span className="inline-flex rounded-full bg-white/92 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      {item.family}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-xl font-semibold text-slate-950">{item.title}</h3>
-                      <p className="mt-1 text-sm font-medium uppercase tracking-[0.16em] text-slate-500">
-                        {item.size}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        From
-                      </p>
-                      <p className="text-2xl font-semibold text-slate-950">{item.priceFrom}</p>
-                    </div>
-                  </div>
-
-                  <p className="mt-4 text-sm leading-6 text-slate-600">{item.bestFor}</p>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        Weight
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-slate-700">{item.weight}</p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        Pack Info
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-slate-700">{item.packInfo}</p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        Included
-                      </p>
-                      <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-700">
-                        {included.map((line) => (
-                          <li key={line}>{line}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        Not Included
-                      </p>
-                      <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-700">
-                        {excluded.map((line) => (
-                          <li key={line}>{line}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <Link
-                      href={`/tools/cflc-carport-estimator?size=${item.id === "3x6-carport" ? "single" : "double"}`}
-                      className="rounded-full bg-[#da1a33] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
-                    >
-                      Estimate this carport kit
-                    </Link>
-                    <Link
-                      href={`/tools/cflc-carport-estimator?size=${item.id === "3x6-carport" ? "single" : "double"}`}
-                      className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-                    >
-                      Check a budget
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Recent Carport Photos
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              A clearer visual cue for where you are in the product range
-            </h2>
-            <p className="mt-4 text-sm leading-6 text-slate-600">
-              These recent photos help show the type of practical steel carport you are looking
-              at, so it is easier to see that this page is focused on parking cover and smaller
-              steel shelter projects.
-            </p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              {galleryImages.map((image) => (
-                <div key={image.src} className="relative h-40 overflow-hidden rounded-[1.5rem] border border-slate-200">
-                  <Image src={image.src} alt={image.alt} fill sizes="33vw" className="object-cover object-center" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Need Something Bigger?
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Move into the wider CFLC kit range or the warehouse pages
-            </h2>
-            <p className="mt-4 text-sm leading-6 text-slate-600">
-              If you need a larger cover area, a storage building, or a more custom warehouse
-              project, Smart Steel also has larger CFLC kit options and separate warehouse pages
-              to help you compare the next step more clearly.
-            </p>
-            <div className="mt-6 flex flex-col gap-3">
-              <Link
-                href="/products/cflc-diy-warehouse-kits"
-                className="rounded-full bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
-              >
-                Explore CFLC warehouse kits
-              </Link>
-              <Link
-                href="/warehouses"
-                className="rounded-full border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-              >
-                Compare warehouse systems
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-              Helpful Links
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Keep moving through the right product and warehouse pages
-            </h2>
-          </div>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {supportLinks.map((item) => (
-              <Link
-                key={item.title}
-                href={item.href}
-                className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
-              >
-                <p className="text-base font-semibold text-slate-950">{item.title}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{item.description}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      </div>
+      <section className="mx-auto max-w-7xl px-5 pb-6 pt-16 sm:px-8 sm:pt-24 lg:px-10">
+        <div className="border-l-2 border-[#d9a441] pl-5 sm:pl-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">The Atlas approach</p>
+          <p className="mt-4 max-w-4xl text-xl font-medium leading-8 tracking-[-0.025em] sm:text-2xl sm:leading-9">Atlas turns familiar lip channel steel into a more deliberate modular system: repeatable components, bolted connections, practical starting sizes, and a clearer route from online planning to a buildable project.</p>
+        </div>
+      </section>
     </main>
   )
 }
