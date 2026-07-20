@@ -6,6 +6,7 @@ export const runtime = "nodejs"
 
 const ALLOWED_PERIODS = new Set([30, 90, 365])
 const ACTIVE_ESTIMATE_STATUSES = new Set(["sent", "accepted", "declined", "superseded"])
+const MARKETING_SOURCES = ["search_console", "google_ads"]
 
 function parseNumber(value) {
   const number = Number(value)
@@ -122,6 +123,54 @@ function groupBy(records, getKey, getValue = () => 1) {
     .sort((a, b) => b.value - a.value)
 }
 
+function analyticsSchemaMissing(error) {
+  return error?.code === "42P01" || error?.code === "PGRST205"
+}
+
+function sumMetrics(records) {
+  const totals = records.reduce((result, record) => ({
+    impressions: result.impressions + parseNumber(record.impressions),
+    clicks: result.clicks + parseNumber(record.clicks),
+    cost: result.cost + parseNumber(record.cost),
+    conversions: result.conversions + parseNumber(record.conversions),
+    conversionValue: result.conversionValue + parseNumber(record.conversion_value),
+    weightedPosition: result.weightedPosition + (parseNumber(record.average_position) * parseNumber(record.impressions)),
+    positionWeight: result.positionWeight + (record.average_position === null ? 0 : parseNumber(record.impressions)),
+  }), { impressions: 0, clicks: 0, cost: 0, conversions: 0, conversionValue: 0, weightedPosition: 0, positionWeight: 0 })
+
+  return {
+    impressions: totals.impressions,
+    clicks: totals.clicks,
+    cost: Math.round(totals.cost * 100) / 100,
+    conversions: Math.round(totals.conversions * 100) / 100,
+    conversionValue: Math.round(totals.conversionValue * 100) / 100,
+    ctr: percentage(totals.clicks, totals.impressions),
+    averagePosition: totals.positionWeight > 0 ? Math.round((totals.weightedPosition / totals.positionWeight) * 10) / 10 : null,
+    averageCpc: totals.clicks > 0 ? Math.round((totals.cost / totals.clicks) * 100) / 100 : 0,
+    costPerConversion: totals.conversions > 0 ? Math.round((totals.cost / totals.conversions) * 100) / 100 : 0,
+    roas: totals.cost > 0 ? Math.round((totals.conversionValue / totals.cost) * 100) / 100 : 0,
+  }
+}
+
+function buildMarketingSummary(records, start, end, previousStart) {
+  const bySource = Object.fromEntries(MARKETING_SOURCES.map((source) => {
+    const sourceRecords = records.filter((record) => record.source === source)
+    const current = sumMetrics(sourceRecords.filter((record) => within(record.metric_date, start, end)))
+    const previous = sumMetrics(sourceRecords.filter((record) => within(record.metric_date, previousStart, start)))
+    return [source, {
+      ...current,
+      changes: {
+        impressions: change(current.impressions, previous.impressions),
+        clicks: change(current.clicks, previous.clicks),
+        cost: change(current.cost, previous.cost),
+        conversions: change(current.conversions, previous.conversions),
+      },
+    }]
+  }))
+
+  return bySource
+}
+
 export async function GET(request) {
   const authResponse = await requireOsAuth(request)
   if (authResponse) return authResponse
@@ -132,7 +181,7 @@ export async function GET(request) {
   const start = atStartOfDay(new Date(end.getTime() - days * 24 * 60 * 60 * 1000))
   const previousStart = atStartOfDay(new Date(start.getTime() - days * 24 * 60 * 60 * 1000))
 
-  const [leadsResult, estimatesResult] = await Promise.all([
+  const [leadsResult, estimatesResult, connectionsResult, marketingResult] = await Promise.all([
     fetchAll(() =>
       supabaseServer
         .from("leads")
@@ -146,6 +195,17 @@ export async function GET(request) {
         .select("id, lead_id, created_at, prepared_at, sent_at, status, total")
         .order("created_at", { ascending: true })
     ),
+    supabaseServer
+      .from("os_analytics_connections")
+      .select("source, status, account_label, external_account_id, last_synced_at, last_error"),
+    fetchAll(() =>
+      supabaseServer
+        .from("os_analytics_daily_metrics")
+        .select("metric_date, source, impressions, clicks, cost, conversions, conversion_value, average_position")
+        .eq("dimension_key", "summary")
+        .gte("metric_date", previousStart.toISOString().slice(0, 10))
+        .order("metric_date", { ascending: true })
+    ),
   ])
 
   if (leadsResult.error) {
@@ -154,6 +214,9 @@ export async function GET(request) {
 
   const warnings = []
   if (estimatesResult.error) warnings.push("Estimate activity is temporarily unavailable; lead metrics remain live.")
+  const analyticsSchemaReady = !connectionsResult.error && !marketingResult.error
+  if (connectionsResult.error && !analyticsSchemaMissing(connectionsResult.error)) warnings.push("Marketing connection status is temporarily unavailable.")
+  if (marketingResult.error && !analyticsSchemaMissing(marketingResult.error)) warnings.push("Marketing performance is temporarily unavailable.")
 
   const leads = leadsResult.data || []
   const estimates = estimatesResult.error ? [] : estimatesResult.data || []
@@ -162,6 +225,9 @@ export async function GET(request) {
   const currentLeads = leads.filter((lead) => within(lead.created_at, start, end))
   const today = atStartOfDay(new Date())
   const activeLeads = leads.filter((lead) => !["won", "lost"].includes(String(lead.status || "").toLowerCase()))
+  const connectionRows = connectionsResult.error ? [] : connectionsResult.data || []
+  const connectionMap = Object.fromEntries(connectionRows.map((connection) => [connection.source, connection]))
+  const marketing = buildMarketingSummary(marketingResult.error ? [] : marketingResult.data || [], start, end, previousStart)
 
   return NextResponse.json({
     period: {
@@ -192,6 +258,19 @@ export async function GET(request) {
       overdueFollowUps: activeLeads.filter((lead) => lead.follow_up_at && new Date(lead.follow_up_at) < today).length,
       missingSource: currentLeads.filter((lead) => !normalize(lead.lead_source, "")).length,
       missingProduct: currentLeads.filter((lead) => !normalize(lead.product_type, "")).length,
+    },
+    marketing: {
+      schemaReady: analyticsSchemaReady,
+      connections: MARKETING_SOURCES.map((source) => ({
+        source,
+        status: connectionMap[source]?.status || "not_connected",
+        accountLabel: connectionMap[source]?.account_label || null,
+        externalAccountId: connectionMap[source]?.external_account_id || null,
+        lastSyncedAt: connectionMap[source]?.last_synced_at || null,
+        lastError: connectionMap[source]?.last_error || null,
+      })),
+      searchConsole: marketing.search_console,
+      googleAds: marketing.google_ads,
     },
     warnings,
   })
