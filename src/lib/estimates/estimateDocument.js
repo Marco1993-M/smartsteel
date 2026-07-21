@@ -20,6 +20,16 @@ function formatDimension(value) {
   return `${numeric}m`
 }
 
+function formatArea(value) {
+  const numeric = Number(value || 0)
+  if (!Number.isFinite(numeric) || numeric <= 0) return "Not specified"
+  return `${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 2 }).format(numeric)} m²`
+}
+
+function getSavedEstimateTitle(estimate) {
+  return String(estimate?.title || "").replace(/\s+V\d+$/i, "").trim()
+}
+
 function isSolarProduct(productType) {
   return ["Solar carport", "Solar ground mount", "Solar structure"].includes(productType)
 }
@@ -77,13 +87,14 @@ export function buildEstimateDisplayModel(estimate, lead) {
     Number(input.effectiveLength) !== Number(input.length)
       ? `Requested depth ${Number(input.length)}m is priced against a practical ${Number(input.effectiveLength)}m bay layout.`
       : ""
-  const quotationTitle = trussProduct
+  const generatedQuotationTitle = trussProduct
     ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} ${roofStyleLabel} ${productTypeLabel} Quotation`
     : groundMountProduct
       ? `${quantity > 1 ? `${quantity} x ` : ""}${totalModuleCount || moduleCount} Panel ${productTypeLabel} Quotation`
     : hasDimensions
       ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} x ${formatDimension(input.length)} ${productTypeLabel} Quotation`
       : `${productTypeLabel} Quotation`
+  const quotationTitle = getSavedEstimateTitle(estimate) || generatedQuotationTitle
   const summaryFields = trussProduct
     ? [
         { label: "Span", value: formatDimension(input.width) },
@@ -115,8 +126,8 @@ export function buildEstimateDisplayModel(estimate, lead) {
           value:
             area > 0
               ? quantity > 1
-                ? `${area} m² each (${totalArea} m² total)`
-                : `${area} m²`
+                ? `${formatArea(area)} each (${formatArea(totalArea)} total)`
+                : formatArea(area)
               : "Not specified",
         },
         {
@@ -151,8 +162,8 @@ export function buildEstimateDisplayModel(estimate, lead) {
           value:
             area > 0
               ? quantity > 1
-                ? `${area} m² each (${totalArea} m² total)`
-                : `${area} m²`
+                ? `${formatArea(area)} each (${formatArea(totalArea)} total)`
+                : formatArea(area)
               : "Not specified",
         },
         { label: "Cladding", value: input.cladding || "Not specified" },
@@ -188,8 +199,8 @@ export function buildEstimateDisplayModel(estimate, lead) {
     areaLabel:
       area > 0
         ? quantity > 1
-          ? `${area} m² each (${totalArea} m² total)`
-          : `${area} m²`
+          ? `${formatArea(area)} each (${formatArea(totalArea)} total)`
+          : formatArea(area)
         : "Not specified",
     claddingLabel: input.cladding || "Not specified",
     deliveryLabel:
