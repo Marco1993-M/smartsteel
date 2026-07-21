@@ -262,6 +262,13 @@ function buildEstimateRequestLabel(previewRequest, productTypeLabel) {
   return output
 }
 
+function resolveEstimateTitle(formState, preview) {
+  return (
+    formState.estimateName?.trim() ||
+    buildDefaultEstimateTitle(preview.summary.title, formState.productTypeLabel)
+  ).trim()
+}
+
 function buildEditableLineItem(item, overrides = {}) {
   const quantity = Number(overrides.quantity ?? item.quantity ?? 0)
   const unitRate = Number(overrides.unitRate ?? item.unitRate ?? 0)
@@ -422,10 +429,7 @@ function buildEstimateDraft({
     version_no: versionNo,
     product_type: formState.productType,
     product_type_display: formState.productTypeLabel?.trim() || formState.productType,
-    title: `${(
-      formState.estimateName ||
-      buildDefaultEstimateTitle(preview.summary.title, formState.productTypeLabel)
-    ).trim()} V${versionNo}`,
+    title: `${resolveEstimateTitle(formState, preview)} V${versionNo}`,
     input_data: {
       ...preview.input,
       useCustomSize: formState.useCustomSize,
@@ -596,6 +600,7 @@ export default function EstimateDrawer({
   )
   const estimateQuantity = Math.max(1, Number(formState.quantity) || 1)
   const estimatedTotal = roundMoney(subtotal * estimateQuantity)
+  const resolvedEstimateTitle = resolveEstimateTitle(formState, preview)
   const hasOverrides = editableLineItems.some(
     (item) =>
       item.manual ||
@@ -876,21 +881,23 @@ export default function EstimateDrawer({
                     </select>
                   </div>
 
-                  <details className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-slate-700">Estimate title and client label</summary>
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700">Estimate name</label>
+                        <label className="block text-sm font-semibold text-slate-900">Document title</label>
                         <input
                           type="text"
                           value={formState.estimateName}
                           onChange={(event) => handleChange("estimateName", event.target.value)}
-                          placeholder={buildDefaultEstimateTitle(preview.summary.title, formState.productTypeLabel)}
+                          placeholder={resolvedEstimateTitle}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                         />
+                        <p className="mt-2 text-xs leading-5 text-slate-500">
+                          This is the heading that will appear on the estimate. Leave it blank to use the suggested title.
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700">Client-facing product label</label>
+                        <label className="block text-sm font-medium text-slate-700">Product / scope label</label>
                         <input
                           type="text"
                           value={formState.productTypeLabel}
@@ -898,9 +905,16 @@ export default function EstimateDrawer({
                           placeholder={formState.productType}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                         />
+                        <p className="mt-2 text-xs leading-5 text-slate-500">
+                          Used in the project details and scope wording. It does not replace the document title above.
+                        </p>
                       </div>
                     </div>
-                  </details>
+                    <div className="mt-4 border-l-2 border-emerald-500 bg-emerald-50 px-4 py-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Estimate heading</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-950">{resolvedEstimateTitle}</p>
+                    </div>
+                  </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
                     {!isSolarEstimate && !isTrussEstimate ? (
