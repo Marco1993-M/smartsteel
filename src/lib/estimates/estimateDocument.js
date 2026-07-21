@@ -63,6 +63,8 @@ export function buildEstimateDisplayModel(estimate, lead) {
   const lineItems = Array.isArray(estimate?.line_items) ? estimate.line_items : []
   const subtotal = Number(estimate?.subtotal || 0)
   const total = Number(estimate?.total || 0)
+  const discountPercent = Math.min(100, Math.max(0, Number(input.discountPercent || 0)))
+  const discountAmount = Math.max(0, subtotal - total)
   const vatRate = 0.15
   const vatAmount = total * vatRate
   const totalInclVat = total + vatAmount
@@ -211,6 +213,10 @@ export function buildEstimateDisplayModel(estimate, lead) {
     summaryFields,
     notes: [layoutNote, estimate?.notes].filter(Boolean).join("\n\n"),
     lineItems,
+    hasDiscount: discountPercent > 0 && discountAmount > 0,
+    discountPercentLabel: `${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 2 }).format(discountPercent)}%`,
+    grossSubtotalLabel: formatCurrency(subtotal),
+    discountLabel: formatCurrency(discountAmount),
     subtotalLabel: formatCurrency(total),
     vatLabel: formatCurrency(vatAmount),
     totalInclVatLabel: formatCurrency(totalInclVat),
