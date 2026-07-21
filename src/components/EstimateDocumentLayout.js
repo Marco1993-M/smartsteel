@@ -56,6 +56,18 @@ export default function EstimateDocumentLayout({
               <p className="mt-1 text-sm text-slate-300 print:text-[12px]">Total including VAT</p>
             </div>
             <div className="space-y-3 px-5 py-4 text-sm text-slate-700 print:space-y-2 print:px-4 print:py-3 print:text-[12px]">
+              {documentModel.hasDiscount ? (
+                <>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-slate-500">Subtotal</span>
+                    <span className="font-semibold text-slate-900">{documentModel.grossSubtotalLabel}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 text-emerald-700">
+                    <span>Discount ({documentModel.discountPercentLabel})</span>
+                    <span className="font-semibold">-{documentModel.discountLabel}</span>
+                  </div>
+                </>
+              ) : null}
               <div className="flex items-center justify-between gap-4">
                 <span className="text-slate-500">Total excl. VAT</span>
                 <span className="font-semibold text-slate-900">{documentModel.subtotalLabel}</span>
@@ -206,6 +218,18 @@ export default function EstimateDocumentLayout({
               Totals
             </h2>
             <div className="mt-5 space-y-3 text-sm text-slate-700">
+              {documentModel.hasDiscount ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span>Subtotal excl. VAT</span>
+                    <span className="font-medium text-slate-900">{documentModel.grossSubtotalLabel}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-emerald-700">
+                    <span>Discount ({documentModel.discountPercentLabel})</span>
+                    <span className="font-medium">-{documentModel.discountLabel}</span>
+                  </div>
+                </>
+              ) : null}
               <div className="flex items-center justify-between">
                 <span>Total excl. VAT</span>
                 <span className="font-medium text-slate-900">{documentModel.subtotalLabel}</span>

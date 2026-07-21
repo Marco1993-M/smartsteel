@@ -206,6 +206,7 @@ function buildInitialState(lead, estimate) {
     useCustomSize,
     wallHeight: Number(latestInput.wallHeight || lead?.wall_height || 3),
     quantity: Math.max(1, Number(latestInput.quantity || 1)),
+    discountPercent: Math.min(100, Math.max(0, Number(latestInput.discountPercent || 0))),
     roofStyle: latestInput.roofStyle || "dual_pitch",
     roofPitch: Math.max(1, Number(latestInput.roofPitch || 15)),
     trussSpacing: Math.max(0.1, Number(latestInput.trussSpacing || 1.2)),
@@ -288,6 +289,7 @@ function buildEditableLineItem(item, overrides = {}) {
     total: roundMoney(quantity * unitRate),
     originalQuantity: Number(item.quantity ?? 0),
     originalUnitRate: Number(item.unitRate ?? 0),
+    originalUnit: item.unit,
     originalTotal: roundMoney(item.total ?? quantity * unitRate),
     manual: Boolean(overrides.manual),
     priceIncludesMarkup,
@@ -313,7 +315,6 @@ function applyMarkupToLineItem(item, markupMultiplier) {
 
 function buildEditableLineItemsFromEstimate(previewLineItems, estimate, markupMultiplier) {
   const savedItems = Array.isArray(estimate?.line_items) ? estimate.line_items : []
-  const savedOriginalItems = Array.isArray(estimate?.original_line_items) ? estimate.original_line_items : []
 
   if (savedItems.length === 0) {
     return previewLineItems.map((item) =>
@@ -324,37 +325,26 @@ function buildEditableLineItemsFromEstimate(previewLineItems, estimate, markupMu
   }
 
   const previewByCode = new Map(previewLineItems.map((item) => [item.code, item]))
-  const savedOriginalByCode = new Map(savedOriginalItems.map((item) => [item.code, item]))
 
   return savedItems.map((savedItem) => {
     const previewItem = previewByCode.get(savedItem.code)
-    const normalizedSavedItem = savedItem.priceIncludesMarkup
-      ? savedItem
-      : applyMarkupToLineItem(savedItem, markupMultiplier)
-    const matchingOriginalItem = savedOriginalByCode.get(savedItem.code)
-    const normalizedOriginalItem = matchingOriginalItem
-      ? applyMarkupToLineItem(matchingOriginalItem, markupMultiplier)
-      : null
-    const savedItemWasEdited = normalizedOriginalItem
-      ? Number(normalizedSavedItem.quantity ?? 0) !== Number(normalizedOriginalItem.quantity ?? 0) ||
-        Number(normalizedSavedItem.unitRate ?? 0) !== Number(normalizedOriginalItem.unitRate ?? 0) ||
-        String(normalizedSavedItem.label || "") !== String(normalizedOriginalItem.label || "")
-      : Boolean(savedItem.manual)
 
     if (previewItem) {
       return buildEditableLineItem(
         applyMarkupToLineItem(previewItem, markupMultiplier),
         {
-          ...normalizedSavedItem,
-          userEdited: savedItemWasEdited,
+          ...savedItem,
+          priceIncludesMarkup: true,
+          userEdited: true,
         }
       )
     }
 
-    return buildEditableLineItem(normalizedSavedItem, {
-      ...normalizedSavedItem,
+    return buildEditableLineItem(savedItem, {
+      ...savedItem,
       id: savedItem.id || savedItem.code,
       manual: true,
+      priceIncludesMarkup: true,
       userEdited: true,
     })
   })
@@ -366,6 +356,7 @@ function hasLineItemOverrides(item, previewLabel) {
   return (
     Number(item.quantity) !== Number(item.originalQuantity) ||
     Number(item.unitRate) !== Number(item.originalUnitRate) ||
+    item.unit !== item.originalUnit ||
     item.label !== previewLabel
   )
 }
@@ -435,6 +426,7 @@ function buildEstimateDraft({
       useCustomSize: formState.useCustomSize,
       productType: formState.productType,
       productTypeLabel: formState.productTypeLabel?.trim() || formState.productType,
+      discountPercent: Math.min(100, Math.max(0, Number(formState.discountPercent) || 0)),
     },
     original_line_items: preview.lineItems,
     line_items: editableLineItems,
@@ -599,14 +591,18 @@ export default function EstimateDrawer({
     [editableLineItems]
   )
   const estimateQuantity = Math.max(1, Number(formState.quantity) || 1)
-  const estimatedTotal = roundMoney(subtotal * estimateQuantity)
+  const grossSubtotal = roundMoney(subtotal * estimateQuantity)
+  const discountPercent = Math.min(100, Math.max(0, Number(formState.discountPercent) || 0))
+  const discountAmount = roundMoney(grossSubtotal * (discountPercent / 100))
+  const estimatedTotal = roundMoney(grossSubtotal - discountAmount)
   const resolvedEstimateTitle = resolveEstimateTitle(formState, preview)
   const hasOverrides = editableLineItems.some(
     (item) =>
       item.manual ||
       item.label !== (item.manual ? item.label : preview.lineItems.find((base) => base.code === item.code)?.label) ||
       Number(item.quantity) !== Number(item.originalQuantity) ||
-      Number(item.unitRate) !== Number(item.originalUnitRate)
+      Number(item.unitRate) !== Number(item.originalUnitRate) ||
+      item.unit !== item.originalUnit
   )
 
   const handleChange = (field, value) => {
@@ -657,6 +653,7 @@ export default function EstimateDrawer({
         total: 0,
         originalQuantity: 0,
         originalUnitRate: 0,
+        originalUnit: "item",
         originalTotal: 0,
         manual: true,
         priceIncludesMarkup: true,
@@ -701,7 +698,7 @@ export default function EstimateDrawer({
         formState,
         preview,
         editableLineItems,
-        subtotal,
+        subtotal: grossSubtotal,
         estimatedTotal,
       })
     )
@@ -722,7 +719,7 @@ export default function EstimateDrawer({
         formState,
         preview,
         editableLineItems,
-        subtotal,
+        subtotal: grossSubtotal,
         estimatedTotal,
       })
     )
@@ -752,7 +749,7 @@ export default function EstimateDrawer({
         formState,
         preview,
         editableLineItems,
-        subtotal,
+        subtotal: grossSubtotal,
         estimatedTotal,
         existingEstimate: loadedEstimate,
         saveMode: "update",
@@ -1248,7 +1245,37 @@ export default function EstimateDrawer({
                       <div className="text-sm text-slate-500 sm:text-right">
                         <p>Current line-item total: {formatCurrency(subtotal)}</p>
                         {estimateQuantity > 1 ? <p>Quantity: {estimateQuantity}</p> : null}
+                        {discountPercent > 0 ? <p>Subtotal before discount: {formatCurrency(grossSubtotal)}</p> : null}
                         <p>Prices shown include margin</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                          Discount percentage
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          value={formState.discountPercent}
+                          onChange={(event) =>
+                            handleChange(
+                              "discountPercent",
+                              Math.min(100, Math.max(0, Number(event.target.value) || 0))
+                            )
+                          }
+                          className="mt-2 block w-full rounded-md border-gray-300 text-sm shadow-sm sm:max-w-[180px]"
+                        />
+                        <p className="mt-2 text-xs leading-5 text-slate-500">
+                          Applied after quantity to the estimate subtotal. Line-item rates remain unchanged.
+                        </p>
+                      </div>
+                      <div className="text-sm sm:text-right">
+                        <p className="text-slate-500">Discount</p>
+                        <p className="mt-1 font-semibold text-emerald-700">-{formatCurrency(discountAmount)}</p>
                       </div>
                     </div>
 
