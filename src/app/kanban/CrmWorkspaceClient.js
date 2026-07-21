@@ -1112,6 +1112,40 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         item.id === estimate.id ? updatedEstimate : item
       )
     )
+
+    const currentLeadStatus = normalizeStatus(lead.status)
+    const shouldMoveLeadToQuoted =
+      status === "sent" && !["quoted", "won", "lost"].includes(currentLeadStatus)
+
+    if (shouldMoveLeadToQuoted) {
+      const leadUpdate = {
+        status: "quoted",
+        quote_value: Number(updatedEstimate.total || estimate.total || lead.quote_value || 0),
+        next_action: `Awaiting the client's review of ${updatedEstimate.title || `estimate V${estimate.version_no || 1}`}.`,
+        client_follow_up_state: "awaiting_reply",
+      }
+      const { data: updatedLeadRows, error: leadUpdateError } = await supabase
+        .from("leads")
+        .update(leadUpdate)
+        .eq("id", lead.id)
+        .select()
+
+      if (leadUpdateError) {
+        alert(`Estimate marked as sent, but the lead could not be moved to Quoted: ${leadUpdateError.message}`)
+        return false
+      }
+
+      const updatedLead = updatedLeadRows?.[0] || { ...lead, ...leadUpdate }
+      setLeads((current) => current.map((item) => (item.id === lead.id ? normalizeLead(updatedLead) : item)))
+      await logLeadActivity({
+        lead_id: lead.id,
+        type: "status",
+        user_name: "System",
+        description: `Lead moved automatically from ${formatStatusLabel(currentLeadStatus)} to Quoted when estimate V${estimate.version_no || 1} was marked as sent.`,
+        timestamp: now,
+      })
+    }
+
     await logLeadActivity({
       lead_id: lead.id,
       type: "estimate_status",
