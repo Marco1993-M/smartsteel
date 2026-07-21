@@ -468,10 +468,28 @@ export default function EstimateDrawer({
   const isSolarEstimate = isSolarEstimateProduct(formState.productType)
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
   const isTrussEstimate = isTrussEstimateProduct(formState.productType)
-  const preview = useMemo(
-    () => calculateEstimateByProductType(formState.productType, formState),
-    [formState]
-  )
+  const preview = useMemo(() => {
+    // Line items describe one priced unit. The estimate quantity is applied only
+    // to the final sell total so changing it never rewrites edited line items.
+    const unitPreview = calculateEstimateByProductType(formState.productType, {
+      ...formState,
+      quantity: 1,
+    })
+    const quantity = Math.max(1, Number(formState.quantity) || 1)
+    const quantitySummary =
+      quantity > 1
+        ? calculateEstimateByProductType(formState.productType, formState).summary
+        : unitPreview.summary
+
+    return {
+      ...unitPreview,
+      input: {
+        ...unitPreview.input,
+        quantity,
+      },
+      summary: quantitySummary,
+    }
+  }, [formState])
   const [editableLineItems, setEditableLineItems] = useState(() =>
     buildEditableLineItemsFromEstimate(
       preview.lineItems,
@@ -489,7 +507,10 @@ export default function EstimateDrawer({
     setFormState(nextFormState)
     previousProductTypeRef.current = nextFormState.productType
 
-    const nextPreview = calculateEstimateByProductType(nextFormState.productType, nextFormState)
+    const nextPreview = calculateEstimateByProductType(nextFormState.productType, {
+      ...nextFormState,
+      quantity: 1,
+    })
     setEditableLineItems(
       buildEditableLineItemsFromEstimate(
         nextPreview.lineItems,
@@ -573,7 +594,8 @@ export default function EstimateDrawer({
     () => roundMoney(editableLineItems.reduce((sum, item) => sum + Number(item.total || 0), 0)),
     [editableLineItems]
   )
-  const estimatedTotal = subtotal
+  const estimateQuantity = Math.max(1, Number(formState.quantity) || 1)
+  const estimatedTotal = roundMoney(subtotal * estimateQuantity)
   const hasOverrides = editableLineItems.some(
     (item) =>
       item.manual ||
@@ -1210,7 +1232,8 @@ export default function EstimateDrawer({
                         </p>
                       </div>
                       <div className="text-sm text-slate-500 sm:text-right">
-                        <p>Line-item total: {formatCurrency(subtotal)}</p>
+                        <p>Current line-item total: {formatCurrency(subtotal)}</p>
+                        {estimateQuantity > 1 ? <p>Quantity: {estimateQuantity}</p> : null}
                         <p>Prices shown include margin</p>
                       </div>
                     </div>
