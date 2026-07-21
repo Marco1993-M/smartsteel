@@ -1068,19 +1068,38 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         next_action: `Awaiting the client's review of ${updatedEstimate.title || `estimate V${estimate.version_no || 1}`}.`,
         client_follow_up_state: "awaiting_reply",
       }
-      const { data: updatedLeadRows, error: leadUpdateError } = await supabase
-        .from("leads")
-        .update(leadUpdate)
-        .eq("id", lead.id)
-        .select()
+      const leadPersistencePayload = { ...leadUpdate }
+      const unsupportedFields = []
+      let leadUpdateResult
+
+      while (true) {
+        leadUpdateResult = await supabase
+          .from("leads")
+          .update(leadPersistencePayload)
+          .eq("id", lead.id)
+          .select()
+        if (!leadUpdateResult.error) break
+
+        const missingColumn = parseMissingColumn(leadUpdateResult.error)
+        if (!missingColumn || !CRM_FALLBACK_FIELDS.includes(missingColumn)) break
+        unsupportedFields.push(missingColumn)
+        delete leadPersistencePayload[missingColumn]
+      }
+
+      const { data: updatedLeadRows, error: leadUpdateError } = leadUpdateResult
 
       if (leadUpdateError) {
         alert(`Estimate marked as sent, but the lead could not be moved to Quoted: ${leadUpdateError.message}`)
         return false
       }
 
+      if (unsupportedFields.length > 0) {
+        persistFallbackFields(lead.id, { ...lead, ...leadUpdate })
+      }
+
       const updatedLead = updatedLeadRows?.[0] || { ...lead, ...leadUpdate }
-      setLeads((current) => current.map((item) => (item.id === lead.id ? normalizeLead(updatedLead) : item)))
+      const mergedUpdatedLead = { ...updatedLead, ...leadUpdate }
+      setLeads((current) => current.map((item) => (item.id === lead.id ? normalizeLead(mergedUpdatedLead) : item)))
       await logLeadActivity({
         lead_id: lead.id,
         type: "status",
