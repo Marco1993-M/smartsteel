@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
@@ -212,6 +213,186 @@ function SaveStateBadge({ state }) {
       <span className={`h-2 w-2 rounded-full ${state === "Saved" ? "bg-emerald-500" : state === "Saving" ? "animate-pulse bg-sky-500" : "bg-amber-500"}`} />
       {state}
     </span>
+  )
+}
+
+function formatReportDate(value) {
+  if (!value) return "Not recorded"
+  return new Date(`${value}T12:00:00`).toLocaleDateString("en-ZA", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+}
+
+function chunkItems(items, size) {
+  return Array.from({ length: Math.ceil(items.length / size) }, (_, index) =>
+    items.slice(index * size, index * size + size)
+  )
+}
+
+function ReportFooter({ project, visit, company, pageLabel }) {
+  return (
+    <footer className="mt-auto flex items-end justify-between gap-6 border-t border-slate-200 pt-4 text-[10px] leading-4 text-slate-500">
+      <div>
+        <p className="font-bold uppercase tracking-[0.16em] text-slate-700">{company.label}</p>
+        <p>{company.contact}</p>
+      </div>
+      <div className="text-right">
+        <p>{project.projectNumber} · {visit.visitNumber}</p>
+        <p>{pageLabel}</p>
+      </div>
+    </footer>
+  )
+}
+
+function SiteReportDocument({ project, visit, company }) {
+  const checkedItems = visit.items.filter((item) => item.status !== "Not checked")
+  const attentionItems = visit.items.filter((item) => ["Attention", "Action required", "Fail"].includes(item.status))
+  const openActions = visit.actions.filter((action) => action.status !== "Resolved")
+  const photoPages = visit.photos.length ? chunkItems(visit.photos, 4) : [[]]
+  const meta = [
+    ["Client", project.clientName || "Not recorded"],
+    ["Site", project.address || "Not recorded"],
+    ["System / project type", project.system || "Not recorded"],
+    ["Inspector", visit.inspector || "Not recorded"],
+    ["Site contact", project.siteContact || "Not recorded"],
+    ["Contractor", project.contractor || "Not recorded"],
+    ["Project manager", project.projectManager || "Not recorded"],
+    ["Weather", visit.weather || "Not recorded"],
+  ]
+
+  return (
+    <article className="site-report mx-auto w-full max-w-[210mm] bg-white text-slate-950 shadow-xl print:shadow-none">
+      <section className="site-report-page flex min-h-[277mm] flex-col px-[14mm] py-[12mm]">
+        <header className="border-t-[7px] pt-7" style={{ borderColor: company.accent }}>
+          <div className="flex items-start justify-between gap-8 border-b border-slate-200 pb-7">
+            <div className="flex items-center gap-4">
+              {company.key !== "pequeno" ? <Image src="/Logo.png" alt="Smart Steel" width={118} height={48} className="h-11 w-auto object-contain" /> : null}
+              <div className={company.key !== "pequeno" ? "border-l border-slate-200 pl-4" : ""}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: company.accent }}>{company.reportName}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">Project Operations</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="inline-flex border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ borderColor: company.accent, color: company.accent }}>{visit.recordState}</span>
+              <p className="mt-3 font-mono text-xs text-slate-500">{visit.visitNumber}</p>
+            </div>
+          </div>
+          <div className="py-10">
+            <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: company.accent }}>{visit.recordType}</p>
+            <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-[1.05] tracking-[-0.045em]">{visit.visitType}</h1>
+            <div className="mt-6 flex flex-wrap gap-x-7 gap-y-2 text-sm text-slate-600">
+              <span className="font-semibold text-slate-950">{project.name}</span>
+              <span>{project.projectNumber}</span>
+              <span>{formatReportDate(visit.date)}</span>
+            </div>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-4 border-y border-slate-200">
+          {[
+            ["Outcome", visit.outcome || "Open"],
+            ["Checks completed", `${checkedItems.length}/${visit.items.length}`],
+            ["Items requiring attention", attentionItems.length],
+            ["Open actions", openActions.length],
+          ].map(([label, value], index) => (
+            <div key={label} className={`px-4 py-5 ${index < 3 ? "border-r border-slate-200" : ""}`}>
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+              <p className="mt-2 text-xl font-bold">{value}</p>
+            </div>
+          ))}
+        </div>
+
+        <section className="mt-8">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Visit summary</h2>
+          <p className="mt-4 whitespace-pre-wrap text-base leading-7 text-slate-700">{visit.summary || "No summary recorded."}</p>
+        </section>
+
+        <section className="mt-8 grid grid-cols-2 gap-x-10 gap-y-5 border-t border-slate-200 pt-6">
+          {meta.map(([label, value]) => (
+            <div key={label} className="break-inside-avoid">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+              <p className="mt-1.5 text-sm font-semibold leading-5 text-slate-800">{value}</p>
+            </div>
+          ))}
+        </section>
+
+        {(project.scope || project.references) ? (
+          <section className="mt-8 grid grid-cols-2 gap-8 border-t border-slate-200 pt-6">
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Project scope</p><p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-slate-700">{project.scope || "Not recorded"}</p></div>
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Document references</p><p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-slate-700">{project.references || "Not recorded"}</p></div>
+          </section>
+        ) : null}
+
+        <ReportFooter project={project} visit={visit} company={company} pageLabel="Report summary" />
+      </section>
+
+      <section className="site-report-page flex min-h-[277mm] flex-col px-[14mm] py-[12mm]">
+        <div className="flex items-end justify-between border-b border-slate-200 pb-5">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: company.accent }}>Inspection record</p><h2 className="mt-2 text-2xl font-bold tracking-[-0.03em]">Findings and required actions</h2></div>
+          <p className="font-mono text-xs text-slate-400">{visit.visitNumber}</p>
+        </div>
+
+        <section className="mt-7">
+          <div className="grid grid-cols-[1fr_34mm] border-b-2 border-slate-900 pb-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500"><span>Inspection item and finding</span><span>Status</span></div>
+          {visit.items.map((item, index) => (
+            <div key={`${item.label}-${index}`} className="grid break-inside-avoid grid-cols-[1fr_34mm] border-b border-slate-200 py-3.5">
+              <div className="pr-6"><p className="text-sm font-semibold text-slate-900">{item.label}</p>{item.note ? <p className="mt-1.5 whitespace-pre-wrap text-xs leading-5 text-slate-600">{item.note}</p> : null}</div>
+              <div><span className="inline-flex border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-700">{item.status}</span></div>
+            </div>
+          ))}
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Action register</h2>
+          {visit.actions.length ? (
+            <div className="mt-4 border-t-2 border-slate-900">
+              {visit.actions.map((action, index) => (
+                <div key={action.id} className="grid break-inside-avoid grid-cols-[8mm_1fr_35mm] gap-3 border-b border-slate-200 py-3.5">
+                  <span className="font-mono text-xs text-slate-400">{String(index + 1).padStart(2, "0")}</span>
+                  <div><p className="text-sm font-semibold">{action.text || "Action not described"}</p><p className="mt-1 text-[10px] uppercase tracking-[0.1em] text-slate-500">{action.priority} priority · Owner: {action.owner || "Unassigned"} · Due: {action.dueDate ? formatReportDate(action.dueDate) : "Not set"}</p></div>
+                  <p className="text-right text-xs font-bold text-slate-700">{action.status}</p>
+                </div>
+              ))}
+            </div>
+          ) : <p className="mt-4 border-y border-slate-200 py-5 text-sm text-slate-500">No follow-up actions were recorded during this visit.</p>}
+        </section>
+
+        <section className="mt-8 grid grid-cols-2 gap-8 border-t border-slate-200 pt-6">
+          <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Acknowledged by</p><p className="mt-3 text-sm font-semibold">{visit.acknowledgement || "Not recorded"}</p></div>
+          <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Record status</p><p className="mt-3 text-sm font-semibold">{visit.recordState}{visit.issuedAt ? ` · Issued ${new Date(visit.issuedAt).toLocaleDateString("en-ZA")}` : ""}</p></div>
+        </section>
+
+        <ReportFooter project={project} visit={visit} company={company} pageLabel="Findings and actions" />
+      </section>
+
+      {photoPages.map((photos, pageIndex) => (
+        <section key={`photos-${pageIndex}`} className="site-report-page flex min-h-[277mm] flex-col px-[14mm] py-[12mm]">
+          <div className="flex items-end justify-between border-b border-slate-200 pb-5">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: company.accent }}>Photo evidence</p><h2 className="mt-2 text-2xl font-bold tracking-[-0.03em]">Site photo record</h2></div>
+            <p className="text-xs text-slate-500">{visit.photos.length} photo{visit.photos.length === 1 ? "" : "s"}</p>
+          </div>
+          <div className="mt-7 grid grid-cols-2 gap-x-5 gap-y-7">
+            {!photos.length ? (
+              <div className="col-span-2 border-y border-slate-200 py-10 text-center">
+                <p className="text-sm font-semibold text-slate-700">No site photos were recorded for this visit.</p>
+              </div>
+            ) : null}
+            {photos.map((photo, photoIndex) => {
+              const number = pageIndex * 4 + photoIndex + 1
+              return (
+                <figure key={photo.id} className="break-inside-avoid">
+                  <div className="relative overflow-hidden border border-slate-200 bg-slate-100"><img src={photo.src} alt={photo.caption || photo.name} className="aspect-[4/3] w-full object-cover" /><span className="absolute left-0 top-0 bg-slate-950 px-3 py-2 font-mono text-xs font-bold text-white">{String(number).padStart(2, "0")}</span></div>
+                  <figcaption className="border-x border-b border-slate-200 px-3 py-3"><p className="text-xs font-semibold leading-5 text-slate-800">{photo.caption || `Site photo ${number}`}</p>{photo.linkedItem ? <p className="mt-1 text-[10px] leading-4 text-slate-500">Linked finding: {photo.linkedItem}</p> : null}</figcaption>
+                </figure>
+              )
+            })}
+          </div>
+          <ReportFooter project={project} visit={visit} company={company} pageLabel={`Photo record ${pageIndex + 1}/${photoPages.length}`} />
+        </section>
+      ))}
+    </article>
   )
 }
 
@@ -455,48 +636,12 @@ export default function ProjectsWorkspace() {
 
   if (activeVisit && activeProject && reportPreview) {
     return (
-      <div className="mx-auto w-full max-w-5xl p-3 sm:p-6 lg:p-8">
+      <div className="site-report-preview min-h-screen bg-slate-200/70 p-3 sm:p-6 lg:p-8 print:min-h-0 print:bg-white print:p-0">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <button type="button" onClick={() => setReportPreview(false)} className="text-sm font-semibold text-slate-600 hover:text-slate-950">← Continue editing</button>
           <button type="button" onClick={() => window.print()} className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">Print / Save PDF</button>
         </div>
-        <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm print:border-0 print:shadow-none">
-          <header className="p-6 sm:p-10" style={{ borderTop: `8px solid ${company.accent}` }}>
-            <div className="flex items-start justify-between gap-6 border-b border-slate-200 pb-7">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: company.accent }}>{company.reportName}</p>
-                <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{activeVisit.visitType}</h1>
-                <p className="mt-2 text-sm text-slate-600">{activeVisit.visitNumber} · {activeVisit.recordState}</p>
-              </div>
-              <div className="text-right text-xs leading-5 text-slate-500">
-                <p className="font-bold text-slate-800">{company.label}</p>
-                <p>{company.contact}</p>
-              </div>
-            </div>
-            <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {[["Project", activeProject.name], ["Client", activeProject.clientName], ["Date", activeVisit.date], ["Inspector", activeVisit.inspector || "Not recorded"], ["Site", activeProject.address], ["System", activeProject.system], ["Site contact", activeProject.siteContact || "Not recorded"], ["Outcome", activeVisit.outcome]].map(([label, value]) => (
-                <div key={label}><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{label}</p><p className="mt-1 text-sm font-semibold text-slate-900">{value}</p></div>
-              ))}
-            </div>
-          </header>
-          <div className="space-y-8 px-6 pb-10 sm:px-10">
-            <section>
-              <h2 className="text-lg font-bold text-slate-950">{activeVisit.recordType} findings</h2>
-              <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
-                {activeVisit.items.map((item, index) => (
-                  <div key={`${item.label}-${index}`} className="grid gap-2 border-b border-slate-200 p-4 last:border-b-0 sm:grid-cols-[1fr_150px]">
-                    <div><p className="font-semibold text-slate-900">{item.label}</p>{item.note ? <p className="mt-1 text-sm text-slate-600">{item.note}</p> : null}</div>
-                    <p className="text-sm font-bold text-slate-700 sm:text-right">{item.status}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-            <section><h2 className="text-lg font-bold text-slate-950">Visit summary</h2><p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-700">{activeVisit.summary || "No summary recorded."}</p></section>
-            {activeVisit.actions.length ? <section><h2 className="text-lg font-bold text-slate-950">Required actions</h2><div className="mt-3 space-y-2">{activeVisit.actions.map((action) => <div key={action.id} className="rounded-xl bg-slate-50 p-4"><div className="flex justify-between gap-4"><p className="font-semibold text-slate-900">{action.text || "Action not described"}</p><span className="text-xs font-bold text-slate-500">{action.status}</span></div><p className="mt-1 text-xs text-slate-500">{action.priority} priority · {action.owner || "Unassigned"} · {action.dueDate || "No due date"}</p></div>)}</div></section> : null}
-            {activeVisit.photos.length ? <section><h2 className="text-lg font-bold text-slate-950">Photo record</h2><div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">{activeVisit.photos.map((photo) => <figure key={photo.id}><img src={photo.src} alt={photo.caption || photo.name} className="aspect-[4/3] w-full rounded-lg object-cover" /><figcaption className="mt-2 text-xs leading-5 text-slate-600">{photo.caption || "Site photo"}{photo.linkedItem ? ` · ${photo.linkedItem}` : ""}</figcaption></figure>)}</div></section> : null}
-            <section className="grid gap-4 border-t border-slate-200 pt-6 sm:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Acknowledged by</p><p className="mt-2 font-semibold text-slate-900">{activeVisit.acknowledgement || "Not recorded"}</p></div><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Project references</p><p className="mt-2 text-sm text-slate-700">{activeProject.references || "No references recorded"}</p></div></section>
-          </div>
-        </article>
+        <SiteReportDocument project={activeProject} visit={activeVisit} company={company} />
       </div>
     )
   }
