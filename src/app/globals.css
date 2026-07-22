@@ -93,6 +93,57 @@ body {
     background: #fff;
   }
 
+  .os-shell,
+  .os-shell-grid,
+  .os-shell-main {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .os-shell-sidebar,
+  .os-shell-header {
+    display: none !important;
+  }
+
+  .site-report-preview {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .site-report {
+    width: 186mm !important;
+    max-width: 186mm !important;
+    min-width: 186mm !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+  }
+
+  .site-report-page {
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    /* Leave a small tolerance for Chromium's print pixel-to-mm rounding. */
+    min-height: 264mm !important;
+    break-after: page;
+  }
+
+  .site-report-page:last-child {
+    break-after: auto;
+  }
+
+  .site-report-page figure,
+  .site-report-page footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
   .estimate-sheet {
     width: 210mm !important;
     max-width: 210mm !important;
