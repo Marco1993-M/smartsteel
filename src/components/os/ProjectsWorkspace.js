@@ -136,6 +136,7 @@ function normalizeProject(project) {
   return {
     ...emptyProject,
     ...project,
+    crmLeadId: project.crmLeadId || project.sourceLeadId || "",
     archived: Boolean(project.archived),
     visits: (project.visits || []).map(normalizeVisit),
   }
@@ -438,6 +439,9 @@ export default function ProjectsWorkspace() {
   const [saveError, setSaveError] = useState("")
   const [photoState, setPhotoState] = useState("")
   const [locationState, setLocationState] = useState("")
+  const [crmLeads, setCrmLeads] = useState([])
+  const [selectedCrmLeadId, setSelectedCrmLeadId] = useState("")
+  const [crmLinkState, setCrmLinkState] = useState("")
   const saveSequence = useRef(0)
 
   useEffect(() => {
@@ -490,6 +494,24 @@ export default function ProjectsWorkspace() {
     }
 
     loadProjects()
+  }, [])
+
+  useEffect(() => {
+    async function loadCrmLeads() {
+      try {
+        const response = await fetch("/api/os/crm-leads", {
+          cache: "no-store",
+          headers: await getOsAuthHeaders(),
+        })
+        const payload = await response.json()
+        if (!response.ok) throw new Error(payload.error || "Could not load CRM leads.")
+        setCrmLeads(payload.leads || [])
+      } catch (error) {
+        setCrmLinkState(error.message)
+      }
+    }
+
+    loadCrmLeads()
   }, [])
 
   useEffect(() => {
@@ -645,12 +667,26 @@ export default function ProjectsWorkspace() {
     setActiveVisitId(null)
   }
 
-  function deleteProject(project) {
+  async function deleteProject(project) {
     const visitCount = project.visits?.length || 0
     const confirmed = window.confirm(
       `Delete ${project.projectNumber} - ${project.name}?\n\nThis will permanently remove the project and ${visitCount} site record${visitCount === 1 ? "" : "s"}, including their actions and photos. This cannot be undone.`
     )
     if (!confirmed) return
+
+    if (saveState !== "Local only") {
+      try {
+        const response = await fetch(`/api/os/projects?id=${encodeURIComponent(project.id)}`, {
+          method: "DELETE",
+          headers: await getOsAuthHeaders(),
+        })
+        const payload = await response.json()
+        if (!response.ok) throw new Error(payload.error || "Could not delete the shared project.")
+      } catch (error) {
+        setSaveError(error.message)
+        return
+      }
+    }
 
     setProjects((current) => current.filter((item) => item.id !== project.id))
     setEditingProject(false)
@@ -670,6 +706,72 @@ export default function ProjectsWorkspace() {
       ? { ...project, ...editProjectForm, id: project.id, visits: project.visits, archived: project.archived }
       : project))
     setEditingProject(false)
+  }
+
+  async function linkProjectToLead(lead) {
+    if (!activeProject || !lead) return
+    setCrmLinkState("Linking CRM lead...")
+    try {
+      const response = await fetch("/api/os/crm-leads", {
+        method: "PATCH",
+        headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          leadId: lead.id,
+          projectNumber: activeProject.projectNumber,
+          projectName: activeProject.name,
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "Could not link the CRM lead.")
+
+      setProjects((current) => current.map((project) => project.id === activeProject.id
+        ? { ...project, crmLeadId: lead.id, crmLeadName: lead.name, crmLeadStatus: lead.status }
+        : project))
+      setSelectedCrmLeadId("")
+      setCrmLinkState("CRM lead linked.")
+    } catch (error) {
+      setCrmLinkState(error.message)
+    }
+  }
+
+  async function createLeadFromProject() {
+    if (!activeProject) return
+    setCrmLinkState("Creating CRM lead...")
+    try {
+      const latestVisit = activeProject.visits?.[0]
+      const response = await fetch("/api/os/crm-leads", {
+        method: "POST",
+        headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          clientName: activeProject.clientName,
+          projectNumber: activeProject.projectNumber,
+          projectName: activeProject.name,
+          address: activeProject.address,
+          system: activeProject.system,
+          scope: activeProject.scope,
+          projectManager: activeProject.projectManager,
+          latestVisitSummary: latestVisit?.summary || "",
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "Could not create the CRM lead.")
+
+      setCrmLeads((current) => [payload.lead, ...current])
+      setProjects((current) => current.map((project) => project.id === activeProject.id
+        ? { ...project, crmLeadId: payload.lead.id, crmLeadName: payload.lead.name, crmLeadStatus: payload.lead.status }
+        : project))
+      setCrmLinkState("CRM lead created and linked.")
+    } catch (error) {
+      setCrmLinkState(error.message)
+    }
+  }
+
+  function unlinkProjectFromLead() {
+    if (!activeProject) return
+    setProjects((current) => current.map((project) => project.id === activeProject.id
+      ? { ...project, crmLeadId: "", crmLeadName: "", crmLeadStatus: "" }
+      : project))
+    setCrmLinkState("Project unlinked. The CRM lead remains unchanged.")
   }
 
   function updateRecordState(nextState) {
@@ -869,6 +971,40 @@ export default function ProjectsWorkspace() {
                     <button type="button" onClick={beginProjectEdit} className="text-xs font-semibold text-sky-700 hover:text-sky-900">Edit details</button>
                     <button type="button" onClick={() => archiveProject(activeProject.id)} className="text-xs font-semibold text-slate-500 hover:text-rose-600">{activeProject.archived ? "Restore project" : "Archive project"}</button>
                   </div>
+                </div>
+                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky-700">CRM connection</p>
+                      <h3 className="mt-1 text-base font-bold text-slate-950">Keep the opportunity and site work connected</h3>
+                    </div>
+                    {activeProject.crmLeadId ? <span className="w-fit rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800">Linked</span> : <span className="w-fit rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">Not linked</span>}
+                  </div>
+
+                  {activeProject.crmLeadId ? (
+                    <div className="mt-4 flex flex-col gap-3 rounded-xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-bold text-slate-900">{activeProject.crmLeadName || "Linked CRM lead"}</p>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">{activeProject.crmLeadStatus || "Active"} · Lead {activeProject.crmLeadId}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <a href={`/os/crm?leadId=${encodeURIComponent(activeProject.crmLeadId)}`} className="rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white">Open in CRM</a>
+                        <button type="button" onClick={unlinkProjectFromLead} className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-600">Unlink</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto]">
+                      <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+                        <select className={`${inputClass} mt-0 min-w-0`} value={selectedCrmLeadId} onChange={(event) => setSelectedCrmLeadId(event.target.value)}>
+                          <option value="">Select an existing CRM lead</option>
+                          {crmLeads.map((lead) => <option key={lead.id} value={lead.id}>{lead.name} · {lead.productType || "General"} · {lead.status}</option>)}
+                        </select>
+                        <button type="button" disabled={!selectedCrmLeadId} onClick={() => linkProjectToLead(crmLeads.find((lead) => String(lead.id) === selectedCrmLeadId))} className="shrink-0 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-800 disabled:opacity-40">Link lead</button>
+                      </div>
+                      <button type="button" onClick={createLeadFromProject} className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white">Create CRM lead</button>
+                    </div>
+                  )}
+                  {crmLinkState ? <p className="mt-3 text-xs text-slate-500">{crmLinkState}</p> : null}
                 </div>
                 <div className="mt-6 rounded-xl bg-slate-50 p-4">
                   <p className="text-sm font-bold text-slate-900">Start a site record</p>

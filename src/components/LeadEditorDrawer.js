@@ -1458,12 +1458,12 @@ export default function LeadEditorDrawer({
 
               {/* Scrollable Body */}
 <div className={`${isNew ? "hidden" : "flex-1"} overflow-y-auto w-full max-w-full bg-slate-50`}>
-  {!isNew && normalizeStatus(formData.status) === "won" && (
-    <div className="border-b border-emerald-200 bg-emerald-50 p-4">
+  {!isNew && (
+    <div className="border-b border-sky-200 bg-sky-50 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Won handoff</p>
-          <p className="mt-1 text-sm font-semibold text-slate-900">Move this client into Projects with the current scope already loaded.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">Project operations</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">Start or open the project workspace whenever site work is needed.</p>
         </div>
         <button
           type="button"
@@ -1478,7 +1478,7 @@ export default function LeadEditorDrawer({
               setCreatingProject(false)
             }
           }}
-          className="shrink-0 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-50"
+          className="shrink-0 rounded-xl bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-50"
         >
           {creatingProject ? "Creating..." : "Create project"}
         </button>
