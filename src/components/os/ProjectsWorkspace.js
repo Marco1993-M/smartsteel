@@ -645,6 +645,19 @@ export default function ProjectsWorkspace() {
     setActiveVisitId(null)
   }
 
+  function deleteProject(project) {
+    const visitCount = project.visits?.length || 0
+    const confirmed = window.confirm(
+      `Delete ${project.projectNumber} - ${project.name}?\n\nThis will permanently remove the project and ${visitCount} site record${visitCount === 1 ? "" : "s"}, including their actions and photos. This cannot be undone.`
+    )
+    if (!confirmed) return
+
+    setProjects((current) => current.filter((item) => item.id !== project.id))
+    setEditingProject(false)
+    setActiveProjectId(null)
+    setActiveVisitId(null)
+  }
+
   function beginProjectEdit() {
     if (!activeProject) return
     setEditProjectForm({ ...emptyProject, ...activeProject })
@@ -838,7 +851,10 @@ export default function ProjectsWorkspace() {
                   <Field label="Project scope" wide><textarea rows={3} className={inputClass} value={editProjectForm.scope} onChange={(e) => setEditProjectForm((form) => ({ ...form, scope: e.target.value }))} /></Field>
                   <Field label="Drawing and document references" wide><textarea rows={3} className={inputClass} value={editProjectForm.references} onChange={(e) => setEditProjectForm((form) => ({ ...form, references: e.target.value }))} /></Field>
                 </div>
-                <button type="submit" className="mt-5 rounded-full bg-sky-700 px-5 py-3 text-sm font-semibold text-white">Save project details</button>
+                <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <button type="button" onClick={() => deleteProject(activeProject)} className="rounded-full border border-rose-200 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-50">Delete project</button>
+                  <button type="submit" className="rounded-full bg-sky-700 px-5 py-3 text-sm font-semibold text-white">Save project details</button>
+                </div>
               </form>
             ) : (
               <>
