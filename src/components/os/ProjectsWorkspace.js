@@ -233,17 +233,27 @@ function chunkItems(items, size) {
 
 function ReportFooter({ project, visit, company, pageLabel }) {
   return (
-    <footer className="mt-auto flex items-end justify-between gap-6 border-t border-slate-200 pt-4 text-[10px] leading-4 text-slate-500">
-      <div>
-        <p className="font-bold uppercase tracking-[0.16em] text-slate-700">{company.label}</p>
-        <p>{company.contact}</p>
+    <footer className="mt-auto grid grid-cols-[1fr_auto] items-end gap-6 border-t border-slate-300 pt-4 text-[9px] leading-4 text-slate-500">
+      <div className="flex items-center gap-3">
+        <span className="h-7 w-1" style={{ backgroundColor: company.accent }} />
+        <div>
+          <p className="font-bold uppercase tracking-[0.18em] text-slate-800">{company.label} · Project Operations</p>
+          <p>{company.contact}</p>
+        </div>
       </div>
       <div className="text-right">
-        <p>{project.projectNumber} · {visit.visitNumber}</p>
-        <p>{pageLabel}</p>
+        <p className="font-mono font-semibold text-slate-700">{project.projectNumber} · {visit.visitNumber}</p>
+        <p className="uppercase tracking-[0.12em]">{pageLabel}</p>
       </div>
     </footer>
   )
+}
+
+function getReportStatusTone(status) {
+  if (["Complete", "Pass", "Resolved", "Closed"].includes(status)) return "border-emerald-200 bg-emerald-50 text-emerald-800"
+  if (["Attention", "Action required", "Fail", "Overdue"].includes(status)) return "border-red-200 bg-red-50 text-red-800"
+  if (["In progress", "Open"].includes(status)) return "border-amber-200 bg-amber-50 text-amber-800"
+  return "border-slate-200 bg-slate-50 text-slate-700"
 }
 
 function SiteReportDocument({ project, visit, company }) {
@@ -264,62 +274,71 @@ function SiteReportDocument({ project, visit, company }) {
 
   return (
     <article className="site-report mx-auto w-full max-w-[210mm] bg-white text-slate-950 shadow-xl print:shadow-none">
-      <section className="site-report-page flex min-h-[277mm] flex-col px-[14mm] py-[12mm]">
-        <header className="border-t-[7px] pt-7" style={{ borderColor: company.accent }}>
-          <div className="flex items-start justify-between gap-8 border-b border-slate-200 pb-7">
+      <section className="site-report-page site-report-summary-page relative flex min-h-[277mm] flex-col overflow-hidden px-[14mm] py-[12mm]">
+        <div className="pointer-events-none absolute right-[-34mm] top-[-38mm] h-[92mm] w-[92mm] rotate-45 border-[18mm] border-slate-50" />
+        <header className="relative border-t-[7px] pt-5" style={{ borderColor: company.accent }}>
+          <div className="flex items-start justify-between gap-8 border-b border-slate-300 pb-5">
             <div className="flex items-center gap-4">
               {company.key !== "pequeno" ? <Image src="/Logo.png" alt="Smart Steel" width={118} height={48} className="h-11 w-auto object-contain" /> : null}
               <div className={company.key !== "pequeno" ? "border-l border-slate-200 pl-4" : ""}>
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: company.accent }}>{company.reportName}</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">Project Operations</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">Controlled project record</p>
               </div>
             </div>
             <div className="text-right">
-              <span className="inline-flex border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ borderColor: company.accent, color: company.accent }}>{visit.recordState}</span>
+              <span className="inline-flex border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ borderColor: company.accent, color: company.accent, backgroundColor: `${company.accent}0D` }}>{visit.recordState}</span>
               <p className="mt-3 font-mono text-xs text-slate-500">{visit.visitNumber}</p>
             </div>
           </div>
-          <div className="py-10">
-            <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: company.accent }}>{visit.recordType}</p>
-            <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-[1.05] tracking-[-0.045em]">{visit.visitType}</h1>
-            <div className="mt-6 flex flex-wrap gap-x-7 gap-y-2 text-sm text-slate-600">
-              <span className="font-semibold text-slate-950">{project.name}</span>
-              <span>{project.projectNumber}</span>
-              <span>{formatReportDate(visit.date)}</span>
+          <div className="grid grid-cols-[1fr_47mm] gap-10 py-7">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.24em]" style={{ color: company.accent }}>01 · {visit.recordType}</p>
+              <h1 className="mt-4 max-w-3xl text-[38px] font-bold leading-[1.02] tracking-[-0.05em]">{visit.visitType}</h1>
+              <p className="mt-4 max-w-xl text-base font-semibold leading-6 text-slate-600">{project.name}</p>
+            </div>
+            <div className="border-l border-slate-300 pl-6">
+              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">Project record</p>
+              <p className="mt-2 font-mono text-sm font-bold text-slate-900">{project.projectNumber}</p>
+              <p className="mt-5 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">Visit date</p>
+              <p className="mt-2 text-sm font-semibold text-slate-800">{formatReportDate(visit.date)}</p>
             </div>
           </div>
         </header>
 
-        <div className="grid grid-cols-4 border-y border-slate-200">
+        <div className="relative grid grid-cols-4 border-y border-slate-300 bg-slate-950 text-white">
           {[
             ["Outcome", visit.outcome || "Open"],
             ["Checks completed", `${checkedItems.length}/${visit.items.length}`],
             ["Items requiring attention", attentionItems.length],
             ["Open actions", openActions.length],
           ].map(([label, value], index) => (
-            <div key={label} className={`px-4 py-5 ${index < 3 ? "border-r border-slate-200" : ""}`}>
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
-              <p className="mt-2 text-xl font-bold">{value}</p>
+            <div key={label} className={`relative px-4 py-4 ${index < 3 ? "border-r border-white/15" : ""}`}>
+              <span className="absolute left-0 top-0 h-1 w-full" style={{ backgroundColor: index === 0 ? company.accent : "transparent" }} />
+              <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+              <p className="mt-2 text-xl font-bold text-white">{value}</p>
             </div>
           ))}
         </div>
 
-        <section className="mt-8">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Visit summary</h2>
-          <p className="mt-4 whitespace-pre-wrap text-base leading-7 text-slate-700">{visit.summary || "No summary recorded."}</p>
+        <section className="relative mt-6 border-l-4 bg-slate-50 px-6 py-4" style={{ borderColor: company.accent }}>
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Executive visit summary</h2>
+          <p className="mt-2 whitespace-pre-wrap text-[14px] leading-6 text-slate-700">{visit.summary || "No summary recorded."}</p>
         </section>
 
-        <section className="mt-8 grid grid-cols-2 gap-x-10 gap-y-5 border-t border-slate-200 pt-6">
-          {meta.map(([label, value]) => (
-            <div key={label} className="break-inside-avoid">
+        <section className="mt-5 grid grid-cols-2 gap-x-10 gap-y-0 border-t border-slate-300">
+          {meta.map(([label, value], index) => (
+            <div key={label} className="grid break-inside-avoid grid-cols-[8mm_1fr] border-b border-slate-200 py-2.5">
+              <span className="font-mono text-[9px] text-slate-300">{String(index + 1).padStart(2, "0")}</span>
+              <div>
               <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
               <p className="mt-1.5 text-sm font-semibold leading-5 text-slate-800">{value}</p>
+              </div>
             </div>
           ))}
         </section>
 
         {(project.scope || project.references) ? (
-          <section className="mt-8 grid grid-cols-2 gap-8 border-t border-slate-200 pt-6">
+          <section className="mt-5 grid grid-cols-2 gap-8 border-t border-slate-200 pt-4">
             <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Project scope</p><p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-slate-700">{project.scope || "Not recorded"}</p></div>
             <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Document references</p><p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-slate-700">{project.references || "Not recorded"}</p></div>
           </section>
@@ -328,31 +347,33 @@ function SiteReportDocument({ project, visit, company }) {
         <ReportFooter project={project} visit={visit} company={company} pageLabel="Report summary" />
       </section>
 
-      <section className="site-report-page flex min-h-[277mm] flex-col px-[14mm] py-[12mm]">
-        <div className="flex items-end justify-between border-b border-slate-200 pb-5">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: company.accent }}>Inspection record</p><h2 className="mt-2 text-2xl font-bold tracking-[-0.03em]">Findings and required actions</h2></div>
-          <p className="font-mono text-xs text-slate-400">{visit.visitNumber}</p>
+      <section className="site-report-page relative flex min-h-[277mm] flex-col overflow-hidden px-[14mm] py-[12mm]">
+        <div className="absolute right-0 top-0 h-[7px] w-[38mm]" style={{ backgroundColor: company.accent }} />
+        <div className="flex items-end justify-between border-b border-slate-300 pb-6">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: company.accent }}>02 · Inspection record</p><h2 className="mt-2 text-[28px] font-bold tracking-[-0.04em]">Findings and required actions</h2><p className="mt-2 text-xs text-slate-500">A clear record of checks completed, observations made, and work still requiring attention.</p></div>
+          <p className="font-mono text-[10px] text-slate-400">{visit.visitNumber}</p>
         </div>
 
         <section className="mt-7">
-          <div className="grid grid-cols-[1fr_34mm] border-b-2 border-slate-900 pb-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500"><span>Inspection item and finding</span><span>Status</span></div>
+          <div className="grid grid-cols-[9mm_1fr_34mm] border-b-2 border-slate-900 pb-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500"><span>No.</span><span>Inspection item and finding</span><span>Status</span></div>
           {visit.items.map((item, index) => (
-            <div key={`${item.label}-${index}`} className="grid break-inside-avoid grid-cols-[1fr_34mm] border-b border-slate-200 py-3.5">
+            <div key={`${item.label}-${index}`} className="grid break-inside-avoid grid-cols-[9mm_1fr_34mm] border-b border-slate-200 py-3.5">
+              <span className="font-mono text-[10px] text-slate-300">{String(index + 1).padStart(2, "0")}</span>
               <div className="pr-6"><p className="text-sm font-semibold text-slate-900">{item.label}</p>{item.note ? <p className="mt-1.5 whitespace-pre-wrap text-xs leading-5 text-slate-600">{item.note}</p> : null}</div>
-              <div><span className="inline-flex border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-700">{item.status}</span></div>
+              <div><span className={`inline-flex border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.08em] ${getReportStatusTone(item.status)}`}>{item.status}</span></div>
             </div>
           ))}
         </section>
 
         <section className="mt-8">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Action register</h2>
+          <div className="flex items-center gap-3"><span className="h-px flex-1 bg-slate-300" /><h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Action register</h2><span className="h-px flex-1 bg-slate-300" /></div>
           {visit.actions.length ? (
             <div className="mt-4 border-t-2 border-slate-900">
               {visit.actions.map((action, index) => (
                 <div key={action.id} className="grid break-inside-avoid grid-cols-[8mm_1fr_35mm] gap-3 border-b border-slate-200 py-3.5">
                   <span className="font-mono text-xs text-slate-400">{String(index + 1).padStart(2, "0")}</span>
                   <div><p className="text-sm font-semibold">{action.text || "Action not described"}</p><p className="mt-1 text-[10px] uppercase tracking-[0.1em] text-slate-500">{action.priority} priority · Owner: {action.owner || "Unassigned"} · Due: {action.dueDate ? formatReportDate(action.dueDate) : "Not set"}</p></div>
-                  <p className="text-right text-xs font-bold text-slate-700">{action.status}</p>
+                  <p className={`justify-self-end self-start border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.08em] ${getReportStatusTone(action.status)}`}>{action.status}</p>
                 </div>
               ))}
             </div>
@@ -368,10 +389,11 @@ function SiteReportDocument({ project, visit, company }) {
       </section>
 
       {photoPages.map((photos, pageIndex) => (
-        <section key={`photos-${pageIndex}`} className="site-report-page flex min-h-[277mm] flex-col px-[14mm] py-[12mm]">
-          <div className="flex items-end justify-between border-b border-slate-200 pb-5">
-            <div><p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: company.accent }}>Photo evidence</p><h2 className="mt-2 text-2xl font-bold tracking-[-0.03em]">Site photo record</h2></div>
-            <p className="text-xs text-slate-500">{visit.photos.length} photo{visit.photos.length === 1 ? "" : "s"}</p>
+        <section key={`photos-${pageIndex}`} className="site-report-page relative flex min-h-[277mm] flex-col overflow-hidden px-[14mm] py-[12mm]">
+          <div className="absolute right-0 top-0 h-[7px] w-[38mm]" style={{ backgroundColor: company.accent }} />
+          <div className="flex items-end justify-between border-b border-slate-300 pb-6">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: company.accent }}>03 · Photo evidence</p><h2 className="mt-2 text-[28px] font-bold tracking-[-0.04em]">Site photo record</h2><p className="mt-2 text-xs text-slate-500">Dated visual evidence captured as part of this project record.</p></div>
+            <div className="border-l border-slate-300 pl-5 text-right"><p className="text-2xl font-bold text-slate-900">{visit.photos.length}</p><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Photos recorded</p></div>
           </div>
           <div className="mt-7 grid grid-cols-2 gap-x-5 gap-y-7">
             {!photos.length ? (
@@ -383,8 +405,8 @@ function SiteReportDocument({ project, visit, company }) {
               const number = pageIndex * 4 + photoIndex + 1
               return (
                 <figure key={photo.id} className="break-inside-avoid">
-                  <div className="relative overflow-hidden border border-slate-200 bg-slate-100"><img src={photo.src} alt={photo.caption || photo.name} className="aspect-[4/3] w-full object-cover" /><span className="absolute left-0 top-0 bg-slate-950 px-3 py-2 font-mono text-xs font-bold text-white">{String(number).padStart(2, "0")}</span></div>
-                  <figcaption className="border-x border-b border-slate-200 px-3 py-3"><p className="text-xs font-semibold leading-5 text-slate-800">{photo.caption || `Site photo ${number}`}</p>{photo.linkedItem ? <p className="mt-1 text-[10px] leading-4 text-slate-500">Linked finding: {photo.linkedItem}</p> : null}</figcaption>
+                  <div className="relative overflow-hidden border border-slate-300 bg-slate-100"><img src={photo.src} alt={photo.caption || photo.name} className="aspect-[4/3] w-full object-cover" /><span className="absolute left-0 top-0 px-3 py-2 font-mono text-xs font-bold text-white" style={{ backgroundColor: company.accent }}>{String(number).padStart(2, "0")}</span></div>
+                  <figcaption className="border-x border-b border-slate-300 bg-slate-50 px-3 py-3"><p className="text-xs font-semibold leading-5 text-slate-800">{photo.caption || `Site photo ${number}`}</p>{photo.linkedItem ? <p className="mt-1 border-t border-slate-200 pt-1.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-slate-500">Linked finding · {photo.linkedItem}</p> : null}</figcaption>
                 </figure>
               )
             })}
