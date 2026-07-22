@@ -13,6 +13,9 @@ const COMPANY_OPTIONS = [
   { key: "pequeno", label: "Pequeno", prefix: "PEQ", accent: "#c45734", reportName: "Pequeno Project Site Record", contact: "info@pequenohome.com" },
 ]
 
+const PROJECT_TEAM_MEMBERS = ["Niel", "Stefan", "Marco"]
+const CONTRACTOR_OPTIONS = ["Smart Steel"]
+
 const VISIT_TYPES = [
   { label: "General site visit", recordType: "Site visit" },
   { label: "Installation progress review", recordType: "Site visit" },
@@ -85,7 +88,7 @@ const emptyProject = {
   address: "",
   system: "Atlas Warehouse",
   siteContact: "",
-  contractor: "",
+  contractor: "Smart Steel",
   projectManager: "",
   scope: "",
   references: "",
@@ -434,6 +437,7 @@ export default function ProjectsWorkspace() {
   const [saveState, setSaveState] = useState("Loading")
   const [saveError, setSaveError] = useState("")
   const [photoState, setPhotoState] = useState("")
+  const [locationState, setLocationState] = useState("")
   const saveSequence = useRef(0)
 
   useEffect(() => {
@@ -549,6 +553,26 @@ export default function ProjectsWorkspace() {
   const visibleProjects = projects.filter((project) => showArchived ? project.archived : !project.archived)
   const progress = activeVisit ? getVisitProgress(activeVisit) : null
   const nextProjectNumber = getNextProjectNumber(projects, projectForm.companyKey)
+  const addressSuggestions = [...new Set(projects.map((project) => project.address?.trim()).filter(Boolean))]
+
+  function useCurrentLocation(setForm) {
+    if (!navigator.geolocation) {
+      setLocationState("GPS is not available on this device.")
+      return
+    }
+
+    setLocationState("Finding your location...")
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const location = `GPS pin: ${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`
+        setForm((form) => ({ ...form, address: location }))
+        setLocationState("Current location added.")
+        window.setTimeout(() => setLocationState(""), 2500)
+      },
+      () => setLocationState("Location could not be accessed. Check your browser permission or type the address."),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    )
+  }
 
   function addProject(event) {
     event.preventDefault()
@@ -779,13 +803,13 @@ export default function ProjectsWorkspace() {
         <Field label="Project number"><div className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900">{nextProjectNumber}</div><p className="mt-1.5 text-xs text-slate-500">Generated automatically when the project is created.</p></Field>
         <Field label="Client"><input required className={inputClass} value={projectForm.clientName} onChange={(e) => setProjectForm((f) => ({ ...f, clientName: e.target.value }))} /></Field>
         <Field label="System or project type"><input className={inputClass} value={projectForm.system} onChange={(e) => setProjectForm((f) => ({ ...f, system: e.target.value }))} /></Field>
-        <Field label="Site address"><input required className={inputClass} value={projectForm.address} onChange={(e) => setProjectForm((f) => ({ ...f, address: e.target.value }))} /></Field>
-        <Field label="Site contact"><input className={inputClass} value={projectForm.siteContact} onChange={(e) => setProjectForm((f) => ({ ...f, siteContact: e.target.value }))} placeholder="Name and contact number" /></Field>
-        <Field label="Contractor"><input className={inputClass} value={projectForm.contractor} onChange={(e) => setProjectForm((f) => ({ ...f, contractor: e.target.value }))} /></Field>
-        <Field label="Project manager"><input className={inputClass} value={projectForm.projectManager} onChange={(e) => setProjectForm((f) => ({ ...f, projectManager: e.target.value }))} /></Field>
+        <Field label="Site location"><div className="mt-2 flex gap-2"><input required list="project-address-suggestions" className={`${inputClass} mt-0 min-w-0`} value={projectForm.address} onChange={(e) => setProjectForm((f) => ({ ...f, address: e.target.value }))} placeholder="Start typing an address" /><button type="button" onClick={() => useCurrentLocation(setProjectForm)} className="shrink-0 rounded-xl border border-sky-200 bg-white px-3 text-xs font-bold text-sky-700">Use GPS</button></div>{locationState ? <p className="mt-1.5 text-xs text-slate-500">{locationState}</p> : null}</Field>
+        <Field label="Site contact"><select className={inputClass} value={projectForm.siteContact} onChange={(e) => setProjectForm((f) => ({ ...f, siteContact: e.target.value }))}><option value="">Select team member</option>{PROJECT_TEAM_MEMBERS.map((member) => <option key={member}>{member}</option>)}</select></Field>
+        <Field label="Contractor"><select className={inputClass} value={projectForm.contractor} onChange={(e) => setProjectForm((f) => ({ ...f, contractor: e.target.value }))}>{!CONTRACTOR_OPTIONS.includes(projectForm.contractor) && projectForm.contractor ? <option>{projectForm.contractor}</option> : null}{CONTRACTOR_OPTIONS.map((contractor) => <option key={contractor}>{contractor}</option>)}</select></Field>
+        <Field label="Project manager"><select className={inputClass} value={projectForm.projectManager} onChange={(e) => setProjectForm((f) => ({ ...f, projectManager: e.target.value }))}><option value="">Select team member</option>{PROJECT_TEAM_MEMBERS.map((member) => <option key={member}>{member}</option>)}</select></Field>
         <Field label="Project scope" wide><textarea rows={3} className={inputClass} value={projectForm.scope} onChange={(e) => setProjectForm((f) => ({ ...f, scope: e.target.value }))} placeholder="Short description of the agreed project scope" /></Field>
         <Field label="Drawing and document references"><textarea rows={3} className={inputClass} value={projectForm.references} onChange={(e) => setProjectForm((f) => ({ ...f, references: e.target.value }))} placeholder="Drawing numbers, revisions, estimate, purchase order, or contract references" /></Field>
-      </div><button type="submit" className="mt-5 rounded-full bg-sky-700 px-5 py-3 text-sm font-semibold text-white">Create project</button></form> : null}
+      </div><datalist id="project-address-suggestions">{addressSuggestions.map((address) => <option key={address} value={address} />)}</datalist><button type="submit" className="mt-5 rounded-full bg-sky-700 px-5 py-3 text-sm font-semibold text-white">Create project</button></form> : null}
 
       <div className="mt-5 grid min-w-0 gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
         <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"><div className="flex items-center justify-between gap-4"><div><h2 className="text-lg font-bold text-slate-950">Project register</h2><button type="button" onClick={() => setShowArchived((current) => !current)} className="mt-1 text-xs font-semibold text-slate-500 hover:text-slate-900">{showArchived ? "Show active projects" : `Archived (${projects.filter((project) => project.archived).length})`}</button></div><span className="text-sm text-slate-500">{visibleProjects.length}</span></div><div className="mt-4 space-y-2">{visibleProjects.length ? visibleProjects.map((project) => { const brand = COMPANY_OPTIONS.find((item) => item.key === project.companyKey) || COMPANY_OPTIONS[0]; return <button key={project.id} type="button" onClick={() => { setActiveProjectId(project.id); setActiveVisitId(null); setEditingProject(false) }} className={`w-full rounded-xl border p-4 text-left transition ${activeProjectId === project.id ? "border-sky-400 bg-sky-50" : "border-slate-200 hover:border-slate-300"}`}><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{project.name}</p><p className="mt-1 text-sm text-slate-600">{project.clientName} · {project.projectNumber}</p></div><span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white" style={{ backgroundColor: brand.accent }}>{brand.label}</span></div><p className="mt-3 text-xs text-slate-500">{project.system} · {project.visits?.length || 0} site records</p></button> }) : <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center"><p className="font-semibold text-slate-800">{showArchived ? "No archived projects" : "No projects yet"}</p><p className="mt-1 text-sm text-slate-500">{showArchived ? "Archived projects can be restored from here." : "Create the project you plan to visit next week."}</p></div>}</div></section>
@@ -807,10 +831,10 @@ export default function ProjectsWorkspace() {
                   <Field label="Project number"><input readOnly className={`${inputClass} cursor-not-allowed bg-slate-100 text-slate-500`} value={editProjectForm.projectNumber} /><p className="mt-1.5 text-xs text-slate-500">Stable project reference</p></Field>
                   <Field label="Client"><input required className={inputClass} value={editProjectForm.clientName} onChange={(e) => setEditProjectForm((form) => ({ ...form, clientName: e.target.value }))} /></Field>
                   <Field label="System or project type"><input className={inputClass} value={editProjectForm.system} onChange={(e) => setEditProjectForm((form) => ({ ...form, system: e.target.value }))} /></Field>
-                  <Field label="Site address"><input required className={inputClass} value={editProjectForm.address} onChange={(e) => setEditProjectForm((form) => ({ ...form, address: e.target.value }))} /></Field>
-                  <Field label="Site contact"><input className={inputClass} value={editProjectForm.siteContact} onChange={(e) => setEditProjectForm((form) => ({ ...form, siteContact: e.target.value }))} /></Field>
-                  <Field label="Contractor"><input className={inputClass} value={editProjectForm.contractor} onChange={(e) => setEditProjectForm((form) => ({ ...form, contractor: e.target.value }))} /></Field>
-                  <Field label="Project manager"><input className={inputClass} value={editProjectForm.projectManager} onChange={(e) => setEditProjectForm((form) => ({ ...form, projectManager: e.target.value }))} /></Field>
+                  <Field label="Site location"><div className="mt-2 flex gap-2"><input required list="project-address-suggestions-edit" className={`${inputClass} mt-0 min-w-0`} value={editProjectForm.address} onChange={(e) => setEditProjectForm((form) => ({ ...form, address: e.target.value }))} placeholder="Start typing an address" /><button type="button" onClick={() => useCurrentLocation(setEditProjectForm)} className="shrink-0 rounded-xl border border-sky-200 bg-sky-50 px-3 text-xs font-bold text-sky-700">Use GPS</button></div>{locationState ? <p className="mt-1.5 text-xs text-slate-500">{locationState}</p> : null}<datalist id="project-address-suggestions-edit">{addressSuggestions.map((address) => <option key={address} value={address} />)}</datalist></Field>
+                  <Field label="Site contact"><select className={inputClass} value={editProjectForm.siteContact} onChange={(e) => setEditProjectForm((form) => ({ ...form, siteContact: e.target.value }))}>{editProjectForm.siteContact && !PROJECT_TEAM_MEMBERS.includes(editProjectForm.siteContact) ? <option>{editProjectForm.siteContact}</option> : <option value="">Select team member</option>}{PROJECT_TEAM_MEMBERS.map((member) => <option key={member}>{member}</option>)}</select></Field>
+                  <Field label="Contractor"><select className={inputClass} value={editProjectForm.contractor} onChange={(e) => setEditProjectForm((form) => ({ ...form, contractor: e.target.value }))}>{!CONTRACTOR_OPTIONS.includes(editProjectForm.contractor) && editProjectForm.contractor ? <option>{editProjectForm.contractor}</option> : null}{CONTRACTOR_OPTIONS.map((contractor) => <option key={contractor}>{contractor}</option>)}</select></Field>
+                  <Field label="Project manager"><select className={inputClass} value={editProjectForm.projectManager} onChange={(e) => setEditProjectForm((form) => ({ ...form, projectManager: e.target.value }))}>{editProjectForm.projectManager && !PROJECT_TEAM_MEMBERS.includes(editProjectForm.projectManager) ? <option>{editProjectForm.projectManager}</option> : <option value="">Select team member</option>}{PROJECT_TEAM_MEMBERS.map((member) => <option key={member}>{member}</option>)}</select></Field>
                   <Field label="Project scope" wide><textarea rows={3} className={inputClass} value={editProjectForm.scope} onChange={(e) => setEditProjectForm((form) => ({ ...form, scope: e.target.value }))} /></Field>
                   <Field label="Drawing and document references" wide><textarea rows={3} className={inputClass} value={editProjectForm.references} onChange={(e) => setEditProjectForm((form) => ({ ...form, references: e.target.value }))} /></Field>
                 </div>
