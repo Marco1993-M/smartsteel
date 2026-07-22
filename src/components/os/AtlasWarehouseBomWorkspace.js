@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, ArrowUpRight, Check, GitBranch, Layers3, Plus, ShieldAlert } from "lucide-react"
+import { ArrowLeft, ArrowUpRight, Check, ChevronDown, GitBranch, Layers3, Plus, ShieldAlert } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { calculateLcssWarehouseEstimate } from "../../lib/estimates/warehouseEstimateLcss"
 
@@ -14,14 +14,16 @@ const SCOPES = [
 ]
 
 const CONTROLLED_LINES = [
-  { lineNumber: 10, code: "W08-COL", title: "W08 column set", category: "Primary framing", unit: "set", scope: "standard", rule: "Portal count = length / 2.5 + 1", notes: "Standard 3m-eave column set for each portal position." },
-  { lineNumber: 20, code: "W08-RAF", title: "W08 dual-pitch rafter set", category: "Primary framing", unit: "set", scope: "standard", rule: "One rafter set per portal", notes: "Standard 8m-span dual-pitch rafter geometry." },
-  { lineNumber: 30, code: "W08-XBR", title: "W08 X-bracing set", category: "Bracing", unit: "set", scope: "standard", rule: "floor(bays / 4) + 1", notes: "Brace count scales with the modular bay count." },
-  { lineNumber: 40, code: "W08-SEC", title: "W08 purlin and wall-hat pack", category: "Secondary steel", unit: "m", scope: "standard", rule: "Calculated linear metres from length and selected scope", notes: "Includes roof purlins and applicable long-wall hats." },
-  { lineNumber: 50, code: "W08-CON", title: "W08 bolted connection set", category: "Connections and fittings", unit: "set", scope: "project_specific", rule: "Matched to portal and bracing count", notes: "Hold for approved Atlas connection schedule before final issue." },
-  { lineNumber: 60, code: "W08-RCL", title: "W08 roof sheeting pack", category: "Cladding", unit: "m2", scope: "optional", rule: "Dual-pitch roof coverage plus standard allowance", notes: "Only included when roof sheeting is selected." },
-  { lineNumber: 70, code: "W08-WCL", title: "W08 long-wall sheeting pack", category: "Cladding", unit: "m2", scope: "optional", rule: "Two long walls x length x eave height plus allowance", notes: "Both standard gable ends remain open." },
+  { lineNumber: 10, code: "W08-COL", title: "W08 column set", category: "Primary framing", unit: "set", scope: "standard", rule: "Portal count = length / 2.5 + 1", notes: "Standard 3m-eave column set for each portal position.", profile: "Atlas lip channel column assembly", size: "3m eave · W08 geometry", material: "ZAM-coated structural steel", finish: "ZAM", use: "Forms the vertical support at every portal position.", specReady: true },
+  { lineNumber: 20, code: "W08-RAF", title: "W08 dual-pitch rafter set", category: "Primary framing", unit: "set", scope: "standard", rule: "One rafter set per portal", notes: "Standard 8m-span dual-pitch rafter geometry.", profile: "Atlas lip channel rafter assembly", size: "8m span · dual pitch", material: "ZAM-coated structural steel", finish: "ZAM", use: "Forms the roof frame across each portal.", specReady: true },
+  { lineNumber: 30, code: "W08-XBR", title: "W08 X-bracing set", category: "Bracing", unit: "set", scope: "standard", rule: "floor(bays / 4) + 1", notes: "Brace count scales with the modular bay count.", profile: "Atlas X-bracing assembly", size: "Matched to selected bay arrangement", material: "Structural steel · grade to be confirmed", finish: "Finish to be confirmed", use: "Provides longitudinal stability between selected portal bays.", specReady: false },
+  { lineNumber: 40, code: "W08-SEC", title: "W08 purlin and wall-hat pack", category: "Secondary steel", unit: "m", scope: "standard", rule: "Calculated linear metres from length and selected scope", notes: "Includes roof purlins and applicable long-wall hats.", profile: "Top-hat secondary profile", size: "Cut schedule generated from building length", material: "ZAM-coated structural steel", finish: "ZAM", use: "Supports roof sheeting and selected long-wall sheeting.", specReady: true },
+  { lineNumber: 50, code: "W08-CON", title: "W08 bolted connection set", category: "Connections and fittings", unit: "set", scope: "project_specific", rule: "Matched to portal and bracing count", notes: "Hold for approved Atlas connection schedule before final issue.", profile: "Brackets, bolts, nuts and washers", size: "Per approved W08 connection schedule", material: "Structural steel and graded fasteners", finish: "Corrosion-protection specification pending", use: "Connects columns, rafters, bracing and secondary members.", specReady: false },
+  { lineNumber: 60, code: "W08-RCL", title: "W08 roof sheeting pack", category: "Cladding", unit: "m2", scope: "optional", rule: "Dual-pitch roof coverage plus standard allowance", notes: "Only included when roof sheeting is selected.", profile: "IBR roof sheeting", size: "Cut lengths from roof geometry · thickness to confirm", material: "Coated steel sheeting", finish: "Colour and coating selected per project", use: "Weatherproof roof covering for both roof slopes.", specReady: false },
+  { lineNumber: 70, code: "W08-WCL", title: "W08 long-wall sheeting pack", category: "Cladding", unit: "m2", scope: "optional", rule: "Two long walls x length x eave height plus allowance", notes: "Both standard gable ends remain open.", profile: "IBR wall sheeting", size: "3m wall height · thickness to confirm", material: "Coated steel sheeting", finish: "Colour and coating selected per project", use: "Closes both long walls while standard gable ends remain open.", specReady: false },
 ]
+
+const CATEGORY_ORDER = ["Primary framing", "Bracing", "Secondary steel", "Connections and fittings", "Cladding"]
 
 function scopeTone(scope) {
   if (scope === "standard") return "bg-sky-100 text-sky-700"
@@ -43,6 +45,7 @@ export default function AtlasWarehouseBomWorkspace() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
+  const [expandedCode, setExpandedCode] = useState("W08-COL")
 
   async function loadWorkspace() {
     setLoading(true)
@@ -84,6 +87,10 @@ export default function AtlasWarehouseBomWorkspace() {
   const controlledBom = records.find((record) => record.revisionCode === "R2")
   const componentMap = new Map(components.map((component) => [component.title, component]))
   const componentCoverage = CONTROLLED_LINES.filter((line) => componentMap.has(line.title)).length
+  const groupedLines = CATEGORY_ORDER.map((category) => ({
+    category,
+    lines: CONTROLLED_LINES.filter((line) => line.category === category),
+  }))
 
   const previewValues = {
     "W08-COL": `${preview.dimensions.portals} portal sets`,
@@ -142,6 +149,14 @@ export default function AtlasWarehouseBomWorkspace() {
       {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
       {message ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
 
+      <section className="grid overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white shadow-sm md:grid-cols-3">
+        {[
+          ["01", "Choose the building", "Set the modular length and decide whether sheeting is included."],
+          ["02", "Read required quantities", "The schedule recalculates portals, steel, connections, and sheeting coverage."],
+          ["03", "Open component details", "Check the profile, size, material, finish, use, and calculation before handoff."],
+        ].map(([number, title, copy], index) => <div key={number} className={`p-5 sm:p-6 ${index < 2 ? "border-b border-slate-200 md:border-b-0 md:border-r" : ""}`}><div className="flex items-start gap-4"><span className="font-mono text-xs font-bold text-sky-700">{number}</span><div><h2 className="text-sm font-bold text-slate-950">{title}</h2><p className="mt-1.5 text-xs leading-5 text-slate-500">{copy}</p></div></div></div>)}
+      </section>
+
       <section className="grid overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm xl:grid-cols-[330px_minmax(0,1fr)]">
         <aside className="border-b border-slate-200 bg-slate-50 p-5 sm:p-6 xl:border-b-0 xl:border-r">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Configuration preview</p>
@@ -149,8 +164,65 @@ export default function AtlasWarehouseBomWorkspace() {
           <div className="mt-4"><p className="text-xs font-semibold text-slate-700">Commercial scope</p><div className="mt-2 space-y-2">{SCOPES.map((item) => <button key={item.value} type="button" onClick={() => setScope(item.value)} className={`w-full rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition ${scope === item.value ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-700"}`}>{item.label}</button>)}</div></div>
           <div className="mt-5 grid grid-cols-2 gap-2"><div className="rounded-xl bg-white p-3"><p className="text-[10px] uppercase tracking-[0.12em] text-slate-400">Portals</p><p className="mt-1 text-xl font-bold text-slate-950">{preview.dimensions.portals}</p></div><div className="rounded-xl bg-white p-3"><p className="text-[10px] uppercase tracking-[0.12em] text-slate-400">Steel</p><p className="mt-1 text-xl font-bold text-slate-950">{formatNumber(preview.materials.totalSteelKg)}kg</p></div></div>
         </aside>
-        <article className="min-w-0 p-5 sm:p-7"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Calculated material path</p><h2 className="mt-1 text-2xl font-bold text-slate-950">W08 · 8m x {length}m x 3m</h2></div><span className="rounded-full bg-sky-100 px-3 py-1.5 text-xs font-bold text-sky-700">{selectedScope.label}</span></div>
-          <div className="mt-5 divide-y divide-slate-200">{CONTROLLED_LINES.map((line) => { const selected = !previewValues[line.code].includes("Not selected"); const registered = componentMap.has(line.title); return <div key={line.code} className={`grid gap-3 py-4 sm:grid-cols-[45px_minmax(0,1fr)_150px] sm:items-center ${selected ? "" : "opacity-45"}`}><span className={`grid h-9 w-9 place-items-center rounded-xl ${registered ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>{registered ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}</span><div><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-bold text-slate-900">{line.title}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${scopeTone(line.scope)}`}>{line.scope.replace("_", " ")}</span></div><p className="mt-1 text-xs leading-5 text-slate-500">{line.rule}</p></div><p className="text-left text-sm font-bold text-slate-900 sm:text-right">{previewValues[line.code]}</p></div>})}</div>
+        <article className="min-w-0 p-5 sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Quick material schedule</p><h2 className="mt-1 text-2xl font-bold text-slate-950">W08 · 8m x {length}m x 3m</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Scan the quantity first, then open any component for its profile, material, finish, use, and calculation basis.</p></div>
+            <span className="rounded-full bg-sky-100 px-3 py-1.5 text-xs font-bold text-sky-700">{selectedScope.label}</span>
+          </div>
+
+          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-xl bg-slate-950 p-3 text-white"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Component groups</p><p className="mt-1 text-xl font-bold">{CATEGORY_ORDER.length}</p></div>
+            <div className="rounded-xl bg-slate-100 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Registered components</p><p className="mt-1 text-xl font-bold text-slate-950">{componentCoverage}/{CONTROLLED_LINES.length}</p></div>
+            <div className="rounded-xl bg-amber-50 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-700">Specifications to confirm</p><p className="mt-1 text-xl font-bold text-amber-950">{CONTROLLED_LINES.filter((line) => !line.specReady).length}</p></div>
+          </div>
+
+          <div className="mt-7 space-y-6">
+            {groupedLines.map((group, groupIndex) => (
+              <section key={group.category}>
+                <div className="flex items-center gap-3 border-b border-slate-300 pb-2">
+                  <span className="font-mono text-[10px] text-slate-400">{String(groupIndex + 1).padStart(2, "0")}</span>
+                  <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-slate-700">{group.category}</h3>
+                  <span className="ml-auto text-[10px] font-semibold text-slate-400">{group.lines.length} item{group.lines.length === 1 ? "" : "s"}</span>
+                </div>
+                <div className="divide-y divide-slate-200">
+                  {group.lines.map((line) => {
+                    const selected = !previewValues[line.code].includes("Not selected")
+                    const registered = componentMap.has(line.title)
+                    const expanded = expandedCode === line.code
+                    return (
+                      <div key={line.code} className={selected ? "" : "opacity-45"}>
+                        <button type="button" onClick={() => setExpandedCode(expanded ? "" : line.code)} className="grid w-full gap-3 py-4 text-left sm:grid-cols-[72px_minmax(0,1fr)_150px_24px] sm:items-center">
+                          <span className="font-mono text-[11px] font-bold text-sky-700">{line.code}</span>
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2"><p className="text-sm font-bold text-slate-900">{line.title}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${scopeTone(line.scope)}`}>{line.scope.replace("_", " ")}</span></div>
+                            <p className="mt-1 text-xs text-slate-500">{line.profile}</p>
+                          </div>
+                          <div className="sm:text-right"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Required quantity</p><p className="mt-1 text-sm font-bold text-slate-950">{previewValues[line.code]}</p></div>
+                          <ChevronDown className={`h-4 w-4 text-slate-400 transition ${expanded ? "rotate-180" : ""}`} />
+                        </button>
+
+                        {expanded ? (
+                          <div className="mb-4 border-l-4 border-sky-500 bg-slate-50 p-4 sm:ml-[72px] sm:p-5">
+                            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                              {[["Profile / component", line.profile], ["Size / geometry", line.size], ["Material", line.material], ["Finish", line.finish]].map(([label, value]) => <div key={label}><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1.5 text-sm font-semibold leading-5 text-slate-800">{value}</p></div>)}
+                            </div>
+                            <div className="mt-5 grid gap-4 border-t border-slate-200 pt-4 sm:grid-cols-2">
+                              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Where it is used</p><p className="mt-1.5 text-sm leading-6 text-slate-700">{line.use}</p></div>
+                              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Quantity calculation</p><p className="mt-1.5 text-sm leading-6 text-slate-700">{line.rule}</p></div>
+                            </div>
+                            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                              <div className="flex items-center gap-2"><span className={`grid h-7 w-7 place-items-center rounded-lg ${registered ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>{registered ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}</span><p className="text-xs font-semibold text-slate-600">{registered ? "Registered component record" : "Component record still required"}</p></div>
+                              <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${line.specReady ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{line.specReady ? "Specification ready" : "Specification to confirm"}</span>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
         </article>
       </section>
 
