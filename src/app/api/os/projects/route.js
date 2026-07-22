@@ -139,12 +139,14 @@ export async function POST(request) {
       address: String(body?.address || "").trim(),
       system: String(body?.system || "").trim(),
       siteContact: String(body?.siteContact || "").trim(),
-      contractor: "",
+      contractor: "Smart Steel",
       projectManager: String(body?.projectManager || "").trim(),
       scope: String(body?.scope || "").trim(),
       references: String(body?.references || "").trim(),
       sourceLeadId,
-      source: "CRM won lead",
+      crmLeadId: sourceLeadId,
+      crmLeadName: clientName,
+      source: "CRM lead",
       archived: false,
       visits: [],
       createdAt: new Date().toISOString(),
@@ -168,4 +170,20 @@ export async function POST(request) {
   } catch (error) {
     return NextResponse.json({ error: error.message || "Could not generate the project number." }, { status: 500 })
   }
+}
+
+export async function DELETE(request) {
+  const authResponse = await requireOsAuth(request)
+  if (authResponse) return authResponse
+
+  const projectId = new URL(request.url).searchParams.get("id")?.trim()
+  if (!projectId) return NextResponse.json({ error: "Project ID is required." }, { status: 400 })
+
+  const { error } = await supabaseServer.from("os_projects").delete().eq("id", projectId)
+  if (error) {
+    if (schemaMissing(error)) return NextResponse.json({ error: "Shared Projects storage is not available." }, { status: 409 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ deleted: true })
 }
