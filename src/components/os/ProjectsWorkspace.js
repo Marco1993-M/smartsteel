@@ -1,6 +1,6 @@
 "use client"
 
-import Image from "next/image"
+import NextImage from "next/image"
 import { useEffect, useRef, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
@@ -188,7 +188,7 @@ function compressImage(file) {
     const reader = new FileReader()
     reader.onerror = reject
     reader.onload = () => {
-      const image = new Image()
+      const image = new window.Image()
       image.onerror = reject
       image.onload = () => {
         const maxDimension = 1200
@@ -300,7 +300,7 @@ function SiteReportDocument({ project, visit, company }) {
         <header className="relative border-t-[7px] pt-5" style={{ borderColor: company.accent }}>
           <div className="flex items-start justify-between gap-8 border-b border-slate-300 pb-5">
             <div className="flex items-center gap-4">
-              {company.key !== "pequeno" ? <Image src="/Logo.png" alt="Smart Steel" width={118} height={48} className="h-11 w-auto object-contain" /> : null}
+              {company.key !== "pequeno" ? <NextImage src="/Logo.png" alt="Smart Steel" width={118} height={48} className="h-11 w-auto object-contain" /> : null}
               <div className={company.key !== "pequeno" ? "border-l border-slate-200 pl-4" : ""}>
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: company.accent }}>{company.reportName}</p>
                 <p className="mt-1 text-xs font-semibold text-slate-500">Controlled project record</p>
