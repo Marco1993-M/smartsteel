@@ -46,6 +46,7 @@ export default function AtlasWarehouseBomWorkspace() {
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
   const [expandedCode, setExpandedCode] = useState("W08-COL")
+  const [viewMode, setViewMode] = useState("sales")
 
   async function loadWorkspace() {
     setLoading(true)
@@ -91,7 +92,6 @@ export default function AtlasWarehouseBomWorkspace() {
     category,
     lines: CONTROLLED_LINES.filter((line) => line.category === category),
   }))
-
   const previewValues = {
     "W08-COL": `${preview.dimensions.portals} portal sets`,
     "W08-RAF": `${preview.dimensions.portals} rafter sets`,
@@ -101,6 +101,7 @@ export default function AtlasWarehouseBomWorkspace() {
     "W08-RCL": selectedScope.cladding === "None" ? "Not selected" : `${formatNumber(preview.sheeting.roofSheetingArea, 1)}m²`,
     "W08-WCL": scope === "walls" ? `${formatNumber(preview.sheeting.wallSheetingArea, 1)}m²` : "Not selected",
   }
+  const includedLineCount = CONTROLLED_LINES.filter((line) => !previewValues[line.code].includes("Not selected")).length
 
   async function createControlledBom() {
     if (!familyId || controlledBom || componentCoverage !== CONTROLLED_LINES.length) return
@@ -167,13 +168,29 @@ export default function AtlasWarehouseBomWorkspace() {
         <article className="min-w-0 p-5 sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Quick material schedule</p><h2 className="mt-1 text-2xl font-bold text-slate-950">W08 · 8m x {length}m x 3m</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Scan the quantity first, then open any component for its profile, material, finish, use, and calculation basis.</p></div>
-            <span className="rounded-full bg-sky-100 px-3 py-1.5 text-xs font-bold text-sky-700">{selectedScope.label}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-sky-100 px-3 py-1.5 text-xs font-bold text-sky-700">{selectedScope.label}</span>
+              <div className="inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">
+                <button type="button" onClick={() => setViewMode("sales")} className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${viewMode === "sales" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}>Sales view</button>
+                <button type="button" onClick={() => setViewMode("technical")} className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${viewMode === "technical" ? "bg-slate-950 text-white" : "text-slate-500"}`}>Technical view</button>
+              </div>
+            </div>
           </div>
 
           <div className="mt-5 grid gap-2 sm:grid-cols-3">
-            <div className="rounded-xl bg-slate-950 p-3 text-white"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Component groups</p><p className="mt-1 text-xl font-bold">{CATEGORY_ORDER.length}</p></div>
-            <div className="rounded-xl bg-slate-100 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Registered components</p><p className="mt-1 text-xl font-bold text-slate-950">{componentCoverage}/{CONTROLLED_LINES.length}</p></div>
-            <div className="rounded-xl bg-amber-50 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-700">Specifications to confirm</p><p className="mt-1 text-xl font-bold text-amber-950">{CONTROLLED_LINES.filter((line) => !line.specReady).length}</p></div>
+            {viewMode === "sales" ? (
+              <>
+                <div className="rounded-xl bg-slate-950 p-3 text-white"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Included material groups</p><p className="mt-1 text-xl font-bold">{includedLineCount}</p></div>
+                <div className="rounded-xl bg-slate-100 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Portal frames</p><p className="mt-1 text-xl font-bold text-slate-950">{preview.dimensions.portals}</p></div>
+                <div className="rounded-xl bg-sky-50 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-sky-700">Calculated steel</p><p className="mt-1 text-xl font-bold text-slate-950">{formatNumber(preview.materials.totalSteelKg)}kg</p></div>
+              </>
+            ) : (
+              <>
+                <div className="rounded-xl bg-slate-950 p-3 text-white"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Component groups</p><p className="mt-1 text-xl font-bold">{CATEGORY_ORDER.length}</p></div>
+                <div className="rounded-xl bg-slate-100 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Registered components</p><p className="mt-1 text-xl font-bold text-slate-950">{componentCoverage}/{CONTROLLED_LINES.length}</p></div>
+                <div className="rounded-xl bg-amber-50 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-700">Specifications to confirm</p><p className="mt-1 text-xl font-bold text-amber-950">{CONTROLLED_LINES.filter((line) => !line.specReady).length}</p></div>
+              </>
+            )}
           </div>
 
           <div className="mt-7 space-y-6">
@@ -191,18 +208,23 @@ export default function AtlasWarehouseBomWorkspace() {
                     const expanded = expandedCode === line.code
                     return (
                       <div key={line.code} className={selected ? "" : "opacity-45"}>
-                        <button type="button" onClick={() => setExpandedCode(expanded ? "" : line.code)} className="grid w-full gap-3 py-4 text-left sm:grid-cols-[72px_minmax(0,1fr)_150px_24px] sm:items-center">
-                          <span className="font-mono text-[11px] font-bold text-sky-700">{line.code}</span>
+                        <button type="button" onClick={() => setExpandedCode(expanded ? "" : line.code)} className={`grid w-full gap-3 py-4 text-left sm:items-center ${viewMode === "sales" ? "sm:grid-cols-[minmax(0,1fr)_150px_110px_24px]" : "sm:grid-cols-[72px_minmax(0,1fr)_150px_24px]"}`}>
+                          {viewMode === "technical" ? <span className="font-mono text-[11px] font-bold text-sky-700">{line.code}</span> : null}
                           <div>
-                            <div className="flex flex-wrap items-center gap-2"><p className="text-sm font-bold text-slate-900">{line.title}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${scopeTone(line.scope)}`}>{line.scope.replace("_", " ")}</span></div>
-                            <p className="mt-1 text-xs text-slate-500">{line.profile}</p>
+                            <div className="flex flex-wrap items-center gap-2"><p className="text-sm font-bold text-slate-900">{line.title.replace(/^W08\s/, "")}</p>{viewMode === "technical" ? <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${scopeTone(line.scope)}`}>{line.scope.replace("_", " ")}</span> : null}</div>
+                            <p className="mt-1 text-xs leading-5 text-slate-500">{viewMode === "sales" ? line.use : line.profile}</p>
                           </div>
                           <div className="sm:text-right"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Required quantity</p><p className="mt-1 text-sm font-bold text-slate-950">{previewValues[line.code]}</p></div>
+                          {viewMode === "sales" ? <span className={`w-fit rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.1em] ${selected ? scopeTone(line.scope) : "bg-slate-100 text-slate-500"}`}>{selected ? line.scope === "standard" ? "Included" : line.scope === "optional" ? "Selected" : "Confirm" : "Not selected"}</span> : null}
                           <ChevronDown className={`h-4 w-4 text-slate-400 transition ${expanded ? "rotate-180" : ""}`} />
                         </button>
 
                         {expanded ? (
-                          <div className="mb-4 border-l-4 border-sky-500 bg-slate-50 p-4 sm:ml-[72px] sm:p-5">
+                          <div className={`mb-4 border-l-4 border-sky-500 bg-slate-50 p-4 sm:p-5 ${viewMode === "technical" ? "sm:ml-[72px]" : ""}`}>
+                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Component reference</p><p className="mt-1 font-mono text-xs font-bold text-sky-700">{line.code}</p></div>
+                              <button type="button" onClick={(event) => { event.stopPropagation(); setViewMode("technical") }} className="text-xs font-bold text-sky-700">Open full technical view</button>
+                            </div>
                             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                               {[["Profile / component", line.profile], ["Size / geometry", line.size], ["Material", line.material], ["Finish", line.finish]].map(([label, value]) => <div key={label}><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1.5 text-sm font-semibold leading-5 text-slate-800">{value}</p></div>)}
                             </div>

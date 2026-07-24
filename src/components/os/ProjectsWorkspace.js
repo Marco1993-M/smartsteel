@@ -17,6 +17,7 @@ const PROJECT_TEAM_MEMBERS = ["Niel", "Stefan", "Marco"]
 const CONTRACTOR_OPTIONS = ["Smart Steel"]
 
 const VISIT_TYPES = [
+  { label: "Initial site assessment", recordType: "Site assessment" },
   { label: "General site visit", recordType: "Site visit" },
   { label: "Installation progress review", recordType: "Site visit" },
   { label: "Pre-start inspection", recordType: "Inspection" },
@@ -29,6 +30,22 @@ const VISIT_TYPES = [
 const RECORD_STATES = ["Draft", "Ready for review", "Issued", "Superseded"]
 
 const CHECKLISTS = {
+  "Initial site assessment": [
+    "Access — road condition, gate width, turning space, and delivery vehicle access checked",
+    "Building position — proposed footprint, orientation, and future expansion space confirmed",
+    "Site dimensions — available width, length, clearances, and nearby obstructions measured",
+    "Ground levels — slope, level changes, and need for cut, fill, or retaining work recorded",
+    "Ground condition — visible soil, rock, fill, soft areas, erosion, or waterlogged ground recorded",
+    "Drainage — natural water flow, low points, flood risk, and stormwater route checked",
+    "Clearing — vegetation, trees, rubble, existing structures, and removal work recorded",
+    "Services — overhead lines, underground services, water, sewer, and electrical supply checked",
+    "Boundaries — pegs, servitudes, setbacks, neighbouring structures, and access rights considered",
+    "Foundations — likely foundation approach and client-supplied civil work discussed",
+    "Installation access — crane, lifting equipment, scaffolding, and working-area access considered",
+    "Material handling — unloading position, secure storage, and movement around the site confirmed",
+    "Client requirements — intended use, openings, heights, sheeting, timing, and future needs recorded",
+    "Photo record — road approach, access, full footprint, four directions, ground, services, and obstructions photographed",
+  ],
   "General site visit": [
     "Work completed since the previous visit",
     "Current work quality and visible defects",
@@ -254,15 +271,15 @@ function ReportFooter({ project, visit, company, pageLabel }) {
 }
 
 function getReportStatusTone(status) {
-  if (["Complete", "Pass", "Resolved", "Closed"].includes(status)) return "border-emerald-200 bg-emerald-50 text-emerald-800"
-  if (["Attention", "Action required", "Fail", "Overdue"].includes(status)) return "border-red-200 bg-red-50 text-red-800"
+  if (["Complete", "Pass", "Confirmed", "Resolved", "Closed"].includes(status)) return "border-emerald-200 bg-emerald-50 text-emerald-800"
+  if (["Attention", "Attention required", "Follow up", "Action required", "Fail", "Overdue"].includes(status)) return "border-red-200 bg-red-50 text-red-800"
   if (["In progress", "Open"].includes(status)) return "border-amber-200 bg-amber-50 text-amber-800"
   return "border-slate-200 bg-slate-50 text-slate-700"
 }
 
 function SiteReportDocument({ project, visit, company }) {
   const checkedItems = visit.items.filter((item) => item.status !== "Not checked")
-  const attentionItems = visit.items.filter((item) => ["Attention", "Action required", "Fail"].includes(item.status))
+  const attentionItems = visit.items.filter((item) => ["Attention", "Attention required", "Follow up", "Action required", "Fail"].includes(item.status))
   const openActions = visit.actions.filter((action) => action.status !== "Resolved")
   const photoPages = visit.photos.length ? chunkItems(visit.photos, 4) : [[]]
   const meta = [
@@ -842,9 +859,10 @@ export default function ProjectsWorkspace() {
 
           <section className="p-5 sm:p-8">
             <div className="flex items-end justify-between gap-4">
-              <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{activeVisit.recordType} checklist</p><h2 className="mt-1 text-xl font-bold text-slate-950">Record what you found on site</h2></div>
+              <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{activeVisit.recordType} checklist</p><h2 className="mt-1 text-xl font-bold text-slate-950">{activeVisit.visitType === "Initial site assessment" ? "Walk the site before you leave" : "Record what you found on site"}</h2></div>
               <span className="text-sm font-semibold text-slate-500">{activeVisit.items.filter((item) => item.status !== "Not checked").length}/{activeVisit.items.length}</span>
             </div>
+            {activeVisit.visitType === "Initial site assessment" ? <p className="mt-3 max-w-3xl rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-6 text-sky-950">Move through access, footprint, ground, drainage, services, installation space, and the photo record in order. Flag anything that needs engineering or client confirmation.</p> : null}
             <div className="mt-5 space-y-3">
               {activeVisit.items.map((item, index) => (
                 <div key={`${item.label}-${index}`} className="rounded-xl border border-slate-200 p-4">
@@ -854,10 +872,13 @@ export default function ProjectsWorkspace() {
                   </div>
                   <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.2fr)]">
                     <div className="grid grid-cols-3 gap-2" aria-label={`Result for ${item.label}`}>
-                      {["Pass", "Attention required", "Not applicable"].map((status) => {
+                      {(activeVisit.visitType === "Initial site assessment"
+                        ? ["Confirmed", "Follow up", "Not applicable"]
+                        : ["Pass", "Attention required", "Not applicable"]
+                      ).map((status) => {
                         const selected = item.status === status
                         const shortLabel = status === "Attention required" ? "Attention" : status === "Not applicable" ? "N/A" : status
-                        const selectedTone = status === "Pass" ? "border-emerald-600 bg-emerald-600 text-white" : status === "Attention required" ? "border-amber-500 bg-amber-400 text-slate-950" : "border-slate-700 bg-slate-700 text-white"
+                        const selectedTone = ["Pass", "Confirmed"].includes(status) ? "border-emerald-600 bg-emerald-600 text-white" : ["Attention required", "Follow up"].includes(status) ? "border-amber-500 bg-amber-400 text-slate-950" : "border-slate-700 bg-slate-700 text-white"
                         return <button key={status} type="button" onClick={() => updateVisit((visit) => ({ ...visit, items: visit.items.map((current, i) => i === index ? { ...current, status: selected ? "Not checked" : status } : current) }))} className={`min-h-11 rounded-xl border px-2 py-2 text-xs font-semibold transition ${selected ? selectedTone : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"}`} aria-pressed={selected}>{shortLabel}</button>
                       })}
                     </div>
@@ -889,7 +910,21 @@ export default function ProjectsWorkspace() {
               )) : <p className="text-sm text-slate-500">No follow-up actions recorded.</p>}
             </div>
 
-            <div className="mt-8"><h2 className="text-xl font-bold text-slate-950">Site photos</h2><div className="mt-3 flex flex-wrap items-center gap-3"><label className="print:hidden inline-flex min-h-11 cursor-pointer items-center rounded-full bg-sky-600 px-5 py-3 text-sm font-semibold text-white"><input type="file" accept="image/*" capture="environment" multiple className="sr-only" onChange={addPhotos} />Add photos</label>{photoState ? <p className={`text-xs font-semibold ${photoState.includes("could not") ? "text-rose-700" : "text-slate-500"}`}>{photoState}</p> : null}</div></div>
+            <div className="mt-8">
+              <h2 className="text-xl font-bold text-slate-950">Site photos</h2>
+              <p className="mt-1 text-sm text-slate-500">Take photos as you work, or upload a batch from your device afterwards.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <label className="print:hidden inline-flex min-h-11 cursor-pointer items-center rounded-full bg-sky-600 px-5 py-3 text-sm font-semibold text-white">
+                  <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={addPhotos} />
+                  Take photo
+                </label>
+                <label className="print:hidden inline-flex min-h-11 cursor-pointer items-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700">
+                  <input type="file" accept="image/*" multiple className="sr-only" onChange={addPhotos} />
+                  Upload photos
+                </label>
+                {photoState ? <p className={`text-xs font-semibold ${photoState.includes("could not") ? "text-rose-700" : "text-slate-500"}`}>{photoState}</p> : null}
+              </div>
+            </div>
             {activeVisit.photos.length ? <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{activeVisit.photos.map((photo, index) => <figure key={photo.id} className="overflow-hidden rounded-xl border border-slate-200"><img src={photo.src} alt={photo.caption || photo.name} className="aspect-[4/3] w-full object-cover" /><div className="space-y-2 p-2"><input className="w-full border-0 px-1 py-1 text-sm outline-none" value={photo.caption} onChange={(e) => updateVisit((v) => ({ ...v, photos: v.photos.map((p, i) => i === index ? { ...p, caption: e.target.value } : p) }))} placeholder="Photo caption" /><select className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs" value={photo.linkedItem} onChange={(e) => updateVisit((v) => ({ ...v, photos: v.photos.map((p, i) => i === index ? { ...p, linkedItem: e.target.value } : p) }))}><option value="">General photo</option>{activeVisit.items.map((item) => <option key={item.label} value={item.label}>{item.label}</option>)}</select><div className="flex items-center justify-between"><div className="flex gap-2"><button type="button" disabled={index === 0} onClick={() => updateVisit((v) => { const photos = [...v.photos]; [photos[index - 1], photos[index]] = [photos[index], photos[index - 1]]; return { ...v, photos } })} className="text-xs font-semibold disabled:opacity-30">←</button><button type="button" disabled={index === activeVisit.photos.length - 1} onClick={() => updateVisit((v) => { const photos = [...v.photos]; [photos[index], photos[index + 1]] = [photos[index + 1], photos[index]]; return { ...v, photos } })} className="text-xs font-semibold disabled:opacity-30">→</button></div><button type="button" onClick={() => updateVisit((v) => ({ ...v, photos: v.photos.filter((_, i) => i !== index) }))} className="text-xs font-semibold text-rose-600">Delete</button></div></div></figure>)}</div> : null}
 
             <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4"><Field label="Acknowledged by"><input className={inputClass} value={activeVisit.acknowledgement} onChange={(e) => updateVisit((v) => ({ ...v, acknowledgement: e.target.value }))} placeholder="Client, contractor, or site representative" /></Field><p className="mt-3 text-xs leading-5 text-slate-500">This field records who received or reviewed the site findings. Formal digital signatures will follow in the production data phase.</p></div>
