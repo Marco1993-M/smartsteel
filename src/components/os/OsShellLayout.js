@@ -2,17 +2,55 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import {
+  BarChart3,
+  Boxes,
+  Factory,
+  FolderKanban,
+  Handshake,
+  LayoutDashboard,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelsTopLeft,
+  Settings,
+  UsersRound,
+} from "lucide-react"
 import { useSupabaseAuth } from "../../lib/supabaseAuth"
 import { OS_SECTIONS, OS_STATUS_META, getOsSection } from "../../lib/osNavigation"
+
+const SECTION_ICONS = {
+  dashboard: LayoutDashboard,
+  crm: UsersRound,
+  projects: FolderKanban,
+  atlas: Boxes,
+  lsf: PanelsTopLeft,
+  partners: Handshake,
+  manufacturing: Factory,
+  analytics: BarChart3,
+  settings: Settings,
+}
 
 export default function OsShellLayout({ children }) {
   const pathname = usePathname()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { user, loading } = useSupabaseAuth(
     `/login?redirect=${encodeURIComponent(pathname || "/os")}`
   )
   const activeSection = getOsSection(pathname)
+
+  useEffect(() => {
+    setSidebarCollapsed(window.localStorage.getItem("smartsteel-os-sidebar") === "collapsed")
+  }, [])
+
+  function toggleSidebar() {
+    setSidebarCollapsed((current) => {
+      const next = !current
+      window.localStorage.setItem("smartsteel-os-sidebar", next ? "collapsed" : "expanded")
+      return next
+    })
+  }
 
   if (loading) {
     return (
@@ -28,19 +66,37 @@ export default function OsShellLayout({ children }) {
 
   return (
     <div className="os-shell min-h-screen w-full min-w-0 max-w-[100vw] overflow-x-hidden bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_24%,_#eef3f7_100%)] text-slate-900">
-      <div className="os-shell-grid grid min-h-screen w-full min-w-0 max-w-full lg:grid-cols-[260px_minmax(0,1fr)]">
+      <div className={`os-shell-grid grid min-h-screen w-full min-w-0 max-w-full transition-[grid-template-columns] duration-300 ${
+        sidebarCollapsed
+          ? "lg:grid-cols-[84px_minmax(0,1fr)]"
+          : "lg:grid-cols-[260px_minmax(0,1fr)]"
+      }`}>
         <aside className="os-shell-sidebar w-full min-w-0 max-w-full overflow-hidden border-b border-white/10 bg-[linear-gradient(180deg,_#0f172a,_#111827)] text-white lg:w-auto lg:border-b-0 lg:border-r print:hidden">
-          <div className="flex items-center justify-between gap-4 px-4 py-3 lg:block lg:p-6">
-            <Link href="/os" className="block" onClick={() => setMobileNavOpen(false)}>
+          <div className={`flex items-center justify-between gap-4 px-4 py-3 ${sidebarCollapsed ? "lg:flex-col lg:px-3 lg:py-5" : "lg:block lg:p-6"}`}>
+            <Link href="/os" className={sidebarCollapsed ? "block lg:text-center" : "block"} onClick={() => setMobileNavOpen(false)}>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">
-                Smart Steel OS
+                <span className={sidebarCollapsed ? "lg:hidden" : ""}>Smart Steel OS</span>
+                <span className={sidebarCollapsed ? "hidden lg:inline" : "hidden"}>SS</span>
               </p>
-              <h1 className="mt-1.5 hidden text-xl font-bold tracking-tight lg:block lg:text-2xl">Operating System</h1>
+              <h1 className={`mt-1.5 hidden text-xl font-bold tracking-tight lg:text-2xl ${sidebarCollapsed ? "" : "lg:block"}`}>Operating System</h1>
               <p className="mt-1 text-sm font-semibold text-white lg:hidden">{activeSection.label}</p>
-              <p className="mt-1.5 hidden text-sm leading-6 text-slate-300 lg:block">
+              <p className={`mt-1.5 hidden text-sm leading-6 text-slate-300 ${sidebarCollapsed ? "" : "lg:block"}`}>
                 Dashboard-first operating surface for CRM, product systems, partners, and manufacturing.
               </p>
             </Link>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className={`hidden border border-white/15 bg-white/10 text-slate-200 transition hover:bg-white/15 hover:text-white lg:inline-flex ${
+                sidebarCollapsed
+                  ? "h-10 w-10 items-center justify-center rounded-xl"
+                  : "mt-5 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold"
+              }`}
+              aria-label={sidebarCollapsed ? "Expand OS navigation" : "Collapse OS navigation"}
+              title={sidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
+            >
+              {sidebarCollapsed ? <PanelLeftOpen size={17} /> : <><PanelLeftClose size={16} /> Collapse menu</>}
+            </button>
             <button
               type="button"
               onClick={() => setMobileNavOpen((current) => !current)}
@@ -56,31 +112,29 @@ export default function OsShellLayout({ children }) {
             {OS_SECTIONS.map((section) => {
               const isActive =
                 pathname === section.href || (section.href !== "/os" && pathname?.startsWith(`${section.href}/`))
+              const SectionIcon = SECTION_ICONS[section.key] || LayoutDashboard
 
               return (
                 <Link
                   key={section.key}
                   href={section.href}
                   onClick={() => setMobileNavOpen(false)}
-                  className={`min-w-0 rounded-xl px-3 py-2.5 transition lg:block lg:rounded-2xl lg:px-4 lg:py-3 ${
+                  title={sidebarCollapsed ? section.label : undefined}
+                  className={`min-w-0 rounded-xl px-3 py-2.5 transition lg:block lg:rounded-2xl lg:py-3 ${
+                    sidebarCollapsed ? "lg:px-3" : "lg:px-4"
+                  } ${
                     isActive
                       ? "bg-white text-slate-950 shadow-sm"
                       : "bg-white/5 text-slate-200 hover:bg-white/10"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold whitespace-nowrap">{section.label}</p>
-                    {section.status ? (
-                      <span
-                        className={`hidden rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] lg:inline-flex ${
-                          isActive ? "border-slate-200 bg-slate-100 text-slate-600" : OS_STATUS_META[section.status]?.badgeClassName
-                        }`}
-                      >
-                        {OS_STATUS_META[section.status]?.label || section.status}
-                      </span>
-                    ) : null}
+                  <div className={`flex items-center gap-3 ${sidebarCollapsed ? "lg:justify-center" : "justify-between"}`}>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <SectionIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <p className={`text-sm font-semibold whitespace-nowrap ${sidebarCollapsed ? "lg:hidden" : ""}`}>{section.label}</p>
+                    </div>
                   </div>
-                  <p className={`mt-1 hidden text-xs leading-5 lg:block ${isActive ? "text-slate-600" : "text-slate-400"}`}>
+                  <p className={`mt-1 hidden text-xs leading-5 ${sidebarCollapsed ? "" : "lg:block"} ${isActive ? "text-slate-600" : "text-slate-400"}`}>
                     {section.description}
                   </p>
                 </Link>
