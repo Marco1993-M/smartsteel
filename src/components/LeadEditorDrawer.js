@@ -328,6 +328,12 @@ function stripEstimateVersionSuffix(title) {
   return String(title || "").replace(/\s+V\d+$/i, "").trim()
 }
 
+function toClientFacingSystemName(value) {
+  return String(value || "")
+    .replace(/\bCFLC\b/gi, "Cold Formed Lipped Channel")
+    .trim()
+}
+
 function getLeadFirstName(lead) {
   return normalizePersonName(lead?.name || "there") || "there"
 }
@@ -337,8 +343,8 @@ function getLeadFullName(lead) {
 }
 
 function getProjectReference(lead) {
-  const productType = String(lead?.product_type || "").trim()
-  const estimateRequest = String(lead?.estimate_request || "").trim()
+  const productType = toClientFacingSystemName(lead?.product_type)
+  const estimateRequest = toClientFacingSystemName(lead?.estimate_request)
 
   if (productType) {
     if (/trusses/i.test(productType)) return `${productType} project`
@@ -375,7 +381,7 @@ function buildFollowUpTemplate(templateKey, lead) {
   switch (templateKey) {
     case "estimate_request_acknowledgement":
       return {
-        subject: `Estimate request received | ${projectReference}`,
+        subject: "Smart Steel | Estimate request received",
         body: `Good day ${getLeadFullName(lead)},
 
 Thank you for sending through your estimate request for ${projectReference}.
@@ -457,7 +463,9 @@ Smart Steel`,
 
 function buildEstimateEmailTemplate(lead, estimate) {
   const clientName = getLeadFullName(lead)
-  const projectReference = stripEstimateVersionSuffix(estimate?.title) || getProjectReference(lead)
+  const projectReference =
+    toClientFacingSystemName(stripEstimateVersionSuffix(estimate?.title)) ||
+    getProjectReference(lead)
 
   return {
     subject: `Your Smart Steel estimate | ${projectReference}`,
@@ -2460,9 +2468,9 @@ export default function LeadEditorDrawer({
                   </Tab.Panels>
 
                   {showEmailComposer && (
-                    <div className="absolute inset-0 z-20 flex items-end justify-center bg-slate-900/30 p-3 sm:items-center sm:p-6">
-                      <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white shadow-2xl">
-                        <div className="border-b border-slate-200 px-4 py-4 sm:px-5">
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-2 sm:p-6">
+                      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:rounded-3xl">
+                        <div className="shrink-0 border-b border-slate-200 px-4 py-3 sm:px-5 sm:py-4">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -2471,7 +2479,7 @@ export default function LeadEditorDrawer({
                               <h3 className="mt-1 text-lg font-semibold text-slate-900">
                                 Generate, edit, and send
                               </h3>
-                              <p className="mt-1 text-sm text-slate-600">
+                              <p className="mt-1 hidden text-sm text-slate-600 sm:block">
                                 {emailComposerMode === "estimate"
                                   ? "Review the message, attach the correct estimate PDF, and confirm only after it has been sent."
                                   : "Review and edit the prepared message before opening it in your email app."}
@@ -2487,7 +2495,7 @@ export default function LeadEditorDrawer({
                           </div>
                         </div>
 
-                        <div className="space-y-4 px-4 py-4 sm:px-5">
+                        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
                           {emailComposerMode === "follow_up" ? (
                             <div>
                               <label className={fieldLabelClass}>Template</label>
@@ -2520,7 +2528,7 @@ export default function LeadEditorDrawer({
                             <textarea
                               value={emailBody}
                               onChange={(e) => setEmailBody(e.target.value)}
-                              className={`${inputClass} min-h-[260px]`}
+                              className={`${inputClass} min-h-[210px] resize-y sm:min-h-[260px]`}
                               rows={12}
                             />
                           </div>
@@ -2535,18 +2543,18 @@ export default function LeadEditorDrawer({
                           </div>
                         </div>
 
-                        <div className="flex flex-col gap-2 border-t border-slate-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
+                        <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-slate-200 bg-white px-3 py-3 sm:flex sm:justify-end sm:px-5 sm:py-4">
                           <button
                             type="button"
                             onClick={handleCopyFollowUpEmail}
-                            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:px-4"
                           >
                             Copy email
                           </button>
                           <button
                             type="button"
                             onClick={handleOpenEmailDraft}
-                            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:px-4"
                           >
                             Open email app
                           </button>
@@ -2554,12 +2562,12 @@ export default function LeadEditorDrawer({
                             type="button"
                             disabled={confirmingEmailSent}
                             onClick={handleConfirmEmailSent}
-                            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50"
+                            className="col-span-2 inline-flex items-center justify-center rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 sm:px-4"
                           >
                             {confirmingEmailSent ? "Saving..." : "Confirm email sent"}
                           </button>
                         </div>
-                        <p className="px-4 pb-4 text-xs leading-5 text-slate-500 sm:px-5">
+                        <p className="hidden shrink-0 px-4 pb-4 text-xs leading-5 text-slate-500 sm:block sm:px-5">
                           {emailDraftOpened
                             ? "Your email app was opened. Confirm only after you have reviewed and sent the message."
                             : "Review the draft first. Opening the email app does not change the pipeline."}
