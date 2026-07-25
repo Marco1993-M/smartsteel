@@ -316,6 +316,7 @@ function normalizePersonName(value) {
 }
 
 const FOLLOW_UP_TEMPLATE_OPTIONS = [
+  { key: "estimate_request_acknowledgement", label: "Acknowledge estimate request" },
   { key: "enquiry_follow_up", label: "General follow-up" },
   { key: "estimate_follow_up", label: "Estimate follow-up" },
   { key: "missing_info", label: "Request missing info" },
@@ -372,6 +373,17 @@ function buildFollowUpTemplate(templateKey, lead) {
     : ""
 
   switch (templateKey) {
+    case "estimate_request_acknowledgement":
+      return {
+        subject: `Estimate request received | ${projectReference}`,
+        body: `Good day ${getLeadFullName(lead)},
+
+Thank you for sending through your estimate request for ${projectReference}.
+
+We have received the project information and will review the scope before preparing your estimate. If we need any additional measurements, drawings, site information, or clarification, we will contact you.
+
+If there is anything else you would like us to consider, you are welcome to reply to this email and send it through.`,
+      }
     case "estimate_follow_up":
       return {
         subject: "Following up on your Smart Steel estimate",
@@ -448,22 +460,16 @@ function buildEstimateEmailTemplate(lead, estimate) {
   const projectReference = stripEstimateVersionSuffix(estimate?.title) || getProjectReference(lead)
 
   return {
-    subject: `Smart Steel estimate for ${projectReference}`,
+    subject: `Your Smart Steel estimate | ${projectReference}`,
     body: `Good day ${clientName},
 
-I trust you're doing well.
+Please find the estimate for ${projectReference} attached.
 
-Please find the attached estimate for your project.
+The estimate is based on the project information currently available and outlines the proposed scope and budget.
 
-The estimate outlines the proposed scope of work and budget based on the information currently available. Should your requirements change or if you would like to explore alternative options to better suit your budget, timeline, or operational needs, we'd be happy to revise the proposal accordingly.
+If you would like to adjust the scope, compare an alternative option, or discuss a different approach to suit your budget or project requirements, we would be happy to revise it with you.
 
-If you have any questions regarding the estimate or would like to discuss any aspect of the project in more detail, please don't hesitate to contact us.
-
-Thank you for the opportunity to quote on your project. We appreciate your consideration and look forward to the possibility of working with you.
-
-From concept and engineering through manufacturing and installation, our goal is to deliver practical, cost-effective steel structures built to perform.
-
-Kind regards,`,
+Once you have reviewed the estimate, please reply with any questions or let us know if you would like to discuss the next step.`,
   }
 }
 
@@ -475,6 +481,8 @@ function getWaitingSummaryForTemplate(templateKey, lead) {
   const projectReference = getProjectReference(lead)
 
   switch (templateKey) {
+    case "estimate_request_acknowledgement":
+      return `Prepare the estimate for ${projectReference}.`
     case "missing_info":
       return `Awaiting the client's missing project details for ${projectReference}.`
     case "quote_check_in":
@@ -1104,6 +1112,8 @@ export default function LeadEditorDrawer({
     setConfirmingEmailSent(true)
     const nextFollowUpAt = getBusinessFollowUpIsoDate(3)
     const isEstimateEmail = emailComposerMode === "estimate"
+    const isEstimateRequestAcknowledgement =
+      !isEstimateEmail && emailTemplateKey === "estimate_request_acknowledgement"
     const estimateLabel = selectedEstimateEmail?.title || "the latest estimate"
     const templateLabel = getFollowUpTemplateLabel(emailTemplateKey)
     const nextAction = isEstimateEmail
@@ -1115,8 +1125,10 @@ export default function LeadEditorDrawer({
       quote_value: isEstimateEmail
         ? selectedEstimateEmail?.total || formData.quote_value
         : formData.quote_value,
-      client_follow_up_state: "awaiting_reply",
-      follow_up_at: nextFollowUpAt,
+      client_follow_up_state: isEstimateRequestAcknowledgement
+        ? formData.client_follow_up_state
+        : "awaiting_reply",
+      follow_up_at: isEstimateRequestAcknowledgement ? formData.follow_up_at : nextFollowUpAt,
       next_action: nextAction,
     }
 
@@ -1157,6 +1169,8 @@ export default function LeadEditorDrawer({
     const followUpNumber = emailEvents.filter((event) => event.email_type === "follow_up").length + 1
     const emailType = isEstimateEmail
       ? "estimate"
+      : emailTemplateKey === "estimate_request_acknowledgement"
+        ? "estimate_request_acknowledgement"
       : emailTemplateKey === "missing_info"
         ? "information_request"
         : emailTemplateKey === "reactivation"
@@ -1213,7 +1227,7 @@ export default function LeadEditorDrawer({
       lead_id: lead.id,
       type: "email",
       user_name: "System",
-      description: `${isEstimateEmail ? `${estimateLabel} sent` : `Follow-up email sent (${templateLabel})`}. Subject: ${emailSubject}\n\nEmail copy:\n${emailBody}`,
+      description: `${isEstimateEmail ? `${estimateLabel} sent` : `Email sent (${templateLabel})`}. Subject: ${emailSubject}\n\nEmail copy:\n${emailBody}`,
       timestamp: new Date().toISOString(),
     }])
   }
