@@ -171,6 +171,15 @@ export function getLeadNextBestAction(lead) {
   const hasQuoteValue = Boolean(String(lead?.quote_value || "").trim())
   const hasFollowUp = Boolean(lead?.follow_up_at)
 
+  if (status === "lost" && followUpState === "unresponsive") {
+    return {
+      title: "Archived as unresponsive",
+      reason: "The client history is preserved, but this lead is no longer included in active follow-up work.",
+      shortLabel: "Unresponsive",
+      tone: "slate",
+    }
+  }
+
   if (!hasContact) {
     return {
       title: "Capture contact info",
