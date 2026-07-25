@@ -158,12 +158,43 @@ export default function AtlasWarehouseBomWorkspace() {
         ].map(([number, title, copy], index) => <div key={number} className={`p-5 sm:p-6 ${index < 2 ? "border-b border-slate-200 md:border-b-0 md:border-r" : ""}`}><div className="flex items-start gap-4"><span className="font-mono text-xs font-bold text-sky-700">{number}</span><div><h2 className="text-sm font-bold text-slate-950">{title}</h2><p className="mt-1.5 text-xs leading-5 text-slate-500">{copy}</p></div></div></div>)}
       </section>
 
-      <section className="grid overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm xl:grid-cols-[330px_minmax(0,1fr)]">
-        <aside className="border-b border-slate-200 bg-slate-50 p-5 sm:p-6 xl:border-b-0 xl:border-r">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Configuration preview</p>
-          <div className="mt-5"><label className="text-xs font-semibold text-slate-700">Building length</label><select value={length} onChange={(event) => setLength(Number(event.target.value))} className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900">{LENGTHS.map((item) => <option key={item} value={item}>{item}m · {item / 2.5} bays</option>)}</select></div>
-          <div className="mt-4"><p className="text-xs font-semibold text-slate-700">Commercial scope</p><div className="mt-2 space-y-2">{SCOPES.map((item) => <button key={item.value} type="button" onClick={() => setScope(item.value)} className={`w-full rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition ${scope === item.value ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-700"}`}>{item.label}</button>)}</div></div>
-          <div className="mt-5 grid grid-cols-2 gap-2"><div className="rounded-xl bg-white p-3"><p className="text-[10px] uppercase tracking-[0.12em] text-slate-400">Portals</p><p className="mt-1 text-xl font-bold text-slate-950">{preview.dimensions.portals}</p></div><div className="rounded-xl bg-white p-3"><p className="text-[10px] uppercase tracking-[0.12em] text-slate-400">Steel</p><p className="mt-1 text-xl font-bold text-slate-950">{formatNumber(preview.materials.totalSteelKg)}kg</p></div></div>
+      <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+        <aside className="border-b border-slate-200 bg-slate-50 p-4 sm:p-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(210px,0.8fr)_minmax(460px,1.8fr)_110px_140px] xl:items-end">
+            <div>
+              <label className="text-xs font-semibold text-slate-700">Building length</label>
+              <select value={length} onChange={(event) => setLength(Number(event.target.value))} className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900">
+                {LENGTHS.map((item) => <option key={item} value={item}>{item}m · {item / 2.5} bays</option>)}
+              </select>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-700">Commercial scope</p>
+              <div className="mt-1 grid grid-cols-3 gap-1.5">
+                {SCOPES.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setScope(item.value)}
+                    className={`min-h-10 rounded-xl border px-2 py-2 text-center text-[11px] font-semibold leading-4 transition sm:text-xs ${
+                      scope === item.value
+                        ? "border-slate-950 bg-slate-950 text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Portals</p>
+              <p className="mt-0.5 text-xl font-bold text-slate-950">{preview.dimensions.portals}</p>
+            </div>
+            <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-sky-700">Calculated steel</p>
+              <p className="mt-0.5 text-xl font-bold text-slate-950">{formatNumber(preview.materials.totalSteelKg)}kg</p>
+            </div>
+          </div>
         </aside>
         <article className="min-w-0 p-5 sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import {
   BOM_LINE_SCOPE_OPTIONS,
@@ -110,6 +110,33 @@ export default function AtlasBomWorkspace() {
   const approvedCount = records.filter((record) => record.status === "approved").length
   const reviewCount = records.filter((record) => record.status === "needs_review").length
   const lineCount = records.reduce((total, record) => total + (record.lines || []).length, 0)
+  const selectedBomOverview = useMemo(() => {
+    const lines = selectedBom?.lines || []
+    const categories = []
+    const groups = new Map()
+
+    lines.forEach((line) => {
+      const category = line.category || "Uncategorized"
+      if (!groups.has(category)) {
+        groups.set(category, [])
+        categories.push(category)
+      }
+      groups.get(category).push(line)
+    })
+
+    return {
+      groups: categories.map((category, index) => ({
+        category,
+        level: index + 1,
+        lines: groups.get(category),
+      })),
+      registeredCount: lines.filter((line) => line.componentCode || line.componentId).length,
+      reviewCount: lines.filter(
+        (line) => line.scope === "project_specific" || !line.componentCode
+      ).length,
+      categoryCount: categories.length,
+    }
+  }, [selectedBom])
 
   function replaceRecord(nextRecord) {
     setRecords((current) => current.map((record) => (record.id === nextRecord.id ? nextRecord : record)))
@@ -311,37 +338,125 @@ export default function AtlasBomWorkspace() {
                 {selectedBom.status !== "draft" ? <ActionButton label="Move to draft" onClick={() => changeStatus("draft")} quiet disabled={saving || !schemaReady} /> : null}
               </div>
 
-              <div className="mt-6 overflow-x-auto border border-slate-200">
-                <table className="min-w-[780px] w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-[11px] uppercase tracking-[0.14em] text-slate-500">
+              <div className="mt-6 border-y border-slate-200 py-4">
+                <div className="grid grid-cols-3 divide-x divide-slate-200">
+                  <BomStat label="Assemblies" value={selectedBomOverview.categoryCount} />
+                  <BomStat label="Registered IDs" value={selectedBomOverview.registeredCount} />
+                  <BomStat label="Review items" value={selectedBomOverview.reviewCount} alert={selectedBomOverview.reviewCount > 0} />
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Working BOM</p>
+                  <h4 className="mt-1 text-lg font-bold text-slate-900">Components and quantities</h4>
+                </div>
+                <p className="hidden text-xs text-slate-500 sm:block">Select a row on mobile for the full specification.</p>
+              </div>
+
+              <div className="mt-4 hidden overflow-hidden border border-slate-300 md:block">
+                <table className="w-full table-fixed text-left text-sm">
+                  <thead className="bg-slate-950 text-[10px] uppercase tracking-[0.14em] text-white">
                     <tr>
-                      <th className="px-4 py-3 font-semibold">Line</th>
-                      <th className="px-4 py-3 font-semibold">Material or scope item</th>
-                      <th className="px-4 py-3 font-semibold">Qty</th>
-                      <th className="px-4 py-3 font-semibold">Allowance</th>
-                      <th className="px-4 py-3 font-semibold">Scope</th>
-                      <th className="px-4 py-3 font-semibold" aria-label="Actions" />
+                      <th className="w-[7%] px-3 py-3 font-semibold">Level</th>
+                      <th className="w-[14%] px-3 py-3 font-semibold">Part #</th>
+                      <th className="w-[26%] px-3 py-3 font-semibold">Component</th>
+                      <th className="w-[25%] px-3 py-3 font-semibold">Specification</th>
+                      <th className="w-[9%] px-3 py-3 text-right font-semibold">Qty</th>
+                      <th className="w-[8%] px-3 py-3 font-semibold">Unit</th>
+                      <th className="w-[11%] px-3 py-3 font-semibold">Scope</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {(selectedBom.lines || []).map((line) => (
-                      <tr key={line.id} className="align-top">
-                        <td className="px-4 py-4 font-mono text-xs text-slate-500">{String(line.lineNumber).padStart(3, "0")}</td>
-                        <td className="px-4 py-4">
-                          <p className="font-semibold text-slate-900">{line.description}</p>
-                          <p className="mt-1 text-xs text-slate-500">{line.category}{line.componentName ? ` · ${line.componentName}` : ""}</p>
-                          {line.notes ? <p className="mt-2 max-w-xl text-xs leading-5 text-slate-500">{line.notes}</p> : null}
-                        </td>
-                        <td className="px-4 py-4 font-medium text-slate-800">{formatQuantity(line.quantity)} {line.unit}</td>
-                        <td className="px-4 py-4 text-slate-600">{line.wasteFactor > 0 ? `${Math.round(line.wasteFactor * 100)}% waste` : "None"}</td>
-                        <td className="px-4 py-4"><span className={`inline-flex border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${scopeTone(line.scope)}`}>{formatStatusLabel(line.scope)}</span></td>
-                        <td className="px-4 py-4 text-right">
-                          <button type="button" onClick={() => deleteLine(line.id)} disabled={saving || !schemaReady} className="text-xs font-semibold text-rose-600 transition hover:text-rose-800 disabled:cursor-not-allowed disabled:opacity-40">Remove</button>
+                  {selectedBomOverview.groups.map((group) => (
+                    <tbody key={group.category} className="border-t border-slate-300">
+                      <tr className="bg-slate-100">
+                        <td className="px-3 py-2 font-mono text-xs font-bold text-slate-600">{group.level}</td>
+                        <td colSpan={6} className="px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-700">
+                          {group.category}
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
+                      {group.lines.map((line) => (
+                        <tr key={line.id} className="border-t border-slate-200 align-top transition hover:bg-sky-50/50">
+                          <td className="px-3 py-3 font-mono text-[11px] text-slate-400">{group.level}.{String(line.lineNumber).padStart(2, "0")}</td>
+                          <td className="break-words px-3 py-3 font-mono text-xs font-semibold text-slate-700">
+                            {line.componentCode || line.sourceCode || "Not assigned"}
+                          </td>
+                          <td className="px-3 py-3">
+                            <p className="font-semibold leading-5 text-slate-900">{line.description}</p>
+                            {line.componentName && line.componentName !== line.description ? (
+                              <p className="mt-1 text-xs text-slate-500">{line.componentName}</p>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => deleteLine(line.id)}
+                              disabled={saving || !schemaReady}
+                              className="mt-2 text-[11px] font-semibold text-rose-600 transition hover:text-rose-800 disabled:opacity-40"
+                            >
+                              Remove line
+                            </button>
+                          </td>
+                          <td className="px-3 py-3 text-xs leading-5 text-slate-600">
+                            {line.quantityRule || line.notes || "Specification not yet recorded"}
+                            {line.wasteFactor > 0 ? (
+                              <span className="mt-1 block font-semibold text-amber-700">
+                                Includes {Math.round(line.wasteFactor * 100)}% allowance
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="px-3 py-3 text-right font-bold tabular-nums text-slate-900">{formatQuantity(line.quantity)}</td>
+                          <td className="px-3 py-3 text-slate-600">{line.unit}</td>
+                          <td className="px-3 py-3">
+                            <span className={`inline-flex border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${scopeTone(line.scope)}`}>
+                              {formatStatusLabel(line.scope)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  ))}
+                  <tfoot className="border-t-2 border-slate-900 bg-slate-50">
+                    <tr>
+                      <td colSpan={4} className="px-3 py-3 text-right text-xs font-bold uppercase tracking-[0.12em] text-slate-600">Total component lines</td>
+                      <td className="px-3 py-3 text-right font-bold tabular-nums text-slate-950">{selectedBom.lines?.length || 0}</td>
+                      <td colSpan={2} className="px-3 py-3" />
+                    </tr>
+                  </tfoot>
                 </table>
+              </div>
+
+              <div className="mt-4 space-y-3 md:hidden">
+                {selectedBomOverview.groups.map((group) => (
+                  <section key={group.category} className="overflow-hidden border border-slate-200 bg-white">
+                    <div className="flex items-center gap-3 bg-slate-950 px-3 py-2.5 text-white">
+                      <span className="font-mono text-xs text-slate-400">{group.level}</span>
+                      <p className="text-xs font-bold uppercase tracking-[0.12em]">{group.category}</p>
+                    </div>
+                    <div className="divide-y divide-slate-200">
+                      {group.lines.map((line) => (
+                        <details key={line.id} className="group">
+                          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-slate-900">{line.description}</p>
+                              <p className="mt-1 font-mono text-[11px] text-slate-500">{line.componentCode || line.sourceCode || "ID not assigned"}</p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="font-bold tabular-nums text-slate-950">{formatQuantity(line.quantity)}</p>
+                              <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{line.unit}</p>
+                            </div>
+                          </summary>
+                          <div className="border-t border-slate-100 bg-slate-50 px-3 py-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Specification</p>
+                            <p className="mt-1 text-sm leading-6 text-slate-700">{line.quantityRule || line.notes || "Specification not yet recorded."}</p>
+                            <div className="mt-3 flex items-center justify-between gap-3">
+                              <span className={`inline-flex border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${scopeTone(line.scope)}`}>{formatStatusLabel(line.scope)}</span>
+                              <button type="button" onClick={() => deleteLine(line.id)} disabled={saving || !schemaReady} className="text-xs font-semibold text-rose-600 disabled:opacity-40">Remove line</button>
+                            </div>
+                          </div>
+                        </details>
+                      ))}
+                    </div>
+                  </section>
+                ))}
               </div>
             </section>
           ) : null}
@@ -402,6 +517,15 @@ function Metric({ label, value, tone }) {
     sky: "border-sky-200 bg-sky-50 text-sky-700",
   }
   return <div className={`rounded-2xl border px-4 py-3 ${tones[tone]}`}><p className="text-xs font-semibold uppercase tracking-[0.14em]">{label}</p><p className="mt-1 text-2xl font-bold text-slate-900">{value}</p></div>
+}
+
+function BomStat({ label, value, alert = false }) {
+  return (
+    <div className="px-3 text-center sm:px-5 sm:text-left">
+      <p className={`text-2xl font-bold tabular-nums ${alert ? "text-amber-700" : "text-slate-950"}`}>{value}</p>
+      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-xs">{label}</p>
+    </div>
+  )
 }
 
 function Field({ label, children }) {
