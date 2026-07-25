@@ -216,6 +216,8 @@ function getClientFollowUpStateLabel(state) {
       return "Awaiting reply"
     case "client_will_revert":
       return "Client will be in touch"
+    case "unresponsive":
+      return "Unresponsive"
     default:
       return ""
   }
@@ -758,6 +760,35 @@ export default function LeadEditorDrawer({
   const opportunitySummary = getOpportunitySummary(formData)
   const latestEstimate = savedEstimates[0] || null
   const guidedAction = getGuidedLeadAction(nextBestAction, formData, latestEstimate)
+  const isUnresponsive = formData.client_follow_up_state === "unresponsive"
+
+  const markLeadUnresponsive = () => {
+    setFormData((current) => ({
+      ...current,
+      status: "lost",
+      client_follow_up_state: "unresponsive",
+      lost_reason: "Client unresponsive after follow-ups",
+      follow_up_at: null,
+      next_action: "Archived as unresponsive. Reopen if the client returns.",
+    }))
+    setValidationErrors((current) => ({
+      ...current,
+      lost_reason: "",
+      next_action: "",
+    }))
+  }
+
+  const reopenUnresponsiveLead = () => {
+    const hasEstimate = savedEstimates.length > 0 || Boolean(String(formData.quote_value || "").trim())
+    setFormData((current) => ({
+      ...current,
+      status: hasEstimate ? "quoted" : "contacted",
+      client_follow_up_state: "",
+      lost_reason: "",
+      follow_up_at: getFollowUpIsoDate(1),
+      next_action: "Follow up with the client and confirm the next step.",
+    }))
+  }
 
   const confirmLatestEstimateStatus = async (event) => {
     if (!latestEstimate || !onEstimateStatusChange) return
@@ -2059,6 +2090,37 @@ export default function LeadEditorDrawer({
                   No follow-up email has been logged yet.
                 </p>
               )}
+            </div>
+
+            <div className={`rounded-2xl border p-3 ${isUnresponsive ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-white"}`}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {isUnresponsive ? "This lead is archived as unresponsive" : "Has the client gone silent?"}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    {isUnresponsive
+                      ? "The full client history is preserved and the lead no longer appears in active follow-up work."
+                      : "Use this after the planned follow-ups have been completed without a response."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={isUnresponsive ? reopenUnresponsiveLead : markLeadUnresponsive}
+                  className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                    isUnresponsive
+                      ? "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                      : "bg-slate-900 text-white hover:bg-slate-700"
+                  }`}
+                >
+                  {isUnresponsive ? "Reopen follow-up" : "Mark unresponsive"}
+                </button>
+              </div>
+              {!isUnresponsive ? (
+                <p className="mt-2 text-[11px] text-slate-400">
+                  Review the change, then select Save Changes.
+                </p>
+              ) : null}
             </div>
           </div>
         </section>
