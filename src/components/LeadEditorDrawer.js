@@ -11,6 +11,7 @@ import {
   Link2,
   Mail,
   MessageSquare,
+  MoreHorizontal,
   PanelsTopLeft,
   Phone,
   Save,
@@ -1376,9 +1377,9 @@ export default function LeadEditorDrawer({
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="relative flex h-full w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl sm:w-[min(96vw,960px)] sm:max-w-[960px]">
+            <Dialog.Panel className="relative flex h-dvh w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl sm:h-full sm:w-[min(96vw,960px)] sm:max-w-[960px]">
               {/* Header */}
-<div className="sticky top-0 z-20 flex flex-col justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:px-6 sm:py-4">
+<div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur sm:px-6 sm:py-4">
   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
     {/* Back Button */}
     <button onClick={backHandler} className="shrink-0 rounded-full p-2 hover:bg-gray-100">
@@ -1387,28 +1388,28 @@ export default function LeadEditorDrawer({
 
     {/* Lead Name + Status */}
     <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+      <p className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:block">
         Lead workspace
       </p>
-      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
-        <Dialog.Title className="text-lg font-bold tracking-tight text-slate-950 sm:text-2xl">
+      <div className="flex min-w-0 items-center gap-2 sm:mt-1 sm:flex-wrap">
+        <Dialog.Title className="truncate text-base font-bold tracking-tight text-slate-950 sm:text-2xl">
           {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
         </Dialog.Title>
         {!isNew && (
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(formData.status)}`}
+            className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(formData.status)}`}
           >
             {formatStatusLabel(formData.status)}
           </span>
         )}
         {clientFollowUpStateLabel && (
-          <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
+          <span className="hidden shrink-0 items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 sm:inline-flex">
             {clientFollowUpStateLabel}
           </span>
         )}
       </div>
       {!isNew && (
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 hidden text-xs text-slate-500 sm:block">
           Added {createdAtLabel}
         </p>
       )}
@@ -1417,7 +1418,7 @@ export default function LeadEditorDrawer({
 
 {/* Action Buttons */}
 	{!isNew && (
-	  <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+	  <div className="hidden flex-wrap gap-2 sm:flex sm:flex-nowrap">
       <button
         type="button"
         className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
@@ -1481,7 +1482,7 @@ export default function LeadEditorDrawer({
                 />
               ) : null}
 
-              <div className={`${isNew ? "hidden" : ""} border-b border-slate-200 bg-white px-4 py-3 sm:px-6`}>
+              <div className={`${isNew ? "hidden" : "hidden sm:block"} border-b border-slate-200 bg-white px-4 py-3 sm:px-6`}>
                 <div className="grid gap-2 sm:grid-cols-3">
                   <div className="rounded-xl bg-slate-100 px-3 py-2.5">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Opportunity</p>
@@ -1510,7 +1511,59 @@ export default function LeadEditorDrawer({
               </div>
 
               {/* Scrollable Body */}
-<div className={`${isNew ? "hidden" : "flex-1"} overflow-y-auto w-full max-w-full bg-slate-50`}>
+<div className={`${isNew ? "hidden" : "min-h-0 flex-1"} w-full max-w-full overflow-y-auto overscroll-contain bg-slate-50`}>
+  {!isNew ? (
+    <details className="group border-b border-slate-200 bg-white sm:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2.5 text-sm font-semibold text-slate-700">
+        <span className="inline-flex items-center gap-2">
+          <MoreHorizontal size={17} />
+          Lead actions
+        </span>
+        <span className="text-xs font-medium text-slate-400 group-open:hidden">Open</span>
+        <span className="hidden text-xs font-medium text-slate-400 group-open:inline">Close</span>
+      </summary>
+      <div className="grid grid-cols-4 gap-2 border-t border-slate-100 px-3 py-3">
+        <button type="button" onClick={() => onCreateEstimate?.(lead)} className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2.5 text-[11px] font-semibold text-slate-700">
+          <FileText size={17} />
+          Estimate
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            addActivity({ type: "call", description: `Called ${formData.name}` })
+            window.location.href = `tel:${formData.phone}`
+          }}
+          className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2.5 text-[11px] font-semibold text-slate-700"
+        >
+          <Phone size={17} />
+          Call
+        </button>
+        <button type="button" onClick={openEmailComposer} className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2.5 text-[11px] font-semibold text-slate-700">
+          <Mail size={17} />
+          Email
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            addActivity({ type: "whatsapp", description: `Messaged ${formData.name} on WhatsApp` })
+            window.open(`https://wa.me/${formData.phone?.replace(/\D/g, "")}`, "_blank")
+          }}
+          className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2.5 text-[11px] font-semibold text-slate-700"
+        >
+          <MessageSquare size={17} />
+          WhatsApp
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(lead.id)}
+          className="col-span-4 mt-1 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 px-3 py-2.5 text-xs font-semibold text-rose-600"
+        >
+          <Trash2 size={15} />
+          Delete lead
+        </button>
+      </div>
+    </details>
+  ) : null}
   {!isNew && (
     <div className="border-b border-sky-200 bg-sky-50 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -2639,9 +2692,9 @@ export default function LeadEditorDrawer({
                   )}
 
                   {/* Footer */}
-                  <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 p-4 backdrop-blur sm:px-6">
+                  <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur sm:p-4 sm:px-6">
                     <div className="mx-auto flex max-w-5xl flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
+                      <div className="hidden sm:block">
                         {!isNew && (
                           <button
                             onClick={() => onDelete(lead.id)}
@@ -2653,7 +2706,7 @@ export default function LeadEditorDrawer({
                       </div>
                       <button
                         onClick={handleSaveClick}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
                       >
                         <Save size={16} /> {isNew ? "Add lead" : "Save changes"}
                       </button>
