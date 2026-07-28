@@ -751,6 +751,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const handleSaveLead = async (leadData, isNew = false) => {
     const normalizedLead = normalizeLead({
       ...leadData,
+      quote_value: isNew ? null : leadData.quote_value,
       created_by: leadData.created_by || user?.id || null,
     })
     const validationError = validateLead(normalizedLead)

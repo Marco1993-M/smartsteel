@@ -1076,6 +1076,7 @@ export default function LeadEditorDrawer({
       name: normalizePersonName(formData.name),
       last_name: normalizePersonName(formData.last_name),
       status: normalizeStatus(formData.status),
+      quote_value: isNew ? null : formData.quote_value,
     });
   };
 
@@ -1885,19 +1886,22 @@ export default function LeadEditorDrawer({
         {!isNew && (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <label className={fieldLabelClass}>Quote Value</label>
+              <label className={fieldLabelClass}>Estimate value</label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
                 value={formData.quote_value || ""}
                 onChange={(e) => handleChange("quote_value", e.target.value)}
-                placeholder="0.00"
+                placeholder="Added from the estimate"
                 className={inputClass}
               />
               {validationErrors.quote_value && (
                 <p className="mt-1 text-xs text-red-600">{validationErrors.quote_value}</p>
               )}
+              <p className="mt-1 text-xs text-slate-500">
+                Leave this blank until an estimate has been prepared.
+              </p>
             </div>
           </div>
         )}
