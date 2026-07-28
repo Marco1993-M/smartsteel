@@ -7,7 +7,7 @@ export default function WorkspaceSectionNav({ items }) {
   const pathname = usePathname()
 
   return (
-    <div className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-6">
+    <div className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-6 print:hidden">
       <div className="flex gap-2 overflow-x-auto">
         {items.map((item) => {
           const isActive =

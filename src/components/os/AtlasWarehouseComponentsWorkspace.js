@@ -86,6 +86,16 @@ const CONNECTION_ITEM_TEMPLATES = [
   { itemCode: "W08-CON-WS01", itemType: "washer", description: "Structural connection washer", unit: "each", quantityRule: "Matched to approved bolt and bracket schedule", notes: "Confirm washer type, diameter, thickness, material, and finish." },
 ]
 
+const EMPTY_COMPONENT_SPECIFICATION = {
+  profileSpec: "",
+  thicknessSpec: "",
+  gradeSpec: "",
+  coatingSpec: "",
+  quantityRule: "",
+  drawingRevision: "",
+  notes: "",
+}
+
 function toneForScope(scope) {
   return scope === "Optional" ? "bg-sky-100 text-sky-700" : scope.includes("review") ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-700"
 }
@@ -100,6 +110,8 @@ export default function AtlasWarehouseComponentsWorkspace() {
   const [connectionItems, setConnectionItems] = useState([])
   const [connectionSchemaReady, setConnectionSchemaReady] = useState(true)
   const [savingItemId, setSavingItemId] = useState("")
+  const [editingComponentId, setEditingComponentId] = useState("")
+  const [componentDraft, setComponentDraft] = useState(EMPTY_COMPONENT_SPECIFICATION)
 
   async function loadRecords() {
     setLoading(true)
@@ -239,6 +251,45 @@ export default function AtlasWarehouseComponentsWorkspace() {
     }
   }
 
+  function beginComponentEdit(record, component) {
+    setEditingComponentId(record.id)
+    setComponentDraft({
+      ...EMPTY_COMPONENT_SPECIFICATION,
+      profileSpec: component.section,
+      quantityRule: component.rule,
+      ...(record.specification || {}),
+    })
+  }
+
+  function updateComponentDraft(field, value) {
+    setComponentDraft((current) => ({ ...current, [field]: value }))
+  }
+
+  async function saveComponentSpecification(record) {
+    setSavingItemId(record.id)
+    setError("")
+    setMessage("")
+    try {
+      const response = await fetch("/api/os/catalog-items", {
+        method: "PATCH",
+        headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          id: record.id,
+          specification: componentDraft,
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "Could not update the component specification.")
+      setRecords((current) => current.map((item) => item.id === record.id ? payload.record : item))
+      setEditingComponentId("")
+      setMessage(`${record.componentCode || record.title} specification updated.`)
+    } catch (saveError) {
+      setError(saveError.message)
+    } finally {
+      setSavingItemId("")
+    }
+  }
+
   return (
     <div className="space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
       <section className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_55px_rgba(15,23,42,0.08)]">
@@ -262,6 +313,7 @@ export default function AtlasWarehouseComponentsWorkspace() {
       <section className="grid gap-4 xl:grid-cols-2">
         {W08_COMPONENTS.map((component, index) => {
           const record = recordMap.get(component.title)
+          const specification = record?.specification || {}
           return (
             <article key={component.code} className={`rounded-[1.4rem] border bg-white p-5 shadow-sm ${record ? "border-slate-200" : "border-dashed border-amber-300"}`}>
               <div className="flex items-start justify-between gap-4">
@@ -269,8 +321,23 @@ export default function AtlasWarehouseComponentsWorkspace() {
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${record ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>{record ? "Registered" : "Not registered"}</span>
               </div>
               <p className="mt-4 text-sm leading-6 text-slate-600">{component.summary}</p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Section / basis</p><p className="mt-1 text-sm font-semibold text-slate-800">{component.section}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Quantity rule</p><p className="mt-1 text-sm font-semibold text-slate-800">{component.rule}</p></div></div>
-              <div className="mt-4 flex items-center justify-between gap-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${toneForScope(component.scope)}`}>{component.scope}</span><p className="text-xs text-slate-500">{record?.owner || "Owner assigned on registration"}</p></div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Profile / section</p><p className="mt-1 text-sm font-semibold text-slate-800">{specification.profileSpec || component.section}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Quantity rule</p><p className="mt-1 text-sm font-semibold text-slate-800">{specification.quantityRule || component.rule}</p></div></div>
+              {specification.thicknessSpec || specification.gradeSpec || specification.coatingSpec ? <div className="mt-3 flex flex-wrap gap-2">{[specification.thicknessSpec, specification.gradeSpec, specification.coatingSpec].filter(Boolean).map((value) => <span key={value} className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600">{value}</span>)}</div> : null}
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${toneForScope(component.scope)}`}>{component.scope}</span><p className="text-xs text-slate-500">{record?.owner || "Owner assigned on registration"}</p></div>{record ? <button type="button" onClick={() => editingComponentId === record.id ? setEditingComponentId("") : beginComponentEdit(record, component)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"><Settings2 className="h-3.5 w-3.5" />{editingComponentId === record.id ? "Close editor" : "Edit specs"}</button> : null}</div>
+              {editingComponentId === record?.id ? (
+                <div className="mt-4 border-t border-slate-200 pt-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="text-xs font-semibold text-slate-600">Profile / section<input value={componentDraft.profileSpec} onChange={(event) => updateComponentDraft("profileSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                    <label className="text-xs font-semibold text-slate-600">Thickness<input value={componentDraft.thicknessSpec} onChange={(event) => updateComponentDraft("thicknessSpec", event.target.value)} placeholder="e.g. 2.5mm BMT" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                    <label className="text-xs font-semibold text-slate-600">Steel grade<input value={componentDraft.gradeSpec} onChange={(event) => updateComponentDraft("gradeSpec", event.target.value)} placeholder="Record when confirmed" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                    <label className="text-xs font-semibold text-slate-600">Coating / finish<input value={componentDraft.coatingSpec} onChange={(event) => updateComponentDraft("coatingSpec", event.target.value)} placeholder="e.g. ZAM" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                    <label className="text-xs font-semibold text-slate-600 sm:col-span-2">Quantity rule<input value={componentDraft.quantityRule} onChange={(event) => updateComponentDraft("quantityRule", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                    <label className="text-xs font-semibold text-slate-600">Drawing revision<input value={componentDraft.drawingRevision} onChange={(event) => updateComponentDraft("drawingRevision", event.target.value)} placeholder="e.g. W08-COL-R1" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                    <label className="text-xs font-semibold text-slate-600">Notes<input value={componentDraft.notes} onChange={(event) => updateComponentDraft("notes", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                  </div>
+                  <div className="mt-4 flex justify-end"><button type="button" onClick={() => saveComponentSpecification(record)} disabled={savingItemId === record.id} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50">{savingItemId === record.id ? "Saving..." : "Save component specs"}</button></div>
+                </div>
+              ) : null}
             </article>
           )
         })}
