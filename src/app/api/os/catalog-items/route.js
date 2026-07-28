@@ -25,6 +25,9 @@ function normalizeCatalogItem(row) {
     productFamilyKey: row.product_families?.key || null,
     productFamilyName: row.product_families?.name || "Unlinked",
     tags: Array.isArray(row.metadata?.tags) ? row.metadata.tags : [],
+    specification: row.metadata?.specification && typeof row.metadata.specification === "object"
+      ? row.metadata.specification
+      : {},
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -108,6 +111,9 @@ export async function POST(request) {
     product_family_id: body?.productFamilyId || null,
     metadata: {
       tags,
+      specification: body?.specification && typeof body.specification === "object"
+        ? body.specification
+        : {},
     },
   }
 
@@ -155,6 +161,29 @@ export async function PATCH(request) {
 
   if (body?.componentCode !== undefined) {
     updatePayload.component_code = String(body.componentCode || "").trim().toUpperCase() || null
+  }
+
+  if (body?.specification !== undefined) {
+    const { data: existing, error: metadataError } = await supabaseServer
+      .from("os_catalog_items")
+      .select("metadata")
+      .eq("id", id)
+      .single()
+
+    if (metadataError) {
+      return NextResponse.json({ error: metadataError.message }, { status: 500 })
+    }
+
+    const specification = body.specification && typeof body.specification === "object"
+      ? Object.fromEntries(
+          Object.entries(body.specification).map(([key, value]) => [key, String(value || "").trim()])
+        )
+      : {}
+
+    updatePayload.metadata = {
+      ...(existing?.metadata || {}),
+      specification,
+    }
   }
 
   if (Object.keys(updatePayload).length === 0) {
