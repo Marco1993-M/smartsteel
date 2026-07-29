@@ -237,7 +237,8 @@ export async function GET(request) {
   )
   const grossMarginRate = 0.3
   const lifetimeProjectsPerCustomer = 1
-  const averageWonValue = current.wonCount > 0 ? current.wonValue / current.wonCount : 0
+  const paidWonValue = paidWonLeads.reduce((sum, lead) => sum + parseNumber(lead.quote_value), 0)
+  const averageWonValue = paidWonLeads.length > 0 ? paidWonValue / paidWonLeads.length : 0
   const contributionLtv = averageWonValue * grossMarginRate * lifetimeProjectsPerCustomer
   const paidAcquisitionCost = marketing.google_ads.cost || 0
   const cac = paidWonLeads.length > 0 ? paidAcquisitionCost / paidWonLeads.length : 0
@@ -295,9 +296,10 @@ export async function GET(request) {
       contributionLtv: Math.round(contributionLtv * 100) / 100,
       paidAcquisitionCost,
       paidWonCustomers: paidWonLeads.length,
+      paidWonValue: Math.round(paidWonValue * 100) / 100,
       cac: Math.round(cac * 100) / 100,
       ltvCacRatio: Math.round(ltvCacRatio * 100) / 100,
-      basis: "Won quote value × gross margin × lifetime projects, divided by Google Ads spend per paid-attributed won customer.",
+      basis: "Paid-attributed won value × gross margin × lifetime projects, compared with Google Ads spend per paid-attributed won customer.",
       blocker: !current.wonCount
         ? "No won opportunities with value in this period."
         : !paidAcquisitionCost
