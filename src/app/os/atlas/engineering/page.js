@@ -2,27 +2,22 @@ import {
   ATLAS_ENGINEERING_REFERENCES,
   ATLAS_ENGINEERING_STREAMS,
 } from "../../../../lib/osProductData"
+import AtlasModuleHero from "../../../../components/os/AtlasModuleHero"
 
 export default function AtlasEngineeringPage() {
   return (
     <div className="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Atlas engineering
-          </p>
-          <h3 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-            Keep Atlas technical logic visible before it disappears into manual judgement
-          </h3>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-            This module is where Atlas design assumptions, standard details, and engineering review
-            triggers should live. The aim is not to turn the OS into a drawing office overnight. It
-            is to make the technical basis behind Atlas products clear enough that pricing, quoting,
-            and fabrication handoff all become more dependable.
-          </p>
-        </div>
+      <AtlasModuleHero
+        eyebrow="Atlas engineering control"
+        title="Keep the design basis visible."
+        description="Bring assumptions, standard details, limits and review triggers into one controlled technical layer that supports dependable pricing, quoting and fabrication handoff."
+        status="Technical control"
+        actionHref="/os/atlas/components"
+        actionLabel="Review component records"
+      />
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
             Engineering references
           </p>
@@ -34,11 +29,16 @@ export default function AtlasEngineeringPage() {
             ))}
           </div>
         </div>
+        <div className="border border-slate-800 bg-slate-950 p-5 text-white shadow-sm sm:p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">Engineering envelope</p>
+          <p className="mt-4 text-2xl font-bold tracking-tight">Known limits belong with the product.</p>
+          <p className="mt-3 text-sm leading-6 text-slate-300">Open technical fields remain visible hold points until a controlled calculation, drawing or specification closes them.</p>
+        </div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
         {ATLAS_ENGINEERING_STREAMS.map((stream) => (
-          <div key={stream.key} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div key={stream.key} className="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <p className="text-lg font-semibold text-slate-900">{stream.label}</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">{stream.summary}</p>
             <div className="mt-4 space-y-2">

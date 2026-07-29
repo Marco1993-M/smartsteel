@@ -1,22 +1,20 @@
 import { ATLAS_RULE_CHECKS, ATLAS_RULE_GROUPS } from "../../../../lib/osProductData"
+import AtlasModuleHero from "../../../../components/os/AtlasModuleHero"
 
 export default function AtlasRulesPage() {
   return (
     <div className="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atlas rules</p>
-          <h3 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-            Put Atlas commercial rules in one place before they drift into quote habits
-          </h3>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-            This module is the operating layer for how Atlas products should be quoted consistently.
-            It is where scope defaults, commercial adjustments, and review triggers can be defined
-            clearly enough that the team does not have to rely on memory to protect margins or scope.
-          </p>
-        </div>
+      <AtlasModuleHero
+        eyebrow="Atlas operating rules"
+        title="Make the right quote repeatable."
+        description="Define scope defaults, commercial adjustments and review triggers clearly enough that product quality and margin protection do not depend on memory."
+        status="Scope control"
+        actionHref="/os/atlas/pricing"
+        actionLabel="Open pricing control"
+      />
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
             Rule check before sending
           </p>
@@ -28,11 +26,16 @@ export default function AtlasRulesPage() {
             ))}
           </div>
         </div>
+        <div className="border border-slate-800 bg-slate-950 p-5 text-white shadow-sm sm:p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">Control principle</p>
+          <p className="mt-4 text-2xl font-bold tracking-tight">Standard products first. Visible exceptions second.</p>
+          <p className="mt-3 text-sm leading-6 text-slate-300">Every Atlas estimate should reveal what is standard, what was selected, and what requires project-specific review.</p>
+        </div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
         {ATLAS_RULE_GROUPS.map((group) => (
-          <div key={group.key} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div key={group.key} className="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <p className="text-lg font-semibold text-slate-900">{group.label}</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">{group.summary}</p>
             <div className="mt-4 space-y-2">
