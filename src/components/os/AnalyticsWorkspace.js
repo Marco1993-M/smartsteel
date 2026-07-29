@@ -349,6 +349,73 @@ function MarketingSourceCard({ connection, metrics, type, schemaReady, syncingSo
   )
 }
 
+function LtvCacCard({ metric, periodLabel }) {
+  const ratio = Number(metric?.ltvCacRatio || 0)
+  const healthy = ratio >= 3
+  const developing = ratio > 0 && ratio < 3
+
+  return (
+    <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="p-5 sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Commercial efficiency</p>
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Lifetime value to acquisition cost</h2>
+            </div>
+            <span className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] ${
+              metric?.ready
+                ? healthy
+                  ? "bg-emerald-100 text-emerald-700"
+                  : developing
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-rose-100 text-rose-700"
+                : "bg-slate-100 text-slate-600"
+            }`}>
+              {metric?.ready ? (healthy ? "Healthy" : developing ? "Developing" : "Needs attention") : "Awaiting data"}
+            </span>
+          </div>
+
+          <div className="mt-6 grid gap-px overflow-hidden border border-slate-200 bg-slate-200 sm:grid-cols-3">
+            <div className="bg-slate-950 p-5 text-white">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-300">LTV:CAC ratio</p>
+              <p className="mt-3 text-4xl font-bold tracking-[-0.05em]">{metric?.ready ? `${ratio.toFixed(2)}:1` : "Pending"}</p>
+              <p className="mt-2 text-xs text-slate-400">{periodLabel}</p>
+            </div>
+            <div className="bg-white p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Contribution LTV</p>
+              <p className="mt-3 text-2xl font-bold tracking-tight text-slate-950">{formatCurrency(metric?.contributionLtv)}</p>
+              <p className="mt-2 text-xs text-slate-500">{Math.round(Number(metric?.grossMarginRate || 0) * 100)}% margin · {metric?.lifetimeProjectsPerCustomer || 1} lifetime project</p>
+            </div>
+            <div className="bg-white p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Paid CAC</p>
+              <p className="mt-3 text-2xl font-bold tracking-tight text-slate-950">{metric?.cac ? formatCurrency(metric.cac) : "Pending"}</p>
+              <p className="mt-2 text-xs text-slate-500">{metric?.paidWonCustomers || 0} paid-attributed won customer{metric?.paidWonCustomers === 1 ? "" : "s"}</p>
+            </div>
+          </div>
+
+          <p className="mt-4 text-xs leading-5 text-slate-500">{metric?.basis}</p>
+        </div>
+        <aside className={`p-5 sm:p-7 ${metric?.ready ? (healthy ? "bg-emerald-50" : "bg-amber-50") : "bg-slate-50"}`}>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Reading the metric</p>
+          <p className="mt-3 text-lg font-bold text-slate-950">
+            {metric?.ready
+              ? healthy
+                ? "Acquisition is producing healthy contribution value."
+                : "The ratio needs more margin, repeat value, or lower acquisition cost."
+              : "Complete the missing attribution before using this ratio."}
+          </p>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {metric?.ready
+              ? `${formatCurrency(metric.averageWonValue)} average won value and ${formatCurrency(metric.paidAcquisitionCost)} paid spend are included in this period.`
+              : metric?.blocker}
+          </p>
+        </aside>
+      </div>
+    </section>
+  )
+}
+
 export default function AnalyticsWorkspace() {
   const [days, setDays] = useState(30)
   const [data, setData] = useState(null)
@@ -464,6 +531,8 @@ export default function AnalyticsWorkspace() {
             </div>
             {syncMessage ? <p className={`mt-3 rounded-xl px-4 py-3 text-sm ${syncMessage.includes("updated with") ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{syncMessage}</p> : null}
           </section>
+
+          <LtvCacCard metric={data.commercialEfficiency} periodLabel={data.period.label} />
 
           <section className="grid overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)] xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
             <article className="min-w-0 p-5 sm:p-7">
