@@ -292,15 +292,17 @@ export default function AtlasWarehouseComponentsWorkspace() {
 
   return (
     <div className="space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
-      <section className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_55px_rgba(15,23,42,0.08)]">
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_310px]">
+      <section className="relative overflow-hidden rounded-[1.75rem] border border-slate-800 bg-[radial-gradient(circle_at_88%_0%,rgba(14,165,233,0.24),transparent_32%),linear-gradient(140deg,#020617,#172033)] text-white shadow-[0_22px_55px_rgba(15,23,42,0.16)]">
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,transparent_58%,rgba(250,204,21,0.12)_58%,rgba(250,204,21,0.12)_59%,transparent_59%)]" />
+        <div className="relative grid lg:grid-cols-[minmax(0,1fr)_310px]">
           <div className="p-5 sm:p-7">
-            <Link href="/os/atlas/products" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 transition hover:text-slate-900"><ArrowLeft className="h-3.5 w-3.5" /> Atlas W08 product</Link>
-            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">W08 component definition</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950 sm:text-4xl">Turn the warehouse into reusable parts.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">This controlled set separates primary framing, stability, secondary steel, connections, and optional sheeting so the BOM and pricing layers remain traceable.</p>
+            <Link href="/os/atlas/products" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 transition hover:text-white"><ArrowLeft className="h-3.5 w-3.5" /> Atlas W08 product</Link>
+            <div className="mt-6 flex flex-wrap items-center gap-2"><span className="rounded-sm bg-amber-400 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-950">Atlas system</span><span className="rounded-sm border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sky-200">Component control</span></div>
+            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">W08 component definition</p>
+            <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] text-white sm:text-5xl">Turn the warehouse into reusable parts.</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">This controlled set separates primary framing, stability, secondary steel, connections, and optional sheeting so the BOM and pricing layers remain traceable.</p>
           </div>
-          <div className="flex flex-col justify-between border-t border-slate-200 bg-slate-950 p-5 text-white sm:p-7 lg:border-l lg:border-t-0">
+          <div className="flex flex-col justify-between border-t border-white/10 bg-white/5 p-5 text-white backdrop-blur sm:p-7 lg:border-l lg:border-t-0">
             <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Live record coverage</p><p className="mt-2 text-4xl font-bold">{loading ? "--" : `${registeredCount}/${W08_COMPONENTS.length}`}</p><div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-amber-400 transition-[width]" style={{ width: `${(registeredCount / W08_COMPONENTS.length) * 100}%` }} /></div></div>
             <button type="button" onClick={registerMissingComponents} disabled={saving || loading || !familyId || missingComponents.length === 0} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-slate-500"><PackagePlus className="h-4 w-4" />{saving ? "Registering..." : missingComponents.length ? `Register ${missingComponents.length} missing` : "Component set complete"}</button>
           </div>
