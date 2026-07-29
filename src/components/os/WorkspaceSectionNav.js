@@ -1,11 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
+import { withAtlasProduct } from "../../lib/atlasProductRange"
 
 export default function WorkspaceSectionNav({ items, variant = "default" }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const isAtlas = variant === "atlas"
+  const activeProductCode = isAtlas ? searchParams.get("product") : ""
 
   return (
     <div className={`border-b px-4 py-3 shadow-sm sm:px-6 print:hidden ${
@@ -21,7 +24,7 @@ export default function WorkspaceSectionNav({ items, variant = "default" }) {
           return (
             <Link
               key={item.key}
-              href={item.href}
+              href={isAtlas ? withAtlasProduct(item.href, activeProductCode) : item.href}
               className={`whitespace-nowrap px-4 py-2 text-sm font-semibold transition ${
                 isActive
                   ? isAtlas

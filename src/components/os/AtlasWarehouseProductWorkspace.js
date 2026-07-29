@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -18,13 +19,15 @@ import {
   Wrench,
 } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
+import { ATLAS_PRODUCT_RANGE, getAtlasProduct, withAtlasProduct } from "../../lib/atlasProductRange"
 
-const W08_SPEC_LENGTHS = [8, 12, 16, 20, 24, 28, 32, 36, 40]
+const W08_SPEC_LENGTHS = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]
 const W08_SPEC_BAY_SPACING = 4
 const W08_SPEC_ROOF_PURLIN_ROWS = 10
 const W08_SPEC_SCOPES = [
   { name: "Structure only", detail: "Primary frame, provisional secondary steel, bracing, and the connection schedule once approved." },
   { name: "Roof sheeted", detail: "Standard structure with roof sheeting and applicable roof closures once the cladding schedule is approved." },
+  { name: "Roof and walls sheeted", detail: "Roof and long side walls sheeted. Both gable ends remain open." },
   { name: "Fully enclosed", detail: "Roof, long walls, and gable ends enclosed as a selectable configuration, subject to the approved cladding and wind design." },
 ]
 const W08_ROOF_SHEETING_STANDARD = [
@@ -106,16 +109,17 @@ const PRODUCT = {
   summary: "The 8m-span pilot for Smart Steel's modular, bolted Atlas warehouse range.",
   specifications: [
     ["Span", "8m", "Fixed W08 product width"],
-    ["Length", "2.5m bays", "Configure length without creating another product"],
+    ["Length", "From 4m", "One or more approved 4m bays"],
     ["Eave height", "3m to 5m", "3m default with the standard system supporting heights up to 5m"],
     ["Roof form", "Dual pitch", "15-degree standard starting geometry"],
     ["Assembly", "Bolted", "Repeatable connections for practical site assembly"],
-    ["Gable ends", "Open", "Open in every standard sheeting configuration"],
+    ["Gable ends", "Open by default", "Selectable as fully enclosed"],
   ],
   scopes: [
     { name: "Structure only", detail: "Primary frame, secondary steel, bracing, connections, and required structural fixings." },
     { name: "Roof sheeted", detail: "Standard structure with roof sheeting and applicable roof closures." },
     { name: "Roof and walls sheeted", detail: "Roof and long side walls sheeted. Both gable ends remain open." },
+    { name: "Fully enclosed", detail: "Roof, long walls, and both gable ends sheeted as a selectable configuration." },
   ],
   reviewTriggers: [
     "Openings, lean-tos, canopies, or suspended loads",
@@ -222,9 +226,9 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
     },
     {
       code: "W08-CON-AP01",
-      component: "Apex brackets",
-      specification: "Atlas W08 bolted apex connection",
-      function: "Joins the two rafter members at the roof apex.",
+      component: "Ridge brackets",
+      specification: "Atlas W08 bolted ridge connection",
+      function: "Joins the two rafter members at the roof ridge.",
       quantity: portalCount,
       unit: "set",
       basis: `1 set per portal x ${portalCount} portals`,
@@ -329,7 +333,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
 
         <section className="mt-7">
           <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Available commercial scope</p>
-          <div className="mt-3 grid grid-cols-3 gap-3">
+          <div className="mt-3 grid grid-cols-4 gap-2">
             {W08_SPEC_SCOPES.map((scope, index) => (
               <div key={scope.name} className="border border-slate-300 p-3">
                 <span className="font-mono text-[9px] font-bold text-sky-700">0{index + 1}</span>
@@ -500,11 +504,20 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
 }
 
 export default function AtlasWarehouseProductWorkspace() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const requestedProductCode = searchParams.get("product")
+  const initialProductCode = getAtlasProduct(requestedProductCode)?.code || "W08"
   const [data, setData] = useState({ components: [], boms: [], documents: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [specPreviewOpen, setSpecPreviewOpen] = useState(false)
   const [specLength, setSpecLength] = useState(20)
+  const [selectedProductCode, setSelectedProductCode] = useState(initialProductCode)
+
+  useEffect(() => {
+    if (getAtlasProduct(requestedProductCode)) setSelectedProductCode(requestedProductCode)
+  }, [requestedProductCode])
 
   useEffect(() => {
     let active = true
@@ -547,6 +560,11 @@ export default function AtlasWarehouseProductWorkspace() {
   ], [bom, data.components.length, data.documents])
   const readinessCount = readiness.filter((item) => item.ready).length
   const readinessPercentage = Math.round((readinessCount / readiness.length) * 100)
+  const selectedProduct = ATLAS_PRODUCT_RANGE.find((product) => product.code === selectedProductCode) || ATLAS_PRODUCT_RANGE[0]
+  const selectProduct = (productCode) => {
+    setSelectedProductCode(productCode)
+    router.replace(withAtlasProduct("/os/atlas/products", productCode), { scroll: false })
+  }
 
   if (specPreviewOpen) {
     return (
@@ -574,6 +592,82 @@ export default function AtlasWarehouseProductWorkspace() {
 
   return (
     <div className="space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
+      <section className="overflow-hidden border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-700">Atlas product range</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Select a product source of truth</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Move between Atlas products without mixing their specifications, material logic or controlled documents.</p>
+          </div>
+          <span className="w-fit bg-slate-950 px-3 py-1.5 text-xs font-bold text-white">{ATLAS_PRODUCT_RANGE.length} products</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto p-4 sm:p-5">
+          {ATLAS_PRODUCT_RANGE.map((product) => {
+            const selected = selectedProductCode === product.code
+            return (
+              <button
+                key={product.code}
+                type="button"
+                onClick={() => selectProduct(product.code)}
+                className={`min-w-[230px] border p-4 text-left transition sm:min-w-[250px] ${
+                  selected
+                    ? "border-slate-950 bg-slate-950 text-white shadow-lg"
+                    : "border-slate-200 bg-slate-50 text-slate-900 hover:border-sky-300 hover:bg-white"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className={`font-mono text-[10px] font-bold uppercase tracking-[0.15em] ${selected ? "text-sky-300" : "text-sky-700"}`}>{product.code}</span>
+                  <span className={`h-2.5 w-2.5 ${product.available ? "bg-emerald-400" : "bg-amber-400"}`} />
+                </div>
+                <p className="mt-4 text-base font-bold">{product.name}</p>
+                <p className={`mt-1 text-xs ${selected ? "text-slate-400" : "text-slate-500"}`}>{product.family}</p>
+                <p className={`mt-3 text-[10px] font-bold uppercase tracking-[0.12em] ${selected ? "text-amber-300" : "text-slate-500"}`}>{product.status}</p>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {selectedProductCode !== "W08" ? (
+        <section className="relative overflow-hidden rounded-[1.75rem] border border-slate-800 bg-[radial-gradient(circle_at_88%_0%,rgba(14,165,233,0.24),transparent_32%),linear-gradient(140deg,#020617,#172033)] text-white shadow-[0_22px_55px_rgba(15,23,42,0.16)]">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,transparent_58%,rgba(250,204,21,0.12)_58%,rgba(250,204,21,0.12)_59%,transparent_59%)]" />
+          <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-end">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-sm bg-amber-400 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-950">Atlas system</span>
+                <span className="rounded-sm border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sky-200">{selectedProduct.family}</span>
+              </div>
+              <p className="mt-6 font-mono text-xs font-bold uppercase tracking-[0.2em] text-sky-300">{selectedProduct.code}</p>
+              <h2 className="mt-2 text-3xl font-bold tracking-[-0.04em] sm:text-5xl">{selectedProduct.name}</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">{selectedProduct.summary}</p>
+            </div>
+            <div className="border border-white/10 bg-white/5 p-5 backdrop-blur">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Product record status</p>
+              <p className="mt-2 text-xl font-bold text-white">{selectedProduct.status}</p>
+              <p className="mt-3 text-xs leading-5 text-slate-400">The commercial product exists, but its controlled product definition has not yet been built to W08 depth.</p>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {selectedProductCode !== "W08" ? (
+        <section className="grid gap-px overflow-hidden border border-slate-200 bg-slate-200 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["01", "Product definition", "Confirm standard configurations, scope and naming."],
+            ["02", "Components", "Register reusable members, connections and fittings."],
+            ["03", "BOM and pricing", "Link quantities and commercial logic to the product."],
+            ["04", "Documents", "Prepare the controlled internal and client-facing records."],
+          ].map(([number, title, detail]) => (
+            <div key={number} className="bg-white p-5">
+              <span className="font-mono text-xs font-bold text-sky-700">{number}</span>
+              <h3 className="mt-4 font-bold text-slate-950">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      <div className={selectedProductCode === "W08" ? "contents" : "hidden"}>
       <section className="relative overflow-hidden rounded-[1.75rem] border border-slate-800 bg-[radial-gradient(circle_at_90%_0%,_rgba(14,165,233,0.22),_transparent_30%),linear-gradient(145deg,_#020617,_#172033)] text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
         <div className="grid gap-7 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-end">
           <div>
@@ -586,7 +680,7 @@ export default function AtlasWarehouseProductWorkspace() {
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">{PRODUCT.summary}</p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Link href="/warehouse-builder?productType=LCSS%20Warehouse&width=8&length=20" className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-amber-300">Open live builder <ArrowUpRight className="h-4 w-4" /></Link>
-              <Link href="/os/atlas/bom" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">Review W08 BOM</Link>
+              <Link href={withAtlasProduct("/os/atlas/bom", selectedProductCode)} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">Review W08 BOM</Link>
               <button type="button" onClick={() => setSpecPreviewOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">
                 <FileText className="h-4 w-4" /> Preview spec sheet
               </button>
@@ -617,14 +711,14 @@ export default function AtlasWarehouseProductWorkspace() {
         </article>
         <aside className="border-t border-slate-200 bg-slate-50 p-5 sm:p-7 xl:border-l xl:border-t-0">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Length logic</p>
-          <h3 className="mt-1 text-xl font-bold text-slate-950">Built in 2.5m bays</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Length is a configuration, not a separate warehouse product. The W08 identity stays stable as bays are added.</p>
-          <div className="mt-5 flex flex-wrap gap-2">{[10, 12.5, 15, 17.5, 20, 25, 30].map((length) => <span key={length} className={`rounded-xl border px-3 py-2 text-xs font-bold ${length === 20 ? "border-sky-300 bg-sky-50 text-sky-800" : "border-slate-200 bg-white text-slate-700"}`}>{length}m</span>)}</div>
+          <h3 className="mt-1 text-xl font-bold text-slate-950">Start with one 4m bay</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">The smallest standard arrangement is a 4m-long x 8m-wide structure. Add further 4m bays without creating another warehouse product.</p>
+          <div className="mt-5 flex flex-wrap gap-2">{W08_SPEC_LENGTHS.map((length) => <span key={length} className={`rounded-xl border px-3 py-2 text-xs font-bold ${length === 20 ? "border-sky-300 bg-sky-50 text-sky-800" : "border-slate-200 bg-white text-slate-700"}`}>{length}m</span>)}</div>
           <p className="mt-3 text-xs text-slate-500">20m is the working reference configuration, not a product limit.</p>
         </aside>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {PRODUCT.scopes.map((scope, index) => (
           <article key={scope.name} className={`rounded-[1.4rem] border p-5 shadow-sm ${index === 0 ? "border-slate-800 bg-slate-950 text-white" : "border-slate-200 bg-white"}`}>
             <span className={`grid h-9 w-9 place-items-center rounded-xl text-sm font-bold ${index === 0 ? "bg-amber-400 text-slate-950" : "bg-sky-100 text-sky-700"}`}>{index + 1}</span>
@@ -651,9 +745,10 @@ export default function AtlasWarehouseProductWorkspace() {
       <section>
         <div className="px-1"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Connected workspaces</p><h2 className="mt-1 text-xl font-bold text-slate-950">Build the product once, use it everywhere</h2></div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          {workspaceLinks.map(({ label, href, icon: Icon }) => <Link key={href} href={href} className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md"><span className="flex items-center gap-3 text-sm font-semibold text-slate-800"><span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-100 text-slate-600 group-hover:bg-sky-100 group-hover:text-sky-700"><Icon className="h-4 w-4" /></span>{label}</span><ArrowUpRight className="h-4 w-4 text-slate-400" /></Link>)}
+          {workspaceLinks.map(({ label, href, icon: Icon }) => <Link key={href} href={withAtlasProduct(href, selectedProductCode)} className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md"><span className="flex items-center gap-3 text-sm font-semibold text-slate-800"><span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-100 text-slate-600 group-hover:bg-sky-100 group-hover:text-sky-700"><Icon className="h-4 w-4" /></span>{label}</span><ArrowUpRight className="h-4 w-4 text-slate-400" /></Link>)}
         </div>
       </section>
+      </div>
     </div>
   )
 }
