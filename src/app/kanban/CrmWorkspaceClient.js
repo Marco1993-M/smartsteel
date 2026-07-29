@@ -44,7 +44,7 @@ const CRM_FALLBACK_FIELDS = [
 const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
 const CRM_VIEW_OPTIONS = [
   { key: "pipeline", label: "Pipeline", helper: "Move and review leads" },
-  { key: "my_work", label: "My Work", helper: "Handle follow-ups, tasks, and loose ends" },
+  { key: "my_work", label: "Team Queue", helper: "Clear follow-ups, tasks, and loose ends together" },
   { key: "quotes", label: "Quotes", helper: "Manage priced work and quoted momentum" },
   { key: "insights", label: "Insights", helper: "Check workload and risk" },
 ]
@@ -126,6 +126,12 @@ function isBeforeToday(dateValue) {
   today.setHours(0, 0, 0, 0)
   date.setHours(0, 0, 0, 0)
   return date < today
+}
+
+function startOfDay(dateValue) {
+  const date = new Date(dateValue)
+  date.setHours(0, 0, 0, 0)
+  return date
 }
 
 function readLocalNextActions() {
@@ -377,7 +383,7 @@ async function sendCrmNotification(payload) {
   }
 }
 
-function TodayWorkColumn({ title, helper, tone, items, emptyText, renderItem }) {
+function TodayWorkColumn({ title, helper, tone, items, emptyText, renderItem, priority = false }) {
   const toneClasses = {
     rose: "bg-rose-50 text-rose-700 border-rose-100",
     sky: "bg-sky-50 text-sky-700 border-sky-100",
@@ -386,7 +392,9 @@ function TodayWorkColumn({ title, helper, tone, items, emptyText, renderItem }) 
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+    <div className={`rounded-2xl border p-3 sm:p-4 ${
+      priority ? "border-slate-300 bg-white shadow-sm" : "border-slate-200 bg-slate-50"
+    }`}>
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold text-slate-900">{title}</h3>
@@ -431,15 +439,11 @@ function TodayLeadCard({ lead, onOpen, onSnooze }) {
         </span>
       </div>
 
-      <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">
-        {lead.next_action || "No next action captured yet."}
-      </p>
-
       <div className="mt-2 rounded-lg bg-slate-50 p-2">
         <div className="flex items-start justify-between gap-2">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-              SOP next
+              Next move
             </p>
             <p className="mt-1 text-xs font-medium leading-4 text-slate-700">
               {lead.next_action || leadSop.nextStep}
@@ -531,6 +535,129 @@ function TodayTaskCard({ task, onComplete }) {
   )
 }
 
+function getQueueActionLabel(lead) {
+  const action = String(lead?.next_action || "").toLowerCase()
+  if (action.includes("email") || action.includes("follow up")) return "Prepare follow-up"
+  if (action.includes("estimate") || action.includes("quote")) return "Review estimate"
+  if (action.includes("call") || action.includes("contact")) return "Open call details"
+  if (!lead?.next_action?.trim()) return "Set next step"
+  return "Open next step"
+}
+
+function getQueueTiming(lead) {
+  if (!lead?.follow_up_at) return { label: "Needs a date", tone: "amber", score: 30 }
+  const followUp = startOfDay(lead.follow_up_at)
+  const today = startOfDay(new Date())
+  const days = Math.round((today.getTime() - followUp.getTime()) / 86400000)
+
+  if (days > 0) {
+    return {
+      label: `${days} day${days === 1 ? "" : "s"} overdue`,
+      tone: "rose",
+      score: 100 + days,
+    }
+  }
+  if (days === 0) return { label: "Due today", tone: "sky", score: 80 }
+  return {
+    label: `Due ${new Date(lead.follow_up_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short" })}`,
+    tone: "slate",
+    score: 10,
+  }
+}
+
+function QueueLeadRow({ lead, onOpen, onSnooze, compact = false }) {
+  const timing = getQueueTiming(lead)
+  const opportunity = getOpportunitySummary(lead)
+  const toneClasses = {
+    rose: "bg-rose-50 text-rose-700 ring-rose-100",
+    sky: "bg-sky-50 text-sky-700 ring-sky-100",
+    amber: "bg-amber-50 text-amber-700 ring-amber-100",
+    slate: "bg-slate-100 text-slate-600 ring-slate-200",
+  }
+
+  return (
+    <article className="group rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-slate-300 hover:shadow-md sm:p-4">
+      <div className="flex items-start gap-3">
+        <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+          timing.tone === "rose" ? "bg-rose-500" : timing.tone === "sky" ? "bg-sky-500" : "bg-amber-500"
+        }`} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h3 className="font-bold text-slate-950">{lead.name} {lead.last_name}</h3>
+              <p className="mt-0.5 text-xs text-slate-500">
+                {opportunity.line} · {lead.product_type || "Project not selected"}
+              </p>
+            </div>
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${toneClasses[timing.tone]}`}>
+              {timing.label}
+            </span>
+          </div>
+
+          <div className={`${compact ? "mt-2" : "mt-3"} rounded-xl bg-slate-50 px-3 py-2.5`}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Next move</p>
+            <p className="mt-1 text-sm font-medium leading-5 text-slate-700">
+              {lead.next_action || "Decide and capture the next action for this lead."}
+            </p>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-slate-500">
+              Owner: <span className="text-slate-800">{lead.allocated_to || "Unassigned"}</span>
+            </span>
+            <div className="flex gap-2">
+              {!compact && (
+                <button
+                  type="button"
+                  onClick={onSnooze}
+                  className="rounded-lg px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                >
+                  Tomorrow
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onOpen}
+                className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+              >
+                {getQueueActionLabel(lead)}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function QueueTaskRow({ task, onComplete }) {
+  const overdue = task.due_date && task.due_date < new Date().toISOString().split("T")[0]
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-bold text-slate-950">{task.title}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {task.assignee || "Unassigned"} · {task.priority || "Normal priority"}
+          </p>
+        </div>
+        <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+          overdue ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
+        }`}>
+          {overdue ? "Task overdue" : "Task due"}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={onComplete}
+        className="mt-3 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100"
+      >
+        Mark complete
+      </button>
+    </article>
+  )
+}
+
 export default function CrmWorkspace({ mode = "legacy" }) {
   const router = useRouter()
   const isOsCrmRoute = mode === "os"
@@ -560,6 +687,8 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const [dailyTasks, setDailyTasks] = useState([])
   const [tasksLoading, setTasksLoading] = useState(true)
   const [crmLoadWarning, setCrmLoadWarning] = useState("")
+  const [teamQueueOwner, setTeamQueueOwner] = useState("all")
+  const [showTeamPlanner, setShowTeamPlanner] = useState(false)
 
   useEffect(() => {
     if (!isOsCrmRoute || typeof window === "undefined") return
@@ -807,6 +936,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const handleSaveLead = async (leadData, isNew = false) => {
     const normalizedLead = normalizeLead({
       ...leadData,
+      quote_value: isNew ? null : leadData.quote_value,
       created_by: leadData.created_by || user?.id || null,
     })
     const validationError = validateLead(normalizedLead)
@@ -1936,6 +2066,60 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     }
   }, [currentTeamMember, dailyTasks, leads, ownershipView])
 
+  const teamCommandQueue = useMemo(() => {
+    const ownerMatches = (item) =>
+      teamQueueOwner === "all" || item.allocated_to === teamQueueOwner || item.assignee === teamQueueOwner
+    const activeLeads = leads.filter(
+      (lead) => !["won", "lost"].includes(normalizeStatus(lead.status)) && ownerMatches(lead)
+    )
+
+    const urgentLeads = activeLeads
+      .filter((lead) => isBeforeToday(lead.follow_up_at) || isSameDay(lead.follow_up_at))
+      .map((lead) => ({
+        type: "lead",
+        record: lead,
+        score:
+          getQueueTiming(lead).score +
+          (normalizeStatus(lead.status) === "quoted" ? 20 : 0),
+      }))
+
+    const dueTasks = dailyTasks
+      .filter(ownerMatches)
+      .filter((task) => !task.due_date || task.due_date <= new Date().toISOString().split("T")[0])
+      .map((task) => ({
+        type: "task",
+        record: task,
+        score:
+          70 +
+          (task.priority === "High" ? 20 : task.priority === "Medium" ? 10 : 0) +
+          (task.due_date && task.due_date < new Date().toISOString().split("T")[0] ? 20 : 0),
+      }))
+
+    const urgentLeadIds = new Set(urgentLeads.map((item) => item.record.id))
+    const needsDirection = activeLeads
+      .filter((lead) => !urgentLeadIds.has(lead.id))
+      .filter((lead) => {
+        const staleDays = getDaysSince(getLeadFreshnessDate(lead))
+        return !lead.next_action?.trim() || !lead.allocated_to?.trim() || staleDays > 5
+      })
+      .sort((a, b) => getDaysSince(getLeadFreshnessDate(b)) - getDaysSince(getLeadFreshnessDate(a)))
+
+    const inSevenDays = addDays(startOfDay(new Date()), 7).getTime()
+    const upcomingLeads = activeLeads
+      .filter((lead) => {
+        if (!lead.follow_up_at || urgentLeadIds.has(lead.id)) return false
+        const due = startOfDay(lead.follow_up_at).getTime()
+        return due > startOfDay(new Date()).getTime() && due <= inSevenDays
+      })
+      .sort((a, b) => new Date(a.follow_up_at) - new Date(b.follow_up_at))
+
+    return {
+      now: [...urgentLeads, ...dueTasks].sort((a, b) => b.score - a.score),
+      needsDirection,
+      upcomingLeads,
+    }
+  }, [dailyTasks, leads, teamQueueOwner])
+
   const topOwnerRow = useMemo(() => {
     return [...accountabilityRows].sort((a, b) => b.owned - a.owned)[0] || null
   }, [accountabilityRows])
@@ -2372,151 +2556,154 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         )}
 
         {crmView === "my_work" && (
-          <>
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Today&apos;s work
-              </p>
-              <h2 className="mt-1 text-lg font-semibold text-slate-900">
-                My work queue
-              </h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Start here for general follow-ups, calls due today, loose ends, and open tasks.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                Open items
-              </p>
-              <p className="mt-1 text-3xl font-bold text-slate-900">{todaysWork.total}</p>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 xl:grid-cols-4">
-            <TodayWorkColumn
-              title="Overdue"
-              helper="Follow-ups already slipping"
-              tone="rose"
-              items={todaysWork.overdueFollowUps}
-              emptyText="No overdue follow-ups."
-              renderItem={(lead) => (
-                <TodayLeadCard
-                  key={lead.id}
-                  lead={lead}
-                  onOpen={() => setEditingLead(lead)}
-                  onSnooze={() => handleSnoozeLeadToTomorrow(lead)}
-                />
-              )}
-            />
-            <TodayWorkColumn
-              title="Due today"
-              helper="Calls and follow-ups for today"
-              tone="sky"
-              items={todaysWork.dueToday}
-              emptyText="Nothing due today."
-              renderItem={(lead) => (
-                <TodayLeadCard
-                  key={lead.id}
-                  lead={lead}
-                  onOpen={() => setEditingLead(lead)}
-                  onSnooze={() => handleSnoozeLeadToTomorrow(lead)}
-                />
-              )}
-            />
-            <TodayWorkColumn
-              title="Needs decision"
-              helper="Missing owner, next step, or stale"
-              tone="amber"
-              items={todaysWork.needsDecision}
-              emptyText="No loose ends showing."
-              renderItem={(lead) => (
-                <TodayLeadCard
-                  key={lead.id}
-                  lead={lead}
-                  onOpen={() => setEditingLead(lead)}
-                  onSnooze={() => handleSnoozeLeadToTomorrow(lead)}
-                />
-              )}
-            />
-            <TodayWorkColumn
-              title="Tasks"
-              helper={tasksLoading ? "Loading tasks..." : "CRM tasks due now"}
-              tone="emerald"
-              items={todaysWork.openTasks}
-              emptyText="No open tasks due."
-              renderItem={(task) => (
-                <TodayTaskCard
-                  key={task.id}
-                  task={task}
-                  onComplete={() => handleCompleteDailyTask(task.id)}
-                />
-              )}
-            />
-          </div>
-        </section>
-          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-              <UpcomingTasks onTasksChanged={setDailyTasks} />
-
-              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                <h2 className="text-lg font-semibold text-slate-900">Stalled opportunities</h2>
-                <p className="mt-1 text-sm text-slate-600">
-                  These opportunities are overdue, stale, unassigned, or missing a next step.
-                </p>
-                <div className="mt-4 space-y-3">
-                  {atRiskLeads.length === 0 ? (
-                    <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                      No stalled leads right now.
-                    </p>
-                  ) : (
-                    atRiskLeads.map((lead) => (
-                      <div key={lead.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold text-slate-900">
-                              {lead.name} {lead.last_name}
-                            </p>
-                            <p className="text-sm text-slate-600">
-                              {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
-                            </p>
-                          </div>
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                            {formatStatusLabel(lead.status)}
-                          </span>
-                        </div>
-                        <div className="mt-3 grid gap-2 text-sm text-slate-600">
-                          <p>
-                            <span className="font-medium text-slate-900">Next step:</span>{" "}
-                            {lead.next_action || "Missing"}
-                          </p>
-                          <p>
-                            <span className="font-medium text-slate-900">Follow-up:</span>{" "}
-                            {lead.follow_up_at
-                              ? new Date(lead.follow_up_at).toLocaleDateString()
-                              : "Not set"}
-                          </p>
-                          <p>
-                            <span className="font-medium text-slate-900">Last movement:</span>{" "}
-                            {Number.isFinite(getDaysSince(getLeadFreshnessDate(lead)))
-                              ? `${getDaysSince(getLeadFreshnessDate(lead))} day(s) ago`
-                              : "Unknown"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setEditingLead(lead)}
-                          className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
-                        >
-                          Review lead
-                        </button>
-                      </div>
-                    ))
-                  )}
+          <div className="space-y-5">
+            <section className="overflow-hidden rounded-3xl bg-slate-950 text-white shadow-xl shadow-slate-300/30">
+              <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-end">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.24em] text-sky-300">Team command centre</p>
+                  <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+                    Finish the right work first.
+                  </h2>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
+                    Client commitments and operational tasks ranked by urgency for the whole team.
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/10">
+                  <div className="bg-white/5 px-4 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Now</p>
+                    <p className="mt-1 text-2xl font-bold">{teamCommandQueue.now.length}</p>
+                  </div>
+                  <div className="bg-white/5 px-4 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Decide</p>
+                    <p className="mt-1 text-2xl font-bold">{teamCommandQueue.needsDirection.length}</p>
+                  </div>
+                  <div className="bg-white/5 px-4 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Next</p>
+                    <p className="mt-1 text-2xl font-bold">{teamCommandQueue.upcomingLeads.length}</p>
+                  </div>
                 </div>
               </div>
+              <div className="flex gap-2 overflow-x-auto border-t border-white/10 px-5 py-3 sm:px-7">
+                {["all", ...TEAM_MEMBERS].map((owner) => (
+                  <button
+                    key={owner}
+                    type="button"
+                    onClick={() => setTeamQueueOwner(owner)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                      teamQueueOwner === owner
+                        ? "bg-white text-slate-950"
+                        : "bg-white/10 text-slate-300 hover:bg-white/15"
+                    }`}
+                  >
+                    {owner === "all" ? "Whole team" : owner}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+              <section className="rounded-3xl border border-slate-200 bg-slate-100/70 p-3 sm:p-4">
+                <div className="mb-3 flex items-end justify-between gap-3 px-1">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-600">Now</p>
+                    <h3 className="mt-1 text-xl font-bold text-slate-950">Ranked action queue</h3>
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 shadow-sm">
+                    {teamCommandQueue.now.length} remaining
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {teamCommandQueue.now.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-emerald-300 bg-emerald-50 p-8 text-center">
+                      <p className="font-bold text-emerald-800">The immediate queue is clear.</p>
+                      <p className="mt-1 text-sm text-emerald-700">No overdue work or commitments due today.</p>
+                    </div>
+                  ) : (
+                    teamCommandQueue.now.map((item) =>
+                      item.type === "lead" ? (
+                        <QueueLeadRow
+                          key={`lead-${item.record.id}`}
+                          lead={item.record}
+                          onOpen={() => setEditingLead(item.record)}
+                          onSnooze={() => handleSnoozeLeadToTomorrow(item.record)}
+                        />
+                      ) : (
+                        <QueueTaskRow
+                          key={`task-${item.record.id}`}
+                          task={item.record}
+                          onComplete={() => handleCompleteDailyTask(item.record.id)}
+                        />
+                      )
+                    )
+                  )}
+                </div>
+              </section>
+
+              <div className="space-y-5">
+                <section className="rounded-3xl border border-amber-200 bg-amber-50/60 p-4 sm:p-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700">Needs direction</p>
+                  <h3 className="mt-1 text-lg font-bold text-slate-950">Decide the next move</h3>
+                  <div className="mt-4 space-y-3">
+                    {teamCommandQueue.needsDirection.length === 0 ? (
+                      <p className="rounded-xl bg-white/70 p-4 text-sm text-slate-500">No unclear or stale leads.</p>
+                    ) : (
+                      teamCommandQueue.needsDirection.slice(0, 5).map((lead) => (
+                        <QueueLeadRow
+                          key={lead.id}
+                          lead={lead}
+                          compact
+                          onOpen={() => setEditingLead(lead)}
+                          onSnooze={() => handleSnoozeLeadToTomorrow(lead)}
+                        />
+                      ))
+                    )}
+                  </div>
+                </section>
+
+                <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-700">Next</p>
+                      <h3 className="mt-1 text-lg font-bold text-slate-950">Coming up this week</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowTeamPlanner((current) => !current)}
+                      className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50"
+                    >
+                      {showTeamPlanner ? "Hide planner" : "Open planner"}
+                    </button>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {teamCommandQueue.upcomingLeads.length === 0 ? (
+                      <p className="text-sm text-slate-500">No follow-ups scheduled in the next seven days.</p>
+                    ) : (
+                      teamCommandQueue.upcomingLeads.slice(0, 5).map((lead) => (
+                        <button
+                          key={lead.id}
+                          type="button"
+                          onClick={() => setEditingLead(lead)}
+                          className="flex w-full items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100"
+                        >
+                          <span>
+                            <span className="block text-sm font-bold text-slate-900">{lead.name} {lead.last_name}</span>
+                            <span className="mt-0.5 block text-xs text-slate-500">{lead.allocated_to || "Unassigned"}</span>
+                          </span>
+                          <span className="shrink-0 text-xs font-bold text-slate-600">{getQueueTiming(lead).label}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </section>
+              </div>
             </div>
-          </>
+
+            {showTeamPlanner ? (
+              <section className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
+                <UpcomingTasks onTasksChanged={setDailyTasks} />
+              </section>
+            ) : null}
+          </div>
         )}
 
         {crmView === "quotes" && (
