@@ -17,6 +17,10 @@ function normalize(value, fallback = "Not captured") {
   return String(value || "").trim() || fallback
 }
 
+function isPaidLeadSource(value) {
+  return /(google\s*ads?|paid|cpc|ppc|adwords)/i.test(String(value || ""))
+}
+
 function percentage(part, total) {
   return total > 0 ? Math.round((part / total) * 1000) / 10 : 0
 }
@@ -228,6 +232,17 @@ export async function GET(request) {
   const connectionRows = connectionsResult.error ? [] : connectionsResult.data || []
   const connectionMap = Object.fromEntries(connectionRows.map((connection) => [connection.source, connection]))
   const marketing = buildMarketingSummary(marketingResult.error ? [] : marketingResult.data || [], start, end, previousStart)
+  const paidWonLeads = currentLeads.filter(
+    (lead) => String(lead.status || "").toLowerCase() === "won" && isPaidLeadSource(lead.lead_source)
+  )
+  const grossMarginRate = 0.3
+  const lifetimeProjectsPerCustomer = 1
+  const averageWonValue = current.wonCount > 0 ? current.wonValue / current.wonCount : 0
+  const contributionLtv = averageWonValue * grossMarginRate * lifetimeProjectsPerCustomer
+  const paidAcquisitionCost = marketing.google_ads.cost || 0
+  const cac = paidWonLeads.length > 0 ? paidAcquisitionCost / paidWonLeads.length : 0
+  const ltvCacRatio = cac > 0 ? contributionLtv / cac : 0
+  const ltvCacReady = contributionLtv > 0 && paidAcquisitionCost > 0 && paidWonLeads.length > 0
 
   return NextResponse.json({
     period: {
@@ -271,6 +286,25 @@ export async function GET(request) {
       })),
       searchConsole: marketing.search_console,
       googleAds: marketing.google_ads,
+    },
+    commercialEfficiency: {
+      ready: ltvCacReady,
+      averageWonValue: Math.round(averageWonValue * 100) / 100,
+      grossMarginRate,
+      lifetimeProjectsPerCustomer,
+      contributionLtv: Math.round(contributionLtv * 100) / 100,
+      paidAcquisitionCost,
+      paidWonCustomers: paidWonLeads.length,
+      cac: Math.round(cac * 100) / 100,
+      ltvCacRatio: Math.round(ltvCacRatio * 100) / 100,
+      basis: "Won quote value × gross margin × lifetime projects, divided by Google Ads spend per paid-attributed won customer.",
+      blocker: !current.wonCount
+        ? "No won opportunities with value in this period."
+        : !paidAcquisitionCost
+          ? "Google Ads spend has not been synced for this period."
+          : !paidWonLeads.length
+            ? "No won CRM leads are attributed to Google Ads or another paid source."
+            : "",
     },
     warnings,
   })
