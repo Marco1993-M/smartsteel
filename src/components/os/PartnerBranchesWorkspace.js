@@ -86,15 +86,10 @@ function distanceFromHub(branch) {
   return Math.round(earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine)))
 }
 
-function radiusStyle(radiusKm, bounds) {
-  const latitudeRadius = radiusKm / 111.32
-  const longitudeRadius =
-    radiusKm / (111.32 * Math.cos((PRETORIA_HUB.latitude * Math.PI) / 180))
-  const width = (longitudeRadius * 2 * 84) / (bounds.maxLng - bounds.minLng)
-  const height = (latitudeRadius * 2 * 78) / (bounds.maxLat - bounds.minLat)
+function radiusStyle(radiusKm) {
   return {
-    width: `${width}%`,
-    height: `${height}%`,
+    width: `min(${radiusKm / 4}%, ${radiusKm * 1.6}px)`,
+    aspectRatio: "1 / 1",
   }
 }
 
@@ -348,7 +343,7 @@ export default function PartnerBranchesWorkspace() {
                     key={radius}
                     style={{
                       ...hubPosition,
-                      ...radiusStyle(radius, bounds),
+                      ...radiusStyle(radius),
                     }}
                     className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-dashed border-sky-500/30 bg-sky-400/[0.025]"
                   >
