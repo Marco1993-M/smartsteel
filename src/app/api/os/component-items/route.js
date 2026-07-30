@@ -104,6 +104,18 @@ export async function PATCH(request) {
   if (quantity !== null && (!Number.isFinite(quantity) || quantity < 0)) {
     return NextResponse.json({ error: "Quantity must be blank or a positive number." }, { status: 400 })
   }
+  if (status === "approved") {
+    const missing = [
+      !quantity ? "quantity" : "",
+      !String(body?.quantityRule || "").trim() ? "quantity rule" : "",
+      !String(body?.sizeSpec || "").trim() || body.sizeSpec === "To be confirmed" ? "size" : "",
+      !String(body?.gradeSpec || "").trim() || body.gradeSpec === "To be confirmed" ? "grade" : "",
+      !String(body?.finishSpec || "").trim() || body.finishSpec === "To be confirmed" ? "finish" : "",
+    ].filter(Boolean)
+    if (missing.length) {
+      return NextResponse.json({ error: `Complete ${missing.join(", ")} before approving this connection item.` }, { status: 400 })
+    }
+  }
 
   const { data, error } = await supabaseServer
     .from("os_component_items")
