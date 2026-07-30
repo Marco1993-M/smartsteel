@@ -49,8 +49,8 @@ const PLANNING_RADII_KM = [100, 200, 300]
 const NETWORK_BOUNDS = {
   minLat: -29.15,
   maxLat: -24.75,
-  minLng: 25,
-  maxLng: 31.55,
+  minLng: 26.75,
+  maxLng: 31.65,
 }
 
 function statusTone(status) {
@@ -84,6 +84,17 @@ function distanceFromHub(branch) {
       Math.cos(branchLatitude) *
       Math.sin(longitudeDelta / 2) ** 2
   return Math.round(earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine)))
+}
+
+function automaticPlanningZone(branch) {
+  const distance = distanceFromHub(branch)
+  if (distance === null) {
+    return { code: "Review", label: "Location review", detail: "Coordinates required" }
+  }
+  if (distance <= 100) return { code: "A", label: "Zone A", detail: "Within 100 km" }
+  if (distance <= 200) return { code: "B", label: "Zone B", detail: "101–200 km" }
+  if (distance <= 300) return { code: "C", label: "Zone C", detail: "201–300 km" }
+  return { code: "D", label: "Zone D", detail: "More than 300 km" }
 }
 
 function radiusStyle(radiusKm) {
@@ -159,6 +170,7 @@ export default function PartnerBranchesWorkspace() {
   const bounds = NETWORK_BOUNDS
   const hubPosition = branchPosition(PRETORIA_HUB, bounds)
   const selectedDistance = selected ? distanceFromHub(selected) : null
+  const selectedAutomaticZone = selected ? automaticPlanningZone(selected) : null
 
   const filteredRecords = records.filter((branch) => {
     const matchesQuery =
@@ -435,8 +447,13 @@ export default function PartnerBranchesWorkspace() {
                       <dd className="mt-1 text-sm font-semibold text-slate-900">{selected.territory || "Unassigned"}</dd>
                     </div>
                     <div className="rounded-xl border border-slate-200 p-3">
-                      <dt className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Delivery zone</dt>
-                      <dd className="mt-1 text-sm font-semibold text-slate-900">{selected.deliveryZone || "Unassigned"}</dd>
+                      <dt className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Planning zone</dt>
+                      <dd className="mt-1 text-sm font-semibold text-slate-900">
+                        {selected.deliveryZone || selectedAutomaticZone?.label}
+                      </dd>
+                      <dd className="mt-0.5 text-[11px] text-slate-500">
+                        {selected.deliveryZone ? "Manual override" : selectedAutomaticZone?.detail}
+                      </dd>
                     </div>
                     <div className="col-span-2 rounded-xl border border-slate-200 p-3">
                       <dt className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Branch contact</dt>
@@ -559,8 +576,11 @@ export default function PartnerBranchesWorkspace() {
                   <input value={form.territory} onChange={(event) => setForm((current) => ({ ...current, territory: event.target.value }))} placeholder="e.g. Highveld East" className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
                 </label>
                 <label>
-                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Delivery zone</span>
-                  <input value={form.deliveryZone} onChange={(event) => setForm((current) => ({ ...current, deliveryZone: event.target.value }))} placeholder="e.g. Zone A" className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Planning-zone override</span>
+                  <input value={form.deliveryZone} onChange={(event) => setForm((current) => ({ ...current, deliveryZone: event.target.value }))} placeholder={automaticPlanningZone(selected).label} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
+                  <span className="mt-1 block text-xs text-slate-500">
+                    Leave blank to use {automaticPlanningZone(selected).label} automatically.
+                  </span>
                 </label>
               </div>
               <label className="block">
