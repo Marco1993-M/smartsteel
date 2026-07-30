@@ -13,6 +13,7 @@ function normalizeItem(row) {
   return {
     id: row.id,
     componentId: row.component_id,
+    fastenerId: row.fastener_id || "",
     itemCode: row.item_code,
     itemType: row.item_type,
     description: row.description,
@@ -65,6 +66,7 @@ export async function POST(request) {
       component_id: componentId,
       item_code: itemCode,
       item_type: itemType,
+      fastener_id: String(body?.fastenerId || "").trim() || null,
       description,
       quantity: null,
       unit,
@@ -107,6 +109,7 @@ export async function PATCH(request) {
     .from("os_component_items")
     .update({
       item_type: itemType,
+      fastener_id: String(body?.fastenerId || "").trim() || null,
       description: String(body?.description || "").trim(),
       quantity,
       unit,
