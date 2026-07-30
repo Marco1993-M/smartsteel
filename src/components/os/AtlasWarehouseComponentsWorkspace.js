@@ -4,6 +4,9 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, ArrowUpRight, Check, Layers3, PackagePlus, Settings2, ShieldAlert } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
+import {
+  matchLippedChannelProfile,
+} from "../../lib/atlasLippedChannelProfiles"
 
 const W08_COMPONENTS = [
   {
@@ -15,6 +18,7 @@ const W08_COMPONENTS = [
     rule: "One column set per portal",
     scope: "Standard",
     tags: ["W08", "Columns", "Primary steel", "3m eave"],
+    usesLippedChannel: true,
   },
   {
     code: "W08-RAF",
@@ -25,6 +29,7 @@ const W08_COMPONENTS = [
     rule: "One rafter set per portal",
     scope: "Standard",
     tags: ["W08", "Rafters", "Primary steel", "Dual pitch"],
+    usesLippedChannel: true,
   },
   {
     code: "W08-XBR",
@@ -35,6 +40,7 @@ const W08_COMPONENTS = [
     rule: "Calculated from total bay count",
     scope: "Standard",
     tags: ["W08", "X-bracing", "Stability", "Bay rule"],
+    usesLippedChannel: true,
   },
   {
     code: "W08-SEC",
@@ -45,6 +51,7 @@ const W08_COMPONENTS = [
     rule: "Linear metres from bay length and scope",
     scope: "Standard",
     tags: ["W08", "Purlins", "Wall hats", "Secondary steel"],
+    usesLippedChannel: true,
   },
   {
     code: "W08-CON",
@@ -87,8 +94,13 @@ const CONNECTION_ITEM_TEMPLATES = [
 ]
 
 const EMPTY_COMPONENT_SPECIFICATION = {
+  profileId: "",
   profileSpec: "",
   thicknessSpec: "",
+  calculatedMassKgPerM: "",
+  verifiedMassKgPerM: "",
+  massSource: "",
+  profileAvailability: "",
   gradeSpec: "",
   coatingSpec: "",
   quantityRule: "",
@@ -108,6 +120,8 @@ export default function AtlasWarehouseComponentsWorkspace() {
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
   const [connectionItems, setConnectionItems] = useState([])
+  const [profiles, setProfiles] = useState([])
+  const [profileSchemaReady, setProfileSchemaReady] = useState(true)
   const [connectionSchemaReady, setConnectionSchemaReady] = useState(true)
   const [savingItemId, setSavingItemId] = useState("")
   const [editingComponentId, setEditingComponentId] = useState("")
@@ -118,15 +132,23 @@ export default function AtlasWarehouseComponentsWorkspace() {
     setError("")
     try {
       const headers = await getOsAuthHeaders()
-      const [itemsResponse, familiesResponse] = await Promise.all([
+      const [itemsResponse, familiesResponse, profilesResponse] = await Promise.all([
         fetch("/api/os/catalog-items?platform=atlas&kind=component", { cache: "no-store", headers }),
         fetch("/api/os/product-families?platform=atlas", { cache: "no-store", headers }),
+        fetch("/api/os/atlas-profiles", { cache: "no-store", headers }),
       ])
-      const [itemsPayload, familiesPayload] = await Promise.all([itemsResponse.json(), familiesResponse.json()])
+      const [itemsPayload, familiesPayload, profilesPayload] = await Promise.all([
+        itemsResponse.json(),
+        familiesResponse.json(),
+        profilesResponse.json(),
+      ])
       if (!itemsResponse.ok) throw new Error(itemsPayload.error || "Could not load Atlas components.")
       if (!familiesResponse.ok) throw new Error(familiesPayload.error || "Could not load Atlas product families.")
+      if (!profilesResponse.ok) throw new Error(profilesPayload.error || "Could not load Atlas profiles.")
       setRecords(itemsPayload.records || [])
       setFamilyId((familiesPayload.records || []).find((family) => family.key === "warehouses")?.id || "")
+      setProfiles(profilesPayload.records || [])
+      setProfileSchemaReady(profilesPayload.schemaReady !== false)
     } catch (loadError) {
       setError(loadError.message)
     } finally {
@@ -252,17 +274,66 @@ export default function AtlasWarehouseComponentsWorkspace() {
   }
 
   function beginComponentEdit(record, component) {
+    const savedSpecification = record.specification || {}
+    const matchedProfile =
+      profiles.find((profile) => profile.id === savedSpecification.profileId) ||
+      matchLippedChannelProfile(savedSpecification.profileSpec || component.section, profiles)
     setEditingComponentId(record.id)
     setComponentDraft({
       ...EMPTY_COMPONENT_SPECIFICATION,
       profileSpec: component.section,
       quantityRule: component.rule,
-      ...(record.specification || {}),
+      ...savedSpecification,
+      ...(matchedProfile
+        ? {
+            profileId: matchedProfile.id,
+            profileSpec: matchedProfile.label,
+            thicknessSpec: `${matchedProfile.thicknessMm}mm BMT`,
+            calculatedMassKgPerM: String(matchedProfile.calculatedMassKgPerM),
+            verifiedMassKgPerM:
+              matchedProfile.verifiedMassKgPerM === null
+                ? savedSpecification.verifiedMassKgPerM || ""
+                : String(matchedProfile.verifiedMassKgPerM),
+            massSource:
+              matchedProfile.verifiedMassKgPerM === null ? "calculated" : "verified",
+            profileAvailability: matchedProfile.availabilityStatus,
+          }
+        : {}),
     })
   }
 
   function updateComponentDraft(field, value) {
     setComponentDraft((current) => ({ ...current, [field]: value }))
+  }
+
+  function selectProfile(profileId) {
+    if (profileId === "custom") {
+      setComponentDraft((current) => ({
+        ...current,
+        profileId: "custom",
+        profileSpec: "",
+        thicknessSpec: "",
+        calculatedMassKgPerM: "",
+        verifiedMassKgPerM: "",
+        massSource: "",
+        profileAvailability: "custom",
+      }))
+      return
+    }
+
+    const profile = profiles.find((item) => item.id === profileId)
+    if (!profile) return
+    setComponentDraft((current) => ({
+      ...current,
+      profileId: profile.id,
+      profileSpec: profile.label,
+      thicknessSpec: `${profile.thicknessMm}mm BMT`,
+      calculatedMassKgPerM: String(profile.calculatedMassKgPerM),
+      verifiedMassKgPerM:
+        profile.verifiedMassKgPerM === null ? "" : String(profile.verifiedMassKgPerM),
+      massSource: profile.verifiedMassKgPerM === null ? "calculated" : "verified",
+      profileAvailability: profile.availabilityStatus,
+    }))
   }
 
   async function saveComponentSpecification(record) {
@@ -324,13 +395,44 @@ export default function AtlasWarehouseComponentsWorkspace() {
               </div>
               <p className="mt-4 text-sm leading-6 text-slate-600">{component.summary}</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Profile / section</p><p className="mt-1 text-sm font-semibold text-slate-800">{specification.profileSpec || component.section}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Quantity rule</p><p className="mt-1 text-sm font-semibold text-slate-800">{specification.quantityRule || component.rule}</p></div></div>
-              {specification.thicknessSpec || specification.gradeSpec || specification.coatingSpec ? <div className="mt-3 flex flex-wrap gap-2">{[specification.thicknessSpec, specification.gradeSpec, specification.coatingSpec].filter(Boolean).map((value) => <span key={value} className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600">{value}</span>)}</div> : null}
+              {specification.thicknessSpec || specification.gradeSpec || specification.coatingSpec || specification.calculatedMassKgPerM ? <div className="mt-3 flex flex-wrap gap-2">{[specification.thicknessSpec, specification.gradeSpec, specification.coatingSpec, specification.calculatedMassKgPerM ? `${specification.verifiedMassKgPerM || specification.calculatedMassKgPerM} kg/m` : ""].filter(Boolean).map((value) => <span key={value} className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600">{value}</span>)}</div> : null}
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${toneForScope(component.scope)}`}>{component.scope}</span><p className="text-xs text-slate-500">{record?.owner || "Owner assigned on registration"}</p></div>{record ? <button type="button" onClick={() => editingComponentId === record.id ? setEditingComponentId("") : beginComponentEdit(record, component)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"><Settings2 className="h-3.5 w-3.5" />{editingComponentId === record.id ? "Close editor" : "Edit specs"}</button> : null}</div>
               {editingComponentId === record?.id ? (
                 <div className="mt-4 border-t border-slate-200 pt-4">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="text-xs font-semibold text-slate-600">Profile / section<input value={componentDraft.profileSpec} onChange={(event) => updateComponentDraft("profileSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
-                    <label className="text-xs font-semibold text-slate-600">Thickness<input value={componentDraft.thicknessSpec} onChange={(event) => updateComponentDraft("thicknessSpec", event.target.value)} placeholder="e.g. 2.5mm BMT" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                    {component.usesLippedChannel ? (
+                      <>
+                        <label className="text-xs font-semibold text-slate-600 sm:col-span-2">
+                          Standard lipped-channel profile
+                          <select value={componentDraft.profileId || "custom"} onChange={(event) => selectProfile(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900">
+                            <option value="custom">Custom profile</option>
+                            <optgroup label="Supplier-confirmed sizes">
+                              {profiles.filter((profile) => profile.availabilityStatus === "confirmed").map((profile) => <option key={profile.id} value={profile.id}>{profile.label} · {profile.calculatedMassKgPerM.toFixed(3)} kg/m</option>)}
+                            </optgroup>
+                            <optgroup label="Assumed thickness variants">
+                              {profiles.filter((profile) => profile.availabilityStatus === "assumed").map((profile) => <option key={profile.id} value={profile.id}>{profile.label} · {profile.calculatedMassKgPerM.toFixed(3)} kg/m</option>)}
+                            </optgroup>
+                          </select>
+                        </label>
+                        {componentDraft.profileId === "custom" || !componentDraft.profileId ? (
+                          <>
+                            <label className="text-xs font-semibold text-slate-600">Custom profile / section<input value={componentDraft.profileSpec} onChange={(event) => updateComponentDraft("profileSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                            <label className="text-xs font-semibold text-slate-600">Thickness<input value={componentDraft.thicknessSpec} onChange={(event) => updateComponentDraft("thicknessSpec", event.target.value)} placeholder="e.g. 2.5mm BMT" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                          </>
+                        ) : (
+                          <div className="grid gap-3 rounded-xl border border-sky-200 bg-sky-50 p-3 sm:col-span-2 sm:grid-cols-3">
+                            <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-700">Selected profile</p><p className="mt-1 text-sm font-bold text-slate-950">{componentDraft.profileSpec}</p></div>
+                            <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-700">Effective mass</p><p className="mt-1 text-sm font-bold text-slate-950">{componentDraft.verifiedMassKgPerM || componentDraft.calculatedMassKgPerM} kg/m</p><p className="mt-0.5 text-[10px] text-slate-500">{componentDraft.verifiedMassKgPerM ? "Verified mass" : "Calculated fallback"}</p></div>
+                            <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-700">Availability</p><p className="mt-1 text-sm font-bold capitalize text-slate-950">{componentDraft.profileAvailability}</p><p className="mt-0.5 text-[10px] text-slate-500">{componentDraft.profileAvailability === "confirmed" ? "Visible in supplier list" : "Confirm before procurement"}</p></div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <label className="text-xs font-semibold text-slate-600">Profile / section<input value={componentDraft.profileSpec} onChange={(event) => updateComponentDraft("profileSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                        <label className="text-xs font-semibold text-slate-600">Thickness<input value={componentDraft.thicknessSpec} onChange={(event) => updateComponentDraft("thicknessSpec", event.target.value)} placeholder="e.g. 2.5mm BMT" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
+                      </>
+                    )}
                     <label className="text-xs font-semibold text-slate-600">Steel grade<input value={componentDraft.gradeSpec} onChange={(event) => updateComponentDraft("gradeSpec", event.target.value)} placeholder="Record when confirmed" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
                     <label className="text-xs font-semibold text-slate-600">Coating / finish<input value={componentDraft.coatingSpec} onChange={(event) => updateComponentDraft("coatingSpec", event.target.value)} placeholder="e.g. ZAM" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
                     <label className="text-xs font-semibold text-slate-600 sm:col-span-2">Quantity rule<input value={componentDraft.quantityRule} onChange={(event) => updateComponentDraft("quantityRule", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
@@ -344,6 +446,8 @@ export default function AtlasWarehouseComponentsWorkspace() {
           )
         })}
       </section>
+
+      {!profileSchemaReady ? <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">The standard profile selector is running from the verified local library. Run the Atlas lipped-channel profile SQL to enable shared verified-mass overrides.</div> : null}
 
       <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-7">
