@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { AlertTriangle, Check, ChevronDown, ChevronUp, Save, Scale } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
@@ -341,7 +342,6 @@ export default function AtlasPricingWorkspace() {
           <div className="divide-y divide-slate-200">
             {items.map((record) => {
               const expanded = expandedId === record.id
-              const hasHold = record.status !== "confirmed" || (record.pricingUnit === "ton" && record.massKgPerM === "")
               const usesLippedChannelProfile = record.pricingUnit === "ton"
               const selectedProfile = profiles.find((profile) => profile.id === record.profileId)
               const usesBoltSelection = record.componentCode === "W08-BLT"
@@ -349,6 +349,8 @@ export default function AtlasPricingWorkspace() {
               const primaryValuePerM = materialValuePerM(record.massKgPerM, record.galvanisedRate)
               const lineCost = calculateAtlasPricingLine(record)
               const completeness = getAtlasPricingCompleteness(record)
+              const hasHold = record.status !== "confirmed" || !completeness.ready
+              const inheritsComponentQuantityRule = record.linkedComponentCode !== "W08-CON" || record.componentCode === "W08-CON"
               return (
                 <article key={record.id}>
                   <button
@@ -377,10 +379,10 @@ export default function AtlasPricingWorkspace() {
                     <div className="border-t border-sky-100 bg-sky-50/40 p-4 sm:p-5">
                       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                         <Field label="Component name">
-                          <input value={record.componentName} onChange={(event) => updateRecord(record.id, "componentName", event.target.value)} className={inputClass} />
+                          <input value={record.componentName} onChange={(event) => updateRecord(record.id, "componentName", event.target.value)} className={inputClass} disabled={Boolean(record.componentId)} />
                         </Field>
                         <Field label="Category">
-                          <input value={record.category} onChange={(event) => updateRecord(record.id, "category", event.target.value)} className={inputClass} />
+                          <input value={record.category} onChange={(event) => updateRecord(record.id, "category", event.target.value)} className={inputClass} disabled={Boolean(record.componentId)} />
                         </Field>
                         <Field label="Pricing unit">
                           <select value={record.pricingUnit} onChange={(event) => updateRecord(record.id, "pricingUnit", event.target.value)} className={inputClass}>
@@ -392,7 +394,31 @@ export default function AtlasPricingWorkspace() {
                             {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value} disabled={value === "confirmed" && !completeness.ready}>{label}</option>)}
                           </select>
                         </Field>
-                        {usesLippedChannelProfile ? (
+                        {record.componentId ? (
+                          <div className="border border-sky-200 bg-white p-4 md:col-span-2 xl:col-span-4">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div>
+                                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-sky-700">Inherited technical source</p>
+                                <p className="mt-1 text-base font-bold text-slate-950">{record.linkedComponentCode} · Technical revision {record.componentRevision}</p>
+                                <p className="mt-1 text-xs text-slate-500">Profile, mass, grade, coating, and the applicable quantity rule are controlled in Components.</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${record.technicalApproved ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{record.technicalApproved ? `Approved by ${record.technicalApprovedBy}` : "Technical approval required"}</span>
+                                <Link href="/os/atlas/components" className="border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:border-sky-400 hover:text-sky-700">Open Components</Link>
+                              </div>
+                            </div>
+                            <div className="mt-4 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-2 lg:grid-cols-5">
+                              {[
+                                ["Profile", record.technicalSpecification?.profileSpec || record.profileSpec || "Not specified"],
+                                ["Thickness", record.technicalSpecification?.thicknessSpec || "Not specified"],
+                                ["Mass", record.massKgPerM === "" ? "Not specified" : `${record.massKgPerM} kg/m`],
+                                ["Grade", record.technicalSpecification?.gradeSpec || "Not specified"],
+                                ["Coating", record.technicalSpecification?.coatingSpec || "Not specified"],
+                              ].map(([label, value]) => <div key={label} className="bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-xs font-bold leading-5 text-slate-800">{value}</p></div>)}
+                            </div>
+                            {record.technicalStale ? <p className="mt-3 border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">The component changed after this pricing line was last acknowledged. Saving will inherit revision {record.componentRevision} and keep the line in review.</p> : null}
+                          </div>
+                        ) : usesLippedChannelProfile ? (
                           <>
                             <Field label="Standard lipped-channel profile" wide>
                               <select value={record.profileId || ""} onChange={(event) => selectPricingProfile(record.id, event.target.value)} className={inputClass}>
@@ -448,7 +474,7 @@ export default function AtlasPricingWorkspace() {
                           <input value={record.lengthRule} onChange={(event) => updateRecord(record.id, "lengthRule", event.target.value)} className={inputClass} />
                         </Field>
                         <Field label="Quantity rule">
-                          <input value={record.quantityRule} onChange={(event) => updateRecord(record.id, "quantityRule", event.target.value)} className={inputClass} />
+                          <input value={record.quantityRule} onChange={(event) => updateRecord(record.id, "quantityRule", event.target.value)} className={inputClass} disabled={Boolean(record.componentId && inheritsComponentQuantityRule)} />
                         </Field>
                         <Field label="Baseline quantity">
                           <input type="number" min="0" step="0.01" value={record.baselineQuantity} onChange={(event) => updateRecord(record.id, "baselineQuantity", event.target.value)} className={inputClass} />
@@ -463,8 +489,8 @@ export default function AtlasPricingWorkspace() {
                           <input type="number" min="0" step="0.01" value={record.mildSteelRate} onChange={(event) => updateRecord(record.id, "mildSteelRate", event.target.value)} className={inputClass} />
                         </Field>
                         <Field label={selectedProfile ? "Verified mass override kg/m" : "Mass kg/m"}>
-                          <input type="number" min="0" step="0.0001" value={record.massKgPerM} onChange={(event) => updateMassOverride(record.id, event.target.value)} className={inputClass} />
-                          {selectedProfile ? <span className="mt-1 flex items-start justify-between gap-3 text-[10px] leading-4 text-slate-500"><span>The selected profile supplied {selectedProfile.calculatedMassKgPerM.toFixed(4)} kg/m. Editing this field marks the value as verified/manual.</span><button type="button" onClick={() => restoreProfileMass(record.id)} className="shrink-0 font-bold text-sky-700 hover:text-sky-900">Use profile mass</button></span> : null}
+                          <input type="number" min="0" step="0.0001" value={record.massKgPerM} onChange={(event) => updateMassOverride(record.id, event.target.value)} className={inputClass} disabled={Boolean(record.componentId)} />
+                          {selectedProfile && !record.componentId ? <span className="mt-1 flex items-start justify-between gap-3 text-[10px] leading-4 text-slate-500"><span>The selected profile supplied {selectedProfile.calculatedMassKgPerM.toFixed(4)} kg/m. Editing this field marks the value as verified/manual.</span><button type="button" onClick={() => restoreProfileMass(record.id)} className="shrink-0 font-bold text-sky-700 hover:text-sky-900">Use profile mass</button></span> : null}
                         </Field>
                         <Field label="Waste %">
                           <input type="number" min="0" step="0.1" value={record.wastePercent} onChange={(event) => updateRecord(record.id, "wastePercent", event.target.value)} className={inputClass} />

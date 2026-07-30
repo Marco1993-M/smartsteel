@@ -14,11 +14,11 @@ const W08_COMPONENTS = [
     code: "W08-COL",
     category: "Primary framing",
     title: "W08 column set",
-    section: "100 x 50 x 20 x 2 CFLC",
-    summary: "W08 column set for confirmed 3m to 5m eave configurations.",
-    rule: "One column set per portal",
+    section: "2 x 100 x 50 x 20 x 2mm BMT lipped channels, back-to-back",
+    summary: "Each W08 column assembly uses two lipped channels fixed back-to-back for confirmed 3m to 5m eave configurations.",
+    rule: "Two back-to-back channels per column position; two column positions per portal",
     scope: "Standard",
-    tags: ["W08", "Columns", "Primary steel", "3m to 5m eave"],
+    tags: ["W08", "Columns", "Back-to-back", "Primary steel", "3m to 5m eave"],
     usesLippedChannel: true,
   },
   {
@@ -139,6 +139,7 @@ export default function AtlasWarehouseComponentsWorkspace() {
   const [savingItemId, setSavingItemId] = useState("")
   const [editingComponentId, setEditingComponentId] = useState("")
   const [componentDraft, setComponentDraft] = useState(EMPTY_COMPONENT_SPECIFICATION)
+  const [componentApprover, setComponentApprover] = useState("")
 
   async function loadRecords() {
     setLoading(true)
@@ -343,6 +344,7 @@ export default function AtlasWarehouseComponentsWorkspace() {
       profiles.find((profile) => profile.id === savedSpecification.profileId) ||
       matchLippedChannelProfile(savedSpecification.profileSpec || component.section, profiles)
     setEditingComponentId(record.id)
+    setComponentApprover(record.technicalApprovedBy || "")
     setComponentDraft({
       ...EMPTY_COMPONENT_SPECIFICATION,
       profileSpec: component.section,
@@ -425,6 +427,35 @@ export default function AtlasWarehouseComponentsWorkspace() {
     }
   }
 
+  async function approveComponentSpecification(record) {
+    if (!componentApprover.trim()) {
+      setError("Enter the technical approver before approving this component.")
+      return
+    }
+    setSavingItemId(record.id)
+    setError("")
+    setMessage("")
+    try {
+      const response = await fetch("/api/os/catalog-items", {
+        method: "PATCH",
+        headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          id: record.id,
+          technicalApproval: true,
+          technicalApprovedBy: componentApprover.trim(),
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "Could not approve the component specification.")
+      setRecords((current) => current.map((item) => item.id === record.id ? payload.record : item))
+      setMessage(`${record.componentCode || record.title} technical revision approved.`)
+    } catch (saveError) {
+      setError(saveError.message)
+    } finally {
+      setSavingItemId("")
+    }
+  }
+
   return (
     <div className="space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
       <section className="relative overflow-hidden rounded-[1.75rem] border border-slate-800 bg-[radial-gradient(circle_at_88%_0%,rgba(14,165,233,0.24),transparent_32%),linear-gradient(140deg,#020617,#172033)] text-white shadow-[0_22px_55px_rgba(15,23,42,0.16)]">
@@ -460,7 +491,7 @@ export default function AtlasWarehouseComponentsWorkspace() {
               <p className="mt-4 text-sm leading-6 text-slate-600">{component.summary}</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Profile / section</p><p className="mt-1 text-sm font-semibold text-slate-800">{specification.profileSpec || component.section}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Quantity rule</p><p className="mt-1 text-sm font-semibold text-slate-800">{specification.quantityRule || component.rule}</p></div></div>
               {specification.thicknessSpec || specification.gradeSpec || specification.coatingSpec || specification.calculatedMassKgPerM ? <div className="mt-3 flex flex-wrap gap-2">{[specification.thicknessSpec, specification.gradeSpec, specification.coatingSpec, specification.calculatedMassKgPerM ? `${specification.verifiedMassKgPerM || specification.calculatedMassKgPerM} kg/m` : ""].filter(Boolean).map((value) => <span key={value} className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600">{value}</span>)}</div> : null}
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${toneForScope(component.scope)}`}>{component.scope}</span><p className="text-xs text-slate-500">{record?.owner || "Owner assigned on registration"}</p></div>{record ? <button type="button" onClick={() => editingComponentId === record.id ? setEditingComponentId("") : beginComponentEdit(record, component)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"><Settings2 className="h-3.5 w-3.5" />{editingComponentId === record.id ? "Close editor" : "Edit specs"}</button> : null}</div>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${toneForScope(component.scope)}`}>{component.scope}</span><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${record?.technicalApprovedAt ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{record?.technicalApprovedAt ? `Technical R${record.technicalRevision} approved` : `Technical R${record?.technicalRevision || 1} needs approval`}</span><p className="text-xs text-slate-500">{record?.owner || "Owner assigned on registration"}</p></div>{record ? <button type="button" onClick={() => editingComponentId === record.id ? setEditingComponentId("") : beginComponentEdit(record, component)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"><Settings2 className="h-3.5 w-3.5" />{editingComponentId === record.id ? "Close editor" : "Edit specs"}</button> : null}</div>
               {editingComponentId === record?.id ? (
                 <div className="mt-4 border-t border-slate-200 pt-4">
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -503,7 +534,7 @@ export default function AtlasWarehouseComponentsWorkspace() {
                     <label className="text-xs font-semibold text-slate-600">Drawing revision<input value={componentDraft.drawingRevision} onChange={(event) => updateComponentDraft("drawingRevision", event.target.value)} placeholder="e.g. W08-COL-R1" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
                     <label className="text-xs font-semibold text-slate-600">Notes<input value={componentDraft.notes} onChange={(event) => updateComponentDraft("notes", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>
                   </div>
-                  <div className="mt-4 flex justify-end"><button type="button" onClick={() => saveComponentSpecification(record)} disabled={savingItemId === record.id} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50">{savingItemId === record.id ? "Saving..." : "Save component specs"}</button></div>
+                  <div className="mt-4 grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end"><label className="text-xs font-semibold text-slate-600">Technical approver<input value={componentApprover} onChange={(event) => setComponentApprover(event.target.value)} placeholder="Required for approval" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label><button type="button" onClick={() => saveComponentSpecification(record)} disabled={savingItemId === record.id} className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-800 disabled:opacity-50">{savingItemId === record.id ? "Saving..." : "Save new revision"}</button><button type="button" onClick={() => approveComponentSpecification(record)} disabled={savingItemId === record.id || !componentApprover.trim()} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40">{record.technicalApprovedAt ? "Reapprove revision" : "Approve technical revision"}</button></div>
                 </div>
               ) : null}
             </article>
