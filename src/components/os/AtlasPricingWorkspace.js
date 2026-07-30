@@ -6,6 +6,7 @@ import { AlertTriangle, Check, ChevronDown, ChevronUp, Save, Scale } from "lucid
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { getAtlasProduct, withAtlasProduct } from "../../lib/atlasProductRange"
 import { matchLippedChannelProfile } from "../../lib/atlasLippedChannelProfiles"
+import { formatBoltSpecification } from "../../lib/atlasFasteners"
 import AtlasModuleHero from "./AtlasModuleHero"
 
 const STATUS_LABELS = {
@@ -46,7 +47,9 @@ export default function AtlasPricingWorkspace() {
   const [loading, setLoading] = useState(true)
   const [schemaReady, setSchemaReady] = useState(true)
   const [profiles, setProfiles] = useState([])
+  const [fasteners, setFasteners] = useState([])
   const [profileSchemaReady, setProfileSchemaReady] = useState(true)
+  const [fastenerSchemaReady, setFastenerSchemaReady] = useState(true)
   const [expandedId, setExpandedId] = useState("")
   const [savingId, setSavingId] = useState("")
   const [error, setError] = useState("")
@@ -59,19 +62,22 @@ export default function AtlasPricingWorkspace() {
       setError("")
       try {
         const headers = await getOsAuthHeaders()
-        const [response, profilesResponse] = await Promise.all([
+        const [response, profilesResponse, fastenersResponse] = await Promise.all([
           fetch(`/api/os/atlas-pricing?product=${encodeURIComponent(productCode)}`, {
             cache: "no-store",
             headers,
           }),
           fetch("/api/os/atlas-profiles", { cache: "no-store", headers }),
+          fetch("/api/os/atlas-fasteners", { cache: "no-store", headers }),
         ])
-        const [payload, profilesPayload] = await Promise.all([
+        const [payload, profilesPayload, fastenersPayload] = await Promise.all([
           response.json(),
           profilesResponse.json(),
+          fastenersResponse.json(),
         ])
         if (!response.ok) throw new Error(payload.error || "Could not load Atlas pricing.")
         if (!profilesResponse.ok) throw new Error(profilesPayload.error || "Could not load Atlas profiles.")
+        if (!fastenersResponse.ok) throw new Error(fastenersPayload.error || "Could not load Atlas fasteners.")
         if (active) {
           setRecords(
             (payload.records || []).map((record) => {
@@ -86,6 +92,8 @@ export default function AtlasPricingWorkspace() {
           setSchemaReady(payload.schemaReady !== false)
           setProfiles(profilesPayload.records || [])
           setProfileSchemaReady(profilesPayload.schemaReady !== false)
+          setFasteners(fastenersPayload.records || [])
+          setFastenerSchemaReady(fastenersPayload.schemaReady !== false)
         }
       } catch (loadError) {
         if (active) setError(loadError.message)
@@ -178,6 +186,21 @@ export default function AtlasPricingWorkspace() {
     )
   }
 
+  function selectPricingBolt(recordId, fastenerId) {
+    const bolt = fasteners.find((item) => item.id === fastenerId)
+    setRecords((current) =>
+      current.map((record) =>
+        record.id === recordId
+          ? {
+              ...record,
+              fastenerId: bolt?.id || "",
+              profileSpec: bolt ? formatBoltSpecification(bolt) : "",
+            }
+          : record
+      )
+    )
+  }
+
   async function saveRecord(record) {
     setSavingId(record.id)
     setError("")
@@ -218,6 +241,11 @@ export default function AtlasPricingWorkspace() {
       {!profileSchemaReady ? (
         <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           The profile selector is using the local Atlas library. Run <strong>supabase/smart_steel_os_atlas_lipped_channel_profiles.sql</strong> before saving profile-linked pricing.
+        </div>
+      ) : null}
+      {!fastenerSchemaReady ? (
+        <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          The bolt selector is using the local Atlas library. Run <strong>supabase/smart_steel_os_atlas_fasteners.sql</strong> before saving controlled bolt pricing.
         </div>
       ) : null}
       {error ? <div className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div> : null}
@@ -263,6 +291,8 @@ export default function AtlasPricingWorkspace() {
               const hasHold = record.status !== "confirmed" || (record.pricingUnit === "ton" && record.massKgPerM === "")
               const usesLippedChannelProfile = record.pricingUnit === "ton"
               const selectedProfile = profiles.find((profile) => profile.id === record.profileId)
+              const usesBoltSelection = record.componentCode === "W08-BLT"
+              const selectedBolt = fasteners.find((fastener) => fastener.id === record.fastenerId)
               const primaryValuePerM = materialValuePerM(record.massKgPerM, record.galvanisedRate)
               return (
                 <article key={record.id}>
@@ -328,6 +358,27 @@ export default function AtlasPricingWorkspace() {
                               </div>
                             ) : (
                               <Field label="Custom profile / specification" wide>
+                                <textarea rows={2} value={record.profileSpec} onChange={(event) => updateRecord(record.id, "profileSpec", event.target.value)} className={inputClass} />
+                              </Field>
+                            )}
+                          </>
+                        ) : usesBoltSelection ? (
+                          <>
+                            <Field label="Standard bolt" wide>
+                              <select value={record.fastenerId || ""} onChange={(event) => selectPricingBolt(record.id, event.target.value)} className={inputClass}>
+                                <option value="">Custom bolt</option>
+                                {fasteners.map((bolt) => <option key={bolt.id} value={bolt.id}>{bolt.label} · Property Class {bolt.propertyClass}</option>)}
+                              </select>
+                            </Field>
+                            {selectedBolt ? (
+                              <div className="grid gap-3 border border-amber-200 bg-amber-50 p-3 md:col-span-2 xl:col-span-4 sm:grid-cols-2 xl:grid-cols-4">
+                                <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-amber-800">Selected bolt</p><p className="mt-1 text-sm font-bold text-slate-950">{selectedBolt.label}</p><p className="mt-0.5 text-[10px] text-slate-500">Property Class {selectedBolt.propertyClass}</p></div>
+                                <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-amber-800">Thread and head</p><p className="mt-1 text-sm font-bold text-slate-950">{selectedBolt.threadPitchMm}mm coarse pitch</p><p className="mt-0.5 text-[10px] text-slate-500">{selectedBolt.driveSizeMm}mm hex drive</p></div>
+                                <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-amber-800">Matching set</p><p className="mt-1 text-xs font-bold text-slate-950">{selectedBolt.matchingNut}</p><p className="mt-0.5 text-[10px] text-slate-500">{selectedBolt.matchingWasher}</p></div>
+                                <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-amber-800">Finish review</p><p className="mt-1 text-xs font-bold text-amber-950">{selectedBolt.finishSpec}</p><p className="mt-0.5 text-[10px] text-amber-800">Confirm suitability for exterior exposure</p></div>
+                              </div>
+                            ) : (
+                              <Field label="Custom bolt specification" wide>
                                 <textarea rows={2} value={record.profileSpec} onChange={(event) => updateRecord(record.id, "profileSpec", event.target.value)} className={inputClass} />
                               </Field>
                             )}

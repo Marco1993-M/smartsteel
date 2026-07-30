@@ -7,6 +7,7 @@ import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import {
   matchLippedChannelProfile,
 } from "../../lib/atlasLippedChannelProfiles"
+import { formatBoltSpecification } from "../../lib/atlasFasteners"
 
 const W08_COMPONENTS = [
   {
@@ -121,7 +122,9 @@ export default function AtlasWarehouseComponentsWorkspace() {
   const [message, setMessage] = useState("")
   const [connectionItems, setConnectionItems] = useState([])
   const [profiles, setProfiles] = useState([])
+  const [fasteners, setFasteners] = useState([])
   const [profileSchemaReady, setProfileSchemaReady] = useState(true)
+  const [fastenerSchemaReady, setFastenerSchemaReady] = useState(true)
   const [connectionSchemaReady, setConnectionSchemaReady] = useState(true)
   const [savingItemId, setSavingItemId] = useState("")
   const [editingComponentId, setEditingComponentId] = useState("")
@@ -132,23 +135,28 @@ export default function AtlasWarehouseComponentsWorkspace() {
     setError("")
     try {
       const headers = await getOsAuthHeaders()
-      const [itemsResponse, familiesResponse, profilesResponse] = await Promise.all([
+      const [itemsResponse, familiesResponse, profilesResponse, fastenersResponse] = await Promise.all([
         fetch("/api/os/catalog-items?platform=atlas&kind=component", { cache: "no-store", headers }),
         fetch("/api/os/product-families?platform=atlas", { cache: "no-store", headers }),
         fetch("/api/os/atlas-profiles", { cache: "no-store", headers }),
+        fetch("/api/os/atlas-fasteners", { cache: "no-store", headers }),
       ])
-      const [itemsPayload, familiesPayload, profilesPayload] = await Promise.all([
+      const [itemsPayload, familiesPayload, profilesPayload, fastenersPayload] = await Promise.all([
         itemsResponse.json(),
         familiesResponse.json(),
         profilesResponse.json(),
+        fastenersResponse.json(),
       ])
       if (!itemsResponse.ok) throw new Error(itemsPayload.error || "Could not load Atlas components.")
       if (!familiesResponse.ok) throw new Error(familiesPayload.error || "Could not load Atlas product families.")
       if (!profilesResponse.ok) throw new Error(profilesPayload.error || "Could not load Atlas profiles.")
+      if (!fastenersResponse.ok) throw new Error(fastenersPayload.error || "Could not load Atlas fasteners.")
       setRecords(itemsPayload.records || [])
       setFamilyId((familiesPayload.records || []).find((family) => family.key === "warehouses")?.id || "")
       setProfiles(profilesPayload.records || [])
       setProfileSchemaReady(profilesPayload.schemaReady !== false)
+      setFasteners(fastenersPayload.records || [])
+      setFastenerSchemaReady(fastenersPayload.schemaReady !== false)
     } catch (loadError) {
       setError(loadError.message)
     } finally {
@@ -251,6 +259,32 @@ export default function AtlasWarehouseComponentsWorkspace() {
 
   function updateConnectionItemLocal(id, field, value) {
     setConnectionItems((current) => current.map((item) => item.id === id ? { ...item, [field]: value } : item))
+  }
+
+  function selectConnectionBolt(itemId, fastenerId) {
+    const bolt = fasteners.find((item) => item.id === fastenerId)
+    if (!bolt) {
+      setConnectionItems((current) =>
+        current.map((item) =>
+          item.id === itemId ? { ...item, fastenerId: "", sizeSpec: "" } : item
+        )
+      )
+      return
+    }
+    setConnectionItems((current) =>
+      current.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              fastenerId: bolt.id,
+              sizeSpec: formatBoltSpecification(bolt),
+              gradeSpec: `Property Class ${bolt.propertyClass}`,
+              finishSpec: bolt.finishSpec,
+              notes: `${bolt.matchingNut}; ${bolt.matchingWasher}. ${bolt.corrosionClass}; exterior exposure review required.`,
+            }
+          : item
+      )
+    )
   }
 
   async function saveConnectionItem(item) {
@@ -448,13 +482,17 @@ export default function AtlasWarehouseComponentsWorkspace() {
       </section>
 
       {!profileSchemaReady ? <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">The standard profile selector is running from the verified local library. Run the Atlas lipped-channel profile SQL to enable shared verified-mass overrides.</div> : null}
+      {!fastenerSchemaReady ? <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">The bolt selector is running from the local Atlas library. Run the Atlas fastener SQL before saving controlled bolt selections.</div> : null}
 
       <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-7">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">W08-CON assembly</p><h2 className="mt-1 text-2xl font-bold text-slate-950">Bolted connection-pack schedule</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Define every bracket and fixing explicitly. Quantities, sizes, grades, and finishes remain visible review fields until engineering approves them.</p></div>
           {connectionItems.length === 0 ? <button type="button" onClick={createConnectionSchedule} disabled={!connectionComponent || !connectionSchemaReady || saving} className="shrink-0 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500">{!connectionSchemaReady ? "Run component ID SQL" : !connectionComponent ? "Register W08-CON first" : saving ? "Creating..." : "Create connection schedule"}</button> : <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-800">{connectionItems.filter((item) => item.status !== "approved").length} items need review</span>}
         </div>
-        {connectionItems.length > 0 ? <div className="divide-y divide-slate-200">{connectionItems.map((item) => <article key={item.id} className="p-5 sm:p-7"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">{item.itemCode} · {item.itemType}</p><h3 className="mt-1 text-lg font-bold text-slate-950">{item.description}</h3><p className="mt-1 text-xs text-slate-500">{item.quantityRule}</p></div><select value={item.status} onChange={(event) => updateConnectionItemLocal(item.id, "status", event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700"><option value="draft">Draft</option><option value="needs_review">Needs review</option><option value="approved">Approved</option></select></div><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5"><label className="text-xs font-semibold text-slate-600">Quantity<input type="number" min="0" value={item.quantity} onChange={(event) => updateConnectionItemLocal(item.id, "quantity", event.target.value)} placeholder="TBC" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label><label className="text-xs font-semibold text-slate-600">Unit<select value={item.unit} onChange={(event) => updateConnectionItemLocal(item.id, "unit", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900"><option value="each">Each</option><option value="set">Set</option><option value="pack">Pack</option></select></label><label className="text-xs font-semibold text-slate-600">Size / type<input value={item.sizeSpec} onChange={(event) => updateConnectionItemLocal(item.id, "sizeSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label><label className="text-xs font-semibold text-slate-600">Grade<input value={item.gradeSpec} onChange={(event) => updateConnectionItemLocal(item.id, "gradeSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label><label className="text-xs font-semibold text-slate-600">Finish<input value={item.finishSpec} onChange={(event) => updateConnectionItemLocal(item.id, "finishSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label></div><div className="mt-4 flex justify-end"><button type="button" onClick={() => saveConnectionItem(item)} disabled={savingItemId === item.id} className="rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{savingItemId === item.id ? "Saving..." : `Save ${item.itemCode}`}</button></div></article>)}</div> : <div className="p-5 text-sm text-slate-500 sm:p-7">Create the schedule once the coded W08-CON component is available.</div>}
+        {connectionItems.length > 0 ? <div className="divide-y divide-slate-200">{connectionItems.map((item) => {
+          const selectedBolt = fasteners.find((fastener) => fastener.id === item.fastenerId)
+          return <article key={item.id} className="p-5 sm:p-7"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">{item.itemCode} · {item.itemType}</p><h3 className="mt-1 text-lg font-bold text-slate-950">{item.description}</h3><p className="mt-1 text-xs text-slate-500">{item.quantityRule}</p></div><select value={item.status} onChange={(event) => updateConnectionItemLocal(item.id, "status", event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700"><option value="draft">Draft</option><option value="needs_review">Needs review</option><option value="approved">Approved</option></select></div><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5"><label className="text-xs font-semibold text-slate-600">Quantity<input type="number" min="0" value={item.quantity} onChange={(event) => updateConnectionItemLocal(item.id, "quantity", event.target.value)} placeholder="TBC" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label><label className="text-xs font-semibold text-slate-600">Unit<select value={item.unit} onChange={(event) => updateConnectionItemLocal(item.id, "unit", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900"><option value="each">Each</option><option value="set">Set</option><option value="pack">Pack</option></select></label>{item.itemType === "bolt" ? <label className="text-xs font-semibold text-slate-600">Standard bolt<select value={item.fastenerId || ""} onChange={(event) => selectConnectionBolt(item.id, event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900"><option value="">Custom bolt</option>{fasteners.map((bolt) => <option key={bolt.id} value={bolt.id}>{bolt.label} · Class {bolt.propertyClass}</option>)}</select></label> : <label className="text-xs font-semibold text-slate-600">Size / type<input value={item.sizeSpec} onChange={(event) => updateConnectionItemLocal(item.id, "sizeSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label>}<label className="text-xs font-semibold text-slate-600">Grade<input value={item.gradeSpec} onChange={(event) => updateConnectionItemLocal(item.id, "gradeSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label><label className="text-xs font-semibold text-slate-600">Finish<input value={item.finishSpec} onChange={(event) => updateConnectionItemLocal(item.id, "finishSpec", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-normal text-slate-900" /></label></div>{selectedBolt ? <div className="mt-3 grid gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs sm:grid-cols-3"><p><span className="font-bold text-slate-900">Thread:</span> {selectedBolt.threadType}, {selectedBolt.threadPitchMm}mm pitch</p><p><span className="font-bold text-slate-900">Matching:</span> {selectedBolt.matchingNut} + {selectedBolt.matchingWasher}</p><p className="text-amber-900"><span className="font-bold">Hold:</span> Confirm finish for exterior exposure.</p></div> : null}<div className="mt-4 flex justify-end"><button type="button" onClick={() => saveConnectionItem(item)} disabled={savingItemId === item.id} className="rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{savingItemId === item.id ? "Saving..." : `Save ${item.itemCode}`}</button></div></article>
+        })}</div> : <div className="p-5 text-sm text-slate-500 sm:p-7">Create the schedule once the coded W08-CON component is available.</div>}
       </section>
 
       <section className="grid overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm lg:grid-cols-[minmax(0,1fr)_330px]">
