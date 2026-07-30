@@ -9,23 +9,60 @@ export const runtime = "nodejs"
 const STATUSES = ["draft", "needs_review", "confirmed", "superseded"]
 const UNITS = ["ton", "kg", "m", "each", "set"]
 
-function normalizeRow(row) {
+const COMPONENT_CODE_ALIASES = {
+  "W08-PUR": "W08-SEC",
+  "W08-RDG": "W08-CON",
+  "W08-EAV": "W08-CON",
+  "W08-BLT": "W08-CON",
+  "W08-NUT": "W08-CON",
+  "W08-WSH": "W08-CON",
+}
+
+function technicalSpecification(component) {
+  const specification = component?.metadata?.specification || {}
+  const mass = specification.verifiedMassKgPerM || specification.calculatedMassKgPerM || ""
+  return {
+    profileId: specification.profileId || "",
+    profileSpec: specification.profileSpec || "",
+    thicknessSpec: specification.thicknessSpec || "",
+    gradeSpec: specification.gradeSpec || "",
+    coatingSpec: specification.coatingSpec || "",
+    quantityRule: specification.quantityRule || "",
+    massKgPerM: mass === "" ? "" : Number(mass),
+    massSource: specification.verifiedMassKgPerM ? "verified" : mass ? "calculated" : "",
+    drawingRevision: specification.drawingRevision || "",
+  }
+}
+
+function normalizeRow(row, component = null) {
+  const inherited = component ? technicalSpecification(component) : null
+  const componentRevision = Number(component?.technical_revision || 1)
+  const inheritsQuantityRule = component?.component_code !== "W08-CON" || row.component_code === "W08-CON"
   return {
     id: row.id,
     productCode: row.product_code,
     componentCode: row.component_code,
     componentName: row.component_name,
     category: row.category,
-    profileId: row.profile_id || "",
+    componentId: row.component_id || component?.id || "",
+    linkedComponentCode: component?.component_code || "",
+    componentRevision,
+    inheritedComponentRevision: Number(row.inherited_component_revision || 0),
+    technicalStale: Boolean(component && Number(row.inherited_component_revision || 0) !== componentRevision),
+    technicalApproved: Boolean(component?.technical_approved_at),
+    technicalApprovedBy: component?.technical_approved_by || "",
+    technicalApprovedAt: component?.technical_approved_at || "",
+    technicalSpecification: inherited,
+    profileId: inherited?.profileId || row.profile_id || "",
     fastenerId: row.fastener_id || "",
-    profileSpec: row.profile_spec || "",
+    profileSpec: inherited?.profileSpec || row.profile_spec || "",
     lengthRule: row.length_rule || "",
-    quantityRule: row.quantity_rule || "",
+    quantityRule: (inheritsQuantityRule ? inherited?.quantityRule : "") || row.quantity_rule || "",
     pricingUnit: row.pricing_unit,
     galvanisedRate: row.galvanised_rate === null ? "" : Number(row.galvanised_rate),
     mildSteelRate: row.mild_steel_rate === null ? "" : Number(row.mild_steel_rate),
-    massKgPerM: row.mass_kg_per_m === null ? "" : Number(row.mass_kg_per_m),
-    massSource: row.mass_source || "",
+    massKgPerM: inherited?.massKgPerM ?? (row.mass_kg_per_m === null ? "" : Number(row.mass_kg_per_m)),
+    massSource: inherited?.massSource || row.mass_source || "",
     wastePercent: Number(row.waste_percent || 0),
     fabricationAllowance: Number(row.fabrication_allowance || 0),
     baselineQuantity: row.baseline_quantity == null ? "" : Number(row.baseline_quantity),
@@ -69,6 +106,18 @@ export async function GET(request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  const componentCodes = [...new Set((data || []).map((row) => COMPONENT_CODE_ALIASES[row.component_code] || row.component_code))]
+  let componentMap = new Map()
+  if (componentCodes.length) {
+    const { data: componentRows, error: componentError } = await supabaseServer
+      .from("os_catalog_items")
+      .select("*")
+      .eq("platform_key", "atlas")
+      .eq("kind", "component")
+      .in("component_code", componentCodes)
+    if (!componentError) componentMap = new Map((componentRows || []).map((row) => [row.component_code, row]))
+  }
+
   const ids = (data || []).map((row) => row.id)
   let revisions = []
   if (ids.length) {
@@ -90,7 +139,14 @@ export async function GET(request) {
     }
   }
 
-  return NextResponse.json({ records: (data || []).map(normalizeRow), revisions, schemaReady: true })
+  return NextResponse.json({
+    records: (data || []).map((row) => normalizeRow(
+      row,
+      componentMap.get(COMPONENT_CODE_ALIASES[row.component_code] || row.component_code) || null
+    )),
+    revisions,
+    schemaReady: true,
+  })
 }
 
 export async function PATCH(request) {
@@ -141,6 +197,22 @@ export async function PATCH(request) {
     }, { status: 400 })
   }
 
+  let linkedComponent = null
+  if (existing.component_id) {
+    const { data: component, error: componentError } = await supabaseServer
+      .from("os_catalog_items")
+      .select("*")
+      .eq("id", existing.component_id)
+      .single()
+    if (componentError) return NextResponse.json({ error: componentError.message }, { status: 500 })
+    linkedComponent = component
+    if (approving && !component.technical_approved_at) {
+      return NextResponse.json({ error: "Approve the linked component specification before confirming its pricing." }, { status: 400 })
+    }
+  }
+  const inherited = linkedComponent ? technicalSpecification(linkedComponent) : null
+  const inheritsQuantityRule = linkedComponent?.component_code !== "W08-CON" || existing.component_code === "W08-CON"
+
   const nextRevision = Number(existing.revision_number || 1) + 1
   const { error: revisionError } = await supabaseServer
     .from("os_atlas_pricing_revisions")
@@ -163,15 +235,18 @@ export async function PATCH(request) {
     .update({
       component_name: String(body.componentName || "").trim(),
       category: String(body.category || "").trim(),
-      profile_id: String(body.profileId || "").trim() || null,
+      component_id: existing.component_id || null,
+      inherited_component_revision: linkedComponent ? Number(linkedComponent.technical_revision || 1) : existing.inherited_component_revision,
+      profile_id: String(inherited?.profileId || body.profileId || "").trim() || null,
       fastener_id: String(body.fastenerId || "").trim() || null,
-      profile_spec: String(body.profileSpec || "").trim() || null,
+      profile_spec: String(inherited?.profileSpec || body.profileSpec || "").trim() || null,
       length_rule: String(body.lengthRule || "").trim() || null,
-      quantity_rule: String(body.quantityRule || "").trim() || null,
+      quantity_rule: String((inheritsQuantityRule ? inherited?.quantityRule : "") || body.quantityRule || "").trim() || null,
       pricing_unit: body.pricingUnit,
       ...numericFields,
-      mass_source: ["calculated", "verified", "custom"].includes(body.massSource)
-        ? body.massSource
+      mass_kg_per_m: inherited?.massKgPerM === "" ? null : inherited?.massKgPerM ?? numericFields.mass_kg_per_m,
+      mass_source: ["calculated", "verified", "custom"].includes(inherited?.massSource || body.massSource)
+        ? inherited?.massSource || body.massSource
         : null,
       supplier_name: String(body.supplierName || "").trim() || null,
       supplier_quote_reference: String(body.supplierQuoteReference || "").trim() || null,
@@ -209,5 +284,5 @@ export async function PATCH(request) {
     }
   }
 
-  return NextResponse.json({ record: normalizeRow(data), revisionRecorded: !revisionError })
+  return NextResponse.json({ record: normalizeRow(data, linkedComponent), revisionRecorded: !revisionError })
 }

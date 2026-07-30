@@ -28,6 +28,9 @@ function normalizeCatalogItem(row) {
     specification: row.metadata?.specification && typeof row.metadata.specification === "object"
       ? row.metadata.specification
       : {},
+    technicalRevision: Number(row.technical_revision || 1),
+    technicalApprovedBy: row.technical_approved_by || "",
+    technicalApprovedAt: row.technical_approved_at || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -163,10 +166,47 @@ export async function PATCH(request) {
     updatePayload.component_code = String(body.componentCode || "").trim().toUpperCase() || null
   }
 
+  if (body?.technicalApproval === true) {
+    const approver = String(body?.technicalApprovedBy || "").trim()
+    if (!approver) {
+      return NextResponse.json({ error: "Record who approved this component specification." }, { status: 400 })
+    }
+    const { data: approvalComponent, error: approvalComponentError } = await supabaseServer
+      .from("os_catalog_items")
+      .select("component_code")
+      .eq("id", id)
+      .single()
+    if (approvalComponentError) {
+      return NextResponse.json({ error: approvalComponentError.message }, { status: 500 })
+    }
+    if (approvalComponent.component_code === "W08-CON") {
+      const { data: connectionItems, error: connectionError } = await supabaseServer
+        .from("os_component_items")
+        .select("status, quantity, size_spec, grade_spec, finish_spec")
+        .eq("component_id", id)
+      if (connectionError) return NextResponse.json({ error: connectionError.message }, { status: 500 })
+      const connectionReady = (connectionItems || []).length > 0 && (connectionItems || []).every((item) =>
+        item.status === "approved" &&
+        Number(item.quantity) > 0 &&
+        item.size_spec &&
+        item.size_spec !== "To be confirmed" &&
+        item.grade_spec &&
+        item.grade_spec !== "To be confirmed" &&
+        item.finish_spec &&
+        item.finish_spec !== "To be confirmed"
+      )
+      if (!connectionReady) {
+        return NextResponse.json({ error: "Complete and approve every connection-pack item before approving W08-CON." }, { status: 400 })
+      }
+    }
+    updatePayload.technical_approved_by = approver
+    updatePayload.technical_approved_at = new Date().toISOString()
+  }
+
   if (body?.specification !== undefined) {
     const { data: existing, error: metadataError } = await supabaseServer
       .from("os_catalog_items")
-      .select("metadata")
+      .select("*")
       .eq("id", id)
       .single()
 
@@ -183,6 +223,30 @@ export async function PATCH(request) {
     updatePayload.metadata = {
       ...(existing?.metadata || {}),
       specification,
+    }
+
+    const supportsTechnicalRevisions = Object.prototype.hasOwnProperty.call(existing || {}, "technical_revision")
+    if (supportsTechnicalRevisions) {
+      const currentRevision = Number(existing.technical_revision || 1)
+      const changedBy = String(body?.changedBy || body?.technicalApprovedBy || "Smart Steel team").trim()
+      const { error: revisionError } = await supabaseServer
+        .from("os_component_revisions")
+        .insert([{
+          component_id: id,
+          component_code: existing.component_code,
+          technical_revision: currentRevision,
+          specification_snapshot: existing.metadata?.specification || {},
+          changed_by: changedBy,
+          change_note: String(body?.changeNote || "Component specification updated").trim(),
+        }])
+
+      if (revisionError && !isSchemaMissingError(revisionError)) {
+        return NextResponse.json({ error: revisionError.message }, { status: 500 })
+      }
+
+      updatePayload.technical_revision = currentRevision + 1
+      updatePayload.technical_approved_by = null
+      updatePayload.technical_approved_at = null
     }
   }
 
@@ -208,5 +272,23 @@ export async function PATCH(request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ record: normalizeCatalogItem(data) })
+  if (body?.specification !== undefined) {
+    const { error: pricingError } = await supabaseServer
+      .from("os_atlas_pricing_items")
+      .update({
+        status: "needs_review",
+        approved_by: null,
+        approved_at: null,
+      })
+      .eq("component_id", id)
+
+    if (pricingError && !isSchemaMissingError(pricingError)) {
+      return NextResponse.json({ error: pricingError.message }, { status: 500 })
+    }
+  }
+
+  return NextResponse.json({
+    record: normalizeCatalogItem(data),
+    pricingInvalidated: body?.specification !== undefined,
+  })
 }
