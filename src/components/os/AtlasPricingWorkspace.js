@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { AlertTriangle, Check, ChevronDown, ChevronUp, Save, Scale } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { getAtlasProduct, withAtlasProduct } from "../../lib/atlasProductRange"
+import { matchLippedChannelProfile } from "../../lib/atlasLippedChannelProfiles"
 import AtlasModuleHero from "./AtlasModuleHero"
 
 const STATUS_LABELS = {
@@ -17,6 +18,13 @@ const STATUS_LABELS = {
 function formatRate(value, unit) {
   if (value === "" || value === null || value === undefined) return "Not set"
   return `R ${Number(value).toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${unit}`
+}
+
+function materialValuePerM(massKgPerM, ratePerTon) {
+  const mass = Number(massKgPerM)
+  const rate = Number(ratePerTon)
+  if (!Number.isFinite(mass) || !Number.isFinite(rate)) return null
+  return (mass * rate) / 1000
 }
 
 function Field({ label, children, wide = false }) {
@@ -37,6 +45,8 @@ export default function AtlasPricingWorkspace() {
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
   const [schemaReady, setSchemaReady] = useState(true)
+  const [profiles, setProfiles] = useState([])
+  const [profileSchemaReady, setProfileSchemaReady] = useState(true)
   const [expandedId, setExpandedId] = useState("")
   const [savingId, setSavingId] = useState("")
   const [error, setError] = useState("")
@@ -48,15 +58,34 @@ export default function AtlasPricingWorkspace() {
       setLoading(true)
       setError("")
       try {
-        const response = await fetch(`/api/os/atlas-pricing?product=${encodeURIComponent(productCode)}`, {
-          cache: "no-store",
-          headers: await getOsAuthHeaders(),
-        })
-        const payload = await response.json()
+        const headers = await getOsAuthHeaders()
+        const [response, profilesResponse] = await Promise.all([
+          fetch(`/api/os/atlas-pricing?product=${encodeURIComponent(productCode)}`, {
+            cache: "no-store",
+            headers,
+          }),
+          fetch("/api/os/atlas-profiles", { cache: "no-store", headers }),
+        ])
+        const [payload, profilesPayload] = await Promise.all([
+          response.json(),
+          profilesResponse.json(),
+        ])
         if (!response.ok) throw new Error(payload.error || "Could not load Atlas pricing.")
+        if (!profilesResponse.ok) throw new Error(profilesPayload.error || "Could not load Atlas profiles.")
         if (active) {
-          setRecords(payload.records || [])
+          setRecords(
+            (payload.records || []).map((record) => {
+              const matchedProfile =
+                profilesPayload.records?.find((profile) => profile.id === record.profileId) ||
+                matchLippedChannelProfile(record.profileSpec, profilesPayload.records || [])
+              return matchedProfile && !record.profileId
+                ? { ...record, profileId: matchedProfile.id }
+                : record
+            })
+          )
           setSchemaReady(payload.schemaReady !== false)
+          setProfiles(profilesPayload.records || [])
+          setProfileSchemaReady(profilesPayload.schemaReady !== false)
         }
       } catch (loadError) {
         if (active) setError(loadError.message)
@@ -77,6 +106,76 @@ export default function AtlasPricingWorkspace() {
 
   function updateRecord(id, field, value) {
     setRecords((current) => current.map((record) => record.id === id ? { ...record, [field]: value } : record))
+  }
+
+  function selectPricingProfile(recordId, profileId) {
+    if (!profileId) {
+      setRecords((current) =>
+        current.map((record) =>
+          record.id === recordId
+            ? {
+                ...record,
+                profileId: "",
+                profileSpec: "",
+                massKgPerM: "",
+                massSource: "custom",
+              }
+            : record
+        )
+      )
+      return
+    }
+
+    const profile = profiles.find((item) => item.id === profileId)
+    if (!profile) return
+    setRecords((current) =>
+      current.map((record) =>
+        record.id === recordId
+          ? {
+              ...record,
+              profileId: profile.id,
+              profileSpec: profile.label,
+              massKgPerM:
+                profile.verifiedMassKgPerM ?? profile.calculatedMassKgPerM,
+              massSource:
+                profile.verifiedMassKgPerM === null ? "calculated" : "verified",
+            }
+          : record
+      )
+    )
+  }
+
+  function updateMassOverride(recordId, value) {
+    setRecords((current) =>
+      current.map((record) =>
+        record.id === recordId
+          ? {
+              ...record,
+              massKgPerM: value,
+              massSource: value === "" ? (record.profileId ? "calculated" : "custom") : "verified",
+            }
+          : record
+      )
+    )
+  }
+
+  function restoreProfileMass(recordId) {
+    const record = records.find((item) => item.id === recordId)
+    const profile = profiles.find((item) => item.id === record?.profileId)
+    if (!profile) return
+    setRecords((current) =>
+      current.map((item) =>
+        item.id === recordId
+          ? {
+              ...item,
+              massKgPerM:
+                profile.verifiedMassKgPerM ?? profile.calculatedMassKgPerM,
+              massSource:
+                profile.verifiedMassKgPerM === null ? "calculated" : "verified",
+            }
+          : item
+      )
+    )
   }
 
   async function saveRecord(record) {
@@ -114,6 +213,11 @@ export default function AtlasPricingWorkspace() {
       {!schemaReady ? (
         <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           Run <strong>supabase/smart_steel_os_atlas_pricing.sql</strong> to activate editable Atlas pricing records.
+        </div>
+      ) : null}
+      {!profileSchemaReady ? (
+        <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          The profile selector is using the local Atlas library. Run <strong>supabase/smart_steel_os_atlas_lipped_channel_profiles.sql</strong> before saving profile-linked pricing.
         </div>
       ) : null}
       {error ? <div className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div> : null}
@@ -157,6 +261,9 @@ export default function AtlasPricingWorkspace() {
             {items.map((record) => {
               const expanded = expandedId === record.id
               const hasHold = record.status !== "confirmed" || (record.pricingUnit === "ton" && record.massKgPerM === "")
+              const usesLippedChannelProfile = record.pricingUnit === "ton"
+              const selectedProfile = profiles.find((profile) => profile.id === record.profileId)
+              const primaryValuePerM = materialValuePerM(record.massKgPerM, record.galvanisedRate)
               return (
                 <article key={record.id}>
                   <button
@@ -199,9 +306,37 @@ export default function AtlasPricingWorkspace() {
                             {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                           </select>
                         </Field>
-                        <Field label="Profile / specification" wide>
-                          <textarea rows={2} value={record.profileSpec} onChange={(event) => updateRecord(record.id, "profileSpec", event.target.value)} className={inputClass} />
-                        </Field>
+                        {usesLippedChannelProfile ? (
+                          <>
+                            <Field label="Standard lipped-channel profile" wide>
+                              <select value={record.profileId || ""} onChange={(event) => selectPricingProfile(record.id, event.target.value)} className={inputClass}>
+                                <option value="">Custom profile</option>
+                                <optgroup label="Supplier-confirmed sizes">
+                                  {profiles.filter((profile) => profile.availabilityStatus === "confirmed").map((profile) => <option key={profile.id} value={profile.id}>{profile.label} · {profile.calculatedMassKgPerM.toFixed(3)} kg/m</option>)}
+                                </optgroup>
+                                <optgroup label="Assumed thickness variants">
+                                  {profiles.filter((profile) => profile.availabilityStatus === "assumed").map((profile) => <option key={profile.id} value={profile.id}>{profile.label} · {profile.calculatedMassKgPerM.toFixed(3)} kg/m</option>)}
+                                </optgroup>
+                              </select>
+                            </Field>
+                            {selectedProfile ? (
+                              <div className="grid gap-3 border border-sky-200 bg-sky-50 p-3 md:col-span-2 xl:col-span-4 sm:grid-cols-2 xl:grid-cols-4">
+                                <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-700">Selected profile</p><p className="mt-1 text-sm font-bold text-slate-950">{selectedProfile.label}</p></div>
+                                <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-700">Pricing mass</p><p className="mt-1 text-sm font-bold text-slate-950">{record.massKgPerM} kg/m</p><p className="mt-0.5 text-[10px] text-slate-500">{record.massSource === "verified" ? "Verified/manual mass" : "Calculated fallback"}</p></div>
+                                <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-700">Availability</p><p className="mt-1 text-sm font-bold capitalize text-slate-950">{selectedProfile.availabilityStatus}</p><p className="mt-0.5 text-[10px] text-slate-500">{selectedProfile.availabilityStatus === "confirmed" ? "Visible in supplier list" : "Confirm before procurement"}</p></div>
+                                <div><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-700">Raw steel value</p><p className="mt-1 text-sm font-bold text-slate-950">{primaryValuePerM === null ? "Set rate" : `R ${primaryValuePerM.toFixed(2)} / m`}</p><p className="mt-0.5 text-[10px] text-slate-500">Before waste and fabrication</p></div>
+                              </div>
+                            ) : (
+                              <Field label="Custom profile / specification" wide>
+                                <textarea rows={2} value={record.profileSpec} onChange={(event) => updateRecord(record.id, "profileSpec", event.target.value)} className={inputClass} />
+                              </Field>
+                            )}
+                          </>
+                        ) : (
+                          <Field label="Profile / specification" wide>
+                            <textarea rows={2} value={record.profileSpec} onChange={(event) => updateRecord(record.id, "profileSpec", event.target.value)} className={inputClass} />
+                          </Field>
+                        )}
                         <Field label="Length rule">
                           <input value={record.lengthRule} onChange={(event) => updateRecord(record.id, "lengthRule", event.target.value)} className={inputClass} />
                         </Field>
@@ -214,8 +349,9 @@ export default function AtlasPricingWorkspace() {
                         <Field label="Mild-steel / alternate rate">
                           <input type="number" min="0" step="0.01" value={record.mildSteelRate} onChange={(event) => updateRecord(record.id, "mildSteelRate", event.target.value)} className={inputClass} />
                         </Field>
-                        <Field label="Mass kg/m">
-                          <input type="number" min="0" step="0.0001" value={record.massKgPerM} onChange={(event) => updateRecord(record.id, "massKgPerM", event.target.value)} className={inputClass} />
+                        <Field label={selectedProfile ? "Verified mass override kg/m" : "Mass kg/m"}>
+                          <input type="number" min="0" step="0.0001" value={record.massKgPerM} onChange={(event) => updateMassOverride(record.id, event.target.value)} className={inputClass} />
+                          {selectedProfile ? <span className="mt-1 flex items-start justify-between gap-3 text-[10px] leading-4 text-slate-500"><span>The selected profile supplied {selectedProfile.calculatedMassKgPerM.toFixed(4)} kg/m. Editing this field marks the value as verified/manual.</span><button type="button" onClick={() => restoreProfileMass(record.id)} className="shrink-0 font-bold text-sky-700 hover:text-sky-900">Use profile mass</button></span> : null}
                         </Field>
                         <Field label="Waste %">
                           <input type="number" min="0" step="0.1" value={record.wastePercent} onChange={(event) => updateRecord(record.id, "wastePercent", event.target.value)} className={inputClass} />
