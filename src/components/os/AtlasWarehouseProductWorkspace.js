@@ -21,14 +21,14 @@ import {
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { ATLAS_PRODUCT_RANGE, getAtlasProduct, withAtlasProduct } from "../../lib/atlasProductRange"
 
-const W08_SPEC_LENGTHS = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]
+const W08_SPEC_LENGTHS = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
 const W08_SPEC_BAY_SPACING = 4
-const W08_SPEC_ROOF_PURLIN_ROWS = 10
+const W08_SPEC_ROOF_PURLIN_ROWS = 8
 const W08_SPEC_SCOPES = [
   { name: "Structure only", detail: "Primary frame, provisional secondary steel, bracing, and the connection schedule once approved." },
   { name: "Roof sheeted", detail: "Standard structure with roof sheeting and applicable roof closures once the cladding schedule is approved." },
-  { name: "Roof and walls sheeted", detail: "Roof and long side walls sheeted. Both gable ends remain open." },
-  { name: "Fully enclosed", detail: "Roof, long walls, and gable ends enclosed as a selectable configuration, subject to the approved cladding and wind design." },
+  { name: "Fully enclosed", detail: "Default sheeted configuration with the roof, long walls, and both gable ends enclosed." },
+  { name: "Open-gable project option", detail: "One or both gable ends may be opened where the project scope requires access or an open-ended structure." },
 ]
 const W08_ROOF_SHEETING_STANDARD = [
   ["Standard profile", "IBR", "Mid-range Atlas roof and wall sheeting option"],
@@ -36,7 +36,7 @@ const W08_ROOF_SHEETING_STANDARD = [
   ["Sheet thickness", "0.47mm TCT", "Final coated sheet thickness; base metal thickness not separately specified"],
   ["Minimum roof pitch", "15 degrees", "Matches the standard W08 roof geometry"],
   ["Sheet orientation", "Normal roof orientation", "Profile runs from eave to ridge"],
-  ["Maximum purlin spacing", "1,200mm c/c", "Current W08 roof support standard"],
+  ["Maximum purlin spacing", "1,500mm c/c", "Confirmed W08 roof support standard"],
   ["Side lap", "To be confirmed", "Record profile overlap and manufacturer requirement"],
   ["End lap", "Not permitted", "Sheets should run in continuous lengths from eave to ridge"],
   ["Side-lap stitching", "Not required", "Current standard"],
@@ -109,17 +109,17 @@ const PRODUCT = {
   summary: "The 8m-span pilot for Smart Steel's modular, bolted Atlas warehouse range.",
   specifications: [
     ["Span", "8m", "Fixed W08 product width"],
-    ["Length", "From 4m", "One or more approved 4m bays"],
+    ["Length", "4m to 48m modular", "Approved 4m bays within a 50m standard engineering envelope"],
     ["Eave height", "3m to 5m", "3m default with the standard system supporting heights up to 5m"],
     ["Roof form", "Dual pitch", "15-degree standard starting geometry"],
     ["Assembly", "Bolted", "Repeatable connections for practical site assembly"],
-    ["Gable ends", "Open by default", "Selectable as fully enclosed"],
+    ["Gable ends", "Closed by default", "Open-gable arrangements remain project selections"],
   ],
   scopes: [
     { name: "Structure only", detail: "Primary frame, secondary steel, bracing, connections, and required structural fixings." },
     { name: "Roof sheeted", detail: "Standard structure with roof sheeting and applicable roof closures." },
-    { name: "Roof and walls sheeted", detail: "Roof and long side walls sheeted. Both gable ends remain open." },
-    { name: "Fully enclosed", detail: "Roof, long walls, and both gable ends sheeted as a selectable configuration." },
+    { name: "Fully enclosed", detail: "Default sheeted scope with roof, long walls, and both gable ends enclosed." },
+    { name: "Open-gable project option", detail: "One or both gable ends may be left open where required by the selected project configuration." },
   ],
   reviewTriggers: [
     "Openings, lean-tos, canopies, or suspended loads",
@@ -181,7 +181,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
   const bayCount = selectedLength / W08_SPEC_BAY_SPACING
   const portalCount = bayCount + 1
   const memberCount = portalCount * 2
-  const bracedBayCount = Math.ceil(bayCount / 5)
+  const bracedBayCount = Math.ceil(bayCount / 4)
   const roofPurlinLength = W08_SPEC_ROOF_PURLIN_ROWS * selectedLength
   const componentSchedule = [
     {
@@ -208,10 +208,10 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
       code: "W08-XBR-01",
       component: "X-bracing sets",
       specification: componentSpecification("W08-XBR", "ZAM lipped channel to the W08 bracing schedule"),
-      function: "Provides longitudinal stability in one controlled braced bay for every five bays.",
+      function: "Provides longitudinal stability in braced bays 1, 5, 9, and every fourth bay position thereafter.",
       quantity: bracedBayCount,
       unit: "sets",
-      basis: `${bayCount} bays / maximum 5 bays per braced set`,
+      basis: `${bayCount} bays · bracing at bay positions 1, 5, 9...`,
       status: "Profile pending",
     },
     {
@@ -257,12 +257,12 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
     {
       code: "W08-SEC-01",
       component: "Roof purlins",
-      specification: componentSpecification("W08-SEC", "2.5mm BMT ZAM lipped channel at a maximum 1,200mm c/c, to the W08 purlin schedule"),
+      specification: componentSpecification("W08-SEC", "2.5mm BMT ZAM lipped channel at a maximum 1,500mm c/c, to the W08 purlin schedule"),
       function: "Supports roof sheeting across the standard W08 dual-pitch roof arrangement.",
       quantity: roofPurlinLength,
       unit: "linear m",
-      basis: `${W08_SPEC_ROOF_PURLIN_ROWS} roof rows x ${selectedLength}m using the current 1,200mm c/c standard`,
-      status: "Current standard",
+      basis: `${W08_SPEC_ROOF_PURLIN_ROWS} roof rows x ${selectedLength}m using the confirmed 1,500mm c/c standard`,
+      status: "Confirmed standard",
     },
   ]
   const issuedDate = new Date().toLocaleDateString("en-ZA", {
@@ -316,11 +316,11 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
           <div className="mt-3 grid grid-cols-2 border-t-2 border-slate-900">
             {[
               ["Span", "8m", "Fixed W08 product width"],
-              ["Length", "4m bays", "Approved W08 modular design basis"],
+              ["Length", "4m bays", "Standard modular lengths to 48m within a 50m engineering envelope"],
               ["Eave height", "3m to 5m", "3m default; the standard W08 system supports heights up to 5m"],
               ["Roof form", "Dual pitch", "15-degree standard geometry"],
               ["Assembly", "Bolted", "Connection selection is confirmed for the project configuration"],
-              ["Gable ends", "Open by default", "May be selected as fully enclosed"],
+              ["Gable ends", "Closed by default", "One or both may be opened by project selection"],
             ].map(([label, value, detail], index) => (
               <div key={label} className={`border-b border-slate-200 py-3 ${index % 2 === 0 ? "pr-6" : "border-l pl-6"}`}>
                 <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
@@ -401,7 +401,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
         </section>
 
         <div className="mt-5 border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-[9px] leading-4 text-amber-950">
-          Quantities follow the approved W08 4m modular rule. Roof purlins use a maximum 1,200mm c/c spacing. Final connection geometry, fastener selection, anchors, and foundation interfaces are confirmed for the project before procurement or construction.
+          Quantities follow the approved W08 4m modular rule. Roof purlins use a maximum 1,500mm c/c spacing and bracing follows bay positions 1, 5, 9 and onward. Final fixing quantities, anchors, and foundation interfaces remain to be confirmed before procurement or construction.
         </div>
 
         <SpecFooter page="3 of 4" revision={revision} />
@@ -450,13 +450,11 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
 
         <section className="mt-4 border-y border-slate-300 py-3">
           <div className="flex items-center justify-between gap-4">
-            <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">Finish availability</p>
-            <p className="text-[8px] font-bold text-slate-800">Available for every profile</p>
+            <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">Material and finish availability</p>
+            <p className="text-[8px] font-bold text-slate-800">Corrugated · IBR · Concealed Fix</p>
           </div>
           <p className="mt-1.5 text-[8px] leading-4 text-slate-600">
-            <span className="font-bold text-slate-900">Galvanised</span>
-            {" · "}
-            {W08_CLADDING_FINISHES.join(" · ")}
+            <span className="font-bold text-slate-900">Galvanised</span> or <span className="font-bold text-slate-900">Chromadek</span>: {W08_CLADDING_FINISHES.join(" · ")}
           </p>
         </section>
 
@@ -714,7 +712,7 @@ export default function AtlasWarehouseProductWorkspace() {
           <h3 className="mt-1 text-xl font-bold text-slate-950">Start with one 4m bay</h3>
           <p className="mt-2 text-sm leading-6 text-slate-600">The smallest standard arrangement is a 4m-long x 8m-wide structure. Add further 4m bays without creating another warehouse product.</p>
           <div className="mt-5 flex flex-wrap gap-2">{W08_SPEC_LENGTHS.map((length) => <span key={length} className={`rounded-xl border px-3 py-2 text-xs font-bold ${length === 20 ? "border-sky-300 bg-sky-50 text-sky-800" : "border-slate-200 bg-white text-slate-700"}`}>{length}m</span>)}</div>
-          <p className="mt-3 text-xs text-slate-500">20m is the working reference configuration, not a product limit.</p>
+          <p className="mt-3 text-xs text-slate-500">Standard 4m modules extend to 48m. The confirmed engineering envelope permits lengths up to 50m without additional engineering implications.</p>
         </aside>
       </section>
 
