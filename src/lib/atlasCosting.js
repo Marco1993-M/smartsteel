@@ -52,6 +52,8 @@ export function getAtlasPricingCompleteness(record) {
   }
   if (!Number(record.baselineQuantity)) missing.push("baseline quantity")
   if (record.componentCode === "W08-BLT" && !record.fastenerId) missing.push("controlled bolt")
+  if (record.componentId && !record.technicalApproved) missing.push("approved component specification")
+  if (record.componentId && record.technicalStale) missing.push("current component revision")
 
   const uniqueMissing = [...new Set(missing)]
   return {
