@@ -7,6 +7,11 @@ import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { getAtlasProduct, withAtlasProduct } from "../../lib/atlasProductRange"
 import { matchLippedChannelProfile } from "../../lib/atlasLippedChannelProfiles"
 import { formatBoltSpecification } from "../../lib/atlasFasteners"
+import {
+  calculateAtlasPricingLine,
+  getAtlasPricingCompleteness,
+  summarizeAtlasPricing,
+} from "../../lib/atlasCosting"
 import AtlasModuleHero from "./AtlasModuleHero"
 
 const STATUS_LABELS = {
@@ -19,6 +24,13 @@ const STATUS_LABELS = {
 function formatRate(value, unit) {
   if (value === "" || value === null || value === undefined) return "Not set"
   return `R ${Number(value).toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${unit}`
+}
+
+function formatMoney(value) {
+  return `R ${Number(value || 0).toLocaleString("en-ZA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
 }
 
 function materialValuePerM(massKgPerM, ratePerTon) {
@@ -48,6 +60,7 @@ export default function AtlasPricingWorkspace() {
   const [schemaReady, setSchemaReady] = useState(true)
   const [profiles, setProfiles] = useState([])
   const [fasteners, setFasteners] = useState([])
+  const [revisions, setRevisions] = useState([])
   const [profileSchemaReady, setProfileSchemaReady] = useState(true)
   const [fastenerSchemaReady, setFastenerSchemaReady] = useState(true)
   const [expandedId, setExpandedId] = useState("")
@@ -90,6 +103,7 @@ export default function AtlasPricingWorkspace() {
             })
           )
           setSchemaReady(payload.schemaReady !== false)
+          setRevisions(payload.revisions || [])
           setProfiles(profilesPayload.records || [])
           setProfileSchemaReady(profilesPayload.schemaReady !== false)
           setFasteners(fastenersPayload.records || [])
@@ -111,6 +125,7 @@ export default function AtlasPricingWorkspace() {
     groups[record.category] = [...(groups[record.category] || []), record]
     return groups
   }, {})), [records])
+  const assembledSummary = useMemo(() => summarizeAtlasPricing(records), [records])
 
   function updateRecord(id, field, value) {
     setRecords((current) => current.map((record) => record.id === id ? { ...record, [field]: value } : record))
@@ -199,6 +214,19 @@ export default function AtlasPricingWorkspace() {
           : record
       )
     )
+    if (bolt) {
+      setRecords((current) =>
+        current.map((record) => {
+          if (record.componentCode === "W08-NUT") {
+            return { ...record, profileSpec: bolt.matchingNut }
+          }
+          if (record.componentCode === "W08-WSH") {
+            return { ...record, profileSpec: bolt.matchingWasher }
+          }
+          return record
+        })
+      )
+    }
   }
 
   async function saveRecord(record) {
@@ -269,6 +297,31 @@ export default function AtlasPricingWorkspace() {
         </div>
       </section>
 
+      <section className="overflow-hidden border border-slate-900 bg-slate-950 text-white shadow-xl">
+        <div className="grid gap-px bg-white/10 lg:grid-cols-[minmax(0,1.35fr)_repeat(3,minmax(150px,0.55fr))]">
+          <div className="bg-slate-950 p-5 sm:p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-300">Live assembled W08 baseline</p>
+            <div className="mt-3 flex flex-wrap items-end gap-4">
+              <p className="text-3xl font-bold tracking-tight sm:text-4xl">{formatMoney(assembledSummary.totalCost)}</p>
+              <span className={`mb-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${assembledSummary.holdCount ? "bg-amber-300 text-slate-950" : "bg-emerald-300 text-emerald-950"}`}>
+                {assembledSummary.holdCount ? `${assembledSummary.holdCount} holds` : "Quote ready"}
+              </span>
+            </div>
+            <p className="mt-2 max-w-xl text-xs leading-5 text-slate-400">Calculated from the controlled baseline quantity and member length on every pricing line. It is not released to estimates until every line is complete and confirmed.</p>
+          </div>
+          {[
+            ["Raw material", assembledSummary.rawCost],
+            ["Waste + fabrication + coating", assembledSummary.wasteCost + assembledSummary.fabricationCost + assembledSummary.coatingCost],
+            ["Margin allowance", assembledSummary.marginCost],
+          ].map(([label, value]) => (
+            <div key={label} className="bg-slate-950 p-5 sm:p-6">
+              <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-slate-500">{label}</p>
+              <p className="mt-2 text-lg font-bold">{formatMoney(value)}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {!loading && records.length === 0 ? (
         <section className="border border-slate-200 bg-white p-6">
           <p className="font-bold text-slate-950">No controlled pricing register exists for {product?.name} yet.</p>
@@ -294,6 +347,8 @@ export default function AtlasPricingWorkspace() {
               const usesBoltSelection = record.componentCode === "W08-BLT"
               const selectedBolt = fasteners.find((fastener) => fastener.id === record.fastenerId)
               const primaryValuePerM = materialValuePerM(record.massKgPerM, record.galvanisedRate)
+              const lineCost = calculateAtlasPricingLine(record)
+              const completeness = getAtlasPricingCompleteness(record)
               return (
                 <article key={record.id}>
                   <button
@@ -305,6 +360,7 @@ export default function AtlasPricingWorkspace() {
                     <span>
                       <span className="block font-bold text-slate-950">{record.componentName}</span>
                       <span className="mt-1 block text-xs text-slate-500">{record.quantityRule}</span>
+                      <span className="mt-1 block text-xs font-bold text-sky-700">{formatMoney(lineCost.totalCost)} baseline</span>
                     </span>
                     <span>
                       <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Galv / primary</span>
@@ -312,7 +368,7 @@ export default function AtlasPricingWorkspace() {
                     </span>
                     <span className={`inline-flex w-fit items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${hasHold ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-700"}`}>
                       {hasHold ? <AlertTriangle className="h-3 w-3" /> : <Check className="h-3 w-3" />}
-                      {STATUS_LABELS[record.status]}
+                      {completeness.ready ? STATUS_LABELS[record.status] : `${completeness.missing.length} missing`}
                     </span>
                     {expanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                   </button>
@@ -333,7 +389,7 @@ export default function AtlasPricingWorkspace() {
                         </Field>
                         <Field label="Status">
                           <select value={record.status} onChange={(event) => updateRecord(record.id, "status", event.target.value)} className={inputClass}>
-                            {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                            {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value} disabled={value === "confirmed" && !completeness.ready}>{label}</option>)}
                           </select>
                         </Field>
                         {usesLippedChannelProfile ? (
@@ -394,6 +450,12 @@ export default function AtlasPricingWorkspace() {
                         <Field label="Quantity rule">
                           <input value={record.quantityRule} onChange={(event) => updateRecord(record.id, "quantityRule", event.target.value)} className={inputClass} />
                         </Field>
+                        <Field label="Baseline quantity">
+                          <input type="number" min="0" step="0.01" value={record.baselineQuantity} onChange={(event) => updateRecord(record.id, "baselineQuantity", event.target.value)} className={inputClass} />
+                        </Field>
+                        <Field label="Baseline member length (m)">
+                          <input type="number" min="0" step="0.001" value={record.baselineLengthM} onChange={(event) => updateRecord(record.id, "baselineLengthM", event.target.value)} className={inputClass} disabled={!["ton", "m"].includes(record.pricingUnit)} />
+                        </Field>
                         <Field label="Galvanised / primary rate">
                           <input type="number" min="0" step="0.01" value={record.galvanisedRate} onChange={(event) => updateRecord(record.id, "galvanisedRate", event.target.value)} className={inputClass} />
                         </Field>
@@ -410,13 +472,53 @@ export default function AtlasPricingWorkspace() {
                         <Field label="Fabrication allowance">
                           <input type="number" min="0" step="0.01" value={record.fabricationAllowance} onChange={(event) => updateRecord(record.id, "fabricationAllowance", event.target.value)} className={inputClass} />
                         </Field>
+                        <Field label="Coating allowance">
+                          <input type="number" min="0" step="0.01" value={record.coatingAllowance} onChange={(event) => updateRecord(record.id, "coatingAllowance", event.target.value)} className={inputClass} />
+                        </Field>
+                        <Field label="Margin %">
+                          <input type="number" min="0" step="0.1" value={record.marginPercent} onChange={(event) => updateRecord(record.id, "marginPercent", event.target.value)} className={inputClass} />
+                        </Field>
+                        <Field label="Supplier">
+                          <input value={record.supplierName} onChange={(event) => updateRecord(record.id, "supplierName", event.target.value)} placeholder="Supplier name" className={inputClass} />
+                        </Field>
+                        <Field label="Supplier quote / reference">
+                          <input value={record.supplierQuoteReference} onChange={(event) => updateRecord(record.id, "supplierQuoteReference", event.target.value)} placeholder="Quote, price list, or reference" className={inputClass} />
+                        </Field>
                         <Field label="Effective date">
                           <input type="date" value={record.effectiveDate} onChange={(event) => updateRecord(record.id, "effectiveDate", event.target.value)} className={inputClass} />
+                        </Field>
+                        <Field label="Approved by">
+                          <input value={record.approvedBy} onChange={(event) => updateRecord(record.id, "approvedBy", event.target.value)} placeholder="Required to confirm" className={inputClass} />
                         </Field>
                         <Field label="Notes" wide>
                           <textarea rows={2} value={record.notes} onChange={(event) => updateRecord(record.id, "notes", event.target.value)} className={inputClass} />
                         </Field>
                       </div>
+                      <div className="mt-5 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-3 lg:grid-cols-6">
+                        {[
+                          ["Raw", lineCost.rawCost],
+                          ["Waste", lineCost.wasteCost],
+                          ["Fabrication", lineCost.fabricationCost],
+                          ["Coating", lineCost.coatingCost],
+                          ["Margin", lineCost.marginCost],
+                          ["Line total", lineCost.totalCost],
+                        ].map(([label, value]) => <div key={label} className={label === "Line total" ? "bg-slate-950 p-3 text-white" : "bg-white p-3"}><p className="text-[9px] font-bold uppercase tracking-[0.12em] opacity-55">{label}</p><p className="mt-1 text-sm font-bold">{formatMoney(value)}</p></div>)}
+                      </div>
+                      {!completeness.ready ? <div className="mt-4 border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900"><strong>Complete before approval:</strong> {completeness.missing.join(", ")}.</div> : null}
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[10px] text-slate-500"><span>Revision {record.revisionNumber || 1}{record.approvedAt ? ` · approved ${new Date(record.approvedAt).toLocaleDateString("en-ZA")}` : ""}</span><span>Every save records the previous values in pricing history.</span></div>
+                      {revisions.some((revision) => revision.pricingItemId === record.id) ? (
+                        <div className="mt-4 border-t border-slate-200 pt-4">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-slate-400">Recent revisions</p>
+                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            {revisions.filter((revision) => revision.pricingItemId === record.id).slice(0, 4).map((revision) => (
+                              <div key={revision.id} className="border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                                <div className="flex items-center justify-between gap-3"><strong className="text-slate-900">Revision {revision.revisionNumber}</strong><span>{new Date(revision.createdAt).toLocaleDateString("en-ZA")}</span></div>
+                                <p className="mt-1">{revision.changedBy || "Smart Steel team"} · {revision.changeNote}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
                       <div className="mt-5 flex justify-end">
                         <button
                           type="button"
