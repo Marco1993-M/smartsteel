@@ -15,6 +15,7 @@ function normalizeRow(row) {
     componentCode: row.component_code,
     componentName: row.component_name,
     category: row.category,
+    profileId: row.profile_id || "",
     profileSpec: row.profile_spec || "",
     lengthRule: row.length_rule || "",
     quantityRule: row.quantity_rule || "",
@@ -22,6 +23,7 @@ function normalizeRow(row) {
     galvanisedRate: row.galvanised_rate === null ? "" : Number(row.galvanised_rate),
     mildSteelRate: row.mild_steel_rate === null ? "" : Number(row.mild_steel_rate),
     massKgPerM: row.mass_kg_per_m === null ? "" : Number(row.mass_kg_per_m),
+    massSource: row.mass_source || "",
     wastePercent: Number(row.waste_percent || 0),
     fabricationAllowance: Number(row.fabrication_allowance || 0),
     status: row.status,
@@ -85,11 +87,15 @@ export async function PATCH(request) {
     .update({
       component_name: String(body.componentName || "").trim(),
       category: String(body.category || "").trim(),
+      profile_id: String(body.profileId || "").trim() || null,
       profile_spec: String(body.profileSpec || "").trim() || null,
       length_rule: String(body.lengthRule || "").trim() || null,
       quantity_rule: String(body.quantityRule || "").trim() || null,
       pricing_unit: body.pricingUnit,
       ...numericFields,
+      mass_source: ["calculated", "verified", "custom"].includes(body.massSource)
+        ? body.massSource
+        : null,
       status: body.status,
       effective_date: body.effectiveDate || null,
       notes: String(body.notes || "").trim() || null,
