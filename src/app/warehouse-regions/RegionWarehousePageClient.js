@@ -98,11 +98,11 @@ export default function RegionWarehousePageClient({ citySlug }) {
           </div>
 
           <h1 className="max-w-5xl text-4xl font-bold leading-tight text-white sm:text-5xl md:text-6xl">
-            Lightweight Steel Warehouses in {content.name}
+            Steel warehouse builders and suppliers in {content.name}
           </h1>
           <p className="mt-4 max-w-3xl text-base text-white/90 sm:text-lg md:text-xl">
-            Warehouse systems for {content.name} projects that need faster build times,
-            practical spans, and dependable long-term commercial value.
+            Lightweight warehouse systems for {content.name} projects that need clear price guidance,
+            practical spans, faster construction, and dependable long-term commercial value.
           </p>
 
           <div className="mt-8 flex items-center gap-4">
@@ -173,6 +173,30 @@ export default function RegionWarehousePageClient({ citySlug }) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-6 py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#da1a33]">
+              Builder And Supplier Fit
+            </p>
+            <h2 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
+              Warehouse construction support for {content.name} projects
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-gray-700">
+              Use this page to compare steel warehouse sizes, supplier scope, construction direction,
+              and budget ranges before you request a final quotation.
+            </p>
+          </div>
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {content.searchIntentPoints.map((point) => (
+              <div key={point} className="rounded-[1.5rem] border border-gray-200 bg-gray-50 p-6">
+                <p className="text-sm leading-7 text-gray-700">{point}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -301,25 +325,21 @@ export default function RegionWarehousePageClient({ citySlug }) {
               Pricing Context
             </p>
             <h2 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
-              Warehouse pricing guidance in {content.name}
+              Steel warehouse price guidance in {content.name}
             </h2>
             <p className="mt-4 text-lg text-gray-700">
-              Warehouse pricing in {content.name} depends on span, length, cladding specification,
-              foundations, doors, insulation, and whether the project is supply-only or installed.
+              Warehouse prices in {content.name} depend on span, length, cladding specification,
+              foundations, doors, insulation, delivery distance, and whether the project is supply-only,
+              an enclosed shell, or a fuller turnkey build.
             </p>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              <div className="rounded-[1.5rem] bg-gray-100 p-5">
-                <p className="text-sm font-semibold text-gray-900">Structure only</p>
-                <p className="mt-2 text-sm text-gray-600">Around R1,200 to R1,800 per m² for a standard shell comparison.</p>
-              </div>
-              <div className="rounded-[1.5rem] bg-gray-100 p-5">
-                <p className="text-sm font-semibold text-gray-900">Installed shell</p>
-                <p className="mt-2 text-sm text-gray-600">Affected by cladding, access openings, delivery, and installation scope.</p>
-              </div>
-              <div className="rounded-[1.5rem] bg-gray-100 p-5">
-                <p className="text-sm font-semibold text-gray-900">Turnkey builds</p>
-                <p className="mt-2 text-sm text-gray-600">Project-specific depending on slab, fit-out, and site preparation requirements.</p>
-              </div>
+              {content.pricingBands.map((band) => (
+                <div key={band.title} className="rounded-[1.5rem] bg-gray-100 p-5">
+                  <p className="text-sm font-semibold text-gray-900">{band.title}</p>
+                  <p className="mt-2 text-xl font-bold text-gray-950">{band.value}</p>
+                  <p className="mt-3 text-sm leading-6 text-gray-600">{band.description}</p>
+                </div>
+              ))}
             </div>
           </div>
 

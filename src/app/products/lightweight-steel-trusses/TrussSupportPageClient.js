@@ -45,6 +45,47 @@ export default function TrussSupportPageClient({ slug }) {
         </div>
       </section>
 
+      {page.priceBands && (
+        <section className="bg-white px-6 py-10">
+          <div className="mx-auto max-w-5xl">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">Budget guide</p>
+              <h2 className="mt-4 text-3xl font-bold text-black">Lightweight steel truss price ranges</h2>
+              <p className="mt-4 text-lg leading-8 text-gray-700">
+                These ranges are planning guides for early comparison. A final quote still needs drawings, roof geometry,
+                loading assumptions, delivery location, and the agreed project scope.
+              </p>
+            </div>
+            <div className="mt-8 grid gap-5 md:grid-cols-3">
+              {page.priceBands.map((band) => (
+                <div key={band.title} className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#da1a33]">{band.title}</p>
+                  <p className="mt-4 text-2xl font-bold text-black">{band.value}</p>
+                  <p className="mt-4 text-sm leading-7 text-gray-700">{band.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {page.quoteExamples && (
+        <section className="bg-gray-50 px-6 py-16">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="text-3xl font-bold text-black">Example truss budget scenarios</h2>
+            <div className="mt-8 grid gap-5 md:grid-cols-3">
+              {page.quoteExamples.map((example) => (
+                <div key={example.title} className="rounded-2xl bg-white p-6 shadow-sm">
+                  <h3 className="text-xl font-bold text-black">{example.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-gray-600">{example.scope}</p>
+                  <p className="mt-5 text-sm font-semibold leading-7 text-[#da1a33]">{example.range}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="bg-white px-6 py-4">
         <div className="mx-auto max-w-5xl space-y-12">
           {page.sections.map((section) => (

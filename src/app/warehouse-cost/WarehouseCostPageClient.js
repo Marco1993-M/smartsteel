@@ -311,6 +311,8 @@ export default function WarehouseCostPageClient({ slug }) {
               { href: "/tools/estimator", label: "Warehouse estimator", description: "Run a faster budget check for standard warehouse structures." },
               { href: "/warehouses", label: "Warehouse systems", description: "Explore Smart Steel warehouse solutions and standard options." },
               { href: "/warehouse-regions", label: "Warehouse regions", description: "Compare warehouse delivery and project context across South Africa." },
+              { href: "/lightweight-steel-framing", label: "Lightweight steel framing", description: "Understand the LSF system behind faster, cleaner steel warehouse projects." },
+              { href: "/products/lightweight-steel-trusses/roof-truss-prices", label: "Roof truss prices", description: "Compare lightweight steel roof truss budget ranges and quote drivers." },
             ].map((item) => (
               <Link
                 key={item.href}

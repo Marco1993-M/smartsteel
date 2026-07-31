@@ -348,8 +348,8 @@ export function buildRegionWarehouseMetadata(citySlug) {
   if (!config) return {};
 
   const canonicalPath = `/${config.legacySlug}`;
-  const title = `Steel Warehouses ${config.name} | Lightweight Steel Buildings | Smart Steel`;
-  const description = `Lightweight steel warehouses in ${config.name}. Explore warehouse sizes, pricing guidance, delivery areas, and fast-build steel building solutions from Smart Steel.`;
+  const title = `Warehouse Builders ${config.name} | Steel Warehouse Prices | Smart Steel`;
+  const description = `Steel warehouse builders and suppliers in ${config.name}. Compare lightweight warehouse sizes, price guidance, delivery areas, and fast-build steel construction options.`;
 
   return {
     title,
@@ -386,12 +386,16 @@ export function buildRegionWarehouseContent(citySlug) {
   const pricePath = "/warehouse-builder";
   const faqItems = [
     {
-      question: `How long does it take to build a steel warehouse in ${config.name}?`,
-      answer: `Most standard warehouse shells in ${config.name} move from final approval to installation within a few weeks, depending on size, access, foundations, and optional extras.`,
+      question: `How much does a steel warehouse cost in ${config.name}?`,
+      answer: `As a planning guide, structure-only steel warehouse projects often start around R1,050 to R1,300 per m2, enclosed shells around R1,350 to R1,500 per m2, and turnkey projects around R1,650 to R2,700+ per m2. Final pricing in ${config.name} depends on span, height, cladding, access openings, slab scope, delivery, and installation requirements.`,
     },
     {
-      question: `What does a steel warehouse cost in ${config.name}?`,
-      answer: `Lightweight steel warehouse pricing in ${config.name} depends on width, length, cladding, access openings, slab scope, and whether you need supply-only or installation. Use our warehouse builder for a fast visual starting point, or the estimator if you want a simpler budget check.`,
+      question: `Can Smart Steel act as a warehouse builder or supplier in ${config.name}?`,
+      answer: `Yes. Smart Steel supports steel warehouse enquiries in ${config.name} for supply, planning, estimating, and project-specific quotation. The right route depends on whether you need structure-only supply, an enclosed shell, installation, or a fuller turnkey scope.`,
+    },
+    {
+      question: `How long does it take to build a steel warehouse in ${config.name}?`,
+      answer: `Most standard warehouse shells in ${config.name} move from final approval to installation within a few weeks, depending on size, access, foundations, cladding scope, and optional extras.`,
     },
     {
       question: `Do you install outside ${config.name}?`,
@@ -414,6 +418,23 @@ export function buildRegionWarehouseContent(citySlug) {
       "Scalable layouts with practical 8m, 10m, and 12m modular widths",
       "Galvanized steel systems designed for lower maintenance and long-term durability",
       "Suitable for warehouses, workshops, storage, fleet cover, and light industrial use",
+    ],
+    pricingBands: [
+      {
+        title: "Structure only",
+        value: "R1,050 to R1,300 per m2",
+        description: "A planning range for the primary lightweight steel frame before cladding, slab, delivery, and site-specific extras.",
+      },
+      {
+        title: "Enclosed shell",
+        value: "R1,350 to R1,500 per m2",
+        description: "A typical guide for steel frame plus roof and wall cladding, subject to openings, height, insulation, and finish.",
+      },
+      {
+        title: "Turnkey project",
+        value: "R1,650 to R2,700+ per m2",
+        description: "Used when the project includes more complete coordination, civil works, finishes, and handover scope.",
+      },
     ],
     proofStats: [
       { value: "23321+", label: "lightweight steel meters supplied" },
@@ -462,6 +483,11 @@ export function buildRegionWarehouseContent(citySlug) {
       "What span and length make the most sense for the site?",
       "Should we build structure-only, installed shell, or a larger turnkey scope?",
       "What door, cladding, and insulation options will affect final pricing?",
+    ],
+    searchIntentPoints: [
+      `Steel warehouse builders in ${config.name} for storage, workshop, agricultural, and commercial projects.`,
+      `Warehouse suppliers in ${config.name} for structure-only, enclosed shell, and project-specific steel building scopes.`,
+      `Warehouse construction guidance in ${config.name} covering size, height, cladding, openings, slab planning, and delivery.`,
     ],
     internalLinks: [
       { href: "/warehouse-builder", label: "Build your warehouse online" },

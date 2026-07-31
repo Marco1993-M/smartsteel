@@ -25,6 +25,9 @@ export default function TrussLandingPageClient() {
               <Link href="/contact" className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-black">
                 Request a Truss Quote
               </Link>
+              <Link href="/products/lightweight-steel-trusses/roof-truss-prices" className="rounded-full border border-[#da1a33] px-6 py-3 font-semibold text-[#da1a33] transition hover:bg-[#da1a33] hover:text-white">
+                Compare Truss Prices
+              </Link>
               <Link href="/resources" className="rounded-full border border-black px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white">
                 View Technical Resources
               </Link>
@@ -72,6 +75,32 @@ export default function TrussLandingPageClient() {
                 <p className="mt-4 text-sm leading-7 text-gray-700">{item.body}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-6 py-16">
+        <div className="mx-auto grid max-w-6xl gap-8 rounded-[2rem] border border-gray-200 bg-gray-50 p-8 md:grid-cols-[1fr_0.75fr] md:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">Price intent</p>
+            <h2 className="mt-4 text-3xl font-bold text-black md:text-4xl">
+              Looking for lightweight steel roof truss prices?
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-gray-700">
+              Start with the dedicated price guide before requesting a quote. It explains planning ranges, example budgets,
+              what changes the final number, and what to send if you want a useful truss estimate.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <p className="text-sm font-semibold text-gray-500">Popular price checks</p>
+            <ul className="mt-4 space-y-3 text-sm leading-7 text-gray-700">
+              <li>Simple residential roof truss budgets</li>
+              <li>Detailed residential and light commercial roof budgets</li>
+              <li>Drawings and scope needed for a final quotation</li>
+            </ul>
+            <Link href="/products/lightweight-steel-trusses/roof-truss-prices" className="mt-6 inline-block rounded-full bg-[#da1a33] px-6 py-3 text-sm font-semibold text-white transition hover:bg-black">
+              View Truss Price Guide
+            </Link>
           </div>
         </div>
       </section>

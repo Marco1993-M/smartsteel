@@ -104,11 +104,71 @@ export default function LightweightSteelFramingClient() {
       {/* Hero Section */}
       <section className="bg-white text-black py-32 px-6 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          Lightweight Steel Framing Solutions
+          Lightweight Steel Framing in South Africa
         </h1>
         <p className="text-lg md:text-xl max-w-3xl mx-auto">
-          Discover our durable, cost-effective, and sustainable lightweight steel framing (LSF) solutions for warehouses, sheds, and buildings. Build faster with earthquake-resistant, energy-efficient steel structures.
+          Smart Steel supplies lightweight steel framing, LSF warehouse systems, roof trusses, sheds, and commercial steel building components for projects that need faster construction, cleaner accuracy, and lower long-term maintenance.
         </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <Link
+            href="/warehouse-cost"
+            className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-black"
+          >
+            Compare Warehouse Prices
+          </Link>
+          <Link
+            href="/products/lightweight-steel-trusses/roof-truss-prices"
+            className="rounded-full border border-black px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
+          >
+            View Truss Prices
+          </Link>
+        </div>
+      </section>
+
+      <section className="bg-gray-50 py-20 px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
+              LSF Supplier Guidance
+            </p>
+            <h2 className="mt-4 text-3xl font-bold text-black">
+              Where lightweight steel framing fits best
+            </h2>
+            <p className="mt-5 text-lg leading-8 text-gray-700">
+              Buyers usually compare lightweight steel framing when they need a cleaner alternative to heavier construction,
+              timber framing, or slow site-built methods. The right Smart Steel route depends on whether you are planning a
+              warehouse, roof truss package, shed, commercial building, or a more tailored steel structure.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {[
+              {
+                title: "Warehouse framing",
+                value: "From R1,050 per m2 for structure-only planning",
+                text: "Use the warehouse cost guides when the project is mainly storage, workshop, agricultural, or light industrial space.",
+                href: "/warehouse-cost",
+              },
+              {
+                title: "Roof trusses",
+                value: "From R650 per m2 for simple roof-truss planning",
+                text: "Use the truss price guide when the project is focused on light steel roof structure, spans, pitch, and drawings.",
+                href: "/products/lightweight-steel-trusses/roof-truss-prices",
+              },
+              {
+                title: "Custom LSF structures",
+                value: "Quoted from project scope",
+                text: "Use the contact route when the project needs design support, unusual geometry, specific cladding, or a mixed building scope.",
+                href: "/contact",
+              },
+            ].map((item) => (
+              <Link key={item.title} href={item.href} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-[#da1a33] hover:shadow-md">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#da1a33]">{item.title}</p>
+                <p className="mt-4 text-xl font-bold text-black">{item.value}</p>
+                <p className="mt-4 text-sm leading-7 text-gray-700">{item.text}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Why Choose Lightweight Steel Structures */}
@@ -254,7 +314,7 @@ export default function LightweightSteelFramingClient() {
           With a commitment to high-quality builds, reliable supply chains, and sustainable construction practices, our team is trusted across South Africa. Certified, experienced, and client-focused.
         </p>
         <Link
-          href="/about"
+          href="/company"
           className="inline-block bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition"
         >
           Learn More About Us

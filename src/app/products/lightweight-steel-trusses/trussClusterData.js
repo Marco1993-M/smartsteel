@@ -102,27 +102,71 @@ export const trussClusterPages = {
   },
   'roof-truss-prices': {
     slug: 'roof-truss-prices',
-    title: 'Lightweight Steel Roof Truss Prices | Smart Steel',
+    title: 'Lightweight Steel Roof Truss Prices South Africa | Smart Steel',
     heading: 'Lightweight steel roof truss prices in South Africa',
     description:
-      'Understand the main price drivers for lightweight steel roof trusses, including span, roof design, engineering, and project complexity.',
+      'Compare lightweight steel roof truss price ranges in South Africa, including budget bands, quote examples, span factors, roof complexity, and engineering scope.',
     intro:
-      'Most buyers ask for price early, but truss pricing depends on more than square metres. Roof shape, span, loading, geometry, and complexity can change the final cost significantly.',
+      'Most buyers ask for price early, so this page starts with budget context before moving into the technical drivers. Final lightweight steel truss pricing depends on roof area, span, pitch, loading, geometry, engineering detail, delivery, and whether Smart Steel is supplying only or supporting the broader roof package.',
     keyPoints: [
-      'Truss pricing depends on geometry, span, loading, and roof complexity',
-      'Straightforward roofs are easier to price than complex layouts',
-      'The best comparison is total value, not only cheapest upfront rate',
+      'Simple lightweight steel roof truss projects usually price very differently from complex hip, valley, or long-span roofs',
+      'Useful budget conversations should separate truss supply, engineering/detailing, delivery, and installation support',
+      'The strongest comparison is total roof value: straightness, termite resistance, lower movement risk, and cleaner long-term performance',
+    ],
+    priceBands: [
+      {
+        title: 'Simple residential roof',
+        value: 'Budget from about R650 to R950 per m2',
+        description:
+          'A planning range for straightforward roof layouts with repeatable trusses, moderate spans, and clear drawings.',
+      },
+      {
+        title: 'Detailed residential or light commercial roof',
+        value: 'Budget from about R950 to R1,450 per m2',
+        description:
+          'Typical when the roof has larger spans, more junctions, design coordination, or a higher level of specification.',
+      },
+      {
+        title: 'Complex or engineered roof package',
+        value: 'Project-specific quotation',
+        description:
+          'Needed for unusual geometry, heavier loading, large commercial roofs, retrofit complexity, or special connection details.',
+      },
+    ],
+    quoteExamples: [
+      {
+        title: 'Small house roof',
+        scope: '120 m2 straightforward roof area',
+        range: 'Indicative truss budget: R78,000 to R114,000',
+      },
+      {
+        title: 'Larger residential roof',
+        scope: '220 m2 roof with more detailing',
+        range: 'Indicative truss budget: R209,000 to R319,000',
+      },
+      {
+        title: 'Commercial or institutional roof',
+        scope: 'Repeatable bays, longer spans, and engineering coordination',
+        range: 'Quoted after drawings, loading, and connection details are reviewed',
+      },
     ],
     sections: [
       {
-        title: 'What changes truss pricing most',
+        title: 'What changes lightweight steel truss pricing most',
         paragraphs: [
           'The biggest price factors are span, pitch, overall roof geometry, loading requirements, connection complexity, and whether the project includes design support and engineering coordination.',
           'Simple repeatable roofs usually price differently from roofs with multiple hips, valleys, junctions, or unusual structural requirements.',
         ],
       },
       {
-        title: 'Why cheap comparisons can be misleading',
+        title: 'What to send for a useful truss price',
+        paragraphs: [
+          'The fastest way to move from a vague budget to a credible lightweight steel truss quotation is to send roof drawings, spans, pitch, project location, roof covering, ceiling requirements, and any known loading requirements.',
+          'If drawings are not ready yet, Smart Steel can still help with early budget direction, but the quote should be treated as a planning range until the roof geometry and engineering assumptions are confirmed.',
+        ],
+      },
+      {
+        title: 'Why cheap truss comparisons can be misleading',
         paragraphs: [
           'Comparing steel truss pricing to timber without looking at durability, straightness, waste reduction, and maintenance can produce the wrong conclusion.',
           'A better buying question is: what structural system gives the cleanest long-term result for the roof I am building?',
@@ -137,8 +181,16 @@ export const trussClusterPages = {
     ],
     faqs: [
       {
+        q: 'How much do lightweight steel roof trusses cost in South Africa?',
+        a: 'As a planning guide, simple lightweight steel roof truss projects can start around R650 to R950 per m2 of roof area, while more detailed residential or light commercial roofs can sit closer to R950 to R1,450 per m2. Complex projects should be quoted from drawings.',
+      },
+      {
         q: 'What is the biggest factor in roof truss pricing?',
         a: 'Span and roof complexity are usually the largest price drivers, followed by engineering requirements and the level of detail needed for fabrication and installation.',
+      },
+      {
+        q: 'Why can two roof truss quotes be so different?',
+        a: 'Two quotes can differ because they include different assumptions around engineering, delivery, connections, roof complexity, installation support, and whether the supplier is pricing only trusses or a fuller roof package.',
       },
       {
         q: 'Can lightweight steel trusses be cost-effective?',
