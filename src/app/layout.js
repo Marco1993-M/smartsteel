@@ -1,12 +1,12 @@
+// app/layout.js or app/layout.tsx
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
-import AppShell from "../components/AppShell";
-import AnnouncementBanner from "../components/AnnouncementBanner";
+import AppChrome from "@/components/AppChrome";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  weight: ["400", "600"],
 });
 
 const geistMono = Geist_Mono({
@@ -15,71 +15,77 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://www.smartsteel.co.za"),
-  title: {
-    default: "Smart Steel | Warehouses, Solar Carports & Steel Systems",
-    template: "%s | Smart Steel",
-  },
+  title: "Pequeno Home | Pequeño Lightweight Steel Homes South Africa",
   description:
-    "Smart Steel designs and supplies lightweight steel warehouses, CFLC DIY kits, solar carports, and steel building systems across South Africa.",
-  icons: {
-    icon: [
-      { url: "/favicon/favicon.ico", sizes: "any" },
-      { url: "/favicon/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon/favicon-96x96.png", sizes: "96x96", type: "image/png" },
-    ],
-    apple: "/favicon/apple-touch-icon.png",
-  },
-  manifest: "/favicon/site.webmanifest",
+    "Pequeno Home, also styled Pequeño, designs and builds architect-led modular lightweight steel homes in South Africa with precision, speed, and considered architectural detail.",
+  keywords: [
+    "Pequeno",
+    "Pequeno Home",
+    "Pequeño",
+    "lightweight steel homes",
+    "steel construction",
+    "eco-friendly housing",
+    "affordable steel homes",
+    "Pequeño homes",
+    "modern prefab",
+    "Prefab homes",
+    "Steel homes",
+    "Modular steel homes",
+    "Sustainable modular homes",
+    "Modern prefab houses",
+    "Modular lightweight steel homes in South Africa",
+    "Affordable modular steel homes for families",
+    "Fast-build sustainable steel frame houses",
+  ],
+  authors: [{ name: "Pequeño Team", url: "https://www.pequenohome.com" }],
+  creator: "Pequeño",
+  metadataBase: new URL("https://www.pequenohome.com"),
   openGraph: {
-    title: "Smart Steel | Warehouses, Solar Carports & Steel Systems",
+    title: "Pequeno Home | Pequeño Lightweight Steel Homes South Africa",
     description:
-      "Explore Smart Steel lightweight steel warehouses, CFLC DIY kits, solar carports, and steel systems built for South African projects.",
-    url: "https://www.smartsteel.co.za",
-    siteName: "Smart Steel",
-    locale: "en_ZA",
-    type: "website",
+      "Discover architect-led lightweight steel homes, prefab-style builds, and modular steel homes designed for South African conditions.",
+    url: "https://www.pequenohome.com",
+    siteName: "Pequeño",
     images: [
       {
-        url: "/images/hero.webp",
-        width: 1200,
-        height: 630,
-        alt: "Smart Steel warehouses, solar carports and steel systems",
+        url: "https://www.pequenohome.com/images/modular-hero.jpg",
+        width: 1600,
+        height: 900,
+        alt: "Pequeño lightweight steel home architecture",
       },
     ],
+    locale: "en_ZA",
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Smart Steel | Warehouses, Solar Carports & Steel Systems",
+    title: "Pequeno Home | Pequeño Lightweight Steel Homes South Africa",
     description:
-      "Explore Smart Steel lightweight steel warehouses, CFLC DIY kits, solar carports, and steel systems for South African projects.",
-    images: ["/images/hero.webp"],
+      "Discover architect-led lightweight steel homes and modular steel homes designed for South African conditions.",
+    images: ["https://www.pequenohome.com/images/modular-hero.jpg"],
+    creator: "@pequeno", // Update or remove if not using Twitter
+  },
+  icons: {
+    icon: [
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon.ico",
+  },
+  manifest: "/site.webmanifest",
+  appleWebApp: {
+    title: "Pequeño",
   },
 };
-
-
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=AW-17629050810"
-          strategy="afterInteractive"
-        />
-        <Script id="google-ads-base-tag" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            window.gtag = window.gtag || gtag;
-            gtag('js', new Date());
-            gtag('config', 'AW-17629050810');
-          `}
-        </Script>
-      </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/*<AnnouncementBanner />*/}
-        <AppShell>{children}</AppShell>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased text-gray-900`}
+      >
+        <AppChrome>{children}</AppChrome>
       </body>
     </html>
   );
