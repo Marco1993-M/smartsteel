@@ -177,20 +177,21 @@ export default function ProductsHubPage() {
             <Link
               key={item.title}
               href={item.href}
-              className={`group relative min-h-[430px] overflow-hidden rounded-[2rem] border p-6 shadow-sm transition hover:-translate-y-1 sm:p-8 ${item.tone === "lsf" ? "border-[#121a20] bg-[#121a20] text-white" : "border-[#1c5b57] bg-[#1c5b57] text-[#f7f5ef]"}`}
+              className={`group relative min-h-[430px] overflow-hidden rounded-[2rem] border p-6 shadow-sm transition hover:-translate-y-1 sm:p-8 ${item.tone === "lsf" ? "border-[#121a20] bg-[#121a20] text-white" : "border-[#001d2e] bg-[linear-gradient(135deg,#001d2e_0%,#06308d_55%,#0043f3_100%)] text-white"}`}
             >
               <Image src={item.image} alt={item.imageAlt} fill sizes="(min-width: 1024px) 50vw, 100vw" className={`object-cover transition duration-500 group-hover:scale-[1.03] ${item.tone === "atlas" ? "object-center opacity-40" : "opacity-30"}`} />
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(18,26,32,0.88),rgba(18,26,32,0.42))]" />
+              <div className={`absolute inset-0 ${item.tone === "atlas" ? "bg-[linear-gradient(135deg,rgba(0,29,46,0.94),rgba(0,67,243,0.42))]" : "bg-[linear-gradient(135deg,rgba(18,26,32,0.88),rgba(18,26,32,0.42))]"}`} />
+              {item.tone === "atlas" ? <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(132deg,transparent_65%,rgba(193,217,229,0.16)_65%,rgba(193,217,229,0.16)_66%,transparent_66%)]" /> : null}
               <div className="relative z-10 flex h-full flex-col">
                 <div className="flex items-start justify-between gap-5">
-                  <p className={`font-mono text-xs ${item.tone === "lsf" ? "text-[#f14c5d]" : "text-[#d9a441]"}`}>{item.number}</p>
+                  <p className={`font-mono text-xs ${item.tone === "lsf" ? "text-[#f14c5d]" : "text-[#c1d9e5]"}`}>{item.number}</p>
                   <span className="border border-white/25 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80">{item.detail}</span>
                 </div>
                 <div className="mt-auto max-w-xl">
-                  <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${item.tone === "lsf" ? "text-[#f14c5d]" : "text-[#d9a441]"}`}>{item.eyebrow}</p>
+                  <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${item.tone === "lsf" ? "text-[#f14c5d]" : "text-[#c1d9e5]"}`}>{item.eyebrow}</p>
                   <h3 className="mt-4 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">{item.title}</h3>
                   <p className="mt-5 max-w-lg text-base leading-7 text-white/76">{item.description}</p>
-                  <p className={`mt-8 inline-flex items-center gap-2 border-b pb-2 text-sm font-semibold ${item.tone === "lsf" ? "border-[#f14c5d] text-[#ffadb6]" : "border-[#d9a441] text-[#f6d37c]"}`}>{item.cta} <Arrow /></p>
+                  <p className={`mt-8 inline-flex items-center gap-2 border-b pb-2 text-sm font-semibold ${item.tone === "lsf" ? "border-[#f14c5d] text-[#ffadb6]" : "border-[#c1d9e5] text-white"}`}>{item.cta} <Arrow /></p>
                 </div>
               </div>
             </Link>
@@ -205,14 +206,15 @@ export default function ProductsHubPage() {
         </div>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {structureOptions.map((item) => (
-            <Link key={item.title} href={item.href} className="group overflow-hidden rounded-[1.7rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#1c5b57]">
+            <Link key={item.title} href={item.href} className="group overflow-hidden rounded-[1.7rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#0043f3] hover:shadow-[0_20px_45px_-32px_rgba(0,67,243,0.65)]">
               <div className="relative h-56 overflow-hidden bg-slate-100">
                 <Image src={item.image} alt={item.imageAlt} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition duration-500 group-hover:scale-[1.04]" />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,26,32,0.02),rgba(18,26,32,0.46))]" />
                 <p className="absolute bottom-4 left-5 text-xs font-semibold uppercase tracking-[0.18em] text-white">{item.eyebrow}</p>
               </div>
               <div className="p-5 sm:p-6">
-                <span className="inline-flex rounded-full border border-[#1c5b57]/25 bg-[#eaf3f1] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1c5b57]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#c1d9e5] bg-[#eef6fa] py-1 pl-1.5 pr-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#0043f3]">
+                  <span className="grid h-5 w-5 place-items-center overflow-hidden rounded-[0.3rem] bg-white"><Image src="/atlas/atlas-mark.png" alt="" width={14} height={15} className="h-3.5 w-3.5 object-contain" /></span>
                   {item.system}
                 </span>
                 <h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[#121a20]">{item.title}</h3>
