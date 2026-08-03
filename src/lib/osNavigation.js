@@ -28,7 +28,7 @@ export const OS_SECTIONS = [
   },
   {
     key: "atlas",
-    label: "Atlas (CFLC)",
+    label: "Atlas",
     href: "/os/atlas",
     description: "Lip channel products, components, pricing, and documents for the Atlas line.",
     status: "active_build",
