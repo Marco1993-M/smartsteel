@@ -23,7 +23,7 @@ export default function AtlasWSeriesLandingPage() {
 
         <div className="relative mx-auto max-w-7xl">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#121a20]/15 pb-5">
-            <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={240} height={84} className="h-11 w-auto object-contain object-left" priority />
+            <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={320} height={50} className="h-10 w-auto max-w-full object-contain object-left" priority />
             <div className="rounded-full border border-[#121a20]/15 bg-white/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#121a20]/65">
               W-Series · Modular Warehouses
             </div>
