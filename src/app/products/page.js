@@ -206,20 +206,20 @@ export default function ProductsHubPage() {
         </div>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {structureOptions.map((item) => (
-            <Link key={item.title} href={item.href} className="group overflow-hidden rounded-[1.7rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#0043f3] hover:shadow-[0_20px_45px_-32px_rgba(0,67,243,0.65)]">
+            <Link key={item.title} href={item.href} className="group overflow-hidden rounded-[1.7rem] border border-[#a8c9d9] bg-[#c1d9e5] shadow-sm transition hover:-translate-y-1 hover:border-[#0043f3] hover:shadow-[0_20px_45px_-30px_rgba(0,67,243,0.7)]">
               <div className="relative h-56 overflow-hidden bg-slate-100">
                 <Image src={item.image} alt={item.imageAlt} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition duration-500 group-hover:scale-[1.04]" />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,26,32,0.02),rgba(18,26,32,0.46))]" />
                 <p className="absolute bottom-4 left-5 text-xs font-semibold uppercase tracking-[0.18em] text-white">{item.eyebrow}</p>
               </div>
               <div className="p-5 sm:p-6">
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#c1d9e5] bg-[#eef6fa] py-1 pl-1.5 pr-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#0043f3]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#0043f3]/20 bg-white/70 py-1 pl-1.5 pr-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#0043f3]">
                   <span className="grid h-5 w-5 place-items-center overflow-hidden rounded-[0.3rem] bg-white"><Image src="/atlas/atlas-mark.png" alt="" width={14} height={15} className="h-3.5 w-3.5 object-contain" /></span>
                   {item.system}
                 </span>
                 <h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[#121a20]">{item.title}</h3>
-                <p className="mt-3 min-h-[72px] text-sm leading-6 text-[#121a20]/65">{item.description}</p>
-                <p className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#d21f35]">{item.cta} <Arrow /></p>
+                <p className="mt-3 min-h-[72px] text-sm leading-6 text-[#001d2e]/70">{item.description}</p>
+                <p className="mt-6 inline-flex items-center gap-2 border-b border-[#0043f3]/30 pb-1.5 text-sm font-semibold text-[#0043f3] transition group-hover:border-[#0043f3]">{item.cta} <Arrow /></p>
               </div>
             </Link>
           ))}
