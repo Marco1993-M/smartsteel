@@ -458,13 +458,13 @@ export default function AtlasWarehouseComponentsWorkspace() {
 
   return (
     <div className="space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
-      <section className="relative overflow-hidden rounded-[1.75rem] border border-slate-800 bg-[radial-gradient(circle_at_88%_0%,rgba(14,165,233,0.24),transparent_32%),linear-gradient(140deg,#020617,#172033)] text-white shadow-[0_22px_55px_rgba(15,23,42,0.16)]">
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,transparent_58%,rgba(250,204,21,0.12)_58%,rgba(250,204,21,0.12)_59%,transparent_59%)]" />
+      <section className="relative overflow-hidden rounded-[1.75rem] border border-[#001d2e] bg-[radial-gradient(circle_at_88%_0%,rgba(193,217,229,0.2),transparent_34%),linear-gradient(140deg,#001d2e,#0043f3)] text-white shadow-[0_22px_55px_rgba(0,29,46,0.2)]">
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,transparent_58%,rgba(193,217,229,0.16)_58%,rgba(193,217,229,0.16)_59%,transparent_59%)]" />
         <div className="relative grid lg:grid-cols-[minmax(0,1fr)_310px]">
           <div className="p-5 sm:p-7">
             <Link href="/os/atlas/products" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 transition hover:text-white"><ArrowLeft className="h-3.5 w-3.5" /> Atlas W08 product</Link>
-            <div className="mt-6 flex flex-wrap items-center gap-2"><span className="rounded-sm bg-amber-400 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-950">Atlas system</span><span className="rounded-sm border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sky-200">Component control</span></div>
-            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">W08 component definition</p>
+            <div className="mt-6 flex flex-wrap items-center gap-2"><span className="rounded-sm bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#0043f3]">Atlas system</span><span className="rounded-sm border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#c1d9e5]">Component control</span></div>
+            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-[#c1d9e5]">W08 component definition</p>
             <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] text-white sm:text-5xl">Turn the warehouse into reusable parts.</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">This controlled set separates primary framing, stability, secondary steel, connections, and optional sheeting so the BOM and pricing layers remain traceable.</p>
           </div>

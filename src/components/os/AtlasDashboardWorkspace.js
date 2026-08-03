@@ -167,13 +167,13 @@ export default function AtlasDashboardWorkspace() {
 
   return (
     <div className="space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
-      <section className="relative overflow-hidden rounded-[1.75rem] border border-slate-800 bg-[radial-gradient(circle_at_85%_0%,rgba(14,165,233,0.25),transparent_30%),linear-gradient(140deg,#020617,#172033)] text-white shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
-        <div className="absolute right-0 top-0 h-full w-1/3 bg-[linear-gradient(135deg,transparent_45%,rgba(250,204,21,0.12)_45%,rgba(250,204,21,0.12)_47%,transparent_47%)]" />
+      <section className="relative overflow-hidden rounded-[1.75rem] border border-[#001d2e] bg-[radial-gradient(circle_at_85%_0%,rgba(193,217,229,0.22),transparent_32%),linear-gradient(140deg,#001d2e,#0043f3)] text-white shadow-[0_24px_60px_rgba(0,29,46,0.22)]">
+        <div className="absolute right-0 top-0 h-full w-1/3 bg-[linear-gradient(135deg,transparent_45%,rgba(193,217,229,0.16)_45%,rgba(193,217,229,0.16)_47%,transparent_47%)]" />
         <div className="relative grid gap-7 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-sm bg-amber-400 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-950">Atlas system</span>
-              <span className="rounded-sm border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sky-200">Product control</span>
+              <span className="rounded-sm bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#0043f3]">Atlas system</span>
+              <span className="rounded-sm border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#c1d9e5]">Product control</span>
             </div>
             <h1 className="mt-5 max-w-3xl text-3xl font-bold tracking-[-0.04em] sm:text-5xl">
               Build the Atlas system from one source of truth.
@@ -182,7 +182,7 @@ export default function AtlasDashboardWorkspace() {
               Product definitions, component records, material logic and controlled documents connected around commercially usable systems.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Link href="/os/atlas/products" className="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-amber-300">
+              <Link href="/os/atlas/products" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-black text-[#0043f3] transition hover:bg-[#c1d9e5]">
                 Open W08 product <ArrowUpRight className="h-4 w-4" />
               </Link>
               <Link href="/warehouse-builder?productType=LCSS%20Warehouse&width=8&length=20" className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/10">
@@ -197,10 +197,10 @@ export default function AtlasDashboardWorkspace() {
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">W08 system readiness</p>
                 <p className="mt-2 text-5xl font-bold tracking-tight">{loading ? "--" : `${summary.readiness}%`}</p>
               </div>
-              <Gauge className="h-9 w-9 text-amber-300" />
+              <Gauge className="h-9 w-9 text-[#c1d9e5]" />
             </div>
             <div className="mt-5 h-2 overflow-hidden bg-white/10">
-              <div className="h-full bg-amber-400 transition-[width] duration-700" style={{ width: `${summary.readiness}%` }} />
+              <div className="h-full bg-[#c1d9e5] transition-[width] duration-700" style={{ width: `${summary.readiness}%` }} />
             </div>
             <p className="mt-3 text-xs leading-5 text-slate-400">{summary.readyCount} of {summary.controls.length} product controls complete.</p>
           </div>

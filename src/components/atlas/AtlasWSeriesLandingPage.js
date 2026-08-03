@@ -15,8 +15,8 @@ const SYSTEM_STEPS = [
 
 export default function AtlasWSeriesLandingPage() {
   return (
-    <main className="mt-6 min-h-screen overflow-hidden bg-[#f3f0e9] text-[#121a20] sm:mt-8">
-      <section className="relative isolate overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#faf9f5_45%,#ebe8dd_100%)] px-4 pb-16 pt-20 sm:px-6 sm:pt-24 lg:px-8 lg:pb-24 lg:pt-28">
+    <main className="atlas-brand mt-6 min-h-screen overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#eef6fa_100%)] text-[#001d2e] sm:mt-8">
+      <section className="relative isolate overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#f7fbfd_45%,#e8f2f7_100%)] px-4 pb-16 pt-20 sm:px-6 sm:pt-24 lg:px-8 lg:pb-24 lg:pt-28">
         <div className="pointer-events-none absolute inset-0 [background-image:linear-gradient(rgba(18,26,32,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(18,26,32,0.08)_1px,transparent_1px)] [background-size:42px_42px]" />
         <div className="pointer-events-none absolute -right-32 top-[-14rem] h-[42rem] w-[42rem] rounded-full border border-[#d9a441]/30" />
         <div className="pointer-events-none absolute -right-12 top-[-5rem] h-[30rem] w-[30rem] rounded-full border border-[#d9a441]/20" />
