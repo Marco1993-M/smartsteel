@@ -3,6 +3,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --atlas-light: #c1d9e5;
+  --atlas-blue: #0043f3;
+  --atlas-navy: #001d2e;
+  --atlas-white: #ffffff;
 }
 
 @theme inline {
@@ -25,6 +29,61 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   max-width: 100%;
   overflow-x: hidden;
+}
+
+/* Atlas uses a deliberately tighter, higher-contrast identity than Smart Steel. */
+.atlas-brand {
+  --atlas-surface: color-mix(in srgb, var(--atlas-light) 32%, white);
+  color: var(--atlas-navy);
+}
+
+.atlas-brand .text-\[\#1c5b57\] {
+  color: var(--atlas-blue) !important;
+}
+
+.atlas-brand .text-\[\#121a20\] {
+  color: var(--atlas-navy) !important;
+}
+
+.atlas-brand .bg-\[\#1c5b57\],
+.atlas-brand .bg-\[\#121a20\] {
+  background-color: var(--atlas-navy) !important;
+}
+
+.atlas-brand .bg-\[\#f3f0e9\] {
+  background-color: #eef6fa !important;
+}
+
+.atlas-brand .hover\:bg-\[\#f3f0e9\]:hover {
+  background-color: #e4f0f6 !important;
+}
+
+.atlas-brand .bg-\[\#d9a441\] {
+  background-color: var(--atlas-blue) !important;
+  color: white !important;
+}
+
+.atlas-brand .text-\[\#d9a441\] {
+  color: var(--atlas-light) !important;
+}
+
+.atlas-brand .border-\[\#d9a441\] {
+  border-color: var(--atlas-blue) !important;
+}
+
+.atlas-brand .hover\:border-\[\#1c5b57\]:hover,
+.atlas-brand .hover\:border-\[\#d9a441\]:hover {
+  border-color: var(--atlas-blue) !important;
+}
+
+.atlas-brand .border-l-2.border-\[\#d9a441\],
+.atlas-brand .border-l-4.border-\[\#d9a441\] {
+  border-color: var(--atlas-blue) !important;
+}
+
+.atlas-brand-os {
+  --atlas-surface: color-mix(in srgb, var(--atlas-light) 28%, white);
+  color: var(--atlas-navy);
 }
 
 .os-input {
@@ -55,6 +114,17 @@ body {
 
 .invoice-sheet {
   min-height: 297mm;
+}
+
+.product-spec-page {
+  box-sizing: border-box;
+  min-height: 297mm;
+  background: #fff;
+  break-after: page;
+}
+
+.product-spec-page:last-child {
+  break-after: auto;
 }
 
 .invoice-sheet,
@@ -140,6 +210,40 @@ body {
 
   .site-report-page figure,
   .site-report-page footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .product-spec-preview {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .product-spec-sheet {
+    width: 186mm !important;
+    max-width: 186mm !important;
+    min-width: 186mm !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+  }
+
+  .product-spec-page {
+    display: flex !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    min-height: 264mm !important;
+    overflow: hidden !important;
+    break-after: page;
+  }
+
+  .product-spec-page:last-child {
+    break-after: auto;
+  }
+
+  .product-spec-page table,
+  .product-spec-page footer {
     break-inside: avoid;
     page-break-inside: avoid;
   }

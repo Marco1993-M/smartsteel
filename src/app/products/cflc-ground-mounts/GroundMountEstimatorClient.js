@@ -235,7 +235,7 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
           ))}
         </div>
 
-        <div className="mt-6 border border-[#121a20]/12 bg-[#f3f0e9]/65 p-5">
+        <div className="mt-6 border border-[#c1d9e5] bg-[#eef6fa] p-5">
           {currentStep === 1 ? (
             <div className="space-y-5">
               <label className="block text-sm font-semibold text-slate-700">

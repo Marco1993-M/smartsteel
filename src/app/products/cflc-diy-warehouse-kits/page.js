@@ -14,9 +14,9 @@ const PRODUCT_QUESTIONS = [
 
 export default function CflcDiyWarehouseKitsPage() {
   return (
-    <main className="mt-6 min-h-screen bg-[#f3f0e9] px-4 py-10 text-[#121a20] sm:mt-8 sm:px-6 lg:px-8">
+    <main className="atlas-brand mt-6 min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#eef6fa_100%)] px-4 py-10 text-[#001d2e] sm:mt-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <section className="relative isolate overflow-hidden border border-[#121a20]/15 bg-[linear-gradient(180deg,#ffffff_0%,#faf9f5_48%,#ebe8dd_100%)] px-6 py-10 shadow-[0_28px_60px_-48px_rgba(18,26,32,0.72)] sm:px-8 lg:px-10 lg:py-14">
+        <section className="relative isolate overflow-hidden border border-[#121a20]/15 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbfd_48%,#e8f2f7_100%)] px-6 py-10 shadow-[0_28px_60px_-48px_rgba(0,29,46,0.28)] sm:px-8 lg:px-10 lg:py-14">
           <div className="pointer-events-none absolute inset-0 [background-image:linear-gradient(rgba(18,26,32,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(18,26,32,0.07)_1px,transparent_1px)] [background-size:42px_42px]" />
           <div className="pointer-events-none absolute -right-20 -top-32 h-96 w-96 rounded-full border border-[#d9a441]/35" />
           <div className="relative grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-end">

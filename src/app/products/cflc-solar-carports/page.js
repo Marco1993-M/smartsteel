@@ -120,10 +120,10 @@ function Arrow() {
 
 export default function AtlasSolarCarportsPage() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#f3f0e9_17rem,#f3f0e9_100%)] pb-16 pt-24 text-[#121a20] sm:pt-28">
+    <main className="atlas-brand min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#eef6fa_17rem,#eef6fa_100%)] pb-16 pt-24 text-[#001d2e] sm:pt-28">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <section className="mx-4 overflow-hidden border border-[#121a20]/15 bg-[linear-gradient(145deg,#ffffff_0%,#faf9f5_48%,#ebe8dd_100%)] shadow-sm sm:mx-6 lg:mx-8">
+      <section className="mx-4 overflow-hidden border border-[#121a20]/15 bg-[linear-gradient(145deg,#ffffff_0%,#f7fbfd_48%,#e8f2f7_100%)] shadow-sm sm:mx-6 lg:mx-8">
         <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
           <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(18,26,32,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(18,26,32,0.06)_1px,transparent_1px)] [background-size:42px_42px]" />
           <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full border border-[#d9a441]/45" />
