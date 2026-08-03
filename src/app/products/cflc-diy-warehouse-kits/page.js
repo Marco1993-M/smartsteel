@@ -21,7 +21,7 @@ export default function CflcDiyWarehouseKitsPage() {
           <div className="pointer-events-none absolute -right-20 -top-32 h-96 w-96 rounded-full border border-[#d9a441]/35" />
           <div className="relative grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-end">
             <div className="max-w-3xl">
-              <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={240} height={84} className="h-11 w-auto object-contain object-left" priority />
+              <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={320} height={50} className="h-10 w-auto max-w-full object-contain object-left" priority />
               <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas W-Series Catalogue</p>
               <h1 className="mt-4 text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-5xl lg:text-6xl">
                 Pick the warehouse model. Build the footprint around it.
