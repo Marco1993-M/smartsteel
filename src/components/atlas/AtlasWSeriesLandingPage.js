@@ -16,7 +16,7 @@ const SYSTEM_STEPS = [
 export default function AtlasWSeriesLandingPage() {
   return (
     <main className="atlas-brand mt-6 min-h-screen overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#eef6fa_100%)] text-[#001d2e] sm:mt-8">
-      <section className="relative isolate overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#f7fbfd_45%,#e8f2f7_100%)] px-4 pb-16 pt-20 sm:px-6 sm:pt-24 lg:px-8 lg:pb-24 lg:pt-28">
+      <section className="atlas-public-hero relative isolate overflow-hidden px-4 pb-16 pt-20 sm:px-6 sm:pt-24 lg:px-8 lg:pb-24 lg:pt-28">
         <div className="pointer-events-none absolute inset-0 [background-image:linear-gradient(rgba(18,26,32,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(18,26,32,0.08)_1px,transparent_1px)] [background-size:42px_42px]" />
         <div className="pointer-events-none absolute -right-32 top-[-14rem] h-[42rem] w-[42rem] rounded-full border border-[#d9a441]/30" />
         <div className="pointer-events-none absolute -right-12 top-[-5rem] h-[30rem] w-[30rem] rounded-full border border-[#d9a441]/20" />
@@ -24,7 +24,9 @@ export default function AtlasWSeriesLandingPage() {
         <div className="relative mx-auto max-w-7xl">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#121a20]/15 pb-5">
             <div className="flex items-center gap-3 text-[#121a20]">
-              <span className="grid h-9 w-9 place-items-center border border-[#d9a441] text-sm font-semibold text-[#d9a441]">A</span>
+              <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-lg border border-white/20 bg-white">
+                <Image src="/atlas/atlas-mark.png" alt="" width={26} height={28} className="h-7 w-7 object-contain" />
+              </span>
               <div>
                 <p className="text-sm font-semibold tracking-[0.2em]">ATLAS SYSTEM</p>
                 <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#121a20]/55">Developed by Smart Steel</p>
