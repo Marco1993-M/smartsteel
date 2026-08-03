@@ -116,14 +116,16 @@ export default function AtlasCarportsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
 
-      <section className="mx-4 overflow-hidden border border-[#121a20]/15 bg-[linear-gradient(145deg,#ffffff_0%,#f7fbfd_48%,#e8f2f7_100%)] shadow-sm sm:mx-6 lg:mx-8">
+      <section className="atlas-public-hero mx-4 overflow-hidden border shadow-sm sm:mx-6 lg:mx-8">
         <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
           <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(18,26,32,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(18,26,32,0.06)_1px,transparent_1px)] [background-size:42px_42px]" />
           <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full border border-[#d9a441]/45" />
           <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
             <div className="max-w-3xl">
               <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center border border-[#d9a441] font-mono text-sm font-semibold text-[#1c5b57]">A</span>
+                <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-lg border border-white/20 bg-white">
+                  <Image src="/atlas/atlas-mark.png" alt="" width={26} height={28} className="h-7 w-7 object-contain" />
+                </span>
                 <div>
                   <p className="text-sm font-semibold tracking-[0.2em]">ATLAS SYSTEM</p>
                   <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#121a20]/55">Developed by Smart Steel</p>

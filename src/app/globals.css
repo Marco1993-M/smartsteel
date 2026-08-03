@@ -86,6 +86,76 @@ body {
   color: var(--atlas-navy);
 }
 
+.atlas-public-hero {
+  position: relative;
+  isolation: isolate;
+  border-color: var(--atlas-navy) !important;
+  background:
+    radial-gradient(circle at 82% 8%, rgb(193 217 229 / 0.2), transparent 29%),
+    linear-gradient(135deg, var(--atlas-navy) 0%, #06308d 53%, var(--atlas-blue) 100%) !important;
+  color: white;
+  box-shadow: 0 30px 70px -45px rgb(0 29 46 / 0.72);
+}
+
+.atlas-public-hero::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(132deg, transparent 66%, rgb(193 217 229 / 0.14) 66%, rgb(193 217 229 / 0.14) 67%, transparent 67%),
+    linear-gradient(132deg, transparent 78%, rgb(255 255 255 / 0.08) 78%, rgb(255 255 255 / 0.08) 79%, transparent 79%);
+}
+
+.atlas-public-hero > [class*="pointer-events-none"][class*="inset-0"] {
+  opacity: 0.3 !important;
+  background-image:
+    linear-gradient(rgb(193 217 229 / 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(193 217 229 / 0.15) 1px, transparent 1px) !important;
+}
+
+.atlas-public-hero [class*="text-[#121a20]"],
+.atlas-public-hero [class*="text-[#1c5b57]"] {
+  color: white !important;
+}
+
+.atlas-public-hero p[class*="text-[#121a20]/"],
+.atlas-public-hero div[class*="text-[#121a20]/"] {
+  color: rgb(193 217 229 / 0.88) !important;
+}
+
+.atlas-public-hero [class*="border-[#121a20]"] {
+  border-color: rgb(193 217 229 / 0.28) !important;
+}
+
+.atlas-public-hero [class*="border-[#d9a441]"] {
+  border-color: rgb(193 217 229 / 0.5) !important;
+}
+
+.atlas-public-hero [class*="bg-white"] {
+  color: var(--atlas-navy) !important;
+}
+
+.atlas-public-hero [class*="bg-[#d9a441]"] {
+  background-color: white !important;
+  color: var(--atlas-blue) !important;
+}
+
+.atlas-public-hero [class*="hover:bg-[#ebbd5f]"]:hover {
+  background-color: var(--atlas-light) !important;
+}
+
+.atlas-public-hero .atlas-hero-island,
+.atlas-public-hero .atlas-hero-island [class*="text-[#121a20]"] {
+  color: var(--atlas-navy) !important;
+}
+
+.atlas-public-hero .atlas-hero-island [class*="bg-[#d9a441]"] {
+  background-color: var(--atlas-blue) !important;
+  color: white !important;
+}
+
 .os-input {
   width: 100%;
   border: 1px solid rgb(203 213 225);
