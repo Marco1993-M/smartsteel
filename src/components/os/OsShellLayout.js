@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -130,7 +131,26 @@ export default function OsShellLayout({ children }) {
                 >
                   <div className={`flex items-center gap-3 ${sidebarCollapsed ? "lg:justify-center" : "justify-between"}`}>
                     <div className="flex min-w-0 items-center gap-3">
-                      <SectionIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      {section.key === "atlas" ? (
+                        <span
+                          className={`grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-[0.45rem] border ${
+                            isActive
+                              ? "border-[#c1d9e5] bg-[#c1d9e5]"
+                              : "border-white/20 bg-white"
+                          }`}
+                          aria-hidden="true"
+                        >
+                          <Image
+                            src="/atlas/atlas-mark.png"
+                            alt=""
+                            width={24}
+                            height={25}
+                            className="h-5 w-5 object-contain"
+                          />
+                        </span>
+                      ) : (
+                        <SectionIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      )}
                       <p className={`text-sm font-semibold whitespace-nowrap ${sidebarCollapsed ? "lg:hidden" : ""}`}>{section.label}</p>
                     </div>
                   </div>
