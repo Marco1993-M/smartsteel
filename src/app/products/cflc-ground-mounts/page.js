@@ -289,10 +289,7 @@ export default function AtlasGroundMountsPage() {
           <div className="relative grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div className="atlas-hero-island"><GroundMountEstimatorClient variant="hero" /></div>
             <div>
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-lg border border-white/20 bg-white"><Image src="/atlas/atlas-mark.png" alt="" width={26} height={28} className="h-7 w-7 object-contain" /></span>
-                <div><p className="text-sm font-semibold tracking-[0.2em]">ATLAS SYSTEM</p><p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#121a20]/55">Developed by Smart Steel</p></div>
-              </div>
+              <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={240} height={84} className="h-11 w-auto object-contain object-left" priority />
               <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas Solar Ground Mounts</p>
               <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-5xl lg:text-6xl">Price your solar ground mount before you enquire.</h1>
               <p className="mt-6 max-w-2xl text-base leading-7 text-[#121a20]/70 sm:text-lg">Start with panel count and get an immediate structure budget for a modular Atlas ground mount manufactured from ZAM corrosion-resistant steel.</p>

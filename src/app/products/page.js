@@ -214,7 +214,7 @@ export default function ProductsHubPage() {
               </div>
               <div className="p-5 sm:p-6">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#0043f3]/20 bg-white/70 py-1 pl-1.5 pr-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#0043f3]">
-                  <span className="grid h-5 w-5 place-items-center overflow-hidden rounded-[0.3rem] bg-white"><Image src="/atlas/atlas-mark.png" alt="" width={14} height={15} className="h-3.5 w-3.5 object-contain" /></span>
+                  <span className="grid h-5 w-5 place-items-center overflow-hidden rounded-[0.3rem] bg-white"><Image src="/atlas/atlas-mark-dark.png" alt="" width={14} height={15} className="h-3.5 w-3.5 object-contain" /></span>
                   {item.system}
                 </span>
                 <h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[#121a20]">{item.title}</h3>

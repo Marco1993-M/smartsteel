@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { calculateSolarEstimate, formatCurrency } from "../../../lib/estimates/solarEstimate"
@@ -230,13 +231,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       <div className="mx-auto max-w-6xl">
         <section className="border border-[#121a20]/15 bg-[linear-gradient(145deg,#ffffff_0%,#faf9f5_50%,#ebe8dd_100%)] px-6 py-10 shadow-sm sm:px-8 lg:px-10">
           <div className="max-w-4xl">
-            <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center border border-[#d9a441] font-mono text-sm font-semibold text-[#1c5b57]">A</span>
-              <div>
-                <p className="text-sm font-semibold tracking-[0.2em]">ATLAS SYSTEM</p>
-                <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#121a20]/55">Developed by Smart Steel</p>
-              </div>
-            </div>
+            <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas by Smart Steel" width={240} height={84} className="h-11 w-auto object-contain object-left" priority />
             <p className="mt-8 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">
               Atlas Solar Carport Estimator
             </p>

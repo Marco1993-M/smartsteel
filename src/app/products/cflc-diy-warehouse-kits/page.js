@@ -21,15 +21,7 @@ export default function CflcDiyWarehouseKitsPage() {
           <div className="pointer-events-none absolute -right-20 -top-32 h-96 w-96 rounded-full border border-[#d9a441]/35" />
           <div className="relative grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-end">
             <div className="max-w-3xl">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-lg border border-white/20 bg-white">
-                  <Image src="/atlas/atlas-mark.png" alt="" width={26} height={28} className="h-7 w-7 object-contain" />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold tracking-[0.2em]">ATLAS SYSTEM</p>
-                  <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#121a20]/55">Developed by Smart Steel</p>
-                </div>
-              </div>
+              <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={240} height={84} className="h-11 w-auto object-contain object-left" priority />
               <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas W-Series Catalogue</p>
               <h1 className="mt-4 text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-5xl lg:text-6xl">
                 Pick the warehouse model. Build the footprint around it.
