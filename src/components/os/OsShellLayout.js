@@ -141,7 +141,7 @@ export default function OsShellLayout({ children }) {
                           aria-hidden="true"
                         >
                           <Image
-                            src="/atlas/atlas-mark.png"
+                            src="/atlas/atlas-mark-dark.png"
                             alt=""
                             width={24}
                             height={25}
