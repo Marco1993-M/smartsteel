@@ -9,7 +9,6 @@ import {
   BuildingOffice2Icon,
   ChevronDownIcon,
   CheckBadgeIcon,
-  CubeIcon,
   DocumentTextIcon,
   HomeModernIcon,
   ShieldCheckIcon,
@@ -50,14 +49,13 @@ const PROVINCES = [
 const WAREHOUSE_SYSTEM_OPTIONS = [
   {
     value: "LSF Warehouse",
-    label: "Custom Engineered Warehouse",
-    description: "Project-specific lightweight steel route for larger or more tailored warehouse requirements.",
+    label: "Engineered LSF",
     icon: BuildingOffice2Icon,
   },
   {
     value: "LCSS Warehouse",
-    label: "Atlas Lip Channel Warehouse",
-    description: "Cold-formed lip channel steel option for practical standard warehouse structures.",
+    label: "Atlas W-Series",
+    image: "/atlas/atlas-mark-dark.png",
     icon: Squares2X2Icon,
   },
 ]
@@ -120,12 +118,6 @@ const TARGET_TIMELINE_OPTIONS = [
   "6+ months",
   "Not sure yet",
 ]
-
-const WIDTH_DESCRIPTORS = {
-  8: "Compact footprint",
-  10: "Balanced layout",
-  12: "Wider access",
-}
 
 const LENGTH_DESCRIPTORS = {
   5: "Very compact",
@@ -199,14 +191,14 @@ function RoofEnclosureThumbnail({ variant = "roof_only", active = false }) {
   )
 }
 
-function VisualChoiceCard({ icon: Icon, title, subtitle, active, onClick, thumbnail, brand = "lsf" }) {
+function VisualChoiceCard({ icon: Icon, image, title, active, onClick, thumbnail, brand = "lsf" }) {
   const isAtlas = brand === "atlas"
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`min-h-[154px] rounded-[1.4rem] border px-4 py-3.5 text-left transition ${
+      className={`min-h-[108px] rounded-[1.4rem] border px-4 py-3.5 text-left transition ${
         active
           ? isAtlas
             ? "border-[#0043f3] bg-[linear-gradient(145deg,#001d2e,#0043f3)] text-white shadow-[0_20px_50px_-30px_rgba(0,67,243,0.9)]"
@@ -222,14 +214,116 @@ function VisualChoiceCard({ icon: Icon, title, subtitle, active, onClick, thumbn
             active ? "border-white/20 bg-white/10 text-white" : "border-slate-200 bg-slate-50 text-slate-700"
           }`}
         >
-          <Icon className="h-5 w-5" />
+          {image ? (
+            <Image src={image} alt="" width={24} height={24} className={`h-6 w-6 object-contain ${active ? "brightness-0 invert" : ""}`} />
+          ) : (
+            <Icon className="h-5 w-5" />
+          )}
         </div>
       )}
       <p className="text-sm font-semibold">{title}</p>
-      {subtitle ? (
-        <p className={`mt-1 text-xs leading-5 ${active ? "text-slate-200" : "text-slate-500"}`}>{subtitle}</p>
-      ) : null}
     </button>
+  )
+}
+
+function PrimaryFinishControls({
+  isLcssWarehouse,
+  steelFinish,
+  gableMode,
+  cladding,
+  enclosureType,
+  updateField,
+}) {
+  if (isLcssWarehouse) {
+    return (
+      <div className="grid gap-4">
+        <div>
+          <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Steel finish</label>
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
+            {LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => updateField("steelFinish", option)}
+                className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                  steelFinish === option
+                    ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Sheeting</label>
+          <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
+            {LCSS_WAREHOUSE_GABLE_OPTIONS.map((option) => (
+              <VisualChoiceCard
+                key={option.value}
+                icon={option.value === "roof_only" ? HomeModernIcon : ShieldCheckIcon}
+                title={option.label}
+                active={gableMode === option.value}
+                brand="atlas"
+                thumbnail={
+                  <RoofEnclosureThumbnail
+                    variant={option.value === "fully_enclosed" ? "open_sides" : option.value}
+                    active={gableMode === option.value}
+                  />
+                }
+                onClick={() => updateField("gableMode", option.value)}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-4">
+      <div>
+        <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Cladding profile</label>
+        <div className="mt-1.5 grid grid-cols-3 gap-2">
+          {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => updateField("cladding", option)}
+              className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                cladding === option
+                  ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Enclosure</label>
+        <div className="mt-1.5 grid gap-2 sm:grid-cols-3">
+          {WAREHOUSE_ENCLOSURE_OPTIONS.map((option) => (
+            <VisualChoiceCard
+              key={option.value}
+              icon={
+                option.value === "fully_enclosed"
+                  ? ShieldCheckIcon
+                  : option.value === "open_sides"
+                    ? ArrowsRightLeftIcon
+                    : HomeModernIcon
+              }
+              title={option.label}
+              active={enclosureType === option.value}
+              thumbnail={<RoofEnclosureThumbnail variant={option.value} active={enclosureType === option.value} />}
+              onClick={() => updateField("enclosureType", option.value)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -248,40 +342,6 @@ function ContactField({ label, type = "text", value, onChange, placeholder, requ
         className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-500"
       />
     </label>
-  )
-}
-
-function FootprintChoiceCard({ active, onClick, title, subtitle, bars = [] }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative min-h-[108px] overflow-hidden rounded-[1.4rem] border px-3.5 py-3.5 text-left transition ${
-        active
-          ? "border-[var(--builder-accent,#0f172a)] bg-[var(--builder-selection,#0f172a)] text-white shadow-[0_20px_50px_-30px_var(--builder-shadow,rgba(15,23,42,0.95))]"
-          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:shadow-[0_20px_40px_-35px_rgba(15,23,42,0.35)]"
-      }`}
-    >
-      <div className="flex h-full flex-col justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold">{title}</p>
-          {subtitle ? (
-            <p className={`mt-1 text-[11px] ${active ? "text-slate-200" : "text-slate-500"}`}>{subtitle}</p>
-          ) : null}
-        </div>
-        {bars.length > 0 ? (
-        <div className="pointer-events-none absolute bottom-3 right-3 flex h-7 shrink-0 items-end gap-1 opacity-90">
-            {bars.map((height, index) => (
-              <span
-                key={`${title}-${index}`}
-                className={`w-2 rounded-t-full ${active ? "bg-white/85" : "bg-[var(--builder-accent,#2d63b8)]/85"}`}
-                style={{ height }}
-              />
-            ))}
-          </div>
-        ) : null}
-      </div>
-    </button>
   )
 }
 
@@ -857,8 +917,8 @@ export default function WarehouseBuilderClient() {
                         <VisualChoiceCard
                           key={option.value}
                           icon={option.icon}
+                          image={option.image}
                           title={option.label}
-                          subtitle={option.description}
                           active={isActive}
                           onClick={() => applySystem(option.value)}
                           brand={option.value === "LCSS Warehouse" ? "atlas" : "lsf"}
@@ -866,206 +926,96 @@ export default function WarehouseBuilderClient() {
                       )
                     })}
                   </div>
+                  <p className="mt-3 text-xs leading-5 text-slate-500">
+                    {isLcssWarehouse
+                      ? "Atlas uses a modular, bolted lip channel system built around practical standard configurations."
+                      : "LSF is engineered around projects that need greater flexibility in size, layout, or specification."}
+                  </p>
                 </div>
 
                 <div id="size-style" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
                     step="Step 2"
-                    title="Customize size and style"
-                    hint="Choose a starting footprint, then refine from there."
+                    title="Set the warehouse size"
                   />
-                  <FieldLabel
-                    title={isLcssWarehouse ? "Choose your warehouse size" : "Choose your warehouse size"}
-                  />
-                  <div className="grid grid-cols-3 gap-2">
-                    {widthOptions.map((option) => (
-                      <FootprintChoiceCard
-                        key={option}
-                        active={config.width === option}
-                        onClick={() => updateField("width", option)}
-                        title={`${option}m wide`}
-                        subtitle={WIDTH_DESCRIPTORS[option] || "Warehouse width"}
-                        bars={["30%", "55%", "82%"]}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-3 space-y-3">
+                  <div className="space-y-4">
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Building length
-                      </label>
-                      <select
-                        value={config.length}
-                        onChange={(event) => updateField("length", Number(event.target.value))}
-                        className="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
-                      >
-                        {WAREHOUSE_LENGTH_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}m long{LENGTH_DESCRIPTORS[option] ? ` · ${LENGTH_DESCRIPTORS[option]}` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="rounded-[1.3rem] border border-slate-200 bg-[linear-gradient(180deg,_#ffffff,_#f8fafc)] px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                        Current footprint
-                      </p>
-                      <div className="mt-2 grid grid-cols-3 gap-2">
-                        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Width</p>
-                          <p className="mt-1 text-base font-semibold text-slate-900">{config.width}m</p>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Length</p>
-                          <p className="mt-1 text-base font-semibold text-slate-900">{config.length}m</p>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Height</p>
-                          <p className="mt-1 text-base font-semibold text-slate-900">{config.wallHeight}m</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        {isLcssWarehouse ? "Wall height" : "Eave height"}
-                      </label>
-                      <div className="mt-1 grid grid-cols-3 gap-2">
-                        {WAREHOUSE_HEIGHT_OPTIONS.map((option) => (
+                      <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Width</label>
+                      <div className="mt-1.5 flex gap-2 overflow-x-auto pb-1">
+                        {widthOptions.map((option) => (
                           <button
                             key={option}
                             type="button"
-                            onClick={() => updateField("wallHeight", option)}
-                            className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                              config.wallHeight === option
-                                ? "border-slate-900 bg-slate-900 text-white"
-                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                            onClick={() => updateField("width", option)}
+                            className={`min-w-[64px] flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                              config.width === option
+                                ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
+                                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                             }`}
                           >
                             {option}m
                           </button>
                         ))}
                       </div>
-                      <p className="mt-2 text-xs text-slate-500">3m is the standard starting point.</p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                      <div>
+                        <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Length</label>
+                        <select
+                          value={config.length}
+                          onChange={(event) => updateField("length", Number(event.target.value))}
+                          className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"
+                        >
+                          {WAREHOUSE_LENGTH_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}m{LENGTH_DESCRIPTORS[option] ? ` · ${LENGTH_DESCRIPTORS[option]}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          {isLcssWarehouse ? "Wall height" : "Eave height"}
+                        </label>
+                        <div className="mt-1.5 grid grid-cols-3 gap-2">
+                          {WAREHOUSE_HEIGHT_OPTIONS.map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => updateField("wallHeight", option)}
+                              className={`rounded-xl border px-2 py-2.5 text-sm font-semibold transition ${
+                                config.wallHeight === option
+                                  ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
+                                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                              }`}
+                            >
+                              {option}m
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Current size</p>
+                      <p className="text-sm font-semibold text-slate-900">{config.width}m × {config.length}m × {config.wallHeight}m</p>
+                    </div>
+                    <div className="border-t border-slate-200 pt-4">
+                      <PrimaryFinishControls
+                        isLcssWarehouse={isLcssWarehouse}
+                        steelFinish={config.steelFinish}
+                        gableMode={config.gableMode}
+                        cladding={config.cladding}
+                        enclosureType={config.enclosureType}
+                        updateField={updateField}
+                      />
                     </div>
                   </div>
                 </div>
 
-                {isLcssWarehouse ? (
-                  <div id="build-details" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
-                    <StepLabel
-                      step="Step 3"
-                      title="Choose the main build details"
-                      hint="Choose the finish and sheeting setup."
-                    />
-                    <FieldLabel title="Finish and sheeting style" />
-                    <div className="grid gap-3">
-                      <div>
-                        <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                          Steel finish
-                        </label>
-                        <div className="mt-1 grid grid-cols-2 gap-3">
-                          {LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => (
-                            <VisualChoiceCard
-                              key={option}
-                              icon={option === "Galv" ? ShieldCheckIcon : CubeIcon}
-                              title={option}
-                              subtitle={option === "Galv" ? "Standard commercial finish" : "Upgrade for more demanding environments"}
-                              active={config.steelFinish === option}
-                              onClick={() => updateField("steelFinish", option)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                          Sheeting type
-                        </label>
-                        <div className="mt-1 grid gap-3 sm:grid-cols-2">
-                          {LCSS_WAREHOUSE_GABLE_OPTIONS.map((option) => (
-                            <VisualChoiceCard
-                              key={option.value}
-                              icon={option.value === "roof_only" ? HomeModernIcon : ShieldCheckIcon}
-                              title={option.label}
-                              active={config.gableMode === option.value}
-                              thumbnail={
-                                <RoofEnclosureThumbnail
-                                  variant={option.value === "fully_enclosed" ? "open_sides" : option.value}
-                                  active={config.gableMode === option.value}
-                                />
-                              }
-                              onClick={() => updateField("gableMode", option.value)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div id="cladding" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
-                      <StepLabel
-                        step="Step 3"
-                        title="Choose roof, walls, and enclosure"
-                        hint="Choose the finish and enclosure direction."
-                      />
-                      <div className="rounded-[1.3rem] border border-slate-200 bg-white px-4 py-3">
-                        <div className="flex items-start gap-3">
-                          <CubeIcon className="mt-0.5 h-5 w-5 text-slate-500" />
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">Supply-only budget basis</p>
-                            <p className="mt-1 text-xs leading-5 text-slate-500">Installation is reviewed separately after submission.</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                      <FieldLabel title="Roof and wall finish" />
-                      <div className="grid grid-cols-3 gap-2">
-                        {WAREHOUSE_CLADDING_OPTIONS.map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => updateField("cladding", option)}
-                            className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                              config.cladding === option
-                                ? "border-slate-900 bg-slate-900 text-white"
-                                : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
-                            }`}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="mt-2 grid gap-3 sm:grid-cols-3">
-                        {WAREHOUSE_ENCLOSURE_OPTIONS.map((option) => (
-                          <VisualChoiceCard
-                            key={option.value}
-                            icon={
-                              option.value === "fully_enclosed"
-                                ? ShieldCheckIcon
-                                : option.value === "open_sides"
-                                  ? ArrowsRightLeftIcon
-                                  : HomeModernIcon
-                            }
-                            title={option.label}
-                            active={config.enclosureType === option.value}
-                            thumbnail={
-                              <RoofEnclosureThumbnail
-                                variant={option.value}
-                                active={config.enclosureType === option.value}
-                              />
-                            }
-                            onClick={() => updateField("enclosureType", option.value)}
-                          />
-                        ))}
-                      </div>
-                      </div>
-                    </div>
-
+                {!isLcssWarehouse ? (
                     <div id="openings" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                       <StepLabel
-                        step="Step 4"
+                        step="Step 3"
                         title="Set doors and openings"
                         hint="Add the main access openings you already know about."
                       />
@@ -1121,12 +1071,11 @@ export default function WarehouseBuilderClient() {
                         </div>
                       ) : null}
                     </div>
-                  </>
-                )}
+                ) : null}
 
                 <div id="project-context" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step={isLcssWarehouse ? "Step 4" : "Step 5"}
+                    step={isLcssWarehouse ? "Step 3" : "Step 4"}
                     title="Tell us about the project"
                     hint="A little project context helps us respond better."
                   />
@@ -1201,7 +1150,7 @@ export default function WarehouseBuilderClient() {
 
                 <div id="delivery" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step={isLcssWarehouse ? "Step 5" : "Step 6"}
+                    step={isLcssWarehouse ? "Step 4" : "Step 5"}
                     title="Add project location"
                     hint="Location helps us keep the follow-up practical."
                   />
@@ -1258,7 +1207,7 @@ export default function WarehouseBuilderClient() {
 
                 <div id="notes" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step={isLcssWarehouse ? "Step 6" : "Step 7"}
+                    step={isLcssWarehouse ? "Step 5" : "Step 6"}
                     title="Add anything we should know"
                     hint="Optional notes that could help us review faster."
                   />
