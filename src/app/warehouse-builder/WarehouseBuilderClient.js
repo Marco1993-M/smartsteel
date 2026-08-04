@@ -467,6 +467,7 @@ export default function WarehouseBuilderClient() {
   const changeNoticeTimeoutRef = useRef(null)
   const hasInitialisedBuilderRef = useRef(false)
   const sceneSectionRef = useRef(null)
+  const reviewFormRef = useRef(null)
 
   const isLcssWarehouse = config.productType === "LCSS Warehouse"
   const builderTheme = isLcssWarehouse
@@ -587,6 +588,14 @@ export default function WarehouseBuilderClient() {
       sizeObserver?.disconnect()
     }
   }, [])
+
+  useEffect(() => {
+    if (!showLeadForm) return undefined
+    const frameId = window.requestAnimationFrame(() => {
+      reviewFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+    return () => window.cancelAnimationFrame(frameId)
+  }, [showLeadForm])
 
   useEffect(() => {
     if (hasInitialisedBuilderRef.current) return
@@ -1170,7 +1179,6 @@ export default function WarehouseBuilderClient() {
               onClick={() => {
                 setShowLeadForm(true)
                 trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
-                window.setTimeout(() => scrollToBuilderStage("review-summary"), 0)
               }}
               className="rounded-xl bg-[var(--builder-accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-90"
             >
@@ -1602,7 +1610,7 @@ export default function WarehouseBuilderClient() {
             </section>
  
             {showLeadForm ? (
-              <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+              <section ref={reviewFormRef} className="scroll-mt-4 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
                 <div className={`p-5 text-white sm:p-6 ${isLcssWarehouse ? "bg-[linear-gradient(120deg,#001d2e,#0043f3)]" : "bg-[linear-gradient(120deg,#020617,#172033)]"}`}>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Ready for review · {designReference}</p>
                   <h2 className="mt-2 text-2xl font-semibold">Review and send your design</h2>
@@ -2118,7 +2126,6 @@ export default function WarehouseBuilderClient() {
               onClick={() => {
                 setShowLeadForm(true)
                 trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
-                window.setTimeout(() => scrollToBuilderStage("review-summary"), 0)
               }}
               className="shrink-0 rounded-xl bg-[var(--builder-accent)] px-4 py-3 text-xs font-semibold text-white"
             >
