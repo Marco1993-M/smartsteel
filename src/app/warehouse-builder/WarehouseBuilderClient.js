@@ -456,6 +456,7 @@ export default function WarehouseBuilderClient() {
   const [activeMobileSceneControl, setActiveMobileSceneControl] = useState(null)
   const [undoSnapshot, setUndoSnapshot] = useState(null)
   const [isSceneVisible, setIsSceneVisible] = useState(true)
+  const [sceneSectionHeight, setSceneSectionHeight] = useState(820)
   const [leadForm, setLeadForm] = useState({
     name: "",
     lastName: "",
@@ -563,14 +564,28 @@ export default function WarehouseBuilderClient() {
 
   useEffect(() => {
     const element = sceneSectionRef.current
-    if (!element || typeof IntersectionObserver === "undefined") return undefined
+    if (!element) return undefined
 
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsSceneVisible(entry.isIntersecting),
-      { threshold: 0.18 }
-    )
-    observer.observe(element)
-    return () => observer.disconnect()
+    const visibilityObserver = typeof IntersectionObserver === "undefined"
+      ? null
+      : new IntersectionObserver(
+          ([entry]) => setIsSceneVisible(entry.isIntersecting),
+          { threshold: 0.18 }
+        )
+    const sizeObserver = typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver(() => {
+          setSceneSectionHeight(Math.ceil(element.getBoundingClientRect().height))
+        })
+
+    setSceneSectionHeight(Math.ceil(element.getBoundingClientRect().height))
+    visibilityObserver?.observe(element)
+    sizeObserver?.observe(element)
+
+    return () => {
+      visibilityObserver?.disconnect()
+      sizeObserver?.disconnect()
+    }
   }, [])
 
   useEffect(() => {
@@ -1165,7 +1180,10 @@ export default function WarehouseBuilderClient() {
         </div>
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[440px_minmax(0,1.4fr)] xl:items-start">
-          <section className="order-2 space-y-4 xl:order-1">
+          <section
+            className="order-2 space-y-4 xl:order-1 xl:h-[var(--builder-workspace-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"
+            style={{ "--builder-workspace-height": `${sceneSectionHeight}px` }}
+          >
             <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
@@ -1720,7 +1738,7 @@ export default function WarehouseBuilderClient() {
             ) : null}
           </section>
 
-          <aside className="order-1 space-y-5 xl:order-2 xl:sticky xl:top-6">
+          <aside className="order-1 space-y-5 xl:order-2 xl:sticky xl:top-24">
             <div ref={sceneSectionRef} className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -1738,7 +1756,7 @@ export default function WarehouseBuilderClient() {
               </div>
 
               <div className="relative">
-                <WarehouseBuilderScene {...sceneProps} className="lg:h-[720px] xl:h-[780px]" />
+                <WarehouseBuilderScene {...sceneProps} className="lg:h-[560px] xl:h-[620px]" />
 
                 <div aria-live="polite" className={`pointer-events-none absolute left-1/2 top-16 z-20 -translate-x-1/2 transition-all duration-300 ${changeNotice ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}>
                   <p className="whitespace-nowrap rounded-full border border-white/70 bg-slate-950/90 px-3.5 py-2 text-[11px] font-semibold text-white shadow-lg backdrop-blur">
