@@ -18,6 +18,7 @@ import {
   SparklesIcon,
   Squares2X2Icon,
   TruckIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline"
 import WarehouseBuilderScene from "../../components/warehouse-builder/WarehouseBuilderScene"
 import { calculateEstimateByProductType } from "../../lib/estimates/estimateFactory"
@@ -467,7 +468,6 @@ export default function WarehouseBuilderClient() {
   const changeNoticeTimeoutRef = useRef(null)
   const hasInitialisedBuilderRef = useRef(false)
   const sceneSectionRef = useRef(null)
-  const reviewFormRef = useRef(null)
 
   const isLcssWarehouse = config.productType === "LCSS Warehouse"
   const builderTheme = isLcssWarehouse
@@ -591,11 +591,17 @@ export default function WarehouseBuilderClient() {
 
   useEffect(() => {
     if (!showLeadForm) return undefined
-    const frameId = window.requestAnimationFrame(() => {
-      reviewFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-    })
-    return () => window.cancelAnimationFrame(frameId)
-  }, [showLeadForm])
+    const previousOverflow = document.body.style.overflow
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && !submitting) setShowLeadForm(false)
+    }
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [showLeadForm, submitting])
 
   useEffect(() => {
     if (hasInitialisedBuilderRef.current) return
@@ -954,7 +960,6 @@ export default function WarehouseBuilderClient() {
 
       setSubmissionResult(payload)
       setSubmitted(true)
-      setShowLeadForm(false)
       setLeadForm({ name: "", lastName: "", email: "", phone: "" })
       trackBuilderEvent("warehouse_builder_enquiry_submitted", {
         system: isLcssWarehouse ? "atlas" : "lsf",
@@ -1609,61 +1614,6 @@ export default function WarehouseBuilderClient() {
               </div>
             </section>
  
-            {showLeadForm ? (
-              <section ref={reviewFormRef} className="scroll-mt-4 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-                <div className={`p-5 text-white sm:p-6 ${isLcssWarehouse ? "bg-[linear-gradient(120deg,#001d2e,#0043f3)]" : "bg-[linear-gradient(120deg,#020617,#172033)]"}`}>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Ready for review · {designReference}</p>
-                  <h2 className="mt-2 text-2xl font-semibold">Review and send your design</h2>
-                  <p className="mt-3 text-base font-semibold text-white">{systemLabel} · {config.width}m × {config.length}m × {config.wallHeight}m</p>
-                  <p className="mt-1 text-sm text-white/70">{isLcssWarehouse ? `${steelFinishLabel} · ${gableModeLabel}` : `${config.cladding} · ${enclosureLabel}`} · {formatCurrency(budgetValue)} excl. VAT</p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:p-6 md:grid-cols-2">
-                  <ContactField
-                    label="First name"
-                    value={leadForm.name}
-                    onChange={(event) => setLeadForm((current) => ({ ...current, name: event.target.value }))}
-                    placeholder="First name"
-                    required
-                  />
-                  <ContactField
-                    label="Last name"
-                    value={leadForm.lastName}
-                    onChange={(event) => setLeadForm((current) => ({ ...current, lastName: event.target.value }))}
-                    placeholder="Last name"
-                  />
-                  <ContactField
-                    label="Email"
-                    type="email"
-                    value={leadForm.email}
-                    onChange={(event) => setLeadForm((current) => ({ ...current, email: event.target.value }))}
-                    placeholder="Email address"
-                    required
-                  />
-                  <ContactField
-                    label="Phone"
-                    type="tel"
-                    value={leadForm.phone}
-                    onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))}
-                    placeholder="Phone number (optional)"
-                  />
-                  <div className="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {submitting ? "Sending project..." : reviewCtaLabel}
-                    </button>
-                    <p className="text-sm text-slate-500">Your complete design and project context will be sent together.</p>
-                  </div>
-                  {submitError ? (
-                    <p className="md:col-span-2 text-sm text-red-600">{submitError}</p>
-                  ) : null}
-                </form>
-              </section>
-            ) : null}
-
             {submitted ? (
               <section className="rounded-[2rem] border border-emerald-200 bg-[linear-gradient(180deg,_#ecfdf5,_#f6fffb)] p-5 shadow-sm sm:p-6">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -2114,6 +2064,80 @@ export default function WarehouseBuilderClient() {
           </aside>
         </div>
       </div>
+      {showLeadForm ? (
+        <div className="fixed inset-0 z-[80] flex items-end justify-center p-0 sm:items-center sm:p-6">
+          <button
+            type="button"
+            aria-label="Close project review"
+            onClick={() => !submitting && setShowLeadForm(false)}
+            className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm"
+          />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="warehouse-review-title"
+            className="relative z-10 max-h-[94dvh] w-full overflow-y-auto rounded-t-[2rem] bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]"
+          >
+            <div className={`relative p-5 text-white sm:p-7 ${isLcssWarehouse ? "bg-[linear-gradient(120deg,#001d2e,#0043f3)]" : "bg-[linear-gradient(120deg,#020617,#172033)]"}`}>
+              <button
+                type="button"
+                aria-label="Close"
+                disabled={submitting}
+                onClick={() => setShowLeadForm(false)}
+                className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-50"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+              <p className="pr-12 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Design {designReference}</p>
+              <h2 id="warehouse-review-title" className="mt-2 pr-12 text-2xl font-semibold sm:text-3xl">
+                {submitted ? "Your project is with Smart Steel" : "Request a reviewed quote"}
+              </h2>
+              <div className="mt-5 grid grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur sm:grid-cols-3">
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-white/55">Warehouse</p>
+                  <p className="mt-1 text-sm font-semibold">{config.width}m × {config.length}m × {config.wallHeight}m</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-white/55">System</p>
+                  <p className="mt-1 truncate text-sm font-semibold">{systemLabel}</p>
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-white/55">Guide excl. VAT</p>
+                  <p className="mt-1 text-sm font-semibold">{formatCurrency(budgetValue)}</p>
+                </div>
+              </div>
+            </div>
+
+            {submitted ? (
+              <div className="p-6 text-center sm:p-8">
+                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+                  <CheckIcon className="h-7 w-7" />
+                </div>
+                <h3 className="mt-5 text-xl font-semibold text-slate-950">Request received</h3>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">We have your complete warehouse design and project context. The Smart Steel team can now review it and follow up with the right next step.</p>
+                {submissionResult?.submissionWarning ? (
+                  <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{submissionResult.submissionWarning}</p>
+                ) : null}
+                <button type="button" onClick={() => setShowLeadForm(false)} className="mt-6 w-full rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white">Return to my design</button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2 sm:p-7">
+                <ContactField label="First name" value={leadForm.name} onChange={(event) => setLeadForm((current) => ({ ...current, name: event.target.value }))} placeholder="First name" required />
+                <ContactField label="Last name" value={leadForm.lastName} onChange={(event) => setLeadForm((current) => ({ ...current, lastName: event.target.value }))} placeholder="Last name" />
+                <ContactField label="Email" type="email" value={leadForm.email} onChange={(event) => setLeadForm((current) => ({ ...current, email: event.target.value }))} placeholder="Email address" required />
+                <ContactField label="Phone" type="tel" value={leadForm.phone} onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Phone number (optional)" />
+                <div className="sm:col-span-2">
+                  <button type="submit" disabled={submitting} className={`w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isLcssWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>
+                    {submitting ? "Sending your project..." : "Send for review"}
+                  </button>
+                  <p className="mt-3 text-center text-xs leading-5 text-slate-500">Your saved configuration and project details will be sent together. No payment is required.</p>
+                  {submitError ? <p className="mt-3 text-center text-sm text-red-600">{submitError}</p> : null}
+                </div>
+              </form>
+            )}
+          </section>
+        </div>
+      ) : null}
       {!isSceneVisible && !submitted ? (
         <div className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 xl:hidden">
           <div className="mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/95 p-2.5 pl-4 shadow-[0_20px_55px_-20px_rgba(15,23,42,0.5)] backdrop-blur">
