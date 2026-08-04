@@ -5,6 +5,49 @@ import { ContactShadows, OrbitControls } from "@react-three/drei"
 import { RotateCw } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { DoubleSide, Path, Shape, Vector3 } from "three"
+import { WAREHOUSE_SHEETING_COLORS } from "../../lib/warehouseBuilderStore"
+
+function getOpeningPositions(total, span, kind) {
+  if (total <= 0) return []
+  const usableSpan = span * (kind === "personnel" ? 0.76 : 0.68)
+  if (total === 1) return [kind === "personnel" ? span * 0.32 : 0]
+  return Array.from({ length: total }, (_, index) => -usableSpan / 2 + (index * usableSpan) / (total - 1))
+}
+
+function createWallShape({ span, height, garagePositions, pedestrianPositions, garageWidth }) {
+  const shape = new Shape()
+  shape.moveTo(-span / 2, 0)
+  shape.lineTo(span / 2, 0)
+  shape.lineTo(span / 2, height)
+  shape.lineTo(-span / 2, height)
+  shape.closePath()
+
+  garagePositions.forEach((position) => {
+    const hole = new Path()
+    const halfWidth = Math.min(garageWidth, span * 0.72) / 2
+    const openingHeight = height * 0.72
+    hole.moveTo(position - halfWidth, 0)
+    hole.lineTo(position + halfWidth, 0)
+    hole.lineTo(position + halfWidth, openingHeight)
+    hole.lineTo(position - halfWidth, openingHeight)
+    hole.closePath()
+    shape.holes.push(hole)
+  })
+
+  pedestrianPositions.forEach((position) => {
+    const hole = new Path()
+    const halfWidth = 0.18 / 2
+    const openingHeight = height * 0.54
+    hole.moveTo(position - halfWidth, 0)
+    hole.lineTo(position + halfWidth, 0)
+    hole.lineTo(position + halfWidth, openingHeight)
+    hole.lineTo(position - halfWidth, openingHeight)
+    hole.closePath()
+    shape.holes.push(hole)
+  })
+
+  return shape
+}
 
 function CameraRig({ position, target, controlsRef }) {
   const { camera } = useThree()
@@ -43,6 +86,9 @@ function WarehouseMesh({
   rollerDoorCount,
   garageDoorOpeningType,
   pedestrianDoorCount,
+  rollerDoorFace = "front",
+  pedestrianDoorFace = "rear",
+  sheetingColor = "kalahari-red",
   structureView = false,
 }) {
   const scale = 0.18
@@ -71,28 +117,8 @@ function WarehouseMesh({
     return indices.length > 0 ? indices : [0]
   }, [frameCount])
 
-  const frontDoorPositions = useMemo(() => {
-    const total = Math.max(rollerDoorCount, 0)
-    if (total === 0) return []
-    return Array.from({ length: total }, (_, index) => {
-      const span = w * 0.74
-      const offset = total === 1 ? 0 : -span / 2 + (index * span) / (total - 1)
-      return offset
-    })
-  }, [rollerDoorCount, w])
-
-  const pedestrianDoorPositions = useMemo(() => {
-    const total = Math.max(pedestrianDoorCount, 0)
-    if (total === 0) return []
-    return Array.from({ length: total }, (_, index) => {
-      const span = w * 0.82
-      const offset = total === 1 ? w * 0.3 : -span / 2 + (index * span) / Math.max(total - 1, 1)
-      return offset
-    })
-  }, [pedestrianDoorCount, w])
-
   const garageDoorOpeningWidth =
-    garageDoorOpeningType === "double" ? Math.min(0.92, w * 0.3) : garageDoorOpeningType === "custom" ? Math.min(1.08, w * 0.34) : Math.min(0.58, w * 0.18)
+    garageDoorOpeningType === "double" ? 5 * scale : garageDoorOpeningType === "custom" ? 4 * scale : 2.5 * scale
 
   const gableShape = useMemo(() => {
     const shape = new Shape()
@@ -102,52 +128,24 @@ function WarehouseMesh({
     shape.closePath()
     return shape
   }, [ridgeRise, w])
-  const frontWallShape = useMemo(() => {
-    const shape = new Shape()
-    shape.moveTo(-w / 2, 0)
-    shape.lineTo(w / 2, 0)
-    shape.lineTo(w / 2, h)
-    shape.lineTo(-w / 2, h)
-    shape.closePath()
-
-    frontDoorPositions.forEach((x) => {
-      const hole = new Path()
-      const halfWidth = garageDoorOpeningWidth / 2
-      const openingHeight = h * 0.72
-      hole.moveTo(x - halfWidth, 0)
-      hole.lineTo(x + halfWidth, 0)
-      hole.lineTo(x + halfWidth, openingHeight)
-      hole.lineTo(x - halfWidth, openingHeight)
-      hole.closePath()
-      shape.holes.push(hole)
+  const wallShapes = useMemo(() => {
+    const build = (face, span) => createWallShape({
+      span,
+      height: h,
+      garagePositions: rollerDoorFace === face ? getOpeningPositions(rollerDoorCount, span, "garage") : [],
+      pedestrianPositions: pedestrianDoorFace === face ? getOpeningPositions(pedestrianDoorCount, span, "personnel") : [],
+      garageWidth: garageDoorOpeningWidth,
     })
-
-    return shape
-  }, [frontDoorPositions, garageDoorOpeningWidth, h, w])
-  const rearWallShape = useMemo(() => {
-    const shape = new Shape()
-    shape.moveTo(-w / 2, 0)
-    shape.lineTo(w / 2, 0)
-    shape.lineTo(w / 2, h)
-    shape.lineTo(-w / 2, h)
-    shape.closePath()
-
-    pedestrianDoorPositions.forEach((x) => {
-      const hole = new Path()
-      const halfWidth = 0.18 / 2
-      const openingHeight = h * 0.54
-      hole.moveTo(x - halfWidth, 0)
-      hole.lineTo(x + halfWidth, 0)
-      hole.lineTo(x + halfWidth, openingHeight)
-      hole.lineTo(x - halfWidth, openingHeight)
-      hole.closePath()
-      shape.holes.push(hole)
-    })
-
-    return shape
-  }, [h, pedestrianDoorPositions, w])
+    return {
+      front: build("front", w),
+      rear: build("rear", w),
+      left: build("left", l),
+      right: build("right", l),
+    }
+  }, [garageDoorOpeningWidth, h, l, pedestrianDoorCount, pedestrianDoorFace, rollerDoorCount, rollerDoorFace, w])
   const isAtlas = systemVariant === "atlas"
-  const roofColor = isAtlas ? "#6689a3" : cladding === "Chromadek" ? "#a61b22" : "#b91c1c"
+  const selectedSheetingColor = WAREHOUSE_SHEETING_COLORS.find((option) => option.value === sheetingColor)
+  const roofColor = selectedSheetingColor?.hex || (isAtlas ? "#6689a3" : "#b91c1c")
   const wallColor = roofColor
   const steelColor = "#707d8f"
   const roofHalfSpan = Math.sqrt((w / 2) ** 2 + ridgeRise ** 2)
@@ -314,20 +312,20 @@ function WarehouseMesh({
       {hasCladding && enclosureType === "fully_enclosed" ? (
         <>
           <mesh position={[0, 0, -l / 2 - wallSheetOffset]} receiveShadow>
-            <shapeGeometry args={[frontWallShape]} />
+            <shapeGeometry args={[wallShapes.front]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
           <mesh position={[0, 0, l / 2 + wallSheetOffset]} receiveShadow>
-            <shapeGeometry args={[rearWallShape]} />
+            <shapeGeometry args={[wallShapes.rear]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[-w / 2 - wallSheetOffset, h / 2, 0]} receiveShadow>
-            <boxGeometry args={[wallSheetThickness, h, l]} />
-            <meshPhysicalMaterial {...wallMaterialProps} />
+          <mesh position={[-w / 2 - wallSheetOffset, 0, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+            <shapeGeometry args={[wallShapes.left]} />
+            <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[w / 2 + wallSheetOffset, h / 2, 0]} receiveShadow>
-            <boxGeometry args={[wallSheetThickness, h, l]} />
-            <meshPhysicalMaterial {...wallMaterialProps} />
+          <mesh position={[w / 2 + wallSheetOffset, 0, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+            <shapeGeometry args={[wallShapes.right]} />
+            <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
           <mesh position={[0, h, -l / 2 - wallSheetOffset]} receiveShadow>
             <shapeGeometry args={[gableShape]} />
@@ -346,13 +344,13 @@ function WarehouseMesh({
 
       {hasCladding && (enclosureType === "open_sides" || enclosureType === "side_walls") ? (
         <>
-          <mesh position={[-w / 2 - wallSheetOffset, h / 2, 0]} receiveShadow>
-            <boxGeometry args={[wallSheetThickness, h, l]} />
-            <meshPhysicalMaterial {...wallMaterialProps} />
+          <mesh position={[-w / 2 - wallSheetOffset, 0, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+            <shapeGeometry args={[wallShapes.left]} />
+            <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[w / 2 + wallSheetOffset, h / 2, 0]} receiveShadow>
-            <boxGeometry args={[wallSheetThickness, h, l]} />
-            <meshPhysicalMaterial {...wallMaterialProps} />
+          <mesh position={[w / 2 + wallSheetOffset, 0, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+            <shapeGeometry args={[wallShapes.right]} />
+            <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
         </>
       ) : null}
@@ -431,6 +429,8 @@ export default function WarehouseBuilderScene(props) {
       <Canvas
         camera={{ position: cameraPosition, fov: 40 }}
         gl={printReady ? { preserveDrawingBuffer: true } : undefined}
+        dpr={printReady ? 1.5 : [1, 1.5]}
+        performance={{ min: 0.55 }}
         shadows
         style={{ touchAction: "none", opacity: sceneVisible ? 1 : 0.12, transition: "opacity 280ms ease" }}
         onPointerDown={() => setHasInteracted(true)}
@@ -455,7 +455,7 @@ export default function WarehouseBuilderScene(props) {
           scale={7.4}
           blur={2.2}
           far={3.2}
-          resolution={1024}
+          resolution={printReady ? 1024 : 512}
           color="#98a5b5"
         />
         <OrbitControls
