@@ -487,6 +487,7 @@ export default function WarehouseBuilderClient() {
   const estimateInput = useMemo(() => {
     if (isLcssWarehouse) {
       return {
+        systemVariant: "atlas",
         width: config.width,
         length: config.length,
         wallHeight: config.wallHeight,
@@ -555,6 +556,7 @@ export default function WarehouseBuilderClient() {
     }
 
     return {
+      systemVariant: "lsf",
       width: config.width,
       length: config.length,
       wallHeight: config.wallHeight,
