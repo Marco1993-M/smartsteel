@@ -1,10 +1,36 @@
 "use client"
 
-import { Canvas } from "@react-three/fiber"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { ContactShadows, OrbitControls } from "@react-three/drei"
 import { RotateCw } from "lucide-react"
-import { useMemo, useState } from "react"
-import { DoubleSide, Path, Shape } from "three"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { DoubleSide, Path, Shape, Vector3 } from "three"
+
+function CameraRig({ position, target, controlsRef }) {
+  const { camera } = useThree()
+  const movingRef = useRef(true)
+  const destination = useMemo(() => new Vector3(...position), [position])
+  const targetDestination = useMemo(() => new Vector3(...target), [target])
+
+  useEffect(() => {
+    movingRef.current = true
+  }, [destination, targetDestination])
+
+  useFrame(() => {
+    if (!movingRef.current) return
+    camera.position.lerp(destination, 0.09)
+    controlsRef.current?.target.lerp(targetDestination, 0.09)
+    controlsRef.current?.update()
+
+    if (camera.position.distanceTo(destination) < 0.015 && (!controlsRef.current || controlsRef.current.target.distanceTo(targetDestination) < 0.015)) {
+      camera.position.copy(destination)
+      controlsRef.current?.target.copy(targetDestination)
+      movingRef.current = false
+    }
+  })
+
+  return null
+}
 
 function WarehouseMesh({
   systemVariant = "lsf",
@@ -17,6 +43,7 @@ function WarehouseMesh({
   rollerDoorCount,
   garageDoorOpeningType,
   pedestrianDoorCount,
+  structureView = false,
 }) {
   const scale = 0.18
   const w = width * scale
@@ -125,7 +152,7 @@ function WarehouseMesh({
   const steelColor = "#707d8f"
   const roofHalfSpan = Math.sqrt((w / 2) ** 2 + ridgeRise ** 2)
   const roofAngle = Math.atan2(ridgeRise, w / 2)
-  const hasCladding = cladding !== "None"
+  const hasCladding = cladding !== "None" && !structureView
   const columnThickness = 0.042
   const rafterThickness = 0.028
   const roofSheetThickness = 0.018
@@ -337,38 +364,75 @@ function WarehouseMesh({
 export default function WarehouseBuilderScene(props) {
   const { width, length, wallHeight, className = "", printReady = false } = props
   const [hasInteracted, setHasInteracted] = useState(false)
+  const [cameraView, setCameraView] = useState("exterior")
+  const [sceneVisible, setSceneVisible] = useState(true)
+  const controlsRef = useRef(null)
+  const previousSystemRef = useRef(props.systemVariant)
   const scale = 0.18
   const w = width * scale
   const l = length * scale
   const h = wallHeight * scale
-  const cameraPosition = useMemo(() => {
+  const cameraPositions = useMemo(() => {
     const diagonal = Math.sqrt(w ** 2 + l ** 2)
     const distance = Math.max(4.4, diagonal * 1.18)
-    return [distance * 0.7, Math.max(2.6, h * 2.15), distance * 0.84]
+    return {
+      exterior: [distance * 0.7, Math.max(2.6, h * 2.15), distance * 0.84],
+      structure: [-distance * 0.62, Math.max(2.25, h * 1.8), distance * 0.72],
+      front: [0, Math.max(1.7, h * 1.35), distance],
+    }
   }, [h, l, w])
   const orbitTarget = useMemo(() => [0, Math.max(0.3, h * 0.58), 0], [h])
+  const cameraPosition = cameraPositions[cameraView]
   const minDistance = Math.max(3.4, Math.sqrt(w ** 2 + l ** 2) * 0.62)
   const maxDistance = Math.max(8.5, Math.sqrt(w ** 2 + l ** 2) * 1.55)
+
+  useEffect(() => {
+    if (previousSystemRef.current === props.systemVariant) return
+    previousSystemRef.current = props.systemVariant
+    setSceneVisible(false)
+    setCameraView("exterior")
+    const timeoutId = window.setTimeout(() => setSceneVisible(true), 90)
+    return () => window.clearTimeout(timeoutId)
+  }, [props.systemVariant])
 
   return (
     <div className={`relative h-[min(46vh,320px)] w-full touch-none overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)] shadow-inner sm:h-[460px] lg:h-[640px] ${className}`}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0))]" />
-      <div
+      {!printReady ? <div
         className={`pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur transition-all duration-500 ${
           hasInteracted ? "translate-y-[-0.5rem] opacity-0" : "translate-y-0 opacity-100"
         }`}
       >
         <RotateCw className="h-3.5 w-3.5" />
         Drag to rotate
-      </div>
-      <div className="pointer-events-none absolute bottom-4 left-4 z-10 hidden rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur xl:block">
+      </div> : null}
+      {!printReady ? <div className="absolute left-3 top-3 z-20 flex overflow-hidden rounded-full border border-white/70 bg-white/88 p-1 shadow-sm backdrop-blur sm:left-4 sm:top-4">
+        {[
+          ["exterior", "Exterior"],
+          ["structure", "Structure"],
+          ["front", "Front"],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => {
+              setCameraView(value)
+              setHasInteracted(true)
+            }}
+            className={`rounded-full px-2.5 py-1.5 text-[10px] font-semibold transition sm:px-3 sm:text-[11px] ${cameraView === value ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div> : null}
+      {!printReady ? <div className="pointer-events-none absolute bottom-4 left-4 z-10 hidden rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur xl:block">
         Live 3D build view
-      </div>
+      </div> : null}
       <Canvas
         camera={{ position: cameraPosition, fov: 40 }}
         gl={printReady ? { preserveDrawingBuffer: true } : undefined}
         shadows
-        style={{ touchAction: "none" }}
+        style={{ touchAction: "none", opacity: sceneVisible ? 1 : 0.12, transition: "opacity 280ms ease" }}
         onPointerDown={() => setHasInteracted(true)}
       >
         <color attach="background" args={["#edf3f8"]} />
@@ -383,7 +447,8 @@ export default function WarehouseBuilderScene(props) {
         />
         <directionalLight position={[-4.5, 4.5, -3.2]} intensity={0.48} />
         <spotLight position={[0, 6.4, 2.6]} angle={0.42} penumbra={0.6} intensity={0.46} />
-        <WarehouseMesh {...props} />
+        <CameraRig position={cameraPosition} target={orbitTarget} controlsRef={controlsRef} />
+        <WarehouseMesh {...props} structureView={cameraView === "structure"} />
         <ContactShadows
           position={[0, -0.53, 0]}
           opacity={0.3}
@@ -394,6 +459,7 @@ export default function WarehouseBuilderScene(props) {
           color="#98a5b5"
         />
         <OrbitControls
+          ref={controlsRef}
           enablePan={false}
           target={orbitTarget}
           minDistance={minDistance}
