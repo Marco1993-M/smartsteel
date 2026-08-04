@@ -7,6 +7,7 @@ import { useMemo, useState } from "react"
 import { DoubleSide, Path, Shape } from "three"
 
 function WarehouseMesh({
+  systemVariant = "lsf",
   width,
   length,
   wallHeight,
@@ -63,19 +64,9 @@ function WarehouseMesh({
     })
   }, [pedestrianDoorCount, w])
 
-  const sideRibPositions = useMemo(() => {
-    const ribCount = Math.max(5, Math.round(length / 1.5))
-    const step = ribCount === 1 ? 0 : l / (ribCount - 1)
-    return Array.from({ length: ribCount }, (_, index) => -l / 2 + index * step)
-  }, [l, length])
   const garageDoorOpeningWidth =
     garageDoorOpeningType === "double" ? Math.min(0.92, w * 0.3) : garageDoorOpeningType === "custom" ? Math.min(1.08, w * 0.34) : Math.min(0.58, w * 0.18)
 
-  const endWallRibPositions = useMemo(() => {
-    const ribCount = Math.max(4, Math.round(width / 1.5))
-    const step = ribCount === 1 ? 0 : w / (ribCount - 1)
-    return Array.from({ length: ribCount }, (_, index) => -w / 2 + index * step)
-  }, [w, width])
   const gableShape = useMemo(() => {
     const shape = new Shape()
     shape.moveTo(-w / 2, 0)
@@ -128,53 +119,22 @@ function WarehouseMesh({
 
     return shape
   }, [h, pedestrianDoorPositions, w])
-  const frontOpeningRanges = useMemo(
-    () => frontDoorPositions.map((x) => [x - garageDoorOpeningWidth / 2, x + garageDoorOpeningWidth / 2]),
-    [frontDoorPositions, garageDoorOpeningWidth]
-  )
-  const rearOpeningRanges = useMemo(
-    () => pedestrianDoorPositions.map((x) => [x - 0.09, x + 0.09]),
-    [pedestrianDoorPositions]
-  )
-
-  const roofColor = cladding === "Chromadek" ? "#a61b22" : "#b91c1c"
+  const isAtlas = systemVariant === "atlas"
+  const roofColor = isAtlas ? "#6689a3" : cladding === "Chromadek" ? "#a61b22" : "#b91c1c"
   const wallColor = roofColor
   const steelColor = "#707d8f"
   const roofHalfSpan = Math.sqrt((w / 2) ** 2 + ridgeRise ** 2)
   const roofAngle = Math.atan2(ridgeRise, w / 2)
   const hasCladding = cladding !== "None"
-  const halfRoofPanelSpan = roofHalfSpan / 2
   const columnThickness = 0.042
   const rafterThickness = 0.028
   const roofSheetThickness = 0.018
   const ridgeThickness = 0.022
   const wallSheetThickness = 0.022
   const braceThickness = 0.018
-  const wallRibThickness = 0.008
-  const roofMajorRibWidth = 0.04
-  const roofMajorRibHeight = 0.026
-  const roofMinorRibWidth = 0.018
-  const roofMinorRibHeight = 0.01
-  const roofPanelSpacing = 0.18
-
-  const roofMajorRibOffsets = useMemo(() => {
-    const usableSpan = Math.max(halfRoofPanelSpan - 0.05, 0.12)
-    const count = Math.max(5, Math.floor((usableSpan * 2) / roofPanelSpacing))
-    const start = -usableSpan
-
-    return Array.from({ length: count + 1 }, (_, index) => start + index * roofPanelSpacing).filter(
-      (offset) => Math.abs(offset) < usableSpan + 0.001
-    )
-  }, [halfRoofPanelSpan])
-
-  const roofMinorRibOffsets = useMemo(() => {
-    if (roofMajorRibOffsets.length < 2) return []
-
-    return roofMajorRibOffsets
-      .slice(0, -1)
-      .map((offset, index) => offset + (roofMajorRibOffsets[index + 1] - offset) / 2)
-      .filter((offset) => Math.abs(offset) < halfRoofPanelSpan - 0.04)
-  }, [halfRoofPanelSpan, roofMajorRibOffsets])
+  const sheetingClearance = 0.018
+  const roofSheetOffset = rafterThickness / 2 + sheetingClearance + roofSheetThickness / 2
+  const wallSheetOffset = columnThickness / 2 + sheetingClearance + wallSheetThickness / 2
 
   const concreteMaterialProps = {
     color: "#d9e1e8",
@@ -217,7 +177,7 @@ function WarehouseMesh({
   }
 
   const ridgeMaterialProps = {
-    color: "#7f1d1d",
+    color: isAtlas ? "#315b78" : "#7f1d1d",
     metalness: 0.4,
     roughness: 0.44,
     clearcoat: 0.16,
@@ -306,42 +266,18 @@ function WarehouseMesh({
       {hasCladding ? (
         <>
           <group position={[-w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, roofAngle]}>
-            <mesh receiveShadow>
+            <mesh position={[0, roofSheetOffset, 0]} receiveShadow>
               <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
               <meshPhysicalMaterial {...roofMaterialProps} />
             </mesh>
-            {roofMajorRibOffsets.map((offset) => (
-              <mesh key={`left-major-rib-${offset}`} position={[offset, roofMajorRibHeight * 0.55, 0]} receiveShadow>
-                <boxGeometry args={[roofMajorRibWidth, roofMajorRibHeight, l + 0.08]} />
-                <meshPhysicalMaterial {...roofMaterialProps} />
-              </mesh>
-            ))}
-            {roofMinorRibOffsets.map((offset) => (
-              <mesh key={`left-minor-rib-${offset}`} position={[offset, roofMinorRibHeight * 0.8, 0]} receiveShadow>
-                <boxGeometry args={[roofMinorRibWidth, roofMinorRibHeight, l + 0.08]} />
-                <meshPhysicalMaterial {...roofMaterialProps} />
-              </mesh>
-            ))}
           </group>
           <group position={[w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, -roofAngle]}>
-            <mesh receiveShadow>
+            <mesh position={[0, roofSheetOffset, 0]} receiveShadow>
               <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
               <meshPhysicalMaterial {...roofMaterialProps} />
             </mesh>
-            {roofMajorRibOffsets.map((offset) => (
-              <mesh key={`right-major-rib-${offset}`} position={[offset, roofMajorRibHeight * 0.55, 0]} receiveShadow>
-                <boxGeometry args={[roofMajorRibWidth, roofMajorRibHeight, l + 0.08]} />
-                <meshPhysicalMaterial {...roofMaterialProps} />
-              </mesh>
-            ))}
-            {roofMinorRibOffsets.map((offset) => (
-              <mesh key={`right-minor-rib-${offset}`} position={[offset, roofMinorRibHeight * 0.8, 0]} receiveShadow>
-                <boxGeometry args={[roofMinorRibWidth, roofMinorRibHeight, l + 0.08]} />
-                <meshPhysicalMaterial {...roofMaterialProps} />
-              </mesh>
-            ))}
           </group>
-          <mesh position={[0, h + ridgeRise + 0.015, 0]} receiveShadow>
+          <mesh position={[0, h + ridgeRise + roofSheetOffset, 0]} receiveShadow>
             <boxGeometry args={[0.045, ridgeThickness, l + 0.08]} />
             <meshPhysicalMaterial {...ridgeMaterialProps} />
           </mesh>
@@ -350,87 +286,47 @@ function WarehouseMesh({
 
       {hasCladding && enclosureType === "fully_enclosed" ? (
         <>
-          <mesh position={[0, 0, -l / 2]} receiveShadow>
+          <mesh position={[0, 0, -l / 2 - wallSheetOffset]} receiveShadow>
             <shapeGeometry args={[frontWallShape]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[0, 0, l / 2]} receiveShadow>
+          <mesh position={[0, 0, l / 2 + wallSheetOffset]} receiveShadow>
             <shapeGeometry args={[rearWallShape]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[-w / 2, h / 2, 0]} receiveShadow>
+          <mesh position={[-w / 2 - wallSheetOffset, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
             <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
-          <mesh position={[w / 2, h / 2, 0]} receiveShadow>
+          <mesh position={[w / 2 + wallSheetOffset, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
             <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
-          <mesh position={[0, h, -l / 2 - wallSheetThickness * 0.52]} receiveShadow>
+          <mesh position={[0, h, -l / 2 - wallSheetOffset]} receiveShadow>
             <shapeGeometry args={[gableShape]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
           <mesh
-            position={[0, h, l / 2 + wallSheetThickness * 0.52]}
+            position={[0, h, l / 2 + wallSheetOffset]}
             rotation={[0, Math.PI, 0]}
             receiveShadow
           >
             <shapeGeometry args={[gableShape]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          {endWallRibPositions.map((x) => (
-            <group key={`end-rib-${x}`}>
-              {!frontOpeningRanges.some(([start, end]) => x > start && x < end) ? (
-                <mesh position={[x, h / 2, -l / 2 - wallSheetThickness * 0.35]} receiveShadow>
-                  <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
-                  <meshPhysicalMaterial {...wallMaterialProps} />
-                </mesh>
-              ) : null}
-              {!rearOpeningRanges.some(([start, end]) => x > start && x < end) ? (
-                <mesh position={[x, h / 2, l / 2 + wallSheetThickness * 0.35]} receiveShadow>
-                  <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
-                  <meshPhysicalMaterial {...wallMaterialProps} />
-                </mesh>
-              ) : null}
-            </group>
-          ))}
-          {sideRibPositions.map((z) => (
-            <group key={`side-rib-${z}`}>
-              <mesh position={[-w / 2 - wallSheetThickness * 0.35, h / 2, z]} receiveShadow>
-                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
-                <meshPhysicalMaterial {...wallMaterialProps} />
-              </mesh>
-              <mesh position={[w / 2 + wallSheetThickness * 0.35, h / 2, z]} receiveShadow>
-                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
-                <meshPhysicalMaterial {...wallMaterialProps} />
-              </mesh>
-            </group>
-          ))}
         </>
       ) : null}
 
       {hasCladding && (enclosureType === "open_sides" || enclosureType === "side_walls") ? (
         <>
-          <mesh position={[-w / 2, h / 2, 0]} receiveShadow>
+          <mesh position={[-w / 2 - wallSheetOffset, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
             <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
-          <mesh position={[w / 2, h / 2, 0]} receiveShadow>
+          <mesh position={[w / 2 + wallSheetOffset, h / 2, 0]} receiveShadow>
             <boxGeometry args={[wallSheetThickness, h, l]} />
             <meshPhysicalMaterial {...wallMaterialProps} />
           </mesh>
-          {sideRibPositions.map((z) => (
-            <group key={`open-side-rib-${z}`}>
-              <mesh position={[-w / 2 - wallSheetThickness * 0.35, h / 2, z]} receiveShadow>
-                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
-                <meshPhysicalMaterial {...wallMaterialProps} />
-              </mesh>
-              <mesh position={[w / 2 + wallSheetThickness * 0.35, h / 2, z]} receiveShadow>
-                <boxGeometry args={[wallRibThickness, h * 0.94, wallRibThickness]} />
-                <meshPhysicalMaterial {...wallMaterialProps} />
-              </mesh>
-            </group>
-          ))}
         </>
       ) : null}
 
