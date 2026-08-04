@@ -49,6 +49,8 @@ export default function WarehouseBuilderSummaryClient() {
     [configuration]
   )
   const budget = estimate.pricing.estimatedTotal ?? estimate.pricing.baseTotal ?? estimate.pricing.totalInclVat
+  const guideRate = Math.round(budget / (configuration.width * configuration.length))
+  const createdDate = new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "long", year: "numeric" }).format(new Date())
   const reference = createDesignReference({
     productType: configuration.productType,
     width: configuration.width,
@@ -97,6 +99,7 @@ export default function WarehouseBuilderSummaryClient() {
           <div className="self-end text-left sm:text-right">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">Design reference</p>
             <p className="mt-1 text-lg font-semibold">{reference}</p>
+            <p className="mt-1 text-xs text-white/55">{createdDate}</p>
           </div>
         </header>
 
@@ -122,6 +125,8 @@ export default function WarehouseBuilderSummaryClient() {
                 ["Size", `${configuration.width}m × ${configuration.length}m × ${configuration.wallHeight}m`],
                 ["Finish", finishName],
                 ["Roof pitch", "15 degrees"],
+                ["Guide rate", `${formatCurrency(guideRate)}/sqm excl. VAT`],
+                ...(!isAtlas ? [["Openings", `${configuration.rollerDoorCount} main · ${configuration.pedestrianDoorCount} personnel`]] : []),
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 py-3 text-sm"><dt className="text-slate-500">{label}</dt><dd className="text-right font-semibold">{value}</dd></div>
               ))}

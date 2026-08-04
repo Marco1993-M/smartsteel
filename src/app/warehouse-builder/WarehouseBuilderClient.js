@@ -48,6 +48,7 @@ const PROVINCES = [
 ]
 
 const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
+const WAREHOUSE_BUILDER_AUTOSAVE_KEY = "smartsteel.warehouse-builder.configuration"
 
 const WAREHOUSE_SYSTEM_OPTIONS = [
   {
@@ -416,7 +417,7 @@ function getClientFacingLineItemLabel(label) {
 export default function WarehouseBuilderClient() {
   const searchParams = useSearchParams()
   const config = useWarehouseBuilderStore()
-  const updateField = useWarehouseBuilderStore((state) => state.updateField)
+  const updateStoreField = useWarehouseBuilderStore((state) => state.updateField)
   const patchFields = useWarehouseBuilderStore((state) => state.patchFields)
   const reset = useWarehouseBuilderStore((state) => state.reset)
   const [showLeadForm, setShowLeadForm] = useState(false)
@@ -427,6 +428,8 @@ export default function WarehouseBuilderClient() {
   const [budgetDelta, setBudgetDelta] = useState(0)
   const [budgetPulse, setBudgetPulse] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
+  const [changeNotice, setChangeNotice] = useState("")
+  const [deviceSaveStatus, setDeviceSaveStatus] = useState("")
   const [activeMobileSceneControl, setActiveMobileSceneControl] = useState(null)
   const [leadForm, setLeadForm] = useState({
     name: "",
@@ -435,6 +438,8 @@ export default function WarehouseBuilderClient() {
     phone: "",
   })
   const previousBudgetRef = useRef(null)
+  const changeNoticeTimeoutRef = useRef(null)
+  const hasInitialisedBuilderRef = useRef(false)
 
   const isLcssWarehouse = config.productType === "LCSS Warehouse"
   const builderTheme = isLcssWarehouse
@@ -470,6 +475,24 @@ export default function WarehouseBuilderClient() {
   const steelFinishLabel = config.steelFinish || "Galv"
   const gableModeLabel =
     LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === config.gableMode)?.label || config.gableMode
+  const updateField = (field, value) => {
+    updateStoreField(field, value)
+
+    const notice = {
+      width: `Width updated to ${value}m`,
+      length: `Length updated to ${value}m`,
+      wallHeight: `Height updated to ${value}m`,
+      cladding: `${value} cladding selected`,
+      steelFinish: `${value} steel finish selected`,
+      enclosureType: WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === value)?.label,
+      gableMode: LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === value)?.label,
+    }[field]
+
+    if (!notice) return
+    setChangeNotice(notice)
+    window.clearTimeout(changeNoticeTimeoutRef.current)
+    changeNoticeTimeoutRef.current = window.setTimeout(() => setChangeNotice(""), 1900)
+  }
   const mobileSceneSummary = isLcssWarehouse
     ? `${config.width}m x ${config.length}m · ${gableModeLabel}`
     : `${config.width}m x ${config.length}m · ${enclosureLabel}`
@@ -506,6 +529,24 @@ export default function WarehouseBuilderClient() {
   )
 
   useEffect(() => {
+    if (hasInitialisedBuilderRef.current) return
+    hasInitialisedBuilderRef.current = true
+
+    const hasSharedConfiguration = Object.values(SHAREABLE_BUILDER_FIELDS).some((parameter) => searchParams.has(parameter))
+    if (!hasSharedConfiguration) {
+      try {
+        const savedConfiguration = JSON.parse(window.localStorage.getItem(WAREHOUSE_BUILDER_AUTOSAVE_KEY) || "null")
+        if (savedConfiguration && typeof savedConfiguration === "object") {
+          patchFields(savedConfiguration)
+          setDeviceSaveStatus("Previous design restored")
+          window.setTimeout(() => setDeviceSaveStatus("Saved on this device"), 2200)
+        }
+      } catch {
+        window.localStorage.removeItem(WAREHOUSE_BUILDER_AUTOSAVE_KEY)
+      }
+      return
+    }
+
     const widthParam = Number(searchParams.get("width"))
     const lengthParam = Number(searchParams.get("length"))
     const productTypeParam = searchParams.get("productType")
@@ -544,9 +585,9 @@ export default function WarehouseBuilderClient() {
     if (WAREHOUSE_HEIGHT_OPTIONS.includes(heightParam)) nextValues.wallHeight = heightParam
     if (WAREHOUSE_CLADDING_OPTIONS.includes(claddingParam)) nextValues.cladding = claddingParam
     if (WAREHOUSE_ENCLOSURE_OPTIONS.some((option) => option.value === enclosureParam)) nextValues.enclosureType = enclosureParam
-    if (Number.isFinite(rollerDoorParam)) nextValues.rollerDoorCount = Math.min(6, Math.max(0, rollerDoorParam))
+    if (searchParams.has("rollerDoors") && Number.isFinite(rollerDoorParam)) nextValues.rollerDoorCount = Math.min(6, Math.max(0, rollerDoorParam))
     if (WAREHOUSE_GARAGE_OPENING_OPTIONS.some((option) => option.value === openingSizeParam)) nextValues.garageDoorOpeningType = openingSizeParam
-    if (Number.isFinite(personnelDoorParam)) nextValues.pedestrianDoorCount = Math.min(6, Math.max(0, personnelDoorParam))
+    if (searchParams.has("personnelDoors") && Number.isFinite(personnelDoorParam)) nextValues.pedestrianDoorCount = Math.min(6, Math.max(0, personnelDoorParam))
     if (LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.includes(steelFinishParam)) nextValues.steelFinish = steelFinishParam
     if (LCSS_WAREHOUSE_GABLE_OPTIONS.some((option) => option.value === sheetingParam)) nextValues.gableMode = sheetingParam
 
@@ -558,6 +599,15 @@ export default function WarehouseBuilderClient() {
       setSubmitError("")
     }
   }, [searchParams, config.productType, patchFields])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      window.localStorage.setItem(WAREHOUSE_BUILDER_AUTOSAVE_KEY, JSON.stringify(shareableConfiguration))
+      setDeviceSaveStatus("Saved on this device")
+    }, 500)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [shareableConfiguration])
 
   const estimateInput = useMemo(() => {
     if (isLcssWarehouse) {
@@ -651,6 +701,9 @@ export default function WarehouseBuilderClient() {
     setSubmissionResult(null)
     setShowLeadForm(false)
     setSubmitError("")
+    setChangeNotice(productType === "LCSS Warehouse" ? "Atlas W-Series selected" : "Engineered LSF selected")
+    window.clearTimeout(changeNoticeTimeoutRef.current)
+    changeNoticeTimeoutRef.current = window.setTimeout(() => setChangeNotice(""), 1900)
   }
 
   const handleSaveDesign = async () => {
@@ -897,16 +950,6 @@ export default function WarehouseBuilderClient() {
       ? "Request my reviewed quote"
       : "Request my project review"
 
-  const nextStepTitle =
-    config.projectStage === "Ready to order soon" || config.projectStage === "Ready to request a formal quote"
-      ? "You look close to formal quoting"
-      : "Turn this builder result into a proper next step"
-
-  const nextStepBody =
-    config.projectStage === "Ready to order soon" || config.projectStage === "Ready to request a formal quote"
-      ? "Send the current layout through and the team can review the sizing, finishes, and scope before preparing the next quoting step."
-      : "Send the current layout through and the team can review the size, finishes, and site context before guiding the next conversation."
-
   const includedItems = isLcssWarehouse
     ? [
         "The main steel structure sized to your selected warehouse footprint",
@@ -1032,7 +1075,7 @@ export default function WarehouseBuilderClient() {
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">Plan details</h2>
-                  <p className="mt-1 text-xs text-slate-500">Move from layout to budget in a few clear steps.</p>
+                  <p className="mt-1 text-xs text-slate-500">{deviceSaveStatus || "Move from layout to budget in a few clear steps."}</p>
                 </div>
                 <button
                   type="button"
@@ -1379,40 +1422,15 @@ export default function WarehouseBuilderClient() {
             </section>
  
             {showLeadForm ? (
-              <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                <div className="max-w-2xl">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#da1a33]">
-                    Request Your Review
-                  </p>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-                    {nextStepTitle}
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {nextStepBody}
-                  </p>
-                  <div className="mt-4 grid gap-2 text-sm text-slate-500 sm:grid-cols-2">
-                    <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      We receive your layout, live budget guide, and project context together.
-                    </p>
-                    <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      Better detail here means a faster, more useful follow-up from Smart Steel.
-                    </p>
-                  </div>
+              <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+                <div className={`p-5 text-white sm:p-6 ${isLcssWarehouse ? "bg-[linear-gradient(120deg,#001d2e,#0043f3)]" : "bg-[linear-gradient(120deg,#020617,#172033)]"}`}>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Ready for review · {designReference}</p>
+                  <h2 className="mt-2 text-2xl font-semibold">Review and send your design</h2>
+                  <p className="mt-3 text-base font-semibold text-white">{systemLabel} · {config.width}m × {config.length}m × {config.wallHeight}m</p>
+                  <p className="mt-1 text-sm text-white/70">{isLcssWarehouse ? `${steelFinishLabel} · ${gableModeLabel}` : `${config.cladding} · ${enclosureLabel}`} · {formatCurrency(budgetValue)} excl. VAT</p>
                 </div>
 
-                <div className="mt-5 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Project review summary
-                  </p>
-                  <p className="mt-2 text-lg font-semibold text-slate-900">
-                    {systemLabel} · {config.width}m x {config.length}m x {config.wallHeight}m
-                  </p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Supply-only budget guide excl. VAT: {formatCurrency(budgetValue)}
-                  </p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="mt-6 grid gap-4 md:grid-cols-2">
+                <form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:p-6 md:grid-cols-2">
                   <ContactField
                     label="First name"
                     value={leadForm.name}
@@ -1439,8 +1457,7 @@ export default function WarehouseBuilderClient() {
                     type="tel"
                     value={leadForm.phone}
                     onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))}
-                    placeholder="Phone number"
-                    required
+                    placeholder="Phone number (optional)"
                   />
                   <div className="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <button
@@ -1450,7 +1467,7 @@ export default function WarehouseBuilderClient() {
                     >
                       {submitting ? "Sending project..." : reviewCtaLabel}
                     </button>
-                    <p className="text-sm text-slate-500">We&apos;ll use this information to review your project and come back with the right next step.</p>
+                    <p className="text-sm text-slate-500">Your complete design and project context will be sent together.</p>
                   </div>
                   {submitError ? (
                     <p className="md:col-span-2 text-sm text-red-600">{submitError}</p>
@@ -1560,6 +1577,12 @@ export default function WarehouseBuilderClient() {
 
               <div className="relative">
                 <WarehouseBuilderScene {...sceneProps} className="lg:h-[720px] xl:h-[780px]" />
+
+                <div aria-live="polite" className={`pointer-events-none absolute left-1/2 top-16 z-20 -translate-x-1/2 transition-all duration-300 ${changeNotice ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}>
+                  <p className="whitespace-nowrap rounded-full border border-white/70 bg-slate-950/90 px-3.5 py-2 text-[11px] font-semibold text-white shadow-lg backdrop-blur">
+                    {changeNotice || "Configuration updated"}
+                  </p>
+                </div>
 
                 <div className="pointer-events-none absolute inset-x-3 bottom-3 z-20 xl:hidden">
                   <div className="flex items-end justify-between gap-2">
