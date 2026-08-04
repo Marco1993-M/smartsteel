@@ -7,6 +7,7 @@ import {
   ArrowsRightLeftIcon,
   ArrowsUpDownIcon,
   BuildingOffice2Icon,
+  CheckIcon,
   ChevronDownIcon,
   CheckBadgeIcon,
   DocumentTextIcon,
@@ -45,6 +46,8 @@ const PROVINCES = [
   "North West",
   "Northern Cape",
 ]
+
+const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
 
 const WAREHOUSE_SYSTEM_OPTIONS = [
   {
@@ -118,6 +121,54 @@ const TARGET_TIMELINE_OPTIONS = [
   "6+ months",
   "Not sure yet",
 ]
+
+const SHAREABLE_BUILDER_FIELDS = {
+  productType: "productType",
+  width: "width",
+  length: "length",
+  wallHeight: "height",
+  cladding: "cladding",
+  enclosureType: "enclosure",
+  rollerDoorCount: "rollerDoors",
+  garageDoorOpeningType: "openingSize",
+  pedestrianDoorCount: "personnelDoors",
+  steelFinish: "steelFinish",
+  gableMode: "sheeting",
+}
+
+function getShareableConfiguration(config) {
+  return Object.keys(SHAREABLE_BUILDER_FIELDS).reduce((result, field) => {
+    result[field] = config[field]
+    return result
+  }, {})
+}
+
+function createDesignReference(configuration) {
+  const source = JSON.stringify(configuration)
+  let hash = 2166136261
+
+  for (let index = 0; index < source.length; index += 1) {
+    hash ^= source.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+
+  return `WB-${(hash >>> 0).toString(36).toUpperCase().padStart(7, "0").slice(0, 7)}`
+}
+
+function buildShareableBuilderUrl(configuration, pathname = "/warehouse-builder") {
+  const url = new URL(window.location.href)
+  const params = new URLSearchParams()
+
+  Object.entries(SHAREABLE_BUILDER_FIELDS).forEach(([field, parameter]) => {
+    const value = configuration[field]
+    if (value !== undefined && value !== null && value !== "") params.set(parameter, String(value))
+  })
+
+  url.pathname = pathname
+  url.search = params.toString()
+  url.hash = ""
+  return url.toString()
+}
 
 const LENGTH_DESCRIPTORS = {
   5: "Very compact",
@@ -375,6 +426,7 @@ export default function WarehouseBuilderClient() {
   const [submitError, setSubmitError] = useState("")
   const [budgetDelta, setBudgetDelta] = useState(0)
   const [budgetPulse, setBudgetPulse] = useState(false)
+  const [saveStatus, setSaveStatus] = useState("")
   const [activeMobileSceneControl, setActiveMobileSceneControl] = useState(null)
   const [leadForm, setLeadForm] = useState({
     name: "",
@@ -447,6 +499,11 @@ export default function WarehouseBuilderClient() {
       icon: isLcssWarehouse ? HomeModernIcon : ShieldCheckIcon,
     },
   ]
+  const shareableConfiguration = useMemo(() => getShareableConfiguration(config), [config])
+  const designReference = useMemo(
+    () => createDesignReference(shareableConfiguration),
+    [shareableConfiguration]
+  )
 
   useEffect(() => {
     const widthParam = Number(searchParams.get("width"))
@@ -474,6 +531,24 @@ export default function WarehouseBuilderClient() {
     if (Number.isFinite(lengthParam) && WAREHOUSE_LENGTH_OPTIONS.includes(lengthParam)) {
       nextValues.length = lengthParam
     }
+
+    const heightParam = Number(searchParams.get("height"))
+    const claddingParam = searchParams.get("cladding")
+    const enclosureParam = searchParams.get("enclosure")
+    const rollerDoorParam = Number(searchParams.get("rollerDoors"))
+    const openingSizeParam = searchParams.get("openingSize")
+    const personnelDoorParam = Number(searchParams.get("personnelDoors"))
+    const steelFinishParam = searchParams.get("steelFinish")
+    const sheetingParam = searchParams.get("sheeting")
+
+    if (WAREHOUSE_HEIGHT_OPTIONS.includes(heightParam)) nextValues.wallHeight = heightParam
+    if (WAREHOUSE_CLADDING_OPTIONS.includes(claddingParam)) nextValues.cladding = claddingParam
+    if (WAREHOUSE_ENCLOSURE_OPTIONS.some((option) => option.value === enclosureParam)) nextValues.enclosureType = enclosureParam
+    if (Number.isFinite(rollerDoorParam)) nextValues.rollerDoorCount = Math.min(6, Math.max(0, rollerDoorParam))
+    if (WAREHOUSE_GARAGE_OPENING_OPTIONS.some((option) => option.value === openingSizeParam)) nextValues.garageDoorOpeningType = openingSizeParam
+    if (Number.isFinite(personnelDoorParam)) nextValues.pedestrianDoorCount = Math.min(6, Math.max(0, personnelDoorParam))
+    if (LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.includes(steelFinishParam)) nextValues.steelFinish = steelFinishParam
+    if (LCSS_WAREHOUSE_GABLE_OPTIONS.some((option) => option.value === sheetingParam)) nextValues.gableMode = sheetingParam
 
     if (Object.keys(nextValues).length > 0) {
       patchFields(nextValues)
@@ -543,6 +618,7 @@ export default function WarehouseBuilderClient() {
   const sceneProps = useMemo(() => {
     if (isLcssWarehouse) {
       return {
+        systemVariant: "atlas",
         width: config.width,
         length: config.length,
         wallHeight: config.wallHeight,
@@ -575,6 +651,37 @@ export default function WarehouseBuilderClient() {
     setSubmissionResult(null)
     setShowLeadForm(false)
     setSubmitError("")
+  }
+
+  const handleSaveDesign = async () => {
+    const shareUrl = buildShareableBuilderUrl(shareableConfiguration)
+
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setSaveStatus("Design link copied")
+    } catch {
+      window.history.replaceState({}, "", shareUrl)
+      setSaveStatus("Design saved in this link")
+    }
+
+    window.setTimeout(() => setSaveStatus(""), 2400)
+  }
+
+  const handleWhatsAppDesign = () => {
+    const shareUrl = buildShareableBuilderUrl(shareableConfiguration)
+    const message = [
+      "Hi Smart Steel, I would like help with this warehouse design:",
+      `${systemLabel} · ${config.width}m x ${config.length}m x ${config.wallHeight}m`,
+      `Budget guide excl. VAT: ${formatCurrency(budgetValue)}`,
+      `Design reference: ${designReference}`,
+      shareUrl,
+    ].join("\n")
+
+    window.open(`https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
+  }
+
+  const handleOpenDesignSummary = () => {
+    window.open(buildShareableBuilderUrl(shareableConfiguration, "/warehouse-builder/summary"), "_blank", "noopener,noreferrer")
   }
 
   const handleSubmit = async (event) => {
@@ -820,6 +927,16 @@ export default function WarehouseBuilderClient() {
     "Delivery and installation support, if requested",
     "Any changes to layout, finishes, openings, access, or additional building requirements",
   ]
+  const builderStages = [
+    { label: "System", target: "building-type", complete: Boolean(config.productType) },
+    { label: "Configure", target: "size-style", complete: Boolean(config.width && config.length && config.wallHeight) },
+    { label: "Project", target: "project-context", complete: Boolean(config.projectStage && config.location.trim()) },
+    { label: "Review", target: "review-summary", complete: showLeadForm || submitted },
+  ]
+
+  const scrollToBuilderStage = (target) => {
+    document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
   return (
     <main
@@ -880,6 +997,35 @@ export default function WarehouseBuilderClient() {
           </div>
         </section>
 
+        <div className="sticky top-3 z-30 mt-3 hidden items-center justify-between gap-5 rounded-2xl border border-slate-200 bg-white/95 px-5 py-3 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.55)] backdrop-blur xl:flex">
+          <div className="flex min-w-0 items-center gap-5">
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-slate-500">{systemLabel} · {designReference}</p>
+              <p className="mt-0.5 text-sm font-semibold text-slate-950">{config.width}m × {config.length}m × {config.wallHeight}m</p>
+            </div>
+            <span className="h-9 w-px bg-slate-200" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Live guide excl. VAT</p>
+              <p className="mt-0.5 text-lg font-semibold text-slate-950">{formatCurrency(budgetValue)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={handleSaveDesign} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+              {saveStatus || "Save design"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowLeadForm(true)
+                window.setTimeout(() => scrollToBuilderStage("review-summary"), 0)
+              }}
+              className="rounded-xl bg-[var(--builder-accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-90"
+            >
+              Request reviewed quote
+            </button>
+          </div>
+        </div>
+
         <div className="mt-8 grid gap-6 xl:grid-cols-[440px_minmax(0,1.4fr)] xl:items-start">
           <section className="order-2 space-y-4 xl:order-1">
             <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -900,6 +1046,26 @@ export default function WarehouseBuilderClient() {
                   Reset
                 </button>
               </div>
+
+              <nav aria-label="Builder progress" className="mb-4 grid grid-cols-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                {builderStages.map((stage, index) => (
+                  <button
+                    key={stage.label}
+                    type="button"
+                    onClick={() => scrollToBuilderStage(stage.target)}
+                    className={`flex min-w-0 items-center justify-center gap-1.5 border-r border-slate-200 px-1.5 py-2.5 text-[10px] font-semibold transition last:border-r-0 sm:text-xs ${
+                      stage.complete ? "bg-white text-slate-900" : "text-slate-400 hover:text-slate-600"
+                    }`}
+                  >
+                    <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] ${
+                      stage.complete ? "bg-[var(--builder-selection)] text-white" : "border border-slate-300 bg-white"
+                    }`}>
+                      {stage.complete ? <CheckIcon className="h-2.5 w-2.5" /> : index + 1}
+                    </span>
+                    <span className="truncate">{stage.label}</span>
+                  </button>
+                ))}
+              </nav>
 
               <div className="space-y-4">
                 <div id="building-type" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
@@ -1191,19 +1357,6 @@ export default function WarehouseBuilderClient() {
                         <span className="mt-1 block text-xs leading-5 text-slate-500">Delivery is reviewed separately after submission.</span>
                       </span>
                     </label>
-                    {config.deliveryRequired ? (
-                      <input
-                        type="number"
-                        min="0"
-                        step="5"
-                        value={config.deliveryDistance}
-                        onChange={(event) =>
-                          updateField("deliveryDistance", Math.max(0, Number(event.target.value) || 0))
-                        }
-                        placeholder="Estimated delivery distance, if known (km)"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                      />
-                    ) : null}
                   </div>
                 </div>
 
@@ -1564,7 +1717,7 @@ export default function WarehouseBuilderClient() {
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Current design</p>
                   <p className="mt-1 text-sm font-semibold text-slate-900">
@@ -1586,7 +1739,7 @@ export default function WarehouseBuilderClient() {
               </div>
             </div>
 
-            <section className={`rounded-[2rem] border p-5 text-white shadow-sm transition-all duration-500 sm:p-6 ${
+            <section id="review-summary" className={`scroll-mt-28 rounded-[2rem] border p-5 text-white shadow-sm transition-all duration-500 sm:p-6 ${
               isLcssWarehouse
                 ? "border-[#0043f3]/40 bg-[linear-gradient(140deg,#001d2e_0%,#06347e_58%,#0043f3_130%)]"
                 : "border-slate-200 bg-slate-950"
@@ -1600,13 +1753,16 @@ export default function WarehouseBuilderClient() {
                     <p className={`mt-3 text-4xl font-semibold leading-none transition sm:text-5xl ${budgetPulse ? "scale-[1.015]" : "scale-100"}`}>
                       {formatCurrency(budgetValue)}
                     </p>
-                    <p className={`mt-2 text-sm font-medium ${priceChangeTone}`}>
+                    <p aria-live="polite" className={`mt-2 text-sm font-medium ${priceChangeTone}`}>
                       {priceChangeLabel}
                     </p>
                     <p className="mt-4 max-w-xl text-sm leading-6 text-slate-300">
                       {isLcssWarehouse
                         ? "Based on your selected size, wall height, steel finish, and sheeting choice."
                         : "Based on your current structure, enclosure, and opening selections."}
+                    </p>
+                    <p className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/65">
+                      Design {designReference}
                     </p>
                   </div>
                   <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
@@ -1631,7 +1787,7 @@ export default function WarehouseBuilderClient() {
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <button
                   type="button"
                   onClick={() => setShowLeadForm((open) => !open)}
@@ -1643,10 +1799,26 @@ export default function WarehouseBuilderClient() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                  className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                  onClick={handleWhatsAppDesign}
+                  className="inline-flex items-center justify-center rounded-2xl bg-[#25d366] px-5 py-3.5 text-sm font-semibold text-[#062d17] transition hover:bg-[#20bd5b]"
                 >
-                  Keep editing
+                  Send via WhatsApp
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveDesign}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  {saveStatus ? <CheckIcon className="h-4 w-4" /> : <DocumentTextIcon className="h-4 w-4" />}
+                  {saveStatus || "Save design"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenDesignSummary}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  <DocumentTextIcon className="h-4 w-4" />
+                  Design summary
                 </button>
               </div>
 
