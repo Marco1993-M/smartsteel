@@ -335,7 +335,7 @@ function WarehouseMesh({
 }
 
 export default function WarehouseBuilderScene(props) {
-  const { width, length, wallHeight, className = "" } = props
+  const { width, length, wallHeight, className = "", printReady = false } = props
   const [hasInteracted, setHasInteracted] = useState(false)
   const scale = 0.18
   const w = width * scale
@@ -366,6 +366,7 @@ export default function WarehouseBuilderScene(props) {
       </div>
       <Canvas
         camera={{ position: cameraPosition, fov: 40 }}
+        gl={printReady ? { preserveDrawingBuffer: true } : undefined}
         shadows
         style={{ touchAction: "none" }}
         onPointerDown={() => setHasInteracted(true)}
