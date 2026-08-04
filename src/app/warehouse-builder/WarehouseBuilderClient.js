@@ -56,7 +56,7 @@ const WAREHOUSE_SYSTEM_OPTIONS = [
   },
   {
     value: "LCSS Warehouse",
-    label: "Lip Channel Warehouse Kit",
+    label: "Atlas Lip Channel Warehouse",
     description: "Cold-formed lip channel steel option for practical standard warehouse structures.",
     icon: Squares2X2Icon,
   },
@@ -161,7 +161,7 @@ function FieldLabel({ title, hint }) {
 function StepLabel({ step, title, hint }) {
   return (
     <div className="mb-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#da1a33]">{step}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--builder-accent,#da1a33)]">{step}</p>
       <h3 className="mt-1 text-base font-semibold text-slate-950">{title}</h3>
       {hint ? <p className="mt-1 text-xs leading-5 text-slate-500">{hint}</p> : null}
     </div>
@@ -199,14 +199,18 @@ function RoofEnclosureThumbnail({ variant = "roof_only", active = false }) {
   )
 }
 
-function VisualChoiceCard({ icon: Icon, title, subtitle, active, onClick, thumbnail }) {
+function VisualChoiceCard({ icon: Icon, title, subtitle, active, onClick, thumbnail, brand = "lsf" }) {
+  const isAtlas = brand === "atlas"
+
   return (
     <button
       type="button"
       onClick={onClick}
       className={`min-h-[154px] rounded-[1.4rem] border px-4 py-3.5 text-left transition ${
         active
-          ? "border-slate-900 bg-slate-900 text-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.95)]"
+          ? isAtlas
+            ? "border-[#0043f3] bg-[linear-gradient(145deg,#001d2e,#0043f3)] text-white shadow-[0_20px_50px_-30px_rgba(0,67,243,0.9)]"
+            : "border-slate-900 bg-slate-900 text-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.95)]"
           : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:shadow-[0_20px_40px_-35px_rgba(15,23,42,0.35)]"
       }`}
     >
@@ -254,7 +258,7 @@ function FootprintChoiceCard({ active, onClick, title, subtitle, bars = [] }) {
       onClick={onClick}
       className={`relative min-h-[108px] overflow-hidden rounded-[1.4rem] border px-3.5 py-3.5 text-left transition ${
         active
-          ? "border-slate-900 bg-slate-900 text-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.95)]"
+          ? "border-[var(--builder-accent,#0f172a)] bg-[var(--builder-selection,#0f172a)] text-white shadow-[0_20px_50px_-30px_var(--builder-shadow,rgba(15,23,42,0.95))]"
           : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:shadow-[0_20px_40px_-35px_rgba(15,23,42,0.35)]"
       }`}
     >
@@ -270,7 +274,7 @@ function FootprintChoiceCard({ active, onClick, title, subtitle, bars = [] }) {
             {bars.map((height, index) => (
               <span
                 key={`${title}-${index}`}
-                className={`w-2 rounded-t-full ${active ? "bg-white/85" : "bg-[#2d63b8]/85"}`}
+                className={`w-2 rounded-t-full ${active ? "bg-white/85" : "bg-[var(--builder-accent,#2d63b8)]/85"}`}
                 style={{ height }}
               />
             ))}
@@ -282,7 +286,7 @@ function FootprintChoiceCard({ active, onClick, title, subtitle, bars = [] }) {
 }
 
 function getSystemLabel(productType) {
-  return productType === "LCSS Warehouse" ? "Lip Channel Warehouse Kit" : "Custom Engineered Warehouse"
+  return productType === "LCSS Warehouse" ? "Atlas Lip Channel Warehouse" : "Custom Engineered Warehouse"
 }
 
 function getClientFacingLineItemLabel(label) {
@@ -321,6 +325,27 @@ export default function WarehouseBuilderClient() {
   const previousBudgetRef = useRef(null)
 
   const isLcssWarehouse = config.productType === "LCSS Warehouse"
+  const builderTheme = isLcssWarehouse
+    ? {
+        name: "Atlas W-Series",
+        eyebrow: "Atlas warehouse builder",
+        title: "Build and price your Atlas warehouse",
+        description: "Configure a modular, bolted lip channel warehouse and see the footprint and supply-only budget update live.",
+        logo: "/atlas/atlas-logo-horizontal-light.png",
+        accent: "#0043f3",
+        selection: "#0043f3",
+        shadow: "rgba(0,67,243,0.9)",
+      }
+    : {
+        name: "Smart Steel LSF",
+        eyebrow: "LSF warehouse builder",
+        title: "Build and price your engineered LSF warehouse",
+        description: "Shape a project-specific lightweight steel warehouse and see the footprint and supply-only budget update live.",
+        logo: "/LogoWhite.png",
+        accent: "#da1a33",
+        selection: "#0f172a",
+        shadow: "rgba(15,23,42,0.95)",
+      }
   const systemLabel = getSystemLabel(config.productType)
   const widthOptions = isLcssWarehouse ? LCSS_WAREHOUSE_WIDTH_OPTIONS : WAREHOUSE_WIDTH_OPTIONS
   const enclosureLabel =
@@ -735,26 +760,56 @@ export default function WarehouseBuilderClient() {
   ]
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#ffffff_12%,_#fff8f6_24%,_#ffffff_42%,_#eef3f7_100%)] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <main
+      className={`min-h-screen px-4 py-8 transition-colors duration-500 sm:px-6 sm:py-10 lg:px-8 ${
+        isLcssWarehouse
+          ? "bg-[linear-gradient(180deg,#ffffff_0%,#eef6fa_24%,#ffffff_48%,#edf2f6_100%)]"
+          : "bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_12%,#fff8f6_24%,#ffffff_42%,#eef3f7_100%)]"
+      }`}
+      style={{
+        "--builder-accent": builderTheme.accent,
+        "--builder-selection": builderTheme.selection,
+        "--builder-shadow": builderTheme.shadow,
+      }}
+    >
       <div className="mx-auto max-w-[1540px]">
-        <section className="rounded-[1.6rem] border border-slate-200 bg-white/90 px-5 py-4 shadow-sm backdrop-blur sm:px-6 sm:py-5">
+        <section
+          className={`relative overflow-hidden rounded-[1.6rem] border px-5 py-4 shadow-sm transition-all duration-500 sm:px-6 sm:py-5 ${
+            isLcssWarehouse
+              ? "border-[#0043f3]/25 bg-[linear-gradient(120deg,#001d2e_0%,#073584_58%,#0043f3_100%)] text-white"
+              : "border-slate-200 bg-[linear-gradient(120deg,#020617,#172033)] text-white"
+          }`}
+        >
+          <div className="pointer-events-none absolute -right-24 -top-36 h-72 w-72 rotate-45 border-[28px] border-white/[0.07]" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#da1a33]">
-              Warehouse Builder
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl lg:text-[2rem]">
-              Build, price, and submit your warehouse enquiry
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-              Compare systems, shape the footprint, and get a live 3D view with a supply-only budget guide before you speak to the team.
-            </p>
+              <div className="mb-4 flex items-center gap-3">
+                <Image
+                  src={builderTheme.logo}
+                  alt={builderTheme.name}
+                  width={isLcssWarehouse ? 240 : 150}
+                  height={48}
+                  className={isLcssWarehouse ? "h-8 w-auto object-contain object-left" : "h-9 w-auto object-contain object-left"}
+                  priority
+                />
+                <span className="hidden h-7 w-px bg-white/20 sm:block" />
+                <p className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] text-white/65 sm:block">Live configuration</p>
+              </div>
+              <p className={`text-[11px] font-semibold uppercase tracking-[0.26em] ${isLcssWarehouse ? "text-[#c1d9e5]" : "text-red-300"}`}>
+                {builderTheme.eyebrow}
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-[2rem]">
+                {builderTheme.title}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">
+                {builderTheme.description}
+              </p>
             </div>
             <div className="flex flex-wrap gap-2 lg:max-w-[460px] lg:justify-end">
               {["Live 3D preview", "Budget guide excl. VAT", "Built for South African projects"].map((item) => (
                 <span
                   key={item}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600"
+                  className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75 backdrop-blur"
                 >
                   {item}
                 </span>
@@ -806,6 +861,7 @@ export default function WarehouseBuilderClient() {
                           subtitle={option.description}
                           active={isActive}
                           onClick={() => applySystem(option.value)}
+                          brand={option.value === "LCSS Warehouse" ? "atlas" : "lsf"}
                         />
                       )
                     })}
@@ -1388,7 +1444,12 @@ export default function WarehouseBuilderClient() {
                   <p className="text-sm font-semibold text-slate-900">Live warehouse preview</p>
                   <p className="text-sm text-slate-500">Rotate, zoom, and watch the footprint update as you edit the build.</p>
                 </div>
-                <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                  isLcssWarehouse ? "bg-[#c1d9e5]/55 text-[#001d2e]" : "bg-slate-100 text-slate-600"
+                }`}>
+                  {isLcssWarehouse ? (
+                    <Image src="/atlas/atlas-mark-dark.png" alt="" width={18} height={18} className="h-4 w-4 object-contain" />
+                  ) : null}
                   {systemLabel} · {roofTypeLabel}
                 </div>
               </div>
@@ -1432,7 +1493,9 @@ export default function WarehouseBuilderClient() {
                             }
                             className={`flex h-11 w-11 items-center justify-center rounded-full border shadow-sm backdrop-blur transition ${
                               isActive
-                                ? "border-slate-900 bg-slate-900 text-white"
+                                ? isLcssWarehouse
+                                  ? "border-[#0043f3] bg-[#0043f3] text-white"
+                                  : "border-slate-900 bg-slate-900 text-white"
                                 : "border-slate-200/90 bg-white/94 text-slate-700"
                             }`}
                             aria-label={control.label}
@@ -1478,11 +1541,13 @@ export default function WarehouseBuilderClient() {
                               }}
                               className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
                                 config.productType === option.value
-                                  ? "border-slate-900 bg-slate-900 text-white"
+                                  ? option.value === "LCSS Warehouse"
+                                    ? "border-[#0043f3] bg-[#0043f3] text-white"
+                                    : "border-slate-900 bg-slate-900 text-white"
                                   : "border-slate-200 bg-white text-slate-700"
                               }`}
                             >
-                              {option.value === "LCSS Warehouse" ? "Lip channel" : "Engineered"}
+                              {option.value === "LCSS Warehouse" ? "Atlas" : "Engineered"}
                             </button>
                           ))}
                         </div>
@@ -1570,7 +1635,11 @@ export default function WarehouseBuilderClient() {
               </div>
             </div>
 
-            <section className="rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-sm sm:p-6">
+            <section className={`rounded-[2rem] border p-5 text-white shadow-sm transition-all duration-500 sm:p-6 ${
+              isLcssWarehouse
+                ? "border-[#0043f3]/40 bg-[linear-gradient(140deg,#001d2e_0%,#06347e_58%,#0043f3_130%)]"
+                : "border-slate-200 bg-slate-950"
+            }`}>
               <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.03] p-4 sm:p-5">
                 <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
                   <div>
@@ -1615,7 +1684,9 @@ export default function WarehouseBuilderClient() {
                 <button
                   type="button"
                   onClick={() => setShowLeadForm((open) => !open)}
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#da1a33] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#bf172d]"
+                  className={`inline-flex items-center justify-center rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition ${
+                    isLcssWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-[#da1a33] hover:bg-[#bf172d]"
+                  }`}
                 >
                   {showLeadForm ? "Hide review form" : reviewCtaLabel}
                 </button>
