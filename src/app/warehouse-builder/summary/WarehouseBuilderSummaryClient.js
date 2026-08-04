@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation"
 import WarehouseBuilderScene from "../../../components/warehouse-builder/WarehouseBuilderScene"
 import { calculateEstimateByProductType } from "../../../lib/estimates/estimateFactory"
 import { formatCurrency } from "../../../lib/estimates/warehouseEstimate"
+import { WAREHOUSE_SHEETING_COLORS } from "../../../lib/warehouseBuilderStore"
 
 function numberParam(searchParams, key, fallback) {
   const value = Number(searchParams.get(key))
@@ -35,7 +36,10 @@ export default function WarehouseBuilderSummaryClient() {
       enclosureType: searchParams.get("enclosure") || "roof_only",
       rollerDoorCount: Math.max(0, Number(searchParams.get("rollerDoors")) || 0),
       garageDoorOpeningType: searchParams.get("openingSize") || "single",
+      rollerDoorFace: searchParams.get("rollerFace") || "front",
       pedestrianDoorCount: Math.max(0, Number(searchParams.get("personnelDoors")) || 0),
+      pedestrianDoorFace: searchParams.get("personnelFace") || "rear",
+      sheetingColor: searchParams.get("sheetingColor") || (productType === "LCSS Warehouse" ? "dove-grey" : "kalahari-red"),
       steelFinish: searchParams.get("steelFinish") || "Galv",
       gableMode: searchParams.get("sheeting") || "fully_enclosed",
       roofPitch: 15,
@@ -60,7 +64,10 @@ export default function WarehouseBuilderSummaryClient() {
     enclosureType: configuration.enclosureType,
     rollerDoorCount: configuration.rollerDoorCount,
     garageDoorOpeningType: configuration.garageDoorOpeningType,
+    rollerDoorFace: configuration.rollerDoorFace,
     pedestrianDoorCount: configuration.pedestrianDoorCount,
+    pedestrianDoorFace: configuration.pedestrianDoorFace,
+    sheetingColor: configuration.sheetingColor,
     steelFinish: configuration.steelFinish,
     gableMode: configuration.gableMode,
   })
@@ -68,6 +75,7 @@ export default function WarehouseBuilderSummaryClient() {
   const finishName = isAtlas
     ? `${configuration.steelFinish} · ${configuration.gableMode === "roof_only" ? "Roof sheeting" : "Roof and walls sheeted"}`
     : `${configuration.cladding} · ${configuration.enclosureType.replaceAll("_", " ")}`
+  const sheetingColorLabel = WAREHOUSE_SHEETING_COLORS.find((option) => option.value === configuration.sheetingColor)?.label || "Not selected"
   const sceneProps = {
     printReady: true,
     systemVariant: isAtlas ? "atlas" : "lsf",
@@ -81,7 +89,10 @@ export default function WarehouseBuilderSummaryClient() {
       : configuration.enclosureType,
     rollerDoorCount: isAtlas ? 0 : configuration.rollerDoorCount,
     garageDoorOpeningType: configuration.garageDoorOpeningType,
+    rollerDoorFace: configuration.rollerDoorFace,
     pedestrianDoorCount: isAtlas ? 0 : configuration.pedestrianDoorCount,
+    pedestrianDoorFace: configuration.pedestrianDoorFace,
+    sheetingColor: configuration.sheetingColor,
   }
 
   return (
@@ -124,9 +135,10 @@ export default function WarehouseBuilderSummaryClient() {
                 ["System", systemName],
                 ["Size", `${configuration.width}m × ${configuration.length}m × ${configuration.wallHeight}m`],
                 ["Finish", finishName],
+                ["Sheeting colour", sheetingColorLabel],
                 ["Roof pitch", "15 degrees"],
                 ["Guide rate", `${formatCurrency(guideRate)}/sqm excl. VAT`],
-                ...(!isAtlas ? [["Openings", `${configuration.rollerDoorCount} main · ${configuration.pedestrianDoorCount} personnel`]] : []),
+                ...(!isAtlas ? [["Openings", `${configuration.rollerDoorCount} main (${configuration.rollerDoorFace}) · ${configuration.pedestrianDoorCount} personnel (${configuration.pedestrianDoorFace})`]] : []),
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 py-3 text-sm"><dt className="text-slate-500">{label}</dt><dd className="text-right font-semibold">{value}</dd></div>
               ))}

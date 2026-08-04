@@ -6,12 +6,14 @@ import { useSearchParams } from "next/navigation"
 import {
   ArrowsRightLeftIcon,
   ArrowsUpDownIcon,
+  ArrowUturnLeftIcon,
   BuildingOffice2Icon,
   CheckIcon,
   ChevronDownIcon,
   CheckBadgeIcon,
   DocumentTextIcon,
   HomeModernIcon,
+  ShareIcon,
   ShieldCheckIcon,
   SparklesIcon,
   Squares2X2Icon,
@@ -33,7 +35,11 @@ import {
   LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS,
   LCSS_WAREHOUSE_WIDTH_OPTIONS,
 } from "../../lib/estimates/warehouseEstimateLcss"
-import { useWarehouseBuilderStore } from "../../lib/warehouseBuilderStore"
+import {
+  useWarehouseBuilderStore,
+  WAREHOUSE_OPENING_FACE_OPTIONS,
+  WAREHOUSE_SHEETING_COLORS,
+} from "../../lib/warehouseBuilderStore"
 
 const PROVINCES = [
   "Gauteng",
@@ -75,7 +81,10 @@ const LSF_SYSTEM_DEFAULTS = {
   enclosureType: "roof_only",
   rollerDoorCount: 0,
   garageDoorOpeningType: "single",
+  rollerDoorFace: "front",
   pedestrianDoorCount: 0,
+  pedestrianDoorFace: "rear",
+  sheetingColor: "kalahari-red",
   deliveryRequired: false,
   deliveryDistance: 0,
 }
@@ -93,7 +102,10 @@ const CFLC_SYSTEM_DEFAULTS = {
   enclosureType: "fully_enclosed",
   rollerDoorCount: 0,
   garageDoorOpeningType: "single",
+  rollerDoorFace: "front",
   pedestrianDoorCount: 0,
+  pedestrianDoorFace: "rear",
+  sheetingColor: "dove-grey",
   deliveryRequired: false,
   deliveryDistance: 0,
 }
@@ -132,7 +144,10 @@ const SHAREABLE_BUILDER_FIELDS = {
   enclosureType: "enclosure",
   rollerDoorCount: "rollerDoors",
   garageDoorOpeningType: "openingSize",
+  rollerDoorFace: "rollerFace",
   pedestrianDoorCount: "personnelDoors",
+  pedestrianDoorFace: "personnelFace",
+  sheetingColor: "sheetingColor",
   steelFinish: "steelFinish",
   gableMode: "sheeting",
 }
@@ -169,6 +184,14 @@ function buildShareableBuilderUrl(configuration, pathname = "/warehouse-builder"
   url.search = params.toString()
   url.hash = ""
   return url.toString()
+}
+
+function trackBuilderEvent(eventName, details = {}) {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return
+  window.gtag("event", eventName, {
+    builder: "warehouse",
+    ...details,
+  })
 }
 
 const LENGTH_DESCRIPTORS = {
@@ -431,6 +454,8 @@ export default function WarehouseBuilderClient() {
   const [changeNotice, setChangeNotice] = useState("")
   const [deviceSaveStatus, setDeviceSaveStatus] = useState("")
   const [activeMobileSceneControl, setActiveMobileSceneControl] = useState(null)
+  const [undoSnapshot, setUndoSnapshot] = useState(null)
+  const [isSceneVisible, setIsSceneVisible] = useState(true)
   const [leadForm, setLeadForm] = useState({
     name: "",
     lastName: "",
@@ -440,6 +465,7 @@ export default function WarehouseBuilderClient() {
   const previousBudgetRef = useRef(null)
   const changeNoticeTimeoutRef = useRef(null)
   const hasInitialisedBuilderRef = useRef(false)
+  const sceneSectionRef = useRef(null)
 
   const isLcssWarehouse = config.productType === "LCSS Warehouse"
   const builderTheme = isLcssWarehouse
@@ -475,7 +501,11 @@ export default function WarehouseBuilderClient() {
   const steelFinishLabel = config.steelFinish || "Galv"
   const gableModeLabel =
     LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === config.gableMode)?.label || config.gableMode
+  const sheetingColor =
+    WAREHOUSE_SHEETING_COLORS.find((option) => option.value === config.sheetingColor) ||
+    WAREHOUSE_SHEETING_COLORS[0]
   const updateField = (field, value) => {
+    setUndoSnapshot(getShareableConfiguration(config))
     updateStoreField(field, value)
 
     const notice = {
@@ -486,6 +516,9 @@ export default function WarehouseBuilderClient() {
       steelFinish: `${value} steel finish selected`,
       enclosureType: WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === value)?.label,
       gableMode: LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === value)?.label,
+      sheetingColor: WAREHOUSE_SHEETING_COLORS.find((option) => option.value === value)?.label,
+      rollerDoorFace: `Main openings moved to the ${value}`,
+      pedestrianDoorFace: `Personnel openings moved to the ${value}`,
     }[field]
 
     if (!notice) return
@@ -527,6 +560,18 @@ export default function WarehouseBuilderClient() {
     () => createDesignReference(shareableConfiguration),
     [shareableConfiguration]
   )
+
+  useEffect(() => {
+    const element = sceneSectionRef.current
+    if (!element || typeof IntersectionObserver === "undefined") return undefined
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsSceneVisible(entry.isIntersecting),
+      { threshold: 0.18 }
+    )
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     if (hasInitialisedBuilderRef.current) return
@@ -578,7 +623,10 @@ export default function WarehouseBuilderClient() {
     const enclosureParam = searchParams.get("enclosure")
     const rollerDoorParam = Number(searchParams.get("rollerDoors"))
     const openingSizeParam = searchParams.get("openingSize")
+    const rollerFaceParam = searchParams.get("rollerFace")
     const personnelDoorParam = Number(searchParams.get("personnelDoors"))
+    const personnelFaceParam = searchParams.get("personnelFace")
+    const sheetingColorParam = searchParams.get("sheetingColor")
     const steelFinishParam = searchParams.get("steelFinish")
     const sheetingParam = searchParams.get("sheeting")
 
@@ -587,7 +635,10 @@ export default function WarehouseBuilderClient() {
     if (WAREHOUSE_ENCLOSURE_OPTIONS.some((option) => option.value === enclosureParam)) nextValues.enclosureType = enclosureParam
     if (searchParams.has("rollerDoors") && Number.isFinite(rollerDoorParam)) nextValues.rollerDoorCount = Math.min(6, Math.max(0, rollerDoorParam))
     if (WAREHOUSE_GARAGE_OPENING_OPTIONS.some((option) => option.value === openingSizeParam)) nextValues.garageDoorOpeningType = openingSizeParam
+    if (WAREHOUSE_OPENING_FACE_OPTIONS.some((option) => option.value === rollerFaceParam)) nextValues.rollerDoorFace = rollerFaceParam
     if (searchParams.has("personnelDoors") && Number.isFinite(personnelDoorParam)) nextValues.pedestrianDoorCount = Math.min(6, Math.max(0, personnelDoorParam))
+    if (WAREHOUSE_OPENING_FACE_OPTIONS.some((option) => option.value === personnelFaceParam)) nextValues.pedestrianDoorFace = personnelFaceParam
+    if (WAREHOUSE_SHEETING_COLORS.some((option) => option.value === sheetingColorParam)) nextValues.sheetingColor = sheetingColorParam
     if (LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.includes(steelFinishParam)) nextValues.steelFinish = steelFinishParam
     if (LCSS_WAREHOUSE_GABLE_OPTIONS.some((option) => option.value === sheetingParam)) nextValues.gableMode = sheetingParam
 
@@ -678,6 +729,7 @@ export default function WarehouseBuilderClient() {
         rollerDoorCount: 0,
         garageDoorOpeningType: "single",
         pedestrianDoorCount: 0,
+        sheetingColor: config.sheetingColor,
       }
     }
 
@@ -692,16 +744,23 @@ export default function WarehouseBuilderClient() {
       rollerDoorCount: config.rollerDoorCount,
       garageDoorOpeningType: config.garageDoorOpeningType,
       pedestrianDoorCount: config.pedestrianDoorCount,
+      rollerDoorFace: config.rollerDoorFace,
+      pedestrianDoorFace: config.pedestrianDoorFace,
+      sheetingColor: config.sheetingColor,
     }
   }, [config, isLcssWarehouse])
 
   const applySystem = (productType) => {
+    setUndoSnapshot(getShareableConfiguration(config))
     patchFields(productType === "LCSS Warehouse" ? CFLC_SYSTEM_DEFAULTS : LSF_SYSTEM_DEFAULTS)
     setSubmitted(false)
     setSubmissionResult(null)
     setShowLeadForm(false)
     setSubmitError("")
     setChangeNotice(productType === "LCSS Warehouse" ? "Atlas W-Series selected" : "Engineered LSF selected")
+    trackBuilderEvent("warehouse_builder_system_selected", {
+      system: productType === "LCSS Warehouse" ? "atlas" : "lsf",
+    })
     window.clearTimeout(changeNoticeTimeoutRef.current)
     changeNoticeTimeoutRef.current = window.setTimeout(() => setChangeNotice(""), 1900)
   }
@@ -710,12 +769,28 @@ export default function WarehouseBuilderClient() {
     const shareUrl = buildShareableBuilderUrl(shareableConfiguration)
 
     try {
-      await navigator.clipboard.writeText(shareUrl)
-      setSaveStatus("Design link copied")
+      if (typeof navigator.share === "function") {
+        await navigator.share({
+          title: `${systemLabel} ${designReference}`,
+          text: `Smart Steel warehouse design ${designReference}`,
+          url: shareUrl,
+        })
+        setSaveStatus("Design shared")
+      } else {
+        await navigator.clipboard.writeText(shareUrl)
+        setSaveStatus("Design link copied")
+      }
     } catch {
-      window.history.replaceState({}, "", shareUrl)
-      setSaveStatus("Design saved in this link")
+      try {
+        await navigator.clipboard.writeText(shareUrl)
+        setSaveStatus("Design link copied")
+      } catch {
+        window.history.replaceState({}, "", shareUrl)
+        setSaveStatus("Design saved in this link")
+      }
     }
+
+    trackBuilderEvent("warehouse_builder_design_saved", { system: isLcssWarehouse ? "atlas" : "lsf" })
 
     window.setTimeout(() => setSaveStatus(""), 2400)
   }
@@ -731,10 +806,12 @@ export default function WarehouseBuilderClient() {
     ].join("\n")
 
     window.open(`https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
+    trackBuilderEvent("warehouse_builder_whatsapp_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
   }
 
   const handleOpenDesignSummary = () => {
     window.open(buildShareableBuilderUrl(shareableConfiguration, "/warehouse-builder/summary"), "_blank", "noopener,noreferrer")
+    trackBuilderEvent("warehouse_builder_summary_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
   }
 
   const handleSubmit = async (event) => {
@@ -779,6 +856,10 @@ export default function WarehouseBuilderClient() {
           garageDoorOpeningType: isLcssWarehouse ? null : config.garageDoorOpeningType,
           garageDoorOpeningTypeLabel: isLcssWarehouse ? null : garageDoorOpeningTypeLabel,
           pedestrianDoorCount: isLcssWarehouse ? 0 : config.pedestrianDoorCount,
+          rollerDoorFace: isLcssWarehouse ? null : config.rollerDoorFace,
+          pedestrianDoorFace: isLcssWarehouse ? null : config.pedestrianDoorFace,
+          sheetingColor: config.sheetingColor,
+          sheetingColorLabel: sheetingColor.label,
           steelFinish: isLcssWarehouse ? config.steelFinish : null,
           gableMode: isLcssWarehouse ? config.gableMode : null,
           gableModeLabel: isLcssWarehouse ? gableModeLabel : null,
@@ -802,6 +883,10 @@ export default function WarehouseBuilderClient() {
             rollerDoorCount: config.rollerDoorCount,
             garageDoorOpeningType: config.garageDoorOpeningType,
             pedestrianDoorCount: config.pedestrianDoorCount,
+            rollerDoorFace: config.rollerDoorFace,
+            pedestrianDoorFace: config.pedestrianDoorFace,
+            sheetingColor: config.sheetingColor,
+            sheetingColorLabel: sheetingColor.label,
             steelFinish: config.steelFinish,
             gableMode: config.gableMode,
             deliveryRequired: config.deliveryRequired,
@@ -827,6 +912,10 @@ export default function WarehouseBuilderClient() {
             garageDoorOpeningType: isLcssWarehouse ? null : config.garageDoorOpeningType,
             garageDoorOpeningTypeLabel: isLcssWarehouse ? null : garageDoorOpeningTypeLabel,
             pedestrianDoorCount: isLcssWarehouse ? 0 : config.pedestrianDoorCount,
+            rollerDoorFace: isLcssWarehouse ? null : config.rollerDoorFace,
+            pedestrianDoorFace: isLcssWarehouse ? null : config.pedestrianDoorFace,
+            sheetingColor: config.sheetingColor,
+            sheetingColorLabel: sheetingColor.label,
             steelFinish: isLcssWarehouse ? config.steelFinish : null,
             gableMode: isLcssWarehouse ? config.gableMode : null,
             gableModeLabel: isLcssWarehouse ? gableModeLabel : null,
@@ -843,6 +932,11 @@ export default function WarehouseBuilderClient() {
       setSubmitted(true)
       setShowLeadForm(false)
       setLeadForm({ name: "", lastName: "", email: "", phone: "" })
+      trackBuilderEvent("warehouse_builder_enquiry_submitted", {
+        system: isLcssWarehouse ? "atlas" : "lsf",
+        value: budgetValue,
+        currency: "ZAR",
+      })
     } catch (error) {
       setSubmitError(error?.message || "Could not send your design.")
     } finally {
@@ -1060,6 +1154,7 @@ export default function WarehouseBuilderClient() {
               type="button"
               onClick={() => {
                 setShowLeadForm(true)
+                trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
                 window.setTimeout(() => scrollToBuilderStage("review-summary"), 0)
               }}
               className="rounded-xl bg-[var(--builder-accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-90"
@@ -1077,17 +1172,37 @@ export default function WarehouseBuilderClient() {
                   <h2 className="text-lg font-semibold text-slate-900">Plan details</h2>
                   <p className="mt-1 text-xs text-slate-500">{deviceSaveStatus || "Move from layout to budget in a few clear steps."}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    reset()
-                    setSubmitted(false)
-                    setSubmissionResult(null)
-                  }}
-                  className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
-                >
-                  Reset
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={!undoSnapshot}
+                    onClick={() => {
+                      if (!undoSnapshot) return
+                      const current = getShareableConfiguration(config)
+                      patchFields(undoSnapshot)
+                      setUndoSnapshot(current)
+                      setChangeNotice("Last change undone")
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <ArrowUturnLeftIcon className="h-3.5 w-3.5" />
+                    Undo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!window.confirm("Reset this warehouse design and start again?")) return
+                      setUndoSnapshot(getShareableConfiguration(config))
+                      reset()
+                      setSubmitted(false)
+                      setSubmissionResult(null)
+                      trackBuilderEvent("warehouse_builder_reset", { system: isLcssWarehouse ? "atlas" : "lsf" })
+                    }}
+                    className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+                  >
+                    Reset
+                  </button>
+                </div>
               </div>
 
               <nav aria-label="Builder progress" className="mb-4 grid grid-cols-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
@@ -1220,6 +1335,35 @@ export default function WarehouseBuilderClient() {
                         updateField={updateField}
                       />
                     </div>
+                    {config.cladding !== "None" ? (
+                      <div className="border-t border-slate-200 pt-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <FieldLabel title="Sheeting colour" />
+                          <span className="text-xs font-semibold text-slate-500">{sheetingColor.label}</span>
+                        </div>
+                        <div className="grid grid-cols-7 gap-2" role="radiogroup" aria-label="Sheeting colour">
+                          {WAREHOUSE_SHEETING_COLORS.map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              role="radio"
+                              aria-checked={config.sheetingColor === option.value}
+                              aria-label={option.label}
+                              title={option.label}
+                              onClick={() => updateField("sheetingColor", option.value)}
+                              className={`aspect-square rounded-full border-2 p-0.5 transition hover:scale-105 ${
+                                config.sheetingColor === option.value
+                                  ? "border-[var(--builder-accent)] shadow-sm"
+                                  : "border-slate-200"
+                              }`}
+                            >
+                              <span className="block h-full w-full rounded-full border border-black/10" style={{ backgroundColor: option.hex }} />
+                            </button>
+                          ))}
+                        </div>
+                        <p className="mt-2 text-[11px] leading-5 text-slate-400">Visual guide only. Final colour availability is confirmed with your quote.</p>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
@@ -1264,7 +1408,7 @@ export default function WarehouseBuilderClient() {
                         </div>
                       </div>
                       {config.rollerDoorCount > 0 ? (
-                        <div className="mt-2">
+                        <div className="mt-3 grid gap-3">
                           <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                             Roller door opening size
                           </label>
@@ -1277,6 +1421,24 @@ export default function WarehouseBuilderClient() {
                                 active={config.garageDoorOpeningType === option.value}
                                 onClick={() => updateField("garageDoorOpeningType", option.value)}
                               />
+                            ))}
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Main opening wall</label>
+                            <div className="mt-1 grid grid-cols-4 gap-2">
+                              {WAREHOUSE_OPENING_FACE_OPTIONS.map((option) => (
+                                <button key={option.value} type="button" onClick={() => updateField("rollerDoorFace", option.value)} className={`rounded-xl border px-2 py-2 text-xs font-semibold transition ${config.rollerDoorFace === option.value ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white" : "border-slate-200 bg-white text-slate-600"}`}>{option.label}</button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                      {config.pedestrianDoorCount > 0 ? (
+                        <div className="mt-3">
+                          <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Personnel opening wall</label>
+                          <div className="mt-1 grid grid-cols-4 gap-2">
+                            {WAREHOUSE_OPENING_FACE_OPTIONS.map((option) => (
+                              <button key={option.value} type="button" onClick={() => updateField("pedestrianDoorFace", option.value)} className={`rounded-xl border px-2 py-2 text-xs font-semibold transition ${config.pedestrianDoorFace === option.value ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white" : "border-slate-200 bg-white text-slate-600"}`}>{option.label}</button>
                             ))}
                           </div>
                         </div>
@@ -1559,7 +1721,7 @@ export default function WarehouseBuilderClient() {
           </section>
 
           <aside className="order-1 space-y-5 xl:order-2 xl:sticky xl:top-6">
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div ref={sceneSectionRef} className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Live warehouse preview</p>
@@ -1813,7 +1975,10 @@ export default function WarehouseBuilderClient() {
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <button
                   type="button"
-                  onClick={() => setShowLeadForm((open) => !open)}
+                  onClick={() => {
+                    setShowLeadForm((open) => !open)
+                    if (!showLeadForm) trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
+                  }}
                   className={`inline-flex items-center justify-center rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition ${
                     isLcssWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-[#da1a33] hover:bg-[#bf172d]"
                   }`}
@@ -1832,7 +1997,7 @@ export default function WarehouseBuilderClient() {
                   onClick={handleSaveDesign}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
-                  {saveStatus ? <CheckIcon className="h-4 w-4" /> : <DocumentTextIcon className="h-4 w-4" />}
+                  {saveStatus ? <CheckIcon className="h-4 w-4" /> : <ShareIcon className="h-4 w-4" />}
                   {saveStatus || "Save design"}
                 </button>
                 <button
@@ -1923,6 +2088,27 @@ export default function WarehouseBuilderClient() {
           </aside>
         </div>
       </div>
+      {!isSceneVisible && !submitted ? (
+        <div className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 xl:hidden">
+          <div className="mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/95 p-2.5 pl-4 shadow-[0_20px_55px_-20px_rgba(15,23,42,0.5)] backdrop-blur">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-slate-950">{formatCurrency(budgetValue)} <span className="text-[9px] uppercase tracking-[0.08em] text-slate-400">excl. VAT</span></p>
+              <p className="truncate text-[11px] text-slate-500">{mobileSceneSummary}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setShowLeadForm(true)
+                trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
+                window.setTimeout(() => scrollToBuilderStage("review-summary"), 0)
+              }}
+              className="shrink-0 rounded-xl bg-[var(--builder-accent)] px-4 py-3 text-xs font-semibold text-white"
+            >
+              Review my warehouse
+            </button>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }

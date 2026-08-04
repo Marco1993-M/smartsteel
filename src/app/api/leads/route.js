@@ -25,7 +25,7 @@ function buildBuilderNotes(payload) {
   const isLcssWarehouse = payload.productType === "LCSS Warehouse"
   const lines = [
     "Warehouse Builder submission",
-    payload.productType ? `System: ${payload.productType === "LCSS Warehouse" ? "CFLC Warehouse" : payload.productType}` : null,
+    payload.productType ? `System: ${payload.productType === "LCSS Warehouse" ? "Atlas W-Series Warehouse" : payload.productType}` : null,
     "Budget basis: Supply only",
     payload.intendedUse ? `Intended use: ${payload.intendedUse}` : null,
     payload.projectStage ? `Project stage: ${payload.projectStage}` : null,
@@ -34,10 +34,13 @@ function buildBuilderNotes(payload) {
     isLcssWarehouse ? `Steel finish: ${payload.steelFinish}` : null,
     isLcssWarehouse ? `Sheeting type: ${payload.gableModeLabel}` : `Enclosure: ${payload.enclosureLabel}`,
     isLcssWarehouse ? null : `Cladding: ${payload.cladding}`,
+    payload.sheetingColorLabel ? `Sheeting colour: ${payload.sheetingColorLabel}` : null,
     `Roof: ${payload.roofTypeLabel}`,
     isLcssWarehouse ? null : `Garage door openings: ${payload.rollerDoorCount}`,
     isLcssWarehouse ? null : payload.garageDoorOpeningTypeLabel ? `Garage opening size: ${payload.garageDoorOpeningTypeLabel}` : null,
+    isLcssWarehouse || !payload.rollerDoorCount ? null : `Main opening wall: ${payload.rollerDoorFace}`,
     isLcssWarehouse ? null : `Pedestrian door openings: ${payload.pedestrianDoorCount}`,
+    isLcssWarehouse || !payload.pedestrianDoorCount ? null : `Personnel opening wall: ${payload.pedestrianDoorFace}`,
     payload.province ? `Province: ${payload.province}` : null,
     payload.location ? `Location: ${payload.location}` : null,
     `Delivery support requested: ${payload.deliveryRequired ? "Yes" : "No"}`,
