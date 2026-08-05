@@ -1106,7 +1106,7 @@ export default function WarehouseBuilderClient() {
 
   return (
     <main
-      className={`min-h-screen px-4 py-8 transition-colors duration-500 sm:px-6 sm:py-10 lg:px-8 ${
+      className={`min-h-screen overflow-x-hidden px-4 py-8 transition-colors duration-500 sm:px-6 sm:py-10 lg:px-8 ${
         isLcssWarehouse
           ? "bg-[linear-gradient(180deg,#ffffff_0%,#eef6fa_24%,#ffffff_48%,#edf2f6_100%)]"
           : "bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_12%,#fff8f6_24%,#ffffff_42%,#eef3f7_100%)]"
@@ -1117,7 +1117,7 @@ export default function WarehouseBuilderClient() {
         "--builder-shadow": builderTheme.shadow,
       }}
     >
-      <div className="mx-auto max-w-[1540px]">
+      <div className="mx-auto min-w-0 max-w-[1540px]">
         <section
           className={`relative overflow-hidden rounded-[1.3rem] border px-4 py-3 shadow-sm transition-all duration-500 sm:rounded-[1.6rem] sm:px-6 sm:py-5 ${
             isLcssWarehouse
@@ -1192,12 +1192,12 @@ export default function WarehouseBuilderClient() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 xl:grid-cols-[440px_minmax(0,1.4fr)] xl:items-start">
+        <div className="mt-8 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[440px_minmax(0,1.4fr)] xl:items-start">
           <section
-            className="order-2 space-y-4 xl:order-1 xl:h-[var(--builder-workspace-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"
+            className="order-2 min-w-0 space-y-4 xl:order-1 xl:h-[var(--builder-workspace-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"
             style={{ "--builder-workspace-height": `${sceneSectionHeight}px` }}
           >
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <section className="min-w-0 overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">Plan details</h2>
@@ -1704,8 +1704,8 @@ export default function WarehouseBuilderClient() {
             ) : null}
           </section>
 
-          <aside className="order-1 space-y-5 xl:order-2 xl:sticky xl:top-24">
-            <div ref={sceneSectionRef} className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-5">
+          <aside className="order-1 min-w-0 space-y-5 xl:order-2 xl:sticky xl:top-24">
+            <div ref={sceneSectionRef} className="min-w-0 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-5">
               <div className="mb-3 flex min-w-0 flex-col gap-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900">Live warehouse preview</p>
