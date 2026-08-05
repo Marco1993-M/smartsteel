@@ -1706,18 +1706,18 @@ export default function WarehouseBuilderClient() {
 
           <aside className="order-1 space-y-5 xl:order-2 xl:sticky xl:top-24">
             <div ref={sceneSectionRef} className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-5">
-              <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
-                <div>
+              <div className="mb-3 flex min-w-0 flex-col gap-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900">Live warehouse preview</p>
                   <p className="hidden text-sm text-slate-500 sm:block">Rotate, zoom, and watch the footprint update as you edit the build.</p>
                 </div>
-                <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                <div className={`inline-flex min-w-0 max-w-full self-start items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold sm:max-w-[58%] sm:self-auto ${
                   isLcssWarehouse ? "bg-[#c1d9e5]/55 text-[#001d2e]" : "bg-slate-100 text-slate-600"
                 }`}>
                   {isLcssWarehouse ? (
-                    <Image src="/atlas/atlas-mark-dark.png" alt="" width={18} height={18} className="h-4 w-4 object-contain" />
+                    <Image src="/atlas/atlas-mark-dark.png" alt="" width={18} height={18} className="h-4 w-4 shrink-0 object-contain" />
                   ) : null}
-                  {systemLabel} · {roofTypeLabel}
+                  <span className="truncate">{systemLabel} · {roofTypeLabel}</span>
                 </div>
               </div>
 
