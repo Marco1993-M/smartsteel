@@ -112,6 +112,125 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;")
 }
 
+function getSafeBuilderUrl(value) {
+  try {
+    const url = new URL(String(value || ""), "https://www.smartsteel.co.za")
+    if (url.pathname !== "/warehouse-builder") return "https://www.smartsteel.co.za/warehouse-builder"
+    return `https://www.smartsteel.co.za${url.pathname}${url.search}`
+  } catch {
+    return "https://www.smartsteel.co.za/warehouse-builder"
+  }
+}
+
+function buildConfigurationReceivedEmailHtml(body) {
+  const isAtlas = body.productType === "LCSS Warehouse"
+  const firstName = escapeHtml(body.name || "there")
+  const systemName = isAtlas ? "Atlas W-Series Warehouse" : "Engineered LSF Warehouse"
+  const dimensions = `${body.configuration?.width || "-"}m × ${body.configuration?.length || "-"}m × ${body.configuration?.wallHeight || "-"}m`
+  const sheeting = isAtlas
+    ? body.gableModeLabel || body.summary?.gableModeLabel || "To be confirmed"
+    : body.enclosureLabel || body.summary?.enclosureLabel || "To be confirmed"
+  const reference = body.designReference || "Warehouse builder enquiry"
+  const location = [body.location, body.province].filter(Boolean).join(", ") || "To be confirmed"
+  const builderUrl = getSafeBuilderUrl(body.configurationUrl)
+  const accent = isAtlas ? "#0043f3" : "#da1a33"
+  const dark = isAtlas ? "#001d2e" : "#020617"
+  const pale = isAtlas ? "#c1d9e5" : "#fee2e2"
+  const logo = isAtlas
+    ? "https://www.smartsteel.co.za/atlas/atlas-logo-horizontal-light.png"
+    : "https://www.smartsteel.co.za/Logo.png"
+
+  const detailRow = (label, value) => `
+    <tr>
+      <td style="padding:12px 0;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:13px;">${escapeHtml(label)}</td>
+      <td align="right" style="padding:12px 0;border-bottom:1px solid #e2e8f0;color:#0f172a;font-size:13px;font-weight:700;">${escapeHtml(value)}</td>
+    </tr>`
+
+  return `<!doctype html>
+  <html lang="en">
+    <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5f9;">
+        <tr><td align="center" style="padding:24px 12px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:640px;background:#ffffff;border:1px solid #dbe4ee;">
+            <tr>
+              <td style="padding:28px 30px;background:linear-gradient(120deg,${dark},${accent});">
+                <img src="${logo}" alt="${isAtlas ? "Atlas by Smart Steel" : "Smart Steel"}" width="210" style="display:block;max-width:210px;height:auto;border:0;" />
+                <p style="margin:28px 0 8px;color:${pale};font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Configuration received</p>
+                <h1 style="margin:0;color:#ffffff;font-size:30px;line-height:1.15;">Your warehouse project is with us.</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px;">
+                <p style="margin:0 0 14px;font-size:16px;line-height:1.6;">Good day ${firstName},</p>
+                <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.7;">Thank you for configuring your ${escapeHtml(systemName)}. We have received your project details and will review the structure, site information and selected requirements before preparing the right next step.</p>
+
+                <div style="margin:0 0 24px;padding:18px 20px;background:#f8fafc;border-left:4px solid ${accent};">
+                  <p style="margin:0 0 4px;color:#64748b;font-size:10px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;">Design reference</p>
+                  <p style="margin:0;color:#0f172a;font-size:18px;font-weight:800;">${escapeHtml(reference)}</p>
+                </div>
+
+                <h2 style="margin:0 0 8px;font-size:18px;">Your starting configuration</h2>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  ${detailRow("System", systemName)}
+                  ${detailRow("Warehouse size", dimensions)}
+                  ${detailRow(isAtlas ? "Sheeting" : "Enclosure", sheeting)}
+                  ${isAtlas ? detailRow("Steel finish", body.steelFinish || body.summary?.steelFinish || "To be confirmed") : ""}
+                  ${detailRow("Project location", location)}
+                  ${detailRow("Budget guide excl. VAT", body.priceLabel || "To be reviewed")}
+                </table>
+
+                <div style="margin:28px 0;padding:20px;background:${isAtlas ? "#eef6fa" : "#fff7f7"};">
+                  <p style="margin:0 0 10px;color:${dark};font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;">What happens next</p>
+                  <p style="margin:0;color:#334155;font-size:14px;line-height:1.7;">A Smart Steel team member will review your configuration and contact you if any details need clarification. We will then prepare a project-specific proposal for your consideration.</p>
+                </div>
+
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="${accent}" style="border-radius:4px;">
+                  <a href="${escapeHtml(builderUrl)}" style="display:inline-block;padding:14px 20px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;">Review your configuration</a>
+                </td></tr></table>
+
+                <p style="margin:26px 0 0;color:#64748b;font-size:12px;line-height:1.6;">This online amount is a planning guide excluding VAT. Final pricing remains subject to review of the confirmed scope, engineering, site requirements, delivery and installation where applicable.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 30px;background:${dark};color:#ffffff;">
+                <p style="margin:0 0 5px;font-size:13px;font-weight:700;">${isAtlas ? "Atlas developed by Smart Steel" : "Smart Steel"}</p>
+                <p style="margin:0;color:#cbd5e1;font-size:12px;line-height:1.6;">info@smartsteel.co.za · +27 82 846 4555 · smartsteel.co.za</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body>
+  </html>`
+}
+
+async function sendBuilderConfirmation(body) {
+  const resendApiKey = process.env.RESEND_API_KEY
+  if (!resendApiKey || !body?.email) return { success: false, reason: "Email service is not configured." }
+
+  const isAtlas = body.productType === "LCSS Warehouse"
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: process.env.CLIENT_CONFIRMATION_FROM || "Smart Steel <info@smartsteel.co.za>",
+      to: [body.email],
+      reply_to: "info@smartsteel.co.za",
+      subject: isAtlas
+        ? `Your Atlas warehouse configuration | ${body.designReference || "Smart Steel"}`
+        : `Your Smart Steel warehouse configuration | ${body.designReference || "Received"}`,
+      html: buildConfigurationReceivedEmailHtml(body),
+    }),
+  })
+
+  if (!response.ok) return { success: false, reason: await response.text() }
+  const payload = await response.json().catch(() => null)
+  return { success: true, reference: payload?.id || null }
+}
+
 function buildFallbackLeadEmailHtml({ body, insertPayload, reason }) {
   const leadName = [insertPayload?.name, insertPayload?.last_name].filter(Boolean).join(" ").trim() || "Unknown lead"
   const configurationJson = body?.configuration
@@ -260,12 +379,19 @@ export async function POST(request) {
       })
 
       if (fallbackResult.success) {
+        const confirmationResult = isBuilderSubmission
+          ? await sendBuilderConfirmation(body)
+          : { success: false, reason: "Not a builder submission." }
+        if (isBuilderSubmission && !confirmationResult.success) {
+          console.error("Builder confirmation email failed:", confirmationResult.reason)
+        }
         return NextResponse.json(
           {
             lead: null,
             builderSubmission: null,
             fallbackSaved: true,
             fallbackReference: fallbackResult.reference,
+            confirmationEmailSent: confirmationResult.success,
             submissionWarning:
               "Supabase was unavailable, so this enquiry was captured by the fallback route and sent to the Smart Steel team for manual follow-up.",
           },
@@ -309,8 +435,21 @@ export async function POST(request) {
       }
     }
 
+    const confirmationResult = isBuilderSubmission
+      ? await sendBuilderConfirmation(body)
+      : { success: false, reason: "Not a builder submission." }
+    if (isBuilderSubmission && !confirmationResult.success) {
+      console.error("Builder confirmation email failed:", confirmationResult.reason)
+    }
+
     return NextResponse.json(
-      { lead, builderSubmission, submissionWarning: submissionWarning || null },
+      {
+        lead,
+        builderSubmission,
+        submissionWarning: submissionWarning || null,
+        confirmationEmailSent: confirmationResult.success,
+        confirmationEmailReference: confirmationResult.reference || null,
+      },
       { status: 200 }
     )
   } catch (error) {
@@ -324,12 +463,24 @@ export async function POST(request) {
       })
 
       if (fallbackResult.success) {
+        const isBuilderSubmission =
+          Boolean(body?.configuration) ||
+          Boolean(body?.summary) ||
+          body?.lead_source === "Warehouse Builder" ||
+          body?.leadSource === "Warehouse Builder"
+        const confirmationResult = isBuilderSubmission
+          ? await sendBuilderConfirmation(body)
+          : { success: false, reason: "Not a builder submission." }
+        if (isBuilderSubmission && !confirmationResult.success) {
+          console.error("Builder confirmation email failed:", confirmationResult.reason)
+        }
         return NextResponse.json(
           {
             lead: null,
             builderSubmission: null,
             fallbackSaved: true,
             fallbackReference: fallbackResult.reference,
+            confirmationEmailSent: confirmationResult.success,
             submissionWarning:
               "The enquiry could not be stored in the live CRM, but it was captured by the fallback route and sent to the Smart Steel team for manual follow-up.",
           },

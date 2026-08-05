@@ -898,6 +898,8 @@ export default function WarehouseBuilderClient() {
           estimateRequest: estimate.summary.estimateRequest,
           estimatedTotal: budgetValue,
           priceLabel: formatCurrency(budgetValue),
+          designReference,
+          configurationUrl: buildShareableBuilderUrl(shareableConfiguration),
           summaryNote: estimate.summary.layoutNote,
           configuration: {
             productType: config.productType,
@@ -1635,6 +1637,9 @@ export default function WarehouseBuilderClient() {
                     <p className="mt-3 text-sm leading-6 text-emerald-900/80">
                       We&apos;ve received your planning details, supply-only budget guide, and project notes so we can review the enquiry properly.
                     </p>
+                    {submissionResult?.confirmationEmailSent ? (
+                      <p className="mt-2 text-sm font-semibold text-emerald-800">A configuration summary has been sent to your email.</p>
+                    ) : null}
                   </div>
                   <div className="rounded-[1.5rem] border border-emerald-200 bg-white px-5 py-4 text-left shadow-sm lg:min-w-[260px]">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-600">
@@ -2137,6 +2142,9 @@ export default function WarehouseBuilderClient() {
                 </div>
                 <h3 className="mt-5 text-xl font-semibold text-slate-950">Request received</h3>
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">We have your complete warehouse design and project context. The Smart Steel team can now review it and follow up with the right next step.</p>
+                {submissionResult?.confirmationEmailSent ? (
+                  <p className="mx-auto mt-3 max-w-md text-sm font-semibold text-emerald-700">Your configuration summary is on its way to your inbox.</p>
+                ) : null}
                 {submissionResult?.submissionWarning ? (
                   <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{submissionResult.submissionWarning}</p>
                 ) : null}
@@ -2147,7 +2155,7 @@ export default function WarehouseBuilderClient() {
                 <ContactField label="First name" value={leadForm.name} onChange={(event) => setLeadForm((current) => ({ ...current, name: event.target.value }))} placeholder="First name" required />
                 <ContactField label="Last name" value={leadForm.lastName} onChange={(event) => setLeadForm((current) => ({ ...current, lastName: event.target.value }))} placeholder="Last name" />
                 <ContactField label="Email" type="email" value={leadForm.email} onChange={(event) => setLeadForm((current) => ({ ...current, email: event.target.value }))} placeholder="Email address" required />
-                <ContactField label="Phone" type="tel" value={leadForm.phone} onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Phone number (optional)" />
+                <ContactField label="Phone" type="tel" value={leadForm.phone} onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Phone number" required />
                 <div className="sm:col-span-2">
                   <button type="submit" disabled={submitting} className={`w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isLcssWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>
                     {submitting ? "Sending your project..." : "Send for review"}
