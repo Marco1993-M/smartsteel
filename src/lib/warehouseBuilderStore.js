@@ -25,8 +25,8 @@ export const WAREHOUSE_OPENING_FACE_OPTIONS = [
 ]
 
 export const DEFAULT_WAREHOUSE_BUILDER_STATE = {
-  productType: "LSF Warehouse",
-  width: 10,
+  productType: "LCSS Warehouse",
+  width: 8,
   length: 20,
   wallHeight: 3,
   roofType: "dual_pitch",
@@ -34,13 +34,13 @@ export const DEFAULT_WAREHOUSE_BUILDER_STATE = {
   cladding: "IBR",
   scope: "supply_only",
   installationInterest: false,
-  enclosureType: "roof_only",
+  enclosureType: "fully_enclosed",
   rollerDoorCount: 0,
   garageDoorOpeningType: "single",
   rollerDoorFace: "front",
   pedestrianDoorCount: 0,
   pedestrianDoorFace: "rear",
-  sheetingColor: "kalahari-red",
+  sheetingColor: "dove-grey",
   steelFinish: "Galv",
   gableMode: "fully_enclosed",
   deliveryRequired: false,
