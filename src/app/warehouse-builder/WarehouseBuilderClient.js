@@ -267,14 +267,14 @@ function RoofEnclosureThumbnail({ variant = "roof_only", active = false }) {
   )
 }
 
-function VisualChoiceCard({ icon: Icon, image, title, active, onClick, thumbnail, brand = "lsf" }) {
+function VisualChoiceCard({ icon: Icon, image, title, active, onClick, thumbnail, brand = "lsf", compact = false }) {
   const isAtlas = brand === "atlas"
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`min-h-[108px] rounded-[1.4rem] border px-4 py-3.5 text-left transition ${
+      className={`${compact ? "min-h-[88px] rounded-[1.15rem] px-3 py-3 sm:min-h-[108px] sm:rounded-[1.4rem] sm:px-4 sm:py-3.5" : "min-h-[108px] rounded-[1.4rem] px-4 py-3.5"} border text-left transition ${
         active
           ? isAtlas
             ? "border-[#0043f3] bg-[linear-gradient(145deg,#001d2e,#0043f3)] text-white shadow-[0_20px_50px_-30px_rgba(0,67,243,0.9)]"
@@ -286,18 +286,18 @@ function VisualChoiceCard({ icon: Icon, image, title, active, onClick, thumbnail
         <div className="mb-3">{thumbnail}</div>
       ) : (
         <div
-          className={`mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl border ${
+          className={`${compact ? "mb-2 h-9 w-9 rounded-xl sm:mb-3 sm:h-11 sm:w-11 sm:rounded-2xl" : "mb-3 h-11 w-11 rounded-2xl"} inline-flex items-center justify-center border ${
             active ? "border-white/20 bg-white/10 text-white" : "border-slate-200 bg-slate-50 text-slate-700"
           }`}
         >
           {image ? (
-            <Image src={image} alt="" width={24} height={24} className={`h-6 w-6 object-contain ${active ? "brightness-0 invert" : ""}`} />
+            <Image src={image} alt="" width={24} height={24} className={`${compact ? "h-5 w-5 sm:h-6 sm:w-6" : "h-6 w-6"} object-contain ${active ? "brightness-0 invert" : ""}`} />
           ) : (
             <Icon className="h-5 w-5" />
           )}
         </div>
       )}
-      <p className="text-sm font-semibold">{title}</p>
+      <p className={`${compact ? "text-xs leading-4 sm:text-sm" : "text-sm"} font-semibold`}>{title}</p>
     </button>
   )
 }
@@ -1119,7 +1119,7 @@ export default function WarehouseBuilderClient() {
     >
       <div className="mx-auto max-w-[1540px]">
         <section
-          className={`relative overflow-hidden rounded-[1.6rem] border px-5 py-4 shadow-sm transition-all duration-500 sm:px-6 sm:py-5 ${
+          className={`relative overflow-hidden rounded-[1.3rem] border px-4 py-3 shadow-sm transition-all duration-500 sm:rounded-[1.6rem] sm:px-6 sm:py-5 ${
             isLcssWarehouse
               ? "border-[#0043f3]/25 bg-[linear-gradient(120deg,#001d2e_0%,#073584_58%,#0043f3_100%)] text-white"
               : "border-slate-200 bg-[linear-gradient(120deg,#020617,#172033)] text-white"
@@ -1128,29 +1128,29 @@ export default function WarehouseBuilderClient() {
           <div className="pointer-events-none absolute -right-24 -top-36 h-72 w-72 rotate-45 border-[28px] border-white/[0.07]" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <div className="mb-4 flex items-center gap-3">
+              <div className="mb-2 flex items-center gap-3 sm:mb-4">
                 <Image
                   src={builderTheme.logo}
                   alt={builderTheme.name}
                   width={isLcssWarehouse ? 240 : 150}
                   height={48}
-                  className={isLcssWarehouse ? "h-8 w-auto object-contain object-left" : "h-9 w-auto object-contain object-left"}
+                  className={isLcssWarehouse ? "h-6 max-w-[190px] object-contain object-left sm:h-8 sm:max-w-none" : "h-7 w-auto object-contain object-left sm:h-9"}
                   priority
                 />
                 <span className="hidden h-7 w-px bg-white/20 sm:block" />
                 <p className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] text-white/65 sm:block">Live configuration</p>
               </div>
-              <p className={`text-[11px] font-semibold uppercase tracking-[0.26em] ${isLcssWarehouse ? "text-[#c1d9e5]" : "text-red-300"}`}>
+              <p className={`hidden text-[11px] font-semibold uppercase tracking-[0.26em] sm:block ${isLcssWarehouse ? "text-[#c1d9e5]" : "text-red-300"}`}>
                 {builderTheme.eyebrow}
               </p>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-[2rem]">
+              <h1 className="text-xl font-semibold tracking-tight text-white sm:mt-2 sm:text-3xl lg:text-[2rem]">
                 {builderTheme.title}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">
+              <p className="mt-2 hidden max-w-2xl text-sm leading-6 text-white/70 sm:block">
                 {builderTheme.description}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2 lg:max-w-[460px] lg:justify-end">
+            <div className="hidden flex-wrap gap-2 sm:flex lg:max-w-[460px] lg:justify-end">
               {["Live 3D preview", "Budget guide excl. VAT", "Built for South African projects"].map((item) => (
                 <span
                   key={item}
@@ -1241,7 +1241,14 @@ export default function WarehouseBuilderClient() {
                   <button
                     key={stage.label}
                     type="button"
-                    onClick={() => scrollToBuilderStage(stage.target)}
+                    onClick={() => {
+                      if (stage.target === "review-summary") {
+                        setShowLeadForm(true)
+                        trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
+                        return
+                      }
+                      scrollToBuilderStage(stage.target)
+                    }}
                     className={`flex min-w-0 items-center justify-center gap-1.5 border-r border-slate-200 px-1.5 py-2.5 text-[10px] font-semibold transition last:border-r-0 sm:text-xs ${
                       stage.complete ? "bg-white text-slate-900" : "text-slate-400 hover:text-slate-600"
                     }`}
@@ -1266,7 +1273,7 @@ export default function WarehouseBuilderClient() {
                   <FieldLabel
                     title="Warehouse system"
                   />
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {WAREHOUSE_SYSTEM_OPTIONS.map((option) => {
                       const isActive = config.productType === option.value
 
@@ -1279,6 +1286,7 @@ export default function WarehouseBuilderClient() {
                           active={isActive}
                           onClick={() => applySystem(option.value)}
                           brand={option.value === "LCSS Warehouse" ? "atlas" : "lsf"}
+                          compact
                         />
                       )
                     })}
@@ -1697,11 +1705,11 @@ export default function WarehouseBuilderClient() {
           </section>
 
           <aside className="order-1 space-y-5 xl:order-2 xl:sticky xl:top-24">
-            <div ref={sceneSectionRef} className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div ref={sceneSectionRef} className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-5">
+              <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Live warehouse preview</p>
-                  <p className="text-sm text-slate-500">Rotate, zoom, and watch the footprint update as you edit the build.</p>
+                  <p className="hidden text-sm text-slate-500 sm:block">Rotate, zoom, and watch the footprint update as you edit the build.</p>
                 </div>
                 <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
                   isLcssWarehouse ? "bg-[#c1d9e5]/55 text-[#001d2e]" : "bg-slate-100 text-slate-600"
@@ -1878,7 +1886,7 @@ export default function WarehouseBuilderClient() {
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-4 hidden gap-3 xl:grid xl:grid-cols-4">
                 <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Current design</p>
                   <p className="mt-1 text-sm font-semibold text-slate-900">
@@ -1898,9 +1906,23 @@ export default function WarehouseBuilderClient() {
                   </p>
                 </div>
               </div>
+
+              <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 xl:hidden">
+                <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-semibold text-slate-700">
+                  View budget details
+                </summary>
+                <div className="grid grid-cols-2 gap-2 border-t border-slate-200 p-3">
+                  {budgetBreakdownItems.map((item) => (
+                    <div key={item.label} className="rounded-xl bg-white px-3 py-2">
+                      <p className="text-[10px] text-slate-400">{item.label}</p>
+                      <p className="mt-0.5 text-xs font-semibold text-slate-900">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </details>
             </div>
 
-            <section id="review-summary" className={`scroll-mt-28 rounded-[2rem] border p-5 text-white shadow-sm transition-all duration-500 sm:p-6 ${
+            <section id="review-summary" className={`hidden scroll-mt-28 rounded-[2rem] border p-5 text-white shadow-sm transition-all duration-500 sm:p-6 xl:block ${
               isLcssWarehouse
                 ? "border-[#0043f3]/40 bg-[linear-gradient(140deg,#001d2e_0%,#06347e_58%,#0043f3_130%)]"
                 : "border-slate-200 bg-slate-950"
@@ -2052,7 +2074,7 @@ export default function WarehouseBuilderClient() {
               </div>
             </section>
 
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="hidden rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm xl:block">
               <h2 className="text-lg font-semibold text-slate-900">What happens next</h2>
               <p className="mt-1 text-sm text-slate-500">A quick summary of what happens after you send the project through.</p>
               <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
