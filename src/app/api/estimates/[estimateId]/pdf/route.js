@@ -11,6 +11,7 @@ export const maxDuration = 60
 
 const ESTIMATE_PDF_BUCKET =
   process.env.SUPABASE_ESTIMATE_PDF_BUCKET || "estimate-pdfs"
+const ESTIMATE_PDF_RENDER_REVISION = "atlas-brand-v1"
 
 function buildFilename(estimate) {
   const base = String(estimate?.title || `smart-steel-quote-${estimate?.version_no || "1"}`)
@@ -24,7 +25,7 @@ function buildFilename(estimate) {
 function buildStoragePath(estimate) {
   const updatedAt = estimate?.updated_at || estimate?.created_at || new Date().toISOString()
   const safeUpdatedAt = String(updatedAt).replace(/[^0-9T]/g, "").replace(/:/g, "")
-  return `quotes/${estimate.id}/v${estimate.version_no || 1}-${safeUpdatedAt}.pdf`
+  return `quotes/${estimate.id}/${ESTIMATE_PDF_RENDER_REVISION}-v${estimate.version_no || 1}-${safeUpdatedAt}.pdf`
 }
 
 async function getCachedPdfBuffer(storagePath) {

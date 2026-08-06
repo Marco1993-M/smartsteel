@@ -29,7 +29,9 @@ function buildFilename(estimate) {
 }
 
 function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }) {
-  const isAtlas = lead.product_type === "LCSS Warehouse"
+  const atlasIdentity = `${lead.product_type || ""} ${estimate.product_type_display || ""} ${estimate.title || ""}`.toLowerCase()
+  const isAtlas = ["atlas", "lcss", "cflc", "lip channel", "lipped channel", "solar carport", "solar ground mount"]
+    .some((term) => atlasIdentity.includes(term))
   const configuration = builderSubmission?.configuration || {}
   const summary = builderSubmission?.summary || {}
   const reference = configuration.designReference || summary.designReference || "Atlas proposal"
