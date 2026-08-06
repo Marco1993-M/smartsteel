@@ -816,6 +816,17 @@ export default function LeadEditorDrawer({
     })
   }
 
+  const createProjectFromLead = async () => {
+    setCreatingProject(true)
+    setProjectHandoffError("")
+    try {
+      await onCreateProject?.({ ...lead, ...formData })
+    } catch (error) {
+      setProjectHandoffError(error.message || "Could not create the project.")
+      setCreatingProject(false)
+    }
+  }
+
   const markLeadUnresponsive = () => {
     setFormData((current) => ({
       ...current,
@@ -1609,34 +1620,6 @@ export default function LeadEditorDrawer({
                 />
               ) : null}
 
-              <div className={`${isNew ? "hidden" : "hidden sm:block"} border-b border-slate-200 bg-white px-4 py-3 sm:px-6`}>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <div className="rounded-xl bg-slate-100 px-3 py-2.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Opportunity</p>
-                    <p className="mt-1 truncate text-sm font-bold text-slate-900">{opportunitySummary.line} · {opportunitySummary.family}</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-100 px-3 py-2.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Next move</p>
-                    <p className="mt-1 truncate text-sm font-bold text-slate-900">{formData.next_action || nextBestAction.shortLabel}</p>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl bg-slate-950 px-3 py-2.5 text-white">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                        {isNew ? "Lead source" : "Quote value"}
-                      </p>
-                      <p className="mt-1 text-sm font-bold">
-                        {isNew
-                          ? formData.lead_source || "Not selected"
-                          : String(formData.quote_value || "").trim()
-                            ? formatZar(formData.quote_value)
-                            : "Not quoted"}
-                      </p>
-                    </div>
-                    <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${getStatusBadgeClass(formData.status)}`}>{formatStatusLabel(formData.status)}</span>
-                  </div>
-                </div>
-              </div>
-
               {/* Scrollable Body */}
 <div className={`${isNew ? "hidden" : "min-h-0 flex-1"} w-full max-w-full overflow-y-auto overscroll-contain bg-slate-50`}>
   {!isNew ? (
@@ -1680,52 +1663,16 @@ export default function LeadEditorDrawer({
           <MessageSquare size={17} />
           WhatsApp
         </button>
-        <button
-          type="button"
-          onClick={() => onDelete(lead.id)}
-          className="col-span-4 mt-1 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 px-3 py-2.5 text-xs font-semibold text-rose-600"
-        >
-          <Trash2 size={15} />
-          Delete lead
-        </button>
       </div>
     </details>
   ) : null}
-  {!isNew && (
-    <div className="border-b border-sky-200 bg-sky-50 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">Project operations</p>
-          <p className="mt-1 text-sm font-semibold text-slate-900">Start or open the project workspace whenever site work is needed.</p>
-        </div>
-        <button
-          type="button"
-          disabled={creatingProject}
-          onClick={async () => {
-            setCreatingProject(true)
-            setProjectHandoffError("")
-            try {
-              await onCreateProject?.({ ...lead, ...formData })
-            } catch (error) {
-              setProjectHandoffError(error.message || "Could not create the project.")
-              setCreatingProject(false)
-            }
-          }}
-          className="shrink-0 rounded-xl bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-50"
-        >
-          {creatingProject ? "Creating..." : "Create project"}
-        </button>
-      </div>
-      {projectHandoffError ? <p className="mt-2 text-sm text-rose-700">{projectHandoffError}</p> : null}
-    </div>
-  )}
   <Tab.Group>
-    <Tab.List className="sticky top-0 z-20 flex gap-2 overflow-x-auto border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur no-scrollbar -webkit-overflow-scrolling-touch sm:px-5">
-      {["Overview", "Follow-up", "Estimates", "Notes", "Activity"].map((tab) => (
+    <Tab.List className="sticky top-0 z-20 grid grid-cols-3 gap-1 border-b border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur sm:px-5">
+      {["Overview", "Commercial", "Activity"].map((tab) => (
         <Tab
           key={tab}
           className={({ selected }) =>
-            `flex-shrink-0 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${
+            `rounded-xl px-3 py-2.5 text-sm font-semibold whitespace-nowrap transition ${
               selected ? "bg-slate-950 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`
           }
@@ -1737,59 +1684,40 @@ export default function LeadEditorDrawer({
     <Tab.Panels className="mx-auto w-full max-w-5xl space-y-4 p-0">
       {/* Details Panel */}
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
-        <div className="grid gap-4 lg:grid-cols-[1.35fr_0.85fr]">
-          <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-sm sm:p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
+        <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-sm sm:p-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-2xl">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Best next move</p>
                 <h3 className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">{nextBestAction.title}</h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">{nextBestAction.reason}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${leadSop.isComplete ? "bg-emerald-400/20 text-emerald-200" : "bg-amber-300/15 text-amber-200"}`}>
+                  {leadSop.completionLabel}
+                </span>
                 <button
                   type="button"
                   disabled={guidedAction.type === "wait"}
                   onClick={handleGuidedAction}
-                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-amber-200 disabled:cursor-default disabled:bg-white/10 disabled:text-slate-400"
+                  className="inline-flex items-center justify-center rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-amber-200 disabled:cursor-default disabled:bg-white/10 disabled:text-slate-400"
                 >
                   {guidedAction.label}
                 </button>
               </div>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${leadSop.isComplete ? "bg-emerald-400/20 text-emerald-200" : "bg-amber-300/15 text-amber-200"}`}>
-                {leadSop.completionLabel}
-              </span>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {leadSop.actions.map((action) => (
-                <button key={action.label} type="button" onClick={() => applySopAction(action)} className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20">
-                  {action.label}
-                </button>
-              ))}
-            </div>
-            <div className="mt-5 border-t border-white/10 pt-4">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Log an update</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {[
-                  { key: "called_client", label: "Called" },
-                  { key: "requested_info", label: "Requested info" },
-                  { key: "sent_quote", label: "Sent quote" },
-                  { key: "follow_tomorrow", label: "Tomorrow" },
-                ].map((action) => (
-                  <button key={action.key} type="button" onClick={() => handleQuickLogAction(action.key)} className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-900 transition hover:bg-slate-100">
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </section>
+        </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-red-600">Lead readiness</p>
-                <h3 className="mt-1 font-bold text-slate-950">{leadSop.nextStep}</h3>
-              </div>
-              <p className="text-xs text-slate-400">Added {createdAtLabel}</p>
+        <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Lead readiness</p>
+              <p className="mt-1 text-sm font-bold text-slate-900">{leadSop.nextStep}</p>
             </div>
-            <div className="mt-4 space-y-2.5">
+            <span className="text-xs font-semibold text-slate-400 group-open:hidden">Review</span>
+            <span className="hidden text-xs font-semibold text-slate-400 group-open:inline">Close</span>
+          </summary>
+          <div className="grid gap-4 border-t border-slate-100 px-4 py-4 sm:grid-cols-2">
+            <div className="space-y-2.5">
               {leadSop.checklist.map((item) => (
                 <div key={item.key} className="flex items-center gap-2.5 text-sm">
                   <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"}`}>{item.done ? "✓" : "·"}</span>
@@ -1797,38 +1725,26 @@ export default function LeadEditorDrawer({
                 </div>
               ))}
             </div>
-          </section>
-        </div>
-
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              ["Product", opportunitySummary.lane],
-              ["Owner", opportunitySummary.owner],
-              ["Stage", formatStatusLabel(formData.status)],
-              ["Quote", opportunitySummary.quoteState],
-            ].map(([label, value]) => (
-              <div key={label} className="border-b border-slate-100 pb-3 last:border-0 sm:border-b-0 sm:border-r sm:pb-0 sm:pr-4 sm:last:border-r-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{label}</p>
-                <p className="mt-1 text-sm font-bold text-slate-900">{value}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 rounded-2xl bg-slate-100 px-4 py-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Current next action</p>
-            <p className="mt-1 text-sm font-semibold text-slate-800">{opportunitySummary.nextAction}</p>
-          </div>
-        </section>
-
-        <section id="lead-editor-details" className={`${sectionClass} scroll-mt-24`}>
-          <div className="mb-4 flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">1</span>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Client</p>
-              <h3 className="mt-0.5 text-base font-semibold text-slate-900">Contact details</h3>
+            <div className="flex flex-wrap content-start gap-2">
+              {leadSop.actions.map((action) => (
+                <button key={action.label} type="button" onClick={() => applySopAction(action)} className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200">
+                  {action.label}
+                </button>
+              ))}
             </div>
           </div>
-          <div className="space-y-4">
+        </details>
+
+        <details id="lead-editor-details" className="group scroll-mt-24 rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-red-600">Client</p>
+              <p className="mt-1 truncate text-sm font-bold text-slate-900">{formData.email || formData.phone || "Contact details not complete"}</p>
+            </div>
+            <span className="text-xs font-semibold text-slate-400 group-open:hidden">Edit</span>
+            <span className="hidden text-xs font-semibold text-slate-400 group-open:inline">Close</span>
+          </summary>
+          <div className="space-y-4 border-t border-slate-100 px-4 py-4">
             <div>
               <label className={fieldLabelClass}>First & Last Name</label>
               <input
@@ -1865,18 +1781,22 @@ export default function LeadEditorDrawer({
               </div>
             </div>
           </div>
-        </section>
+        </details>
 
         {(loadingBuilderSubmission || builderSubmission) ? (
-          <section className="overflow-hidden rounded-2xl border border-[#9fc3d5] bg-[#eef6fa] shadow-sm">
-            <div className="border-b border-[#bdd5e1] bg-gradient-to-r from-[#001d2e] to-[#0043f3] px-4 py-3 text-white">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">Builder handoff</p>
-              <h4 className="mt-1 text-base font-semibold">Original warehouse configuration</h4>
-            </div>
+          <details className="group overflow-hidden rounded-2xl border border-[#9fc3d5] bg-[#eef6fa] shadow-sm">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">Builder handoff</p>
+                <p className="mt-1 truncate text-sm font-bold text-[#001d2e]">{builderDimensions || builderDesignReference || "Original warehouse configuration"}</p>
+              </div>
+              <span className="text-xs font-semibold text-[#527083] group-open:hidden">View</span>
+              <span className="hidden text-xs font-semibold text-[#527083] group-open:inline">Close</span>
+            </summary>
             {loadingBuilderSubmission ? (
-              <p className="p-4 text-sm text-slate-600">Loading the submitted configuration...</p>
+              <p className="border-t border-[#bdd5e1] p-4 text-sm text-slate-600">Loading the submitted configuration...</p>
             ) : (
-              <div className="grid gap-3 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+              <div className="grid gap-3 border-t border-[#bdd5e1] p-4 sm:grid-cols-[1fr_auto] sm:items-center">
                 <div>
                   <p className="font-semibold text-slate-950">
                     {builderDesignReference || builderSummary.productType || "Warehouse builder submission"}
@@ -1902,20 +1822,24 @@ export default function LeadEditorDrawer({
                 ) : null}
               </div>
             )}
-          </section>
+          </details>
         ) : null}
 
-        <section className={sectionClass}>
-          <div className="mb-4 flex items-start gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">2</span>
-            <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Project scope</p>
-            <h3 className="mt-0.5 text-base font-semibold text-slate-900">{scopeConfig.title}</h3>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              {scopeConfig.note}
-            </p>
+        <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-red-600">Project scope</p>
+              <p className="mt-1 truncate text-sm font-bold text-slate-900">
+                {[formData.product_type, formData.width && formData.length ? `${formData.width}m x ${formData.length}m` : "", formData.cladding]
+                  .filter(Boolean)
+                  .join(" · ") || "Scope not complete"}
+              </p>
             </div>
-          </div>
+            <span className="text-xs font-semibold text-slate-400 group-open:hidden">Edit</span>
+            <span className="hidden text-xs font-semibold text-slate-400 group-open:inline">Close</span>
+          </summary>
+          <div className="border-t border-slate-100 px-4 py-4">
+          <p className="mb-4 text-sm leading-6 text-slate-600">{scopeConfig.note}</p>
           {scopeConfig.showSizeSelectors ? (
             <>
               <label className={`${fieldLabelClass} mb-2`}>{scopeConfig.sizeLabel}</label>
@@ -1996,16 +1920,23 @@ export default function LeadEditorDrawer({
             onChange={(e) => handleChange("estimate_request", e.target.value)}
             className={`${inputClass} mt-3 min-h-[110px]`}
           />
-        </section>
-
-        <section className={sectionClass}>
-        <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">3</span>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Lead direction</p>
-            <h3 className="mt-0.5 text-base font-semibold text-slate-900">Ownership and commercial stage</h3>
           </div>
-        </div>
+        </details>
+
+        <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-red-600">Lead direction</p>
+            <p className="mt-1 truncate text-sm font-bold text-slate-900">
+              {[formatStatusLabel(formData.status), formData.allocated_to || "Unassigned", formData.lead_source]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
+          <span className="text-xs font-semibold text-slate-400 group-open:hidden">Edit</span>
+          <span className="hidden text-xs font-semibold text-slate-400 group-open:inline">Close</span>
+        </summary>
+        <div className="border-t border-slate-100 px-4 py-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={fieldLabelClass}>Lead Source</label>
@@ -2135,7 +2066,8 @@ export default function LeadEditorDrawer({
             )}
           </div>
         </div>
-        </section>
+        </div>
+        </details>
 
         {normalizeStatus(formData.status) === "lost" && (
           <section className={sectionClass}>
@@ -2386,9 +2318,7 @@ export default function LeadEditorDrawer({
             ))}
           </div>
         </section>
-      </Tab.Panel>
-
-      <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
+        <div className="border-t border-slate-200 pt-4">
         <section className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#fff7ed_55%,_#fef2f2)] p-4 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -2412,15 +2342,25 @@ export default function LeadEditorDrawer({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onCreateInvoice?.(lead)}
+                  onClick={() => onCreateInvoice?.({ ...lead, ...formData })}
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                 >
                   <FileText size={16} />
                   Create invoice
                 </button>
+                <button
+                  type="button"
+                  disabled={creatingProject}
+                  onClick={createProjectFromLead}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-50"
+                >
+                  <Building2 size={16} />
+                  {creatingProject ? "Creating..." : "Create project"}
+                </button>
               </div>
             )}
           </div>
+          {projectHandoffError ? <p className="mt-3 text-sm text-rose-700">{projectHandoffError}</p> : null}
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -2551,11 +2491,30 @@ export default function LeadEditorDrawer({
             )}
           </div>
         </section>
+        </div>
       </Tab.Panel>
 
 
 {/* Notes Panel */}
-<Tab.Panel className="flex h-full w-full max-w-full flex-col p-4 sm:p-5">
+<Tab.Panel className="w-full max-w-full space-y-6 p-4 sm:p-5">
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Working record</p>
+      <h3 className="mt-1 text-lg font-bold text-slate-950">Notes and activity</h3>
+    </div>
+    <div className="flex flex-wrap gap-1.5">
+      {[
+        { key: "called_client", label: "Called" },
+        { key: "requested_info", label: "Requested info" },
+        { key: "sent_quote", label: "Sent quote" },
+        { key: "follow_tomorrow", label: "Follow tomorrow" },
+      ].map((action) => (
+        <button key={action.key} type="button" onClick={() => handleQuickLogAction(action.key)} className="rounded-lg bg-slate-100 px-2.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200">
+          {action.label}
+        </button>
+      ))}
+    </div>
+  </div>
   {/* Sticky Add Note */}
   <div className="sticky top-0 z-10 mb-3 w-full max-w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
     <textarea
@@ -2695,10 +2654,14 @@ export default function LeadEditorDrawer({
       ))
     )}
   </div>
-</Tab.Panel>
-
-      {/* Activity Panel */}
-      <Tab.Panel className="space-y-6 w-full max-w-full p-4 sm:p-5">
+      <section className="border-t border-slate-200 pt-6">
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">History</p>
+            <h3 className="mt-1 text-base font-bold text-slate-950">Recorded activity</h3>
+          </div>
+          <span className="text-xs text-slate-400">{activities.length} entries</span>
+        </div>
         {loadingActivities ? (
           <p className="text-sm text-gray-400">Loading activity…</p>
         ) : activities.length === 0 ? (
@@ -2743,6 +2706,7 @@ export default function LeadEditorDrawer({
             ))}
           </div>
         )}
+      </section>
       </Tab.Panel>
 
 
