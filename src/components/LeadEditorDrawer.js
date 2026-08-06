@@ -20,6 +20,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { supabase } from "../lib/supabase" 
+import { getOsAuthHeaders } from "../lib/osClientAuth"
 import {
   formatCrmStatusLabel,
   getFollowUpIsoDate,
@@ -464,11 +465,31 @@ Smart Steel`,
   }
 }
 
-function buildEstimateEmailTemplate(lead, estimate) {
+function buildEstimateEmailTemplate(lead, estimate, builderSubmission) {
   const clientName = getLeadFullName(lead)
   const projectReference =
     toClientFacingSystemName(stripEstimateVersionSuffix(estimate?.title)) ||
     getProjectReference(lead)
+  const isAtlas = lead?.product_type === "LCSS Warehouse"
+  const configuration = builderSubmission?.configuration || {}
+  const summary = builderSubmission?.summary || {}
+  const designReference = configuration.designReference || summary.designReference || ""
+  const dimensions = configuration.width && configuration.length
+    ? `${configuration.width}m x ${configuration.length}m${configuration.wallHeight ? ` x ${configuration.wallHeight}m` : ""}`
+    : ""
+
+  if (isAtlas) {
+    return {
+      subject: `Your Atlas warehouse proposal${designReference ? ` | ${designReference}` : ""}`,
+      body: `Good day ${clientName},
+
+Your reviewed Atlas warehouse proposal is ready${dimensions ? ` for the ${dimensions} configuration` : ""}.
+
+The attached estimate outlines the proposed scope and budget based on the project information currently available. Please review the included items, exclusions, validity, and commercial terms.
+
+If you would like to adjust the configuration, compare another option, or discuss the next step, please reply and we will help you refine the proposal.`,
+    }
+  }
 
   return {
     subject: `Your Smart Steel estimate | ${projectReference}`,
@@ -705,6 +726,8 @@ export default function LeadEditorDrawer({
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [savedEstimates, setSavedEstimates] = useState([]);
   const [loadingEstimates, setLoadingEstimates] = useState(false);
+  const [builderSubmission, setBuilderSubmission] = useState(null)
+  const [loadingBuilderSubmission, setLoadingBuilderSubmission] = useState(false)
   const [emailEvents, setEmailEvents] = useState([]);
   const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [emailTemplateKey, setEmailTemplateKey] = useState(getSuggestedFollowUpTemplate(lead));
@@ -714,6 +737,7 @@ export default function LeadEditorDrawer({
   const [selectedEstimateEmail, setSelectedEstimateEmail] = useState(null);
   const [emailDraftOpened, setEmailDraftOpened] = useState(false);
   const [confirmingEmailSent, setConfirmingEmailSent] = useState(false);
+  const [sendingBrandedProposal, setSendingBrandedProposal] = useState(false)
   const [validationErrors, setValidationErrors] = useState({});
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectHandoffError, setProjectHandoffError] = useState("");
@@ -760,6 +784,13 @@ export default function LeadEditorDrawer({
   const sectionClass = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
   const opportunitySummary = getOpportunitySummary(formData)
   const latestEstimate = savedEstimates[0] || null
+  const builderConfiguration = builderSubmission?.configuration || {}
+  const builderSummary = builderSubmission?.summary || {}
+  const builderDesignReference = builderConfiguration.designReference || builderSummary.designReference || ""
+  const builderConfigurationUrl = builderConfiguration.configurationUrl || builderSummary.configurationUrl || ""
+  const builderDimensions = builderConfiguration.width && builderConfiguration.length
+    ? `${builderConfiguration.width}m x ${builderConfiguration.length}m${builderConfiguration.wallHeight ? ` x ${builderConfiguration.wallHeight}m` : ""}`
+    : ""
   const guidedAction = getGuidedLeadAction(nextBestAction, formData, latestEstimate)
   const isUnresponsive = formData.client_follow_up_state === "unresponsive"
 
@@ -871,6 +902,36 @@ export default function LeadEditorDrawer({
     }
 
     fetchEmailEvents()
+  }, [lead?.id])
+
+  useEffect(() => {
+    if (!lead?.id) {
+      setBuilderSubmission(null)
+      return
+    }
+
+    const fetchBuilderSubmission = async () => {
+      setLoadingBuilderSubmission(true)
+      const { data, error } = await supabase
+        .from("warehouse_builder_submissions")
+        .select("id, configuration, summary, created_at")
+        .eq("lead_id", lead.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (error) {
+        if (!/warehouse_builder_submissions|schema cache|does not exist/i.test(error.message || "")) {
+          console.error("Error fetching warehouse builder submission:", error)
+        }
+        setBuilderSubmission(null)
+      } else {
+        setBuilderSubmission(data || null)
+      }
+      setLoadingBuilderSubmission(false)
+    }
+
+    fetchBuilderSubmission()
   }, [lead?.id])
 
   useEffect(() => {
@@ -1113,7 +1174,7 @@ export default function LeadEditorDrawer({
       return
     }
 
-    const template = buildEstimateEmailTemplate(formData, estimate)
+    const template = buildEstimateEmailTemplate(formData, estimate, builderSubmission)
     setEmailComposerMode("estimate")
     setSelectedEstimateEmail(estimate || null)
     setEmailSubject(template.subject)
@@ -1148,7 +1209,7 @@ export default function LeadEditorDrawer({
   }
 
   const handleConfirmEmailSent = async () => {
-    if (!lead?.id || confirmingEmailSent) return
+    if (!lead?.id || confirmingEmailSent) return false
 
     setConfirmingEmailSent(true)
     const nextFollowUpAt = getBusinessFollowUpIsoDate(3)
@@ -1176,7 +1237,7 @@ export default function LeadEditorDrawer({
     const saved = await onSave(updatedLead)
     if (!saved) {
       setConfirmingEmailSent(false)
-      return
+      return false
     }
 
     const sentAt = new Date().toISOString()
@@ -1271,6 +1332,49 @@ export default function LeadEditorDrawer({
       description: `${isEstimateEmail ? `${estimateLabel} sent` : `Email sent (${templateLabel})`}. Subject: ${emailSubject}\n\nEmail copy:\n${emailBody}`,
       timestamp: new Date().toISOString(),
     }])
+    setConfirmingEmailSent(false)
+    setShowEmailComposer(false)
+    setEmailDraftOpened(false)
+    return true
+  }
+
+  const handleSendBrandedProposal = async () => {
+    if (emailComposerMode !== "estimate" || !selectedEstimateEmail?.id || sendingBrandedProposal) return
+    if (!emailSubject.trim() || !emailBody.trim()) {
+      alert("Add a subject and email message before sending the proposal.")
+      return
+    }
+
+    const approved = window.confirm(
+      `Send ${selectedEstimateEmail.title || "this estimate"} to ${formData.email}?\n\nThis will email the reviewed PDF and move the lead to Quoted.`
+    )
+    if (!approved) return
+
+    setSendingBrandedProposal(true)
+    try {
+      const response = await fetch("/api/crm/estimate-proposal", {
+        method: "POST",
+        headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          leadId: lead.id,
+          estimateId: selectedEstimateEmail.id,
+          subject: emailSubject,
+          body: emailBody,
+        }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || "Could not send the proposal.")
+
+      const lifecycleSaved = await handleConfirmEmailSent()
+      if (!lifecycleSaved) {
+        alert("The proposal was sent, but the CRM status could not be updated. Please update the lead manually.")
+      }
+    } catch (error) {
+      console.error("Error sending branded proposal:", error)
+      alert(error.message || "Could not send the proposal.")
+    } finally {
+      setSendingBrandedProposal(false)
+    }
   }
 
   const handleEstimateOutcome = async (estimate, outcome) => {
@@ -1740,6 +1844,44 @@ export default function LeadEditorDrawer({
             </div>
           </div>
         </section>
+
+        {(loadingBuilderSubmission || builderSubmission) ? (
+          <section className="overflow-hidden rounded-2xl border border-[#9fc3d5] bg-[#eef6fa] shadow-sm">
+            <div className="border-b border-[#bdd5e1] bg-gradient-to-r from-[#001d2e] to-[#0043f3] px-4 py-3 text-white">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">Builder handoff</p>
+              <h4 className="mt-1 text-base font-semibold">Original warehouse configuration</h4>
+            </div>
+            {loadingBuilderSubmission ? (
+              <p className="p-4 text-sm text-slate-600">Loading the submitted configuration...</p>
+            ) : (
+              <div className="grid gap-3 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div>
+                  <p className="font-semibold text-slate-950">
+                    {builderDesignReference || builderSummary.productType || "Warehouse builder submission"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {[builderDimensions, builderSummary.enclosure, builderSummary.sheetingProfile || builderConfiguration.sheetingProfile]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  <p className="mt-2 text-xs text-slate-500">
+                    Submitted {builderSubmission?.created_at ? new Date(builderSubmission.created_at).toLocaleString() : "from the warehouse builder"}
+                  </p>
+                </div>
+                {/^https?:\/\//i.test(builderConfigurationUrl) ? (
+                  <a
+                    href={builderConfigurationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#78a9c1] bg-white px-4 py-2.5 text-sm font-semibold text-[#001d2e] transition hover:border-[#0043f3] hover:text-[#0043f3]"
+                  >
+                    <Link2 size={15} /> Open configuration
+                  </a>
+                ) : null}
+              </div>
+            )}
+          </section>
+        ) : null}
 
         <section className={sectionClass}>
           <div className="mb-4 flex items-start gap-3">
@@ -2596,7 +2738,7 @@ export default function LeadEditorDrawer({
                                 {emailComposerMode === "estimate" ? "Estimate email" : "Follow-up email"}
                               </p>
                               <h3 className="mt-1 text-lg font-semibold text-slate-900">
-                                Generate, edit, and send
+                                {emailComposerMode === "estimate" ? "Review and send proposal" : "Generate, edit, and send"}
                               </h3>
                               <p className="mt-1 hidden text-sm text-slate-600 sm:block">
                                 {emailComposerMode === "estimate"
@@ -2679,12 +2821,22 @@ export default function LeadEditorDrawer({
                           </button>
                           <button
                             type="button"
-                            disabled={confirmingEmailSent}
+                            disabled={confirmingEmailSent || sendingBrandedProposal}
                             onClick={handleConfirmEmailSent}
-                            className="col-span-2 inline-flex items-center justify-center rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 sm:px-4"
+                            className={`${emailComposerMode === "estimate" ? "" : "col-span-2"} inline-flex items-center justify-center rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 sm:px-4`}
                           >
                             {confirmingEmailSent ? "Saving..." : "Confirm email sent"}
                           </button>
+                          {emailComposerMode === "estimate" ? (
+                            <button
+                              type="button"
+                              disabled={sendingBrandedProposal || confirmingEmailSent || String(selectedEstimateEmail?.id || "").startsWith("local-")}
+                              onClick={handleSendBrandedProposal}
+                              className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0037c9] disabled:cursor-not-allowed disabled:opacity-50 sm:order-last"
+                            >
+                              <Mail size={16} /> {sendingBrandedProposal ? "Sending proposal..." : "Send branded proposal"}
+                            </button>
+                          ) : null}
                         </div>
                         <p className="hidden shrink-0 px-4 pb-4 text-xs leading-5 text-slate-500 sm:block sm:px-5">
                           {emailDraftOpened
