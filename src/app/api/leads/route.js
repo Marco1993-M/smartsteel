@@ -64,8 +64,16 @@ function buildBuilderSubmission(payload, leadId) {
     estimate_request: payload.estimateRequest || "",
     estimated_total: payload.estimatedTotal || 0,
     status: "new",
-    configuration: payload.configuration || {},
-    summary: payload.summary || {},
+    configuration: {
+      ...(payload.configuration || {}),
+      designReference: payload.designReference || null,
+      configurationUrl: getSafeBuilderUrl(payload.configurationUrl),
+    },
+    summary: {
+      ...(payload.summary || {}),
+      designReference: payload.designReference || null,
+      configurationUrl: getSafeBuilderUrl(payload.configurationUrl),
+    },
     notes: buildBuilderNotes(payload),
   }
 }
