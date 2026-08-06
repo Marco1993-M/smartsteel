@@ -38,6 +38,20 @@ function isTrussProduct(productType) {
   return ["LSF trusses", "CFLC trusses"].includes(productType)
 }
 
+function isAtlasEstimate(productType, productTypeLabel) {
+  const identity = `${productType || ""} ${productTypeLabel || ""}`.toLowerCase()
+
+  return (
+    identity.includes("atlas") ||
+    identity.includes("lcss") ||
+    identity.includes("cflc") ||
+    identity.includes("lip channel") ||
+    identity.includes("lipped channel") ||
+    identity.includes("solar carport") ||
+    identity.includes("solar ground mount")
+  )
+}
+
 function getRoofStyleLabel(value) {
   return value === "mono_pitch" ? "Mono pitch" : "Dual pitch"
 }
@@ -79,6 +93,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
     input.productTypeLabel ||
     estimate?.product_type_display ||
     productType
+  const atlasEstimate = isAtlasEstimate(productType, productTypeLabel)
   const solarProduct = isSolarProduct(productType)
   const groundMountProduct = productType === "Solar ground mount"
   const trussProduct = isTrussProduct(productType)
@@ -221,6 +236,26 @@ export function buildEstimateDisplayModel(estimate, lead) {
     vatLabel: formatCurrency(vatAmount),
     totalInclVatLabel: formatCurrency(totalInclVat),
     preparedByLabel: "Smart Steel Sales Team",
+    brand: atlasEstimate
+      ? {
+          key: "atlas",
+          name: "Atlas by Smart Steel",
+          documentLabel: "Atlas Project Proposal",
+          logo: "/atlas/atlas-logo-horizontal-light.png",
+          accent: "#0043f3",
+          dark: "#001d2e",
+          pale: "#c1d9e5",
+        }
+      : {
+          key: "smart-steel",
+          name: "Smart Steel",
+          documentLabel: "Smart Steel Quotation",
+          logo: "/Logo.png",
+          accent: "#dc2626",
+          dark: "#020617",
+          pale: "#fee2e2",
+        },
+    isAtlas: atlasEstimate,
     shareToken: estimate?.share_token || "",
   }
 }
