@@ -470,7 +470,9 @@ function buildEstimateEmailTemplate(lead, estimate, builderSubmission) {
   const projectReference =
     toClientFacingSystemName(stripEstimateVersionSuffix(estimate?.title)) ||
     getProjectReference(lead)
-  const isAtlas = lead?.product_type === "LCSS Warehouse"
+  const atlasIdentity = `${lead?.product_type || ""} ${estimate?.product_type_display || ""} ${estimate?.title || ""}`.toLowerCase()
+  const isAtlas = ["atlas", "lcss", "cflc", "lip channel", "lipped channel", "solar carport", "solar ground mount"]
+    .some((term) => atlasIdentity.includes(term))
   const configuration = builderSubmission?.configuration || {}
   const summary = builderSubmission?.summary || {}
   const designReference = configuration.designReference || summary.designReference || ""
@@ -480,10 +482,10 @@ function buildEstimateEmailTemplate(lead, estimate, builderSubmission) {
 
   if (isAtlas) {
     return {
-      subject: `Your Atlas warehouse proposal${designReference ? ` | ${designReference}` : ""}`,
+      subject: `Your Atlas project proposal${designReference ? ` | ${designReference}` : ""}`,
       body: `Good day ${clientName},
 
-Your reviewed Atlas warehouse proposal is ready${dimensions ? ` for the ${dimensions} configuration` : ""}.
+Your reviewed Atlas project proposal is ready${dimensions ? ` for the ${dimensions} configuration` : ""}.
 
 The attached estimate outlines the proposed scope and budget based on the project information currently available. Please review the included items, exclusions, validity, and commercial terms.
 
