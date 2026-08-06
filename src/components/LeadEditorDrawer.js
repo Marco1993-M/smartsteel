@@ -794,6 +794,28 @@ export default function LeadEditorDrawer({
   const guidedAction = getGuidedLeadAction(nextBestAction, formData, latestEstimate)
   const isUnresponsive = formData.client_follow_up_state === "unresponsive"
 
+  const openEstimateCreator = () => {
+    onCreateEstimate?.({
+      ...lead,
+      ...formData,
+      width: formData.width || lead?.width || builderConfiguration.width || "",
+      length: formData.length || lead?.length || builderConfiguration.length || "",
+      wall_height:
+        formData.wall_height ||
+        lead?.wall_height ||
+        builderConfiguration.wallHeight ||
+        builderConfiguration.eaveHeight ||
+        "",
+      cladding:
+        formData.cladding ||
+        lead?.cladding ||
+        builderConfiguration.sheetingProfile ||
+        builderConfiguration.cladding ||
+        "",
+      builder_configuration: builderConfiguration,
+    })
+  }
+
   const markLeadUnresponsive = () => {
     setFormData((current) => ({
       ...current,
@@ -1446,7 +1468,7 @@ export default function LeadEditorDrawer({
         openEstimateEmailComposer(latestEstimate)
         break
       case "estimate":
-        onCreateEstimate?.({ ...lead, ...formData })
+        openEstimateCreator()
         break
       case "missing_info_email":
         openEmailComposer("missing_info")
@@ -1527,7 +1549,7 @@ export default function LeadEditorDrawer({
       <button
         type="button"
         className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
-        onClick={() => onCreateEstimate?.(lead)}
+        onClick={openEstimateCreator}
         title="Create estimate"
       >
         <FileText size={18} />
@@ -1628,7 +1650,7 @@ export default function LeadEditorDrawer({
         <span className="hidden text-xs font-medium text-slate-400 group-open:inline">Close</span>
       </summary>
       <div className="grid grid-cols-4 gap-2 border-t border-slate-100 px-3 py-3">
-        <button type="button" onClick={() => onCreateEstimate?.(lead)} className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2.5 text-[11px] font-semibold text-slate-700">
+        <button type="button" onClick={openEstimateCreator} className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2.5 text-[11px] font-semibold text-slate-700">
           <FileText size={17} />
           Estimate
         </button>
@@ -2382,7 +2404,7 @@ export default function LeadEditorDrawer({
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => onCreateEstimate?.(lead)}
+                  onClick={openEstimateCreator}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
                 >
                   <FileText size={16} />
