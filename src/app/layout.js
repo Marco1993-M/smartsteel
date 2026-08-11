@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata = {
   metadataBase: new URL("https://www.smartsteel.co.za"),
   title: {
-    default: "Smart Steel | Warehouses, Solar Carports & Steel Systems",
+    default: "Smart Steel South Africa | Warehouses, Solar Carports & Steel Systems",
     template: "%s | Smart Steel",
   },
   description:
-    "Smart Steel designs and supplies lightweight steel warehouses, CFLC DIY kits, solar carports, and steel building systems across South Africa.",
+    "Smart Steel South Africa designs and supplies lightweight steel warehouses, CFLC DIY kits, solar carports, roof trusses, and steel building systems.",
   icons: {
     icon: [
       { url: "/favicon/favicon.ico", sizes: "any" },
@@ -32,9 +32,9 @@ export const metadata = {
   },
   manifest: "/favicon/site.webmanifest",
   openGraph: {
-    title: "Smart Steel | Warehouses, Solar Carports & Steel Systems",
+    title: "Smart Steel South Africa | Warehouses, Solar Carports & Steel Systems",
     description:
-      "Explore Smart Steel lightweight steel warehouses, CFLC DIY kits, solar carports, and steel systems built for South African projects.",
+      "Explore Smart Steel South Africa lightweight steel warehouses, CFLC DIY kits, solar carports, roof trusses, and steel systems.",
     url: "https://www.smartsteel.co.za",
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -50,9 +50,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Smart Steel | Warehouses, Solar Carports & Steel Systems",
+    title: "Smart Steel South Africa | Warehouses, Solar Carports & Steel Systems",
     description:
-      "Explore Smart Steel lightweight steel warehouses, CFLC DIY kits, solar carports, and steel systems for South African projects.",
+      "Explore Smart Steel South Africa lightweight steel warehouses, CFLC DIY kits, solar carports, roof trusses, and steel systems.",
     images: ["/images/hero.webp"],
   },
 };

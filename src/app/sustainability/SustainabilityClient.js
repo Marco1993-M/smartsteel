@@ -1,9 +1,8 @@
 'use client';
 
 import Navbar from '../../components/Navbar';
+import SocialIcons from '../../components/SocialIcons';
 import Image from 'next/image';
-import Link from 'next/link';
-import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
 export default function SustainabilityClient() {
   return (
@@ -91,10 +90,8 @@ export default function SustainabilityClient() {
             <p className="text-lg text-gray-700 mb-8">
               Follow Smart Steel to see how lightweight steel is being used in practical projects and building systems across South Africa.
             </p>
-            <div className="flex justify-center gap-6 text-[#da1a33] text-2xl">
-              <Link href="https://facebook.com" aria-label="Facebook"><FaFacebookF /></Link>
-              <Link href="https://instagram.com" aria-label="Instagram"><FaInstagram /></Link>
-              <Link href="https://linkedin.com" aria-label="LinkedIn"><FaLinkedinIn /></Link>
+            <div className="flex justify-center text-[#da1a33]">
+              <SocialIcons />
             </div>
           </div>
         </section>

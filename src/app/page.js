@@ -2,17 +2,17 @@ import HomePageClient from './HomePageClient';
 
 export const metadata = {
   title: {
-    absolute: 'Lightweight Steel Warehouses South Africa | Smart Steel',
+    absolute: 'Smart Steel South Africa | Lightweight Steel Warehouses & Building Systems',
   },
   description:
-    'Smart Steel supplies lightweight steel warehouse systems across South Africa, with estimate tools, lip channel kit options, and guidance for choosing the right steel structure.',
+    'Smart Steel South Africa supplies lightweight steel warehouses, steel roof trusses, solar carports, lip channel kits, and steel building systems for local projects.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Lightweight Steel Warehouses South Africa | Smart Steel',
+    title: 'Smart Steel South Africa | Lightweight Steel Warehouses & Building Systems',
     description:
-      'Smart Steel supplies lightweight steel warehouse systems across South Africa, with estimate tools, lip channel kit options, and guidance for choosing the right steel structure.',
+      'Smart Steel South Africa supplies lightweight steel warehouses, steel roof trusses, solar carports, lip channel kits, and steel building systems for local projects.',
     url: 'https://www.smartsteel.co.za/',
     siteName: 'Smart Steel',
     locale: 'en_ZA',
@@ -28,9 +28,9 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lightweight Steel Warehouses South Africa | Smart Steel',
+    title: 'Smart Steel South Africa | Lightweight Steel Warehouses & Building Systems',
     description:
-      'Estimate, compare, and plan lightweight steel warehouse systems for South African projects.',
+      'Estimate, compare, and plan Smart Steel lightweight steel warehouse systems for South African projects.',
     images: ['/images/hero.webp'],
   },
 };

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
+import SocialIcons from '../../../components/SocialIcons';
 
 export const metadata = {
   title: 'Resilient Outcomes With Lightweight Steel | Smart Steel',
@@ -151,33 +151,7 @@ export default function ArticlePage() {
               Discover the latest projects featuring frames made from lightweight steel. Follow us for examples and inspiration on how lightweight steel is helping bring designs to life.
             </p>
 
-            {/* Social Icons */}
-            <div className="flex space-x-6 text-2xl">
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[#da1a33] transition"
-              >
-                <FaFacebookF />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[#da1a33] transition"
-              >
-                <FaInstagram />
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[#da1a33] transition"
-              >
-                <FaLinkedinIn />
-              </a>
-            </div>
+            <SocialIcons />
           </div>
         </section>
    </>

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { smartSteelOrganizationSchema, smartSteelWebsiteSchema } from '../lib/brandEntity';
 import { WAREHOUSE_WIDTH_OPTIONS } from '../lib/estimates/warehouseEstimate';
 
 const heroActions = [
@@ -221,23 +222,8 @@ const featuredProjects = [
 ];
 
 const structuredData = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Smart Steel',
-    url: 'https://www.smartsteel.co.za/',
-    logo: 'https://www.smartsteel.co.za/logo-512x512.png',
-    areaServed: {
-      '@type': 'Country',
-      name: 'South Africa',
-    },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Smart Steel',
-    url: 'https://www.smartsteel.co.za/',
-  },
+  smartSteelOrganizationSchema,
+  smartSteelWebsiteSchema,
   {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -293,6 +279,9 @@ export default function HomePageClient() {
         <div className="relative z-10 mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
             <div className="space-y-4">
+              <div className="rounded-full border border-black/10 bg-white/90 px-5 py-2 text-sm font-semibold text-black shadow-sm backdrop-blur-sm">
+                Smart Steel South Africa
+              </div>
               <div className="rounded-[2rem] border border-black/10 bg-white/92 p-4 shadow-sm backdrop-blur-sm sm:p-8">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">
                   Step 1 of 3
