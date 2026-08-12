@@ -52,7 +52,7 @@ const PROVINCES = [
 ]
 
 const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
-const WAREHOUSE_BUILDER_AUTOSAVE_KEY = "smartsteel.warehouse-builder.configuration"
+const WAREHOUSE_BUILDER_AUTOSAVE_KEY = "smartsteel.warehouse-builder.atlas-v2"
 
 const CFLC_SYSTEM_DEFAULTS = {
   productType: "LCSS Warehouse",
