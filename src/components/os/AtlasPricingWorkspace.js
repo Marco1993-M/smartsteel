@@ -15,6 +15,8 @@ import {
 } from "../../lib/atlasCosting"
 import { getAtlasW08PrimaryBenchmark } from "../../lib/atlasW08PricingBenchmarks"
 import { ATLAS_W08_EAVE_HEIGHTS_M, ATLAS_W08_LENGTHS_M, applyAtlasW08GeometryToPricing, calculateAtlasW08Geometry } from "../../lib/atlasW08Geometry"
+import { getAtlasW06PrimaryBenchmark } from "../../lib/atlasW06PricingBenchmarks"
+import { ATLAS_W06_EAVE_HEIGHTS_M, ATLAS_W06_LENGTHS_M, applyAtlasW06GeometryToPricing, calculateAtlasW06Geometry } from "../../lib/atlasW06Geometry"
 import AtlasModuleHero from "./AtlasModuleHero"
 
 const STATUS_LABELS = {
@@ -124,8 +126,19 @@ export default function AtlasPricingWorkspace() {
     return () => { active = false }
   }, [productCode])
 
-  const geometry = useMemo(() => productCode === "W08" ? calculateAtlasW08Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM }) : null, [productCode, configurationLengthM, configurationEaveHeightM])
-  const configuredRecords = useMemo(() => geometry ? applyAtlasW08GeometryToPricing(records, geometry) : records, [records, geometry])
+  useEffect(() => {
+    setConfigurationLengthM(20)
+    setConfigurationEaveHeightM(productCode === "W06" ? 4.5 : 3)
+  }, [productCode])
+
+  const geometry = useMemo(() => productCode === "W08"
+    ? calculateAtlasW08Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
+    : productCode === "W06"
+      ? calculateAtlasW06Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
+      : null, [productCode, configurationLengthM, configurationEaveHeightM])
+  const configuredRecords = useMemo(() => geometry
+    ? productCode === "W06" ? applyAtlasW06GeometryToPricing(records, geometry) : applyAtlasW08GeometryToPricing(records, geometry)
+    : records, [records, geometry, productCode])
   const confirmedCount = configuredRecords.filter((record) => record.status === "confirmed").length
   const missingMassCount = configuredRecords.filter((record) => record.pricingUnit === "ton" && record.massKgPerM === "").length
   const groupedRecords = useMemo(() => Object.entries(configuredRecords.reduce((groups, record) => {
@@ -133,7 +146,9 @@ export default function AtlasPricingWorkspace() {
     return groups
   }, {})), [configuredRecords])
   const assembledSummary = useMemo(() => summarizeAtlasPricing(configuredRecords), [configuredRecords])
-  const pricingBenchmark = productCode === "W08" ? getAtlasW08PrimaryBenchmark() : null
+  const pricingBenchmark = productCode === "W08" ? getAtlasW08PrimaryBenchmark() : productCode === "W06" ? getAtlasW06PrimaryBenchmark() : null
+  const controlledLengths = productCode === "W06" ? ATLAS_W06_LENGTHS_M : ATLAS_W08_LENGTHS_M
+  const controlledHeights = productCode === "W06" ? ATLAS_W06_EAVE_HEIGHTS_M : ATLAS_W08_EAVE_HEIGHTS_M
   const benchmarkVariance = pricingBenchmark
     ? assembledSummary.totalCost - pricingBenchmark.sellingPriceExclVat
     : 0
@@ -267,7 +282,7 @@ export default function AtlasPricingWorkspace() {
         eyebrow={`${productCode} pricing control`}
         title={`Control every ${product?.name || "Atlas product"} input.`}
         description="Maintain material rates, component prices, quantity rules and effective dates in one traceable register. Unconfirmed technical inputs remain visible instead of silently entering estimates."
-        status={productCode === "W08" ? "Component pricing" : "Product record pending"}
+        status={["W06", "W08"].includes(productCode) ? "Component pricing" : "Product record pending"}
         actionHref={withAtlasProduct("/os/atlas/bom", productCode)}
         actionLabel="Review product BOM"
       />
@@ -312,8 +327,8 @@ export default function AtlasPricingWorkspace() {
         <section className="border border-[#0043f3]/20 bg-[#f5f9ff] p-4 sm:p-5">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_160px] lg:items-end">
             <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Live W08 configuration</p><h2 className="mt-1 text-xl font-bold text-slate-950">Price the geometry, not a manually typed baseline.</h2><p className="mt-1 text-xs leading-5 text-slate-600">Columns, rafters and purlins use exact quantities, 90-degree cut lengths and controlled kg/m. Structural waste, fabrication and packaging are R0; delivery and installation remain separate.</p></div>
-            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Building length</span><select value={configurationLengthM} onChange={(event) => setConfigurationLengthM(Number(event.target.value))} className={inputClass}>{ATLAS_W08_LENGTHS_M.map((length) => <option key={length} value={length}>{length}m · {length / 4} bays</option>)}</select></label>
-            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Eave height</span><select value={configurationEaveHeightM} onChange={(event) => setConfigurationEaveHeightM(Number(event.target.value))} className={inputClass}>{ATLAS_W08_EAVE_HEIGHTS_M.map((height) => <option key={height} value={height}>{height}m</option>)}</select></label>
+            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Building length</span><select value={configurationLengthM} onChange={(event) => setConfigurationLengthM(Number(event.target.value))} className={inputClass}>{controlledLengths.map((length) => <option key={length} value={length}>{length}m · {length / 4} bays</option>)}</select></label>
+            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Eave height</span><select value={configurationEaveHeightM} onChange={(event) => setConfigurationEaveHeightM(Number(event.target.value))} className={inputClass}>{controlledHeights.map((height) => <option key={height} value={height}>{height}m</option>)}</select></label>
           </div>
           <div className="mt-4 grid gap-px border border-sky-200 bg-sky-200 sm:grid-cols-2 lg:grid-cols-5">{[["Portal frames", geometry.portalFrames], ["Rafter cut", `${geometry.rafterCutLengthM}m`], ["Purlin rows", geometry.totalPurlinRows], ["Confirmed mass", `${geometry.confirmedStructuralMassKg.toLocaleString("en-ZA")}kg`], ["Technical holds", geometry.holds.length]].map(([label, value]) => <div key={label} className="bg-white p-3"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-base font-bold text-slate-950">{value}</p></div>)}</div>
         </section>
