@@ -1,5 +1,13 @@
 export const ATLAS_PRODUCT_RANGE = [
   {
+    code: "W06",
+    name: "W06 Warehouse",
+    family: "Warehouses",
+    status: "Controlled development",
+    summary: "6m-span modular warehouse system using the controlled 4m bay method.",
+    available: true,
+  },
+  {
     code: "W08",
     name: "W08 Warehouse",
     family: "Warehouses",
