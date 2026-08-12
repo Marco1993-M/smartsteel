@@ -25,9 +25,9 @@ export function calculateAtlasPricingLine(record) {
   else if (unit === "m") rawCost = quantity * lengthM * rate
   else rawCost = quantity * rate
 
-  const wasteCost = rawCost * (numberOrZero(record.wastePercent) / 100)
-  const fabricationCost = numberOrZero(record.fabricationAllowance)
-  const coatingCost = numberOrZero(record.coatingAllowance)
+  const wasteCost = record.geometryControlled ? 0 : rawCost * (numberOrZero(record.wastePercent) / 100)
+  const fabricationCost = record.geometryControlled ? 0 : numberOrZero(record.fabricationAllowance)
+  const coatingCost = record.geometryControlled ? 0 : numberOrZero(record.coatingAllowance)
   const costBeforeMargin = rawCost + wasteCost + fabricationCost + coatingCost
   const marginCost = costBeforeMargin * (numberOrZero(record.marginPercent) / 100)
 
