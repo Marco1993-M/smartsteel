@@ -13,6 +13,7 @@ import {
   getAtlasPricingCompleteness,
   summarizeAtlasPricing,
 } from "../../lib/atlasCosting"
+import { getAtlasW08PrimaryBenchmark } from "../../lib/atlasW08PricingBenchmarks"
 import AtlasModuleHero from "./AtlasModuleHero"
 
 const STATUS_LABELS = {
@@ -127,6 +128,10 @@ export default function AtlasPricingWorkspace() {
     return groups
   }, {})), [records])
   const assembledSummary = useMemo(() => summarizeAtlasPricing(records), [records])
+  const pricingBenchmark = productCode === "W08" ? getAtlasW08PrimaryBenchmark() : null
+  const benchmarkVariance = pricingBenchmark
+    ? assembledSummary.totalCost - pricingBenchmark.sellingPriceExclVat
+    : 0
 
   function updateRecord(id, field, value) {
     setRecords((current) => current.map((record) => record.id === id ? { ...record, [field]: value } : record))
@@ -322,6 +327,78 @@ export default function AtlasPricingWorkspace() {
           ))}
         </div>
       </section>
+
+      {pricingBenchmark ? (
+        <section className="overflow-hidden border border-[#0043f3]/20 bg-white shadow-sm">
+          <div className="grid gap-px bg-slate-200 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+            <div className="bg-white p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">Verified pricing benchmark</p>
+              <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight text-slate-950">{pricingBenchmark.label}</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {pricingBenchmark.widthM}m × {pricingBenchmark.lengthM}m × {pricingBenchmark.eaveHeightM}m · {pricingBenchmark.portalFrameCount} portals at {pricingBenchmark.baySpacingM}m spacing
+                  </p>
+                </div>
+                <div className="text-left lg:text-right">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Selling price excl. VAT</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">{formatMoney(pricingBenchmark.sellingPriceExclVat)}</p>
+                </div>
+              </div>
+              <div className="mt-5 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-4">
+                {[
+                  ["Structure steel", `${pricingBenchmark.totalSteelKg.toLocaleString("en-ZA")}kg`],
+                  ["ZAM rate", formatRate(pricingBenchmark.materialRatePerTon, "ton")],
+                  ["Cost excl. VAT", formatMoney(pricingBenchmark.totalCostExclVat)],
+                  ["Sheet uplift", `${pricingBenchmark.markupPercent}%`],
+                ].map(([label, value]) => (
+                  <div key={label} className="bg-slate-50 p-3.5">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
+                    <p className="mt-1 text-sm font-bold text-slate-900">{value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 overflow-x-auto border border-slate-200">
+                <table className="min-w-[760px] w-full border-collapse text-left text-xs">
+                  <thead className="bg-slate-950 text-white">
+                    <tr>
+                      {["Component", "Controlled profile", "Assembly", "Calculated kg/m", "Sheet weight", "Effective metres"].map((heading) => (
+                        <th key={heading} className="px-3 py-2.5 text-[9px] font-bold uppercase tracking-[0.1em]">{heading}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {pricingBenchmark.components.map((component) => (
+                      <tr key={component.label} className="bg-white">
+                        <td className="px-3 py-2.5 font-bold text-slate-900">{component.label}</td>
+                        <td className="px-3 py-2.5 font-mono text-slate-700">{component.profile.code}</td>
+                        <td className="px-3 py-2.5 text-slate-600">{component.assembly}</td>
+                        <td className="px-3 py-2.5 font-semibold text-slate-800">{component.profile.calculatedMassKgPerM.toFixed(3)}</td>
+                        <td className="px-3 py-2.5 font-semibold text-slate-800">{component.massKg.toLocaleString("en-ZA")}kg</td>
+                        <td className="px-3 py-2.5 font-semibold text-slate-800">{component.effectiveInstalledM.toLocaleString("en-ZA")}m</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-4 text-xs leading-5 text-slate-500">
+                Profile mass uses developed section width × thickness × 7,850kg/m³. Effective metres reconcile the sheet weight against that calculated mass; they are a validation aid until the approved member-length schedule is entered. Benchmark excludes {pricingBenchmark.exclusions.join(", ").toLowerCase()} and does not change public builder pricing.
+              </p>
+            </div>
+            <aside className="bg-[#001d2e] p-5 text-white sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Current baseline variance</p>
+              <p className="mt-3 text-3xl font-bold">{formatMoney(benchmarkVariance)}</p>
+              <p className="mt-2 text-xs leading-5 text-white/65">
+                Current assembled pricing minus the verified benchmark selling price. A zero variance is only meaningful once the component quantities match this exact 20m × 8m × 4.5m configuration.
+              </p>
+              <div className="mt-5 border-t border-white/15 pt-4">
+                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">Source</p>
+                <p className="mt-1 break-words text-xs font-semibold leading-5 text-white/80">{pricingBenchmark.source}</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+      ) : null}
 
       {!loading && records.length === 0 ? (
         <section className="border border-slate-200 bg-white p-6">
