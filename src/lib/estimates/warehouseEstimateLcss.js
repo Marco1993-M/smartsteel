@@ -19,6 +19,7 @@ const LCSS_CLADDING_INSTALL_RATE = WAREHOUSE_MATERIALS.claddingInstallRate
 export const LCSS_WAREHOUSE_WIDTH_OPTIONS = [3, 6, 8, 10, 12]
 export const LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS = ["Galv", "Mild"]
 export const LCSS_WAREHOUSE_GABLE_OPTIONS = [
+  { value: "structure_only", label: "Structure only" },
   { value: "roof_only", label: "Roof sheeting" },
   { value: "fully_enclosed", label: "Roof and walls sheeted" },
 ]
@@ -26,12 +27,19 @@ export const LCSS_WAREHOUSE_GABLE_OPTIONS = [
 function normalizeLcssSheetingMode(value) {
   if (value === "open_gable") return "roof_only"
   if (value === "sheeted_gable") return "fully_enclosed"
-  return value || "fully_enclosed"
+  return value || "structure_only"
 }
 
 function getLcssSheetingLabel(value) {
   const normalized = normalizeLcssSheetingMode(value)
+  if (normalized === "structure_only") return "Structure only"
   return normalized === "roof_only" ? "Roof sheeting" : "Roof and walls sheeted"
+}
+
+function getLcssSheetingFinishLabel(cladding) {
+  if (cladding === "Chromadek") return "Chromadek"
+  if (cladding === "IBR") return "Galvanised"
+  return "No sheeting"
 }
 
 export const LCSS_SPAN_DATA = {
@@ -170,7 +178,7 @@ export function validateLcssWarehouseEstimateInput(input) {
   const steelFinish = input?.steelFinish || "Galv"
   const cladding = input?.cladding || "IBR"
   const claddingInstalled = Boolean(input?.claddingInstalled)
-  const gableMode = normalizeLcssSheetingMode(input?.gableMode || input?.sheetingMode || "fully_enclosed")
+  const gableMode = normalizeLcssSheetingMode(input?.gableMode || input?.sheetingMode || "structure_only")
   const lengthRule = getLcssLengthRule(width, length)
 
   if (!LCSS_WAREHOUSE_WIDTH_OPTIONS.includes(width)) {
@@ -264,14 +272,16 @@ export function calculateLcssWarehouseEstimate(input) {
     ) * LCSS_OVERALL_WASTE_FACTOR
 
   const hatCost = totalHatLengthMeters * LCSS_HAT_RATE_PER_METER
-  const roofSheetingArea = span.trussLength * length * 2 * LCSS_OVERALL_WASTE_FACTOR
+  const roofSheetingArea = gableMode === "structure_only"
+    ? 0
+    : span.trussLength * length * 2 * LCSS_OVERALL_WASTE_FACTOR
   const wallSheetingArea =
     includeWallSheeting
       ? (wallHeight * length) * 2 * LCSS_OVERALL_WASTE_FACTOR
       : 0
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
   const claddingSupplyRate = WAREHOUSE_MATERIALS.cladding[cladding]?.supply || 0
-  const claddingCost = cladding === "None" ? 0 : totalSheetingArea * claddingSupplyRate
+  const claddingCost = cladding === "None" || gableMode === "structure_only" ? 0 : totalSheetingArea * claddingSupplyRate
   const steelCost = totalColumnCost + totalRafterCost + totalXBraceCost + totalABraceCost
   const totalSteelCost = steelCost * quantity
   const totalHatCost = hatCost * quantity
@@ -348,11 +358,11 @@ export function calculateLcssWarehouseEstimate(input) {
     })
   )
 
-  if (cladding !== "None") {
+  if (cladding !== "None" && totalSheetingArea > 0) {
     lineItems.push(
       buildLineItem({
         code: "lcss_cladding",
-        label: `${cladding} cladding`,
+        label: `${getLcssSheetingFinishLabel(cladding)} sheeting`,
         quantity: roundMoney(totalSheetingArea * quantity),
         unit: "sqm",
         unitRate: claddingSupplyRate,
