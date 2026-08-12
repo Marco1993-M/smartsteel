@@ -33,6 +33,8 @@ export const DEFAULT_WAREHOUSE_BUILDER_STATE = {
   roofType: "dual_pitch",
   roofPitch: 15,
   cladding: "None",
+  sheetingProfile: "IBR",
+  sheetingFinish: "galvanised",
   scope: "supply_only",
   installationInterest: false,
   enclosureType: "roof_only",

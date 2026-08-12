@@ -36,9 +36,9 @@ function getLcssSheetingLabel(value) {
   return normalized === "roof_only" ? "Roof sheeting" : "Roof and walls sheeted"
 }
 
-function getLcssSheetingFinishLabel(cladding) {
-  if (cladding === "Chromadek") return "Chromadek"
-  if (cladding === "IBR") return "Galvanised"
+function getLcssSheetingFinishLabel(sheetingFinish) {
+  if (sheetingFinish === "chromadek") return "Chromadek"
+  if (sheetingFinish === "galvanised") return "Galvanised"
   return "No sheeting"
 }
 
@@ -177,6 +177,8 @@ export function validateLcssWarehouseEstimateInput(input) {
   const quantity = Math.max(1, Math.round(Number(input?.quantity) || 1))
   const steelFinish = input?.steelFinish || "Galv"
   const cladding = input?.cladding || "IBR"
+  const sheetingProfile = input?.sheetingProfile || "IBR"
+  const sheetingFinish = input?.sheetingFinish || (cladding === "Chromadek" ? "chromadek" : "galvanised")
   const claddingInstalled = Boolean(input?.claddingInstalled)
   const gableMode = normalizeLcssSheetingMode(input?.gableMode || input?.sheetingMode || "structure_only")
   const lengthRule = getLcssLengthRule(width, length)
@@ -205,6 +207,14 @@ export function validateLcssWarehouseEstimateInput(input) {
     throw new Error("Please choose a valid cladding option.")
   }
 
+  if (!["Corrugated", "IBR", "Concealed Fix"].includes(sheetingProfile)) {
+    throw new Error("Please choose Corrugated, IBR, or Concealed Fix sheeting.")
+  }
+
+  if (!["galvanised", "chromadek"].includes(sheetingFinish)) {
+    throw new Error("Please choose a galvanised or Chromadek finish.")
+  }
+
   if (!LCSS_WAREHOUSE_GABLE_OPTIONS.some((option) => option.value === gableMode)) {
     throw new Error("Please choose a valid sheeting option.")
   }
@@ -216,6 +226,8 @@ export function validateLcssWarehouseEstimateInput(input) {
     quantity,
     steelFinish,
     cladding,
+    sheetingProfile,
+    sheetingFinish,
     claddingInstalled,
     gableMode,
     baySpacing: lengthRule.baySpacing,
@@ -232,6 +244,8 @@ export function calculateLcssWarehouseEstimate(input) {
     quantity,
     steelFinish,
     cladding,
+    sheetingProfile,
+    sheetingFinish,
     claddingInstalled,
     gableMode,
     baySpacing,
@@ -362,7 +376,7 @@ export function calculateLcssWarehouseEstimate(input) {
     lineItems.push(
       buildLineItem({
         code: "lcss_cladding",
-        label: `${getLcssSheetingFinishLabel(cladding)} sheeting`,
+        label: `${sheetingProfile} sheeting · ${getLcssSheetingFinishLabel(sheetingFinish)}`,
         quantity: roundMoney(totalSheetingArea * quantity),
         unit: "sqm",
         unitRate: claddingSupplyRate,
@@ -456,13 +470,15 @@ export function calculateLcssWarehouseEstimate(input) {
     lineItems,
     summary: {
       title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m LCSS Warehouse`,
-      shortDescription: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish.toLowerCase()} steel, ${getLcssSheetingLabel(gableMode).toLowerCase()}, ${cladding} sheeting${claddingInstalled ? " with installation" : ", supply only"}`,
-      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish}, ${getLcssSheetingLabel(gableMode)}, ${cladding} sheeting${claddingInstalled ? ", sheeting supply and installation" : ", sheeting supply only"}, priced from CFLC workbook model`,
+      shortDescription: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish.toLowerCase()} steel, ${getLcssSheetingLabel(gableMode).toLowerCase()}${gableMode === "structure_only" ? "" : `, ${sheetingProfile} sheeting with a ${getLcssSheetingFinishLabel(sheetingFinish).toLowerCase()} finish`}${claddingInstalled ? " with installation" : ", supply only"}`,
+      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish}, ${getLcssSheetingLabel(gableMode)}${gableMode === "structure_only" ? "" : `, ${sheetingProfile} sheeting, ${getLcssSheetingFinishLabel(sheetingFinish)} finish`}${claddingInstalled ? ", sheeting supply and installation" : ", supply only"}, priced from CFLC workbook model`,
       layoutNote: "",
     },
     labels: {
       steelFinish,
       cladding,
+      sheetingProfile,
+      sheetingFinish: getLcssSheetingFinishLabel(sheetingFinish),
       installation: claddingInstalled ? "Cladding installation included" : "Structure supply only",
       gableMode: getLcssSheetingLabel(gableMode),
     },
