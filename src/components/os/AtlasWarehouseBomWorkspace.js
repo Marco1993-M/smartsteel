@@ -5,11 +5,9 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, ArrowUpRight, Check, ChevronDown, GitBranch, Layers3, Plus, ShieldAlert } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { getAtlasPricingCompleteness, summarizeAtlasPricing } from "../../lib/atlasCosting"
+import { ATLAS_W08_EAVE_HEIGHTS_M, ATLAS_W08_LENGTHS_M, applyAtlasW08GeometryToPricing, calculateAtlasW08Geometry } from "../../lib/atlasW08Geometry"
 
-const LENGTHS = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
-const BAY_SPACING = 4
-const ROOF_PITCH_DEGREES = 15
-const ROOF_PURLIN_ROWS = 8
+const LENGTHS = ATLAS_W08_LENGTHS_M
 const SCOPES = [
   { value: "structure", label: "Structure only" },
   { value: "roof", label: "Roof sheeted" },
@@ -17,10 +15,10 @@ const SCOPES = [
 ]
 
 const CONTROLLED_LINES = [
-  { lineNumber: 10, code: "W08-COL", title: "W08 column set", category: "Primary framing", unit: "set", scope: "standard", rule: "Portal count = length / 4 + 1", notes: "Column set for confirmed 3m to 5m W08 eave configurations.", profile: "Atlas lip channel column assembly", size: "3m to 5m eave · W08 geometry", material: "ZAM-coated structural steel", finish: "ZAM", use: "Forms the vertical support at every portal position.", specReady: true },
-  { lineNumber: 20, code: "W08-RAF", title: "W08 dual-pitch rafter set", category: "Primary framing", unit: "set", scope: "standard", rule: "One rafter set per portal", notes: "Standard 8m-span dual-pitch rafter geometry.", profile: "Atlas lip channel rafter assembly", size: "8m span · dual pitch", material: "ZAM-coated structural steel", finish: "ZAM", use: "Forms the roof frame across each portal.", specReady: true },
-  { lineNumber: 30, code: "W08-XBR", title: "W08 X-bracing set", category: "Bracing", unit: "set", scope: "standard", rule: "Braced bays at positions 1, 5, 9 and onward", notes: "Brace count follows the confirmed every-fourth-position sequence.", profile: "Atlas X-bracing assembly", size: "Matched to selected bay arrangement", material: "Structural steel · grade to be confirmed", finish: "Finish to be confirmed", use: "Provides longitudinal stability at confirmed braced bay positions.", specReady: false },
-  { lineNumber: 40, code: "W08-SEC", title: "W08 purlin and wall-hat pack", category: "Secondary steel", unit: "m", scope: "standard", rule: "Eight roof rows at maximum 1500mm c/c; wall support follows selected scope", notes: "Includes confirmed roof purlin spacing and applicable wall support members.", profile: "Atlas secondary lipped-channel profile", size: "4m modules · maximum 1500mm c/c roof spacing", material: "ZAM-coated structural steel", finish: "ZAM", use: "Supports roof sheeting and selected wall sheeting.", specReady: true },
+  { lineNumber: 10, code: "W08-COL", title: "W08 column set", category: "Primary framing", unit: "set", scope: "standard", rule: "Portal count = length / 4 + 1", notes: "Column set for confirmed 3m to 5m W08 eave configurations.", profile: "2 x 200 x 75 x 20 x 2mm lipped channels, back-to-back", size: "3m to 5m eave · W08 geometry", material: "ZAM-coated structural steel", finish: "ZAM", use: "Forms the vertical support at every portal position.", specReady: true },
+  { lineNumber: 20, code: "W08-RAF", title: "W08 dual-pitch rafter set", category: "Primary framing", unit: "set", scope: "standard", rule: "One rafter set per portal", notes: "Standard 8m-span dual-pitch rafter geometry.", profile: "200 x 75 x 20 x 2.5mm single lipped channel", size: "8m span · dual pitch", material: "ZAM-coated structural steel", finish: "ZAM", use: "Forms the roof frame across each portal.", specReady: true },
+  { lineNumber: 30, code: "W08-XBR", title: "W08 X-bracing set", category: "Bracing", unit: "set", scope: "standard", rule: "Braced bays at positions 1, 5, 9 and onward", notes: "Brace count follows the confirmed every-fourth-position sequence.", profile: "100 x 50 x 20 x 2mm lipped channel", size: "Matched to selected bay arrangement", material: "ZAM-coated structural steel", finish: "ZAM", use: "Provides longitudinal stability at confirmed braced bay positions.", specReady: true },
+  { lineNumber: 40, code: "W08-SEC", title: "W08 purlin and wall-hat pack", category: "Secondary steel", unit: "m", scope: "standard", rule: "Roof purlins, side girts, and gable girts calculated as separate member schedules", notes: "Includes 175 x 65 x 20 x 2mm purlins and 150 x 50 x 20 x 2mm side and gable girts.", profile: "Purlins: 175 x 65 x 20 x 2mm · girts: 150 x 50 x 20 x 2mm", size: "4m bays · maximum 1500mm c/c roof spacing", material: "ZAM-coated structural steel", finish: "ZAM", use: "Supports roof and wall sheeting using profile-specific weight calculations.", specReady: true },
   { lineNumber: 50, code: "W08-CON", title: "W08 bolted connection set", category: "Connections and fittings", unit: "set", scope: "project_specific", rule: "Matched to portal and bracing count", notes: "Hold for approved Atlas connection schedule before final issue.", profile: "Brackets, bolts, nuts and washers", size: "Per approved W08 connection schedule", material: "Structural steel and graded fasteners", finish: "Corrosion-protection specification pending", use: "Connects columns, rafters, bracing and secondary members.", specReady: false },
   { lineNumber: 60, code: "W08-RCL", title: "W08 roof sheeting pack", category: "Cladding", unit: "m2", scope: "optional", rule: "Dual-pitch roof coverage plus standard allowance", notes: "Only included when roof sheeting is selected.", profile: "IBR roof sheeting", size: "Cut lengths from roof geometry · thickness to confirm", material: "Coated steel sheeting", finish: "Colour and coating selected per project", use: "Weatherproof roof covering for both roof slopes.", specReady: false },
   { lineNumber: 70, code: "W08-WCL", title: "W08 long-wall sheeting pack", category: "Cladding", unit: "m2", scope: "optional", rule: "Two long walls plus both closed gable ends", notes: "Closed gables are the default W08 sheeted configuration.", profile: "Corrugated, IBR, or concealed-fix wall sheeting", size: "3m to 5m wall height · 0.47mm standard thickness", material: "Galvanised or Chromadek coated steel", finish: "Galvanised or selected Chromadek colour", use: "Closes both long walls and the default closed gable ends.", specReady: true },
@@ -44,7 +42,8 @@ export default function AtlasWarehouseBomWorkspace() {
   const [pricingRecords, setPricingRecords] = useState([])
   const [familyId, setFamilyId] = useState("")
   const [length, setLength] = useState(20)
-  const [scope, setScope] = useState("walls")
+  const [eaveHeight, setEaveHeight] = useState(3)
+  const [scope, setScope] = useState("structure")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -80,28 +79,9 @@ export default function AtlasWarehouseBomWorkspace() {
   useEffect(() => { loadWorkspace() }, [])
 
   const selectedScope = SCOPES.find((item) => item.value === scope) || SCOPES[0]
-  const preview = useMemo(() => {
-    const bays = length / BAY_SPACING
-    const portals = bays + 1
-    const roofSlopeLength = 4 / Math.cos((ROOF_PITCH_DEGREES * Math.PI) / 180)
-    const roofRise = 4 * Math.tan((ROOF_PITCH_DEGREES * Math.PI) / 180)
-    const roofSheetingArea = roofSlopeLength * 2 * length
-    const wallSheetingArea = (2 * length * 3) + (2 * 8 * 3) + (8 * roofRise)
-    return {
-      dimensions: {
-        bays,
-        portals,
-        xBraceSets: Math.ceil(bays / 4),
-      },
-      materials: {
-        roofPurlinLengthMeters: ROOF_PURLIN_ROWS * length,
-      },
-      sheeting: {
-        roofSheetingArea,
-        wallSheetingArea,
-      },
-    }
-  }, [length])
+  const geometry = useMemo(() => calculateAtlasW08Geometry({ lengthM: length, eaveHeightM: eaveHeight }), [length, eaveHeight])
+  const roofSheetingArea = geometry.rafterCutLengthM * 2 * length
+  const wallSheetingArea = (2 * length * eaveHeight) + (2 * 8 * eaveHeight) + (8 * geometry.roofRiseM)
   const currentBom = [...records].sort((a, b) => Number(String(b.revisionCode).replace(/\D/g, "")) - Number(String(a.revisionCode).replace(/\D/g, "")))[0]
   const controlledBom = records.find((record) => record.revisionCode === "R2")
   const componentMap = new Map(components.map((component) => [component.title, component]))
@@ -111,16 +91,16 @@ export default function AtlasWarehouseBomWorkspace() {
     lines: CONTROLLED_LINES.filter((line) => line.category === category),
   }))
   const previewValues = {
-    "W08-COL": `${preview.dimensions.portals} portal sets`,
-    "W08-RAF": `${preview.dimensions.portals} rafter sets`,
-    "W08-XBR": `${preview.dimensions.xBraceSets} brace sets · bays 1, 5, 9...`,
-    "W08-SEC": `${formatNumber(preview.materials.roofPurlinLengthMeters, 1)}m roof purlins`,
-    "W08-CON": `${preview.dimensions.portals} portal connections + bracing`,
-    "W08-RCL": scope === "structure" ? "Not selected" : `${formatNumber(preview.sheeting.roofSheetingArea, 1)}m²`,
-    "W08-WCL": scope === "walls" ? `${formatNumber(preview.sheeting.wallSheetingArea, 1)}m²` : "Not selected",
+    "W08-COL": `${geometry.members.columns.quantity} channels × ${eaveHeight}m`,
+    "W08-RAF": `${geometry.members.rafters.quantity} channels × ${geometry.rafterCutLengthM}m`,
+    "W08-XBR": `${geometry.bracedBayPositions.length} sets · technical quantity hold`,
+    "W08-SEC": `${geometry.members.purlins.quantity} purlins × 4m`,
+    "W08-CON": `${geometry.portalFrames} portal connections · technical quantity hold`,
+    "W08-RCL": scope === "structure" ? "Not selected" : `${formatNumber(roofSheetingArea, 1)}m²`,
+    "W08-WCL": scope === "walls" ? `${formatNumber(wallSheetingArea, 1)}m²` : "Not selected",
   }
   const includedLineCount = CONTROLLED_LINES.filter((line) => !previewValues[line.code].includes("Not selected")).length
-  const pricingSummary = summarizeAtlasPricing(pricingRecords)
+  const pricingSummary = summarizeAtlasPricing(applyAtlasW08GeometryToPricing(pricingRecords, geometry))
   const pricingMap = new Map(pricingRecords.map((record) => [record.componentCode, record]))
 
   async function createControlledBom() {
@@ -180,11 +160,17 @@ export default function AtlasWarehouseBomWorkspace() {
 
       <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
         <aside className="border-b border-slate-200 bg-slate-50 p-4 sm:p-5">
-          <div className="grid gap-4 xl:grid-cols-[minmax(210px,0.8fr)_minmax(460px,1.8fr)_110px_140px] xl:items-end">
+          <div className="grid gap-4 xl:grid-cols-[minmax(180px,0.7fr)_minmax(150px,0.55fr)_minmax(420px,1.6fr)_110px_140px] xl:items-end">
             <div>
               <label className="text-xs font-semibold text-slate-700">Building length</label>
               <select value={length} onChange={(event) => setLength(Number(event.target.value))} className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900">
                 {LENGTHS.map((item) => <option key={item} value={item}>{item}m · {item / 4} bays</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700">Eave height</label>
+              <select value={eaveHeight} onChange={(event) => setEaveHeight(Number(event.target.value))} className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900">
+                {ATLAS_W08_EAVE_HEIGHTS_M.map((item) => <option key={item} value={item}>{item}m</option>)}
               </select>
             </div>
             <div>
@@ -208,17 +194,17 @@ export default function AtlasWarehouseBomWorkspace() {
             </div>
             <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
               <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Portals</p>
-              <p className="mt-0.5 text-xl font-bold text-slate-950">{preview.dimensions.portals}</p>
+              <p className="mt-0.5 text-xl font-bold text-slate-950">{geometry.portalFrames}</p>
             </div>
             <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5">
               <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-sky-700">Calculated steel</p>
-              <p className="mt-0.5 text-xl font-bold text-slate-950">{ROOF_PURLIN_ROWS} rows</p>
+              <p className="mt-0.5 text-xl font-bold text-slate-950">{formatNumber(geometry.confirmedStructuralMassKg, 0)}kg</p>
             </div>
           </div>
         </aside>
         <article className="min-w-0 p-5 sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Quick material schedule</p><h2 className="mt-1 text-2xl font-bold text-slate-950">W08 · 8m x {length}m x 3m</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Scan the quantity first, then open any component for its profile, material, finish, use, and calculation basis.</p></div>
+            <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Quick material schedule</p><h2 className="mt-1 text-2xl font-bold text-slate-950">W08 · 8m x {length}m x {eaveHeight}m</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Exact cut lengths and quantities are calculated from the selected geometry. Bracing and connection details remain visibly on hold until their schedules are approved.</p></div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-sky-100 px-3 py-1.5 text-xs font-bold text-sky-700">{selectedScope.label}</span>
               <div className="inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">
@@ -232,8 +218,8 @@ export default function AtlasWarehouseBomWorkspace() {
             {viewMode === "sales" ? (
               <>
                 <div className="rounded-xl bg-slate-950 p-3 text-white"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Included material groups</p><p className="mt-1 text-xl font-bold">{includedLineCount}</p></div>
-                <div className="rounded-xl bg-slate-100 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Portal frames</p><p className="mt-1 text-xl font-bold text-slate-950">{preview.dimensions.portals}</p></div>
-                <div className="rounded-xl bg-sky-50 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-sky-700">Roof purlin rows</p><p className="mt-1 text-xl font-bold text-slate-950">{ROOF_PURLIN_ROWS}</p></div>
+                <div className="rounded-xl bg-slate-100 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Portal frames</p><p className="mt-1 text-xl font-bold text-slate-950">{geometry.portalFrames}</p></div>
+                <div className="rounded-xl bg-sky-50 p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-sky-700">Roof purlin rows</p><p className="mt-1 text-xl font-bold text-slate-950">{geometry.totalPurlinRows}</p></div>
               </>
             ) : (
               <>

@@ -187,7 +187,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
     {
       code: "W08-COL-01",
       component: "Columns",
-      specification: componentSpecification("W08-COL", "100 x 50 x 20 x 2.0mm BMT ZAM lipped channel, two channels back-to-back"),
+      specification: componentSpecification("W08-COL", "200 x 75 x 20 x 2.0mm BMT ZAM lipped channel, two channels back-to-back"),
       function: "Each column position is one structural assembly made from two back-to-back channels.",
       quantity: memberCount,
       unit: "assemblies",
@@ -197,7 +197,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
     {
       code: "W08-RAF-01",
       component: "Rafters",
-      specification: componentSpecification("W08-RAF", "175 x 75 x 20 x 2.5mm BMT ZAM lipped channel"),
+      specification: componentSpecification("W08-RAF", "200 x 75 x 20 x 2.5mm BMT ZAM lipped channel"),
       function: "One single lipped channel rafter runs on each roof slope; rafters are not back-to-back.",
       quantity: memberCount,
       unit: "each",
@@ -207,7 +207,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
     {
       code: "W08-XBR-01",
       component: "X-bracing sets",
-      specification: componentSpecification("W08-XBR", "ZAM lipped channel to the W08 bracing schedule"),
+      specification: componentSpecification("W08-XBR", "100 x 50 x 20 x 2.0mm BMT ZAM lipped channel"),
       function: "Provides longitudinal stability in braced bays 1, 5, 9, and every fourth bay position thereafter.",
       quantity: bracedBayCount,
       unit: "sets",
@@ -257,7 +257,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
     {
       code: "W08-SEC-01",
       component: "Roof purlins",
-      specification: componentSpecification("W08-SEC", "2.5mm BMT ZAM lipped channel at a maximum 1,500mm c/c, to the W08 purlin schedule"),
+      specification: componentSpecification("W08-SEC", "175 x 65 x 20 x 2.0mm ZAM roof purlins; 150 x 50 x 20 x 2.0mm ZAM side and gable girts"),
       function: "Supports roof sheeting across the standard W08 dual-pitch roof arrangement.",
       quantity: roofPurlinLength,
       unit: "linear m",
