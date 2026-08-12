@@ -26,32 +26,37 @@ function createDesignReference(configuration) {
 export default function WarehouseBuilderSummaryClient() {
   const searchParams = useSearchParams()
   const configuration = useMemo(() => {
-    const productType = searchParams.get("productType") === "LCSS Warehouse" ? "LCSS Warehouse" : "LSF Warehouse"
+    const productType = "LCSS Warehouse"
     return {
       productType,
       width: numberParam(searchParams, "width", productType === "LCSS Warehouse" ? 8 : 10),
       length: numberParam(searchParams, "length", 20),
       wallHeight: numberParam(searchParams, "height", 3),
-      cladding: searchParams.get("cladding") || "IBR",
+      cladding: searchParams.get("cladding") || "None",
+      sheetingProfile: searchParams.get("sheetingProfile") || "IBR",
+      sheetingFinish: searchParams.get("sheetingFinish") || "galvanised",
       enclosureType: searchParams.get("enclosure") || "roof_only",
       rollerDoorCount: Math.max(0, Number(searchParams.get("rollerDoors")) || 0),
       garageDoorOpeningType: searchParams.get("openingSize") || "single",
       rollerDoorFace: searchParams.get("rollerFace") || "front",
       pedestrianDoorCount: Math.max(0, Number(searchParams.get("personnelDoors")) || 0),
       pedestrianDoorFace: searchParams.get("personnelFace") || "rear",
-      sheetingColor: searchParams.get("sheetingColor") || (productType === "LCSS Warehouse" ? "dove-grey" : "kalahari-red"),
+      sheetingColor: searchParams.get("sheetingColor") || "galvanised",
       steelFinish: searchParams.get("steelFinish") || "Galv",
-      gableMode: searchParams.get("sheeting") || "fully_enclosed",
+      gableMode: searchParams.get("sheeting") || "structure_only",
       roofPitch: 15,
       scope: "supply_only",
     }
   }, [searchParams])
 
   const isAtlas = configuration.productType === "LCSS Warehouse"
-  const estimate = useMemo(
-    () => calculateEstimateByProductType(configuration.productType, configuration),
-    [configuration]
-  )
+  const estimate = useMemo(() => {
+    const structureOnly = configuration.gableMode === "structure_only"
+    return calculateEstimateByProductType(configuration.productType, {
+      ...configuration,
+      cladding: structureOnly ? "None" : configuration.sheetingFinish === "chromadek" ? "Chromadek" : "IBR",
+    })
+  }, [configuration])
   const budget = estimate.pricing.estimatedTotal ?? estimate.pricing.baseTotal ?? estimate.pricing.totalInclVat
   const guideRate = Math.round(budget / (configuration.width * configuration.length))
   const createdDate = new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "long", year: "numeric" }).format(new Date())
@@ -61,6 +66,8 @@ export default function WarehouseBuilderSummaryClient() {
     length: configuration.length,
     wallHeight: configuration.wallHeight,
     cladding: configuration.cladding,
+    sheetingProfile: configuration.sheetingProfile,
+    sheetingFinish: configuration.sheetingFinish,
     enclosureType: configuration.enclosureType,
     rollerDoorCount: configuration.rollerDoorCount,
     garageDoorOpeningType: configuration.garageDoorOpeningType,
@@ -73,9 +80,13 @@ export default function WarehouseBuilderSummaryClient() {
   })
   const systemName = isAtlas ? "Atlas W-Series Warehouse" : "Engineered LSF Warehouse"
   const finishName = isAtlas
-    ? `${configuration.steelFinish} · ${configuration.gableMode === "roof_only" ? "Roof sheeting" : "Roof and walls sheeted"}`
+    ? `${configuration.steelFinish} · ${configuration.gableMode === "structure_only" ? "Structure only" : configuration.gableMode === "roof_only" ? "Roof sheeting" : "Roof and walls sheeted"}`
     : `${configuration.cladding} · ${configuration.enclosureType.replaceAll("_", " ")}`
-  const sheetingColorLabel = WAREHOUSE_SHEETING_COLORS.find((option) => option.value === configuration.sheetingColor)?.label || "Not selected"
+  const sheetingFinishLabel = configuration.gableMode === "structure_only"
+    ? "Not selected"
+    : configuration.sheetingFinish === "chromadek"
+      ? `Chromadek · ${WAREHOUSE_SHEETING_COLORS.find((option) => option.value === configuration.sheetingColor)?.label || "Colour to confirm"}`
+      : "Galvanised"
   const sceneProps = {
     printReady: true,
     systemVariant: isAtlas ? "atlas" : "lsf",
@@ -83,16 +94,16 @@ export default function WarehouseBuilderSummaryClient() {
     length: configuration.length,
     wallHeight: configuration.wallHeight,
     roofPitch: 15,
-    cladding: configuration.cladding,
+    cladding: configuration.gableMode === "structure_only" ? "None" : configuration.sheetingProfile,
     enclosureType: isAtlas
-      ? configuration.gableMode === "roof_only" ? "roof_only" : "side_walls"
+      ? configuration.gableMode === "structure_only" ? "open_sides" : configuration.gableMode === "roof_only" ? "roof_only" : "side_walls"
       : configuration.enclosureType,
     rollerDoorCount: isAtlas ? 0 : configuration.rollerDoorCount,
     garageDoorOpeningType: configuration.garageDoorOpeningType,
     rollerDoorFace: configuration.rollerDoorFace,
     pedestrianDoorCount: isAtlas ? 0 : configuration.pedestrianDoorCount,
     pedestrianDoorFace: configuration.pedestrianDoorFace,
-    sheetingColor: configuration.sheetingColor,
+    sheetingColor: configuration.sheetingFinish === "chromadek" ? configuration.sheetingColor : "galvanised",
   }
 
   return (
@@ -135,7 +146,8 @@ export default function WarehouseBuilderSummaryClient() {
                 ["System", systemName],
                 ["Size", `${configuration.width}m × ${configuration.length}m × ${configuration.wallHeight}m`],
                 ["Finish", finishName],
-                ["Sheeting colour", sheetingColorLabel],
+                ["Sheeting profile", configuration.gableMode === "structure_only" ? "Not selected" : configuration.sheetingProfile],
+                ["Sheeting finish", sheetingFinishLabel],
                 ["Roof pitch", "15 degrees"],
                 ["Guide rate", `${formatCurrency(guideRate)}/sqm excl. VAT`],
                 ...(!isAtlas ? [["Openings", `${configuration.rollerDoorCount} main (${configuration.rollerDoorFace}) · ${configuration.pedestrianDoorCount} personnel (${configuration.pedestrianDoorFace})`]] : []),

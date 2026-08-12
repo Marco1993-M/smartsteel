@@ -7,7 +7,6 @@ import {
   ArrowsRightLeftIcon,
   ArrowsUpDownIcon,
   ArrowUturnLeftIcon,
-  BuildingOffice2Icon,
   CheckIcon,
   ChevronDownIcon,
   CheckBadgeIcon,
@@ -16,7 +15,6 @@ import {
   ShareIcon,
   ShieldCheckIcon,
   SparklesIcon,
-  Squares2X2Icon,
   TruckIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline"
@@ -29,7 +27,6 @@ import {
   WAREHOUSE_GARAGE_OPENING_OPTIONS,
   WAREHOUSE_HEIGHT_OPTIONS,
   WAREHOUSE_LENGTH_OPTIONS,
-  WAREHOUSE_WIDTH_OPTIONS,
 } from "../../lib/estimates/warehouseEstimate"
 import {
   LCSS_WAREHOUSE_GABLE_OPTIONS,
@@ -57,26 +54,16 @@ const PROVINCES = [
 const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
 const WAREHOUSE_BUILDER_AUTOSAVE_KEY = "smartsteel.warehouse-builder.configuration"
 
-const WAREHOUSE_SYSTEM_OPTIONS = [
-  {
-    value: "LSF Warehouse",
-    label: "Engineered LSF",
-    icon: BuildingOffice2Icon,
-  },
-  {
-    value: "LCSS Warehouse",
-    label: "Atlas W-Series",
-    image: "/atlas/atlas-mark-dark.png",
-    icon: Squares2X2Icon,
-  },
-]
-
-const LSF_SYSTEM_DEFAULTS = {
-  productType: "LSF Warehouse",
-  width: 10,
+const CFLC_SYSTEM_DEFAULTS = {
+  productType: "LCSS Warehouse",
+  width: 8,
   length: 20,
   wallHeight: 3,
-  cladding: "IBR",
+  steelFinish: "Galv",
+  gableMode: "structure_only",
+  cladding: "None",
+  sheetingProfile: "IBR",
+  sheetingFinish: "galvanised",
   scope: "supply_only",
   installationInterest: false,
   enclosureType: "roof_only",
@@ -85,28 +72,7 @@ const LSF_SYSTEM_DEFAULTS = {
   rollerDoorFace: "front",
   pedestrianDoorCount: 0,
   pedestrianDoorFace: "rear",
-  sheetingColor: "kalahari-red",
-  deliveryRequired: false,
-  deliveryDistance: 0,
-}
-
-const CFLC_SYSTEM_DEFAULTS = {
-  productType: "LCSS Warehouse",
-  width: 8,
-  length: 20,
-  wallHeight: 3,
-  steelFinish: "Galv",
-  gableMode: "fully_enclosed",
-  cladding: "IBR",
-  scope: "supply_only",
-  installationInterest: false,
-  enclosureType: "fully_enclosed",
-  rollerDoorCount: 0,
-  garageDoorOpeningType: "single",
-  rollerDoorFace: "front",
-  pedestrianDoorCount: 0,
-  pedestrianDoorFace: "rear",
-  sheetingColor: "dove-grey",
+  sheetingColor: "galvanised",
   deliveryRequired: false,
   deliveryDistance: 0,
 }
@@ -142,6 +108,8 @@ const SHAREABLE_BUILDER_FIELDS = {
   length: "length",
   wallHeight: "height",
   cladding: "cladding",
+  sheetingProfile: "sheetingProfile",
+  sheetingFinish: "sheetingFinish",
   enclosureType: "enclosure",
   rollerDoorCount: "rollerDoors",
   garageDoorOpeningType: "openingSize",
@@ -333,8 +301,8 @@ function PrimaryFinishControls({
           </div>
         </div>
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Sheeting</label>
-          <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
+          <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Sheeting add-ons</label>
+          <div className="mt-1.5 grid gap-2 sm:grid-cols-3">
             {LCSS_WAREHOUSE_GABLE_OPTIONS.map((option) => (
               <VisualChoiceCard
                 key={option.value}
@@ -344,11 +312,14 @@ function PrimaryFinishControls({
                 brand="atlas"
                 thumbnail={
                   <RoofEnclosureThumbnail
-                    variant={option.value === "fully_enclosed" ? "open_sides" : option.value}
+                    variant={option.value === "structure_only" ? "open_sides" : option.value === "fully_enclosed" ? "open_sides" : option.value}
                     active={gableMode === option.value}
                   />
                 }
-                onClick={() => updateField("gableMode", option.value)}
+                onClick={() => {
+                  updateField("gableMode", option.value)
+                  if (option.value !== "structure_only" && cladding === "None") updateField("cladding", "IBR")
+                }}
               />
             ))}
           </div>
@@ -469,7 +440,7 @@ export default function WarehouseBuilderClient() {
   const hasInitialisedBuilderRef = useRef(false)
   const sceneSectionRef = useRef(null)
 
-  const isLcssWarehouse = config.productType === "LCSS Warehouse"
+  const isLcssWarehouse = true
   const builderTheme = isLcssWarehouse
     ? {
         name: "Atlas W-Series",
@@ -492,7 +463,7 @@ export default function WarehouseBuilderClient() {
         shadow: "rgba(15,23,42,0.95)",
       }
   const systemLabel = getSystemLabel(config.productType)
-  const widthOptions = isLcssWarehouse ? LCSS_WAREHOUSE_WIDTH_OPTIONS : WAREHOUSE_WIDTH_OPTIONS
+  const widthOptions = LCSS_WAREHOUSE_WIDTH_OPTIONS
   const enclosureLabel =
     WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === config.enclosureType)?.label ||
     config.enclosureType
@@ -515,6 +486,8 @@ export default function WarehouseBuilderClient() {
       length: `Length updated to ${value}m`,
       wallHeight: `Height updated to ${value}m`,
       cladding: `${value} cladding selected`,
+      sheetingProfile: `${value} sheeting selected`,
+      sheetingFinish: `${value === "chromadek" ? "Chromadek" : "Galvanised"} finish selected`,
       steelFinish: `${value} steel finish selected`,
       enclosureType: WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === value)?.label,
       gableMode: LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === value)?.label,
@@ -532,12 +505,6 @@ export default function WarehouseBuilderClient() {
     ? `${config.width}m x ${config.length}m · ${gableModeLabel}`
     : `${config.width}m x ${config.length}m · ${enclosureLabel}`
   const mobileSceneControls = [
-    {
-      key: "system",
-      label: "System",
-      shortLabel: "Type",
-      icon: BuildingOffice2Icon,
-    },
     {
       key: "width",
       label: "Width",
@@ -612,7 +579,22 @@ export default function WarehouseBuilderClient() {
       try {
         const savedConfiguration = JSON.parse(window.localStorage.getItem(WAREHOUSE_BUILDER_AUTOSAVE_KEY) || "null")
         if (savedConfiguration && typeof savedConfiguration === "object") {
-          patchFields(savedConfiguration)
+          patchFields({
+            ...CFLC_SYSTEM_DEFAULTS,
+            ...savedConfiguration,
+            productType: "LCSS Warehouse",
+            sheetingProfile: ["Corrugated", "IBR", "Concealed Fix"].includes(savedConfiguration.sheetingProfile)
+              ? savedConfiguration.sheetingProfile
+              : "IBR",
+            sheetingFinish: ["galvanised", "chromadek"].includes(savedConfiguration.sheetingFinish)
+              ? savedConfiguration.sheetingFinish
+              : savedConfiguration.cladding === "Chromadek"
+                ? "chromadek"
+                : "galvanised",
+            gableMode: LCSS_WAREHOUSE_GABLE_OPTIONS.some((option) => option.value === savedConfiguration.gableMode)
+              ? savedConfiguration.gableMode
+              : "structure_only",
+          })
           setDeviceSaveStatus("Previous design restored")
           window.setTimeout(() => setDeviceSaveStatus("Saved on this device"), 2200)
         }
@@ -624,21 +606,9 @@ export default function WarehouseBuilderClient() {
 
     const widthParam = Number(searchParams.get("width"))
     const lengthParam = Number(searchParams.get("length"))
-    const productTypeParam = searchParams.get("productType")
+    const nextWidthOptions = LCSS_WAREHOUSE_WIDTH_OPTIONS
 
-    const nextProductType =
-      productTypeParam === "LCSS Warehouse" || productTypeParam === "LSF Warehouse"
-        ? productTypeParam
-        : null
-
-    const nextWidthOptions =
-      nextProductType === "LCSS Warehouse" ? LCSS_WAREHOUSE_WIDTH_OPTIONS : WAREHOUSE_WIDTH_OPTIONS
-
-    const nextValues = {}
-
-    if (nextProductType && nextProductType !== config.productType) {
-      Object.assign(nextValues, nextProductType === "LCSS Warehouse" ? CFLC_SYSTEM_DEFAULTS : LSF_SYSTEM_DEFAULTS)
-    }
+    const nextValues = { productType: "LCSS Warehouse" }
 
     if (Number.isFinite(widthParam) && nextWidthOptions.includes(widthParam)) {
       nextValues.width = widthParam
@@ -657,6 +627,8 @@ export default function WarehouseBuilderClient() {
     const personnelDoorParam = Number(searchParams.get("personnelDoors"))
     const personnelFaceParam = searchParams.get("personnelFace")
     const sheetingColorParam = searchParams.get("sheetingColor")
+    const sheetingProfileParam = searchParams.get("sheetingProfile")
+    const sheetingFinishParam = searchParams.get("sheetingFinish")
     const steelFinishParam = searchParams.get("steelFinish")
     const sheetingParam = searchParams.get("sheeting")
 
@@ -669,6 +641,8 @@ export default function WarehouseBuilderClient() {
     if (searchParams.has("personnelDoors") && Number.isFinite(personnelDoorParam)) nextValues.pedestrianDoorCount = Math.min(6, Math.max(0, personnelDoorParam))
     if (WAREHOUSE_OPENING_FACE_OPTIONS.some((option) => option.value === personnelFaceParam)) nextValues.pedestrianDoorFace = personnelFaceParam
     if (WAREHOUSE_SHEETING_COLORS.some((option) => option.value === sheetingColorParam)) nextValues.sheetingColor = sheetingColorParam
+    if (["Corrugated", "IBR", "Concealed Fix"].includes(sheetingProfileParam)) nextValues.sheetingProfile = sheetingProfileParam
+    if (["galvanised", "chromadek"].includes(sheetingFinishParam)) nextValues.sheetingFinish = sheetingFinishParam
     if (LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.includes(steelFinishParam)) nextValues.steelFinish = steelFinishParam
     if (LCSS_WAREHOUSE_GABLE_OPTIONS.some((option) => option.value === sheetingParam)) nextValues.gableMode = sheetingParam
 
@@ -692,6 +666,7 @@ export default function WarehouseBuilderClient() {
 
   const estimateInput = useMemo(() => {
     if (isLcssWarehouse) {
+      const structureOnly = config.gableMode === "structure_only"
       return {
         systemVariant: "atlas",
         width: config.width,
@@ -699,7 +674,9 @@ export default function WarehouseBuilderClient() {
         wallHeight: config.wallHeight,
         steelFinish: config.steelFinish,
         gableMode: config.gableMode,
-        cladding: config.cladding,
+        cladding: structureOnly ? "None" : config.sheetingFinish === "chromadek" ? "Chromadek" : "IBR",
+        sheetingProfile: config.sheetingProfile,
+        sheetingFinish: config.sheetingFinish,
       }
     }
 
@@ -754,12 +731,12 @@ export default function WarehouseBuilderClient() {
         length: config.length,
         wallHeight: config.wallHeight,
         roofPitch: 15,
-        cladding: config.cladding,
-        enclosureType: config.gableMode === "roof_only" ? "roof_only" : "side_walls",
+        cladding: config.gableMode === "structure_only" ? "None" : config.sheetingProfile,
+        enclosureType: config.gableMode === "structure_only" ? "open_sides" : config.gableMode === "roof_only" ? "roof_only" : "side_walls",
         rollerDoorCount: 0,
         garageDoorOpeningType: "single",
         pedestrianDoorCount: 0,
-        sheetingColor: config.sheetingColor,
+        sheetingColor: config.sheetingFinish === "chromadek" ? config.sheetingColor : "galvanised",
       }
     }
 
@@ -769,7 +746,7 @@ export default function WarehouseBuilderClient() {
       length: config.length,
       wallHeight: config.wallHeight,
       roofPitch: config.roofPitch,
-      cladding: config.cladding,
+        cladding: config.gableMode === "structure_only" ? "None" : config.cladding,
       enclosureType: config.enclosureType,
       rollerDoorCount: config.rollerDoorCount,
       garageDoorOpeningType: config.garageDoorOpeningType,
@@ -779,21 +756,6 @@ export default function WarehouseBuilderClient() {
       sheetingColor: config.sheetingColor,
     }
   }, [config, isLcssWarehouse])
-
-  const applySystem = (productType) => {
-    setUndoSnapshot(getShareableConfiguration(config))
-    patchFields(productType === "LCSS Warehouse" ? CFLC_SYSTEM_DEFAULTS : LSF_SYSTEM_DEFAULTS)
-    setSubmitted(false)
-    setSubmissionResult(null)
-    setShowLeadForm(false)
-    setSubmitError("")
-    setChangeNotice(productType === "LCSS Warehouse" ? "Atlas W-Series selected" : "Engineered LSF selected")
-    trackBuilderEvent("warehouse_builder_system_selected", {
-      system: productType === "LCSS Warehouse" ? "atlas" : "lsf",
-    })
-    window.clearTimeout(changeNoticeTimeoutRef.current)
-    changeNoticeTimeoutRef.current = window.setTimeout(() => setChangeNotice(""), 1900)
-  }
 
   const handleSaveDesign = async () => {
     const shareUrl = buildShareableBuilderUrl(shareableConfiguration)
@@ -881,15 +843,17 @@ export default function WarehouseBuilderClient() {
           enclosureLabel: isLcssWarehouse ? null : enclosureLabel,
           roofType: config.roofType,
           roofTypeLabel,
-          cladding: isLcssWarehouse ? null : config.cladding,
+          cladding: config.gableMode === "structure_only" ? "None" : config.sheetingProfile,
+          sheetingProfile: config.gableMode === "structure_only" ? null : config.sheetingProfile,
+          sheetingFinish: config.gableMode === "structure_only" ? null : config.sheetingFinish,
           rollerDoorCount: isLcssWarehouse ? 0 : config.rollerDoorCount,
           garageDoorOpeningType: isLcssWarehouse ? null : config.garageDoorOpeningType,
           garageDoorOpeningTypeLabel: isLcssWarehouse ? null : garageDoorOpeningTypeLabel,
           pedestrianDoorCount: isLcssWarehouse ? 0 : config.pedestrianDoorCount,
           rollerDoorFace: isLcssWarehouse ? null : config.rollerDoorFace,
           pedestrianDoorFace: isLcssWarehouse ? null : config.pedestrianDoorFace,
-          sheetingColor: config.sheetingColor,
-          sheetingColorLabel: sheetingColor.label,
+          sheetingColor: config.gableMode === "structure_only" ? null : config.sheetingFinish === "chromadek" ? config.sheetingColor : "galvanised",
+          sheetingColorLabel: config.gableMode === "structure_only" ? "Not selected" : config.sheetingFinish === "chromadek" ? sheetingColor.label : "Galvanised",
           steelFinish: isLcssWarehouse ? config.steelFinish : null,
           gableMode: isLcssWarehouse ? config.gableMode : null,
           gableModeLabel: isLcssWarehouse ? gableModeLabel : null,
@@ -908,7 +872,9 @@ export default function WarehouseBuilderClient() {
             wallHeight: config.wallHeight,
             roofType: config.roofType,
             roofPitch: config.roofPitch,
-            cladding: config.cladding,
+            cladding: config.gableMode === "structure_only" ? "None" : config.sheetingProfile,
+            sheetingProfile: config.gableMode === "structure_only" ? null : config.sheetingProfile,
+            sheetingFinish: config.gableMode === "structure_only" ? null : config.sheetingFinish,
             scope: "supply_only",
             installationInterest: config.installationInterest,
             enclosureType: config.enclosureType,
@@ -917,8 +883,8 @@ export default function WarehouseBuilderClient() {
             pedestrianDoorCount: config.pedestrianDoorCount,
             rollerDoorFace: config.rollerDoorFace,
             pedestrianDoorFace: config.pedestrianDoorFace,
-            sheetingColor: config.sheetingColor,
-            sheetingColorLabel: sheetingColor.label,
+            sheetingColor: config.gableMode === "structure_only" ? null : config.sheetingFinish === "chromadek" ? config.sheetingColor : "galvanised",
+            sheetingColorLabel: config.gableMode === "structure_only" ? "Not selected" : config.sheetingFinish === "chromadek" ? sheetingColor.label : "Galvanised",
             steelFinish: config.steelFinish,
             gableMode: config.gableMode,
             deliveryRequired: config.deliveryRequired,
@@ -946,8 +912,10 @@ export default function WarehouseBuilderClient() {
             pedestrianDoorCount: isLcssWarehouse ? 0 : config.pedestrianDoorCount,
             rollerDoorFace: isLcssWarehouse ? null : config.rollerDoorFace,
             pedestrianDoorFace: isLcssWarehouse ? null : config.pedestrianDoorFace,
-            sheetingColor: config.sheetingColor,
-            sheetingColorLabel: sheetingColor.label,
+            sheetingProfile: config.gableMode === "structure_only" ? null : config.sheetingProfile,
+            sheetingFinish: config.gableMode === "structure_only" ? null : config.sheetingFinish,
+            sheetingColor: config.gableMode === "structure_only" ? null : config.sheetingFinish === "chromadek" ? config.sheetingColor : "galvanised",
+            sheetingColorLabel: config.gableMode === "structure_only" ? "Not selected" : config.sheetingFinish === "chromadek" ? sheetingColor.label : "Galvanised",
             steelFinish: isLcssWarehouse ? config.steelFinish : null,
             gableMode: isLcssWarehouse ? config.gableMode : null,
             gableModeLabel: isLcssWarehouse ? gableModeLabel : null,
@@ -981,7 +949,9 @@ export default function WarehouseBuilderClient() {
         { label: "Warehouse", value: `${config.width}m x ${config.length}m` },
         { label: "Height", value: `${config.wallHeight}m wall height` },
         { label: "Steel finish", value: steelFinishLabel },
-        { label: "Sheeting type", value: gableModeLabel },
+        { label: "Sheeting add-on", value: gableModeLabel },
+        { label: "Sheeting profile", value: config.gableMode === "structure_only" ? "Not selected" : config.sheetingProfile },
+        { label: "Sheeting finish", value: config.gableMode === "structure_only" ? "Not selected" : config.sheetingFinish === "chromadek" ? `Chromadek · ${sheetingColor.label}` : "Galvanised" },
         { label: "Project stage", value: config.projectStage || "Not selected" },
       ]
     : [
@@ -998,8 +968,9 @@ export default function WarehouseBuilderClient() {
         { label: "Size", value: `${config.width}m x ${config.length}m x ${config.wallHeight}m` },
         { label: "System", value: systemLabel },
         { label: "Steel finish", value: steelFinishLabel },
-        { label: "Sheeting type", value: gableModeLabel },
-        { label: "Cladding", value: config.cladding },
+        { label: "Sheeting add-on", value: gableModeLabel },
+        { label: "Sheeting profile", value: config.gableMode === "structure_only" ? "Not selected" : config.sheetingProfile },
+        { label: "Sheeting finish", value: config.gableMode === "structure_only" ? "Not selected" : config.sheetingFinish === "chromadek" ? `Chromadek · ${sheetingColor.label}` : "Galvanised" },
         { label: "Sheeting coverage", value: `${Math.round(lcssSheetingCoverage).toLocaleString()} sqm` },
       ]
     : [
@@ -1016,7 +987,8 @@ export default function WarehouseBuilderClient() {
     ? [
         { label: "System", value: systemLabel },
         { label: "Steel finish", value: steelFinishLabel },
-        { label: "Sheeting type", value: gableModeLabel },
+        { label: "Sheeting add-on", value: gableModeLabel },
+        { label: "Sheeting profile", value: config.gableMode === "structure_only" ? "Not selected" : config.sheetingProfile },
         { label: "Use", value: config.intendedUse || "Not supplied" },
         { label: "Stage", value: config.projectStage },
         { label: "Timeline", value: config.targetTimeline },
@@ -1078,8 +1050,10 @@ export default function WarehouseBuilderClient() {
   const includedItems = isLcssWarehouse
     ? [
         "The main steel structure sized to your selected warehouse footprint",
-        `${config.cladding} sheeting allowance across approximately ${Math.round(lcssSheetingCoverage).toLocaleString()} sqm of coverage`,
-        gableModeLabel === "Roof sheeting"
+        ...(config.gableMode === "structure_only" ? [] : [`${config.sheetingProfile} sheeting with a ${config.sheetingFinish === "chromadek" ? "Chromadek" : "galvanised"} finish across approximately ${Math.round(lcssSheetingCoverage).toLocaleString()} sqm of coverage`]),
+        config.gableMode === "structure_only"
+          ? "Sheeting remains optional and can be added before requesting a reviewed quote"
+          : gableModeLabel === "Roof sheeting"
           ? `Roof sheeting priced on approximately ${Math.round(lcssRoofCoverage).toLocaleString()} sqm`
           : "Roof and wall sheeting allowance based on the selected warehouse footprint",
         "Project context so the next conversation starts with the right detail",
@@ -1096,7 +1070,6 @@ export default function WarehouseBuilderClient() {
     "Any changes to layout, finishes, openings, access, or additional building requirements",
   ]
   const builderStages = [
-    { label: "System", target: "building-type", complete: Boolean(config.productType) },
     { label: "Configure", target: "size-style", complete: Boolean(config.width && config.length && config.wallHeight) },
     { label: "Project", target: "project-context", complete: Boolean(config.projectStage && config.location.trim()) },
     { label: "Review", target: "review-summary", complete: showLeadForm || submitted },
@@ -1238,7 +1211,7 @@ export default function WarehouseBuilderClient() {
                 </div>
               </div>
 
-              <nav aria-label="Builder progress" className="mb-4 grid grid-cols-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+              <nav aria-label="Builder progress" className="mb-4 grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
                 {builderStages.map((stage, index) => (
                   <button
                     key={stage.label}
@@ -1266,43 +1239,9 @@ export default function WarehouseBuilderClient() {
               </nav>
 
               <div className="space-y-4">
-                <div id="building-type" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
-                  <StepLabel
-                    step="Step 1"
-                    title="Choose your building type"
-                    hint="Pick the system that best fits your project."
-                  />
-                  <FieldLabel
-                    title="Warehouse system"
-                  />
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                    {WAREHOUSE_SYSTEM_OPTIONS.map((option) => {
-                      const isActive = config.productType === option.value
-
-                      return (
-                        <VisualChoiceCard
-                          key={option.value}
-                          icon={option.icon}
-                          image={option.image}
-                          title={option.label}
-                          active={isActive}
-                          onClick={() => applySystem(option.value)}
-                          brand={option.value === "LCSS Warehouse" ? "atlas" : "lsf"}
-                          compact
-                        />
-                      )
-                    })}
-                  </div>
-                  <p className="mt-3 text-xs leading-5 text-slate-500">
-                    {isLcssWarehouse
-                      ? "Atlas uses a modular, bolted lip channel system built around practical standard configurations."
-                      : "LSF is engineered around projects that need greater flexibility in size, layout, or specification."}
-                  </p>
-                </div>
-
                 <div id="size-style" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step="Step 2"
+                    step="Step 1"
                     title="Set the warehouse size"
                   />
                   <div className="space-y-4">
@@ -1376,14 +1315,35 @@ export default function WarehouseBuilderClient() {
                         updateField={updateField}
                       />
                     </div>
-                    {config.cladding !== "None" ? (
+                    {config.gableMode !== "structure_only" ? (
                       <div className="border-t border-slate-200 pt-4">
+                        <FieldLabel title="Sheeting profile" />
+                        <div className="mb-4 grid grid-cols-3 gap-2">
+                          {[
+                            "Corrugated",
+                            "IBR",
+                            "Concealed Fix",
+                          ].map((option) => (
+                            <button key={option} type="button" onClick={() => updateField("sheetingProfile", option)} className={`rounded-xl border px-2 py-2.5 text-xs font-semibold transition sm:text-sm ${config.sheetingProfile === option ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white" : "border-slate-200 bg-white text-slate-700"}`}>{option}</button>
+                          ))}
+                        </div>
+                        <FieldLabel title="Sheeting finish" />
+                        <div className="mb-4 grid grid-cols-2 gap-2">
+                          {[
+                            { value: "galvanised", label: "Galvanised" },
+                            { value: "chromadek", label: "Chromadek" },
+                          ].map((option) => (
+                            <button key={option.value} type="button" onClick={() => updateField("sheetingFinish", option.value)} className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${config.sheetingFinish === option.value ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white" : "border-slate-200 bg-white text-slate-700"}`}>{option.label}</button>
+                          ))}
+                        </div>
+                        {config.sheetingFinish === "chromadek" ? (
+                          <>
                         <div className="flex items-center justify-between gap-3">
-                          <FieldLabel title="Sheeting colour" />
+                          <FieldLabel title="Chromadek colour" />
                           <span className="text-xs font-semibold text-slate-500">{sheetingColor.label}</span>
                         </div>
                         <div className="grid grid-cols-7 gap-2" role="radiogroup" aria-label="Sheeting colour">
-                          {WAREHOUSE_SHEETING_COLORS.map((option) => (
+                          {WAREHOUSE_SHEETING_COLORS.filter((option) => option.value !== "galvanised").map((option) => (
                             <button
                               key={option.value}
                               type="button"
@@ -1403,6 +1363,8 @@ export default function WarehouseBuilderClient() {
                           ))}
                         </div>
                         <p className="mt-2 text-[11px] leading-5 text-slate-400">Visual guide only. Final colour availability is confirmed with your quote.</p>
+                          </>
+                        ) : <p className="text-xs text-slate-500">Standard unpainted galvanised finish.</p>}
                       </div>
                     ) : null}
                   </div>
@@ -1807,30 +1769,6 @@ export default function WarehouseBuilderClient() {
                         </button>
                       </div>
 
-                      {activeMobileSceneControl === "system" ? (
-                        <div className="grid grid-cols-2 gap-2">
-                          {WAREHOUSE_SYSTEM_OPTIONS.map((option) => (
-                            <button
-                              key={option.value}
-                              type="button"
-                              onClick={() => {
-                                applySystem(option.value)
-                                setActiveMobileSceneControl(null)
-                              }}
-                              className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                                config.productType === option.value
-                                  ? option.value === "LCSS Warehouse"
-                                    ? "border-[#0043f3] bg-[#0043f3] text-white"
-                                    : "border-slate-900 bg-slate-900 text-white"
-                                  : "border-slate-200 bg-white text-slate-700"
-                              }`}
-                            >
-                              {option.value === "LCSS Warehouse" ? "Atlas" : "Engineered"}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-
                       {activeMobileSceneControl === "width" ? (
                         <div className="grid grid-cols-3 gap-2">
                           {widthOptions.map((option) => (
@@ -1874,7 +1812,9 @@ export default function WarehouseBuilderClient() {
                         <select
                           value={isLcssWarehouse ? config.gableMode : config.enclosureType}
                           onChange={(event) => {
-                            updateField(isLcssWarehouse ? "gableMode" : "enclosureType", event.target.value)
+                            const value = event.target.value
+                            updateField(isLcssWarehouse ? "gableMode" : "enclosureType", value)
+                            if (isLcssWarehouse && value !== "structure_only" && config.cladding === "None") updateField("cladding", "IBR")
                             setActiveMobileSceneControl(null)
                           }}
                           className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"
