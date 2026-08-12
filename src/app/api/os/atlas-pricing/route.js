@@ -10,6 +10,12 @@ const STATUSES = ["draft", "needs_review", "confirmed", "superseded"]
 const UNITS = ["ton", "kg", "m", "each", "set"]
 
 const COMPONENT_CODE_ALIASES = {
+  "W06-PUR": "W06-SEC",
+  "W06-RDG": "W06-CON",
+  "W06-EAV": "W06-CON",
+  "W06-BLT": "W06-CON",
+  "W06-NUT": "W06-CON",
+  "W06-WSH": "W06-CON",
   "W08-PUR": "W08-SEC",
   "W08-RDG": "W08-CON",
   "W08-EAV": "W08-CON",
