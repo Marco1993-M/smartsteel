@@ -1,5 +1,6 @@
 import { formatCurrency } from "../../../lib/estimates/warehouseEstimate"
 import { calculateLcssWarehouseEstimate } from "../../../lib/estimates/warehouseEstimateLcss"
+import { calculateAtlasWarehouseEstimate } from "../../../lib/estimates/atlasWarehouseEstimate"
 import { ATLAS_W_SERIES } from "../../../lib/atlasProductData"
 
 const SITE_URL = "https://www.smartsteel.co.za"
@@ -23,7 +24,7 @@ const DEFAULT_EXCLUDED = [
 
 const DEFAULT_PRODUCT_INPUT = {
   wallHeight: 3,
-  steelFinish: "Galv",
+  steelFinish: "ZAM",
   gableMode: "sheeted_gable",
   quantity: 1,
 }
@@ -34,21 +35,21 @@ const LAUNCH_SPANS = [
     label: "6m span kits",
     image: "/CFLC.webp",
     audience: "Smaller storage, workshop, and utility structures where a practical DIY-friendly kit makes sense.",
-    lengths: [5, 7.5, 10, 12.5, 15],
+    lengths: [4, 8, 12, 16, 20],
   },
   {
     width: 10,
     label: "10m span kits",
     image: "/CFLC.webp",
     audience: "A stronger mid-range warehouse kit category for operational storage, covered work areas, and commercial utility use.",
-    lengths: [10, 12.5, 15, 20, 25],
+    lengths: [8, 12, 16, 20, 24],
   },
   {
     width: 12,
     label: "12m span kits",
     image: "/CFLC.webp",
     audience: "Larger footprint kits for warehousing and agricultural use where a standard size still makes sense.",
-    lengths: [10, 15, 20, 25, 30],
+    lengths: [8, 12, 16, 20, 24, 28],
   },
 ]
 
@@ -76,7 +77,7 @@ const STARTER_KITS = [
 ]
 
 function buildKit(width, length) {
-  const estimate = calculateLcssWarehouseEstimate({
+  const estimate = calculateAtlasWarehouseEstimate({
     ...DEFAULT_PRODUCT_INPUT,
     width,
     length,
@@ -194,7 +195,7 @@ function buildFeaturedSelection({
 
 function buildWarehouseFeaturedSelection({ modelCode, width, length, family, bestFor, packInfo }) {
   const model = ATLAS_W_SERIES.find((item) => item.code === modelCode)
-  const estimate = calculateLcssWarehouseEstimate({
+  const estimate = calculateAtlasWarehouseEstimate({
     ...DEFAULT_PRODUCT_INPUT,
     width,
     length,
@@ -242,7 +243,7 @@ export const cflcFeaturedSelections = [
   buildWarehouseFeaturedSelection({
     modelCode: "W08",
     width: 8,
-    length: 10,
+    length: 12,
     family: "Atlas W08 · 8m span",
     bestFor: "Compact storage buildings, workshops, agricultural utility space, and covered work areas.",
     packInfo:
@@ -260,7 +261,7 @@ export const cflcFeaturedSelections = [
   buildWarehouseFeaturedSelection({
     modelCode: "W10",
     width: 10,
-    length: 10,
+    length: 12,
     family: "Atlas W10 · 10m span",
     bestFor: "Operational storage, wider workshop space, and covered work areas that need more width.",
     packInfo:
@@ -278,7 +279,7 @@ export const cflcFeaturedSelections = [
   buildWarehouseFeaturedSelection({
     modelCode: "W12",
     width: 12,
-    length: 10,
+    length: 12,
     family: "Atlas W12 · 12m span",
     bestFor: "Wider warehouse and agricultural storage projects that need a stronger footprint from the start.",
     packInfo:

@@ -48,9 +48,10 @@ const CFLC_ESTIMATOR_DEFAULTS = {
   wallHeight: 3,
   cladding: "IBR",
   claddingInstalled: false,
-  steelFinish: "Galv",
+  steelFinish: "ZAM",
   gableMode: "fully_enclosed",
 };
+const ATLAS_WAREHOUSE_LENGTH_OPTIONS = Array.from({ length: 12 }, (_, index) => (index + 1) * 4);
 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -142,6 +143,7 @@ export default function EstimatorPage() {
         deliveryRequired,
         steelFinish,
         gableMode,
+        pricingModel: isLcssWarehouse ? "atlas_os_v1" : undefined,
       }),
     [cladding, claddingInstalled, deliveryRequired, distance, enclosureType, gableMode, length, productType, steelFinish, wallHeight, width]
   );
@@ -341,7 +343,7 @@ export default function EstimatorPage() {
                   value={length}
                   onChange={(e) => setLength(parseFloat(e.target.value))}
                 >
-                  {WAREHOUSE_LENGTH_OPTIONS.map((val) => (
+                  {(isLcssWarehouse ? ATLAS_WAREHOUSE_LENGTH_OPTIONS : WAREHOUSE_LENGTH_OPTIONS).map((val) => (
                     <option key={val} value={val}>
                       {val} m
                     </option>

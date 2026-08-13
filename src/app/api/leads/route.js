@@ -22,10 +22,10 @@ function getNextBusinessMorningIso() {
 }
 
 function buildBuilderNotes(payload) {
-  const isLcssWarehouse = payload.productType === "LCSS Warehouse"
+  const isLcssWarehouse = ["Atlas Warehouse", "LCSS Warehouse", "CFLC Warehouse"].includes(payload.productType)
   const lines = [
     "Warehouse Builder submission",
-    payload.productType ? `System: ${payload.productType === "LCSS Warehouse" ? "Atlas W-Series Warehouse" : payload.productType}` : null,
+    payload.productType ? `System: ${isLcssWarehouse ? "Atlas W-Series Warehouse" : payload.productType}` : null,
     "Budget basis: Supply only",
     payload.intendedUse ? `Intended use: ${payload.intendedUse}` : null,
     payload.projectStage ? `Project stage: ${payload.projectStage}` : null,
@@ -131,7 +131,7 @@ function getSafeBuilderUrl(value) {
 }
 
 function buildConfigurationReceivedEmailHtml(body) {
-  const isAtlas = body.productType === "LCSS Warehouse"
+  const isAtlas = ["Atlas Warehouse", "LCSS Warehouse", "CFLC Warehouse"].includes(body.productType)
   const firstName = escapeHtml(body.name || "there")
   const systemName = isAtlas ? "Atlas W-Series Warehouse" : "Engineered LSF Warehouse"
   const dimensions = `${body.configuration?.width || "-"}m × ${body.configuration?.length || "-"}m × ${body.configuration?.wallHeight || "-"}m`
@@ -216,7 +216,7 @@ async function sendBuilderConfirmation(body) {
   const resendApiKey = process.env.RESEND_API_KEY
   if (!resendApiKey || !body?.email) return { success: false, reason: "Email service is not configured." }
 
-  const isAtlas = body.productType === "LCSS Warehouse"
+  const isAtlas = ["Atlas Warehouse", "LCSS Warehouse", "CFLC Warehouse"].includes(body.productType)
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {

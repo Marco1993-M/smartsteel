@@ -39,6 +39,8 @@ import {
   WAREHOUSE_SHEETING_COLORS,
 } from "../../lib/warehouseBuilderStore"
 
+const ATLAS_WAREHOUSE_LENGTH_OPTIONS = Array.from({ length: 12 }, (_, index) => (index + 1) * 4)
+
 const PROVINCES = [
   "Gauteng",
   "Western Cape",
@@ -465,6 +467,7 @@ export default function WarehouseBuilderClient() {
       }
   const systemLabel = getSystemLabel(config.productType)
   const widthOptions = LCSS_WAREHOUSE_WIDTH_OPTIONS
+  const lengthOptions = ATLAS_WAREHOUSE_LENGTH_OPTIONS
   const enclosureLabel =
     WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === config.enclosureType)?.label ||
     config.enclosureType
@@ -615,7 +618,7 @@ export default function WarehouseBuilderClient() {
       nextValues.width = widthParam
     }
 
-    if (Number.isFinite(lengthParam) && WAREHOUSE_LENGTH_OPTIONS.includes(lengthParam)) {
+    if (Number.isFinite(lengthParam) && ATLAS_WAREHOUSE_LENGTH_OPTIONS.includes(lengthParam)) {
       nextValues.length = lengthParam
     }
 
@@ -670,6 +673,7 @@ export default function WarehouseBuilderClient() {
       const structureOnly = config.gableMode === "structure_only"
       return {
         systemVariant: "atlas",
+        pricingModel: "atlas_os_v1",
         width: config.width,
         length: config.length,
         wallHeight: config.wallHeight,
@@ -1273,7 +1277,7 @@ export default function WarehouseBuilderClient() {
                           onChange={(event) => updateField("length", Number(event.target.value))}
                           className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"
                         >
-                          {WAREHOUSE_LENGTH_OPTIONS.map((option) => (
+                          {lengthOptions.map((option) => (
                             <option key={option} value={option}>
                               {option}m{LENGTH_DESCRIPTORS[option] ? ` · ${LENGTH_DESCRIPTORS[option]}` : ""}
                             </option>
@@ -1801,7 +1805,7 @@ export default function WarehouseBuilderClient() {
                           }}
                           className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"
                         >
-                          {WAREHOUSE_LENGTH_OPTIONS.map((option) => (
+                          {lengthOptions.map((option) => (
                             <option key={option} value={option}>
                               {option}m long
                             </option>

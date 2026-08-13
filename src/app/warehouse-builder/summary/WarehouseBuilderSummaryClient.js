@@ -54,6 +54,7 @@ export default function WarehouseBuilderSummaryClient() {
     const structureOnly = configuration.gableMode === "structure_only"
     return calculateEstimateByProductType(configuration.productType, {
       ...configuration,
+      pricingModel: "atlas_os_v1",
       cladding: structureOnly ? "None" : configuration.sheetingFinish === "chromadek" ? "Chromadek" : "IBR",
     })
   }, [configuration])
