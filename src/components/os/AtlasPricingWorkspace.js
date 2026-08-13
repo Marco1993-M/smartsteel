@@ -17,6 +17,10 @@ import { getAtlasW08PrimaryBenchmark } from "../../lib/atlasW08PricingBenchmarks
 import { ATLAS_W08_EAVE_HEIGHTS_M, ATLAS_W08_LENGTHS_M, applyAtlasW08GeometryToPricing, calculateAtlasW08Geometry } from "../../lib/atlasW08Geometry"
 import { getAtlasW06PrimaryBenchmark } from "../../lib/atlasW06PricingBenchmarks"
 import { ATLAS_W06_EAVE_HEIGHTS_M, ATLAS_W06_LENGTHS_M, applyAtlasW06GeometryToPricing, calculateAtlasW06Geometry } from "../../lib/atlasW06Geometry"
+import { getAtlasW10PrimaryBenchmark } from "../../lib/atlasW10PricingBenchmarks"
+import { ATLAS_W10_EAVE_HEIGHTS_M, ATLAS_W10_LENGTHS_M, applyAtlasW10GeometryToPricing, calculateAtlasW10Geometry } from "../../lib/atlasW10Geometry"
+import { getAtlasW12PrimaryBenchmark } from "../../lib/atlasW12PricingBenchmarks"
+import { ATLAS_W12_EAVE_HEIGHTS_M, ATLAS_W12_LENGTHS_M, applyAtlasW12GeometryToPricing, calculateAtlasW12Geometry } from "../../lib/atlasW12Geometry"
 import AtlasModuleHero from "./AtlasModuleHero"
 
 const STATUS_LABELS = {
@@ -128,16 +132,20 @@ export default function AtlasPricingWorkspace() {
 
   useEffect(() => {
     setConfigurationLengthM(20)
-    setConfigurationEaveHeightM(productCode === "W06" ? 4.5 : 3)
+    setConfigurationEaveHeightM(["W06", "W10", "W12"].includes(productCode) ? 4.5 : 3)
   }, [productCode])
 
   const geometry = useMemo(() => productCode === "W08"
     ? calculateAtlasW08Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
     : productCode === "W06"
       ? calculateAtlasW06Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
+      : productCode === "W10"
+        ? calculateAtlasW10Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
+        : productCode === "W12"
+          ? calculateAtlasW12Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
       : null, [productCode, configurationLengthM, configurationEaveHeightM])
   const configuredRecords = useMemo(() => geometry
-    ? productCode === "W06" ? applyAtlasW06GeometryToPricing(records, geometry) : applyAtlasW08GeometryToPricing(records, geometry)
+    ? productCode === "W06" ? applyAtlasW06GeometryToPricing(records, geometry) : productCode === "W10" ? applyAtlasW10GeometryToPricing(records, geometry) : productCode === "W12" ? applyAtlasW12GeometryToPricing(records, geometry) : applyAtlasW08GeometryToPricing(records, geometry)
     : records, [records, geometry, productCode])
   const confirmedCount = configuredRecords.filter((record) => record.status === "confirmed").length
   const missingMassCount = configuredRecords.filter((record) => record.pricingUnit === "ton" && record.massKgPerM === "").length
@@ -146,9 +154,9 @@ export default function AtlasPricingWorkspace() {
     return groups
   }, {})), [configuredRecords])
   const assembledSummary = useMemo(() => summarizeAtlasPricing(configuredRecords), [configuredRecords])
-  const pricingBenchmark = productCode === "W08" ? getAtlasW08PrimaryBenchmark() : productCode === "W06" ? getAtlasW06PrimaryBenchmark() : null
-  const controlledLengths = productCode === "W06" ? ATLAS_W06_LENGTHS_M : ATLAS_W08_LENGTHS_M
-  const controlledHeights = productCode === "W06" ? ATLAS_W06_EAVE_HEIGHTS_M : ATLAS_W08_EAVE_HEIGHTS_M
+  const pricingBenchmark = productCode === "W08" ? getAtlasW08PrimaryBenchmark() : productCode === "W06" ? getAtlasW06PrimaryBenchmark() : productCode === "W10" ? getAtlasW10PrimaryBenchmark() : productCode === "W12" ? getAtlasW12PrimaryBenchmark() : null
+  const controlledLengths = productCode === "W06" ? ATLAS_W06_LENGTHS_M : productCode === "W10" ? ATLAS_W10_LENGTHS_M : productCode === "W12" ? ATLAS_W12_LENGTHS_M : ATLAS_W08_LENGTHS_M
+  const controlledHeights = productCode === "W06" ? ATLAS_W06_EAVE_HEIGHTS_M : productCode === "W10" ? ATLAS_W10_EAVE_HEIGHTS_M : productCode === "W12" ? ATLAS_W12_EAVE_HEIGHTS_M : ATLAS_W08_EAVE_HEIGHTS_M
   const benchmarkVariance = pricingBenchmark
     ? assembledSummary.totalCost - pricingBenchmark.sellingPriceExclVat
     : 0
@@ -282,7 +290,7 @@ export default function AtlasPricingWorkspace() {
         eyebrow={`${productCode} pricing control`}
         title={`Control every ${product?.name || "Atlas product"} input.`}
         description="Maintain material rates, component prices, quantity rules and effective dates in one traceable register. Unconfirmed technical inputs remain visible instead of silently entering estimates."
-        status={["W06", "W08"].includes(productCode) ? "Component pricing" : "Product record pending"}
+        status={["W06", "W08", "W10", "W12"].includes(productCode) ? "Component pricing" : "Product record pending"}
         actionHref={withAtlasProduct("/os/atlas/bom", productCode)}
         actionLabel="Review product BOM"
       />
@@ -326,7 +334,7 @@ export default function AtlasPricingWorkspace() {
       {geometry ? (
         <section className="border border-[#0043f3]/20 bg-[#f5f9ff] p-4 sm:p-5">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_160px] lg:items-end">
-            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Live W08 configuration</p><h2 className="mt-1 text-xl font-bold text-slate-950">Price the geometry, not a manually typed baseline.</h2><p className="mt-1 text-xs leading-5 text-slate-600">Columns, rafters and purlins use exact quantities, 90-degree cut lengths and controlled kg/m. Structural waste, fabrication and packaging are R0; delivery and installation remain separate.</p></div>
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Live {productCode} configuration</p><h2 className="mt-1 text-xl font-bold text-slate-950">Price the geometry, not a manually typed baseline.</h2><p className="mt-1 text-xs leading-5 text-slate-600">Columns, rafters and purlins use exact quantities, 90-degree cut lengths and controlled kg/m. Structural waste, fabrication and packaging are R0; delivery and installation remain separate.</p></div>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Building length</span><select value={configurationLengthM} onChange={(event) => setConfigurationLengthM(Number(event.target.value))} className={inputClass}>{controlledLengths.map((length) => <option key={length} value={length}>{length}m · {length / 4} bays</option>)}</select></label>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Eave height</span><select value={configurationEaveHeightM} onChange={(event) => setConfigurationEaveHeightM(Number(event.target.value))} className={inputClass}>{controlledHeights.map((height) => <option key={height} value={height}>{height}m</option>)}</select></label>
           </div>
@@ -337,14 +345,14 @@ export default function AtlasPricingWorkspace() {
       <section className="overflow-hidden border border-slate-900 bg-slate-950 text-white shadow-xl">
         <div className="grid gap-px bg-white/10 lg:grid-cols-[minmax(0,1.35fr)_repeat(3,minmax(150px,0.55fr))]">
           <div className="bg-slate-950 p-5 sm:p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-300">Live assembled W08 baseline</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-300">Live assembled {productCode} baseline</p>
             <div className="mt-3 flex flex-wrap items-end gap-4">
               <p className="text-3xl font-bold tracking-tight sm:text-4xl">{formatMoney(assembledSummary.totalCost)}</p>
               <span className={`mb-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${assembledSummary.holdCount ? "bg-amber-300 text-slate-950" : "bg-emerald-300 text-emerald-950"}`}>
                 {assembledSummary.holdCount ? `${assembledSummary.holdCount} holds` : "Quote ready"}
               </span>
             </div>
-            <p className="mt-2 max-w-xl text-xs leading-5 text-slate-400">Calculated from the selected W08 geometry and controlled component rates. It is not released to public estimates, and technical holds remain visible until approved.</p>
+            <p className="mt-2 max-w-xl text-xs leading-5 text-slate-400">Calculated from the selected {productCode} geometry and controlled component rates. It is not released to public estimates, and technical holds remain visible until approved.</p>
           </div>
           {[
             ["Raw material", assembledSummary.rawCost],
@@ -379,7 +387,7 @@ export default function AtlasPricingWorkspace() {
               <div className="mt-5 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-4">
                 {[
                   ["Structure steel", `${pricingBenchmark.totalSteelKg.toLocaleString("en-ZA")}kg`],
-                  ["ZAM rate", formatRate(pricingBenchmark.materialRatePerTon, "ton")],
+                  [`${pricingBenchmark.material} rate`, formatRate(pricingBenchmark.materialRatePerTon, "ton")],
                   ["Cost excl. VAT", formatMoney(pricingBenchmark.totalCostExclVat)],
                   ["Sheet uplift", `${pricingBenchmark.markupPercent}%`],
                 ].map(([label, value]) => (
@@ -474,7 +482,8 @@ export default function AtlasPricingWorkspace() {
                     </span>
                     <span>
                       <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Galv / primary</span>
-                      <span className="mt-1 block text-sm font-semibold text-slate-800">{formatRate(record.galvanisedRate, record.pricingUnit)}</span>
+                      <span className="mt-1 block text-sm font-semibold text-slate-800">{formatRate(record.pricingRateOverride ?? record.galvanisedRate, record.pricingUnit)}</span>
+                      {record.pricingBasisLabel ? <span className="mt-1 block text-[10px] font-bold text-sky-700">{record.pricingBasisLabel} basis</span> : null}
                     </span>
                     <span className={`inline-flex w-fit items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${hasHold ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-700"}`}>
                       {hasHold ? <AlertTriangle className="h-3 w-3" /> : <Check className="h-3 w-3" />}
@@ -586,7 +595,7 @@ export default function AtlasPricingWorkspace() {
                         </Field>
                         <Field label="Baseline quantity">
                           <input type="number" min="0" step="0.01" value={record.baselineQuantity} onChange={(event) => updateRecord(record.id, "baselineQuantity", event.target.value)} className={inputClass} disabled={record.geometryControlled} />
-                          {record.geometryControlled ? <span className="mt-1 block text-[10px] text-sky-700">Calculated from the selected W08 geometry.</span> : null}
+                          {record.geometryControlled ? <span className="mt-1 block text-[10px] text-sky-700">Calculated from the selected {productCode} geometry.</span> : null}
                         </Field>
                         <Field label="Baseline member length (m)">
                           <input type="number" min="0" step="0.001" value={record.baselineLengthM} onChange={(event) => updateRecord(record.id, "baselineLengthM", event.target.value)} className={inputClass} disabled={!["ton", "m"].includes(record.pricingUnit)} />
