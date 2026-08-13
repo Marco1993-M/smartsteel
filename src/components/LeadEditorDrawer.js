@@ -1400,9 +1400,36 @@ export default function LeadEditorDrawer({
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(result.error || "Could not send the proposal.")
 
-      const lifecycleSaved = await handleConfirmEmailSent()
-      if (!lifecycleSaved) {
-        alert("The proposal was sent, but the CRM status could not be updated. Please update the lead manually.")
+      const sentAt = result.sentAt || new Date().toISOString()
+      const updatedLead = {
+        ...formData,
+        status: "quoted",
+        quote_value: selectedEstimateEmail?.total || formData.quote_value,
+        next_action: `Awaiting the client's review of ${selectedEstimateEmail.title || "the estimate"}. Follow up if no reply.`,
+      }
+      setFormData(updatedLead)
+      setSavedEstimates((current) => current.map((estimate) => estimate.id === selectedEstimateEmail.id
+        ? { ...estimate, status: "sent", sent_at: sentAt, sent_by_name: "Smart Steel" }
+        : estimate))
+      setEmailEvents((current) => [{
+        id: result.emailId || `sent-${sentAt}`,
+        estimate_id: selectedEstimateEmail.id,
+        estimate_version: selectedEstimateEmail.version_no,
+        email_type: "estimate",
+        recipient: formData.email,
+        subject: emailSubject,
+        body: emailBody,
+        sent_at: sentAt,
+        sent_by_name: "Smart Steel",
+        channel: "email",
+      }, ...current])
+      setShowEmailComposer(false)
+      setEmailDraftOpened(false)
+
+      if (result.lifecycleRecorded) {
+        alert(`Proposal sent to ${formData.email}. The estimate is recorded as Sent and the lead moved to Quoted.`)
+      } else {
+        alert(`Proposal sent to ${formData.email} (delivery ID: ${result.emailId || "recorded"}). Some CRM records need attention: ${(result.lifecycleWarnings || []).join("; ")}`)
       }
     } catch (error) {
       console.error("Error sending branded proposal:", error)
