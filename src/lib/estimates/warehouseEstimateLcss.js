@@ -5,6 +5,7 @@ import {
 } from "./warehouseEstimate"
 
 const LCSS_BAY_SPACING = 2.5
+const ATLAS_BAY_SPACING = 4
 const LCSS_MARKUP_RATE = 0.3
 const LCSS_VAT_RATE = 0.15
 const LCSS_GALV_RATE_PER_TON = 24840
@@ -15,6 +16,12 @@ const LCSS_OVERALL_WASTE_FACTOR = 1.1
 const DEFAULT_WALL_HEIGHT = 3
 const LCSS_STRUCTURE_INSTALL_RATE = WAREHOUSE_MATERIALS.structureInstallRate
 const LCSS_CLADDING_INSTALL_RATE = WAREHOUSE_MATERIALS.claddingInstallRate
+const LCSS_GALVANISED_SHEETING_RATES = {
+  Corrugated: 160,
+  IBR: 225,
+  "Concealed Fix": 225,
+}
+const LCSS_CHROMADEK_SHEETING_RATE = 350
 
 export const LCSS_WAREHOUSE_WIDTH_OPTIONS = [3, 6, 8, 10, 12]
 export const LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS = ["Galv", "Mild"]
@@ -156,7 +163,7 @@ function scaleWorkbookHatRows(baseRows, wallHeight) {
   return Math.max(1, Math.round((baseRows * wallHeight) / 3))
 }
 
-function getLcssLengthRule(width, length) {
+function getLcssLengthRule(width, length, pricingModel) {
   if (Number(width) === 3 && Number(length) === 6) {
     return {
       baySpacing: 3,
@@ -164,9 +171,16 @@ function getLcssLengthRule(width, length) {
     }
   }
 
+  if (pricingModel === "atlas_4m") {
+    return {
+      baySpacing: ATLAS_BAY_SPACING,
+      label: "atlas_4m_bay_rule",
+    }
+  }
+
   return {
     baySpacing: LCSS_BAY_SPACING,
-    label: "standard_2_5m_rule",
+    label: "legacy_2_5m_rule",
   }
 }
 
@@ -181,7 +195,8 @@ export function validateLcssWarehouseEstimateInput(input) {
   const sheetingFinish = input?.sheetingFinish || (cladding === "Chromadek" ? "chromadek" : "galvanised")
   const claddingInstalled = Boolean(input?.claddingInstalled)
   const gableMode = normalizeLcssSheetingMode(input?.gableMode || input?.sheetingMode || "structure_only")
-  const lengthRule = getLcssLengthRule(width, length)
+  const pricingModel = input?.pricingModel === "atlas_4m" ? "atlas_4m" : "legacy_2_5m"
+  const lengthRule = getLcssLengthRule(width, length, pricingModel)
 
   if (!LCSS_WAREHOUSE_WIDTH_OPTIONS.includes(width)) {
     throw new Error("LCSS warehouses currently support 3m, 6m, 8m, 10m, or 12m spans only.")
@@ -196,7 +211,9 @@ export function validateLcssWarehouseEstimateInput(input) {
   }
 
   if (Math.abs(length / lengthRule.baySpacing - Math.round(length / lengthRule.baySpacing)) > 0.0001) {
-    throw new Error("LCSS lengths must follow 2.5m bay increments, except for the dedicated 3m x 6m carport rule.")
+    throw new Error(pricingModel === "atlas_4m"
+      ? "Atlas warehouse lengths must follow 4m bay increments."
+      : "LCSS lengths must follow 2.5m bay increments, except for the dedicated 3m x 6m carport rule.")
   }
 
   if (!LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.includes(steelFinish)) {
@@ -232,6 +249,7 @@ export function validateLcssWarehouseEstimateInput(input) {
     gableMode,
     baySpacing: lengthRule.baySpacing,
     lengthRule: lengthRule.label,
+    pricingModel,
   }
 }
 
@@ -294,7 +312,11 @@ export function calculateLcssWarehouseEstimate(input) {
       ? (wallHeight * length) * 2 * LCSS_OVERALL_WASTE_FACTOR
       : 0
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
-  const claddingSupplyRate = WAREHOUSE_MATERIALS.cladding[cladding]?.supply || 0
+  const claddingSupplyRate = gableMode === "structure_only"
+    ? 0
+    : sheetingFinish === "chromadek"
+      ? LCSS_CHROMADEK_SHEETING_RATE
+      : LCSS_GALVANISED_SHEETING_RATES[sheetingProfile] || 0
   const claddingCost = cladding === "None" || gableMode === "structure_only" ? 0 : totalSheetingArea * claddingSupplyRate
   const steelCost = totalColumnCost + totalRafterCost + totalXBraceCost + totalABraceCost
   const totalSteelCost = steelCost * quantity
