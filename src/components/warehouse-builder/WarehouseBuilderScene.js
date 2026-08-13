@@ -96,7 +96,9 @@ function WarehouseMesh({
   const l = length * scale
   const h = wallHeight * scale
   const ridgeRise = Math.tan((roofPitch * Math.PI) / 180) * (w / 2)
-  const frameCount = Math.max(2, Math.round(length / 2.5) + 1)
+  const isAtlas = systemVariant === "atlas"
+  const baySpacing = isAtlas ? 4 : 2.5
+  const frameCount = Math.max(2, Math.round(length / baySpacing) + 1)
 
   const framePositions = useMemo(() => {
     const step = frameCount === 1 ? 0 : l / (frameCount - 1)
@@ -104,6 +106,10 @@ function WarehouseMesh({
   }, [frameCount, l])
   const bracedBayIndices = useMemo(() => {
     const totalBays = Math.max(frameCount - 1, 1)
+
+    if (isAtlas) {
+      return Array.from({ length: totalBays }, (_, bayIndex) => bayIndex).filter((bayIndex) => bayIndex % 4 === 0)
+    }
 
     if (totalBays <= 4) {
       return [Math.max(0, Math.floor(totalBays / 2) - 1 + (totalBays % 2 === 0 ? 0 : 1))]
@@ -115,7 +121,7 @@ function WarehouseMesh({
     }
 
     return indices.length > 0 ? indices : [0]
-  }, [frameCount])
+  }, [frameCount, isAtlas])
 
   const garageDoorOpeningWidth =
     garageDoorOpeningType === "double" ? 5 * scale : garageDoorOpeningType === "custom" ? 4 * scale : 2.5 * scale
@@ -143,7 +149,6 @@ function WarehouseMesh({
       right: build("right", l),
     }
   }, [garageDoorOpeningWidth, h, l, pedestrianDoorCount, pedestrianDoorFace, rollerDoorCount, rollerDoorFace, w])
-  const isAtlas = systemVariant === "atlas"
   const selectedSheetingColor = WAREHOUSE_SHEETING_COLORS.find((option) => option.value === sheetingColor)
   const roofColor = selectedSheetingColor?.hex || (isAtlas ? "#6689a3" : "#b91c1c")
   const wallColor = roofColor
@@ -157,9 +162,13 @@ function WarehouseMesh({
   const ridgeThickness = 0.022
   const wallSheetThickness = 0.022
   const braceThickness = 0.018
+  const secondaryMemberThickness = 0.022
+  const secondaryMemberDepth = 0.035
   const sheetingClearance = 0.018
-  const roofSheetOffset = rafterThickness / 2 + sheetingClearance + roofSheetThickness / 2
-  const wallSheetOffset = columnThickness / 2 + sheetingClearance + wallSheetThickness / 2
+  const roofSecondaryOffset = isAtlas ? rafterThickness / 2 + secondaryMemberDepth / 2 : 0
+  const wallSecondaryOffset = isAtlas ? columnThickness / 2 + secondaryMemberDepth / 2 : 0
+  const roofSheetOffset = rafterThickness / 2 + (isAtlas ? secondaryMemberDepth : 0) + sheetingClearance + roofSheetThickness / 2
+  const wallSheetOffset = columnThickness / 2 + (isAtlas ? secondaryMemberDepth : 0) + sheetingClearance + wallSheetThickness / 2
 
   const concreteMaterialProps = {
     color: "#d9e1e8",
@@ -253,6 +262,43 @@ function WarehouseMesh({
           </mesh>
         </group>
       ))}
+
+      {isAtlas ? framePositions.slice(0, -1).map((startZ, bayIndex) => {
+        const endZ = framePositions[bayIndex + 1]
+        const bayDepth = Math.abs(endZ - startZ)
+        const bayCenterZ = (startZ + endZ) / 2
+
+        return (
+          <group key={`secondary-members-${bayIndex}`}>
+            {[0.08, 0.5, 0.92].flatMap((fraction) => {
+              const xDistanceFromRidge = (w / 2) * fraction
+              const roofY = h + ridgeRise * (1 - fraction)
+
+              return [-1, 1].map((side) => (
+                <mesh
+                  key={`purlin-${bayIndex}-${fraction}-${side}`}
+                  position={[side * xDistanceFromRidge, roofY + roofSecondaryOffset, bayCenterZ]}
+                  castShadow
+                >
+                  <boxGeometry args={[secondaryMemberThickness, secondaryMemberDepth, bayDepth]} />
+                  <meshPhysicalMaterial {...frameMaterialProps} />
+                </mesh>
+              ))
+            })}
+
+            {[0.08, 0.5, 0.92].flatMap((fraction) => [-1, 1].map((side) => (
+              <mesh
+                key={`girt-${bayIndex}-${fraction}-${side}`}
+                position={[side * (w / 2 + wallSecondaryOffset), h * fraction, bayCenterZ]}
+                castShadow
+              >
+                <boxGeometry args={[secondaryMemberDepth, secondaryMemberThickness, bayDepth]} />
+                <meshPhysicalMaterial {...frameMaterialProps} />
+              </mesh>
+            )))}
+          </group>
+        )
+      }) : null}
 
       {bracedBayIndices.map((bayIndex) => {
         const startZ = framePositions[bayIndex]
