@@ -1028,6 +1028,26 @@ export default function WarehouseBuilderClient() {
       ]
 
   const budgetBreakdownItems = useMemo(() => {
+    if (isLcssWarehouse) {
+      const lineItems = estimate.lineItems || []
+      const structureSteel = lineItems
+        .filter((item) => ["COL", "RAF", "PUR", "XBW", "XBR", "GRT", "APH"].some((suffix) => item.code?.endsWith(`-${suffix}`)))
+        .reduce((sum, item) => sum + Number(item.total || 0), 0)
+      const connectionHardware = lineItems
+        .filter((item) => ["BAS", "RDG", "EAV", "XBR-BRK", "BLT", "NUT", "WSH", "ANC"].some((suffix) => item.code?.endsWith(`-${suffix}`)))
+        .reduce((sum, item) => sum + Number(item.total || 0), 0)
+      const sheeting = lineItems
+        .filter((item) => item.code?.endsWith("-SHT"))
+        .reduce((sum, item) => sum + Number(item.total || 0), 0)
+
+      return [
+        { label: "Profile-based structure steel", value: formatCurrency(structureSteel) },
+        { label: "Brackets and connection hardware", value: formatCurrency(connectionHardware) },
+        ...(sheeting > 0 ? [{ label: "Selected sheeting", value: formatCurrency(sheeting) }] : []),
+        { label: "40% commercial uplift", value: formatCurrency(Number(estimate.pricing?.markupValue || 0)) },
+      ]
+    }
+
     const sortedItems = [...(estimate.lineItems || [])]
       .filter((item) => Number(item?.total) > 0)
       .sort((left, right) => Number(right.total || 0) - Number(left.total || 0))
@@ -1037,7 +1057,7 @@ export default function WarehouseBuilderClient() {
       label: getClientFacingLineItemLabel(item.label || "Item"),
       value: formatCurrency(Number(item.total || 0)),
     }))
-  }, [estimate.lineItems])
+  }, [estimate.lineItems, estimate.pricing?.markupValue, isLcssWarehouse])
 
   const priceChangeLabel =
     budgetDelta === 0
@@ -1054,7 +1074,8 @@ export default function WarehouseBuilderClient() {
 
   const includedItems = isLcssWarehouse
     ? [
-        "The main steel structure sized to your selected warehouse footprint",
+      "The main steel structure sized to your selected warehouse footprint",
+        "Column bases, ridge and eave brackets, bracing brackets, and M10 connection fixings",
         ...(config.gableMode === "structure_only" ? [] : [`${config.sheetingProfile} sheeting with a ${config.sheetingFinish === "chromadek" ? "Chromadek" : "galvanised"} finish across approximately ${Math.round(lcssSheetingCoverage).toLocaleString()} sqm of coverage`]),
         config.gableMode === "structure_only"
           ? "Sheeting remains optional and can be added before requesting a reviewed quote"
