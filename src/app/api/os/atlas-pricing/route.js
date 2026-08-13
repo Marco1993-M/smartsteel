@@ -79,6 +79,7 @@ function normalizeRow(row, component = null) {
     lengthRule: row.length_rule || "",
     quantityRule: (inheritsQuantityRule ? inherited?.quantityRule : "") || row.quantity_rule || "",
     pricingUnit: row.pricing_unit,
+    zamRate: row.zam_rate === null || row.zam_rate === undefined ? (row.galvanised_rate === null ? "" : Number(row.galvanised_rate)) : Number(row.zam_rate),
     galvanisedRate: row.galvanised_rate === null ? "" : Number(row.galvanised_rate),
     mildSteelRate: row.mild_steel_rate === null ? "" : Number(row.mild_steel_rate),
     massKgPerM: inherited?.massKgPerM ?? (row.mass_kg_per_m === null ? "" : Number(row.mass_kg_per_m)),
@@ -180,6 +181,7 @@ export async function PATCH(request) {
   }
 
   const numericFields = {
+    zam_rate: nullableNumber(body.zamRate),
     galvanised_rate: nullableNumber(body.galvanisedRate),
     mild_steel_rate: nullableNumber(body.mildSteelRate),
     mass_kg_per_m: nullableNumber(body.massKgPerM),
