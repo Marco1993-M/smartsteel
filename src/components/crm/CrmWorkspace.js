@@ -45,7 +45,7 @@ const CRM_FALLBACK_FIELDS = [
 const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
 const CRM_VIEW_OPTIONS = [
   { key: "pipeline", label: "Pipeline", helper: "Move and review leads" },
-  { key: "my_work", label: "My Work", helper: "Handle follow-ups, tasks, and loose ends" },
+  { key: "my_work", label: "Team Queue", helper: "Clear follow-ups, tasks, and loose ends together" },
   { key: "quotes", label: "Quotes", helper: "Manage priced work and quoted momentum" },
   { key: "insights", label: "Insights", helper: "Check workload and risk" },
 ]
@@ -89,12 +89,12 @@ function normalizeLead(lead) {
 }
 
 function buildLeadPersistencePayload(lead) {
-  const optionalNumericFields = ["quote_value", "width", "length"]
+  const optionalNumericFields = ["quote_value", "width", "length", "wall_height"]
   const payload = { ...lead }
 
   optionalNumericFields.forEach((field) => {
     const value = payload[field]
-    if (value === "" || value === undefined || value === null) {
+    if (value === undefined || value === null || String(value).trim() === "") {
       payload[field] = null
       return
     }
@@ -378,7 +378,7 @@ async function sendCrmNotification(payload) {
   }
 }
 
-function TodayWorkColumn({ title, helper, tone, items, emptyText, renderItem }) {
+function TodayWorkColumn({ title, helper, tone, items, emptyText, renderItem, priority = false }) {
   const toneClasses = {
     rose: "bg-rose-50 text-rose-700 border-rose-100",
     sky: "bg-sky-50 text-sky-700 border-sky-100",
@@ -387,7 +387,9 @@ function TodayWorkColumn({ title, helper, tone, items, emptyText, renderItem }) 
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+    <div className={`rounded-2xl border p-3 sm:p-4 ${
+      priority ? "border-slate-300 bg-white shadow-sm" : "border-slate-200 bg-slate-50"
+    }`}>
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold text-slate-900">{title}</h3>
@@ -432,15 +434,11 @@ function TodayLeadCard({ lead, onOpen, onSnooze }) {
         </span>
       </div>
 
-      <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">
-        {lead.next_action || "No next action captured yet."}
-      </p>
-
       <div className="mt-2 rounded-lg bg-slate-50 p-2">
         <div className="flex items-start justify-between gap-2">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-              SOP next
+              Next move
             </p>
             <p className="mt-1 text-xs font-medium leading-4 text-slate-700">
               {lead.next_action || leadSop.nextStep}
@@ -550,7 +548,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const [productLineFilter, setProductLineFilter] = useState("all")
   const [opportunityQuickView, setOpportunityQuickView] = useState("all")
   const [metricFilter, setMetricFilter] = useState("all")
-  const [ownershipView, setOwnershipView] = useState("mine")
+  const [ownershipView, setOwnershipView] = useState("all")
   const [crmView, setCrmView] = useState("pipeline")
   const [nextActionFallbacks, setNextActionFallbacks] = useState({})
   const [fallbackFieldValues, setFallbackFieldValues] = useState({})
@@ -846,7 +844,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       unsupportedFields.forEach((field) => delete fallbackPayload[field])
       updateResult = await supabase
         .from("leads")
-        .update(fallbackPayload)
+        .update(buildLeadPersistencePayload(fallbackPayload))
         .eq("id", normalizedLead.id)
     }
 
@@ -1343,7 +1341,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         unsupportedColumns.push(missingColumn)
         const fallbackPayload = { ...updatePayload }
         unsupportedColumns.forEach((field) => delete fallbackPayload[field])
-        retryResult = await supabase.from("leads").update(fallbackPayload).eq("id", leadId)
+        retryResult = await supabase.from("leads").update(buildLeadPersistencePayload(fallbackPayload)).eq("id", leadId)
       }
 
       if (retryResult.error) {
@@ -2023,30 +2021,6 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                   </Link>
                 </div>
               ) : null}
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setOwnershipView("mine")}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    ownershipView === "mine"
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  My Work{currentTeamMember ? `: ${currentTeamMember}` : ""}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOwnershipView("all")}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    ownershipView === "all"
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  Whole Team
-                </button>
-              </div>
             </div>
 
             <div className="sm:hidden">
@@ -2263,7 +2237,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                   </p>
                 </div>
                 <p className="text-sm text-slate-500">
-                  {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s view` : "Whole team"}
+                  Whole team
                 </p>
               </div>
 
@@ -2346,7 +2320,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                   <h2 className="mt-1 text-lg font-semibold text-slate-900">Where response discipline is slipping</h2>
                 </div>
                 <p className="text-sm text-slate-500">
-                  {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s queue` : "Whole team"} priority watch
+                  Team priority watch
                 </p>
               </div>
               <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -2369,33 +2343,47 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         )}
 
         {crmView === "my_work" && (
-          <>
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="space-y-5">
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 text-white shadow-sm">
+          <div className="p-4 sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Today&apos;s work
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-300">
+                Team Queue
               </p>
-              <h2 className="mt-1 text-lg font-semibold text-slate-900">
-                My work queue
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">
+                Clear what needs attention now
               </h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Start here for general follow-ups, calls due today, loose ends, and open tasks.
+              <p className="mt-1 text-sm text-slate-300">
+                One shared queue for overdue follow-ups, today&apos;s commitments, and loose ends.
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                {ownershipView === "mine" && currentTeamMember ? `${currentTeamMember}'s queue` : "Open items"}
+            <div className="min-w-[118px] rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300">
+                Open items
               </p>
-              <p className="mt-1 text-3xl font-bold text-slate-900">{todaysWork.total}</p>
+              <p className="mt-1 text-3xl font-bold text-white">{todaysWork.total}</p>
             </div>
           </div>
+          </div>
+        </section>
 
-          <div className="mt-4 grid gap-3 xl:grid-cols-4">
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-950">Act first</h3>
+                <p className="text-sm text-slate-500">Time-sensitive client commitments.</p>
+              </div>
+              <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
+                {todaysWork.overdueFollowUps.length + todaysWork.dueToday.length} due
+              </span>
+            </div>
+          <div className="grid gap-3 lg:grid-cols-2">
             <TodayWorkColumn
               title="Overdue"
               helper="Follow-ups already slipping"
               tone="rose"
+              priority
               items={todaysWork.overdueFollowUps}
               emptyText="No overdue follow-ups."
               renderItem={(lead) => (
@@ -2411,6 +2399,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
               title="Due today"
               helper="Calls and follow-ups for today"
               tone="sky"
+              priority
               items={todaysWork.dueToday}
               emptyText="Nothing due today."
               renderItem={(lead) => (
@@ -2422,7 +2411,16 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                 />
               )}
             />
-            <TodayWorkColumn
+          </div>
+          </section>
+
+          <section>
+            <div className="mb-3">
+              <h3 className="font-bold text-slate-950">Keep work moving</h3>
+              <p className="text-sm text-slate-500">Resolve unclear ownership and complete open tasks.</p>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              <TodayWorkColumn
               title="Needs decision"
               helper="Missing owner, next step, or stale"
               tone="amber"
@@ -2437,7 +2435,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                 />
               )}
             />
-            <TodayWorkColumn
+              <TodayWorkColumn
               title="Tasks"
               helper={tasksLoading ? "Loading tasks..." : "CRM tasks due now"}
               tone="emerald"
@@ -2450,70 +2448,17 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                   onComplete={() => handleCompleteDailyTask(task.id)}
                 />
               )}
-            />
-          </div>
-        </section>
-          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-              <UpcomingTasks onTasksChanged={setDailyTasks} />
-
-              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                <h2 className="text-lg font-semibold text-slate-900">Stalled opportunities</h2>
-                <p className="mt-1 text-sm text-slate-600">
-                  These opportunities are overdue, stale, unassigned, or missing a next step.
-                </p>
-                <div className="mt-4 space-y-3">
-                  {atRiskLeads.length === 0 ? (
-                    <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                      No stalled leads right now.
-                    </p>
-                  ) : (
-                    atRiskLeads.map((lead) => (
-                      <div key={lead.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold text-slate-900">
-                              {lead.name} {lead.last_name}
-                            </p>
-                            <p className="text-sm text-slate-600">
-                              {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
-                            </p>
-                          </div>
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                            {formatStatusLabel(lead.status)}
-                          </span>
-                        </div>
-                        <div className="mt-3 grid gap-2 text-sm text-slate-600">
-                          <p>
-                            <span className="font-medium text-slate-900">Next step:</span>{" "}
-                            {lead.next_action || "Missing"}
-                          </p>
-                          <p>
-                            <span className="font-medium text-slate-900">Follow-up:</span>{" "}
-                            {lead.follow_up_at
-                              ? new Date(lead.follow_up_at).toLocaleDateString()
-                              : "Not set"}
-                          </p>
-                          <p>
-                            <span className="font-medium text-slate-900">Last movement:</span>{" "}
-                            {Number.isFinite(getDaysSince(getLeadFreshnessDate(lead)))
-                              ? `${getDaysSince(getLeadFreshnessDate(lead))} day(s) ago`
-                              : "Unknown"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setEditingLead(lead)}
-                          className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
-                        >
-                          Review lead
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+              />
             </div>
-          </>
+          </section>
+          <section>
+            <div className="mb-3">
+              <h3 className="font-bold text-slate-950">Plan ahead</h3>
+              <p className="text-sm text-slate-500">Add and review upcoming team tasks.</p>
+            </div>
+            <UpcomingTasks onTasksChanged={setDailyTasks} />
+          </section>
+          </div>
         )}
 
         {crmView === "quotes" && (
@@ -2921,7 +2866,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                   View: {OPPORTUNITY_QUICK_VIEWS.find((item) => item.key === opportunityQuickView)?.label || "Custom"}
                 </span>
               )}
-              {(searchTerm || statusFilter !== "all" || assigneeFilter !== "all" || productLineFilter !== "all" || opportunityQuickView !== "all" || metricFilter !== "all" || ownershipView !== "mine") && (
+              {(searchTerm || statusFilter !== "all" || assigneeFilter !== "all" || productLineFilter !== "all" || opportunityQuickView !== "all" || metricFilter !== "all" || ownershipView !== "all") && (
                 <button
                   type="button"
                   onClick={() => {
@@ -2931,7 +2876,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                     setProductLineFilter("all")
                     setOpportunityQuickView("all")
                     setMetricFilter("all")
-                    setOwnershipView("mine")
+                    setOwnershipView("all")
                   }}
                   className="font-medium text-slate-700 underline underline-offset-4"
                 >
