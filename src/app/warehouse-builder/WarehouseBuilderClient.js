@@ -1029,22 +1029,12 @@ export default function WarehouseBuilderClient() {
 
   const budgetBreakdownItems = useMemo(() => {
     if (isLcssWarehouse) {
-      const lineItems = estimate.lineItems || []
-      const structureSteel = lineItems
-        .filter((item) => ["COL", "RAF", "PUR", "XBW", "XBR", "GRT", "APH"].some((suffix) => item.code?.endsWith(`-${suffix}`)))
-        .reduce((sum, item) => sum + Number(item.total || 0), 0)
-      const connectionHardware = lineItems
-        .filter((item) => ["BAS", "RDG", "EAV", "XBR-BRK", "BLT", "NUT", "WSH", "ANC"].some((suffix) => item.code?.endsWith(`-${suffix}`)))
-        .reduce((sum, item) => sum + Number(item.total || 0), 0)
-      const sheeting = lineItems
-        .filter((item) => item.code?.endsWith("-SHT"))
-        .reduce((sum, item) => sum + Number(item.total || 0), 0)
-
       return [
-        { label: "Profile-based structure steel", value: formatCurrency(structureSteel) },
-        { label: "Brackets and connection hardware", value: formatCurrency(connectionHardware) },
-        ...(sheeting > 0 ? [{ label: "Selected sheeting", value: formatCurrency(sheeting) }] : []),
-        { label: "40% commercial uplift", value: formatCurrency(Number(estimate.pricing?.markupValue || 0)) },
+        { label: "Atlas structural steel", value: "Included" },
+        { label: "Brackets and connection hardware", value: "Included" },
+        ...(config.gableMode === "structure_only"
+          ? []
+          : [{ label: `${config.sheetingProfile} sheeting`, value: "Included" }]),
       ]
     }
 
@@ -1057,7 +1047,7 @@ export default function WarehouseBuilderClient() {
       label: getClientFacingLineItemLabel(item.label || "Item"),
       value: formatCurrency(Number(item.total || 0)),
     }))
-  }, [estimate.lineItems, estimate.pricing?.markupValue, isLcssWarehouse])
+  }, [config.gableMode, config.sheetingProfile, estimate.lineItems, isLcssWarehouse])
 
   const priceChangeLabel =
     budgetDelta === 0
