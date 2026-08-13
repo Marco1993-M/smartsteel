@@ -22,6 +22,11 @@ import WarehouseBuilderScene from "../../components/warehouse-builder/WarehouseB
 import { calculateEstimateByProductType } from "../../lib/estimates/estimateFactory"
 import { calculateAtlasWarehouseEstimate } from "../../lib/estimates/atlasWarehouseEstimate"
 import {
+  ATLAS_WAREHOUSE_SHEETING_OPTIONS,
+  ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS,
+  ATLAS_WAREHOUSE_WIDTH_OPTIONS,
+} from "../../lib/estimates/atlasWarehouseOptions"
+import {
   formatCurrency,
   WAREHOUSE_CLADDING_OPTIONS,
   WAREHOUSE_ENCLOSURE_OPTIONS,
@@ -29,11 +34,6 @@ import {
   WAREHOUSE_HEIGHT_OPTIONS,
   WAREHOUSE_LENGTH_OPTIONS,
 } from "../../lib/estimates/warehouseEstimate"
-import {
-  LCSS_WAREHOUSE_GABLE_OPTIONS,
-  LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS,
-  LCSS_WAREHOUSE_WIDTH_OPTIONS,
-} from "../../lib/estimates/warehouseEstimateLcss"
 import {
   useWarehouseBuilderStore,
   WAREHOUSE_OPENING_FACE_OPTIONS,
@@ -288,7 +288,7 @@ function PrimaryFinishControls({
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Steel finish</label>
           <div className="mt-1.5 grid grid-cols-2 gap-2">
-            {LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => (
+            {ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => (
               <button
                 key={option}
                 type="button"
@@ -307,7 +307,7 @@ function PrimaryFinishControls({
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Sheeting add-ons</label>
           <div className="mt-1.5 grid gap-2 sm:grid-cols-3">
-            {LCSS_WAREHOUSE_GABLE_OPTIONS.map((option) => (
+            {ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => (
               <VisualChoiceCard
                 key={option.value}
                 icon={option.value === "roof_only" ? HomeModernIcon : ShieldCheckIcon}
@@ -467,7 +467,7 @@ export default function WarehouseBuilderClient() {
         shadow: "rgba(15,23,42,0.95)",
       }
   const systemLabel = getSystemLabel(config.productType)
-  const widthOptions = LCSS_WAREHOUSE_WIDTH_OPTIONS
+  const widthOptions = ATLAS_WAREHOUSE_WIDTH_OPTIONS
   const lengthOptions = ATLAS_WAREHOUSE_LENGTH_OPTIONS
   const enclosureLabel =
     WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === config.enclosureType)?.label ||
@@ -478,7 +478,7 @@ export default function WarehouseBuilderClient() {
     config.garageDoorOpeningType
   const steelFinishLabel = config.steelFinish || "Galv"
   const gableModeLabel =
-    LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === config.gableMode)?.label || config.gableMode
+    ATLAS_WAREHOUSE_SHEETING_OPTIONS.find((option) => option.value === config.gableMode)?.label || config.gableMode
   const sheetingColor =
     WAREHOUSE_SHEETING_COLORS.find((option) => option.value === config.sheetingColor) ||
     WAREHOUSE_SHEETING_COLORS[0]
@@ -495,7 +495,7 @@ export default function WarehouseBuilderClient() {
       sheetingFinish: `${value === "chromadek" ? "Chromadek" : "Galvanised"} finish selected`,
       steelFinish: `${value} steel finish selected`,
       enclosureType: WAREHOUSE_ENCLOSURE_OPTIONS.find((option) => option.value === value)?.label,
-      gableMode: LCSS_WAREHOUSE_GABLE_OPTIONS.find((option) => option.value === value)?.label,
+      gableMode: ATLAS_WAREHOUSE_SHEETING_OPTIONS.find((option) => option.value === value)?.label,
       sheetingColor: WAREHOUSE_SHEETING_COLORS.find((option) => option.value === value)?.label,
       rollerDoorFace: `Main openings moved to the ${value}`,
       pedestrianDoorFace: `Personnel openings moved to the ${value}`,
@@ -596,7 +596,7 @@ export default function WarehouseBuilderClient() {
               : savedConfiguration.cladding === "Chromadek"
                 ? "chromadek"
                 : "galvanised",
-            gableMode: LCSS_WAREHOUSE_GABLE_OPTIONS.some((option) => option.value === savedConfiguration.gableMode)
+            gableMode: ATLAS_WAREHOUSE_SHEETING_OPTIONS.some((option) => option.value === savedConfiguration.gableMode)
               ? savedConfiguration.gableMode
               : "structure_only",
           })
@@ -611,7 +611,7 @@ export default function WarehouseBuilderClient() {
 
     const widthParam = Number(searchParams.get("width"))
     const lengthParam = Number(searchParams.get("length"))
-    const nextWidthOptions = LCSS_WAREHOUSE_WIDTH_OPTIONS
+    const nextWidthOptions = ATLAS_WAREHOUSE_WIDTH_OPTIONS
 
     const nextValues = { productType: "LCSS Warehouse" }
 
@@ -648,8 +648,8 @@ export default function WarehouseBuilderClient() {
     if (WAREHOUSE_SHEETING_COLORS.some((option) => option.value === sheetingColorParam)) nextValues.sheetingColor = sheetingColorParam
     if (["Corrugated", "IBR", "Concealed Fix"].includes(sheetingProfileParam)) nextValues.sheetingProfile = sheetingProfileParam
     if (["galvanised", "chromadek"].includes(sheetingFinishParam)) nextValues.sheetingFinish = sheetingFinishParam
-    if (LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.includes(steelFinishParam)) nextValues.steelFinish = steelFinishParam
-    if (LCSS_WAREHOUSE_GABLE_OPTIONS.some((option) => option.value === sheetingParam)) nextValues.gableMode = sheetingParam
+    if (ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS.includes(steelFinishParam)) nextValues.steelFinish = steelFinishParam
+    if (ATLAS_WAREHOUSE_SHEETING_OPTIONS.some((option) => option.value === sheetingParam)) nextValues.gableMode = sheetingParam
 
     if (Object.keys(nextValues).length > 0) {
       patchFields(nextValues)
@@ -1838,7 +1838,7 @@ export default function WarehouseBuilderClient() {
                           }}
                           className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"
                         >
-                          {(isLcssWarehouse ? LCSS_WAREHOUSE_GABLE_OPTIONS : WAREHOUSE_ENCLOSURE_OPTIONS).map((option) => (
+                          {(isLcssWarehouse ? ATLAS_WAREHOUSE_SHEETING_OPTIONS : WAREHOUSE_ENCLOSURE_OPTIONS).map((option) => (
                             <option key={option.value} value={option.value}>
                               {option.label}
                             </option>

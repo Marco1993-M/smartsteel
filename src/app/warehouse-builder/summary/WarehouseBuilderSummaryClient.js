@@ -4,7 +4,7 @@ import Image from "next/image"
 import { useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import WarehouseBuilderScene from "../../../components/warehouse-builder/WarehouseBuilderScene"
-import { calculateEstimateByProductType } from "../../../lib/estimates/estimateFactory"
+import { calculateAtlasWarehouseEstimate } from "../../../lib/estimates/atlasWarehouseEstimate"
 import { formatCurrency } from "../../../lib/estimates/warehouseEstimate"
 import { WAREHOUSE_SHEETING_COLORS } from "../../../lib/warehouseBuilderStore"
 
@@ -52,7 +52,7 @@ export default function WarehouseBuilderSummaryClient() {
   const isAtlas = configuration.productType === "LCSS Warehouse"
   const estimate = useMemo(() => {
     const structureOnly = configuration.gableMode === "structure_only"
-    return calculateEstimateByProductType(configuration.productType, {
+    return calculateAtlasWarehouseEstimate({
       ...configuration,
       pricingModel: "atlas_os_v1",
       cladding: structureOnly ? "None" : configuration.sheetingFinish === "chromadek" ? "Chromadek" : "IBR",
