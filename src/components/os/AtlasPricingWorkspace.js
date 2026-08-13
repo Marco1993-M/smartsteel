@@ -149,11 +149,26 @@ export default function AtlasPricingWorkspace() {
   const geometryRecords = useMemo(() => geometry
     ? productCode === "W06" ? applyAtlasW06GeometryToPricing(records, geometry) : productCode === "W10" ? applyAtlasW10GeometryToPricing(records, geometry) : productCode === "W12" ? applyAtlasW12GeometryToPricing(records, geometry) : applyAtlasW08GeometryToPricing(records, geometry)
     : records, [records, geometry, productCode])
-  const configuredRecords = useMemo(() => geometryRecords.map((record) => ({
-    ...record,
-    pricingRateOverride: configurationMaterial === "mild" ? record.mildSteelRate : configurationMaterial === "galvanised" ? record.galvanisedRate : record.zamRate,
-    pricingBasisLabel: configurationMaterial === "mild" ? "Mild steel" : configurationMaterial === "galvanised" ? "Galvanised" : "ZAM",
-  })), [geometryRecords, configurationMaterial])
+  const configuredRecords = useMemo(() => geometryRecords.map((record) => {
+    const materialPriced = ["ton", "kg", "m"].includes(record.pricingUnit)
+    return {
+      ...record,
+      pricingRateOverride: materialPriced
+        ? configurationMaterial === "mild"
+          ? record.mildSteelRate
+          : configurationMaterial === "galvanised"
+            ? record.galvanisedRate
+            : record.zamRate
+        : null,
+      pricingBasisLabel: materialPriced
+        ? configurationMaterial === "mild"
+          ? "Mild steel"
+          : configurationMaterial === "galvanised"
+            ? "Galvanised"
+            : "ZAM"
+        : "Fixed unit cost",
+    }
+  }), [geometryRecords, configurationMaterial])
   const confirmedCount = configuredRecords.filter((record) => record.status === "confirmed").length
   const missingMassCount = configuredRecords.filter((record) => record.pricingUnit === "ton" && record.massKgPerM === "").length
   const groupedRecords = useMemo(() => Object.entries(configuredRecords.reduce((groups, record) => {
@@ -360,12 +375,12 @@ export default function AtlasPricingWorkspace() {
                 {assembledSummary.holdCount ? `${assembledSummary.holdCount} holds` : "Quote ready"}
               </span>
             </div>
-            <p className="mt-2 max-w-xl text-xs leading-5 text-slate-400">Calculated from the selected {productCode} geometry and controlled component rates. It is not released to public estimates, and technical holds remain visible until approved.</p>
+            <p className="mt-2 max-w-xl text-xs leading-5 text-slate-400">Calculated from member quantity × cut length × kg/m × the controlled cost rate, followed by one 40% commercial uplift. The source sheet is used only as a variance benchmark.</p>
           </div>
           {[
-            ["Raw material", assembledSummary.rawCost],
+            ["Calculated cost", assembledSummary.rawCost],
             ["Other allowances", assembledSummary.wasteCost + assembledSummary.fabricationCost + assembledSummary.coatingCost],
-            ["Margin allowance", assembledSummary.marginCost],
+            ["40% commercial uplift", assembledSummary.marginCost],
           ].map(([label, value]) => (
             <div key={label} className="bg-slate-950 p-5 sm:p-6">
               <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-slate-500">{label}</p>
@@ -397,7 +412,7 @@ export default function AtlasPricingWorkspace() {
                   ["Structure steel", `${pricingBenchmark.totalSteelKg.toLocaleString("en-ZA")}kg`],
                   [`${pricingBenchmark.material} rate`, formatRate(pricingBenchmark.materialRatePerTon, "ton")],
                   ["Cost excl. VAT", formatMoney(pricingBenchmark.totalCostExclVat)],
-                  ["Sheet uplift", `${pricingBenchmark.markupPercent}%`],
+                  ["Uplift already included", `${pricingBenchmark.markupPercent}%`],
                 ].map(([label, value]) => (
                   <div key={label} className="bg-slate-50 p-3.5">
                     <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
