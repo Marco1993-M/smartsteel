@@ -286,7 +286,7 @@ function WarehouseMesh({
               ))
             })}
 
-            {[0.08, 0.5, 0.92].flatMap((fraction) => [-1, 1].map((side) => (
+            {(enclosureType === "fully_enclosed" || enclosureType === "side_walls") ? [0.08, 0.5, 0.92].flatMap((fraction) => [-1, 1].map((side) => (
               <mesh
                 key={`girt-${bayIndex}-${fraction}-${side}`}
                 position={[side * (w / 2 + wallSecondaryOffset), h * fraction, bayCenterZ]}
@@ -295,7 +295,7 @@ function WarehouseMesh({
                 <boxGeometry args={[secondaryMemberDepth, secondaryMemberThickness, bayDepth]} />
                 <meshPhysicalMaterial {...frameMaterialProps} />
               </mesh>
-            )))}
+            ))) : null}
           </group>
         )
       }) : null}
