@@ -20,6 +20,7 @@ import {
 } from "@heroicons/react/24/outline"
 import WarehouseBuilderScene from "../../components/warehouse-builder/WarehouseBuilderScene"
 import { calculateEstimateByProductType } from "../../lib/estimates/estimateFactory"
+import { calculateAtlasWarehouseEstimate } from "../../lib/estimates/atlasWarehouseEstimate"
 import {
   formatCurrency,
   WAREHOUSE_CLADDING_OPTIONS,
@@ -695,8 +696,10 @@ export default function WarehouseBuilderClient() {
   }, [config, isLcssWarehouse])
 
   const estimate = useMemo(
-    () => calculateEstimateByProductType(config.productType, estimateInput),
-    [config.productType, estimateInput]
+    () => isLcssWarehouse
+      ? calculateAtlasWarehouseEstimate(estimateInput)
+      : calculateEstimateByProductType(config.productType, estimateInput),
+    [config.productType, estimateInput, isLcssWarehouse]
   )
 
   const budgetValue =
