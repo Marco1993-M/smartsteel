@@ -41,6 +41,7 @@ const INTERNAL_PRODUCT_LABELS = [
   "CFLC trusses",
 ]
 const LCSS_ALLOWED_WIDTHS = [3, 6, 8, 10, 12]
+const LCSS_ALLOWED_LENGTHS = Array.from({ length: 13 }, (_, index) => (index + 1) * 4)
 const LCSS_ALLOWED_STEEL_FINISHES = ["Galv", "Mild"]
 const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable", "roof_only", "fully_enclosed"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
@@ -58,7 +59,7 @@ function isValidLcssLength(width, length) {
   const normalizedLength = Number(length)
 
   if (normalizedWidth === 3 && normalizedLength === 6) return true
-  return Math.abs(normalizedLength / 2.5 - Math.round(normalizedLength / 2.5)) <= 0.0001
+  return Math.abs(normalizedLength / 4 - Math.round(normalizedLength / 4)) <= 0.0001
 }
 
 function applyGroundMountDefaults(previousState) {
@@ -96,7 +97,8 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
     const length = Number(previousState.length)
 
     nextState.width = LCSS_ALLOWED_WIDTHS.includes(width) ? width : 6
-    nextState.length = isValidLcssLength(nextState.width, length) ? length : 10
+    nextState.length = isValidLcssLength(nextState.width, length) ? length : 12
+    nextState.pricingModel = "atlas_4m"
     nextState.wallHeight =
       Number.isFinite(Number(previousState.wallHeight)) && Number(previousState.wallHeight) > 0
         ? Number(previousState.wallHeight)
@@ -950,6 +952,16 @@ export default function EstimateDrawer({
                           <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
                             {formState.width}m
                           </div>
+                        ) : isLcssEstimateProduct(formState.productType) ? (
+                          <select
+                            value={formState.width}
+                            onChange={(event) => handleChange("width", Number(event.target.value))}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          >
+                            {LCSS_ALLOWED_WIDTHS.map((option) => (
+                              <option key={option} value={option}>{option}m</option>
+                            ))}
+                          </select>
                         ) : formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
                           <input
                             type="number"
@@ -983,6 +995,16 @@ export default function EstimateDrawer({
                           <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
                             {formState.length}m
                           </div>
+                        ) : isLcssEstimateProduct(formState.productType) ? (
+                          <select
+                            value={formState.length}
+                            onChange={(event) => handleChange("length", Number(event.target.value))}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          >
+                            {LCSS_ALLOWED_LENGTHS.map((option) => (
+                              <option key={option} value={option}>{option}m</option>
+                            ))}
+                          </select>
                         ) : formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
                           <input
                             type="number"
