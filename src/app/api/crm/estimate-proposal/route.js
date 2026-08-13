@@ -151,7 +151,66 @@ export async function POST(request) {
     }
 
     const resendPayload = await resendResponse.json().catch(() => null)
-    return NextResponse.json({ success: true, emailId: resendPayload?.id || null })
+    const emailId = resendPayload?.id || null
+    const sentAt = new Date().toISOString()
+    const lifecycleWarnings = []
+
+    let estimateLifecycle = await supabaseServer
+      .from("estimates")
+      .update({ status: "sent", sent_at: sentAt, sent_by_name: "Smart Steel" })
+      .eq("id", estimate.id)
+
+    if (estimateLifecycle.error && /sent_at|sent_by_name|schema cache/i.test(estimateLifecycle.error.message || "")) {
+      estimateLifecycle = await supabaseServer
+        .from("estimates")
+        .update({ status: "sent" })
+        .eq("id", estimate.id)
+    }
+    if (estimateLifecycle.error) lifecycleWarnings.push(`Estimate status: ${estimateLifecycle.error.message}`)
+
+    const leadLifecycle = await supabaseServer
+      .from("leads")
+      .update({
+        status: "quoted",
+        quote_value: Number(estimate.total || 0),
+        next_action: `Awaiting the client's review of ${estimate.title || `estimate V${estimate.version_no || 1}`}.`,
+      })
+      .eq("id", lead.id)
+    if (leadLifecycle.error) lifecycleWarnings.push(`Lead status: ${leadLifecycle.error.message}`)
+
+    const emailReceipt = await supabaseServer.from("crm_email_events").insert([{
+      estimate_id: estimate.id,
+      lead_id: lead.id,
+      estimate_version: Number(estimate.version_no || 0) || null,
+      email_type: "estimate",
+      recipient: lead.email,
+      subject,
+      body,
+      sent_at: sentAt,
+      sent_by_name: "Smart Steel",
+      follow_up_number: 0,
+      channel: "email",
+    }])
+    if (emailReceipt.error && !/crm_email_events|schema cache|does not exist/i.test(emailReceipt.error.message || "")) {
+      lifecycleWarnings.push(`Email receipt: ${emailReceipt.error.message}`)
+    }
+
+    const activity = await supabaseServer.from("lead_activities").insert([{
+      lead_id: lead.id,
+      type: "email",
+      user_name: "System",
+      description: `${estimate.title || `Estimate V${estimate.version_no || 1}`} sent to ${lead.email}. Resend delivery ID: ${emailId || "not returned"}. Subject: ${subject}`,
+      timestamp: sentAt,
+    }])
+    if (activity.error) lifecycleWarnings.push(`Activity record: ${activity.error.message}`)
+
+    return NextResponse.json({
+      success: true,
+      emailId,
+      sentAt,
+      lifecycleRecorded: lifecycleWarnings.length === 0,
+      lifecycleWarnings,
+    })
   } catch (error) {
     console.error("Estimate proposal email error:", error)
     return NextResponse.json({ error: error?.message || "Could not send the proposal." }, { status: 500 })
