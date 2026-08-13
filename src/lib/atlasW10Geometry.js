@@ -7,6 +7,9 @@ const PROFILE = {
   column: { webMm: 250, flangeMm: 75, lipMm: 20, thicknessMm: 2.5 },
   rafter: { webMm: 200, flangeMm: 75, lipMm: 20, thicknessMm: 2.5 },
   purlin: { webMm: 175, flangeMm: 65, lipMm: 20, thicknessMm: 2 },
+  bracing: { webMm: 100, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
+  sideGirt: { webMm: 150, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
+  apexHaunch: { webMm: 175, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
 }
 
 function round(value, digits = 4) { return Number(Number(value).toFixed(digits)) }
@@ -25,13 +28,19 @@ export function calculateAtlasW10Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
   const roofRiseM = (spanM / 2) * Math.tan(roofPitchRadians)
   const bays = length / baySpacingM
   const portalFrames = bays + 1
-  const purlinRowsPerSlope = Math.ceil(rafterCutLengthM / 1.5)
-  const totalPurlinRows = purlinRowsPerSlope * 2
+  const purlinRowsPerSlope = 3
+  const totalPurlinRows = 6
   const bracedBayPositions = Array.from({ length: bays }, (_, index) => index + 1).filter((bay) => (bay - 1) % 4 === 0)
+  const wallBraceCutLengthM = Math.hypot(baySpacingM, eaveHeight)
+  const roofBraceCutLengthM = Math.hypot(baySpacingM, rafterCutLengthM)
   const members = {
     columns: { code: "W10-COL", label: "Column channels", quantity: portalFrames * 2 * 2, cutLengthM: eaveHeight, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.column), rule: `${portalFrames} frames × 2 columns × 2 back-to-back channels` },
     rafters: { code: "W10-RAF", label: "Rafter channels", quantity: portalFrames * 2, cutLengthM: rafterCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.rafter), rule: `${portalFrames} frames × 2 single rafters` },
     purlins: { code: "W10-PUR", label: "Roof purlins", quantity: bays * totalPurlinRows, cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.purlin), rule: `${totalPurlinRows} rows × ${bays} bay lengths` },
+    wallBracing: { code: "W10-XBW", label: "Wall X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: wallBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 walls × 2 diagonals` },
+    roofBracing: { code: "W10-XBR", label: "Roof X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: roofBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 roof slopes × 2 diagonals` },
+    sideGirts: { code: "W10-GRT", label: "Side girts", quantity: bays * 2 * 3, cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.sideGirt), rule: `${bays} bays × 2 walls × 3 rows` },
+    apexHaunch: { code: "W10-APH", label: "Apex and haunch members", quantity: portalFrames * 3, cutLengthM: 1.5, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.apexHaunch), rule: `${portalFrames} frames × 1 apex member + 2 haunch members` },
   }
   Object.values(members).forEach((member) => {
     member.cutLengthM = round(member.cutLengthM)
@@ -44,7 +53,7 @@ export function calculateAtlasW10Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
     totalPurlinRows, bracedBayPositions, members,
     confirmedStructuralMassKg: round(Object.values(members).reduce((total, member) => total + member.totalMassKg, 0), 2),
     assumptions: { structuralWastePercent: 0, fabricationAllowance: 0, packagingAllowance: 0, punchingIncludedInSteelRate: true, deliveryIncluded: false, installationIncluded: false },
-    holds: ["Apex-and-haunch member quantity and cut-length rule", "Final X-bracing member count and cut-length rule", "Final bolted connection quantities and specifications", "Wall and gable support member rules"],
+    holds: ["Confirm final apex-and-haunch cut length from the 1.5m baseline", "Final bolted connection quantities and specifications", "Gable-girt member schedule"],
   }
 }
 

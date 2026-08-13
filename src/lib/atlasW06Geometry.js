@@ -7,6 +7,8 @@ const PROFILE = {
   column: { webMm: 175, flangeMm: 75, lipMm: 20, thicknessMm: 2 },
   rafter: { webMm: 175, flangeMm: 75, lipMm: 20, thicknessMm: 2 },
   purlin: { webMm: 175, flangeMm: 65, lipMm: 20, thicknessMm: 2 },
+  bracing: { webMm: 100, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
+  sideGirt: { webMm: 125, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
 }
 
 function round(value, digits = 4) {
@@ -27,14 +29,19 @@ export function calculateAtlasW06Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
   const roofRiseM = (spanM / 2) * Math.tan(roofPitchRadians)
   const bays = length / baySpacingM
   const portalFrames = bays + 1
-  const purlinRowsPerSlope = Math.ceil(rafterCutLengthM / 1.5)
-  const totalPurlinRows = purlinRowsPerSlope * 2
+  const purlinRowsPerSlope = 3
+  const totalPurlinRows = 6
   const bracedBayPositions = Array.from({ length: bays }, (_, index) => index + 1).filter((bay) => (bay - 1) % 4 === 0)
+  const wallBraceCutLengthM = Math.hypot(baySpacingM, eaveHeight)
+  const roofBraceCutLengthM = Math.hypot(baySpacingM, rafterCutLengthM)
 
   const members = {
     columns: { code: "W06-COL", label: "Column channels", quantity: portalFrames * 2 * 2, cutLengthM: eaveHeight, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.column), rule: `${portalFrames} frames × 2 columns × 2 back-to-back channels` },
     rafters: { code: "W06-RAF", label: "Rafter channels", quantity: portalFrames * 2, cutLengthM: rafterCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.rafter), rule: `${portalFrames} frames × 2 single rafters` },
     purlins: { code: "W06-PUR", label: "Roof purlins", quantity: bays * totalPurlinRows, cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.purlin), rule: `${totalPurlinRows} rows × ${bays} bay lengths` },
+    wallBracing: { code: "W06-XBW", label: "Wall X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: wallBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 walls × 2 diagonals` },
+    roofBracing: { code: "W06-XBR", label: "Roof X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: roofBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 roof slopes × 2 diagonals` },
+    sideGirts: { code: "W06-GRT", label: "Side girts", quantity: bays * 2 * 3, cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.sideGirt), rule: `${bays} bays × 2 walls × 3 rows` },
   }
 
   Object.values(members).forEach((member) => {
@@ -49,7 +56,7 @@ export function calculateAtlasW06Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
     purlinRowsPerSlope, totalPurlinRows, bracedBayPositions, members,
     confirmedStructuralMassKg: round(Object.values(members).reduce((total, member) => total + member.totalMassKg, 0), 2),
     assumptions: { structuralWastePercent: 0, fabricationAllowance: 0, packagingAllowance: 0, punchingIncludedInSteelRate: true, deliveryIncluded: false, installationIncluded: false },
-    holds: ["Final X-bracing member count and cut-length rule", "Final bolted connection quantities and specifications", "Wall and gable support member rules"],
+    holds: ["Final bolted connection quantities and specifications", "Gable-girt member schedule"],
   }
 }
 

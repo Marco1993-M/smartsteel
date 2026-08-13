@@ -8,6 +8,8 @@ const PROFILE = {
   column: { webMm: 200, flangeMm: 75, lipMm: 20, thicknessMm: 2 },
   rafter: { webMm: 200, flangeMm: 75, lipMm: 20, thicknessMm: 2.5 },
   purlin: { webMm: 175, flangeMm: 65, lipMm: 20, thicknessMm: 2 },
+  bracing: { webMm: 100, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
+  sideGirt: { webMm: 150, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
 }
 
 function round(value, digits = 4) {
@@ -29,9 +31,11 @@ export function calculateAtlasW08Geometry({ lengthM = 20, eaveHeightM = 3 } = {}
   const roofRiseM = halfSpanM * Math.tan(roofPitchRadians)
   const bays = length / baySpacingM
   const portalFrames = bays + 1
-  const purlinRowsPerSlope = Math.ceil(rafterCutLengthM / 1.5)
-  const totalPurlinRows = purlinRowsPerSlope * 2
+  const purlinRowsPerSlope = 3
+  const totalPurlinRows = 6
   const bracedBayPositions = Array.from({ length: bays }, (_, index) => index + 1).filter((bay) => (bay - 1) % 4 === 0)
+  const wallBraceCutLengthM = Math.hypot(baySpacingM, eaveHeight)
+  const roofBraceCutLengthM = Math.hypot(baySpacingM, rafterCutLengthM)
 
   const members = {
     columns: {
@@ -58,6 +62,9 @@ export function calculateAtlasW08Geometry({ lengthM = 20, eaveHeightM = 3 } = {}
       massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.purlin),
       rule: `${totalPurlinRows} rows × ${bays} bay lengths`,
     },
+    wallBracing: { code: "W08-XBW", label: "Wall X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: wallBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 walls × 2 diagonals` },
+    roofBracing: { code: "W08-XBR", label: "Roof X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: roofBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 roof slopes × 2 diagonals` },
+    sideGirts: { code: "W08-GRT", label: "Side girts", quantity: bays * 2 * 3, cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.sideGirt), rule: `${bays} bays × 2 walls × 3 rows` },
   }
 
   Object.values(members).forEach((member) => {
@@ -92,9 +99,8 @@ export function calculateAtlasW08Geometry({ lengthM = 20, eaveHeightM = 3 } = {}
       installationIncluded: false,
     },
     holds: [
-      "Final X-bracing member count and cut-length rule",
       "Final bolted connection quantities and specifications",
-      "Wall and gable support members when wall sheeting is selected",
+      "Gable-girt member schedule",
     ],
   }
 }
