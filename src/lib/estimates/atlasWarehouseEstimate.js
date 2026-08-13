@@ -67,7 +67,11 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
   const sheetingProfile = ["Corrugated", "IBR", "Concealed Fix"].includes(input.sheetingProfile) ? input.sheetingProfile : "IBR"
   const sheetingFinish = input.sheetingFinish === "chromadek" || input.cladding === "Chromadek" ? "chromadek" : "galvanised"
 
-  const structuralLines = Object.values(geometry.members).map((member) => {
+  const wallSupportMemberKeys = new Set(["sideGirts", "frontGableColumns", "rearGableColumns"])
+  const activeStructuralMembers = Object.entries(geometry.members)
+    .filter(([key]) => gableMode === "fully_enclosed" || !wallSupportMemberKeys.has(key))
+    .map(([, member]) => member)
+  const structuralLines = activeStructuralMembers.map((member) => {
     const rawCost = member.totalMassKg * (steelRatePerTon / 1000)
     return buildLineItem({
       code: member.code,
@@ -79,7 +83,10 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     })
   })
 
-  const baseBracketCount = geometry.portalFrames * 2 * quantity
+  const gableColumnCount = gableMode === "fully_enclosed"
+    ? ((geometry.members.frontGableColumns?.quantity || 0) + (geometry.members.rearGableColumns?.quantity || 0)) * quantity
+    : 0
+  const baseBracketCount = geometry.portalFrames * 2 * quantity + gableColumnCount
   const ridgeBracketCount = geometry.portalFrames * quantity
   const eaveBracketCount = geometry.portalFrames * 2 * quantity
   const braceMemberCount = (geometry.members.wallBracing.quantity + geometry.members.roofBracing.quantity) * quantity
@@ -128,7 +135,7 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
   return {
     input: { ...input, width, length, wallHeight, quantity, steelFinish, gableMode, sheetingProfile, sheetingFinish, pricingModel: "atlas_os_v1", baySpacing: geometry.baySpacingM },
     dimensions: { width, length, wallHeight, quantity, portals: geometry.portalFrames, bays: geometry.bays, lengthRule: "atlas_4m_bay_rule", trussLength: geometry.rafterCutLengthM, trussHeight: geometry.roofRiseM, roofPurlins: geometry.totalPurlinRows },
-    materials: { totalSteelKg: roundMoney(geometry.confirmedStructuralMassKg * quantity), geometry, provisionalConnections: true },
+    materials: { totalSteelKg: roundMoney(activeStructuralMembers.reduce((total, member) => total + member.totalMassKg, 0) * quantity), geometry, provisionalConnections: true },
     pricing: { steelCost: roundMoney(structuralLines.reduce((sum, item) => sum + item.total, 0)), connectionCost: roundMoney(connectionLines.reduce((sum, item) => sum + item.total, 0)), subTotalBeforeMarkup: roundMoney(subTotalBeforeMarkup), markupRate: COMMERCIAL_UPLIFT_RATE, markupValue: roundMoney(markupValue), commercialUpliftIncludedInRates: 0, vatRate: VAT_RATE, vatValue: roundMoney(vatValue), baseTotal: roundMoney(totalExclVat), markupMultiplier: 1 + COMMERCIAL_UPLIFT_RATE, estimatedTotal: roundMoney(totalExclVat), totalInclVat: roundMoney(totalInclVat), claddingCost: roundMoney(sheetingCost), installationCost: 0 },
     sheeting: { roofSheetingArea: roundMoney(roofSheetingArea), longWallSheetingArea: roundMoney(longWallSheetingArea), gableSheetingArea: roundMoney(gableSheetingArea), wallSheetingArea: roundMoney(wallSheetingArea), totalSheetingArea: roundMoney(totalSheetingArea), openingsDeducted: false },
     lineItems,
