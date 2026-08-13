@@ -44,7 +44,7 @@ const ESTIMATE_STATUS_OPTIONS = [
   { value: "declined", label: "Declined" },
 ]
 
-const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", "LCSS Warehouse"]
+const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", "Atlas Warehouse", "LCSS Warehouse"]
 const TRUSS_PRODUCT_TYPES = ["LSF trusses", "CFLC trusses"]
 const SOLAR_PRODUCT_TYPES = ["Solar carport", "Solar ground mount", "Solar structure"]
 
@@ -64,6 +64,14 @@ const SCOPE_PRESET_OPTIONS = {
     "Sheeted-gable",
     "Galv finish",
     "Mild steel finish",
+  ],
+  "Atlas Warehouse": [
+    "Storage warehouse",
+    "Workshop",
+    "Agricultural building",
+    "Poultry building",
+    "Commercial building",
+    "Other",
   ],
   "Solar carport": [
     "Single bay",

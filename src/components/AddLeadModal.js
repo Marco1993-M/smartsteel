@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabase"
 
 const PRODUCT_TYPE_OPTIONS = [
   "LSF Warehouse",
-  "LCSS Warehouse",
+  "Atlas Warehouse",
   "Solar carport",
   "Solar ground mount",
   "Solar structure",

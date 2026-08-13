@@ -23,12 +23,13 @@ import { TRUSS_ROOF_STYLE_OPTIONS } from "../lib/estimates/trussEstimate"
 
 const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
   { value: "LSF Warehouse", label: "LSF Warehouse" },
-  { value: "LCSS Warehouse", label: "LCSS Warehouse" },
+  { value: "LCSS Warehouse", label: "Atlas Warehouse" },
   { value: "LSF trusses", label: "LSF trusses" },
   { value: "CFLC trusses", label: "CFLC trusses" },
   ...SOLAR_PRODUCT_TYPE_OPTIONS,
 ]
 const INTERNAL_PRODUCT_LABELS = [
+  "Atlas Warehouse",
   "LSF Warehouse",
   "LCSS Warehouse",
   "LCSS warehouse",
@@ -40,9 +41,9 @@ const INTERNAL_PRODUCT_LABELS = [
   "LSF trusses",
   "CFLC trusses",
 ]
-const LCSS_ALLOWED_WIDTHS = [3, 6, 8, 10, 12]
-const LCSS_ALLOWED_LENGTHS = Array.from({ length: 13 }, (_, index) => (index + 1) * 4)
-const LCSS_ALLOWED_STEEL_FINISHES = ["Galv", "Mild"]
+const LCSS_ALLOWED_WIDTHS = [6, 8, 10, 12]
+const LCSS_ALLOWED_LENGTHS = Array.from({ length: 12 }, (_, index) => (index + 1) * 4)
+const LCSS_ALLOWED_STEEL_FINISHES = ["ZAM", "Galv", "Mild"]
 const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable", "roof_only", "fully_enclosed"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
 
@@ -106,7 +107,7 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
     nextState.useCustomSize = true
     nextState.steelFinish = LCSS_ALLOWED_STEEL_FINISHES.includes(previousState.steelFinish)
       ? previousState.steelFinish
-      : "Galv"
+      : "ZAM"
     nextState.cladding =
       WAREHOUSE_CLADDING_OPTIONS.includes(previousState.cladding) && previousState.cladding !== "None"
         ? previousState.cladding
