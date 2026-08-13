@@ -78,6 +78,7 @@ export default function AtlasPricingWorkspace() {
   const [message, setMessage] = useState("")
   const [configurationLengthM, setConfigurationLengthM] = useState(20)
   const [configurationEaveHeightM, setConfigurationEaveHeightM] = useState(3)
+  const [configurationMaterial, setConfigurationMaterial] = useState("zam")
 
   useEffect(() => {
     let active = true
@@ -133,6 +134,7 @@ export default function AtlasPricingWorkspace() {
   useEffect(() => {
     setConfigurationLengthM(20)
     setConfigurationEaveHeightM(["W06", "W10", "W12"].includes(productCode) ? 4.5 : 3)
+    setConfigurationMaterial("zam")
   }, [productCode])
 
   const geometry = useMemo(() => productCode === "W08"
@@ -144,9 +146,14 @@ export default function AtlasPricingWorkspace() {
         : productCode === "W12"
           ? calculateAtlasW12Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
       : null, [productCode, configurationLengthM, configurationEaveHeightM])
-  const configuredRecords = useMemo(() => geometry
+  const geometryRecords = useMemo(() => geometry
     ? productCode === "W06" ? applyAtlasW06GeometryToPricing(records, geometry) : productCode === "W10" ? applyAtlasW10GeometryToPricing(records, geometry) : productCode === "W12" ? applyAtlasW12GeometryToPricing(records, geometry) : applyAtlasW08GeometryToPricing(records, geometry)
     : records, [records, geometry, productCode])
+  const configuredRecords = useMemo(() => geometryRecords.map((record) => ({
+    ...record,
+    pricingRateOverride: configurationMaterial === "mild" ? record.mildSteelRate : configurationMaterial === "galvanised" ? record.galvanisedRate : record.zamRate,
+    pricingBasisLabel: configurationMaterial === "mild" ? "Mild steel" : configurationMaterial === "galvanised" ? "Galvanised" : "ZAM",
+  })), [geometryRecords, configurationMaterial])
   const confirmedCount = configuredRecords.filter((record) => record.status === "confirmed").length
   const missingMassCount = configuredRecords.filter((record) => record.pricingUnit === "ton" && record.massKgPerM === "").length
   const groupedRecords = useMemo(() => Object.entries(configuredRecords.reduce((groups, record) => {
@@ -333,10 +340,11 @@ export default function AtlasPricingWorkspace() {
 
       {geometry ? (
         <section className="border border-[#0043f3]/20 bg-[#f5f9ff] p-4 sm:p-5">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_160px] lg:items-end">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_150px_170px] lg:items-end">
             <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Live {productCode} configuration</p><h2 className="mt-1 text-xl font-bold text-slate-950">Price the geometry, not a manually typed baseline.</h2><p className="mt-1 text-xs leading-5 text-slate-600">Columns, rafters and purlins use exact quantities, 90-degree cut lengths and controlled kg/m. Structural waste, fabrication and packaging are R0; delivery and installation remain separate.</p></div>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Building length</span><select value={configurationLengthM} onChange={(event) => setConfigurationLengthM(Number(event.target.value))} className={inputClass}>{controlledLengths.map((length) => <option key={length} value={length}>{length}m · {length / 4} bays</option>)}</select></label>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Eave height</span><select value={configurationEaveHeightM} onChange={(event) => setConfigurationEaveHeightM(Number(event.target.value))} className={inputClass}>{controlledHeights.map((height) => <option key={height} value={height}>{height}m</option>)}</select></label>
+            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Structure material</span><select value={configurationMaterial} onChange={(event) => setConfigurationMaterial(event.target.value)} className={inputClass}><option value="zam">ZAM</option><option value="galvanised">Galvanised</option><option value="mild">Mild steel</option></select></label>
           </div>
           <div className="mt-4 grid gap-px border border-sky-200 bg-sky-200 sm:grid-cols-2 lg:grid-cols-5">{[["Portal frames", geometry.portalFrames], ["Rafter cut", `${geometry.rafterCutLengthM}m`], ["Purlin rows", geometry.totalPurlinRows], ["Confirmed mass", `${geometry.confirmedStructuralMassKg.toLocaleString("en-ZA")}kg`], ["Technical holds", geometry.holds.length]].map(([label, value]) => <div key={label} className="bg-white p-3"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-base font-bold text-slate-950">{value}</p></div>)}</div>
         </section>
@@ -462,7 +470,7 @@ export default function AtlasPricingWorkspace() {
               const selectedProfile = profiles.find((profile) => profile.id === record.profileId)
               const usesBoltSelection = record.componentCode === "W08-BLT"
               const selectedBolt = fasteners.find((fastener) => fastener.id === record.fastenerId)
-              const primaryValuePerM = materialValuePerM(record.massKgPerM, record.galvanisedRate)
+              const primaryValuePerM = materialValuePerM(record.massKgPerM, record.pricingRateOverride ?? record.galvanisedRate)
               const lineCost = calculateAtlasPricingLine(record)
               const completeness = getAtlasPricingCompleteness(record)
               const hasHold = record.status !== "confirmed" || !completeness.ready
@@ -602,6 +610,9 @@ export default function AtlasPricingWorkspace() {
                         </Field>
                         <Field label="Galvanised / primary rate">
                           <input type="number" min="0" step="0.01" value={record.galvanisedRate} onChange={(event) => updateRecord(record.id, "galvanisedRate", event.target.value)} className={inputClass} />
+                        </Field>
+                        <Field label="ZAM rate">
+                          <input type="number" min="0" step="0.01" value={record.zamRate} onChange={(event) => updateRecord(record.id, "zamRate", event.target.value)} className={inputClass} />
                         </Field>
                         <Field label="Mild-steel / alternate rate">
                           <input type="number" min="0" step="0.01" value={record.mildSteelRate} onChange={(event) => updateRecord(record.id, "mildSteelRate", event.target.value)} className={inputClass} />
