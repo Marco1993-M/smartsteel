@@ -40,6 +40,9 @@ const CRM_FALLBACK_FIELDS = [
   "quote_value",
   "lost_reason",
   "google_sheet_url",
+  "width",
+  "length",
+  "wall_height",
 ]
 const METRIC_FILTER_OPTIONS = ["all", "quoted", "won", "follow_up_today", "missing_next_step", "overdue_follow_up"]
 const CRM_VIEW_OPTIONS = [
@@ -92,6 +95,8 @@ function buildLeadPersistencePayload(lead) {
   const payload = { ...lead }
 
   optionalNumericFields.forEach((field) => {
+    if (!Object.prototype.hasOwnProperty.call(payload, field)) return
+
     const value = payload[field]
     if (value === undefined || value === null || String(value).trim() === "") {
       payload[field] = null
