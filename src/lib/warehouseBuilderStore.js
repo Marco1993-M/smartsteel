@@ -44,7 +44,7 @@ export const DEFAULT_WAREHOUSE_BUILDER_STATE = {
   pedestrianDoorCount: 0,
   pedestrianDoorFace: "rear",
   sheetingColor: "galvanised",
-  steelFinish: "Galv",
+  steelFinish: "ZAM",
   gableMode: "structure_only",
   deliveryRequired: false,
   deliveryDistance: 0,

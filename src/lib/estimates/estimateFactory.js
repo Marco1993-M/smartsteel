@@ -2,9 +2,10 @@ import { calculateSolarEstimate } from "./solarEstimate"
 import { calculateTrussEstimate, TRUSS_PRODUCT_TYPES } from "./trussEstimate"
 import { calculateWarehouseEstimate } from "./warehouseEstimate"
 import { calculateLcssWarehouseEstimate } from "./warehouseEstimateLcss"
+import { calculateAtlasWarehouseEstimate } from "./atlasWarehouseEstimate"
 
 const SOLAR_PRODUCT_TYPES = ["Solar carport", "Solar ground mount", "Solar structure"]
-const LCSS_PRODUCT_TYPES = ["LCSS Warehouse", "CFLC Warehouse", "CFLC warehouse"]
+const LCSS_PRODUCT_TYPES = ["Atlas Warehouse", "LCSS Warehouse", "CFLC Warehouse", "CFLC warehouse"]
 
 export function isSolarEstimateProduct(productType) {
   return SOLAR_PRODUCT_TYPES.includes(productType)
@@ -32,7 +33,8 @@ export function calculateEstimateByProductType(productType, input) {
   }
 
   if (isLcssEstimateProduct(productType)) {
-    return calculateLcssWarehouseEstimate(input)
+    if (input?.pricingModel === "legacy_2_5m") return calculateLcssWarehouseEstimate(input)
+    return calculateAtlasWarehouseEstimate(input)
   }
 
   return calculateWarehouseEstimate(input)

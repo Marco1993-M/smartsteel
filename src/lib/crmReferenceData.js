@@ -14,7 +14,7 @@ export const LEAD_SOURCE_OPTIONS = [
 
 export const PRODUCT_TYPE_OPTIONS = [
   "LSF Warehouse",
-  "LCSS Warehouse",
+  "Atlas Warehouse",
   "Solar carport",
   "Solar ground mount",
   "Solar structure",
@@ -36,6 +36,12 @@ export const PRODUCT_TYPE_META = {
     family: "Warehouses",
     lane: "Structural system",
     description: "Lip channel warehouse projects.",
+  },
+  "Atlas Warehouse": {
+    line: "Atlas",
+    family: "Warehouses",
+    lane: "Structural system",
+    description: "Cold-formed lipped channel warehouse projects.",
   },
   "Solar carport": {
     line: "Atlas",

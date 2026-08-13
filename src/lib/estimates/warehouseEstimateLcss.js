@@ -23,8 +23,8 @@ const LCSS_GALVANISED_SHEETING_RATES = {
 }
 const LCSS_CHROMADEK_SHEETING_RATE = 350
 
-export const LCSS_WAREHOUSE_WIDTH_OPTIONS = [3, 6, 8, 10, 12]
-export const LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS = ["Galv", "Mild"]
+export const LCSS_WAREHOUSE_WIDTH_OPTIONS = [6, 8, 10, 12]
+export const LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS = ["ZAM", "Galv", "Mild"]
 export const LCSS_WAREHOUSE_GABLE_OPTIONS = [
   { value: "structure_only", label: "Structure only" },
   { value: "roof_only", label: "Roof sheeting" },
@@ -198,8 +198,9 @@ export function validateLcssWarehouseEstimateInput(input) {
   const pricingModel = input?.pricingModel === "atlas_4m" ? "atlas_4m" : "legacy_2_5m"
   const lengthRule = getLcssLengthRule(width, length, pricingModel)
 
-  if (!LCSS_WAREHOUSE_WIDTH_OPTIONS.includes(width)) {
-    throw new Error("LCSS warehouses currently support 3m, 6m, 8m, 10m, or 12m spans only.")
+  const dedicatedCarport = width === 3 && length === 6
+  if (!LCSS_WAREHOUSE_WIDTH_OPTIONS.includes(width) && !dedicatedCarport) {
+    throw new Error("Atlas Warehouses currently support 6m, 8m, 10m, or 12m spans.")
   }
 
   if (!Number.isFinite(length) || length <= 0) {
@@ -213,11 +214,11 @@ export function validateLcssWarehouseEstimateInput(input) {
   if (Math.abs(length / lengthRule.baySpacing - Math.round(length / lengthRule.baySpacing)) > 0.0001) {
     throw new Error(pricingModel === "atlas_4m"
       ? "Atlas warehouse lengths must follow 4m bay increments."
-      : "LCSS lengths must follow 2.5m bay increments, except for the dedicated 3m x 6m carport rule.")
+      : "CFLC catalogue lengths must follow 2.5m increments, except for the dedicated 3m x 6m carport rule.")
   }
 
   if (!LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.includes(steelFinish)) {
-    throw new Error("Please choose Galv or Mild steel.")
+    throw new Error("Please choose ZAM, galvanised, or mild steel.")
   }
 
   if (!WAREHOUSE_CLADDING_OPTIONS.includes(cladding)) {
@@ -491,9 +492,9 @@ export function calculateLcssWarehouseEstimate(input) {
     },
     lineItems,
     summary: {
-      title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m LCSS Warehouse`,
-      shortDescription: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish.toLowerCase()} steel, ${getLcssSheetingLabel(gableMode).toLowerCase()}${gableMode === "structure_only" ? "" : `, ${sheetingProfile} sheeting with a ${getLcssSheetingFinishLabel(sheetingFinish).toLowerCase()} finish`}${claddingInstalled ? " with installation" : ", supply only"}`,
-      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}LCSS warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish}, ${getLcssSheetingLabel(gableMode)}${gableMode === "structure_only" ? "" : `, ${sheetingProfile} sheeting, ${getLcssSheetingFinishLabel(sheetingFinish)} finish`}${claddingInstalled ? ", sheeting supply and installation" : ", supply only"}, priced from CFLC workbook model`,
+      title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m Atlas Warehouse`,
+      shortDescription: `${quantity > 1 ? `${quantity} x ` : ""}Atlas Warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish.toLowerCase()} steel, ${getLcssSheetingLabel(gableMode).toLowerCase()}${gableMode === "structure_only" ? "" : `, ${sheetingProfile} sheeting with a ${getLcssSheetingFinishLabel(sheetingFinish).toLowerCase()} finish`}${claddingInstalled ? " with installation" : ", supply only"}`,
+      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}Atlas Warehouse ${width}m x ${length}m x ${wallHeight}m, ${steelFinish}, ${getLcssSheetingLabel(gableMode)}${gableMode === "structure_only" ? "" : `, ${sheetingProfile} sheeting, ${getLcssSheetingFinishLabel(sheetingFinish)} finish`}${claddingInstalled ? ", sheeting supply and installation" : ", supply only"}, priced from the CFLC warehouse model`,
       layoutNote: "",
     },
     labels: {
