@@ -16,6 +16,22 @@ export const ATLAS_PRODUCT_RANGE = [
     available: true,
   },
   {
+    code: "W10",
+    name: "W10 Warehouse",
+    family: "Warehouses",
+    status: "Controlled development",
+    summary: "10m-span modular warehouse system with a 4.5m default eave height.",
+    available: true,
+  },
+  {
+    code: "W12",
+    name: "W12 Warehouse",
+    family: "Warehouses",
+    status: "Controlled development",
+    summary: "12m-span modular warehouse system with a 4.5m default eave height.",
+    available: true,
+  },
+  {
     code: "CARPORT",
     name: "Atlas Carport",
     family: "Carports",
