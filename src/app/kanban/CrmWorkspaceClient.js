@@ -88,12 +88,12 @@ function normalizeLead(lead) {
 }
 
 function buildLeadPersistencePayload(lead) {
-  const optionalNumericFields = ["quote_value", "width", "length"]
+  const optionalNumericFields = ["quote_value", "width", "length", "wall_height"]
   const payload = { ...lead }
 
   optionalNumericFields.forEach((field) => {
     const value = payload[field]
-    if (value === "" || value === undefined || value === null) {
+    if (value === undefined || value === null || String(value).trim() === "") {
       payload[field] = null
       return
     }
@@ -1031,7 +1031,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       unsupportedFields.forEach((field) => delete fallbackPayload[field])
       updateResult = await supabase
         .from("leads")
-        .update(fallbackPayload)
+        .update(buildLeadPersistencePayload(fallbackPayload))
         .eq("id", normalizedLead.id)
     }
 
@@ -1528,7 +1528,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         unsupportedColumns.push(missingColumn)
         const fallbackPayload = { ...updatePayload }
         unsupportedColumns.forEach((field) => delete fallbackPayload[field])
-        retryResult = await supabase.from("leads").update(fallbackPayload).eq("id", leadId)
+        retryResult = await supabase.from("leads").update(buildLeadPersistencePayload(fallbackPayload)).eq("id", leadId)
       }
 
       if (retryResult.error) {
