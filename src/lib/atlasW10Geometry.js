@@ -9,6 +9,7 @@ const PROFILE = {
   purlin: { webMm: 175, flangeMm: 65, lipMm: 20, thicknessMm: 2 },
   bracing: { webMm: 100, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
   sideGirt: { webMm: 150, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
+  gableColumn: { webMm: 250, flangeMm: 75, lipMm: 20, thicknessMm: 2.5 },
   apexHaunch: { webMm: 175, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
 }
 
@@ -33,6 +34,11 @@ export function calculateAtlasW10Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
   const bracedBayPositions = Array.from({ length: bays }, (_, index) => index + 1).filter((bay) => (bay - 1) % 4 === 0)
   const wallBraceCutLengthM = Math.hypot(baySpacingM, eaveHeight)
   const roofBraceCutLengthM = Math.hypot(baySpacingM, rafterCutLengthM)
+  const gableHeightAdjustmentM = eaveHeight - 4.5
+  const frontGableColumnLengthM = 5.03 + gableHeightAdjustmentM
+  const rearGableColumnLengthM = 5.3 + gableHeightAdjustmentM
+  const apexMemberLengthM = 2
+  const haunchMemberLengthM = 1.3
   const members = {
     columns: { code: "W10-COL", label: "Column channels", quantity: portalFrames * 2 * 2, cutLengthM: eaveHeight, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.column), rule: `${portalFrames} frames × 2 columns × 2 back-to-back channels` },
     rafters: { code: "W10-RAF", label: "Rafter channels", quantity: portalFrames * 2, cutLengthM: rafterCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.rafter), rule: `${portalFrames} frames × 2 single rafters` },
@@ -40,7 +46,10 @@ export function calculateAtlasW10Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
     wallBracing: { code: "W10-XBW", label: "Wall X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: wallBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 walls × 2 diagonals` },
     roofBracing: { code: "W10-XBR", label: "Roof X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: roofBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 roof slopes × 2 diagonals` },
     sideGirts: { code: "W10-GRT", label: "Side girts", quantity: bays * 2 * 3, cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.sideGirt), rule: `${bays} bays × 2 walls × 3 rows` },
-    apexHaunch: { code: "W10-APH", label: "Apex and haunch members", quantity: portalFrames * 3, cutLengthM: 1.5, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.apexHaunch), rule: `${portalFrames} frames × 1 apex member + 2 haunch members` },
+    frontGableColumns: { code: "W10-GCF", label: "Front gable columns", quantity: 2, cutLengthM: frontGableColumnLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.gableColumn), rule: "2 single columns at 2m / 6m / 2m spacing" },
+    rearGableColumns: { code: "W10-GCR", label: "Rear gable columns", quantity: 2, cutLengthM: rearGableColumnLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.gableColumn), rule: "2 single columns at 3m / 4m / 3m spacing" },
+    apexMembers: { code: "W10-APX", label: "Apex members", quantity: portalFrames, cutLengthM: apexMemberLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.apexHaunch), rule: `${portalFrames} frames × 1 apex member` },
+    haunchMembers: { code: "W10-HCH", label: "Haunch members", quantity: portalFrames * 2, cutLengthM: haunchMemberLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.apexHaunch), rule: `${portalFrames} frames × 2 haunch members` },
   }
   Object.values(members).forEach((member) => {
     member.cutLengthM = round(member.cutLengthM)
@@ -50,16 +59,23 @@ export function calculateAtlasW10Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
   return {
     productCode: "W10", spanM, lengthM: length, eaveHeightM: eaveHeight, baySpacingM, bays, portalFrames,
     roofPitchDegrees, roofRiseM: round(roofRiseM), rafterCutLengthM: round(rafterCutLengthM), purlinRowsPerSlope,
-    totalPurlinRows, bracedBayPositions, members,
+    totalPurlinRows, bracedBayPositions,
+    gableFraming: { frontSpacingM: [2, 6, 2], rearSpacingM: [3, 4, 3], frontColumnLengthM: round(frontGableColumnLengthM), rearColumnLengthM: round(rearGableColumnLengthM) },
+    apexMemberLengthM, haunchMemberLengthM, members,
     confirmedStructuralMassKg: round(Object.values(members).reduce((total, member) => total + member.totalMassKg, 0), 2),
     assumptions: { structuralWastePercent: 0, fabricationAllowance: 0, packagingAllowance: 0, punchingIncludedInSteelRate: true, deliveryIncluded: false, installationIncluded: false },
-    holds: ["Confirm final apex-and-haunch cut length from the 1.5m baseline", "Final bolted connection quantities and specifications", "Gable-girt member schedule"],
+    holds: ["Final bolted connection quantities and specifications", "Gable-girt member schedule"],
   }
 }
 
 export function applyAtlasW10GeometryToPricing(records, geometry) {
   const byCode = new Map(Object.values(geometry.members).map((member) => [member.code, member]))
   return records.map((record) => {
+    if (record.componentCode === "W10-APH") {
+      const apex = geometry.members.apexMembers
+      const haunch = geometry.members.haunchMembers
+      return { ...record, baselineQuantity: 1, baselineLengthM: apex.totalLengthM + haunch.totalLengthM, massKgPerM: apex.massKgPerM, quantityRule: `${apex.quantity} apex members × ${apex.cutLengthM}m + ${haunch.quantity} haunch members × ${haunch.cutLengthM}m`, wastePercent: 0, fabricationAllowance: 0, coatingAllowance: 0, geometryControlled: true }
+    }
     const member = byCode.get(record.componentCode)
     return member ? { ...record, baselineQuantity: member.quantity, baselineLengthM: member.cutLengthM, massKgPerM: member.massKgPerM, quantityRule: member.rule, wastePercent: 0, fabricationAllowance: 0, coatingAllowance: 0, geometryControlled: true } : record
   })
