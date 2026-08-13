@@ -16,8 +16,11 @@ export function calculateAtlasPricingLine(record) {
   const quantity = numberOrZero(record.baselineQuantity)
   const lengthM = numberOrZero(record.baselineLengthM)
   const massKgPerM = numberOrZero(record.massKgPerM)
-  const rate = record.pricingRateOverride == null ? numberOrZero(record.galvanisedRate) : numberOrZero(record.pricingRateOverride)
   const unit = record.pricingUnit
+  const materialPriced = ["ton", "kg", "m"].includes(unit)
+  const rate = materialPriced && record.pricingRateOverride != null
+    ? numberOrZero(record.pricingRateOverride)
+    : numberOrZero(record.galvanisedRate)
 
   let rawCost = 0
   if (unit === "ton") rawCost = quantity * lengthM * massKgPerM * (rate / 1000)
