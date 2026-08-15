@@ -10,6 +10,8 @@ const PROFILE = {
   bracing: { webMm: 100, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
   sideGirt: { webMm: 150, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
   gableColumn: { webMm: 250, flangeMm: 75, lipMm: 20, thicknessMm: 2.5 },
+  openingGableColumn: { webMm: 200, flangeMm: 75, lipMm: 20, thicknessMm: 2 },
+  gableGirt: { webMm: 150, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
   apexHaunch: { webMm: 175, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
 }
 
@@ -39,6 +41,36 @@ export function calculateAtlasW10Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
   const rearGableColumnLengthM = 5.3 + gableHeightAdjustmentM
   const apexMemberLengthM = 2
   const haunchMemberLengthM = 1.3
+  const openingWidthM = 6
+  const openingHeightM = eaveHeight
+  const openingSideWidthM = (spanM - openingWidthM) / 2
+  const openingJambColumnLengthM = eaveHeight + openingSideWidthM * Math.tan(roofPitchRadians)
+  const openingGirtRows = 3
+  const openingGirtSegments = openingGirtRows * 2
+  const gableOpening6m = {
+    selected: false,
+    defaultGableArrangement: "open",
+    openingWidthM,
+    openingHeightM,
+    headerLengthM: openingWidthM,
+    headerHeightM: eaveHeight,
+    jambColumns: {
+      quantity: 2,
+      cutLengthM: round(openingJambColumnLengthM),
+      projectionAboveHeaderM: round(openingJambColumnLengthM - eaveHeight),
+      profile: PROFILE.openingGableColumn,
+    },
+    gableGirts: {
+      rows: openingGirtRows,
+      segmentsPerRow: 2,
+      quantity: openingGirtSegments,
+      cutLengthM: round(openingSideWidthM),
+      totalLengthM: round(openingGirtSegments * openingSideWidthM, 3),
+      profile: PROFILE.gableGirt,
+    },
+    upperGableMembers: [],
+    rule: "Optional centred 6m opening to the eave line; no girts or studs in the triangular gable above the header.",
+  }
   const members = {
     columns: { code: "W10-COL", label: "Column channels", quantity: portalFrames * 2 * 2, cutLengthM: eaveHeight, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.column), rule: `${portalFrames} frames × 2 columns × 2 back-to-back channels` },
     rafters: { code: "W10-RAF", label: "Rafter channels", quantity: portalFrames * 2, cutLengthM: rafterCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.rafter), rule: `${portalFrames} frames × 2 single rafters` },
@@ -60,7 +92,7 @@ export function calculateAtlasW10Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
     productCode: "W10", spanM, lengthM: length, eaveHeightM: eaveHeight, baySpacingM, bays, portalFrames,
     roofPitchDegrees, roofRiseM: round(roofRiseM), rafterCutLengthM: round(rafterCutLengthM), purlinRowsPerSlope,
     totalPurlinRows, bracedBayPositions,
-    gableFraming: { frontSpacingM: [2, 6, 2], rearSpacingM: [3, 4, 3], frontColumnLengthM: round(frontGableColumnLengthM), rearColumnLengthM: round(rearGableColumnLengthM) },
+    gableFraming: { defaultArrangement: "open", frontSpacingM: [2, 6, 2], rearSpacingM: [3, 4, 3], frontColumnLengthM: round(frontGableColumnLengthM), rearColumnLengthM: round(rearGableColumnLengthM), opening6m: gableOpening6m },
     apexMemberLengthM, haunchMemberLengthM, members,
     confirmedStructuralMassKg: round(Object.values(members).reduce((total, member) => total + member.totalMassKg, 0), 2),
     assumptions: { structuralWastePercent: 0, fabricationAllowance: 0, packagingAllowance: 0, punchingIncludedInSteelRate: true, deliveryIncluded: false, installationIncluded: false },
