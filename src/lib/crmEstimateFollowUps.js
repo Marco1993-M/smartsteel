@@ -22,6 +22,17 @@ const FOLLOW_UP_STEPS = [
   },
 ]
 
+export const ESTIMATE_RESPONSE_OPTIONS = [
+  { key: "call_me", label: "I'm interested - please call me", shortLabel: "Please call me" },
+  { key: "request_changes", label: "I'd like to change the estimate", shortLabel: "I need changes" },
+  { key: "considering", label: "I'm still considering it", shortLabel: "Still considering" },
+  { key: "not_proceeding", label: "I'm not proceeding right now", shortLabel: "Not proceeding" },
+]
+
+export function getEstimateResponseOption(key) {
+  return ESTIMATE_RESPONSE_OPTIONS.find((option) => option.key === key) || null
+}
+
 export function getFollowUpStep(stepNumber) {
   return FOLLOW_UP_STEPS.find((step) => step.number === Number(stepNumber)) || null
 }
@@ -62,10 +73,13 @@ export function buildFollowUpCopy({ stepNumber, lead, estimate }) {
   }
 }
 
-export function buildFollowUpHtml({ copy, estimate, shareUrl, isAtlas }) {
+export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, isAtlas }) {
   const accent = isAtlas ? "#0043f3" : "#da1a33"
   const dark = isAtlas ? "#001d2e" : "#020617"
   const brand = isAtlas ? "Atlas developed by Smart Steel" : "Smart Steel"
+  const logo = isAtlas
+    ? "https://www.smartsteel.co.za/atlas/atlas-logo-horizontal-light.png"
+    : "https://www.smartsteel.co.za/LogoWhite.png"
   const escapedBody = String(copy.body || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -81,6 +95,7 @@ export function buildFollowUpHtml({ copy, estimate, shareUrl, isAtlas }) {
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:24px 12px;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#fff;border:1px solid #dbe4ee;">
       <tr><td style="padding:24px 28px;background:${dark};border-top:5px solid ${accent};color:#fff;">
+        <img src="${logo}" alt="${brand}" width="210" style="display:block;max-width:210px;height:auto;border:0;margin:0 0 24px;">
         <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#cbd5e1;">${brand}</p>
         <h1 style="margin:0;font-size:25px;line-height:1.2;">${copy.heading}</h1>
       </td></tr>
@@ -91,6 +106,15 @@ export function buildFollowUpHtml({ copy, estimate, shareUrl, isAtlas }) {
           <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${escapedTitle}</p>
         </div>
         <a href="${shareUrl}" style="display:inline-block;padding:13px 18px;background:${accent};color:#fff;text-decoration:none;font-size:14px;font-weight:700;">View estimate</a>
+        ${responseBaseUrl ? `<div style="margin-top:28px;padding-top:24px;border-top:1px solid #e2e8f0;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:${accent};">One quick question</p>
+          <h2 style="margin:0 0 15px;font-size:19px;line-height:1.3;color:#0f172a;">Where are you with your project?</h2>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+            ${ESTIMATE_RESPONSE_OPTIONS.map((option) => `<tr><td style="padding:0 0 8px;">
+              <a href="${responseBaseUrl}?choice=${option.key}" style="display:block;padding:12px 14px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;text-decoration:none;font-size:13px;font-weight:700;">${option.label} &nbsp;→</a>
+            </td></tr>`).join("")}
+          </table>
+        </div>` : ""}
         <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#64748b;">Reply directly to this email and the Smart Steel team will assist you.</p>
       </td></tr>
       <tr><td style="padding:18px 28px;background:${dark};color:#cbd5e1;font-size:12px;">info@smartsteel.co.za · +27 82 846 4555 · smartsteel.co.za</td></tr>
