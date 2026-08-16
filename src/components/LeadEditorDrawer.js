@@ -756,6 +756,7 @@ export default function LeadEditorDrawer({
   const [followUpPlan, setFollowUpPlan] = useState([])
   const [loadingFollowUpSequence, setLoadingFollowUpSequence] = useState(false)
   const [cancellingFollowUps, setCancellingFollowUps] = useState(false)
+  const [previewingFollowUp, setPreviewingFollowUp] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -1512,6 +1513,35 @@ export default function LeadEditorDrawer({
       alert(error.message || "Could not cancel the follow-ups.")
     } finally {
       setCancellingFollowUps(false)
+    }
+  }
+
+  const previewFirstFollowUp = async () => {
+    if (!lead?.id || previewingFollowUp) return
+    const previewWindow = window.open("", "_blank")
+    if (!previewWindow) {
+      alert("Allow pop-ups for Smart Steel to open the email preview.")
+      return
+    }
+    previewWindow.document.write('<main style="padding:32px;font-family:Arial,sans-serif;color:#334155;">Preparing the follow-up email preview...</main>')
+    setPreviewingFollowUp(true)
+    try {
+      const response = await fetch(`/api/crm/estimate-follow-ups?leadId=${encodeURIComponent(lead.id)}&preview=1`, {
+        cache: "no-store",
+        headers: await getOsAuthHeaders(),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || "Could not prepare the email preview.")
+
+      previewWindow.document.open()
+      previewWindow.document.write(result.html)
+      previewWindow.document.close()
+      previewWindow.document.title = result.subject || "Follow-up email preview"
+    } catch (error) {
+      previewWindow.close()
+      alert(error.message || "Could not prepare the email preview.")
+    } finally {
+      setPreviewingFollowUp(false)
     }
   }
 
@@ -2377,16 +2407,26 @@ export default function LeadEditorDrawer({
                       <p className="mt-1 text-xs leading-5 text-slate-500">{followUpSequence.cancellation_reason}</p>
                     ) : null}
                   </div>
-                  {followUpSequence.status === "active" ? (
+                  <div className="flex shrink-0 flex-col gap-2 sm:items-end">
                     <button
                       type="button"
-                      onClick={cancelAutomaticFollowUps}
-                      disabled={cancellingFollowUps}
-                      className="shrink-0 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={previewFirstFollowUp}
+                      disabled={previewingFollowUp}
+                      className="rounded-xl border border-[#0043f3]/25 bg-white px-4 py-2.5 text-sm font-semibold text-[#0043f3] transition hover:bg-[#eef4ff] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {cancellingFollowUps ? "Cancelling..." : "Client replied - cancel"}
+                      {previewingFollowUp ? "Opening preview..." : "Preview email 1"}
                     </button>
-                  ) : null}
+                    {followUpSequence.status === "active" ? (
+                      <button
+                        type="button"
+                        onClick={cancelAutomaticFollowUps}
+                        disabled={cancellingFollowUps}
+                        className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {cancellingFollowUps ? "Cancelling..." : "Client replied - cancel"}
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             ) : null}
