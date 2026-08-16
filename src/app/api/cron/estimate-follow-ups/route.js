@@ -69,6 +69,7 @@ export async function GET(request) {
     }
 
     const shareUrl = new URL(`/quotes/${estimate.share_token}`, request.url).toString()
+    const responseBaseUrl = new URL(`/estimate-response/${sequence.response_token}`, request.url).toString()
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -81,7 +82,7 @@ export async function GET(request) {
         to: [lead.email],
         reply_to: "info@smartsteel.co.za",
         subject: copy.subject,
-        html: buildFollowUpHtml({ copy, estimate, shareUrl, isAtlas: isAtlasEstimate(lead, estimate) }),
+        html: buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, isAtlas: isAtlasEstimate(lead, estimate) }),
       }),
     })
 

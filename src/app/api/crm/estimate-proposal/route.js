@@ -236,6 +236,9 @@ export async function POST(request) {
         cancelled_by_name: null,
         cancellation_reason: null,
         last_error: null,
+        last_response_key: null,
+        last_response_label: null,
+        last_responded_at: null,
         updated_at: sentAt,
       }], { onConflict: "estimate_id" })
       .select("*")
