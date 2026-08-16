@@ -752,6 +752,10 @@ export default function LeadEditorDrawer({
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectHandoffError, setProjectHandoffError] = useState("");
   const [updatingEstimateStatus, setUpdatingEstimateStatus] = useState(false)
+  const [followUpSequence, setFollowUpSequence] = useState(null)
+  const [followUpPlan, setFollowUpPlan] = useState([])
+  const [loadingFollowUpSequence, setLoadingFollowUpSequence] = useState(false)
+  const [cancellingFollowUps, setCancellingFollowUps] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -945,6 +949,37 @@ export default function LeadEditorDrawer({
     }
 
     fetchEmailEvents()
+  }, [lead?.id])
+
+  useEffect(() => {
+    if (!lead?.id) {
+      setFollowUpSequence(null)
+      setFollowUpPlan([])
+      return
+    }
+
+    const fetchFollowUpSequence = async () => {
+      setLoadingFollowUpSequence(true)
+      try {
+        const response = await fetch(`/api/crm/estimate-follow-ups?leadId=${encodeURIComponent(lead.id)}`, {
+          cache: "no-store",
+          headers: await getOsAuthHeaders(),
+        })
+        const result = await response.json().catch(() => ({}))
+        if (response.ok) {
+          setFollowUpSequence(result.sequence || null)
+          setFollowUpPlan(result.plan || [])
+        } else {
+          console.error("Error fetching estimate follow-up sequence:", result.error)
+        }
+      } catch (error) {
+        console.error("Error fetching estimate follow-up sequence:", error)
+      } finally {
+        setLoadingFollowUpSequence(false)
+      }
+    }
+
+    fetchFollowUpSequence()
   }, [lead?.id])
 
   useEffect(() => {
@@ -1431,6 +1466,7 @@ export default function LeadEditorDrawer({
         sent_by_name: "Smart Steel",
         channel: "email",
       }, ...current])
+      setFollowUpSequence(result.followUpSequence || null)
       setShowEmailComposer(false)
       setEmailDraftOpened(false)
 
@@ -1444,6 +1480,38 @@ export default function LeadEditorDrawer({
       alert(error.message || "Could not send the proposal.")
     } finally {
       setSendingBrandedProposal(false)
+    }
+  }
+
+  const cancelAutomaticFollowUps = async () => {
+    if (!followUpSequence?.id || followUpSequence.status !== "active" || cancellingFollowUps) return
+    const approved = window.confirm("Cancel the remaining automatic estimate follow-ups? Use this when the client has replied or the sequence is no longer appropriate.")
+    if (!approved) return
+
+    setCancellingFollowUps(true)
+    try {
+      const response = await fetch("/api/crm/estimate-follow-ups", {
+        method: "PATCH",
+        headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          action: "cancel",
+          sequenceId: followUpSequence.id,
+          cancelledByName: formData.allocated_to || "Smart Steel",
+          reason: "Client replied or the team stopped the sequence manually.",
+        }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || "Could not cancel the follow-ups.")
+      setFollowUpSequence(result.sequence)
+      setFormData((current) => ({
+        ...current,
+        follow_up_at: null,
+        next_action: "Client replied. Review the response and set the next appropriate action.",
+      }))
+    } catch (error) {
+      alert(error.message || "Could not cancel the follow-ups.")
+    } finally {
+      setCancellingFollowUps(false)
     }
   }
 
@@ -2261,6 +2329,62 @@ export default function LeadEditorDrawer({
                 {formData.next_action || "No next step captured yet."}
               </p>
             </div>
+
+            {loadingFollowUpSequence ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
+                Checking automatic follow-ups...
+              </div>
+            ) : followUpSequence ? (
+              <div className={`rounded-2xl border p-4 ${
+                followUpSequence.status === "active"
+                  ? "border-sky-200 bg-sky-50"
+                  : followUpSequence.status === "completed"
+                    ? "border-emerald-200 bg-emerald-50"
+                    : "border-slate-200 bg-slate-50"
+              }`}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-900">Estimate follow-up sequence</p>
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${
+                        followUpSequence.status === "active"
+                          ? "bg-sky-600 text-white"
+                          : followUpSequence.status === "completed"
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-200 text-slate-600"
+                      }`}>
+                        {followUpSequence.status}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-700">
+                      {followUpSequence.status === "active"
+                        ? `Follow-up ${Number(followUpSequence.current_step || 0) + 1} of 3 is scheduled for ${new Date(followUpSequence.next_send_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}.`
+                        : followUpSequence.status === "completed"
+                          ? "All three scheduled follow-ups have been sent."
+                          : `The sequence stopped after ${followUpSequence.current_step || 0} of 3 follow-ups.`}
+                    </p>
+                    {followUpSequence.status === "active" && followUpPlan.length ? (
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        Schedule: 3 business days, 3 business days, then 5 business days. Cancel it as soon as the client replies.
+                      </p>
+                    ) : null}
+                    {followUpSequence.cancellation_reason ? (
+                      <p className="mt-1 text-xs leading-5 text-slate-500">{followUpSequence.cancellation_reason}</p>
+                    ) : null}
+                  </div>
+                  {followUpSequence.status === "active" ? (
+                    <button
+                      type="button"
+                      onClick={cancelAutomaticFollowUps}
+                      disabled={cancellingFollowUps}
+                      className="shrink-0 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {cancellingFollowUps ? "Cancelling..." : "Client replied - cancel"}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
 
             <div className="rounded-2xl bg-slate-50 p-3">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
