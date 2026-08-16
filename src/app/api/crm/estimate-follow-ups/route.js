@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server"
 import { requireOsAuth } from "lib/osRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
-import { getFollowUpPlan } from "lib/crmEstimateFollowUps"
+import {
+  buildFollowUpCopy,
+  buildFollowUpHtml,
+  getFollowUpPlan,
+  isAtlasEstimate,
+} from "lib/crmEstimateFollowUps"
 
 export const dynamic = "force-dynamic"
 
@@ -26,6 +31,33 @@ export async function GET(request) {
 
   if (error && isMissingSchema(error)) return NextResponse.json({ sequence: null, migrationRequired: true })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  const previewRequested = new URL(request.url).searchParams.get("preview") === "1"
+  if (previewRequested && data) {
+    const [{ data: lead }, { data: estimate }] = await Promise.all([
+      supabaseServer.from("leads").select("name, last_name, product_type").eq("id", data.lead_id).maybeSingle(),
+      supabaseServer.from("estimates").select("title, version_no, product_type_display, share_token").eq("id", data.estimate_id).maybeSingle(),
+    ])
+
+    if (!lead || !estimate?.share_token) {
+      return NextResponse.json({ error: "The email preview could not be prepared." }, { status: 404 })
+    }
+
+    const copy = buildFollowUpCopy({ stepNumber: 1, lead, estimate })
+    const shareUrl = new URL(`/quotes/${estimate.share_token}`, request.url).toString()
+    const responseBaseUrl = new URL(`/estimate-response/${data.response_token}`, request.url).toString()
+    return NextResponse.json({
+      subject: copy.subject,
+      html: buildFollowUpHtml({
+        copy,
+        estimate,
+        shareUrl,
+        responseBaseUrl,
+        isAtlas: isAtlasEstimate(lead, estimate),
+      }),
+    })
+  }
+
   return NextResponse.json({ sequence: data || null, plan: getFollowUpPlan() })
 }
 
