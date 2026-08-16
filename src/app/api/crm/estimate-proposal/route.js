@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireOsAuth } from "lib/osRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
+import { getNextFollowUpAt } from "lib/crmEstimateFollowUps"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -104,7 +105,7 @@ export async function POST(request) {
 
     const [{ data: lead, error: leadError }, { data: estimate, error: estimateError }] = await Promise.all([
       supabaseServer.from("leads").select("id, name, last_name, email, product_type").eq("id", leadId).single(),
-      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token").eq("id", estimateId).single(),
+      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token, product_type_display").eq("id", estimateId).single(),
     ])
 
     if (leadError || !lead) return NextResponse.json({ error: "Lead not found." }, { status: 404 })
@@ -153,6 +154,7 @@ export async function POST(request) {
     const resendPayload = await resendResponse.json().catch(() => null)
     const emailId = resendPayload?.id || null
     const sentAt = new Date().toISOString()
+    const firstFollowUpAt = getNextFollowUpAt(sentAt, 1)
     const lifecycleWarnings = []
 
     let estimateLifecycle = await supabaseServer
@@ -173,7 +175,8 @@ export async function POST(request) {
       .update({
         status: "quoted",
         quote_value: Number(estimate.total || 0),
-        next_action: `Awaiting the client's review of ${estimate.title || `estimate V${estimate.version_no || 1}`}.`,
+        follow_up_at: firstFollowUpAt,
+        next_action: `Awaiting the client's review of ${estimate.title || `estimate V${estimate.version_no || 1}`}. Automatic follow-up 1 is scheduled.`,
       })
       .eq("id", lead.id)
     if (leadLifecycle.error) lifecycleWarnings.push(`Lead status: ${leadLifecycle.error.message}`)
@@ -204,12 +207,63 @@ export async function POST(request) {
     }])
     if (activity.error) lifecycleWarnings.push(`Activity record: ${activity.error.message}`)
 
+    await supabaseServer
+      .from("crm_estimate_follow_up_sequences")
+      .update({
+        status: "cancelled",
+        cancelled_at: sentAt,
+        cancellation_reason: "A newer estimate was sent to this lead.",
+        next_send_at: null,
+        updated_at: sentAt,
+      })
+      .eq("lead_id", lead.id)
+      .eq("status", "active")
+      .neq("estimate_id", estimate.id)
+
+    const { data: followUpSequence, error: followUpError } = await supabaseServer
+      .from("crm_estimate_follow_up_sequences")
+      .upsert([{
+        lead_id: lead.id,
+        estimate_id: estimate.id,
+        recipient: lead.email,
+        status: "active",
+        current_step: 0,
+        next_send_at: firstFollowUpAt,
+        started_at: sentAt,
+        last_sent_at: null,
+        completed_at: null,
+        cancelled_at: null,
+        cancelled_by_name: null,
+        cancellation_reason: null,
+        last_error: null,
+        updated_at: sentAt,
+      }], { onConflict: "estimate_id" })
+      .select("*")
+      .single()
+
+    if (followUpError) {
+      lifecycleWarnings.push(`Automatic follow-ups: ${followUpError.message}`)
+      await supabaseServer.from("leads").update({
+        follow_up_at: null,
+        next_action: "Estimate sent. Schedule the first follow-up manually because the automatic sequence could not be started.",
+      }).eq("id", lead.id)
+    } else {
+      await supabaseServer.from("lead_activities").insert([{
+        lead_id: lead.id,
+        type: "follow_up",
+        user_name: "System",
+        description: `Three automatic estimate follow-ups scheduled. The first is due ${new Date(firstFollowUpAt).toLocaleDateString("en-ZA")}. Cancel the sequence manually if the client replies.`,
+        timestamp: sentAt,
+      }])
+    }
+
     return NextResponse.json({
       success: true,
       emailId,
       sentAt,
       lifecycleRecorded: lifecycleWarnings.length === 0,
       lifecycleWarnings,
+      followUpSequence: followUpSequence || null,
     })
   } catch (error) {
     console.error("Estimate proposal email error:", error)
