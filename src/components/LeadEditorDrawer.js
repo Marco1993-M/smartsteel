@@ -2363,6 +2363,11 @@ export default function LeadEditorDrawer({
                           ? "All three scheduled follow-ups have been sent."
                           : `The sequence stopped after ${followUpSequence.current_step || 0} of 3 follow-ups.`}
                     </p>
+                    {followUpSequence.last_response_label ? (
+                      <p className="mt-2 border-l-2 border-[#0043f3] pl-3 text-sm font-semibold text-slate-900">
+                        Latest client response: {followUpSequence.last_response_label}
+                      </p>
+                    ) : null}
                     {followUpSequence.status === "active" && followUpPlan.length ? (
                       <p className="mt-1 text-xs leading-5 text-slate-500">
                         Schedule: 3 business days, 3 business days, then 5 business days. Cancel it as soon as the client replies.
