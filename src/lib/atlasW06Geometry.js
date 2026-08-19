@@ -1,6 +1,6 @@
-import { calculateLippedChannelMassKgPerM } from "./atlasLippedChannelProfiles"
+import { calculateLippedChannelMassKgPerM } from "./atlasLippedChannelProfiles.js"
 
-export const ATLAS_W06_LENGTHS_M = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
+export const ATLAS_W06_LENGTHS_M = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60]
 export const ATLAS_W06_EAVE_HEIGHTS_M = [3, 4, 4.5, 5]
 
 const PROFILE = {
@@ -18,7 +18,7 @@ function round(value, digits = 4) {
 export function calculateAtlasW06Geometry({ lengthM = 20, eaveHeightM = 4.5 } = {}) {
   const length = Number(lengthM)
   const eaveHeight = Number(eaveHeightM)
-  if (!ATLAS_W06_LENGTHS_M.includes(length)) throw new Error("W06 length must use 4m bays from 4m to 48m.")
+  if (!ATLAS_W06_LENGTHS_M.includes(length)) throw new Error("W06 length must use 4m bays from 4m to 60m.")
   if (!ATLAS_W06_EAVE_HEIGHTS_M.includes(eaveHeight)) throw new Error("W06 eave height must use a controlled height from 3m to 5m.")
 
   const spanM = 6
