@@ -42,7 +42,7 @@ const INTERNAL_PRODUCT_LABELS = [
   "CFLC trusses",
 ]
 const LCSS_ALLOWED_WIDTHS = [6, 8, 10, 12]
-const LCSS_ALLOWED_LENGTHS = Array.from({ length: 12 }, (_, index) => (index + 1) * 4)
+const LCSS_ALLOWED_LENGTHS = Array.from({ length: 15 }, (_, index) => (index + 1) * 4)
 const LCSS_ALLOWED_STEEL_FINISHES = ["ZAM", "Galv", "Mild"]
 const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable", "roof_only", "fully_enclosed"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
@@ -1229,7 +1229,11 @@ export default function EstimateDrawer({
                     </div>
                   ) : null}
 
-                  {!isGroundMountEstimate ? (
+                  {isLcssEstimateProduct(formState.productType) ? (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                      Installation and delivery are reviewed and quoted separately.
+                    </div>
+                  ) : !isGroundMountEstimate ? (
                     <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                       <input
                         type="checkbox"
