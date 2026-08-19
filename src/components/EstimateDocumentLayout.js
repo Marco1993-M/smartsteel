@@ -20,9 +20,9 @@ export default function EstimateDocumentLayout({
   return (
     <article className={`estimate-sheet mx-auto w-[210mm] min-w-[210mm] bg-white pb-[8mm] shadow-lg print:max-w-none print:min-w-0 print:pb-[6mm] print:shadow-none ${isAtlas ? "rounded-[4px]" : "rounded-[2rem]"}`}>
       <section className="estimate-page estimate-cover-page print:break-after-page">
-      <div className={`estimate-block relative overflow-hidden border-b border-slate-200 px-[12mm] py-[12mm] print:px-[11mm] print:py-[8mm] ${isAtlas ? "bg-[linear-gradient(145deg,#ffffff_0%,#f3f8fb_62%,#c1d9e5_160%)]" : "bg-[linear-gradient(135deg,_#fff7f7,_#ffffff_38%,_#f8fafc)]"}`}>
-        {isAtlas ? <div className="absolute -right-[14mm] top-0 h-full w-[70mm] -skew-x-[34deg] border-l-[8px] border-[#0043f3]/10 bg-[#c1d9e5]/20" /> : null}
-        <div className="max-w-4xl">
+      <div className={`estimate-block relative isolate overflow-hidden border-b border-slate-200 px-[12mm] py-[12mm] print:px-[11mm] print:py-[8mm] ${isAtlas ? "bg-[linear-gradient(145deg,#ffffff_0%,#f3f8fb_62%,#c1d9e5_160%)]" : "bg-[linear-gradient(135deg,_#fff7f7,_#ffffff_38%,_#f8fafc)]"}`}>
+        {isAtlas ? <div aria-hidden="true" className="pointer-events-none absolute -right-[14mm] top-0 z-0 h-full w-[70mm] -skew-x-[34deg] border-l-[8px] border-[#0043f3]/10 bg-[#c1d9e5]/20" /> : null}
+        <div className="relative z-10 max-w-4xl">
           <div className="flex items-center gap-4 print:gap-3">
               <div className={isAtlas ? "bg-[linear-gradient(120deg,#001d2e,#0043f3)] px-4 py-3" : ""}>
                 <Image src={documentModel.brand.logo} alt={documentModel.brand.name} width={isAtlas ? 220 : 120} height={48} className={isAtlas ? "h-9 w-auto" : "h-12 w-auto"} />
@@ -60,7 +60,7 @@ export default function EstimateDocumentLayout({
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-[1.2fr_0.9fr_0.9fr] gap-4 print:mt-5 print:gap-3">
+        <div className="relative z-10 mt-6 grid grid-cols-[1.2fr_0.9fr_0.9fr] gap-4 print:mt-5 print:gap-3">
           <section className={`estimate-card overflow-hidden border border-slate-200 bg-white shadow-sm ${cardShape}`}>
             <div className={`border-b border-slate-200 px-5 py-4 text-white print:px-4 print:py-3 ${darkBackground}`}>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
