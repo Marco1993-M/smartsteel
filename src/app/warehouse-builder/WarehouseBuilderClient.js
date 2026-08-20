@@ -22,6 +22,12 @@ import WarehouseBuilderScene from "../../components/warehouse-builder/WarehouseB
 import { calculateEstimateByProductType } from "../../lib/estimates/estimateFactory"
 import { calculateAtlasWarehouseEstimate } from "../../lib/estimates/atlasWarehouseEstimate"
 import {
+  ATLAS_LENGTH_OPTIONS,
+  DEFAULT_ATLAS_CONFIGURATION,
+  createAtlasConfigurationReference,
+  normalizeAtlasConfiguration,
+} from "../../lib/atlasConfiguration"
+import {
   ATLAS_WAREHOUSE_SHEETING_OPTIONS,
   ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS,
   ATLAS_WAREHOUSE_WIDTH_OPTIONS,
@@ -40,7 +46,7 @@ import {
   WAREHOUSE_SHEETING_COLORS,
 } from "../../lib/warehouseBuilderStore"
 
-const ATLAS_WAREHOUSE_LENGTH_OPTIONS = Array.from({ length: 12 }, (_, index) => (index + 1) * 4)
+const ATLAS_WAREHOUSE_LENGTH_OPTIONS = ATLAS_LENGTH_OPTIONS
 
 const PROVINCES = [
   "Gauteng",
@@ -57,28 +63,7 @@ const PROVINCES = [
 const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
 const WAREHOUSE_BUILDER_AUTOSAVE_KEY = "smartsteel.warehouse-builder.atlas-v2"
 
-const CFLC_SYSTEM_DEFAULTS = {
-  productType: "LCSS Warehouse",
-  width: 8,
-  length: 20,
-  wallHeight: 3,
-  steelFinish: "Galv",
-  gableMode: "structure_only",
-  cladding: "None",
-  sheetingProfile: "IBR",
-  sheetingFinish: "galvanised",
-  scope: "supply_only",
-  installationInterest: false,
-  enclosureType: "roof_only",
-  rollerDoorCount: 0,
-  garageDoorOpeningType: "single",
-  rollerDoorFace: "front",
-  pedestrianDoorCount: 0,
-  pedestrianDoorFace: "rear",
-  sheetingColor: "galvanised",
-  deliveryRequired: false,
-  deliveryDistance: 0,
-}
+const CFLC_SYSTEM_DEFAULTS = DEFAULT_ATLAS_CONFIGURATION
 
 const INTENDED_USE_OPTIONS = [
   "Storage",
@@ -132,15 +117,7 @@ function getShareableConfiguration(config) {
 }
 
 function createDesignReference(configuration) {
-  const source = JSON.stringify(configuration)
-  let hash = 2166136261
-
-  for (let index = 0; index < source.length; index += 1) {
-    hash ^= source.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
-  }
-
-  return `WB-${(hash >>> 0).toString(36).toUpperCase().padStart(7, "0").slice(0, 7)}`
+  return createAtlasConfigurationReference(configuration)
 }
 
 function buildShareableBuilderUrl(configuration, pathname = "/warehouse-builder") {
@@ -585,9 +562,7 @@ export default function WarehouseBuilderClient() {
         const savedConfiguration = JSON.parse(window.localStorage.getItem(WAREHOUSE_BUILDER_AUTOSAVE_KEY) || "null")
         if (savedConfiguration && typeof savedConfiguration === "object") {
           patchFields({
-            ...CFLC_SYSTEM_DEFAULTS,
-            ...savedConfiguration,
-            productType: "LCSS Warehouse",
+            ...normalizeAtlasConfiguration(savedConfiguration),
             sheetingProfile: ["Corrugated", "IBR", "Concealed Fix"].includes(savedConfiguration.sheetingProfile)
               ? savedConfiguration.sheetingProfile
               : "IBR",
