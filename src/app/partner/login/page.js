@@ -53,9 +53,9 @@ export default function PartnerLoginPage() {
 
       <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-lg items-center lg:min-h-screen lg:px-12">
         <div className="w-full rounded-[2rem] border border-slate-200 bg-white p-7 shadow-xl shadow-slate-900/5 sm:p-10">
-          <div className="flex items-center justify-between gap-5 lg:hidden">
-            <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas by Smart Steel" width={180} height={55} className="h-11 w-auto object-contain" priority />
-            <Image src="/afgri-logo-colour-cropped.png" alt="AFGRI" width={105} height={40} className="h-8 w-auto object-contain" priority />
+          <div className="flex w-full items-center justify-between gap-4 overflow-hidden lg:hidden">
+            <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas by Smart Steel" width={180} height={55} className="h-auto min-w-0 max-w-[68%] object-contain object-left" priority />
+            <Image src="/afgri-logo-colour-cropped.png" alt="AFGRI" width={105} height={40} className="h-auto w-[24%] max-w-[5.5rem] shrink-0 object-contain object-right" priority />
           </div>
           <p className="mt-10 text-xs font-bold uppercase tracking-[0.22em] text-[#0043f3] lg:mt-0">Partner access</p>
           <h2 className="mt-3 text-4xl font-black tracking-[-0.045em] text-[#001d2e]">Welcome back</h2>
