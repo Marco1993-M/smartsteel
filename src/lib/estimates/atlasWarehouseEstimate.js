@@ -19,8 +19,8 @@ const CONNECTION_RATES = {
 }
 const M10_COMPLETE_SET = {
   specification: "M10 x 30mm · Class 8.8 · zinc plated · matching nut and washer",
-  setsPerEaveBracket: 2,
-  setsPerRidgeBracket: 2,
+  setsPerEaveBracket: 8,
+  setsPerRidgeBracket: 8,
   setsPerBracingBracket: 2,
   setsPerPurlinEnd: 1,
   setsPerGirtEnd: 1,
