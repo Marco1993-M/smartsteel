@@ -21,6 +21,10 @@ function formatCurrency(value) {
   return `R ${amount.toLocaleString("en-ZA", { maximumFractionDigits: 2 })}`
 }
 
+function recordIdsMatch(left, right) {
+  return String(left ?? "").trim() === String(right ?? "").trim()
+}
+
 function buildFilename(estimate) {
   const base = String(estimate?.title || "smart-steel-estimate")
     .toLowerCase()
@@ -105,11 +109,21 @@ export async function POST(request) {
 
     const [{ data: lead, error: leadError }, { data: estimate, error: estimateError }] = await Promise.all([
       supabaseServer.from("leads").select("id, name, last_name, email, product_type").eq("id", leadId).single(),
-      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token, product_type_display").eq("id", estimateId).single(),
+      // Keep the send lookup limited to columns guaranteed by the estimate schema.
+      // Optional display fields are deliberately tolerated by the estimate save flow.
+      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token").eq("id", estimateId).single(),
     ])
 
-    if (leadError || !lead) return NextResponse.json({ error: "Lead not found." }, { status: 404 })
-    if (estimateError || !estimate || estimate.lead_id !== lead.id) {
+    if (leadError) {
+      console.error("Estimate proposal lead lookup failed:", leadError)
+      return NextResponse.json({ error: `Could not load the lead: ${leadError.message}` }, { status: 500 })
+    }
+    if (!lead) return NextResponse.json({ error: "Lead not found." }, { status: 404 })
+    if (estimateError) {
+      console.error("Estimate proposal estimate lookup failed:", estimateError)
+      return NextResponse.json({ error: `Could not load the estimate: ${estimateError.message}` }, { status: 500 })
+    }
+    if (!estimate || !recordIdsMatch(estimate.lead_id, lead.id)) {
       return NextResponse.json({ error: "Estimate not found for this lead." }, { status: 404 })
     }
     if (!lead.email) return NextResponse.json({ error: "The lead does not have an email address." }, { status: 400 })
