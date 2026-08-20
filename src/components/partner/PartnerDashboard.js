@@ -4,7 +4,7 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowRight, Check, Clock3, FileText, LogOut, Plus } from "lucide-react"
-import { supabase } from "../../lib/supabase"
+import { partnerSupabase } from "../../lib/partnerSupabase"
 import { getPartnerAuthHeaders } from "../../lib/partnerClientAuth"
 import PartnerAtlasConfigurator from "./PartnerAtlasConfigurator"
 
@@ -71,7 +71,7 @@ export default function PartnerDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block"><p className="text-sm font-bold">{session?.membership?.partner?.name}</p><p className="text-xs capitalize text-slate-500">{session?.membership?.role?.replaceAll("_", " ")}</p></div>
-            <button type="button" onClick={async () => { await supabase.auth.signOut(); router.replace("/partner/login") }} className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-900" aria-label="Sign out"><LogOut className="h-4 w-4" /></button>
+            <button type="button" onClick={async () => { await partnerSupabase.auth.signOut(); router.replace("/partner/login") }} className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-900" aria-label="Sign out"><LogOut className="h-4 w-4" /></button>
           </div>
         </div>
       </header>
