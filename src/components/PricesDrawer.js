@@ -1,14 +1,28 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useMemo, useState } from "react"
+import { ATLAS_LENGTH_OPTIONS } from "../lib/atlasConfiguration"
+import {
+  ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS,
+  ATLAS_WAREHOUSE_WIDTH_OPTIONS,
+  calculateAtlasWarehouseEstimate,
+} from "../lib/estimates/atlasWarehouseEstimate"
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0)
+}
 
 export default function PricesDrawer({ onClose }) {
   const [width, setWidth] = useState(8)
-  const [length, setLength] = useState(2.5)
-  const [result, setResult] = useState(null)
+  const [length, setLength] = useState(20)
+  const [wallHeight, setWallHeight] = useState(3)
+  const [steelFinish, setSteelFinish] = useState("ZAM")
 
   const [openCalculator, setOpenCalculator] = useState(true)
-  const [openShedPricing, setOpenShedPricing] = useState(false)
   const [openTemplates, setOpenTemplates] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState("Outreach email")
 
@@ -40,80 +54,14 @@ P.S. I’ve also attached a short PDF highlighting the advantages of choosing li
 }
 
 
-  const calculateWarehousePrice = (width, length) => {
-    if (![8, 10, 12].includes(width)) {
-      return { error: "Width must be 8, 10, or 12 meters" }
-    }
-    if (length < 2.5 || (length * 10) % 25 !== 0) {
-      return { error: "Length must be a multiple of 2.5m and at least 2.5" }
-    }
-
-    const bayLength = 2.5
-    const totalBaysExact = length / bayLength
-    const fullBays = Math.floor(totalBaysExact)
-    const halfBay = (totalBaysExact - fullBays) >= 0.5
-
-    let columns = fullBays * 2 + 2
-    if (halfBay) columns += 2
-
-    const trusses = columns
-    const brackets = Math.floor(columns / 2)
-
-    let xBracingCount = 1
-    if (fullBays > 1) xBracingCount += Math.floor((fullBays - 1) / 6)
-
-    let halfBaysTotal = fullBays * 2
-    if (halfBay) halfBaysTotal += 1
-    const screws = halfBaysTotal * 160
-
-    const totalTopHatLength = length * 10
-    const topHatSections = Math.ceil(totalTopHatLength / 5.2)
-    const totalTopHatLengthToPurchase = topHatSections * 5.2
-
-    const pricePerColumn = 1400
-    let pricePerTruss = width === 8 ? 5901.92 / 4 : width === 10 ? 7203.36 / 4 : 9191.68 / 4
-    const pricePerBracketSet = 914
-    const pricePerXBracing = 1200
-    const pricePerScrew = 0.8
-    const pricePerTopHatMeter = 56
-
-    const totalColumnsPrice = columns * pricePerColumn
-    const totalTrussesPrice = trusses * pricePerTruss
-    const totalBracketsPrice = brackets * pricePerBracketSet
-    const totalXBracingPrice = xBracingCount * pricePerXBracing
-    const totalScrewsPrice = screws * pricePerScrew
-    const totalTopHatsPrice = totalTopHatLengthToPurchase * pricePerTopHatMeter
-
-    const subtotal = totalColumnsPrice + totalTrussesPrice + totalBracketsPrice +
-      totalXBracingPrice + totalScrewsPrice + totalTopHatsPrice
-
-    const markup = 1.25
-    const totalPrice = subtotal * markup
-
-    return {
-      columns,
-      trusses,
-      brackets,
-      xBracingCount,
-      screws,
-      topHatSections,
-      subtotal,
-      totalPrice
-    }
-  }
-
-  useEffect(() => {
-    const res = calculateWarehousePrice(width, length)
-    if (!res.error) setResult(res)
-  }, [width, length])
-
-  const handleLengthChange = (e) => {
-    let value = parseFloat(e.target.value)
-    if (isNaN(value)) value = 2.5
-    value = Math.round(value / 2.5) * 2.5
-    if (value < 2.5) value = 2.5
-    setLength(value)
-  }
+  const result = useMemo(() => calculateAtlasWarehouseEstimate({
+    width,
+    length,
+    wallHeight,
+    steelFinish,
+    gableMode: "structure_only",
+    quantity: 1,
+  }), [length, steelFinish, wallHeight, width])
 
   const sectionHeaderStyle =
     "flex justify-between items-center cursor-pointer bg-gray-100 px-2 py-1 rounded"
@@ -141,7 +89,7 @@ P.S. I’ve also attached a short PDF highlighting the advantages of choosing li
               className={sectionHeaderStyle}
               onClick={() => setOpenCalculator(!openCalculator)}
             >
-              <span className="font-semibold">Warehouse Price Calculator</span>
+              <span className="font-semibold">Atlas Warehouse Price Guide</span>
               <span>{openCalculator ? "▲" : "▼"}</span>
             </div>
             {openCalculator && (
@@ -152,20 +100,30 @@ P.S. I’ve also attached a short PDF highlighting the advantages of choosing li
                   value={width}
                   onChange={(e) => setWidth(parseInt(e.target.value))}
                 >
-                  <option value={8}>8</option>
-                  <option value={10}>10</option>
-                  <option value={12}>12</option>
+                  {ATLAS_WAREHOUSE_WIDTH_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
                 </select>
 
                 <label className="block text-sm font-medium mt-2">Length (m)</label>
-                <input
-                  type="number"
-                  step="2.5"
-                  min="2.5"
+                <select
                   className="border p-2 rounded w-full"
                   value={length}
-                  onChange={handleLengthChange}
-                />
+                  onChange={(event) => setLength(Number(event.target.value))}
+                >
+                  {ATLAS_LENGTH_OPTIONS.map((option) => <option key={option} value={option}>{option}m · {option / 4} bays</option>)}
+                </select>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block text-sm font-medium">Eave height
+                    <select className="mt-1 w-full rounded border p-2" value={wallHeight} onChange={(event) => setWallHeight(Number(event.target.value))}>
+                      {[3, 4, 4.5, 5].map((option) => <option key={option} value={option}>{option}m</option>)}
+                    </select>
+                  </label>
+                  <label className="block text-sm font-medium">Steel finish
+                    <select className="mt-1 w-full rounded border p-2" value={steelFinish} onChange={(event) => setSteelFinish(event.target.value)}>
+                      {ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => <option key={option}>{option}</option>)}
+                    </select>
+                  </label>
+                </div>
 
                 {result && (
                   <table className="mt-4 w-full text-sm border-collapse">
@@ -177,136 +135,34 @@ P.S. I’ve also attached a short PDF highlighting the advantages of choosing li
                     </thead>
                     <tbody>
                       <tr className="border-b">
-                        <td className="py-1 px-2">Total Price (with markup)</td>
+                        <td className="py-1 px-2">Structure guide excl. VAT</td>
                         <td className="py-1 px-2 text-right font-bold">
-                          R{result.totalPrice.toFixed(2)}
+                          {formatCurrency(result.pricing.estimatedTotal)}
                         </td>
                       </tr>
                       <tr className="border-b">
-                        <td className="py-1 px-2">Columns</td>
-                        <td className="py-1 px-2 text-right">{result.columns}</td>
+                        <td className="py-1 px-2">Atlas system</td>
+                        <td className="py-1 px-2 text-right">{result.meta.productCode}</td>
                       </tr>
                       <tr className="border-b">
-                        <td className="py-1 px-2">Trusses</td>
-                        <td className="py-1 px-2 text-right">{result.trusses}</td>
+                        <td className="py-1 px-2">Portal frames</td>
+                        <td className="py-1 px-2 text-right">{result.dimensions.portals}</td>
                       </tr>
                       <tr className="border-b">
-                        <td className="py-1 px-2">Brackets</td>
-                        <td className="py-1 px-2 text-right">{result.brackets}</td>
+                        <td className="py-1 px-2">4m bays</td>
+                        <td className="py-1 px-2 text-right">{result.dimensions.bays}</td>
                       </tr>
                       <tr className="border-b">
-                        <td className="py-1 px-2">X-Bracing</td>
-                        <td className="py-1 px-2 text-right">{result.xBracingCount}</td>
+                        <td className="py-1 px-2">Structure steel</td>
+                        <td className="py-1 px-2 text-right">{Math.round(result.materials.totalSteelKg).toLocaleString()}kg</td>
                       </tr>
                       <tr className="border-b">
-                        <td className="py-1 px-2">Screws</td>
-                        <td className="py-1 px-2 text-right">{result.screws}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1 px-2">Top Hat Sections</td>
-                        <td className="py-1 px-2 text-right">{result.topHatSections}</td>
+                        <td className="py-1 px-2">Pricing release</td>
+                        <td className="py-1 px-2 text-right text-xs">{result.meta.pricingRelease}</td>
                       </tr>
                     </tbody>
                   </table>
                 )}
-              </div>
-            )}
-          </div>
-
-          {/* Shed Pricing Accordion */}
-          <div>
-            <div
-              className={sectionHeaderStyle}
-              onClick={() => setOpenShedPricing(!openShedPricing)}
-            >
-              <span className="font-semibold">Smart Steel Shed Pricing</span>
-              <span>{openShedPricing ? "▲" : "▼"}</span>
-            </div>
-            {openShedPricing && (
-              <div className="mt-2 text-sm overflow-x-auto">
-                {[
-                  {
-                    width: 8,
-                    components: [
-                      { name: "Columns", qty: "4 x 3000mm", price: "R1400 each" },
-                      { name: "Trusses", qty: "4 x 4141mm", price: "R344.88/m" },
-                      { name: "Top Hats", qty: "5200mm", price: "R56/m" },
-                      { name: "Post Brackets", qty: "4", price: "R155 each" },
-                      { name: "Ridge Brackets", qty: "4", price: "R155 each" },
-                      { name: "Screws", qty: "320 per half bay", price: "R0.60 each" },
-                    ],
-                  },
-                  {
-                    width: 10,
-                    components: [
-                      { name: "Columns", qty: "4 x 3000mm", price: "R1400 each" },
-                      { name: "Trusses", qty: "4 x 5176mm", price: "R344.88/m" },
-                      { name: "Top Hats", qty: "5200mm", price: "R56/m" },
-                      { name: "Post Brackets", qty: "4", price: "R155 each" },
-                      { name: "Ridge Brackets", qty: "4", price: "R155 each" },
-                      { name: "Screws", qty: "320 per half bay", price: "R0.60 each" },
-                    ],
-                  },
-                  {
-                    width: 12,
-                    components: [
-                      { name: "Columns", qty: "4 x 3000mm", price: "R1400 each" },
-                      { name: "Trusses", qty: "4 x 6212mm", price: "R344.88/m" },
-                      { name: "Top Hats", qty: "5200mm", price: "R56/m" },
-                      { name: "Post Brackets", qty: "4", price: "R155 each" },
-                      { name: "Ridge Brackets", qty: "4", price: "R155 each" },
-                      { name: "Screws", qty: "320 per half bay", price: "R0.60 each" },
-                    ],
-                  },
-                ].map((bay) => (
-                  <div key={bay.width} className="mb-4">
-                    <p className="font-semibold mb-2">{bay.width}m Wide Bay</p>
-                    <table className="w-full border border-gray-300 text-sm">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th className="border px-2 py-1 text-left">Component</th>
-                          <th className="border px-2 py-1 text-left">Quantity</th>
-                          <th className="border px-2 py-1 text-left">Unit Price</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {bay.components.map((comp, idx) => (
-                          <tr key={idx} className="border-t">
-                            <td className="px-2 py-1">{comp.name}</td>
-                            <td className="px-2 py-1">{comp.qty}</td>
-                            <td className="px-2 py-1">{comp.price}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ))}
-
-                {/* Sheeting */}
-                <div>
-                  <p className="font-semibold mb-1">Sheeting</p>
-                  <table className="w-full border border-gray-300 text-sm">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="border px-2 py-1 text-left">Type</th>
-                        <th className="border px-2 py-1 text-left">Supply Price</th>
-                        <th className="border px-2 py-1 text-left">Installed Price</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-t">
-                        <td className="px-2 py-1">IBR</td>
-                        <td className="px-2 py-1">R225/sqm</td>
-                        <td className="px-2 py-1">R450/sqm</td>
-                      </tr>
-                      <tr className="border-t">
-                        <td className="px-2 py-1">Chromadek</td>
-                        <td className="px-2 py-1">R350/sqm</td>
-                        <td className="px-2 py-1">R450/sqm</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
               </div>
             )}
           </div>

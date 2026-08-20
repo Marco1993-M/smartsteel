@@ -34,6 +34,14 @@ import {
   PRODUCT_TYPE_OPTIONS,
   TEAM_MEMBERS,
 } from "../lib/crmReferenceData"
+import {
+  ATLAS_LENGTH_OPTIONS,
+} from "../lib/atlasConfiguration"
+import { ATLAS_WAREHOUSE_WIDTH_OPTIONS } from "../lib/estimates/atlasWarehouseOptions"
+import {
+  WAREHOUSE_LENGTH_OPTIONS,
+  WAREHOUSE_WIDTH_OPTIONS,
+} from "../lib/estimates/warehouseEstimate"
 import { addBusinessDays, format, isToday, isYesterday } from "date-fns";
 
 const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
@@ -44,7 +52,14 @@ const ESTIMATE_STATUS_OPTIONS = [
   { value: "declined", label: "Declined" },
 ]
 
-const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", "Atlas Warehouse", "LCSS Warehouse"]
+const ATLAS_WAREHOUSE_PRODUCT_TYPES = [
+  "Atlas Warehouse",
+  "LCSS Warehouse",
+  "LCSS warehouse",
+  "CFLC Warehouse",
+  "CFLC warehouse",
+]
+const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", ...ATLAS_WAREHOUSE_PRODUCT_TYPES]
 const TRUSS_PRODUCT_TYPES = ["LSF trusses", "CFLC trusses"]
 const SOLAR_PRODUCT_TYPES = ["Solar carport", "Solar ground mount", "Solar structure"]
 
@@ -187,6 +202,33 @@ function getScopeSectionConfig(productType) {
     showWarehouseOptions: false,
     showSizeSelectors: false,
     customPlaceholder: "Custom project request & notes...",
+  }
+}
+
+function includeStoredOption(options, storedValue) {
+  const numericValue = Number(storedValue)
+  if (!Number.isFinite(numericValue) || numericValue <= 0 || options.includes(numericValue)) return options
+  return [...options, numericValue].sort((a, b) => a - b)
+}
+
+function getScopeSizeOptions(productType, storedWidth, storedLength) {
+  if (ATLAS_WAREHOUSE_PRODUCT_TYPES.includes(productType)) {
+    return {
+      widths: includeStoredOption(ATLAS_WAREHOUSE_WIDTH_OPTIONS, storedWidth),
+      lengths: includeStoredOption(ATLAS_LENGTH_OPTIONS, storedLength),
+    }
+  }
+
+  if (productType === "LSF Warehouse") {
+    return {
+      widths: includeStoredOption(WAREHOUSE_WIDTH_OPTIONS, storedWidth),
+      lengths: includeStoredOption(WAREHOUSE_LENGTH_OPTIONS, storedLength),
+    }
+  }
+
+  return {
+    widths: includeStoredOption([3, 5, 6, 8, 10, 12, 15, 20], storedWidth),
+    lengths: includeStoredOption([5, 7.5, 10, 12.5, 15, 17.5, 20, 25, 30, 40, 50, 60], storedLength),
   }
 }
 
@@ -793,6 +835,7 @@ export default function LeadEditorDrawer({
   const selectedStageBlockers = getLeadStageBlockers(formData, formData.status);
   const createdAtLabel = formatLeadCreatedAt(formData.created_at);
   const scopeConfig = getScopeSectionConfig(formData.product_type)
+  const scopeSizeOptions = getScopeSizeOptions(formData.product_type, formData.width, formData.length)
   const scopePresetOptions = SCOPE_PRESET_OPTIONS[formData.product_type] || SCOPE_PRESET_OPTIONS.Other
   const fieldLabelClass = "mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500";
   const inputClass = "block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-0";
@@ -1985,7 +2028,7 @@ export default function LeadEditorDrawer({
                   className={`${inputClass} min-w-[100px] flex-1`}
                 >
                   <option value="">{scopeConfig.widthLabel}</option>
-                  {[3, 5, 6, 8, 10, 12, 15, 20].map((width) => (
+                  {scopeSizeOptions.widths.map((width) => (
                     <option key={width} value={width}>{width}m</option>
                   ))}
                 </select>
@@ -1995,10 +2038,9 @@ export default function LeadEditorDrawer({
                   className={`${inputClass} min-w-[100px] flex-1`}
                 >
                   <option value="">{scopeConfig.lengthLabel}</option>
-                  {[...Array(19)].map((_, i) => {
-                    const len = 5 + i * 2.5;
-                    return <option key={len} value={len}>{len}m</option>;
-                  })}
+                  {scopeSizeOptions.lengths.map((length) => (
+                    <option key={length} value={length}>{length}m</option>
+                  ))}
                 </select>
               </div>
             </>
