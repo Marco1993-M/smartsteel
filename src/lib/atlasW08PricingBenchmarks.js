@@ -34,12 +34,12 @@ const W08_GIRT_PROFILE = profile(150, 50, 20, 2)
 
 export const ATLAS_W08_PRICING_BENCHMARKS = [
   {
-    id: "w08-20x8-4-5m-2026-08",
+    id: "w08-20x8-3m-2026-08",
     label: "W08 20m reference structure",
     source: "Estimation - CFLC 6, 8, 10 & 12m Warehouse - CFLC Warehouse - 8m Span.csv",
     widthM: 8,
     lengthM: 20,
-    eaveHeightM: 4.5,
+    eaveHeightM: 3,
     baySpacingM: 4,
     portalFrameCount: 5,
     material: "ZAM (ZincAluMag)",

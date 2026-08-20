@@ -49,9 +49,9 @@ export const OS_SECTIONS = [
     label: "Partners",
     href: "/os/partners",
     description: "Strategic accounts, dealers, installers, and supplier relationships.",
-    status: "scaffolded",
-    phaseLabel: "Planned",
-    items: ["AFGRI", "Build It", "Installers", "Dealers", "Suppliers"],
+    status: "active_build",
+    phaseLabel: "AFGRI pilot",
+    items: ["Opportunities", "Commercial Releases", "AFGRI Network", "Future Partners"],
   },
   {
     key: "manufacturing",

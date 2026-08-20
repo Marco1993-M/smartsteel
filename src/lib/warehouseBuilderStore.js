@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { DEFAULT_ATLAS_CONFIGURATION } from "./atlasConfiguration.js"
 
 export const WAREHOUSE_SHEETING_COLORS = [
   { value: "galvanised", label: "Galvanised", hex: "#b9c1c7", finish: "galvanised" },
@@ -26,28 +27,7 @@ export const WAREHOUSE_OPENING_FACE_OPTIONS = [
 ]
 
 export const DEFAULT_WAREHOUSE_BUILDER_STATE = {
-  productType: "LCSS Warehouse",
-  width: 8,
-  length: 20,
-  wallHeight: 3,
-  roofType: "dual_pitch",
-  roofPitch: 15,
-  cladding: "None",
-  sheetingProfile: "IBR",
-  sheetingFinish: "galvanised",
-  scope: "supply_only",
-  installationInterest: false,
-  enclosureType: "roof_only",
-  rollerDoorCount: 0,
-  garageDoorOpeningType: "single",
-  rollerDoorFace: "front",
-  pedestrianDoorCount: 0,
-  pedestrianDoorFace: "rear",
-  sheetingColor: "galvanised",
-  steelFinish: "ZAM",
-  gableMode: "structure_only",
-  deliveryRequired: false,
-  deliveryDistance: 0,
+  ...DEFAULT_ATLAS_CONFIGURATION,
   province: "Gauteng",
   location: "",
   intendedUse: "",
