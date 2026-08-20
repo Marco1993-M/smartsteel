@@ -174,6 +174,19 @@ export function buildEstimateDisplayModel(estimate, lead) {
         { label: "Length", value: formatDimension(input.length) },
         { label: "Height", value: formatDimension(input.wallHeight) },
         { label: "Quantity", value: `${quantity}` },
+        ...(atlasEstimate
+          ? [{
+              label: "Structural steel",
+              value:
+                input.steelFinish === "Galv"
+                  ? "Galvanised steel"
+                  : input.steelFinish === "ZAM"
+                    ? "ZAM corrosion-resistant steel"
+                    : input.steelFinish === "Mild"
+                      ? "Mild steel"
+                      : "Not specified",
+            }]
+          : []),
         {
           label: "Area",
           value:
