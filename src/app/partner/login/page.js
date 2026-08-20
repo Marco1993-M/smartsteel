@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "../../../lib/supabase"
+import { partnerSupabase } from "../../../lib/partnerSupabase"
 import { getPartnerAuthHeaders } from "../../../lib/partnerClientAuth"
 
 export default function PartnerLoginPage() {
@@ -17,7 +17,7 @@ export default function PartnerLoginPage() {
     event.preventDefault()
     setError("")
     setSubmitting(true)
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    const { error: signInError } = await partnerSupabase.auth.signInWithPassword({ email, password })
     if (signInError) {
       setError("We could not sign you in. Check your email and password.")
       setSubmitting(false)
@@ -26,7 +26,7 @@ export default function PartnerLoginPage() {
 
     const response = await fetch("/api/partner/session", { headers: await getPartnerAuthHeaders() })
     if (!response.ok) {
-      await supabase.auth.signOut()
+      await partnerSupabase.auth.signOut()
       const payload = await response.json().catch(() => ({}))
       setError(payload.error || "This account does not have partner portal access.")
       setSubmitting(false)
