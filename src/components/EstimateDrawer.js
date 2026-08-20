@@ -20,6 +20,7 @@ import {
   isTrussEstimateProduct,
 } from "../lib/estimates/estimateFactory"
 import { TRUSS_ROOF_STYLE_OPTIONS } from "../lib/estimates/trussEstimate"
+import { ATLAS_WAREHOUSE_SHEETING_OPTIONS } from "../lib/estimates/atlasWarehouseOptions"
 
 const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
   { value: "LSF Warehouse", label: "LSF Warehouse" },
@@ -44,7 +45,9 @@ const INTERNAL_PRODUCT_LABELS = [
 const LCSS_ALLOWED_WIDTHS = [6, 8, 10, 12]
 const LCSS_ALLOWED_LENGTHS = Array.from({ length: 15 }, (_, index) => (index + 1) * 4)
 const LCSS_ALLOWED_STEEL_FINISHES = ["ZAM", "Galv", "Mild"]
-const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable", "roof_only", "fully_enclosed"]
+const LCSS_ALLOWED_GABLE_MODES = ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => option.value)
+const LCSS_ALLOWED_SHEETING_PROFILES = ["Corrugated", "IBR", "Concealed Fix"]
+const LCSS_ALLOWED_SHEETING_FINISHES = ["galvanised", "chromadek"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
 
 function getLeadSteelFinish(lead) {
@@ -55,6 +58,24 @@ function getLeadSteelFinish(lead) {
   if (value.includes("zam")) return "ZAM"
   if (value.includes("galv")) return "Galv"
   return ""
+}
+
+function normalizeAtlasSheetingMode(value) {
+  if (["open_gable", "roof_only"].includes(value)) return "roof_only"
+  if (["sheeted_gable", "fully_enclosed"].includes(value)) return "fully_enclosed"
+  return "structure_only"
+}
+
+function getLeadSheetingMode(lead) {
+  const source = `${lead?.estimate_request || ""}\n${lead?.notes || ""}`.toLowerCase()
+  if (/roof and walls|fully enclosed|sheeted gable/.test(source)) return "fully_enclosed"
+  if (/roof sheeting|roof only|open gable/.test(source)) return "roof_only"
+  return "structure_only"
+}
+
+function getLeadSheetingFinish(lead) {
+  const source = `${lead?.estimate_request || ""}\n${lead?.notes || ""}`.toLowerCase()
+  return source.includes("chromadek") ? "chromadek" : "galvanised"
 }
 
 function roundMoney(value) {
@@ -118,13 +139,14 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
     nextState.steelFinish = LCSS_ALLOWED_STEEL_FINISHES.includes(previousState.steelFinish)
       ? previousState.steelFinish
       : "ZAM"
-    nextState.cladding =
-      WAREHOUSE_CLADDING_OPTIONS.includes(previousState.cladding) && previousState.cladding !== "None"
-        ? previousState.cladding
+    nextState.sheetingProfile =
+      LCSS_ALLOWED_SHEETING_PROFILES.includes(previousState.sheetingProfile || previousState.cladding)
+        ? previousState.sheetingProfile || previousState.cladding
         : "IBR"
-    nextState.gableMode = LCSS_ALLOWED_GABLE_MODES.includes(previousState.gableMode)
-      ? previousState.gableMode
-      : "fully_enclosed"
+    nextState.sheetingFinish = LCSS_ALLOWED_SHEETING_FINISHES.includes(previousState.sheetingFinish)
+      ? previousState.sheetingFinish
+      : "galvanised"
+    nextState.gableMode = normalizeAtlasSheetingMode(previousState.gableMode)
     return nextState
   }
 
@@ -250,6 +272,19 @@ function buildInitialState(lead, estimate) {
       latestInput.steelFinish ||
       getLeadSteelFinish(lead) ||
       (isLcssEstimateProduct(productType) ? "ZAM" : "Galv"),
+    sheetingProfile:
+      latestInput.sheetingProfile ||
+      (LCSS_ALLOWED_SHEETING_PROFILES.includes(latestInput.cladding || lead?.cladding)
+        ? latestInput.cladding || lead?.cladding
+        : "IBR"),
+    sheetingFinish:
+      LCSS_ALLOWED_SHEETING_FINISHES.includes(latestInput.sheetingFinish)
+        ? latestInput.sheetingFinish
+        : getLeadSheetingFinish(lead),
+    gableMode:
+      latestInput.gableMode
+        ? normalizeAtlasSheetingMode(latestInput.gableMode)
+        : getLeadSheetingMode(lead),
     notes: estimate?.notes || "",
     estimateName: stripVersionSuffix(estimate?.title) || "",
   }
@@ -1174,7 +1209,49 @@ export default function EstimateDrawer({
 
                   {!isTrussEstimate ? (
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {!isSolarEstimate ? (
+                    {isLcssEstimateProduct(formState.productType) ? (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700">Sheeting coverage</label>
+                          <select
+                            value={formState.gableMode}
+                            onChange={(event) => handleChange("gableMode", event.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          >
+                            {ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {formState.gableMode !== "structure_only" ? (
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700">Sheeting profile</label>
+                            <select
+                              value={formState.sheetingProfile}
+                              onChange={(event) => handleChange("sheetingProfile", event.target.value)}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                            >
+                              {LCSS_ALLOWED_SHEETING_PROFILES.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : null}
+                        {formState.gableMode !== "structure_only" ? (
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700">Sheeting finish</label>
+                            <select
+                              value={formState.sheetingFinish}
+                              onChange={(event) => handleChange("sheetingFinish", event.target.value)}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                            >
+                              <option value="galvanised">Galvanised</option>
+                              <option value="chromadek">Chromadek colour</option>
+                            </select>
+                          </div>
+                        ) : null}
+                      </>
+                    ) : !isSolarEstimate ? (
                       <div>
                         <label className="block text-sm font-medium text-slate-700">Cladding</label>
                         <select
@@ -1204,7 +1281,7 @@ export default function EstimateDrawer({
                         />
                       </div>
                     )}
-                    <div>
+                    {!isLcssEstimateProduct(formState.productType) ? <div>
                       <label className="block text-sm font-medium text-slate-700">
                         {isGroundMountEstimate ? "Calculated layout" : "Delivery distance (km)"}
                       </label>
@@ -1223,7 +1300,7 @@ export default function EstimateDrawer({
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                         />
                       )}
-                    </div>
+                    </div> : null}
                   </div>
                   ) : null}
 
