@@ -25,5 +25,32 @@ export const metadata = {
 };
 
 export default function Page() {
-  return <EstimatorClient />;
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Is the Atlas warehouse estimator a final quotation?",
+        acceptedAnswer: { "@type": "Answer", text: "No. It is an indicative supply-only budget excluding VAT. Smart Steel reviews the configuration before issuing a formal proposal." },
+      },
+      {
+        "@type": "Question",
+        name: "Why are warehouse delivery and installation priced separately?",
+        acceptedAnswer: { "@type": "Answer", text: "Distance, access, ground conditions and installation requirements differ by project, so they are reviewed separately for a fairer figure." },
+      },
+      {
+        "@type": "Question",
+        name: "How long can an Atlas warehouse be?",
+        acceptedAnswer: { "@type": "Answer", text: "Atlas warehouses use 4 metre modular bays, with online estimator options extending to 60 metres." },
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <EstimatorClient />
+    </>
+  );
 }
