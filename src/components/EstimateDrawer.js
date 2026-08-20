@@ -47,6 +47,16 @@ const LCSS_ALLOWED_STEEL_FINISHES = ["ZAM", "Galv", "Mild"]
 const LCSS_ALLOWED_GABLE_MODES = ["sheeted_gable", "open_gable", "roof_only", "fully_enclosed"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
 
+function getLeadSteelFinish(lead) {
+  if (LCSS_ALLOWED_STEEL_FINISHES.includes(lead?.steelFinish)) return lead.steelFinish
+  const match = String(lead?.notes || "").match(/^Steel finish:\s*(.+)$/im)
+  const value = String(match?.[1] || "").toLowerCase()
+  if (value.includes("mild")) return "Mild"
+  if (value.includes("zam")) return "ZAM"
+  if (value.includes("galv")) return "Galv"
+  return ""
+}
+
 function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100
 }
@@ -236,7 +246,10 @@ function buildInitialState(lead, estimate) {
       typeof latestInput.includeTransport === "boolean"
         ? latestInput.includeTransport
         : false,
-    steelFinish: latestInput.steelFinish || "Galv",
+    steelFinish:
+      latestInput.steelFinish ||
+      getLeadSteelFinish(lead) ||
+      (isLcssEstimateProduct(productType) ? "ZAM" : "Galv"),
     notes: estimate?.notes || "",
     estimateName: stripVersionSuffix(estimate?.title) || "",
   }
@@ -1032,6 +1045,21 @@ export default function EstimateDrawer({
                         )}
                       </div>
                     </div>
+                    {isLcssEstimateProduct(formState.productType) ? (
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-slate-700">Structural steel</label>
+                        <select
+                          value={formState.steelFinish}
+                          onChange={(event) => handleChange("steelFinish", event.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        >
+                          <option value="Mild">Mild steel</option>
+                          <option value="ZAM">ZAM</option>
+                          <option value="Galv">Galvanised</option>
+                        </select>
+                        <p className="mt-1 text-xs text-slate-500">The selected finish updates the Atlas price and is shown in the quotation.</p>
+                      </div>
+                    ) : null}
                   </div>
 
                   {isTrussEstimate ? (

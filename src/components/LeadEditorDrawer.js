@@ -62,6 +62,11 @@ const ATLAS_WAREHOUSE_PRODUCT_TYPES = [
 const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", ...ATLAS_WAREHOUSE_PRODUCT_TYPES]
 const TRUSS_PRODUCT_TYPES = ["LSF trusses", "CFLC trusses"]
 const SOLAR_PRODUCT_TYPES = ["Solar carport", "Solar ground mount", "Solar structure"]
+const ATLAS_STEEL_FINISH_OPTIONS = [
+  { value: "Mild", label: "Mild steel" },
+  { value: "ZAM", label: "ZAM" },
+  { value: "Galv", label: "Galvanised" },
+]
 
 const SCOPE_PRESET_OPTIONS = {
   "LSF Warehouse": [
@@ -230,6 +235,27 @@ function getScopeSizeOptions(productType, storedWidth, storedLength) {
     widths: includeStoredOption([3, 5, 6, 8, 10, 12, 15, 20], storedWidth),
     lengths: includeStoredOption([5, 7.5, 10, 12.5, 15, 17.5, 20, 25, 30, 40, 50, 60], storedLength),
   }
+}
+
+function normalizeSteelFinish(value) {
+  const normalized = String(value || "").trim().toLowerCase()
+  if (normalized.includes("mild")) return "Mild"
+  if (normalized.includes("zam")) return "ZAM"
+  if (normalized.includes("galv")) return "Galv"
+  return ""
+}
+
+function getSteelFinishFromNotes(notes) {
+  const match = String(notes || "").match(/^Steel finish:\s*(.+)$/im)
+  return normalizeSteelFinish(match?.[1])
+}
+
+function setControlledNoteValue(notes, label, value) {
+  const source = String(notes || "").trim()
+  const controlledLine = `${label}: ${value}`
+  const matcher = new RegExp(`^${label}:\\s*.*$`, "im")
+  if (matcher.test(source)) return source.replace(matcher, controlledLine)
+  return [source, controlledLine].filter(Boolean).join("\n")
 }
 
 function appendScopePreset(currentValue, preset) {
@@ -617,6 +643,9 @@ const NEW_LEAD_NEXT_ACTIONS = [
 function NewLeadIntake({ formData, handleChange, validationErrors, inputClass, fieldLabelClass, onSave }) {
   const setProductType = (productType) => {
     handleChange("product_type", productType)
+    if (ATLAS_WAREHOUSE_PRODUCT_TYPES.includes(productType) && !getSteelFinishFromNotes(formData.notes)) {
+      handleChange("notes", setControlledNoteValue(formData.notes, "Steel finish", "ZAM"))
+    }
     if (!formData.next_action) {
       handleChange("next_action", NEW_LEAD_NEXT_ACTIONS[0])
     }
@@ -707,6 +736,19 @@ function NewLeadIntake({ formData, handleChange, validationErrors, inputClass, f
                   className={`${inputClass} min-h-[92px] resize-none`}
                 />
               </div>
+              {ATLAS_WAREHOUSE_PRODUCT_TYPES.includes(formData.product_type) ? (
+                <div className="mt-3">
+                  <label className={fieldLabelClass}>Structural steel</label>
+                  <select
+                    value={getSteelFinishFromNotes(formData.notes) || "ZAM"}
+                    onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Steel finish", event.target.value))}
+                    className={inputClass}
+                  >
+                    {ATLAS_STEEL_FINISH_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
+                  <p className="mt-1.5 text-xs text-slate-500">This selection carries into the Atlas estimate and pricing.</p>
+                </div>
+              ) : null}
             </section>
           </div>
 
@@ -843,6 +885,9 @@ export default function LeadEditorDrawer({
   const opportunitySummary = getOpportunitySummary(formData)
   const latestEstimate = savedEstimates[0] || null
   const builderConfiguration = builderSubmission?.configuration || {}
+  const selectedSteelFinish = normalizeSteelFinish(
+    getSteelFinishFromNotes(formData.notes) || builderConfiguration.steelFinish
+  ) || "ZAM"
   const builderSummary = builderSubmission?.summary || {}
   const builderDesignReference = builderConfiguration.designReference || builderSummary.designReference || ""
   const builderConfigurationUrl = builderConfiguration.configurationUrl || builderSummary.configurationUrl || ""
@@ -870,6 +915,7 @@ export default function LeadEditorDrawer({
         builderConfiguration.sheetingProfile ||
         builderConfiguration.cladding ||
         "",
+      steelFinish: selectedSteelFinish,
       builder_configuration: builderConfiguration,
     })
   }
@@ -2048,6 +2094,19 @@ export default function LeadEditorDrawer({
 
           {scopeConfig.showWarehouseOptions ? (
             <>
+              {ATLAS_WAREHOUSE_PRODUCT_TYPES.includes(formData.product_type) ? (
+                <div className="mb-4">
+                  <label className={`${fieldLabelClass} mb-2`}>Structural steel</label>
+                  <select
+                    value={selectedSteelFinish}
+                    onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Steel finish", event.target.value))}
+                    className={inputClass}
+                  >
+                    {ATLAS_STEEL_FINISH_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
+                  <p className="mt-1.5 text-xs text-slate-500">This selection controls the Atlas material rate used when the estimate is prepared.</p>
+                </div>
+              ) : null}
               <label className={`${fieldLabelClass} mb-2`}>Cladding & Installation</label>
               <div className="mb-3 flex gap-2 flex-wrap">
                 {["IBR", "Chromadek"].map((clad) => (
