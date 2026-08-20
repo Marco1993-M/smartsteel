@@ -1,5 +1,4 @@
 import { formatCurrency } from "../../../lib/estimates/warehouseEstimate"
-import { calculateLcssWarehouseEstimate } from "../../../lib/estimates/warehouseEstimateLcss"
 import { calculateAtlasWarehouseEstimate } from "../../../lib/estimates/atlasWarehouseEstimate"
 import { ATLAS_W_SERIES } from "../../../lib/atlasProductData"
 
@@ -94,22 +93,8 @@ function buildKit(width, length) {
 }
 
 function buildStarterKit(kit) {
-  if (!kit.width || !kit.length) {
-    return kit
-  }
-
-  const estimate = calculateLcssWarehouseEstimate({
-    ...DEFAULT_PRODUCT_INPUT,
-    width: kit.width,
-    length: kit.length,
-    gableMode: "open_gable",
-  })
-
-  return {
-    ...kit,
-    priceFrom: formatCurrency(estimate.pricing.totalInclVat),
-    estimate,
-  }
+  // Starter carports are not Atlas warehouses and must not inherit warehouse pricing.
+  return kit
 }
 
 export const cflcLaunchRanges = LAUNCH_SPANS.map((span) => {

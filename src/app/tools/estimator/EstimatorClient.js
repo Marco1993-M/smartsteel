@@ -16,10 +16,10 @@ import {
   calculateEstimateByProductType,
 } from "../../../lib/estimates/estimateFactory";
 import {
-  LCSS_WAREHOUSE_GABLE_OPTIONS,
-  LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS,
-  LCSS_WAREHOUSE_WIDTH_OPTIONS,
-} from "../../../lib/estimates/warehouseEstimateLcss";
+  ATLAS_WAREHOUSE_SHEETING_OPTIONS,
+  ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS,
+  ATLAS_WAREHOUSE_WIDTH_OPTIONS,
+} from "../../../lib/estimates/atlasWarehouseEstimate";
 
 let lastAllocatedIndex = 0;
 const team = ['Stefan', 'Niel', 'Marco'];
@@ -328,7 +328,7 @@ export default function EstimatorPage() {
                   value={width}
                   onChange={(e) => setWidth(parseInt(e.target.value))}
                 >
-                  {(isLcssWarehouse ? LCSS_WAREHOUSE_WIDTH_OPTIONS : WAREHOUSE_WIDTH_OPTIONS).map((option) => (
+                  {(isLcssWarehouse ? ATLAS_WAREHOUSE_WIDTH_OPTIONS : WAREHOUSE_WIDTH_OPTIONS).map((option) => (
                     <option key={option} value={option}>
                       {option}m
                     </option>
@@ -372,7 +372,7 @@ export default function EstimatorPage() {
                       value={steelFinish}
                       onChange={(e) => setSteelFinish(e.target.value)}
                     >
-                      {LCSS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => (
+                      {ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => (
                         <option key={option} value={option}>
                           {option}
                         </option>
@@ -413,7 +413,7 @@ export default function EstimatorPage() {
                       value={gableMode}
                       onChange={(e) => setGableMode(e.target.value)}
                     >
-                      {LCSS_WAREHOUSE_GABLE_OPTIONS.map((option) => (
+                      {ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
