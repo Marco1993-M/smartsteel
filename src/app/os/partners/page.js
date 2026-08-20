@@ -1,5 +1,5 @@
-import PartnerBranchesWorkspace from "../../../components/os/PartnerBranchesWorkspace"
+import PartnersWorkspace from "../../../components/os/PartnersWorkspace"
 
 export default function PartnersOsPage() {
-  return <PartnerBranchesWorkspace />
+  return <PartnersWorkspace />
 }
