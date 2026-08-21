@@ -15,8 +15,8 @@ import {
 
 const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
-  in_review: { label: "In review", className: "bg-blue-100 text-blue-800", action: "Mark quoted", next: "quoted" },
-  quoted: { label: "Quote sent", className: "bg-emerald-100 text-emerald-800", action: "Close opportunity", next: "closed" },
+  in_review: { label: "In review", className: "bg-blue-100 text-blue-800", action: "Approve price", next: "quoted" },
+  quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Close opportunity", next: "closed" },
   closed: { label: "Closed", className: "bg-slate-100 text-slate-600", action: "Reopen review", next: "in_review" },
 }
 
@@ -175,8 +175,8 @@ export default function PartnerOpportunityReviewDrawer({
             <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Quote returned to AFGRI</p>
-                  <p className="mt-1 text-sm text-slate-600">Confirm the commercial amount and attach the controlled proposal.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Price returned to AFGRI</p>
+                  <p className="mt-1 text-sm text-slate-600">Confirm the approved amount. A formal proposal can be attached now or added later.</p>
                 </div>
                 {proposal ? (
                   <button type="button" onClick={() => setQuoteResponse((current) => ({ ...current, finalQuoteAmountExVat: proposal.amountExVat }))} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-[#0043f3] shadow-sm">
@@ -193,8 +193,8 @@ export default function PartnerOpportunityReviewDrawer({
                     {variance > 0 ? "+" : ""}{money.format(variance)} against the calculated proposal
                   </p>
                 ) : null}
-                <QuoteField label="Quote link">
-                  <input value={quoteResponse.quoteUrl} onChange={(event) => setQuoteResponse((current) => ({ ...current, quoteUrl: event.target.value }))} placeholder="/quotes/... or https://..." />
+                <QuoteField label="Formal quote link (optional)">
+                  <input value={quoteResponse.quoteUrl} onChange={(event) => setQuoteResponse((current) => ({ ...current, quoteUrl: event.target.value }))} placeholder="Add when a formal proposal has been issued" />
                 </QuoteField>
                 <QuoteField label="Message to salesperson">
                   <textarea rows="3" value={quoteResponse.partnerQuoteMessage} onChange={(event) => setQuoteResponse((current) => ({ ...current, partnerQuoteMessage: event.target.value }))} placeholder="The reviewed proposal is ready. Open the quote for scope and commercial terms." />

@@ -7,8 +7,8 @@ import PartnerOpportunityReviewDrawer from "./PartnerOpportunityReviewDrawer"
 
 const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
-  in_review: { label: "In review", className: "bg-blue-100 text-blue-800", action: "Mark quoted", next: "quoted" },
-  quoted: { label: "Quote sent", className: "bg-emerald-100 text-emerald-800", action: "Close opportunity", next: "closed" },
+  in_review: { label: "In review", className: "bg-blue-100 text-blue-800", action: "Approve price", next: "quoted" },
+  quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Close opportunity", next: "closed" },
   closed: { label: "Closed", className: "bg-slate-100 text-slate-600", action: "Reopen review", next: "in_review" },
 }
 
