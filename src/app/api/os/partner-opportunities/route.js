@@ -99,8 +99,8 @@ export async function PATCH(request) {
     ? null
     : Number(body.finalQuoteAmountExVat)
   const quoteUrl = String(body.quoteUrl || "").trim()
-  if (status === "quoted" && (!Number.isFinite(finalQuoteAmountExVat) || finalQuoteAmountExVat <= 0 || !quoteUrl)) {
-    return NextResponse.json({ error: "Add the final quote amount and quote link before marking this as quoted." }, { status: 400 })
+  if (status === "quoted" && (!Number.isFinite(finalQuoteAmountExVat) || finalQuoteAmountExVat <= 0)) {
+    return NextResponse.json({ error: "Add the approved amount before returning this price to AFGRI." }, { status: 400 })
   }
 
   const updates = {
