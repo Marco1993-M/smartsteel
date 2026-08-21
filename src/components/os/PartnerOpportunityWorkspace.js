@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { ArrowRight, Building2, CheckCircle2, Clock3, FileCheck2, Inbox, Mail, MapPin, Phone, RefreshCw, UserRound, X } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
+import PartnerOpportunityReviewDrawer from "./PartnerOpportunityReviewDrawer"
 
 const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
@@ -45,7 +46,7 @@ export default function PartnerOpportunityWorkspace() {
     setSelected(record)
     setReviewNotes(record.internalReviewNotes || "")
     setQuoteResponse({
-      finalQuoteAmountExVat: record.finalQuoteAmountExVat ?? record.indicativeAmountExVat ?? "",
+      finalQuoteAmountExVat: record.finalQuoteAmountExVat ?? record.proposedQuote?.amountExVat ?? record.indicativeAmountExVat ?? "",
       quoteUrl: record.quoteUrl || "",
       partnerQuoteMessage: record.partnerQuoteMessage || "",
     })
@@ -98,7 +99,7 @@ export default function PartnerOpportunityWorkspace() {
         </div>
       </section>
 
-      {selected ? <OpportunityDrawer record={selected} notes={reviewNotes} setNotes={setReviewNotes} quoteResponse={quoteResponse} setQuoteResponse={setQuoteResponse} saving={saving} onClose={() => setSelected(null)} onAdvance={advanceRecord} /> : null}
+      {selected ? <PartnerOpportunityReviewDrawer record={selected} notes={reviewNotes} setNotes={setReviewNotes} quoteResponse={quoteResponse} setQuoteResponse={setQuoteResponse} saving={saving} onClose={() => setSelected(null)} onAdvance={advanceRecord} /> : null}
     </div>
   )
 }
