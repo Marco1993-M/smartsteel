@@ -2,12 +2,35 @@ import { NextResponse } from "next/server"
 import { requireOsAuth } from "lib/osRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
 import { isSchemaMissingError } from "lib/osPhase1bData"
+import { calculateAtlasWarehouseEstimate } from "lib/estimates/atlasWarehouseEstimate"
 
 export const runtime = "nodejs"
 
 const REVIEW_STATUSES = ["submitted", "in_review", "quoted", "closed"]
 
 function normalizeOpportunity(row) {
+  let proposedQuote = null
+  try {
+    const estimate = calculateAtlasWarehouseEstimate(row.configuration || {})
+    const commercialFactor = estimate.pricing.markupMultiplier || 1
+    proposedQuote = {
+      amountExVat: estimate.pricing.estimatedTotal,
+      vatAmount: estimate.pricing.vatValue,
+      amountInclVat: estimate.pricing.totalInclVat,
+      structureAmountExVat: Number((estimate.pricing.steelCost * commercialFactor).toFixed(2)),
+      connectionsAmountExVat: Number((estimate.pricing.connectionCost * commercialFactor).toFixed(2)),
+      sheetingAmountExVat: Number((estimate.pricing.claddingCost * commercialFactor).toFixed(2)),
+      totalSteelKg: estimate.materials.totalSteelKg,
+      sheetingAreaSqm: estimate.sheeting.totalSheetingArea,
+      pricingRelease: estimate.meta.pricingRelease,
+      provisionalItems: estimate.meta.provisionalItems || [],
+      inclusions: ["Atlas structural system", "Released connection allowances", "Selected sheeting scope", "Supply-only configuration"],
+      exclusions: ["VAT", "Delivery", "Installation", "Foundations and concrete works", "Project-specific engineering outside the released configuration"],
+    }
+  } catch {
+    proposedQuote = null
+  }
+
   return {
     id: row.id,
     reference: row.reference,
@@ -23,6 +46,7 @@ function normalizeOpportunity(row) {
     finalQuoteAmountExVat: row.final_quote_amount_ex_vat === null ? null : Number(row.final_quote_amount_ex_vat),
     quoteUrl: row.quote_url || "",
     partnerQuoteMessage: row.partner_quote_message || "",
+    proposedQuote,
     submittedAt: row.submitted_at || "",
     quotedAt: row.quoted_at || "",
     updatedAt: row.updated_at,
