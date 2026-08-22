@@ -113,7 +113,7 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
           <section className="xl:sticky xl:top-20">
             <div className="rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
               <WarehouseBuilderScene {...sceneProps} className="h-[330px] sm:h-[500px] xl:h-[620px]" />
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#001d2e] px-4 py-3 text-white sm:px-5"><div><p className="text-[9px] font-bold uppercase tracking-[0.17em] text-[#c1d9e5]">Live partner guide · excl. VAT</p><p className="mt-1 text-2xl font-black">{previewing ? "Updating..." : preview ? money.format(preview.commercial.amountExVat) : "Review required"}</p></div><p className="text-sm font-bold text-white/70">{configuration.width}m × {configuration.length}m × {configuration.wallHeight}m</p></div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#001d2e] px-4 py-3 text-white sm:px-5"><div><p className="text-[9px] font-bold uppercase tracking-[0.17em] text-[#c1d9e5]">Live AFGRI guide · excl. VAT</p><p className="mt-1 text-2xl font-black">{previewing ? "Updating..." : preview ? money.format(preview.commercial.amountExVat) : "Review required"}</p>{preview?.commercial?.partnerAdjustmentRate ? <p className="mt-1 text-[10px] font-semibold text-white/55">Includes the agreed {Math.round(preview.commercial.partnerAdjustmentRate * 100)}% partner adjustment</p> : null}</div><p className="text-sm font-bold text-white/70">{configuration.width}m × {configuration.length}m × {configuration.wallHeight}m</p></div>
             </div>
           </section>
 

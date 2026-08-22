@@ -81,7 +81,7 @@ export default function PartnerOpportunityReviewDrawer({
             <section className="overflow-hidden rounded-2xl bg-[#001d2e] text-white">
               <div className="grid gap-px bg-white/15 sm:grid-cols-[1.35fr_0.65fr]">
                 <div className="bg-[linear-gradient(135deg,#001d2e,#063379)] p-5 sm:p-6">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Proposed supply-only quote</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Proposed AFGRI supply price</p>
                   <p className="mt-3 text-4xl font-black tracking-tight">{money.format(proposal.amountExVat)}</p>
                   <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-white/55">Excl. VAT</p>
                 </div>
@@ -95,6 +95,10 @@ export default function PartnerOpportunityReviewDrawer({
                 <ProposalAmount label="Structure" value={proposal.structureAmountExVat} />
                 <ProposalAmount label="Connections" value={proposal.connectionsAmountExVat} />
                 <ProposalAmount label="Sheeting" value={proposal.sheetingAmountExVat} />
+              </div>
+              <div className="grid gap-px border-t border-white/10 bg-white/10 sm:grid-cols-2">
+                <div className="bg-[#001d2e] px-4 py-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">Recommended customer price</p><p className="mt-1 text-sm font-black">{money.format(proposal.recommendedCustomerPriceExVat)}</p></div>
+                <div className="bg-[#001d2e] px-4 py-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">AFGRI partner adjustment · {Math.round(proposal.partnerAdjustmentRate * 100)}%</p><p className="mt-1 text-sm font-black text-[#c1d9e5]">− {money.format(proposal.partnerAdjustmentAmount)}</p></div>
               </div>
             </section>
           ) : (
