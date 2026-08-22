@@ -81,20 +81,21 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
     body { margin: 0; color: #001d2e; font-family: Arial, Helvetica, sans-serif; background: white; }
     .page { position: relative; min-height: 297mm; padding: 18mm 17mm 16mm; page-break-after: always; overflow: hidden; }
     .page:last-child { page-break-after: auto; }
-    .brandline { position:absolute; inset:0 0 auto; height:7mm; background:linear-gradient(90deg,#001d2e 0 35%,#0043f3 100%); }
-    .slash { position:absolute; right:-18mm; top:-20mm; width:58mm; height:118mm; background:#c1d9e5; transform:rotate(35deg); opacity:.45; }
+    .brandline { position:absolute; z-index:3; inset:0 0 auto; height:7mm; background:linear-gradient(90deg,#001d2e 0 35%,#0043f3 100%); }
+    .slash { position:absolute; z-index:0; right:-18mm; top:-20mm; width:58mm; height:118mm; background:#c1d9e5; transform:rotate(35deg); opacity:.45; }
+    .page > *:not(.brandline):not(.slash) { position:relative; z-index:1; }
     .logos { display:flex; align-items:center; justify-content:space-between; gap:18mm; height:18mm; }
     .logos img:first-child { width:58mm; max-height:15mm; object-fit:contain; object-position:left center; }
     .logos img:last-child { width:30mm; max-height:13mm; object-fit:contain; object-position:right center; }
     .eyebrow { margin-top:17mm; color:#0043f3; font-size:9px; font-weight:800; letter-spacing:3px; text-transform:uppercase; }
     h1 { margin:5mm 0 3mm; max-width:145mm; font-size:31px; line-height:1.05; letter-spacing:-1.2px; }
     .lede { max-width:145mm; color:#52657d; font-size:12px; line-height:1.55; }
-    .price-card { margin-top:11mm; display:grid; grid-template-columns:1.45fr .8fr; background:#001d2e; color:white; }
-    .price-main { padding:9mm; background:linear-gradient(135deg,#001d2e,#063783); }
+    .price-card { margin-top:11mm; display:grid; grid-template-columns:1.45fr .8fr; background:linear-gradient(110deg,#001d2e 0%,#063783 48%,#0043f3 100%); color:white; }
+    .price-main { padding:9mm; background:transparent; }
     .price-main .label,.price-side .label { color:#c1d9e5; font-size:8px; font-weight:800; letter-spacing:1.7px; text-transform:uppercase; }
     .price-main .amount { margin-top:4mm; font-size:32px; font-weight:900; letter-spacing:-1px; }
     .price-main .sub { margin-top:2mm; color:#b9c8da; font-size:9px; text-transform:uppercase; letter-spacing:1.3px; }
-    .price-side { padding:9mm 7mm; background:#0043f3; }
+    .price-side { padding:9mm 7mm; border-left:1px solid rgba(255,255,255,.2); background:transparent; }
     .price-side .amount { margin-top:4mm; font-size:21px; font-weight:900; }
     .price-side .sub { margin-top:2mm; color:#c1d9e5; font-size:9px; }
     .facts { display:grid; grid-template-columns:repeat(3,1fr); margin-top:8mm; border:1px solid #d8e2ec; }
@@ -125,6 +126,10 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
     .condition ul { margin:0; padding-left:4mm; }
     .condition li { margin-bottom:2mm; color:#52657d; font-size:8.5px; line-height:1.45; }
     .notice { margin-top:7mm; padding:5mm; background:#fff8dd; border-left:3px solid #f3c316; color:#4e4a35; font-size:8.5px; line-height:1.5; }
+    .notes { display:grid; grid-template-columns:1fr 1fr; gap:5mm; margin-top:8mm; }
+    .note { min-height:31mm; padding:5mm; background:#eef4f8; }
+    .note .label { color:#0043f3; font-size:7px; font-weight:800; letter-spacing:1.3px; text-transform:uppercase; }
+    .note p { margin:3mm 0 0; color:#52657d; font-size:9px; line-height:1.55; white-space:pre-wrap; }
   </style></head><body>
     <section class="page"><div class="brandline"></div><div class="slash"></div>
       <div class="logos">${atlasLogo ? `<img src="${atlasLogo}">` : "<strong>ATLAS BY SMART STEEL</strong>"}${afgriLogo ? `<img src="${afgriLogo}">` : "<strong>AFGRI</strong>"}</div>
@@ -141,7 +146,7 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
         <div class="fact"><div class="label">Document</div><div class="value">${escapeHtml(documentNumber)}</div></div>
       </div>
       <div class="commercial"><div class="commercial-box"><div class="label">Recommended customer price excl. VAT</div><div class="value">${money.format(recommendedPrice)}</div></div><div class="commercial-box accent"><div class="label">AFGRI partner adjustment · 5%</div><div class="value">-${money.format(adjustment)}</div></div></div>
-      <div class="footer"><span>ATLAS SYSTEM · DEVELOPED BY SMART STEEL</span><span>${escapeHtml(documentNumber)} · PAGE 1 OF 2</span></div>
+      <div class="footer"><span>ATLAS SYSTEM · DEVELOPED BY SMART STEEL</span><span>${escapeHtml(documentNumber)} · PAGE 1 OF 3</span></div>
     </section>
     <section class="page"><div class="brandline"></div>
       <div class="section-head"><h2>Confirmed configuration</h2><span>${escapeHtml(estimate.meta.pricingRelease)}</span></div>
@@ -154,12 +159,21 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
         <div class="fact"><div class="label">Commercial basis</div><div class="value">Supply only</div></div>
       </div>
       <table><thead><tr><th>Group</th><th>Component / supply item</th><th>Qty</th><th>Unit</th></tr></thead><tbody>${rows.map((item) => `<tr><td>${escapeHtml(item.group)}</td><td>${escapeHtml(item.label)}</td><td>${escapeHtml(item.quantity)}</td><td>${escapeHtml(item.unit)}</td></tr>`).join("")}</tbody></table>
+      <div class="footer"><span>ATLAS SYSTEM · CONFIRMED SUPPLY CONFIGURATION</span><span>${escapeHtml(documentNumber)} · PAGE 2 OF 3</span></div>
+    </section>
+    <section class="page"><div class="brandline"></div><div class="slash"></div>
+      <div class="logos">${atlasLogo ? `<img src="${atlasLogo}">` : "<strong>ATLAS BY SMART STEEL</strong>"}${afgriLogo ? `<img src="${afgriLogo}">` : "<strong>AFGRI</strong>"}</div>
+      <div class="section-head"><h2>Commercial record</h2><span>Partner handoff</span></div>
       <div class="conditions">
         <div class="condition"><h3>Included</h3><ul><li>Atlas structural members for the configuration shown.</li><li>Connection hardware allowances included in the approved price.</li><li>Selected sheeting only where recorded above.</li><li>Smart Steel review of the released commercial configuration.</li></ul></div>
         <div class="condition"><h3>Excluded unless confirmed</h3><ul><li>Delivery, offloading and installation.</li><li>Foundations, concrete works and site preparation.</li><li>Electrical, solar panels and specialist services.</li><li>Project-specific changes outside the confirmed configuration.</li></ul></div>
       </div>
+      <div class="notes">
+        <div class="note"><div class="label">Project notes</div><p>${escapeHtml(opportunity.notes || "No additional project notes were recorded.")}</p></div>
+        <div class="note"><div class="label">Smart Steel message</div><p>${escapeHtml(opportunity.partner_quote_message || "The reviewed Atlas configuration and approved AFGRI price are ready for the next customer discussion.")}</p></div>
+      </div>
       <div class="notice"><strong>Commercial record:</strong> This partner price confirmation is not a customer quotation, tax invoice, engineering certificate, purchase order, or instruction to manufacture. Price and scope apply only to the configuration recorded above. Any change to size, finish, sheeting, site requirements, or supply scope requires a new review. Manufacture proceeds only after the required formal order, technical confirmation, and agreed payment conditions.</div>
-      <div class="footer"><span>SMART STEEL · info@smartsteel.co.za · smartsteel.co.za</span><span>${escapeHtml(documentNumber)} · PAGE 2 OF 2</span></div>
+      <div class="footer"><span>SMART STEEL · info@smartsteel.co.za · smartsteel.co.za</span><span>${escapeHtml(documentNumber)} · PAGE 3 OF 3</span></div>
     </section>
   </body></html>`
 
