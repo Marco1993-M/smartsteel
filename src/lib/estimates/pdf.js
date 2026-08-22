@@ -132,3 +132,25 @@ export async function renderDocumentPdf({ browser, url, readySelector }) {
     await page.close().catch(() => {})
   }
 }
+
+export async function renderHtmlPdf({ browser, html, landscape = false }) {
+  const page = await browser.newPage()
+
+  try {
+    await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 30000 })
+    await page.emulateMediaType("print")
+    await page.evaluate(async () => {
+      if (document.fonts?.ready) await document.fonts.ready
+    })
+
+    return await page.pdf({
+      format: "A4",
+      landscape,
+      printBackground: true,
+      preferCSSPageSize: true,
+      margin: { top: "0", right: "0", bottom: "0", left: "0" },
+    })
+  } finally {
+    await page.close().catch(() => {})
+  }
+}
