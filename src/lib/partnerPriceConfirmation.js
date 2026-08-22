@@ -83,7 +83,7 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
     .page:last-child { page-break-after: auto; }
     .brandline { position:absolute; z-index:3; inset:0 0 auto; height:7mm; background:linear-gradient(90deg,#001d2e 0 35%,#0043f3 100%); }
     .slash { position:absolute; z-index:0; right:-18mm; top:-20mm; width:58mm; height:118mm; background:#c1d9e5; transform:rotate(35deg); opacity:.45; }
-    .page > *:not(.brandline):not(.slash) { position:relative; z-index:1; }
+    .page > *:not(.brandline):not(.slash):not(.footer) { position:relative; z-index:1; }
     .logos { display:flex; align-items:center; justify-content:space-between; gap:18mm; height:18mm; }
     .logos img:first-child { width:58mm; max-height:15mm; object-fit:contain; object-position:left center; }
     .logos img:last-child { width:30mm; max-height:13mm; object-fit:contain; object-position:right center; }
@@ -109,7 +109,7 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
     .commercial-box .label { color:#667a92; font-size:7px; font-weight:800; letter-spacing:1.3px; text-transform:uppercase; }
     .commercial-box .value { margin-top:2.5mm; font-size:15px; font-weight:900; }
     .commercial-box.accent { background:#c1d9e5; color:#0043f3; }
-    .footer { position:absolute; left:17mm; right:17mm; bottom:10mm; display:flex; justify-content:space-between; border-top:1px solid #d8e2ec; padding-top:3mm; color:#72839a; font-size:7px; }
+    .footer { position:absolute; z-index:2; left:17mm; right:17mm; bottom:10mm; display:flex; justify-content:space-between; border-top:1px solid #d8e2ec; padding-top:3mm; color:#72839a; font-size:7px; }
     .section-head { margin-top:16mm; display:flex; justify-content:space-between; align-items:end; border-bottom:2px solid #001d2e; padding-bottom:4mm; }
     .section-head h2 { margin:0; font-size:24px; letter-spacing:-.7px; }
     .section-head span { color:#0043f3; font-size:8px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; }
