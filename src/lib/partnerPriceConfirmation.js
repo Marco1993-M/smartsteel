@@ -86,7 +86,7 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
     .page > *:not(.brandline):not(.slash):not(.footer) { position:relative; z-index:1; }
     .logos { display:flex; align-items:center; justify-content:space-between; gap:18mm; height:18mm; }
     .logos img:first-child { width:58mm; max-height:15mm; object-fit:contain; object-position:left center; }
-    .logos img:last-child { width:30mm; max-height:13mm; object-fit:contain; object-position:right center; }
+    .logos img:last-child { width:30mm; max-height:13mm; object-fit:contain; object-position:right center; mix-blend-mode:multiply; }
     .eyebrow { margin-top:17mm; color:#0043f3; font-size:9px; font-weight:800; letter-spacing:3px; text-transform:uppercase; }
     h1 { margin:5mm 0 3mm; max-width:145mm; font-size:31px; line-height:1.05; letter-spacing:-1.2px; }
     .lede { max-width:145mm; color:#52657d; font-size:12px; line-height:1.55; }
