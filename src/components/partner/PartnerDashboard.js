@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Check, Clock3, Download, FileText, LogOut, Plus } from "lucide-react"
+import { ArrowRight, Check, Clock3, Download, FileText, LoaderCircle, LogOut, Plus } from "lucide-react"
 import { partnerSupabase } from "../../lib/partnerSupabase"
 import { getPartnerAuthHeaders } from "../../lib/partnerClientAuth"
 import PartnerAtlasConfigurator from "./PartnerAtlasConfigurator"
@@ -19,10 +19,12 @@ export default function PartnerDashboard() {
   const [error, setError] = useState("")
   const [formOpen, setFormOpen] = useState(false)
   const [editingOpportunity, setEditingOpportunity] = useState(null)
+  const [priceConfirmationLoadingId, setPriceConfirmationLoadingId] = useState("")
 
   async function openPriceConfirmation(record) {
     try {
       setError("")
+      setPriceConfirmationLoadingId(record.id)
       const response = await fetch(`/api/partner/opportunities/${record.id}/price-confirmation`, {
         headers: await getPartnerAuthHeaders(),
       })
@@ -39,6 +41,8 @@ export default function PartnerDashboard() {
       window.setTimeout(() => URL.revokeObjectURL(url), 60000)
     } catch (downloadError) {
       setError(downloadError.message)
+    } finally {
+      setPriceConfirmationLoadingId("")
     }
   }
 
@@ -123,7 +127,7 @@ export default function PartnerDashboard() {
 
           <div className="space-y-5">
             <QueueCard id="drafts" title="Continue drafts" empty="No unfinished opportunities." records={drafts} icon={Clock3} onOpen={(record) => { setEditingOpportunity(record); setFormOpen(true) }} />
-            <QueueCard id="quotes" title="Quote progress" empty="No quote requests yet." records={quotes} icon={Check} onPriceConfirmation={openPriceConfirmation} />
+            <QueueCard id="quotes" title="Quote progress" empty="No quote requests yet." records={quotes} icon={Check} onPriceConfirmation={openPriceConfirmation} priceConfirmationLoadingId={priceConfirmationLoadingId} />
           </div>
         </section>
       </div>
@@ -133,6 +137,6 @@ export default function PartnerDashboard() {
   )
 }
 
-function QueueCard({ id, title, empty, records, icon: Icon, onOpen, onPriceConfirmation }) {
-  return <section id={id} className="scroll-mt-5 rounded-[1.75rem] border border-slate-200 bg-white p-5 sm:p-6"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#c1d9e5] text-[#0043f3]"><Icon className="h-5 w-5" /></span><h2 className="text-lg font-black">{title}</h2></div>{records.length ? <div className="mt-4 space-y-2">{records.slice(0, 4).map((record) => { const Tag = onOpen ? "button" : "div"; return <Tag key={record.id} type={onOpen ? "button" : undefined} onClick={onOpen ? () => onOpen(record) : undefined} className="block w-full rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-blue-300"><div className="flex items-center justify-between gap-3"><p className="font-bold">{record.customer_name}</p><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#0043f3]">{record.status === "quoted" ? "price approved" : record.status.replaceAll("_", " ")}</span></div><p className="mt-1 text-xs text-slate-500">{record.reference} · {record.configuration?.width}m × {record.configuration?.length}m</p>{record.status === "quoted" ? <div className="mt-3 border-t border-slate-200 pt-3"><div className="flex items-end justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Approved AFGRI price excl. VAT</p><p className="mt-1 font-black text-[#0043f3]">{currency.format(record.final_quote_amount_ex_vat || 0)}</p><p className="mt-1 text-[10px] font-semibold text-slate-400">Agreed 5% partner adjustment applied</p></div><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">Price confirmed</span></div><button type="button" onClick={() => onPriceConfirmation?.(record)} className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#0043f3] px-3 text-xs font-black text-white"><Download className="h-3.5 w-3.5" /> View price confirmation</button>{record.quote_url ? <a href={record.quote_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-black text-[#0043f3]">Open formal proposal</a> : null}</div> : null}{record.partner_quote_message ? <p className="mt-2 text-xs leading-5 text-slate-600">{record.partner_quote_message}</p> : null}</Tag> })}</div> : <p className="mt-5 text-sm text-slate-500">{empty}</p>}</section>
+function QueueCard({ id, title, empty, records, icon: Icon, onOpen, onPriceConfirmation, priceConfirmationLoadingId }) {
+  return <section id={id} className="scroll-mt-5 rounded-[1.75rem] border border-slate-200 bg-white p-5 sm:p-6"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#c1d9e5] text-[#0043f3]"><Icon className="h-5 w-5" /></span><h2 className="text-lg font-black">{title}</h2></div>{records.length ? <div className="mt-4 space-y-2">{records.slice(0, 4).map((record) => { const Tag = onOpen ? "button" : "div"; const isPreparing = priceConfirmationLoadingId === record.id; return <Tag key={record.id} type={onOpen ? "button" : undefined} onClick={onOpen ? () => onOpen(record) : undefined} className="block w-full rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-blue-300"><div className="flex items-center justify-between gap-3"><p className="font-bold">{record.customer_name}</p><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#0043f3]">{record.status === "quoted" ? "price approved" : record.status.replaceAll("_", " ")}</span></div><p className="mt-1 text-xs text-slate-500">{record.reference} · {record.configuration?.width}m × {record.configuration?.length}m</p>{record.status === "quoted" ? <div className="mt-3 border-t border-slate-200 pt-3"><div className="flex items-end justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Approved AFGRI price excl. VAT</p><p className="mt-1 font-black text-[#0043f3]">{currency.format(record.final_quote_amount_ex_vat || 0)}</p><p className="mt-1 text-[10px] font-semibold text-slate-400">Agreed 5% partner adjustment applied</p></div><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">Price confirmed</span></div><button type="button" disabled={isPreparing} onClick={() => onPriceConfirmation?.(record)} className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#0043f3] px-3 text-xs font-black text-white disabled:cursor-wait disabled:opacity-70">{isPreparing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} {isPreparing ? "Preparing document..." : "View price confirmation"}</button>{record.quote_url ? <a href={record.quote_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-black text-[#0043f3]">Open formal proposal</a> : null}</div> : null}{record.partner_quote_message ? <p className="mt-2 text-xs leading-5 text-slate-600">{record.partner_quote_message}</p> : null}</Tag> })}</div> : <p className="mt-5 text-sm text-slate-500">{empty}</p>}</section>
 }

@@ -7,12 +7,14 @@ import {
   CheckCircle2,
   Download,
   FileCheck2,
+  LoaderCircle,
   Mail,
   MapPin,
   Phone,
   UserRound,
   X,
 } from "lucide-react"
+import { useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 const STATUS_META = {
@@ -38,6 +40,7 @@ export default function PartnerOpportunityReviewDrawer({
   onClose,
   onAdvance,
 }) {
+  const [preparingDocument, setPreparingDocument] = useState(false)
   const meta = STATUS_META[record.status] || STATUS_META.submitted
   const config = record.configuration || {}
   const proposal = record.proposedQuote
@@ -56,21 +59,26 @@ export default function PartnerOpportunityReviewDrawer({
   const variance = proposal ? finalAmount - proposal.amountExVat : 0
 
   async function openPriceConfirmation() {
-    const response = await fetch(`/api/os/partner-opportunities/${record.id}/price-confirmation`, {
-      headers: await getOsAuthHeaders(),
-    })
-    if (!response.ok) {
-      const payload = await response.json().catch(() => ({}))
-      window.alert(payload.error || "The price confirmation could not be opened.")
-      return
+    try {
+      setPreparingDocument(true)
+      const response = await fetch(`/api/os/partner-opportunities/${record.id}/price-confirmation`, {
+        headers: await getOsAuthHeaders(),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        window.alert(payload.error || "The price confirmation could not be opened.")
+        return
+      }
+      const url = URL.createObjectURL(await response.blob())
+      const link = document.createElement("a")
+      link.href = url
+      link.target = "_blank"
+      link.rel = "noopener noreferrer"
+      link.click()
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } finally {
+      setPreparingDocument(false)
     }
-    const url = URL.createObjectURL(await response.blob())
-    const link = document.createElement("a")
-    link.href = url
-    link.target = "_blank"
-    link.rel = "noopener noreferrer"
-    link.click()
-    window.setTimeout(() => URL.revokeObjectURL(url), 60000)
   }
 
   return (
@@ -228,8 +236,8 @@ export default function PartnerOpportunityReviewDrawer({
           ) : null}
 
           {record.status === "quoted" ? (
-            <button type="button" onClick={openPriceConfirmation} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] bg-white px-5 text-sm font-black text-[#0043f3]">
-              <Download className="h-4 w-4" /> Preview AFGRI price confirmation
+            <button type="button" disabled={preparingDocument} onClick={openPriceConfirmation} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] bg-white px-5 text-sm font-black text-[#0043f3] disabled:cursor-wait disabled:opacity-65">
+              {preparingDocument ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {preparingDocument ? "Preparing document..." : "Preview AFGRI price confirmation"}
             </button>
           ) : null}
         </div>
