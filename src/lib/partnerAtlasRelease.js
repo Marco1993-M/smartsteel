@@ -8,8 +8,9 @@ import {
   ATLAS_WAREHOUSE_PRICING_RELEASE,
   calculateAtlasWarehouseEstimate,
 } from "./estimates/atlasWarehouseEstimate.js"
+import { calculateAfgriPartnerPrice } from "./partnerCommercialTerms.js"
 
-export const PARTNER_ATLAS_RELEASE_VERSION = 1
+export const PARTNER_ATLAS_RELEASE_VERSION = 2
 
 export function buildPartnerSafeAtlasRelease(input = {}) {
   const validation = validateAtlasConfiguration(input)
@@ -17,6 +18,7 @@ export function buildPartnerSafeAtlasRelease(input = {}) {
 
   const configuration = normalizeAtlasConfiguration(validation.configuration)
   const estimate = calculateAtlasWarehouseEstimate(configuration)
+  const partnerTerms = calculateAfgriPartnerPrice(estimate.pricing.estimatedTotal)
   const summary = getAtlasConfigurationSummary(configuration)
 
   return {
@@ -43,12 +45,14 @@ export function buildPartnerSafeAtlasRelease(input = {}) {
     summary,
     commercial: {
       currency: "ZAR",
-      amountExVat: estimate.pricing.estimatedTotal,
-      priceType: "indicative_partner_guide",
+      amountExVat: partnerTerms.partnerPriceExVat,
+      recommendedCustomerPriceExVat: partnerTerms.recommendedCustomerPriceExVat,
+      partnerAdjustmentRate: partnerTerms.partnerAdjustmentRate,
+      partnerAdjustmentAmount: partnerTerms.partnerAdjustmentAmount,
+      priceType: "indicative_afgri_partner_guide",
       vatExcluded: true,
     },
     inclusions: ["Atlas structural system", "Released connection allowances", "Supply-only configuration"],
     exclusions: ["VAT", "Delivery", "Installation", "Foundations and concrete works", "Project-specific engineering outside the released configuration"],
   }
 }
-
