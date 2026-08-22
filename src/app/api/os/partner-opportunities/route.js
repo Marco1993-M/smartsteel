@@ -3,6 +3,7 @@ import { requireOsAuth } from "lib/osRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
 import { isSchemaMissingError } from "lib/osPhase1bData"
 import { calculateAtlasWarehouseEstimate } from "lib/estimates/atlasWarehouseEstimate"
+import { calculateAfgriPartnerPrice } from "lib/partnerCommercialTerms"
 
 export const runtime = "nodejs"
 
@@ -13,13 +14,18 @@ function normalizeOpportunity(row) {
   try {
     const estimate = calculateAtlasWarehouseEstimate(row.configuration || {})
     const commercialFactor = estimate.pricing.markupMultiplier || 1
+    const partnerTerms = calculateAfgriPartnerPrice(estimate.pricing.estimatedTotal)
+    const partnerFactor = 1 - partnerTerms.partnerAdjustmentRate
     proposedQuote = {
-      amountExVat: estimate.pricing.estimatedTotal,
-      vatAmount: estimate.pricing.vatValue,
-      amountInclVat: estimate.pricing.totalInclVat,
-      structureAmountExVat: Number((estimate.pricing.steelCost * commercialFactor).toFixed(2)),
-      connectionsAmountExVat: Number((estimate.pricing.connectionCost * commercialFactor).toFixed(2)),
-      sheetingAmountExVat: Number((estimate.pricing.claddingCost * commercialFactor).toFixed(2)),
+      amountExVat: partnerTerms.partnerPriceExVat,
+      vatAmount: partnerTerms.vatAmount,
+      amountInclVat: partnerTerms.partnerPriceInclVat,
+      recommendedCustomerPriceExVat: partnerTerms.recommendedCustomerPriceExVat,
+      partnerAdjustmentRate: partnerTerms.partnerAdjustmentRate,
+      partnerAdjustmentAmount: partnerTerms.partnerAdjustmentAmount,
+      structureAmountExVat: Number((estimate.pricing.steelCost * commercialFactor * partnerFactor).toFixed(2)),
+      connectionsAmountExVat: Number((estimate.pricing.connectionCost * commercialFactor * partnerFactor).toFixed(2)),
+      sheetingAmountExVat: Number((estimate.pricing.claddingCost * commercialFactor * partnerFactor).toFixed(2)),
       totalSteelKg: estimate.materials.totalSteelKg,
       sheetingAreaSqm: estimate.sheeting.totalSheetingArea,
       pricingRelease: estimate.meta.pricingRelease,
