@@ -5,6 +5,7 @@ import {
   Building2,
   Check,
   CheckCircle2,
+  Download,
   FileCheck2,
   Mail,
   MapPin,
@@ -12,6 +13,7 @@ import {
   UserRound,
   X,
 } from "lucide-react"
+import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
@@ -52,6 +54,24 @@ export default function PartnerOpportunityReviewDrawer({
   ]
   const finalAmount = Number(quoteResponse.finalQuoteAmountExVat || 0)
   const variance = proposal ? finalAmount - proposal.amountExVat : 0
+
+  async function openPriceConfirmation() {
+    const response = await fetch(`/api/os/partner-opportunities/${record.id}/price-confirmation`, {
+      headers: await getOsAuthHeaders(),
+    })
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}))
+      window.alert(payload.error || "The price confirmation could not be opened.")
+      return
+    }
+    const url = URL.createObjectURL(await response.blob())
+    const link = document.createElement("a")
+    link.href = url
+    link.target = "_blank"
+    link.rel = "noopener noreferrer"
+    link.click()
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000)
+  }
 
   return (
     <div
@@ -205,6 +225,12 @@ export default function PartnerOpportunityReviewDrawer({
                 </QuoteField>
               </div>
             </section>
+          ) : null}
+
+          {record.status === "quoted" ? (
+            <button type="button" onClick={openPriceConfirmation} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] bg-white px-5 text-sm font-black text-[#0043f3]">
+              <Download className="h-4 w-4" /> Preview AFGRI price confirmation
+            </button>
           ) : null}
         </div>
 
