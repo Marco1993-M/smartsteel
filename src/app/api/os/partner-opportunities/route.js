@@ -56,6 +56,12 @@ function normalizeOpportunity(row) {
     proposedQuote,
     submittedAt: row.submitted_at || "",
     quotedAt: row.quoted_at || "",
+    partnerOrderStatus: row.partner_order_status || "not_ready",
+    priceValidUntil: row.price_valid_until || "",
+    readyForOrderAt: row.ready_for_order_at || "",
+    afgriOrderReference: row.afgri_order_reference || "",
+    partnerOrderNotes: row.partner_order_notes || "",
+    orderSubmittedAt: row.order_submitted_at || "",
     updatedAt: row.updated_at,
     product: row.partner_product_releases
       ? {
@@ -109,6 +115,19 @@ export async function PATCH(request) {
   if (status === "quoted" && (!Number.isFinite(finalQuoteAmountExVat) || finalQuoteAmountExVat <= 0)) {
     return NextResponse.json({ error: "Add the approved amount before returning this price to AFGRI." }, { status: 400 })
   }
+  let currentOrderStatus = "not_ready"
+  if (status === "closed") {
+    const { data: current, error: currentError } = await supabaseServer
+      .from("partner_opportunities")
+      .select("partner_order_status")
+      .eq("id", id)
+      .single()
+    if (currentError) return NextResponse.json({ error: currentError.message }, { status: 500 })
+    currentOrderStatus = current?.partner_order_status || "not_ready"
+    if (currentOrderStatus !== "order_submitted" && currentOrderStatus !== "acknowledged") {
+      return NextResponse.json({ error: "Wait for AFGRI to submit its order reference before closing this opportunity." }, { status: 409 })
+    }
+  }
 
   const updates = {
     status,
@@ -119,6 +138,14 @@ export async function PATCH(request) {
     updated_at: new Date().toISOString(),
   }
   if (status === "quoted") updates.quoted_at = new Date().toISOString()
+  if (status === "quoted") {
+    const validUntil = new Date()
+    validUntil.setDate(validUntil.getDate() + 14)
+    updates.partner_order_status = "ready_for_order"
+    updates.ready_for_order_at = new Date().toISOString()
+    updates.price_valid_until = validUntil.toISOString().slice(0, 10)
+  }
+  if (status === "closed" && currentOrderStatus === "order_submitted") updates.partner_order_status = "acknowledged"
 
   const { data, error } = await supabaseServer
     .from("partner_opportunities")

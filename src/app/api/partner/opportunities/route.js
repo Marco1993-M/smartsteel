@@ -15,7 +15,7 @@ export async function GET(request) {
 
   let query = supabaseServer
     .from("partner_opportunities")
-    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, updated_at")
+    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, updated_at")
     .eq("partner_id", context.membership.partner_id)
     .order("updated_at", { ascending: false })
 
@@ -78,17 +78,40 @@ export async function PATCH(request) {
 
   const body = await request.json()
   const id = String(body.id || "").trim()
+  const action = String(body.action || "").trim()
   const customerName = String(body.customerName || "").trim()
-  if (!id || !customerName) return NextResponse.json({ error: "Add the customer name before saving." }, { status: 400 })
+  if (!id) return NextResponse.json({ error: "Choose an opportunity before saving." }, { status: 400 })
 
   const { data: existing, error: existingError } = await supabaseServer
     .from("partner_opportunities")
-    .select("id, product_release_id, status")
+    .select("id, product_release_id, status, partner_order_status")
     .eq("id", id)
     .eq("partner_id", context.membership.partner_id)
     .eq("membership_id", context.membership.id)
     .single()
   if (existingError || !existing) return NextResponse.json({ error: "That draft could not be found." }, { status: 404 })
+  if (action === "submit_order") {
+    const orderReference = String(body.afgriOrderReference || "").trim()
+    if (existing.status !== "quoted" || existing.partner_order_status !== "ready_for_order") {
+      return NextResponse.json({ error: "This configuration is not ready for an AFGRI order yet." }, { status: 409 })
+    }
+    if (!orderReference) return NextResponse.json({ error: "Add the AFGRI order or reference number." }, { status: 400 })
+    const { data, error } = await supabaseServer
+      .from("partner_opportunities")
+      .update({
+        partner_order_status: "order_submitted",
+        afgri_order_reference: orderReference,
+        partner_order_notes: String(body.partnerOrderNotes || "").trim(),
+        order_submitted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .select("id, reference, status, partner_order_status, afgri_order_reference, order_submitted_at")
+      .single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ opportunity: data })
+  }
+  if (!customerName) return NextResponse.json({ error: "Add the customer name before saving." }, { status: 400 })
   if (existing.status !== "draft") return NextResponse.json({ error: "Submitted opportunities can no longer be edited." }, { status: 409 })
 
   let resolved
