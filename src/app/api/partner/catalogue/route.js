@@ -39,6 +39,8 @@ export async function GET(request) {
     products: (products || []).map((product) => ({
       id: product.id,
       productCode: product.product_code,
+      sku: product.release_payload?.sku || product.product_code,
+      familyCode: product.release_payload?.familyCode || product.release_payload?.configuration?.familyCode || "",
       name: product.name,
       category: product.category,
       summary: product.release_payload?.summary || {},

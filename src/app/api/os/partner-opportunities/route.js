@@ -29,6 +29,7 @@ function normalizeOpportunity(row) {
       totalSteelKg: estimate.materials.totalSteelKg,
       sheetingAreaSqm: estimate.sheeting.totalSheetingArea,
       pricingRelease: estimate.meta.pricingRelease,
+      sku: estimate.meta.sku,
       provisionalItems: estimate.meta.provisionalItems || [],
       inclusions: ["Atlas structural system", "Released connection allowances", "Selected sheeting scope", "Supply-only configuration"],
       exclusions: ["VAT", "Delivery", "Installation", "Foundations and concrete works", "Project-specific engineering outside the released configuration"],

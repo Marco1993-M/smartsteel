@@ -123,6 +123,8 @@ export async function POST(request) {
     releaseVersion: safeRelease.releaseVersion,
     productKey: safeRelease.productKey,
     productCode: safeRelease.productCode,
+    sku: safeRelease.sku,
+    familyCode: safeRelease.familyCode,
     name: safeRelease.summary.product,
     category: "Atlas Warehouses",
     summary: safeRelease.summary,

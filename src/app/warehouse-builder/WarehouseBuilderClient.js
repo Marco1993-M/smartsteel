@@ -776,6 +776,7 @@ export default function WarehouseBuilderClient() {
       "Hi Smart Steel, I would like help with this warehouse design:",
       `${systemLabel} · ${config.width}m x ${config.length}m x ${config.wallHeight}m`,
       `Budget guide excl. VAT: ${formatCurrency(budgetValue)}`,
+      ...(isLcssWarehouse ? [`Atlas SKU: ${estimate.meta.sku}`] : []),
       `Design reference: ${designReference}`,
       shareUrl,
     ].join("\n")
@@ -846,10 +847,14 @@ export default function WarehouseBuilderClient() {
           estimatedTotal: budgetValue,
           priceLabel: formatCurrency(budgetValue),
           designReference,
+          atlasSku: isLcssWarehouse ? estimate.meta.sku : null,
+          atlasFamilyCode: isLcssWarehouse ? estimate.meta.productCode : null,
           configurationUrl: buildShareableBuilderUrl(shareableConfiguration),
           summaryNote: estimate.summary.layoutNote,
           configuration: {
             productType: config.productType,
+            sku: isLcssWarehouse ? estimate.meta.sku : null,
+            familyCode: isLcssWarehouse ? estimate.meta.productCode : null,
             width: config.width,
             length: config.length,
             wallHeight: config.wallHeight,
@@ -881,6 +886,8 @@ export default function WarehouseBuilderClient() {
           },
           summary: {
             systemLabel,
+            sku: isLcssWarehouse ? estimate.meta.sku : null,
+            familyCode: isLcssWarehouse ? estimate.meta.productCode : null,
             scopeLabel: "Supply only",
             installationInterest: config.installationInterest,
             enclosureLabel: isLcssWarehouse ? null : enclosureLabel,
@@ -968,6 +975,7 @@ export default function WarehouseBuilderClient() {
 
   const submittedSummaryItems = isLcssWarehouse
     ? [
+        { label: "Atlas SKU", value: estimate.meta.sku },
         { label: "System", value: systemLabel },
         { label: "Steel finish", value: steelFinishLabel },
         { label: "Sheeting add-on", value: gableModeLabel },
@@ -1135,7 +1143,9 @@ export default function WarehouseBuilderClient() {
         <div className="sticky top-3 z-30 mt-3 hidden items-center justify-between gap-5 rounded-2xl border border-slate-200 bg-white/95 px-5 py-3 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.55)] backdrop-blur xl:flex">
           <div className="flex min-w-0 items-center gap-5">
             <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-slate-500">{systemLabel} · {designReference}</p>
+              <p className="truncate text-xs font-semibold text-slate-500">
+                {systemLabel} · {isLcssWarehouse ? estimate.meta.sku : designReference}
+              </p>
               <p className="mt-0.5 text-sm font-semibold text-slate-950">{config.width}m × {config.length}m × {config.wallHeight}m</p>
             </div>
             <span className="h-9 w-px bg-slate-200" />
@@ -1884,7 +1894,7 @@ export default function WarehouseBuilderClient() {
                         : "Based on your current structure, enclosure, and opening selections."}
                     </p>
                     <p className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/65">
-                      Design {designReference}
+                      {isLcssWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
                     </p>
                   </div>
                   <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
@@ -2049,7 +2059,9 @@ export default function WarehouseBuilderClient() {
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
-              <p className="pr-12 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Design {designReference}</p>
+              <p className="pr-12 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
+                {isLcssWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
+              </p>
               <h2 id="warehouse-review-title" className="mt-2 pr-12 text-2xl font-semibold sm:text-3xl">
                 {submitted ? "Your project is with Smart Steel" : "Request a reviewed quote"}
               </h2>
