@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowRight, Check, Clock3, Download, FileText, LoaderCircle, LogOut, PackageCheck, Plus, Send } from "lucide-react"
 import { partnerSupabase } from "../../lib/partnerSupabase"
 import { getPartnerAuthHeaders } from "../../lib/partnerClientAuth"
+import { closeProtectedPdfWindow, openProtectedPdfWindow, showProtectedPdf } from "../../lib/openProtectedPdf"
 import PartnerAtlasConfigurator from "./PartnerAtlasConfigurator"
 
 const currency = new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 })
@@ -22,6 +23,7 @@ export default function PartnerDashboard() {
   const [priceConfirmationLoadingId, setPriceConfirmationLoadingId] = useState("")
 
   async function openPriceConfirmation(record) {
+    const previewWindow = openProtectedPdfWindow("Preparing AFGRI price confirmation")
     try {
       setError("")
       setPriceConfirmationLoadingId(record.id)
@@ -32,14 +34,9 @@ export default function PartnerDashboard() {
         const payload = await response.json().catch(() => ({}))
         throw new Error(payload.error || "The price confirmation could not be opened.")
       }
-      const url = URL.createObjectURL(await response.blob())
-      const link = document.createElement("a")
-      link.href = url
-      link.target = "_blank"
-      link.rel = "noopener noreferrer"
-      link.click()
-      window.setTimeout(() => URL.revokeObjectURL(url), 60000)
+      showProtectedPdf(previewWindow, await response.blob())
     } catch (downloadError) {
+      closeProtectedPdfWindow(previewWindow)
       setError(downloadError.message)
     } finally {
       setPriceConfirmationLoadingId("")

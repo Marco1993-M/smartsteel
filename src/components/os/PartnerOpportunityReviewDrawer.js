@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
+import { closeProtectedPdfWindow, openProtectedPdfWindow, showProtectedPdf } from "../../lib/openProtectedPdf"
 
 const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
@@ -59,6 +60,7 @@ export default function PartnerOpportunityReviewDrawer({
   const variance = proposal ? finalAmount - proposal.amountExVat : 0
 
   async function openPriceConfirmation() {
+    const previewWindow = openProtectedPdfWindow("Preparing AFGRI price confirmation")
     try {
       setPreparingDocument(true)
       const response = await fetch(`/api/os/partner-opportunities/${record.id}/price-confirmation`, {
@@ -66,16 +68,14 @@ export default function PartnerOpportunityReviewDrawer({
       })
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}))
+        closeProtectedPdfWindow(previewWindow)
         window.alert(payload.error || "The price confirmation could not be opened.")
         return
       }
-      const url = URL.createObjectURL(await response.blob())
-      const link = document.createElement("a")
-      link.href = url
-      link.target = "_blank"
-      link.rel = "noopener noreferrer"
-      link.click()
-      window.setTimeout(() => URL.revokeObjectURL(url), 60000)
+      showProtectedPdf(previewWindow, await response.blob())
+    } catch (error) {
+      closeProtectedPdfWindow(previewWindow)
+      window.alert(error?.message || "The price confirmation could not be opened.")
     } finally {
       setPreparingDocument(false)
     }
