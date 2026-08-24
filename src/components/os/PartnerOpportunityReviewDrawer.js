@@ -151,6 +151,7 @@ export default function PartnerOpportunityReviewDrawer({
                 <Detail label="Sheeting area" value={proposal?.sheetingAreaSqm ? `${proposal.sheetingAreaSqm} sqm` : "None"} />
                 <Detail label="Steel mass" value={proposal?.totalSteelKg ? `${proposal.totalSteelKg} kg` : "—"} />
                 <Detail label="Pricing release" value={proposal?.pricingRelease || "—"} />
+                <Detail label="Atlas SKU" value={proposal?.sku || "—"} />
               </div>
             </div>
             <div className="rounded-2xl border border-slate-200 p-5">

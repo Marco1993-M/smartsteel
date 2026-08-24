@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { ATLAS_PRODUCT_RANGE, getAtlasProduct, withAtlasProduct } from "../../lib/atlasProductRange"
+import AtlasSkuRegistry from "./AtlasSkuRegistry"
 
 const W08_SPEC_LENGTHS = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
 const W08_SPEC_BAY_SPACING = 4
@@ -696,6 +697,8 @@ export default function AtlasWarehouseProductWorkspace() {
       </section>
 
       {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+
+      <AtlasSkuRegistry familyCode="W08" />
 
       <section className="grid overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)] xl:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]">
         <article className="p-5 sm:p-7">

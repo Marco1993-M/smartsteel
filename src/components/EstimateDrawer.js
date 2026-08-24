@@ -474,6 +474,9 @@ function buildEstimateDraft({
     title: `${resolveEstimateTitle(formState, preview)} V${versionNo}`,
     input_data: {
       ...preview.input,
+      sku: preview.meta?.sku || null,
+      familyCode: preview.meta?.productCode || null,
+      pricingRelease: preview.meta?.pricingRelease || null,
       useCustomSize: formState.useCustomSize,
       productType: formState.productType,
       productTypeLabel: formState.productTypeLabel?.trim() || formState.productType,

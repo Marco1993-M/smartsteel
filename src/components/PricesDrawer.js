@@ -141,7 +141,11 @@ P.S. I’ve also attached a short PDF highlighting the advantages of choosing li
                         </td>
                       </tr>
                       <tr className="border-b">
-                        <td className="py-1 px-2">Atlas system</td>
+                        <td className="py-1 px-2">Atlas SKU</td>
+                        <td className="py-1 px-2 text-right font-semibold">{result.meta.sku}</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-1 px-2">Atlas family</td>
                         <td className="py-1 px-2 text-right">{result.meta.productCode}</td>
                       </tr>
                       <tr className="border-b">
