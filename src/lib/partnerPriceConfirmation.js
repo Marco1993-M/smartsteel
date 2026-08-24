@@ -151,7 +151,7 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
     <section class="page"><div class="brandline"></div>
       <div class="section-head"><h2>Confirmed configuration</h2><span>${escapeHtml(estimate.meta.pricingRelease)}</span></div>
       <div class="facts">
-        <div class="fact"><div class="label">System</div><div class="value">${escapeHtml(estimate.meta.productCode)} Atlas Warehouse</div></div>
+        <div class="fact"><div class="label">Atlas SKU</div><div class="value">${escapeHtml(estimate.meta.sku)}</div></div>
         <div class="fact"><div class="label">Size</div><div class="value">${config.width}m × ${config.length}m × ${config.wallHeight}m</div></div>
         <div class="fact"><div class="label">Steel finish</div><div class="value">${escapeHtml(config.steelFinish)}</div></div>
         <div class="fact"><div class="label">Supply scope</div><div class="value">${escapeHtml(scopeLabel(config.gableMode))}</div></div>

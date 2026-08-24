@@ -2,6 +2,8 @@ import { calculateAtlasW06Geometry } from "../atlasW06Geometry.js"
 import { calculateAtlasW08Geometry } from "../atlasW08Geometry.js"
 import { calculateAtlasW10Geometry } from "../atlasW10Geometry.js"
 import { calculateAtlasW12Geometry } from "../atlasW12Geometry.js"
+import { ATLAS_WAREHOUSE_PRICING_RELEASE } from "../atlasPricingRelease.js"
+import { buildAtlasWarehouseSku } from "../atlasSkuRegistry.js"
 const VAT_RATE = 0.15
 // Controlled Atlas material and component rates are cost rates. Apply the
 // approved commercial uplift exactly once after all priced inputs are added.
@@ -34,7 +36,7 @@ const GEOMETRY_BY_WIDTH = {
 
 // This version identifies the controlled pricing release used by every Atlas
 // warehouse surface. Draft OS changes must not reach client pricing implicitly.
-export const ATLAS_WAREHOUSE_PRICING_RELEASE = "atlas-warehouse-2026-08-20"
+export { ATLAS_WAREHOUSE_PRICING_RELEASE } from "../atlasPricingRelease.js"
 export const ATLAS_WAREHOUSE_WIDTH_OPTIONS = Object.keys(GEOMETRY_BY_WIDTH).map(Number)
 export const ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS = Object.keys(MATERIAL_RATES_PER_TON)
 export const ATLAS_WAREHOUSE_SHEETING_OPTIONS = [
@@ -151,6 +153,7 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
   const vatValue = totalExclVat * VAT_RATE
   const totalInclVat = totalExclVat + vatValue
   const systemName = `Atlas ${geometry.productCode} Warehouse`
+  const sku = buildAtlasWarehouseSku({ width, length, wallHeight, gableMode, steelFinish, sheetingProfile, sheetingFinish })
 
   return {
     input: { ...input, width, length, wallHeight, quantity, steelFinish, gableMode, sheetingProfile, sheetingFinish, pricingModel: "atlas_os_v1", baySpacing: geometry.baySpacingM },
@@ -161,6 +164,6 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     lineItems,
     summary: { title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m ${systemName}`, shortDescription: `${systemName}, ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingModeLabel(gableMode).toLowerCase()}, supply only`, estimateRequest: `${systemName}: ${width}m x ${length}m x ${wallHeight}m, ${steelFinish}, ${sheetingModeLabel(gableMode)}, supply only. Installation and delivery quoted separately.`, layoutNote: "" },
     labels: { steelFinish, cladding: sheetingModeLabel(gableMode), sheetingProfile, sheetingFinish: sheetingFinish === "chromadek" ? "Chromadek" : "Galvanised", installation: "Quoted separately", delivery: "Quoted separately", gableMode: sheetingModeLabel(gableMode) },
-    meta: { productType: "Atlas Warehouse", internalProductType: "LCSS Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, provisionalItems: ["Gable girts", "Bracket fabrication specifications", "M12 anchor-bolt price"] },
+    meta: { productType: "Atlas Warehouse", internalProductType: "LCSS Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, sku, provisionalItems: ["Gable girts", "Bracket fabrication specifications", "M12 anchor-bolt price"] },
   }
 }

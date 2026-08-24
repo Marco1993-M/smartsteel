@@ -10,7 +10,7 @@ import {
 } from "./estimates/atlasWarehouseEstimate.js"
 import { calculateAfgriPartnerPrice } from "./partnerCommercialTerms.js"
 
-export const PARTNER_ATLAS_RELEASE_VERSION = 2
+export const PARTNER_ATLAS_RELEASE_VERSION = 3
 
 export function buildPartnerSafeAtlasRelease(input = {}) {
   const validation = validateAtlasConfiguration(input)
@@ -25,11 +25,15 @@ export function buildPartnerSafeAtlasRelease(input = {}) {
     releaseVersion: PARTNER_ATLAS_RELEASE_VERSION,
     sourcePricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE,
     productKey: configuration.productKey,
-    productCode: estimate.meta.productCode,
+    productCode: estimate.meta.sku,
+    familyCode: estimate.meta.productCode,
+    sku: estimate.meta.sku,
     configurationReference: createAtlasConfigurationReference(configuration),
     configuration: {
       version: configuration.version,
       productKey: configuration.productKey,
+      sku: estimate.meta.sku,
+      familyCode: estimate.meta.productCode,
       width: configuration.width,
       length: configuration.length,
       wallHeight: configuration.wallHeight,
