@@ -20,6 +20,10 @@ export function buildPartnerSafeAtlasRelease(input = {}) {
   const estimate = calculateAtlasWarehouseEstimate(configuration)
   const partnerTerms = calculateAfgriPartnerPrice(estimate.pricing.estimatedTotal)
   const summary = getAtlasConfigurationSummary(configuration)
+  const sheetingDescription = configuration.gableMode === "structure_only"
+    ? "structure only"
+    : `${configuration.gableMode === "roof_only" ? "roof sheeted" : "roof and walls sheeted"} in ${configuration.sheetingFinish === "chromadek" ? "colour-coated" : "galvanised"} ${configuration.sheetingProfile}`
+  const lineItemDescription = `Atlas ${estimate.meta.productCode} warehouse, ${configuration.width}m x ${configuration.length}m x ${configuration.wallHeight}m, ${configuration.steelFinish} steel, ${sheetingDescription}, supply only`
 
   return {
     releaseVersion: PARTNER_ATLAS_RELEASE_VERSION,
@@ -28,6 +32,13 @@ export function buildPartnerSafeAtlasRelease(input = {}) {
     productCode: estimate.meta.sku,
     familyCode: estimate.meta.productCode,
     sku: estimate.meta.sku,
+    productName: `Atlas ${estimate.meta.productCode} Warehouse`,
+    lineItem: {
+      sku: estimate.meta.sku,
+      quantity: 1,
+      unit: "each",
+      description: lineItemDescription,
+    },
     configurationReference: createAtlasConfigurationReference(configuration),
     configuration: {
       version: configuration.version,
