@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { createHash } from "node:crypto"
 import {
   launchEstimatePdfBrowser,
   renderDocumentPdf,
@@ -22,10 +23,28 @@ function buildFilename(estimate) {
   return `${base || "smart-steel-quote"}.pdf`
 }
 
-function buildStoragePath(estimate) {
-  const updatedAt = estimate?.updated_at || estimate?.created_at || new Date().toISOString()
-  const safeUpdatedAt = String(updatedAt).replace(/[^0-9T]/g, "").replace(/:/g, "")
-  return `quotes/${estimate.id}/${ESTIMATE_PDF_RENDER_REVISION}-v${estimate.version_no || 1}-${safeUpdatedAt}.pdf`
+function buildEstimateFingerprint(estimate) {
+  const documentContent = {
+    title: estimate?.title,
+    versionNo: estimate?.version_no,
+    productType: estimate?.product_type,
+    productTypeDisplay: estimate?.product_type_display,
+    inputData: estimate?.input_data,
+    lineItems: estimate?.line_items,
+    subtotal: estimate?.subtotal,
+    total: estimate?.total,
+    notes: estimate?.notes,
+    status: estimate?.status,
+  }
+
+  return createHash("sha256")
+    .update(JSON.stringify(documentContent))
+    .digest("hex")
+    .slice(0, 16)
+}
+
+function buildStoragePath(estimate, fingerprint) {
+  return `quotes/${estimate.id}/${ESTIMATE_PDF_RENDER_REVISION}-v${estimate.version_no || 1}-${fingerprint}.pdf`
 }
 
 async function getCachedPdfBuffer(storagePath) {
@@ -60,7 +79,7 @@ export async function GET(request, { params }) {
 
   const { data: estimate, error } = await supabaseServer
     .from("estimates")
-    .select("id, title, version_no, share_token, created_at, updated_at")
+    .select("id, title, version_no, share_token, product_type, product_type_display, input_data, line_items, subtotal, total, notes, status")
     .eq("id", estimateId)
     .single()
 
@@ -78,7 +97,8 @@ export async function GET(request, { params }) {
     )
   }
 
-  const storagePath = buildStoragePath(estimate)
+  const fingerprint = buildEstimateFingerprint(estimate)
+  const storagePath = buildStoragePath(estimate, fingerprint)
   const cachedPdfBuffer = await getCachedPdfBuffer(storagePath)
 
   if (cachedPdfBuffer) {
@@ -87,13 +107,14 @@ export async function GET(request, { params }) {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${buildFilename(estimate)}"`,
-        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+        "Cache-Control": "private, no-store, max-age=0",
         "X-SmartSteel-PDF-Cache": "hit",
+        "X-SmartSteel-PDF-Revision": fingerprint,
       },
     })
   }
 
-  const pdfUrl = new URL(`/quotes/${estimate.share_token}?pdf=1`, request.url).toString()
+  const pdfUrl = new URL(`/quotes/${estimate.share_token}?pdf=1&revision=${fingerprint}`, request.url).toString()
 
   try {
     const browser = await launchEstimatePdfBrowser()
@@ -110,8 +131,9 @@ export async function GET(request, { params }) {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${buildFilename(estimate)}"`,
-        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+        "Cache-Control": "private, no-store, max-age=0",
         "X-SmartSteel-PDF-Cache": "miss",
+        "X-SmartSteel-PDF-Revision": fingerprint,
       },
     })
   } catch (pdfError) {
