@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Check, Clock3, Download, FileText, LoaderCircle, LogOut, Plus } from "lucide-react"
+import { ArrowRight, Check, Clock3, Download, FileText, LoaderCircle, LogOut, PackageCheck, Plus, Send } from "lucide-react"
 import { partnerSupabase } from "../../lib/partnerSupabase"
 import { getPartnerAuthHeaders } from "../../lib/partnerClientAuth"
 import PartnerAtlasConfigurator from "./PartnerAtlasConfigurator"
@@ -127,7 +127,7 @@ export default function PartnerDashboard() {
 
           <div className="space-y-5">
             <QueueCard id="drafts" title="Continue drafts" empty="No unfinished opportunities." records={drafts} icon={Clock3} onOpen={(record) => { setEditingOpportunity(record); setFormOpen(true) }} />
-            <QueueCard id="quotes" title="Quote progress" empty="No quote requests yet." records={quotes} icon={Check} onPriceConfirmation={openPriceConfirmation} priceConfirmationLoadingId={priceConfirmationLoadingId} />
+            <QueueCard id="quotes" title="Quote and order progress" empty="No quote requests yet." records={quotes} icon={Check} onPriceConfirmation={openPriceConfirmation} priceConfirmationLoadingId={priceConfirmationLoadingId} onOrderSubmitted={loadPortal} />
           </div>
         </section>
       </div>
@@ -137,6 +137,44 @@ export default function PartnerDashboard() {
   )
 }
 
-function QueueCard({ id, title, empty, records, icon: Icon, onOpen, onPriceConfirmation, priceConfirmationLoadingId }) {
-  return <section id={id} className="scroll-mt-5 rounded-[1.75rem] border border-slate-200 bg-white p-5 sm:p-6"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#c1d9e5] text-[#0043f3]"><Icon className="h-5 w-5" /></span><h2 className="text-lg font-black">{title}</h2></div>{records.length ? <div className="mt-4 space-y-2">{records.slice(0, 4).map((record) => { const Tag = onOpen ? "button" : "div"; const isPreparing = priceConfirmationLoadingId === record.id; return <Tag key={record.id} type={onOpen ? "button" : undefined} onClick={onOpen ? () => onOpen(record) : undefined} className="block w-full rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-blue-300"><div className="flex items-center justify-between gap-3"><p className="font-bold">{record.customer_name}</p><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#0043f3]">{record.status === "quoted" ? "price approved" : record.status.replaceAll("_", " ")}</span></div><p className="mt-1 text-xs text-slate-500">{record.reference} · {record.configuration?.width}m × {record.configuration?.length}m</p>{record.configuration?.sku ? <p className="mt-1 truncate font-mono text-[10px] font-bold text-[#0043f3]">{record.configuration.sku}</p> : null}{record.status === "quoted" ? <div className="mt-3 border-t border-slate-200 pt-3"><div className="flex items-end justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Approved AFGRI price excl. VAT</p><p className="mt-1 font-black text-[#0043f3]">{currency.format(record.final_quote_amount_ex_vat || 0)}</p><p className="mt-1 text-[10px] font-semibold text-slate-400">Agreed 5% partner adjustment applied</p></div><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">Price confirmed</span></div><button type="button" disabled={isPreparing} onClick={() => onPriceConfirmation?.(record)} className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#0043f3] px-3 text-xs font-black text-white disabled:cursor-wait disabled:opacity-70">{isPreparing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} {isPreparing ? "Preparing document..." : "View price confirmation"}</button>{record.quote_url ? <a href={record.quote_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-black text-[#0043f3]">Open formal proposal</a> : null}</div> : null}{record.partner_quote_message ? <p className="mt-2 text-xs leading-5 text-slate-600">{record.partner_quote_message}</p> : null}</Tag> })}</div> : <p className="mt-5 text-sm text-slate-500">{empty}</p>}</section>
+function QueueCard({ id, title, empty, records, icon: Icon, onOpen, onPriceConfirmation, priceConfirmationLoadingId, onOrderSubmitted }) {
+  return <section id={id} className="scroll-mt-5 rounded-[1.75rem] border border-slate-200 bg-white p-5 sm:p-6"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#c1d9e5] text-[#0043f3]"><Icon className="h-5 w-5" /></span><h2 className="text-lg font-black">{title}</h2></div>{records.length ? <div className="mt-4 space-y-2">{records.slice(0, 4).map((record) => { const Tag = onOpen ? "button" : "div"; const isPreparing = priceConfirmationLoadingId === record.id; return <Tag key={record.id} type={onOpen ? "button" : undefined} onClick={onOpen ? () => onOpen(record) : undefined} className="block w-full rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-blue-300"><div className="flex items-center justify-between gap-3"><p className="font-bold">{record.customer_name}</p><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#0043f3]">{record.status === "quoted" ? "price approved" : record.status.replaceAll("_", " ")}</span></div><p className="mt-1 text-xs text-slate-500">{record.reference} · {record.configuration?.width}m × {record.configuration?.length}m</p>{record.configuration?.sku ? <p className="mt-1 truncate font-mono text-[10px] font-bold text-[#0043f3]">{record.configuration.sku}</p> : null}{record.status === "quoted" ? <div className="mt-3 border-t border-slate-200 pt-3"><div className="flex items-end justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Approved AFGRI price excl. VAT</p><p className="mt-1 font-black text-[#0043f3]">{currency.format(record.final_quote_amount_ex_vat || 0)}</p><p className="mt-1 text-[10px] font-semibold text-slate-400">Valid until {formatDate(record.price_valid_until)}</p></div><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">Price confirmed</span></div><button type="button" disabled={isPreparing} onClick={() => onPriceConfirmation?.(record)} className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#0043f3] px-3 text-xs font-black text-white disabled:cursor-wait disabled:opacity-70">{isPreparing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} {isPreparing ? "Preparing document..." : "View price confirmation"}</button><OrderHandoff record={record} onSubmitted={onOrderSubmitted} /></div> : null}{record.partner_quote_message ? <p className="mt-2 text-xs leading-5 text-slate-600">{record.partner_quote_message}</p> : null}</Tag> })}</div> : <p className="mt-5 text-sm text-slate-500">{empty}</p>}</section>
+}
+
+function OrderHandoff({ record, onSubmitted }) {
+  const [reference, setReference] = useState(record.afgri_order_reference || "")
+  const [notes, setNotes] = useState(record.partner_order_notes || "")
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const submitted = record.partner_order_status === "order_submitted" || record.partner_order_status === "acknowledged"
+
+  async function submitOrder() {
+    if (!reference.trim()) return setError("Add the AFGRI order or reference number.")
+    setSaving(true)
+    setError("")
+    try {
+      const response = await fetch("/api/partner/opportunities", {
+        method: "PATCH",
+        headers: await getPartnerAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ id: record.id, action: "submit_order", afgriOrderReference: reference, partnerOrderNotes: notes }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "The AFGRI order could not be submitted.")
+      await onSubmitted?.()
+    } catch (submitError) {
+      setError(submitError.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (submitted) return <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4"><div className="flex items-center gap-2 text-emerald-800"><PackageCheck className="h-4 w-4" /><p className="text-xs font-black uppercase tracking-[0.12em]">AFGRI order submitted</p></div><p className="mt-2 font-mono text-sm font-black text-slate-900">{record.afgri_order_reference}</p>{record.partner_order_notes ? <p className="mt-2 text-xs leading-5 text-slate-600">{record.partner_order_notes}</p> : null}</div>
+
+  if (record.partner_order_status !== "ready_for_order") return null
+  return <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-4"><div className="flex items-center gap-2"><PackageCheck className="h-4 w-4 text-[#0043f3]" /><p className="text-xs font-black uppercase tracking-[0.12em] text-[#0043f3]">Ready for AFGRI order</p></div><p className="mt-2 text-xs leading-5 text-slate-600">Create the customer transaction in AFGRI’s system, then record the resulting order reference here.</p><input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="AFGRI order / reference number" className="mt-3 min-h-11 w-full rounded-xl border border-blue-200 bg-white px-3 text-base outline-none focus:border-[#0043f3]" /><textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows="2" placeholder="Optional order note" className="mt-2 w-full rounded-xl border border-blue-200 bg-white p-3 text-base outline-none focus:border-[#0043f3]" />{error ? <p className="mt-2 text-xs font-bold text-rose-700">{error}</p> : null}<button type="button" disabled={saving} onClick={submitOrder} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#001d2e] px-4 text-xs font-black text-white disabled:opacity-60"><Send className="h-3.5 w-3.5" />{saving ? "Submitting order..." : "Submit AFGRI order reference"}</button></div>
+}
+
+function formatDate(value) {
+  if (!value) return "confirmation"
+  return new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${value}T12:00:00`))
 }

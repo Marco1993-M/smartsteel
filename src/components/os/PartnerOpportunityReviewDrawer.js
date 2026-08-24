@@ -237,16 +237,26 @@ export default function PartnerOpportunityReviewDrawer({
           ) : null}
 
           {record.status === "quoted" ? (
-            <button type="button" disabled={preparingDocument} onClick={openPriceConfirmation} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] bg-white px-5 text-sm font-black text-[#0043f3] disabled:cursor-wait disabled:opacity-65">
-              {preparingDocument ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {preparingDocument ? "Preparing document..." : "Preview AFGRI price confirmation"}
-            </button>
+            <section className="space-y-3">
+              <div className={`rounded-2xl border p-5 ${record.partnerOrderStatus === "order_submitted" || record.partnerOrderStatus === "acknowledged" ? "border-emerald-200 bg-emerald-50" : "border-blue-200 bg-blue-50"}`}>
+                <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${record.partnerOrderStatus === "order_submitted" || record.partnerOrderStatus === "acknowledged" ? "text-emerald-700" : "text-[#0043f3]"}`}>
+                  {record.partnerOrderStatus === "order_submitted" || record.partnerOrderStatus === "acknowledged" ? "AFGRI order received" : "Ready for AFGRI order"}
+                </p>
+                {record.afgriOrderReference ? <p className="mt-2 font-mono text-lg font-black text-slate-950">{record.afgriOrderReference}</p> : <p className="mt-2 text-sm leading-6 text-slate-600">AFGRI has the approved configuration and price. The next action belongs to the salesperson.</p>}
+                {record.partnerOrderNotes ? <p className="mt-2 text-sm leading-6 text-slate-600">{record.partnerOrderNotes}</p> : null}
+                <p className="mt-2 text-xs font-semibold text-slate-500">Price valid until {formatDate(record.priceValidUntil)}</p>
+              </div>
+              <button type="button" disabled={preparingDocument} onClick={openPriceConfirmation} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] bg-white px-5 text-sm font-black text-[#0043f3] disabled:cursor-wait disabled:opacity-65">
+                {preparingDocument ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {preparingDocument ? "Preparing document..." : "Preview AFGRI price confirmation"}
+              </button>
+            </section>
           ) : null}
         </div>
 
         <footer className="border-t border-slate-200 bg-white p-4 sm:p-5">
-          <button type="button" disabled={saving} onClick={() => onAdvance(meta.next)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-5 text-sm font-black text-white disabled:opacity-50">
+          <button type="button" disabled={saving || (record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus))} onClick={() => onAdvance(meta.next)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-5 text-sm font-black text-white disabled:opacity-50">
             {record.status === "in_review" ? <FileCheck2 className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-            {saving ? "Saving..." : meta.action}
+            {saving ? "Saving..." : record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus) ? "Waiting for AFGRI order" : record.status === "quoted" ? "Acknowledge order and close" : meta.action}
           </button>
         </footer>
       </aside>
@@ -272,4 +282,9 @@ function ScopeList({ title, items = [] }) {
 
 function QuoteField({ label, children }) {
   return <label className="block text-xs font-bold text-slate-700">{label}<span className="mt-1.5 block [&>input]:min-h-11 [&>input]:w-full [&>input]:rounded-xl [&>input]:border [&>input]:border-blue-200 [&>input]:bg-white [&>input]:px-3 [&>input]:text-base [&>textarea]:w-full [&>textarea]:rounded-xl [&>textarea]:border [&>textarea]:border-blue-200 [&>textarea]:bg-white [&>textarea]:p-3 [&>textarea]:text-base">{children}</span></label>
+}
+
+function formatDate(value) {
+  if (!value) return "—"
+  return new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${value}T12:00:00`))
 }
