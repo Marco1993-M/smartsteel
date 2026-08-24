@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, ArrowRight, Check, Send, X } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, PackageCheck, Send, X } from "lucide-react"
 import WarehouseBuilderScene from "../warehouse-builder/WarehouseBuilderScene"
 import { getPartnerAuthHeaders } from "../../lib/partnerClientAuth"
 import { normalizeAtlasConfiguration } from "../../lib/atlasConfiguration"
@@ -122,7 +122,7 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
             <div className="p-5 sm:p-6">
               {step === 1 ? <SizeStep configuration={configuration} update={update} /> : null}
               {step === 2 ? <FinishStep configuration={configuration} update={update} /> : null}
-              {step === 3 ? <CustomerStep customer={customer} setCustomer={setCustomer} /> : null}
+              {step === 3 ? <CustomerStep customer={customer} setCustomer={setCustomer} preview={preview} /> : null}
               {error ? <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
               <div className="mt-7 grid grid-cols-2 gap-3">
                 <button type="button" onClick={step > 1 ? () => setStep((current) => current - 1) : onClose} className="min-h-12 rounded-xl border border-slate-300 text-sm font-black">{step > 1 ? "Back" : "Cancel"}</button>
@@ -145,9 +145,9 @@ function FinishStep({ configuration, update }) {
   return <div><StepHeading number="2" title="Choose finish and cover" /><OptionGroup label="Structural steel">{FINISHES.map((value) => <Option key={value} active={configuration.steelFinish === value} onClick={() => update("steelFinish", value)}>{value === "Galv" ? "Galvanised" : value}</Option>)}</OptionGroup><OptionGroup label="Sheeting">{SHEETING.map(([value, label]) => <Option key={value} active={configuration.gableMode === value} onClick={() => update("gableMode", value)}>{label}</Option>)}</OptionGroup>{configuration.gableMode !== "structure_only" ? <><OptionGroup label="Profile">{["Corrugated", "IBR", "Concealed Fix"].map((value) => <Option key={value} active={configuration.sheetingProfile === value} onClick={() => update("sheetingProfile", value)}>{value}</Option>)}</OptionGroup><OptionGroup label="Sheet finish">{[["galvanised", "Galvanised"], ["chromadek", "Colour coated"]].map(([value, label]) => <Option key={value} active={configuration.sheetingFinish === value} onClick={() => update("sheetingFinish", value)}>{label}</Option>)}</OptionGroup></> : null}</div>
 }
 
-function CustomerStep({ customer, setCustomer }) {
+function CustomerStep({ customer, setCustomer, preview }) {
   const field = (key) => ({ value: customer[key], onChange: (event) => setCustomer((current) => ({ ...current, [key]: event.target.value })) })
-  return <div><StepHeading number="3" title="Add the customer" /><p className="mt-2 text-sm leading-6 text-slate-500">Only the customer name is required to save a draft.</p><div className="mt-5 space-y-4"><Field label="Customer name" required><input {...field("customerName")} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Mobile"><input {...field("customerPhone")} inputMode="tel" /></Field><Field label="Email"><input {...field("customerEmail")} type="email" /></Field></div><Field label="Project location"><input {...field("siteLocation")} placeholder="Town or farm" /></Field><Field label="Useful note"><textarea {...field("notes")} rows="3" placeholder="What will the building be used for?" /></Field></div></div>
+  return <div><StepHeading number="3" title="Review and add the customer" />{preview?.lineItem ? <div className="mt-5 overflow-hidden rounded-2xl border border-blue-200 bg-[#eef4f8]"><div className="flex items-center gap-3 border-b border-blue-100 px-4 py-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#0043f3]"><PackageCheck className="h-4 w-4" /></span><div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Proposed AFGRI line item</p><p className="truncate font-mono text-xs font-black text-[#0043f3]">{preview.sku}</p></div></div><div className="px-4 py-4"><p className="text-sm font-bold leading-6 text-[#001d2e]">{preview.lineItem.description}</p><div className="mt-3 flex items-end justify-between gap-3 border-t border-blue-100 pt-3"><div><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Quantity</p><p className="mt-1 text-sm font-black">1 structure</p></div><div className="text-right"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">AFGRI guide excl. VAT</p><p className="mt-1 text-lg font-black text-[#0043f3]">{money.format(preview.commercial.amountExVat)}</p></div></div></div></div> : null}<p className="mt-5 text-sm leading-6 text-slate-500">Only the customer name is required to save a draft.</p><div className="mt-5 space-y-4"><Field label="Customer name" required><input {...field("customerName")} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Mobile"><input {...field("customerPhone")} inputMode="tel" /></Field><Field label="Email"><input {...field("customerEmail")} type="email" /></Field></div><Field label="Project location"><input {...field("siteLocation")} placeholder="Town or farm" /></Field><Field label="Useful note"><textarea {...field("notes")} rows="3" placeholder="What will the building be used for?" /></Field></div></div>
 }
 
 function StepHeading({ number, title }) { return <><p className="text-xs font-black uppercase tracking-[0.17em] text-[#0043f3]">Step {number}</p><h2 className="mt-2 text-2xl font-black">{title}</h2></> }
