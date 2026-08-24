@@ -18,6 +18,10 @@ export async function POST(request) {
     return NextResponse.json({
       preview: {
         configuration: resolved.safeRelease.configuration,
+        sku: resolved.safeRelease.sku,
+        familyCode: resolved.safeRelease.familyCode,
+        productName: resolved.safeRelease.productName,
+        lineItem: resolved.safeRelease.lineItem,
         reference: resolved.safeRelease.configurationReference,
         summary: resolved.safeRelease.summary,
         commercial: resolved.safeRelease.commercial,
