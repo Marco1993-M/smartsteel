@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
 import { Edit3, FileText, GripVertical } from "lucide-react"
 import { formatCrmStatusLabel, getLeadNextBestAction } from "../lib/crmSop"
 import { getOpportunitySummary } from "../lib/crmReferenceData"
+import { getOsAuthHeaders } from "../lib/osClientAuth"
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
 const teamColors = {
@@ -20,6 +21,40 @@ const statusBadgeColors = {
   quoted: "bg-amber-100 text-amber-700",
   won: "bg-emerald-100 text-emerald-700",
   lost: "bg-rose-100 text-rose-700",
+}
+
+const sequenceFilters = [
+  { key: "all", label: "All leads" },
+  { key: "active", label: "Follow-up active" },
+  { key: "attention", label: "Needs attention" },
+  { key: "responded", label: "Client responded" },
+  { key: "completed", label: "Sequence complete" },
+]
+
+function matchesSequenceFilter(sequence, filter) {
+  if (filter === "all") return true
+  if (!sequence) return false
+  if (filter === "active") return sequence.status === "active" && !sequence.last_response_key
+  if (filter === "attention") return sequence.status === "failed" || Boolean(sequence.last_error)
+  if (filter === "responded") return Boolean(sequence.last_response_key)
+  if (filter === "completed") return sequence.status === "completed"
+  return true
+}
+
+function getSequencePresentation(sequence) {
+  if (!sequence) return null
+  if (sequence.last_response_key) {
+    return { label: sequence.last_response_label || "Client responded", tone: "emerald", step: Number(sequence.current_step || 0) }
+  }
+  if (sequence.status === "failed" || sequence.last_error) {
+    return { label: "Follow-up needs attention", tone: "rose", step: Number(sequence.current_step || 0) }
+  }
+  if (sequence.status === "completed") return { label: "Follow-up sequence complete", tone: "slate", step: 3 }
+  if (sequence.status === "cancelled") return { label: "Follow-ups stopped", tone: "slate", step: Number(sequence.current_step || 0) }
+  const nextDate = sequence.next_send_at
+    ? new Date(sequence.next_send_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short" })
+    : "scheduled"
+  return { label: `Next email ${nextDate}`, tone: "blue", step: Number(sequence.current_step || 0) }
 }
 
 function normalizeStatus(status) {
@@ -97,9 +132,37 @@ export default function KanbanBoard({
 }) {
   const [mobileStage, setMobileStage] = useState(statuses[0])
   const [showOlderQuoted, setShowOlderQuoted] = useState(false)
+  const [sequenceFilter, setSequenceFilter] = useState("all")
+  const [sequencesByLead, setSequencesByLead] = useState({})
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadSequences() {
+      try {
+        const response = await fetch("/api/crm/estimate-follow-ups", {
+          cache: "no-store",
+          headers: await getOsAuthHeaders(),
+        })
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok || cancelled) return
+        setSequencesByLead(Object.fromEntries((payload.sequences || []).map((sequence) => [String(sequence.lead_id), sequence])))
+      } catch {
+        // The pipeline remains fully usable if follow-up summaries are temporarily unavailable.
+      }
+    }
+
+    loadSequences()
+    return () => { cancelled = true }
+  }, [])
+
+  const visibleLeads = useMemo(
+    () => leads.filter((lead) => matchesSequenceFilter(sequencesByLead[String(lead.id)], sequenceFilter)),
+    [leads, sequenceFilter, sequencesByLead]
+  )
 
   const getAllStageLeads = (status) =>
-    leads.filter((lead) => normalizeStatus(lead.status) === status)
+    visibleLeads.filter((lead) => normalizeStatus(lead.status) === status)
 
   const olderQuotedLeads = getAllStageLeads("quoted").filter(isOlderQuotedLead)
   const getStageLeads = (status) => {
@@ -118,6 +181,23 @@ export default function KanbanBoard({
           Keep the board for awareness and movement. Open a lead to handle the
           detail work in the drawer.
         </p>
+      </div>
+
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
+        {sequenceFilters.map((option) => (
+          <button
+            key={option.key}
+            type="button"
+            onClick={() => setSequenceFilter(option.key)}
+            className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${
+              sequenceFilter === option.key
+                ? "bg-slate-950 text-white"
+                : "border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-2 md:hidden">
@@ -160,6 +240,7 @@ export default function KanbanBoard({
           showShelf={showOlderQuoted}
           onToggleShelf={() => setShowOlderQuoted((current) => !current)}
           draggable={false}
+          sequencesByLead={sequencesByLead}
         />
       </div>
 
@@ -183,6 +264,7 @@ export default function KanbanBoard({
                 showShelf={showOlderQuoted}
                 onToggleShelf={() => setShowOlderQuoted((current) => !current)}
                 draggable
+                sequencesByLead={sequencesByLead}
               />
             </div>
           ))}
@@ -202,6 +284,7 @@ function KanbanColumn({
   showShelf = false,
   onToggleShelf,
   draggable = true,
+  sequencesByLead = {},
 }) {
   const { setNodeRef } = useDroppable({ id })
 
@@ -243,6 +326,7 @@ function KanbanColumn({
               onEditLead={onEditLead}
               onCreateEstimate={onCreateEstimate}
               draggable={draggable}
+              sequence={sequencesByLead[String(lead.id)]}
             />
           ))
         )}
@@ -251,7 +335,7 @@ function KanbanColumn({
   )
 }
 
-function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
+function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequence = null }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id })
   const style = transform
     ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
@@ -265,6 +349,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
   const createdAtLabel = formatCreatedAtLabel(lead.created_at)
   const opportunitySummary = getOpportunitySummary(lead)
   const hasQuoteValue = String(lead.quote_value || "").trim().length > 0
+  const sequencePresentation = getSequencePresentation(sequence)
 
   return (
     <div
@@ -301,28 +386,32 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true }) {
         </span>
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <div className="rounded-xl border border-slate-200 bg-white/85 p-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Quote value
-          </p>
-          <p className="mt-1 text-sm font-bold text-slate-900">
-            {isQuoted
-              ? hasQuoteValue
-                ? formatZar(lead.quote_value)
-                : "Missing"
-              : "Not quoted"}
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white/85 p-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Follow-up
-          </p>
-          <p className="mt-1 text-sm font-bold text-slate-900">
-            {clientFollowUpStateLabel || followUpLabel}
-          </p>
-        </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-600">
+        {isQuoted && hasQuoteValue ? <span className="font-black text-slate-900">{formatZar(lead.quote_value)}</span> : null}
+        {isQuoted && hasQuoteValue ? <span className="text-slate-300">•</span> : null}
+        <span>{clientFollowUpStateLabel || followUpLabel}</span>
       </div>
+
+      {sequencePresentation ? (
+        <div className={`mt-2 rounded-xl border px-3 py-2.5 ${
+          sequencePresentation.tone === "emerald"
+            ? "border-emerald-200 bg-emerald-50"
+            : sequencePresentation.tone === "rose"
+              ? "border-rose-200 bg-rose-50"
+              : sequencePresentation.tone === "blue"
+                ? "border-blue-200 bg-blue-50"
+                : "border-slate-200 bg-slate-50"
+        }`}>
+          <div className="flex items-center justify-between gap-3">
+            <p className="truncate text-[11px] font-bold text-slate-700">{sequencePresentation.label}</p>
+            <div className="flex shrink-0 gap-1" aria-label={`${sequencePresentation.step} of 3 follow-ups sent`}>
+              {[1, 2, 3].map((step) => (
+                <span key={step} className={`h-1.5 w-5 rounded-full ${step <= sequencePresentation.step ? "bg-[#0043f3]" : "bg-slate-200"}`} />
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <button type="button" onClick={() => onEditLead(lead)} className="mt-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-left text-white transition hover:bg-slate-800">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">
