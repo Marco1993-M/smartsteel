@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
-import { Edit3, FileText, GripVertical } from "lucide-react"
+import { ArrowRight, FileText, GripVertical } from "lucide-react"
 import { formatCrmStatusLabel, getLeadNextBestAction } from "../lib/crmSop"
 import { getOpportunitySummary } from "../lib/crmReferenceData"
 import { getOsAuthHeaders } from "../lib/osClientAuth"
@@ -31,14 +31,64 @@ const sequenceFilters = [
   { key: "completed", label: "Sequence complete" },
 ]
 
-function matchesSequenceFilter(sequence, filter) {
+function getFollowUpTiming(lead) {
+  if (!lead?.follow_up_at) return "none"
+  const followUp = new Date(lead.follow_up_at)
+  if (!Number.isFinite(followUp.getTime())) return "none"
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const dueDay = new Date(followUp)
+  dueDay.setHours(0, 0, 0, 0)
+  if (dueDay < today) return "overdue"
+  if (dueDay.getTime() === today.getTime()) return "today"
+  return "future"
+}
+
+function matchesSequenceFilter(lead, sequence, filter) {
   if (filter === "all") return true
+  if (filter === "attention") {
+    return Boolean(sequence?.last_response_key) || sequence?.status === "failed" || Boolean(sequence?.last_error) || ["overdue", "today"].includes(getFollowUpTiming(lead)) || !lead?.next_action?.trim()
+  }
   if (!sequence) return false
   if (filter === "active") return sequence.status === "active" && !sequence.last_response_key
-  if (filter === "attention") return sequence.status === "failed" || Boolean(sequence.last_error)
   if (filter === "responded") return Boolean(sequence.last_response_key)
   if (filter === "completed") return sequence.status === "completed"
   return true
+}
+
+function getCardAttention(lead, sequence) {
+  if (sequence?.last_response_key) return { label: "Client response", rail: "bg-emerald-500", score: 600 }
+  if (sequence?.status === "failed" || sequence?.last_error) return { label: "Follow-up error", rail: "bg-rose-600", score: 550 }
+  const timing = getFollowUpTiming(lead)
+  if (timing === "overdue") return { label: "Overdue", rail: "bg-rose-500", score: 500 }
+  if (timing === "today") return { label: "Due today", rail: "bg-amber-400", score: 450 }
+  if (!lead?.next_action?.trim()) return { label: "Needs direction", rail: "bg-amber-400", score: 400 }
+  if (sequence?.status === "active") return { label: "Sequence active", rail: "bg-blue-500", score: 250 }
+  return { label: "On track", rail: "bg-slate-200", score: 0 }
+}
+
+function getContextualAction(lead, sequence) {
+  if (sequence?.last_response_key) return { label: "Review response", type: "open" }
+  if (sequence?.status === "failed" || sequence?.last_error) return { label: "Resolve follow-up", type: "open" }
+  switch (normalizeStatus(lead.status)) {
+    case "new":
+      return { label: "Acknowledge lead", type: "open" }
+    case "contacted":
+      return { label: "Prepare estimate", type: "estimate" }
+    case "quoted":
+      return { label: "Review follow-up", type: "open" }
+    case "won":
+      return { label: "Open project handoff", type: "open" }
+    default:
+      return { label: "Review record", type: "open" }
+  }
+}
+
+function shouldShowCreatedAt(lead) {
+  if (normalizeStatus(lead.status) === "new") return true
+  const activity = new Date(lead.last_activity_at || lead.updated_at || lead.created_at || 0)
+  if (!Number.isFinite(activity.getTime())) return false
+  return Date.now() - activity.getTime() > 14 * 86400000
 }
 
 function getSequencePresentation(sequence) {
@@ -153,11 +203,18 @@ export default function KanbanBoard({
     }
 
     loadSequences()
-    return () => { cancelled = true }
+    const interval = window.setInterval(loadSequences, 60000)
+    const refreshOnFocus = () => loadSequences()
+    window.addEventListener("focus", refreshOnFocus)
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+      window.removeEventListener("focus", refreshOnFocus)
+    }
   }, [])
 
   const visibleLeads = useMemo(
-    () => leads.filter((lead) => matchesSequenceFilter(sequencesByLead[String(lead.id)], sequenceFilter)),
+    () => leads.filter((lead) => matchesSequenceFilter(lead, sequencesByLead[String(lead.id)], sequenceFilter)),
     [leads, sequenceFilter, sequencesByLead]
   )
 
@@ -167,8 +224,14 @@ export default function KanbanBoard({
   const olderQuotedLeads = getAllStageLeads("quoted").filter(isOlderQuotedLead)
   const getStageLeads = (status) => {
     const stageLeads = getAllStageLeads(status)
-    if (status !== "quoted" || showOlderQuoted) return stageLeads
-    return stageLeads.filter((lead) => !isOlderQuotedLead(lead))
+    const activeStageLeads = status !== "quoted" || showOlderQuoted
+      ? stageLeads
+      : stageLeads.filter((lead) => !isOlderQuotedLead(lead))
+    return activeStageLeads.sort((left, right) => {
+      const scoreDifference = getCardAttention(right, sequencesByLead[String(right.id)]).score - getCardAttention(left, sequencesByLead[String(left.id)]).score
+      if (scoreDifference !== 0) return scoreDifference
+      return new Date(right.updated_at || right.created_at || 0).getTime() - new Date(left.updated_at || left.created_at || 0).getTime()
+    })
   }
 
   const mobileStageLeads = getStageLeads(mobileStage)
@@ -350,16 +413,35 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
   const opportunitySummary = getOpportunitySummary(lead)
   const hasQuoteValue = String(lead.quote_value || "").trim().length > 0
   const sequencePresentation = getSequencePresentation(sequence)
+  const attention = getCardAttention(lead, sequence)
+  const contextualAction = getContextualAction(lead, sequence)
+  const showCreatedAt = shouldShowCreatedAt(lead)
+
+  const handleContextualAction = (event) => {
+    event.stopPropagation()
+    if (contextualAction.type === "estimate") {
+      onCreateEstimate?.(lead)
+      return
+    }
+    onEditLead(lead)
+  }
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       id={String(lead.id)}
-      className={`rounded-2xl border border-slate-100 p-3 transition hover:bg-white hover:shadow-md ${
+      role="button"
+      tabIndex={0}
+      onClick={() => onEditLead(lead)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") onEditLead(lead)
+      }}
+      className={`relative cursor-pointer overflow-hidden rounded-2xl border border-slate-100 p-3 pl-4 transition hover:bg-white hover:shadow-md ${
         teamColors[lead.allocated_to] || "bg-white"
       }`}
     >
+      <span className={`absolute inset-y-0 left-0 w-1 ${attention.rail}`} aria-hidden="true" />
       <div className="mb-2 flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">
@@ -413,21 +495,21 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
         </div>
       ) : null}
 
-      <button type="button" onClick={() => onEditLead(lead)} className="mt-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-left text-white transition hover:bg-slate-800">
+      <div className="mt-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-left text-white">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">
           Next move
         </p>
         <p className="mt-1 line-clamp-2 text-xs font-medium leading-5 text-white">
           {lead.next_action || nextBestAction.shortLabel}
         </p>
-      </button>
+      </div>
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
-          Added: {createdAtLabel}
-        </span>
+        <span className="rounded-full bg-white/80 px-2 py-1 text-slate-600">{attention.label}</span>
+        {showCreatedAt ? <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">Added: {createdAtLabel}</span> : null}
         {draggable ? (
           <div
+            onClick={(event) => event.stopPropagation()}
             className="ml-auto inline-flex cursor-grab items-center justify-center rounded-full bg-slate-100 px-2 py-1 text-slate-500 transition hover:text-slate-700"
             {...listeners}
             {...attributes}
@@ -437,22 +519,18 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
         ) : null}
       </div>
 
-      <div className="mt-3 flex gap-2">
-        <button
-          type="button"
-          onClick={() => onEditLead(lead)}
-          className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
-        >
-          <Edit3 size={12} /> Open
-        </button>
-        <button
-          type="button"
-          onClick={() => onCreateEstimate?.(lead)}
-          className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-rose-100 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-200"
-        >
-          <FileText size={12} /> Estimate
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={handleContextualAction}
+        className={`mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold transition ${
+          contextualAction.type === "estimate"
+            ? "bg-[#0043f3] text-white hover:bg-blue-700"
+            : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+        }`}
+      >
+        {contextualAction.type === "estimate" ? <FileText size={13} /> : <ArrowRight size={13} />}
+        {contextualAction.label}
+      </button>
     </div>
   )
 }
