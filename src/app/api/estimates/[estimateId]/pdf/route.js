@@ -79,11 +79,19 @@ export async function GET(request, { params }) {
 
   const { data: estimate, error } = await supabaseServer
     .from("estimates")
-    .select("id, title, version_no, share_token, product_type, product_type_display, input_data, line_items, subtotal, total, notes, status")
+    .select("*")
     .eq("id", estimateId)
-    .single()
+    .maybeSingle()
 
-  if (error || !estimate) {
+  if (error) {
+    console.error("Could not load estimate for PDF:", error.message)
+    return NextResponse.json(
+      { error: "The estimate could not be loaded for PDF generation." },
+      { status: 500 }
+    )
+  }
+
+  if (!estimate) {
     return NextResponse.json(
       { error: "Estimate not found." },
       { status: 404 }
