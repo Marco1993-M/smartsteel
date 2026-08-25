@@ -8,19 +8,11 @@ import { getOpportunitySummary } from "../lib/crmReferenceData"
 import { getOsAuthHeaders } from "../lib/osClientAuth"
 
 const statuses = ["new", "contacted", "quoted", "won", "lost"]
-const teamColors = {
-  Stefan: "bg-red-100",
-  Niel: "bg-blue-100",
-  Victor: "bg-green-100",
-  Marco: "bg-yellow-100",
-}
-
-const statusBadgeColors = {
-  new: "bg-slate-100 text-slate-600",
-  contacted: "bg-blue-100 text-blue-700",
-  quoted: "bg-amber-100 text-amber-700",
-  won: "bg-emerald-100 text-emerald-700",
-  lost: "bg-rose-100 text-rose-700",
+const teamDotColors = {
+  Stefan: "bg-red-500",
+  Niel: "bg-blue-500",
+  Victor: "bg-emerald-500",
+  Marco: "bg-amber-400",
 }
 
 const sequenceFilters = [
@@ -228,6 +220,9 @@ export default function KanbanBoard({
       ? stageLeads
       : stageLeads.filter((lead) => !isOlderQuotedLead(lead))
     return activeStageLeads.sort((left, right) => {
+      if (status === "new") {
+        return new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime()
+      }
       const scoreDifference = getCardAttention(right, sequencesByLead[String(right.id)]).score - getCardAttention(left, sequencesByLead[String(left.id)]).score
       if (scoreDifference !== 0) return scoreDifference
       return new Date(right.updated_at || right.created_at || 0).getTime() - new Date(left.updated_at || left.created_at || 0).getTime()
@@ -437,35 +432,26 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") onEditLead(lead)
       }}
-      className={`relative cursor-pointer overflow-hidden rounded-2xl border border-slate-100 p-3 pl-4 transition hover:bg-white hover:shadow-md ${
-        teamColors[lead.allocated_to] || "bg-white"
-      }`}
+      className="relative cursor-pointer overflow-hidden rounded-[1.15rem] border border-slate-200 bg-white p-3.5 pl-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg"
     >
       <span className={`absolute inset-y-0 left-0 w-1 ${attention.rail}`} aria-hidden="true" />
-      <div className="mb-2 flex items-start gap-2">
+      <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">
+          <p className="truncate text-[15px] font-black tracking-[-0.02em] text-slate-950">
             {lead.name} {lead.last_name}
           </p>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <span className="rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-700">
-              {opportunitySummary.line}
-            </span>
-            <span className="rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-              {opportunitySummary.family}
-            </span>
-            <p className="truncate text-xs text-slate-500">
-              {lead.product_type || "No product"} · {lead.allocated_to || "Unassigned"}
-            </p>
-          </div>
+          <p className="mt-1 line-clamp-1 text-xs font-medium text-slate-500">{lead.product_type || "Project not selected"}</p>
         </div>
-        <span
-          className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold ${
-            statusBadgeColors[normalizedStatus] || "bg-slate-100 text-slate-600"
-          }`}
-        >
-          {formatStatusLabel(lead.status)}
-        </span>
+        <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-bold text-slate-600">
+          <span className={`h-2 w-2 rounded-full ${teamDotColors[lead.allocated_to] || "bg-slate-300"}`} />
+          {lead.allocated_to || "Unassigned"}
+        </div>
+      </div>
+
+      <div className="mt-2 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">
+        <span>{opportunitySummary.line}</span>
+        <span>·</span>
+        <span className="truncate">{opportunitySummary.family}</span>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-600">
@@ -475,7 +461,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
       </div>
 
       {sequencePresentation ? (
-        <div className={`mt-2 rounded-xl border px-3 py-2.5 ${
+        <div className={`mt-3 rounded-xl border px-3 py-2.5 ${
           sequencePresentation.tone === "emerald"
             ? "border-emerald-200 bg-emerald-50"
             : sequencePresentation.tone === "rose"
@@ -485,7 +471,10 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
                 : "border-slate-200 bg-slate-50"
         }`}>
           <div className="flex items-center justify-between gap-3">
-            <p className="truncate text-[11px] font-bold text-slate-700">{sequencePresentation.label}</p>
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-bold text-slate-700">{sequencePresentation.label}</p>
+              <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400">{sequencePresentation.step} of 3 sent</p>
+            </div>
             <div className="flex shrink-0 gap-1" aria-label={`${sequencePresentation.step} of 3 follow-ups sent`}>
               {[1, 2, 3].map((step) => (
                 <span key={step} className={`h-1.5 w-5 rounded-full ${step <= sequencePresentation.step ? "bg-[#0043f3]" : "bg-slate-200"}`} />
@@ -495,17 +484,17 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
         </div>
       ) : null}
 
-      <div className="mt-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-left text-white">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">
+      <div className="mt-3 w-full rounded-xl bg-[#f1f5f9] px-3 py-2.5 text-left">
+        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">
           Next move
         </p>
-        <p className="mt-1 line-clamp-2 text-xs font-medium leading-5 text-white">
+        <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-slate-700">
           {lead.next_action || nextBestAction.shortLabel}
         </p>
       </div>
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-        <span className="rounded-full bg-white/80 px-2 py-1 text-slate-600">{attention.label}</span>
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">{attention.label}</span>
         {showCreatedAt ? <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">Added: {createdAtLabel}</span> : null}
         {draggable ? (
           <div
@@ -524,8 +513,8 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
         onClick={handleContextualAction}
         className={`mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold transition ${
           contextualAction.type === "estimate"
-            ? "bg-[#0043f3] text-white hover:bg-blue-700"
-            : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+            ? "bg-[#0043f3] text-white shadow-sm hover:bg-blue-700"
+            : "bg-[#001d2e] text-white shadow-sm hover:bg-slate-800"
         }`}
       >
         {contextualAction.type === "estimate" ? <FileText size={13} /> : <ArrowRight size={13} />}
