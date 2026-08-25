@@ -19,7 +19,23 @@ export async function GET(request) {
   if (authResponse) return authResponse
 
   const leadId = String(new URL(request.url).searchParams.get("leadId") || "").trim()
-  if (!leadId) return NextResponse.json({ error: "Lead is required." }, { status: 400 })
+  if (!leadId) {
+    const { data: sequences, error } = await supabaseServer
+      .from("crm_estimate_follow_up_sequences")
+      .select("id, lead_id, estimate_id, status, current_step, next_send_at, last_sent_at, completed_at, cancelled_at, last_error, last_response_key, last_response_label, last_responded_at, created_at")
+      .order("created_at", { ascending: false })
+      .limit(500)
+
+    if (error && isMissingSchema(error)) return NextResponse.json({ sequences: [], migrationRequired: true })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    const latestByLead = new Map()
+    for (const sequence of sequences || []) {
+      if (!latestByLead.has(sequence.lead_id)) latestByLead.set(sequence.lead_id, sequence)
+    }
+
+    return NextResponse.json({ sequences: [...latestByLead.values()] })
+  }
 
   const { data, error } = await supabaseServer
     .from("crm_estimate_follow_up_sequences")
@@ -36,7 +52,7 @@ export async function GET(request) {
   if (previewRequested && data) {
     const [{ data: lead }, { data: estimate }] = await Promise.all([
       supabaseServer.from("leads").select("name, last_name, product_type").eq("id", data.lead_id).maybeSingle(),
-      supabaseServer.from("estimates").select("title, version_no, product_type_display, share_token").eq("id", data.estimate_id).maybeSingle(),
+      supabaseServer.from("estimates").select("title, version_no, product_type, share_token").eq("id", data.estimate_id).maybeSingle(),
     ])
 
     if (!lead || !estimate?.share_token) {

@@ -46,7 +46,7 @@ export async function GET(request) {
   for (const sequence of sequences || []) {
     const [{ data: lead }, { data: estimate }] = await Promise.all([
       supabaseServer.from("leads").select("id, name, last_name, email, product_type, status").eq("id", sequence.lead_id).maybeSingle(),
-      supabaseServer.from("estimates").select("id, title, version_no, product_type_display, share_token, status").eq("id", sequence.estimate_id).maybeSingle(),
+      supabaseServer.from("estimates").select("id, title, version_no, product_type, share_token, status").eq("id", sequence.estimate_id).maybeSingle(),
     ])
 
     if (!lead || !estimate || !lead.email || !estimate.share_token) {
