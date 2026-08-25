@@ -20,7 +20,7 @@ export async function GET(request) {
     .order("updated_at", { ascending: false })
 
   if (context.membership.role === "salesperson") query = query.eq("membership_id", context.membership.id)
-  const { data, error } = await query.limit(50)
+  const { data, error } = await query.limit(100)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ opportunities: data || [] })
 }
