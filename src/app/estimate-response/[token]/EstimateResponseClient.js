@@ -60,10 +60,10 @@ export default function EstimateResponseClient({ token, estimateTitle, clientNam
   }
 
   return (
-    <main className={`min-h-screen px-4 pb-6 pt-20 sm:px-6 sm:pb-10 sm:pt-24 ${
+    <main className={`min-h-screen px-4 py-6 sm:px-6 sm:py-10 ${
       isAtlas
-        ? "bg-[linear-gradient(180deg,#ffffff_0px,#ffffff_44px,#eef5f8_180px)]"
-        : "bg-[linear-gradient(180deg,#ffffff_0px,#ffffff_44px,#f1f5f9_180px)]"
+        ? "bg-[linear-gradient(180deg,#ffffff_0px,#eef5f8_150px)]"
+        : "bg-[linear-gradient(180deg,#ffffff_0px,#f1f5f9_150px)]"
     }`}>
       <div className="mx-auto max-w-3xl overflow-hidden border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
         <header className={`relative overflow-hidden px-6 py-7 text-white sm:px-10 sm:py-9 ${
