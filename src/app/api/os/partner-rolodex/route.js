@@ -48,7 +48,7 @@ function companyPayload(body) {
   }
 }
 
-async function replaceContacts(companyId, contacts) {
+async function replaceContacts(companyId, companyName, contacts) {
   const { error: deleteError } = await supabaseServer
     .from("os_partner_rolodex_contacts")
     .delete()
@@ -56,10 +56,10 @@ async function replaceContacts(companyId, contacts) {
   if (deleteError) throw deleteError
 
   const rows = (contacts || [])
-    .filter((contact) => text(contact.name))
+    .filter((contact) => [contact.name, contact.role, contact.email, contact.phone].some((value) => text(value)))
     .map((contact, index) => ({
       company_id: companyId,
-      name: text(contact.name),
+      name: text(contact.name) || `${companyName} contact`,
       role: text(contact.role) || null,
       email: text(contact.email).toLowerCase() || null,
       phone: text(contact.phone) || null,
@@ -113,8 +113,9 @@ export async function POST(request) {
   }
 
   try {
-    await replaceContacts(data.id, body.contacts)
+    await replaceContacts(data.id, payload.name, body.contacts)
   } catch (contactError) {
+    await supabaseServer.from("os_partner_rolodex_companies").delete().eq("id", data.id)
     return NextResponse.json({ error: contactError.message }, { status: 500 })
   }
 
@@ -148,7 +149,7 @@ export async function PATCH(request) {
   }
 
   try {
-    await replaceContacts(id, body.contacts)
+    await replaceContacts(id, payload.name, body.contacts)
   } catch (contactError) {
     return NextResponse.json({ error: contactError.message }, { status: 500 })
   }
