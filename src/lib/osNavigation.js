@@ -51,7 +51,7 @@ export const OS_SECTIONS = [
     description: "Strategic accounts, dealers, installers, and supplier relationships.",
     status: "active_build",
     phaseLabel: "AFGRI pilot",
-    items: ["Opportunities", "Commercial Releases", "AFGRI Network", "Future Partners"],
+    items: ["Opportunities", "Rolodex", "Commercial Releases", "AFGRI Network"],
   },
   {
     key: "manufacturing",
