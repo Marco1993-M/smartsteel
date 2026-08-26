@@ -32,7 +32,7 @@ export default async function EstimateResponsePage({ params, searchParams }) {
 
   const [{ data: lead }, { data: estimate }] = await Promise.all([
     supabaseServer.from("leads").select("name, last_name, product_type").eq("id", sequence.lead_id).maybeSingle(),
-    supabaseServer.from("estimates").select("title, version_no, product_type_display").eq("id", sequence.estimate_id).maybeSingle(),
+    supabaseServer.from("estimates").select("title, version_no, product_type").eq("id", sequence.estimate_id).maybeSingle(),
   ])
 
   return (

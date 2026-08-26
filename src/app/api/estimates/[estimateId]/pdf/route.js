@@ -12,7 +12,7 @@ export const maxDuration = 60
 
 const ESTIMATE_PDF_BUCKET =
   process.env.SUPABASE_ESTIMATE_PDF_BUCKET || "estimate-pdfs"
-const ESTIMATE_PDF_RENDER_REVISION = "atlas-brand-v1"
+const ESTIMATE_PDF_RENDER_REVISION = "dual-brand-v2"
 
 function buildFilename(estimate) {
   const base = String(estimate?.title || `smart-steel-quote-${estimate?.version_no || "1"}`)

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireOsAuth } from "lib/osRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
-import { getNextFollowUpAt } from "lib/crmEstimateFollowUps"
+import { getEstimateBrandIdentity, getNextFollowUpAt } from "lib/crmEstimateFollowUps"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -34,12 +34,16 @@ function buildFilename(estimate) {
 }
 
 function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }) {
-  const atlasIdentity = `${lead.product_type || ""} ${estimate.product_type_display || ""} ${estimate.title || ""}`.toLowerCase()
-  const isAtlas = ["atlas", "lcss", "cflc", "lip channel", "lipped channel", "solar carport", "solar ground mount"]
-    .some((term) => atlasIdentity.includes(term))
+  const brandIdentity = getEstimateBrandIdentity(lead, estimate)
+  const isAtlas = brandIdentity === "atlas"
+  const isLsf = brandIdentity === "lsf"
   const configuration = builderSubmission?.configuration || {}
   const summary = builderSubmission?.summary || {}
-  const reference = configuration.designReference || summary.designReference || "Atlas proposal"
+  const reference = configuration.designReference || summary.designReference || (isAtlas
+    ? "Atlas project proposal"
+    : isLsf
+      ? "LSF project proposal"
+      : "Smart Steel project proposal")
   const dimensions = configuration.width && configuration.length
     ? `${configuration.width}m × ${configuration.length}m${configuration.wallHeight ? ` × ${configuration.wallHeight}m` : ""}`
     : null
@@ -51,6 +55,8 @@ function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }
   const logo = isAtlas
     ? "https://www.smartsteel.co.za/atlas/atlas-logo-horizontal-light.png"
     : "https://www.smartsteel.co.za/Logo.png"
+  const brandName = isAtlas ? "Atlas by Smart Steel" : isLsf ? "Smart Steel LSF" : "Smart Steel"
+  const estimateName = isAtlas ? "Atlas" : isLsf ? "LSF" : "Smart Steel"
 
   return `<!doctype html>
   <html lang="en">
@@ -59,9 +65,9 @@ function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }
         <tr><td align="center" style="padding:24px 12px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:640px;background:#ffffff;border:1px solid #dbe4ee;">
             <tr><td style="padding:28px 30px;background:${dark};background-image:linear-gradient(120deg,${dark},${accent});">
-              <img src="${logo}" alt="${isAtlas ? "Atlas by Smart Steel" : "Smart Steel"}" width="210" style="display:block;max-width:210px;height:auto;border:0;">
+              <img src="${logo}" alt="${brandName}" width="210" style="display:block;max-width:210px;height:auto;border:0;">
               <p style="margin:28px 0 8px;color:${pale};font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Reviewed project proposal</p>
-              <h1 style="margin:0;color:#ffffff;font-size:30px;line-height:1.15;">Your ${isAtlas ? "Atlas" : "Smart Steel"} estimate is ready.</h1>
+              <h1 style="margin:0;color:#ffffff;font-size:30px;line-height:1.15;">Your ${estimateName} estimate is ready.</h1>
             </td></tr>
             <tr><td style="padding:30px;">
               <div style="color:#334155;font-size:15px;line-height:1.75;">${message}</div>
@@ -82,7 +88,7 @@ function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }
               <p style="margin:26px 0 0;color:#64748b;font-size:12px;line-height:1.6;">Prepared for ${escapeHtml(clientName)}. Please refer to the attached estimate for the confirmed scope, exclusions, validity and commercial terms.</p>
             </td></tr>
             <tr><td style="padding:20px 30px;background:${dark};color:#ffffff;">
-              <p style="margin:0 0 5px;font-size:13px;font-weight:700;">${isAtlas ? "Atlas developed by Smart Steel" : "Smart Steel"}</p>
+              <p style="margin:0 0 5px;font-size:13px;font-weight:700;">${isAtlas ? "Atlas developed by Smart Steel" : brandName}</p>
               <p style="margin:0;color:#cbd5e1;font-size:12px;line-height:1.6;">info@smartsteel.co.za · +27 82 846 4555 · smartsteel.co.za</p>
             </td></tr>
           </table>
@@ -111,7 +117,7 @@ export async function POST(request) {
       supabaseServer.from("leads").select("id, name, last_name, email, product_type").eq("id", leadId).single(),
       // Keep the send lookup limited to columns guaranteed by the estimate schema.
       // Optional display fields are deliberately tolerated by the estimate save flow.
-      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token").eq("id", estimateId).single(),
+      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token, product_type").eq("id", estimateId).single(),
     ])
 
     if (leadError) {
