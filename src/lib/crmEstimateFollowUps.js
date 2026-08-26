@@ -74,10 +74,16 @@ export function buildFollowUpCopy({ stepNumber, lead, estimate }) {
 }
 
 export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, isAtlas }) {
-  const accent = isAtlas ? "#0043f3" : "#da1a33"
-  const dark = isAtlas ? "#001d2e" : "#020617"
-  const brand = isAtlas ? "Atlas developed by Smart Steel" : "Smart Steel"
-  const logo = isAtlas
+  const identity = estimate?.brandIdentity || (isAtlas ? "atlas" : "smart-steel")
+  const isLsf = identity === "lsf"
+  const accent = identity === "atlas" ? "#0043f3" : "#da1a33"
+  const dark = identity === "atlas" ? "#001d2e" : "#020617"
+  const brand = identity === "atlas"
+    ? "Atlas developed by Smart Steel"
+    : isLsf
+      ? "Smart Steel LSF"
+      : "Smart Steel"
+  const logo = identity === "atlas"
     ? "https://www.smartsteel.co.za/atlas/atlas-logo-horizontal-light.png"
     : "https://www.smartsteel.co.za/LogoWhite.png"
   const escapedBody = String(copy.body || "")
@@ -123,7 +129,14 @@ export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, i
 }
 
 export function isAtlasEstimate(lead, estimate) {
-  const identity = `${lead?.product_type || ""} ${estimate?.product_type_display || ""} ${estimate?.title || ""}`.toLowerCase()
-  return ["atlas", "cflc", "lip channel", "lipped channel", "solar carport", "solar ground mount"]
-    .some((term) => identity.includes(term))
+  return getEstimateBrandIdentity(lead, estimate) === "atlas"
+}
+
+export function getEstimateBrandIdentity(lead, estimate) {
+  const identity = `${lead?.product_type || ""} ${estimate?.product_type || ""} ${estimate?.product_type_display || ""} ${estimate?.title || ""}`.toLowerCase()
+  if (["atlas", "lcss", "cflc", "lip channel", "lipped channel", "solar carport", "solar ground mount"]
+    .some((term) => identity.includes(term))) return "atlas"
+  if (["lsf", "light steel frame", "lightweight steel"]
+    .some((term) => identity.includes(term))) return "lsf"
+  return "smart-steel"
 }

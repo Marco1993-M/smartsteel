@@ -52,6 +52,11 @@ function isAtlasEstimate(productType, productTypeLabel) {
   )
 }
 
+function isLsfEstimate(productType, productTypeLabel) {
+  const identity = `${productType || ""} ${productTypeLabel || ""}`.toLowerCase()
+  return ["lsf", "light steel frame", "lightweight steel"].some((term) => identity.includes(term))
+}
+
 function getRoofStyleLabel(value) {
   return value === "mono_pitch" ? "Mono pitch" : "Dual pitch"
 }
@@ -94,6 +99,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
     estimate?.product_type_display ||
     productType
   const atlasEstimate = isAtlasEstimate(productType, productTypeLabel)
+  const lsfEstimate = !atlasEstimate && isLsfEstimate(productType, productTypeLabel)
   const solarProduct = isSolarProduct(productType)
   const groundMountProduct = productType === "Solar ground mount"
   const trussProduct = isTrussProduct(productType)
@@ -259,7 +265,17 @@ export function buildEstimateDisplayModel(estimate, lead) {
           dark: "#001d2e",
           pale: "#c1d9e5",
         }
-      : {
+      : lsfEstimate
+        ? {
+          key: "lsf",
+          name: "Smart Steel LSF",
+          documentLabel: "Smart Steel LSF Project Proposal",
+          logo: "/Logo.png",
+          accent: "#dc2626",
+          dark: "#020617",
+          pale: "#fee2e2",
+        }
+        : {
           key: "smart-steel",
           name: "Smart Steel",
           documentLabel: "Smart Steel Quotation",
@@ -269,6 +285,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
           pale: "#fee2e2",
         },
     isAtlas: atlasEstimate,
+    isLsf: lsfEstimate,
     shareToken: estimate?.share_token || "",
   }
 }
