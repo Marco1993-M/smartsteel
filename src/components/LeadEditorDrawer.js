@@ -549,6 +549,8 @@ function buildEstimateEmailTemplate(lead, estimate, builderSubmission) {
   const atlasIdentity = `${lead?.product_type || ""} ${estimate?.product_type_display || ""} ${estimate?.title || ""}`.toLowerCase()
   const isAtlas = ["atlas", "lcss", "cflc", "lip channel", "lipped channel", "solar carport", "solar ground mount"]
     .some((term) => atlasIdentity.includes(term))
+  const isLsf = !isAtlas && ["lsf", "light steel frame", "lightweight steel"]
+    .some((term) => atlasIdentity.includes(term))
   const configuration = builderSubmission?.configuration || {}
   const summary = builderSubmission?.summary || {}
   const designReference = configuration.designReference || summary.designReference || ""
@@ -566,6 +568,19 @@ Your reviewed Atlas project proposal is ready${dimensions ? ` for the ${dimensio
 The attached estimate outlines the proposed scope and budget based on the project information currently available. Please review the included items, exclusions, validity, and commercial terms.
 
 If you would like to adjust the configuration, compare another option, or discuss the next step, please reply and we will help you refine the proposal.`,
+    }
+  }
+
+  if (isLsf) {
+    return {
+      subject: `Your Smart Steel LSF project proposal | ${projectReference}`,
+      body: `Good day ${clientName},
+
+Your reviewed Smart Steel LSF project proposal is ready${dimensions ? ` for the ${dimensions} configuration` : ""}.
+
+The attached estimate outlines the proposed lightweight steel framing scope and budget based on the project information currently available. Please review the included items, exclusions, validity, and commercial terms.
+
+If you would like to adjust the dimensions, scope, finishes, or delivery requirements, please reply and we will help you refine the proposal before moving forward.`,
     }
   }
 

@@ -7,6 +7,7 @@ export default function EstimateDocumentLayout({
   estimate,
 }) {
   const isAtlas = documentModel.isAtlas
+  const isLsf = documentModel.isLsf
   const cardShape = isAtlas ? "rounded-[4px]" : "rounded-3xl"
   const smallCardShape = isAtlas ? "rounded-[3px]" : "rounded-2xl"
   const accentText = isAtlas ? "text-[#0043f3]" : "text-red-600"
@@ -32,7 +33,11 @@ export default function EstimateDocumentLayout({
                   {documentModel.brand.documentLabel}
                 </p>
                 <p className="mt-1 text-sm text-slate-500 print:text-[12px]">
-                  {isAtlas ? "A defined modular steel system, reviewed for your project" : "Lightweight steel structures tailored to your project"}
+                  {isAtlas
+                    ? "A defined modular steel system, reviewed for your project"
+                    : isLsf
+                      ? "Engineered lightweight steel framing, reviewed for your project"
+                      : "Practical steel structures tailored to your project"}
                 </p>
               </div>
           </div>
@@ -149,7 +154,7 @@ export default function EstimateDocumentLayout({
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Prepared by
             </p>
-            <p className="mt-2 text-sm font-semibold text-slate-900 print:mt-1 print:text-[12px]">{isAtlas ? "Atlas developed by Smart Steel" : "Smart Steel"}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900 print:mt-1 print:text-[12px]">{isAtlas ? "Atlas developed by Smart Steel" : isLsf ? "Smart Steel LSF" : "Smart Steel"}</p>
             <p className="mt-1 text-sm leading-6 text-slate-600 print:text-[12px] print:leading-5">
               Pretoria-based lightweight steel structure specialists serving projects across South Africa.
             </p>
@@ -324,7 +329,7 @@ export default function EstimateDocumentLayout({
           </div>
           <div className={`estimate-card mt-8 bg-slate-50 px-5 py-4 ${smallCardShape}`}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Prepared by {isAtlas ? "Atlas · Smart Steel" : "Smart Steel"}
+              Prepared by {isAtlas ? "Atlas · Smart Steel" : isLsf ? "Smart Steel LSF" : "Smart Steel"}
             </p>
             <div className="mt-3 grid grid-cols-[1fr_auto] items-end gap-4">
               <div>
@@ -336,7 +341,7 @@ export default function EstimateDocumentLayout({
               <div className="min-w-[160px]">
                 <div className="h-12 border-b border-slate-300" />
                 <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  {isAtlas ? "Atlas proposal sign-off" : "Smart Steel Sign-off"}
+                  {isAtlas ? "Atlas proposal sign-off" : isLsf ? "LSF proposal sign-off" : "Smart Steel Sign-off"}
                 </p>
               </div>
             </div>
