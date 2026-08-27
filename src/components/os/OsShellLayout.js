@@ -72,7 +72,7 @@ export default function OsShellLayout({ children }) {
           ? "lg:grid-cols-[84px_minmax(0,1fr)]"
           : "lg:grid-cols-[260px_minmax(0,1fr)]"
       }`}>
-        <aside className="os-shell-sidebar w-full min-w-0 max-w-full overflow-hidden border-b border-white/10 bg-[linear-gradient(180deg,_#0f172a,_#111827)] text-white lg:w-auto lg:border-b-0 lg:border-r print:hidden">
+        <aside className="os-shell-sidebar w-full min-w-0 max-w-full overflow-hidden border-b border-white/10 bg-[linear-gradient(180deg,_#0f172a,_#111827)] text-white lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r print:hidden">
           <div className={`flex items-center justify-between gap-4 px-4 py-3 ${sidebarCollapsed ? "lg:flex-col lg:px-3 lg:py-5" : "lg:block lg:p-6"}`}>
             <Link href="/os" className={sidebarCollapsed ? "block lg:text-center" : "block"} onClick={() => setMobileNavOpen(false)}>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">
