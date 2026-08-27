@@ -101,13 +101,13 @@ function isOverdue(value) {
   return new Date(`${String(value).slice(0, 10)}T23:59:59`) < new Date()
 }
 
-function Metric({ icon: Icon, label, value, detail, tone = "slate" }) {
+function CompactMetric({ icon: Icon, label, value, tone = "slate" }) {
   const tones = {
-    slate: "border-slate-200 bg-white text-slate-950",
-    blue: "border-blue-200 bg-blue-50 text-[#0043f3]",
-    green: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    slate: "text-slate-700",
+    blue: "text-[#0043f3]",
+    green: "text-emerald-700",
   }
-  return <div className={`rounded-2xl border p-4 ${tones[tone]}`}><div className="flex items-center justify-between gap-3"><p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-60">{label}</p><Icon className="h-4 w-4 opacity-60" /></div><p className="mt-3 text-3xl font-black tracking-tight">{value}</p><p className="mt-1 text-xs font-semibold opacity-60">{detail}</p></div>
+  return <div className={`flex min-w-max items-center gap-2.5 px-3 py-2 ${tones[tone]}`}><span className="grid h-8 w-8 place-items-center rounded-lg bg-current/10"><Icon className="h-4 w-4" /></span><div><p className="text-lg font-black leading-none text-slate-950">{value}</p><p className="mt-1 text-[9px] font-black uppercase tracking-[0.12em] opacity-65">{label}</p></div></div>
 }
 
 export default function PartnerRolodexWorkspace() {
@@ -214,19 +214,16 @@ export default function PartnerRolodexWorkspace() {
     {!schemaReady ? <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">Previewing the Rolodex structure. Run <code>supabase/smart_steel_os_partner_rolodex.sql</code> to save shared records.</div> : null}
     {error && !formOpen ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">{error}</div> : null}
 
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <Metric icon={Building2} label="Companies" value={metrics.total} detail="Strategic network records" />
-      <Metric icon={Target} label="Priority" value={metrics.priority} detail="Relationships worth focused effort" tone="blue" />
-      <Metric icon={UsersRound} label="Active partners" value={metrics.active} detail="Working relationships" tone="green" />
-      <Metric icon={CalendarClock} label="Next actions" value={metrics.followUps} detail="Relationships with momentum" />
-    </section>
-
-    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <label className="relative block min-w-0 flex-1 lg:max-w-xl"><Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search company, contact, market or location" className="min-h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-base outline-none transition focus:border-[#0043f3] focus:bg-white" /></label>
-        <div className="flex gap-2 overflow-x-auto pb-1 lg:pb-0">{[
-          ["all", "All"], ["priority", "Priority"], ["active_partner", "Active"], ["conversation", "Conversations"], ["follow_up", "Follow-ups"], ["dormant", "Dormant"],
-        ].map(([value, label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-black transition ${filter === value ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{label}</button>)}</div>
+    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+      <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center">
+        <label className="relative block min-w-0 flex-1"><Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#0043f3]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search company, contact, market or location" className="min-h-14 w-full rounded-xl border border-blue-200 bg-blue-50/40 pl-12 pr-4 text-base font-semibold outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#0043f3] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,67,243,0.08)]" /></label>
+        <div className="flex min-w-0 items-center overflow-x-auto rounded-xl border border-slate-100 bg-slate-50/70 py-1">
+          <CompactMetric icon={Building2} label="Companies" value={metrics.total} />
+          <CompactMetric icon={Target} label="Priority" value={metrics.priority} tone="blue" />
+          <CompactMetric icon={UsersRound} label="Active" value={metrics.active} tone="green" />
+          <CompactMetric icon={CalendarClock} label="Actions" value={metrics.followUps} />
+        </div>
+        <label className="flex min-h-12 shrink-0 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4"><span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">View</span><select value={filter} onChange={(event) => setFilter(event.target.value)} className="min-w-32 bg-transparent text-sm font-black text-slate-800 outline-none"><option value="all">All relationships</option><option value="priority">Priority</option><option value="active_partner">Active partners</option><option value="conversation">Conversations</option><option value="follow_up">Follow-ups</option><option value="dormant">Dormant</option></select></label>
       </div>
     </section>
 
