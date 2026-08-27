@@ -720,6 +720,7 @@ export default function WarehouseBuilderClient() {
         garageDoorOpeningType: "single",
         pedestrianDoorCount: 0,
         sheetingColor: config.sheetingFinish === "chromadek" ? config.sheetingColor : "galvanised",
+        steelFinish: config.steelFinish,
       }
     }
 

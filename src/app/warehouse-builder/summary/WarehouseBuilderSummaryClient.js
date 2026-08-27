@@ -105,6 +105,7 @@ export default function WarehouseBuilderSummaryClient() {
     pedestrianDoorCount: isAtlas ? 0 : configuration.pedestrianDoorCount,
     pedestrianDoorFace: configuration.pedestrianDoorFace,
     sheetingColor: configuration.sheetingFinish === "chromadek" ? configuration.sheetingColor : "galvanised",
+    steelFinish: configuration.steelFinish,
   }
 
   return (
