@@ -8,9 +8,16 @@ export const ROLODEX_STATUS_OPTIONS = [
 ]
 
 export const ROLODEX_RELATIONSHIP_TYPES = [
-  "solar_installer",
+  "sales_partner",
+  "supplier",
+  "manufacturer",
+  "installer",
+  "specifier",
+  "engineer",
+  "developer",
+  "referral_partner",
+  "industry_contact",
   "epc",
-  "solar_developer",
   "distributor",
   "consultant",
   "reseller",
@@ -18,12 +25,15 @@ export const ROLODEX_RELATIONSHIP_TYPES = [
 ]
 
 export const ROLODEX_MARKET_SEGMENTS = [
-  "Solar carports",
-  "Ground mounts",
-  "Commercial solar",
-  "Agricultural solar",
-  "Off-grid projects",
-  "Residential solar",
+  "Solar",
+  "Warehousing",
+  "Agriculture",
+  "Construction",
+  "Manufacturing",
+  "Residential",
+  "Logistics",
+  "Engineering",
+  "Commercial property",
 ]
 
 export const ROLODEX_PERMISSION_OPTIONS = ["unknown", "relationship_only", "marketing_allowed", "do_not_contact"]
@@ -42,14 +52,14 @@ export const FALLBACK_ROLODEX_COMPANIES = [
     id: "rolodex-solafi",
     name: "Solafi",
     website: "",
-    relationshipType: "solar_installer",
+    relationshipType: "installer",
     status: "active_partner",
     relationshipStrength: 4,
     priority: "high",
     owner: "Marco",
     province: "",
     serviceAreas: [],
-    marketSegments: ["Solar carports", "Ground mounts", "Commercial solar"],
+    marketSegments: ["Solar"],
     typicalProjectScale: "",
     relevantProducts: ["Atlas Solar Carports", "Atlas Solar Ground Mounts"],
     source: "Existing Smart Steel relationship",
@@ -58,7 +68,7 @@ export const FALLBACK_ROLODEX_COMPANIES = [
     lastInteractionAt: null,
     nextAction: "Capture the current relationship contacts and agree the next collaboration opportunity.",
     nextActionDueAt: null,
-    notes: "Reference relationship for the Solar Network partner profile.",
+    notes: "Reference relationship for the Smart Steel strategic relationship profile.",
     contacts: [],
     createdAt: "2026-08-26T08:00:00.000Z",
     updatedAt: "2026-08-26T08:00:00.000Z",
