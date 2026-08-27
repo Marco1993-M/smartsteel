@@ -1,328 +1,137 @@
-const SITE_URL = 'https://www.smartsteel.co.za';
-const AVAILABLE_WIDTHS = [8, 10, 12];
-const AVAILABLE_LENGTHS = Array.from({ length: 19 }, (_, index) => 5 + index * 2.5);
-const PRICE_RATES = {
-  structure: { low: 1050, high: 1300 },
-  cladding: { low: 1350, high: 1500 },
-  turnkey: { low: 1650, high: 2700 },
-};
+import { ATLAS_LENGTH_OPTIONS } from "../../lib/atlasConfiguration.js"
+import { calculateAtlasWarehouseEstimate } from "../../lib/estimates/atlasWarehouseEstimate.js"
 
-const warehouseCostPageOverrides = {
-  '7.5x8': {
-    width: 8,
-    length: 7.5,
-    nearbyCity: 'Pretoria',
-    bestFor: ['secure stock storage', 'small dispatch hubs', 'farm implement cover'],
-    suitability: 'A practical starter warehouse size for secure storage, workshop activity, and light industrial use.',
-    heightGuide: 'Most clients look at 3m to 4m eaves for this footprint, depending on vehicle access and shelving.',
-    leadTime: 'allow roughly 4 to 6 weeks for manufacture and installation once the design is approved',
-    addOns: ['roller shutter door', 'PA door', 'insulation', 'concrete slab', 'gutters and downpipes'],
-  },
-  '7.5x10': {
-    width: 10,
-    length: 7.5,
-    nearbyCity: 'Pretoria',
-    bestFor: ['parts storage', 'light fabrication', 'small logistics overflow'],
-    suitability: 'A versatile option when you need more depth for shelving, workstations, or a larger access bay.',
-    heightGuide: 'A 3m to 4m eave height usually suits racking, workshop use, and small delivery vehicles.',
-    leadTime: 'allow roughly 4 to 6 weeks for a standard shell and longer if the project includes slab and fit-out work',
-    addOns: ['roller shutter door', 'personnel door', 'insulation', 'mezzanine-ready design', 'concrete slab'],
-  },
-  '7.5x12': {
-    width: 12,
-    length: 7.5,
-    nearbyCity: 'Pretoria',
-    bestFor: ['agricultural storage', 'larger workshops', 'regional stock holding'],
-    suitability: 'This footprint gives you more storage depth without stepping into a much wider, more expensive span.',
-    heightGuide: 'Clients often compare 3.5m and 4m eaves here to improve stacking height and roller door clearance.',
-    leadTime: 'allow around 5 to 7 weeks depending on final engineering, slab requirements, and delivery distance',
-    addOns: ['roller shutter door', 'ridge ventilation', 'insulation', 'concrete slab', 'window and louvre options'],
-  },
-  '10x8': {
-    width: 8,
-    length: 10,
-    nearbyCity: 'Pretoria',
-    bestFor: ['small distribution warehouses', 'trade workshops', 'equipment storage'],
-    suitability: 'A popular balance between usable floor area and manageable project cost for growing businesses.',
-    heightGuide: 'A 3m to 4m eave height is common, with taller options where forklifts or larger vehicles are involved.',
-    leadTime: 'allow approximately 4 to 6 weeks for a standard enclosure and more time for turnkey delivery',
-    addOns: ['roller shutter door', 'canopy extension', 'insulation', 'concrete slab', 'electrical-ready detailing'],
-  },
-  '10x10': {
-    width: 10,
-    length: 10,
-    nearbyCity: 'Pretoria',
-    bestFor: ['general warehousing', 'fleet storage', 'small industrial use'],
-    suitability: 'At 100 m², this is one of the easiest sizes to compare on a cost-per-square-metre basis.',
-    heightGuide: 'Many projects in this range use 4m eaves to create better access, circulation, and vertical storage.',
-    leadTime: 'allow roughly 5 to 7 weeks for manufacturing and installation, subject to foundations and site access',
-    addOns: ['roller shutter doors', 'insulation', 'fire-rated lining', 'concrete slab', 'office partition allowance'],
-  },
-  '10x12': {
-    width: 12,
-    length: 10,
-    nearbyCity: 'Pretoria',
-    bestFor: ['regional stock rooms', 'fabrication bays', 'agricultural inputs storage'],
-    suitability: 'This footprint suits buyers who want more internal depth for circulation, shelving, and separated work zones.',
-    heightGuide: 'A 4m eave height is often preferred to support better access and higher storage density.',
-    leadTime: 'allow around 5 to 7 weeks for a standard build and longer when civil works are included',
-    addOns: ['roller shutter doors', 'insulation', 'ridge ventilation', 'concrete slab', 'mezzanine-ready design'],
-  },
-  '15x8': {
-    width: 8,
-    length: 15,
-    nearbyCity: 'Pretoria',
-    bestFor: ['agricultural sheds', 'vehicle cover', 'light manufacturing'],
-    suitability: 'A longer, narrower footprint that works well for workflow-driven spaces and covered loading areas.',
-    heightGuide: 'Many projects at this size consider 4m eaves for better vehicle access and working height.',
-    leadTime: 'allow about 5 to 7 weeks, depending on engineering sign-off, delivery, and ground conditions',
-    addOns: ['roller shutter door', 'canopy extension', 'insulation', 'concrete slab', 'partitioned work area'],
-  },
-  '15x10': {
-    width: 10,
-    length: 15,
-    nearbyCity: 'Pretoria',
-    bestFor: ['mid-size warehouse storage', 'trade depots', 'assembly space'],
-    suitability: 'This is a strong option when you need a more serious operational footprint without moving into a large industrial budget.',
-    heightGuide: 'A 4m to 5m eave height is common if the building must handle higher roller doors or stacked stock.',
-    leadTime: 'allow 6 to 8 weeks for a standard project and more if the scope includes foundations and finishes',
-    addOns: ['multiple roller doors', 'insulation', 'ridge ventilation', 'concrete slab', 'office and ablution fit-out'],
-  },
-  '20x8': {
-    width: 8,
-    length: 20,
-    nearbyCity: 'Pretoria',
-    bestFor: ['fleet cover', 'service workshops', 'linear process layouts'],
-    suitability: 'A long-span footprint that suits operational flow, drive-through access, and longer equipment storage.',
-    heightGuide: 'Clients frequently compare 4m and 5m eaves to accommodate vehicles, hoists, and clear circulation.',
-    leadTime: 'allow around 6 to 8 weeks once design details, foundations, and site access are confirmed',
-    addOns: ['multiple roller doors', 'insulation', 'mezzanine-ready design', 'concrete slab', 'stormwater goods'],
-  },
-  '20x10': {
-    width: 10,
-    length: 20,
-    nearbyCity: 'Pretoria',
-    bestFor: ['distribution storage', 'industrial workshops', 'farm and equipment warehousing'],
-    suitability: 'A solid commercial size for buyers who need meaningful warehouse space with room for access and work zones.',
-    heightGuide: 'A 4m to 6m eave height is typical depending on access equipment, stacking needs, and door design.',
-    leadTime: 'allow roughly 6 to 8 weeks, with turnkey projects taking longer because of civil and finishing works',
-    addOns: ['multiple roller doors', 'insulation', 'ridge ventilation', 'concrete slab', 'office and service areas'],
-  },
-  '25x8': {
-    width: 8,
-    length: 25,
-    nearbyCity: 'Pretoria',
-    bestFor: ['large covered storage', 'equipment bays', 'agricultural and logistics use'],
-    suitability: 'This footprint delivers substantial linear storage capacity while remaining easier to stage on long sites.',
-    heightGuide: 'Most buyers review 4m to 6m eaves at this size to support practical access and storage flexibility.',
-    leadTime: 'allow approximately 6 to 9 weeks, especially when site preparation and slabs are part of the scope',
-    addOns: ['multiple access doors', 'insulation', 'ridge ventilation', 'concrete slab', 'loading canopy options'],
-  },
-};
+const SITE_URL = "https://www.smartsteel.co.za"
+const AVAILABLE_WIDTHS = [8, 10, 12]
+// Preserve every established search URL while Atlas maps the searched length
+// to a released 4m production module.
+const SEARCH_LENGTHS = Array.from({ length: 19 }, (_, index) => 5 + index * 2.5)
+const FINISHES = ["ZAM", "Galv", "Mild"]
+const SCOPES = [
+  { key: "structure_only", label: "Structure only", description: "Atlas frame, purlins, bracing and connection hardware." },
+  { key: "roof_only", label: "Roof sheeted", description: "Atlas structure with galvanised IBR roof sheeting." },
+  { key: "fully_enclosed", label: "Roof and walls sheeted", description: "Atlas structure with galvanised IBR roof and wall sheeting." },
+]
 
-const formatArea = (value) => `${Number.isInteger(value) ? value : value.toFixed(1)} m²`;
-const formatCurrency = (value) => `R${Math.round(value).toLocaleString('en-ZA')}`;
-const formatDimension = (value) => `${Number.isInteger(value) ? value : value.toFixed(1)}m`;
+const formatDimension = (value) => `${Number.isInteger(value) ? value : value.toFixed(1)}m`
+const formatArea = (value) => `${Number.isInteger(value) ? value : value.toFixed(1)} m²`
+export const formatWarehouseCurrency = (value) => `R ${Math.round(value).toLocaleString("en-ZA")}`
 
 function parseWarehouseSlug(slug) {
-  const match = /^(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/.exec(slug);
-  if (!match) {
-    return null;
-  }
-
-  const length = Number(match[1]);
-  const width = Number(match[2]);
-
-  if (!AVAILABLE_WIDTHS.includes(width)) {
-    return null;
-  }
-
-  if (!AVAILABLE_LENGTHS.includes(length) && length !== 7.5) {
-    return null;
-  }
-
-  return { length, width };
+  const match = /^(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/.exec(slug)
+  if (!match) return null
+  const length = Number(match[1])
+  const width = Number(match[2])
+  if (!AVAILABLE_WIDTHS.includes(width) || !SEARCH_LENGTHS.includes(length)) return null
+  return { length, width }
 }
 
-function buildDefaultConfig(length, width) {
-  const area = length * width;
-  const widthLabel = `${width}m wide`;
+function getAtlasLengths(targetLength) {
+  const lower = [...ATLAS_LENGTH_OPTIONS].reverse().find((length) => length <= targetLength) ?? ATLAS_LENGTH_OPTIONS[0]
+  const upper = ATLAS_LENGTH_OPTIONS.find((length) => length >= targetLength) ?? ATLAS_LENGTH_OPTIONS.at(-1)
+  return [...new Set([lower, upper])]
+}
 
-  let bestFor = ['general storage', 'workshop use', 'light industrial applications'];
-  let suitability = `A practical ${widthLabel} warehouse footprint for secure storage, workshop activity, and small business operations.`;
-  let heightGuide = 'Most clients compare 3m to 4m eave heights depending on access, shelving, and door requirements.';
-  let leadTime = 'allow roughly 4 to 6 weeks for manufacture and installation once the design is approved';
-  let addOns = ['roller shutter door', 'PA door', 'insulation', 'concrete slab', 'gutters and downpipes'];
+function getDefaultHeight(width) {
+  return width >= 10 ? 4.5 : 3
+}
 
-  if (area >= 100 && area < 200) {
-    bestFor = ['business storage', 'trade workshops', 'regional stock holding'];
-    suitability = `A versatile ${widthLabel} warehouse size that gives you enough floor area for storage, movement, and light operational use.`;
-    heightGuide = 'A 3m to 4m eave height is common, with taller options where vehicle access or racking is important.';
-    leadTime = 'allow approximately 5 to 7 weeks for a standard enclosure and more time for turnkey delivery';
-    addOns = ['roller shutter door', 'insulation', 'concrete slab', 'ridge ventilation', 'electrical-ready detailing'];
-  }
+function buildBuilderUrl({ width, length, wallHeight, steelFinish, gableMode }) {
+  const params = new URLSearchParams({
+    productType: "LCSS Warehouse",
+    width: String(width),
+    length: String(length),
+    wallHeight: String(wallHeight),
+    steelFinish,
+    gableMode,
+    sheetingProfile: "IBR",
+    sheetingFinish: "galvanised",
+  })
+  return `/warehouse-builder?${params.toString()}`
+}
 
-  if (area >= 200 && area < 350) {
-    bestFor = ['distribution storage', 'fleet cover', 'industrial workshop use'];
-    suitability = `A stronger commercial warehouse option for buyers who need more usable floor area without moving into a full industrial mega-span.`;
-    heightGuide = 'Many projects at this size compare 4m to 5m eaves to improve circulation, stacking height, and door clearance.';
-    leadTime = 'allow around 6 to 8 weeks once engineering, foundations, and site access are confirmed';
-    addOns = ['multiple roller doors', 'insulation', 'ridge ventilation', 'concrete slab', 'office-ready allowance'];
-  }
+function buildAtlasOption(width, length) {
+  const wallHeight = getDefaultHeight(width)
+  const prices = Object.fromEntries(FINISHES.map((finish) => [finish, Object.fromEntries(SCOPES.map((scope) => {
+    const estimate = calculateAtlasWarehouseEstimate({ width, length, wallHeight, steelFinish: finish, gableMode: scope.key, sheetingProfile: "IBR", sheetingFinish: "galvanised" })
+    return [scope.key, {
+      total: estimate.pricing.estimatedTotal,
+      label: formatWarehouseCurrency(estimate.pricing.estimatedTotal),
+      url: buildBuilderUrl({ width, length, wallHeight, steelFinish: finish, gableMode: scope.key }),
+    }]
+  }))]))
 
-  if (area >= 350) {
-    bestFor = ['bulk storage', 'larger logistics operations', 'agricultural and industrial use'];
-    suitability = `A substantial ${widthLabel} warehouse footprint suited to bigger storage volumes, operational flow, and staged expansion.`;
-    heightGuide = 'Most buyers review 4m to 6m eaves at this size to support practical access and better storage flexibility.';
-    leadTime = 'allow approximately 6 to 9 weeks, especially when foundations, slabs, transport, and larger access openings are part of the scope';
-    addOns = ['multiple access doors', 'insulation', 'ridge ventilation', 'concrete slab', 'loading canopy options'];
-  }
+  return { width, length, wallHeight, area: width * length, areaLabel: formatArea(width * length), productCode: `W${String(width).padStart(2, "0")}`, prices }
+}
 
-  if (width === 12) {
-    bestFor = [...new Set(['larger enclosed warehousing', ...bestFor])].slice(0, 3);
-    suitability = `A wider warehouse option that improves internal circulation, pallet storage, and vehicle movement for growing operations.`;
-  }
-
-  return {
-    width,
-    length,
-    nearbyCity: 'Pretoria',
-    bestFor,
-    suitability,
-    heightGuide,
-    leadTime,
-    addOns,
-  };
+function getUseCase(area) {
+  if (area >= 350) return ["bulk storage", "agricultural operations", "distribution and logistics"]
+  if (area >= 200) return ["commercial storage", "fleet and equipment cover", "industrial workshops"]
+  if (area >= 100) return ["growing business storage", "trade workshops", "agricultural storage"]
+  return ["secure storage", "small workshops", "farm equipment cover"]
 }
 
 export function getWarehouseCostPageConfig(slug) {
-  const parsed = parseWarehouseSlug(slug);
-  if (!parsed) {
-    return null;
-  }
+  const parsed = parseWarehouseSlug(slug)
+  if (!parsed) return null
 
-  const override = warehouseCostPageOverrides[slug] ?? {};
-  const base = {
-    ...buildDefaultConfig(parsed.length, parsed.width),
-    ...override,
-  };
-
-  const area = base.width * base.length;
-  const structureRange = {
-    low: area * PRICE_RATES.structure.low,
-    high: area * PRICE_RATES.structure.high,
-  };
-  const claddingRange = {
-    low: area * PRICE_RATES.cladding.low,
-    high: area * PRICE_RATES.cladding.high,
-  };
-  const turnkeyRange = {
-    low: area * PRICE_RATES.turnkey.low,
-    high: area * PRICE_RATES.turnkey.high,
-  };
-  const displaySize = `${formatDimension(base.length)} x ${formatDimension(base.width)}`;
-  const altSize = `${base.width}x${base.length}`;
-  const path = `/warehouse-cost/${slug}`;
-  const fullUrl = `${SITE_URL}${path}`;
+  const searchedArea = parsed.width * parsed.length
+  const atlasOptions = getAtlasLengths(parsed.length).map((length) => buildAtlasOption(parsed.width, length))
+  const recommendedIndex = atlasOptions.reduce((bestIndex, option, index) => {
+    const best = atlasOptions[bestIndex]
+    const optionDistance = Math.abs(option.length - parsed.length)
+    const bestDistance = Math.abs(best.length - parsed.length)
+    return optionDistance < bestDistance || (optionDistance === bestDistance && option.length > best.length) ? index : bestIndex
+  }, 0)
+  const displaySize = `${formatDimension(parsed.length)} x ${formatDimension(parsed.width)}`
+  const path = `/warehouse-cost/${slug}`
+  const exactModule = atlasOptions.length === 1 && atlasOptions[0].length === parsed.length
+  const recommended = atlasOptions[recommendedIndex]
 
   return {
-    ...base,
+    ...parsed,
     slug,
-    area,
-    displaySize,
-    altSize,
     path,
-    fullUrl,
-    areaLabel: formatArea(area),
-    updatedLabel: 'Updated April 13, 2026',
-    pricePerSquareMetre: {
-      structure: `${formatCurrency(PRICE_RATES.structure.low)} to ${formatCurrency(PRICE_RATES.structure.high)} per m²`,
-      cladding: `${formatCurrency(PRICE_RATES.cladding.low)} to ${formatCurrency(PRICE_RATES.cladding.high)} per m²`,
-      turnkey: `${formatCurrency(PRICE_RATES.turnkey.low)} to ${formatCurrency(PRICE_RATES.turnkey.high)} per m²`,
-    },
-    prices: {
-      structure: {
-        label: `${formatCurrency(structureRange.low)} - ${formatCurrency(structureRange.high)}`,
-        shortLabel: `${formatCurrency(structureRange.low)} to ${formatCurrency(structureRange.high)}`,
-      },
-      cladding: {
-        label: `${formatCurrency(claddingRange.low)} - ${formatCurrency(claddingRange.high)}`,
-        shortLabel: `${formatCurrency(claddingRange.low)} to ${formatCurrency(claddingRange.high)}`,
-      },
-      turnkey: {
-        label: `${formatCurrency(turnkeyRange.low)} - ${formatCurrency(turnkeyRange.high)}+`,
-        shortLabel: `${formatCurrency(turnkeyRange.low)} to ${formatCurrency(turnkeyRange.high)}+`,
-      },
-    },
+    fullUrl: `${SITE_URL}${path}`,
+    displaySize,
+    altSize: `${parsed.width}x${parsed.length}`,
+    searchedArea,
+    areaLabel: formatArea(searchedArea),
+    atlasOptions,
+    recommendedIndex,
+    exactModule,
+    scopes: SCOPES,
+    finishes: FINISHES,
+    bestFor: getUseCase(searchedArea),
     faqs: [
       {
-        q: `How much does a ${displaySize} warehouse cost in South Africa?`,
-        a: `For a ${formatArea(area)} lightweight steel warehouse, structure-only pricing usually starts around ${formatCurrency(structureRange.low)} and can reach ${formatCurrency(structureRange.high)}. A fully enclosed shell with cladding is typically ${formatCurrency(claddingRange.low)} to ${formatCurrency(claddingRange.high)}, while a turnkey project can range from ${formatCurrency(turnkeyRange.low)} to ${formatCurrency(turnkeyRange.high)} or more depending on site work, height, doors, and finishes.`,
+        q: `How much does a ${displaySize} Atlas warehouse cost?`,
+        a: exactModule
+          ? `The current ${recommended.productCode} ${recommended.length}m structure-only guide starts at ${recommended.prices.ZAM.structure_only.label} excl. VAT in ZAM steel. Roof and wall sheeting can be added in the live builder.`
+          : `Atlas warehouses use 4m modular bays. The closest standard options to ${displaySize} are ${atlasOptions.map((option) => `${option.length}m x ${option.width}m`).join(" and ")}. Current supply-only prices are shown on this page and update by scope and steel finish.`,
       },
-      {
-        q: `What is the cost per m² for a ${displaySize} warehouse?`,
-        a: `A warehouse of this size usually works out to about ${formatCurrency(PRICE_RATES.structure.low)} to ${formatCurrency(PRICE_RATES.structure.high)} per m² for structure-only, ${formatCurrency(PRICE_RATES.cladding.low)} to ${formatCurrency(PRICE_RATES.cladding.high)} per m² with cladding, and ${formatCurrency(PRICE_RATES.turnkey.low)} to ${formatCurrency(PRICE_RATES.turnkey.high)} per m² for turnkey delivery.`,
-      },
-      {
-        q: `What usually changes the final price for a ${displaySize} warehouse?`,
-        a: `The biggest price drivers are site preparation, foundation requirements, eave height, door sizes, insulation, transport distance, and whether you need a shell only or a full turnkey build.`,
-      },
-      {
-        q: `How long does it take to complete a ${displaySize} steel warehouse?`,
-        a: `As a guide, ${base.leadTime}. Final timing depends on engineering approval, civil works, and the complexity of the finishes you choose.`,
-      },
+      { q: `Why is a ${parsed.length}m Atlas warehouse shown as a different length?`, a: "The searched size is retained as a useful planning target, while Atlas production lengths follow 4m bays. We show the nearest standard option and, where useful, the next size on either side." },
+      { q: "What is included in the online Atlas warehouse price?", a: "The guide is supply only and excludes VAT. Structure pricing includes the selected Atlas frame members, purlins, bracing and priced connection hardware. Sheeting is included only when a sheeted option is selected." },
+      { q: "Are installation and delivery included?", a: "No. Delivery and installation are reviewed separately because distance, access, ground conditions and project scope can materially change those costs." },
     ],
-  };
+  }
 }
 
 export function buildWarehouseCostMetadata(slug) {
-  const config = getWarehouseCostPageConfig(slug);
-  if (!config) {
-    return {};
-  }
-
-  const title = `${config.displaySize} Warehouse Cost in South Africa (2026) | Smart Steel`;
-  const description = `See estimated ${config.displaySize} steel warehouse costs in South Africa, including structure-only, cladding, and turnkey pricing for ${config.areaLabel.toLowerCase()} warehouse builds.`;
-
+  const config = getWarehouseCostPageConfig(slug)
+  if (!config) return {}
+  const title = `${config.displaySize} Atlas Warehouse Cost South Africa | Smart Steel`
+  const description = `Plan a ${config.displaySize} warehouse with current Atlas modular pricing. Compare structure-only, roof-sheeted and enclosed options in ZAM, galvanised or mild steel.`
   return {
     title,
     description,
-    keywords: [
-      `${config.displaySize} warehouse cost`,
-      `${config.altSize} warehouse cost`,
-      `${config.displaySize} steel warehouse price`,
-      `warehouse cost South Africa`,
-      `steel warehouse prices`,
-      `prefab warehouse cost`,
-    ],
-    alternates: {
-      canonical: config.path,
-    },
-    openGraph: {
-      title,
-      description,
-      url: config.fullUrl,
-      siteName: 'Smart Steel',
-      locale: 'en_ZA',
-      type: 'article',
-      images: [
-        {
-          url: '/og-warehouse.jpg',
-          width: 1200,
-          height: 630,
-          alt: `${config.displaySize} warehouse cost guide`,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: ['/og-warehouse.jpg'],
-    },
-  };
+    keywords: [`${config.displaySize} warehouse cost`, `${config.altSize} warehouse cost`, `${config.displaySize} steel warehouse price`, "Atlas warehouse price", "steel warehouse cost South Africa", "lip channel warehouse price"],
+    alternates: { canonical: config.path },
+    openGraph: { title, description, url: config.fullUrl, siteName: "Smart Steel", locale: "en_ZA", type: "article", images: [{ url: "/og-warehouse.jpg", width: 1200, height: 630, alt: `${config.displaySize} Atlas warehouse cost guide` }] },
+    twitter: { card: "summary_large_image", title, description, images: ["/og-warehouse.jpg"] },
+  }
 }
 
 export function getWarehouseCostSlugs() {
-  return AVAILABLE_LENGTHS.flatMap((length) => AVAILABLE_WIDTHS.map((width) => `${length}x${width}`));
+  return SEARCH_LENGTHS.flatMap((length) => AVAILABLE_WIDTHS.map((width) => `${length}x${width}`))
 }

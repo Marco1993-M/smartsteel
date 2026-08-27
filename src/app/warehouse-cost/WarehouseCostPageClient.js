@@ -1,455 +1,81 @@
-'use client';
+"use client"
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { useState } from 'react';
-import WarehouseCatalogue from 'components/warehouse-catalogue';
-import { getWarehouseCostPageConfig, getWarehouseCostSlugs } from './warehouseCostData';
+import Link from "next/link"
+import { useState } from "react"
+import { getWarehouseCostPageConfig, getWarehouseCostSlugs } from "./warehouseCostData"
 
-const widths = [8, 10, 12];
-const lengths = Array.from({ length: 19 }, (_, index) => 5 + index * 2.5);
-const availablePages = new Map(
-  getWarehouseCostSlugs()
-    .map((slug) => getWarehouseCostPageConfig(slug))
-    .filter(Boolean)
-    .map((config) => [`${config.length}x${config.width}`, config])
-);
-
-const nearbyLinks = [
-  { href: '/warehouses', label: 'Steel warehouse systems' },
-  { href: '/warehouses/lsf', label: 'LSF warehouses' },
-  { href: '/warehouses/cflc', label: 'CFLC warehouses' },
-  { href: '/warehouse-regions', label: 'Warehouse regions' },
-];
+const widths = [8, 10, 12]
+const lengths = Array.from({ length: 19 }, (_, index) => 5 + index * 2.5)
+const availablePages = new Map(getWarehouseCostSlugs().map((slug) => getWarehouseCostPageConfig(slug)).filter(Boolean).map((config) => [`${config.length}x${config.width}`, config]))
 
 function buildSchemas(config) {
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Home',
-        item: 'https://www.smartsteel.co.za',
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Warehouse Cost',
-        item: 'https://www.smartsteel.co.za/warehouse-cost',
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: `${config.displaySize} Warehouse Cost`,
-        item: config.fullUrl,
-      },
-    ],
-  };
-
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: config.faqs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.q,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.a,
-      },
-    })),
-  };
-
-  return [breadcrumbSchema, faqSchema];
-}
-
-function PriceCard({ title, price, summary, points, href, cta, featured = false }) {
-  return (
-    <div
-      className={`relative flex flex-col rounded-3xl border p-8 ${
-        featured ? 'border-[#da1a33] bg-white shadow-xl' : 'border-gray-200 bg-white'
-      }`}
-    >
-      {featured && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-[#da1a33] px-5 py-1 text-xs font-bold tracking-[0.2em] text-white">
-          MOST POPULAR
-        </div>
-      )}
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">{title}</p>
-      <p className="mt-4 text-3xl font-bold text-gray-900">{price}</p>
-      <p className="mt-2 text-sm text-gray-600">{summary}</p>
-      <ul className="mt-6 space-y-3 text-sm text-gray-700">
-        {points.map((point) => (
-          <li key={point} className="flex gap-2">
-            <span className="font-semibold text-[#da1a33]">✓</span>
-            <span>{point}</span>
-          </li>
-        ))}
-      </ul>
-      <Link
-        href={href}
-        className={`mt-8 rounded-full px-6 py-3 text-center text-sm font-semibold transition ${
-          featured ? 'bg-[#da1a33] text-white hover:bg-black' : 'bg-black text-white hover:bg-[#da1a33]'
-        }`}
-      >
-        {cta}
-      </Link>
-    </div>
-  );
+  return [
+    { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.smartsteel.co.za" },
+      { "@type": "ListItem", position: 2, name: "Warehouse cost guides", item: "https://www.smartsteel.co.za/warehouse-cost" },
+      { "@type": "ListItem", position: 3, name: `${config.displaySize} Atlas warehouse cost`, item: config.fullUrl },
+    ] },
+    { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: config.faqs.map(({ q, a }) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) },
+  ]
 }
 
 export default function WarehouseCostPageClient({ slug }) {
-  const config = getWarehouseCostPageConfig(slug);
-  const [openFaqIndex, setOpenFaqIndex] = useState(0);
-  const [selectedWidth, setSelectedWidth] = useState(config.width);
-  const schemas = buildSchemas(config);
+  const config = getWarehouseCostPageConfig(slug)
+  const [selectedOptionIndex, setSelectedOptionIndex] = useState(config?.recommendedIndex ?? 0)
+  const [selectedFinish, setSelectedFinish] = useState("ZAM")
+  const [selectedWidth, setSelectedWidth] = useState(config?.width ?? 8)
+  const [openFaqIndex, setOpenFaqIndex] = useState(0)
+  if (!config) return null
+  const selectedOption = config.atlasOptions[selectedOptionIndex] ?? config.atlasOptions[0]
+  const nearbyLengths = lengths
+    .filter((length) => Math.abs(length - config.length) <= 10)
+    .slice(0, 9)
 
-  if (!config) {
-    return null;
-  }
+  return <main className="overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#f4f8fb_15rem,#f4f8fb_100%)] pt-24 text-[#001d2e] sm:pt-28">
+    {buildSchemas(config).map((schema, index) => <script key={index} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />)}
 
-  return (
-    <main className="font-sans text-gray-800">
-      {schemas.map((schema, index) => (
-        <script
-          key={index}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
-      ))}
-
-      <section className="relative flex min-h-[85vh] items-start justify-center overflow-hidden px-6 pt-28 text-center text-white md:min-h-[92vh]">
-        <Image
-          src="/images/hero.webp"
-          alt={`${config.displaySize} steel warehouse cost guide`}
-          fill
-          priority
-          quality={85}
-          sizes="100vw"
-          className="object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-white/55" />
-        <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center">
-          <div className="mb-6 rounded-full border border-black bg-white/80 px-5 py-2 text-sm font-semibold text-black">
-            Warehouse cost guide for South Africa
-          </div>
-          <h1 className="max-w-4xl text-4xl font-bold leading-tight text-black md:text-6xl">
-            {config.displaySize} Warehouse Cost in South Africa
-          </h1>
-          <p className="mt-5 max-w-3xl text-lg text-black md:text-xl">
-            See estimated pricing for a {config.areaLabel.toLowerCase()} lightweight steel warehouse, from structure-only through to
-            cladding and turnkey delivery. Also searched as {config.altSize} warehouse cost.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/tools/estimator"
-              className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-black"
-            >
-              Get Instant Estimate
-            </Link>
-            <Link
-              href="/warehouse-builder"
-              className="rounded-full border border-black bg-white px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
-            >
-              Build Your Warehouse
-            </Link>
-            <a
-              href="https://wa.me/27828464555?text=Hi%20Smart%20Steel%2C%20I%E2%80%99d%20like%20pricing%20for%20a%20warehouse%20project"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border border-black bg-white px-6 py-3 font-semibold text-black transition hover:bg-black hover:text-white"
-            >
-              WhatsApp Our Team
-            </a>
-          </div>
-          <p className="mt-4 rounded-full border border-black bg-white/90 px-4 py-1 text-sm text-black">
-            Indicative online pricing. No email required.
-          </p>
-          <div className="mt-12 flex max-w-4xl flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-black/80">
-            <p>
-              <span className="font-semibold text-black">Size:</span> {config.displaySize} ({config.areaLabel})
-            </p>
-            <span className="hidden text-black/40 md:inline">•</span>
-            <p>
-              <span className="font-semibold text-black">Typical use:</span> {config.bestFor[0]}
-            </p>
-            <span className="hidden text-black/40 md:inline">•</span>
-            <p>
-              <span className="font-semibold text-black">Updated:</span> {config.updatedLabel}
-            </p>
-          </div>
+    <section className="relative mx-auto w-[calc(100%-2rem)] max-w-[1500px] overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#001d2e] via-[#07377d] to-[#0043f3] px-6 py-10 text-white shadow-[0_20px_60px_rgba(0,29,46,0.16)] md:px-12 md:py-14">
+      <div className="absolute -right-16 top-0 h-full w-2/5 skew-x-[-38deg] bg-white/10" />
+      <div className="relative z-10 grid items-end gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+        <div>
+          <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-[#c1d9e5]"><span className="grid h-9 w-9 place-items-center rounded-lg bg-white text-xl font-black text-[#001d2e]">Λ</span>Atlas System · Developed by Smart Steel</div>
+          <p className="mt-8 text-xs font-bold uppercase tracking-[0.24em] text-[#c1d9e5]">Warehouse cost guide · South Africa</p>
+          <h1 className="mt-4 max-w-4xl text-4xl font-bold leading-[1.05] md:text-6xl">{config.displaySize} Atlas warehouse cost</h1>
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-white/80">{config.exactModule ? `Compare current supply-only pricing for this standard ${selectedOption.productCode} Atlas configuration.` : "Planning this footprint? Atlas uses 4m modular bays, so we compare the closest practical standard configurations without hiding the difference."}</p>
         </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">{config.displaySize} warehouse pricing explained</h2>
-            <p className="mt-5 text-lg leading-8 text-gray-700">
-              If you are budgeting for a {config.displaySize} steel warehouse, the main decision is whether you only need the
-              structural frame, a fully enclosed shell, or a complete turnkey build. For this footprint, buyers usually compare
-              price, lead time, access requirements, and how easily the building can be expanded later.
-            </p>
-            <p className="mt-5 text-lg leading-8 text-gray-700">
-              This page is designed to answer that search properly. It gives a realistic price range, explains what changes the
-              final quote, and outlines where this size works best in South African commercial, agricultural, and light industrial
-              projects.
-            </p>
-          </div>
-          <div className="rounded-3xl bg-gray-50 p-8">
-            <h2 className="text-2xl font-bold text-gray-900">Quick buyer summary</h2>
-            <ul className="mt-5 space-y-4 text-sm leading-7 text-gray-700">
-              <li>
-                <span className="font-semibold text-black">Best for:</span> {config.bestFor.join(', ')}.
-              </li>
-              <li>
-                <span className="font-semibold text-black">Height guide:</span> {config.heightGuide}
-              </li>
-              <li>
-                <span className="font-semibold text-black">Lead time:</span> {config.leadTime}
-              </li>
-              <li>
-                <span className="font-semibold text-black">Popular add-ons:</span> {config.addOns.join(', ')}.
-              </li>
-            </ul>
-          </div>
+        <div className="border-l border-white/20 lg:pl-8">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">Current starting guide</p>
+          <p className="mt-3 text-4xl font-bold">{selectedOption.prices.ZAM.structure_only.label}</p>
+          <p className="mt-2 text-sm text-white/70">{selectedOption.width}m x {selectedOption.length}m x {selectedOption.wallHeight}m · ZAM · structure only · excl. VAT</p>
+          <a href="#atlas-pricing" className="mt-6 inline-flex bg-white px-6 py-3 font-bold text-[#0043f3] transition hover:bg-[#c1d9e5]">Compare Atlas options ↓</a>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section className="mx-auto w-[95%] max-w-7xl rounded-[2rem] bg-[#f7f7f7] px-6 py-16 md:px-10">
-        <div className="mx-auto mb-12 max-w-3xl text-center">
-          <h2 className="text-4xl font-bold text-gray-900 md:text-5xl">{config.displaySize} warehouse cost guide</h2>
-          <p className="mt-4 text-lg text-gray-600">
-            Transparent pricing for South African buyers comparing structure-only, clad, and turnkey warehouse options.
-          </p>
+    <section id="atlas-pricing" className="mx-auto max-w-7xl scroll-mt-24 px-5 py-14 md:px-8 md:py-16">
+      <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
+        <aside className="border border-[#c9d9e5] bg-white p-6 shadow-[0_14px_45px_rgba(0,29,46,0.07)] md:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Step 1 · Practical size</p><h2 className="mt-4 text-3xl font-bold">Choose the closest Atlas module</h2><p className="mt-4 leading-7 text-[#4c607a]">Your search stays intact. The price uses a buildable 4m-bay Atlas configuration.</p>
+          <div className="mt-7 grid gap-3">{config.atlasOptions.map((option, index) => <button key={option.length} onClick={() => setSelectedOptionIndex(index)} className={`border p-5 text-left transition ${selectedOptionIndex === index ? "border-[#0043f3] bg-[#eaf2ff]" : "border-[#d9e3eb] hover:border-[#0043f3]"}`}><span className="flex items-center justify-between gap-3"><strong>{option.width}m x {option.length}m</strong>{index === config.recommendedIndex && <span className="bg-[#0043f3] px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Closest fit</span>}</span><span className="mt-2 block text-sm text-[#62748c]">{option.areaLabel} · {option.productCode} · {option.wallHeight}m eave</span></button>)}</div>
+          <div className="mt-8 border-t border-[#d9e3eb] pt-7"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Step 2 · Steel finish</p><div className="mt-4 flex flex-wrap gap-2">{config.finishes.map((finish) => <button key={finish} onClick={() => setSelectedFinish(finish)} className={`px-4 py-2 text-sm font-bold ${selectedFinish === finish ? "bg-[#001d2e] text-white" : "bg-[#edf3f7] text-[#31445e]"}`}>{finish}</button>)}</div><p className="mt-4 text-sm leading-6 text-[#62748c]">ZAM is our corrosion-resistant standard. Galvanised and mild steel are available for appropriate project conditions.</p></div>
+        </aside>
+
+        <div>
+          <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Live Atlas pricing</p><h2 className="mt-3 text-3xl font-bold md:text-4xl">Select how much of the building you need</h2></div><p className="text-sm font-semibold text-[#62748c]">Supply only · excl. VAT</p></div>
+          <div className="mt-7 grid gap-4 md:grid-cols-3">{config.scopes.map((scope, index) => { const price = selectedOption.prices[selectedFinish][scope.key]; return <article key={scope.key} className={`grid min-h-[390px] grid-rows-[32px_64px_88px_72px_24px_auto] border bg-white p-6 shadow-[0_12px_36px_rgba(0,29,46,0.05)] ${index === 0 ? "border-[#0043f3]" : "border-[#d9e3eb]"}`}><span className={`${index === 0 ? "visible" : "invisible"} self-start justify-self-start bg-[#0043f3] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white`}>Starting point</span><h3 className="flex items-start pt-4 text-xl font-bold leading-7">{scope.label}</h3><p className="pt-3 text-sm leading-6 text-[#62748c]">{scope.description}</p><p className="flex items-end text-3xl font-bold">{price.label}</p><p className="text-xs font-bold uppercase tracking-wider text-[#93a5bb]">Excluding VAT</p><Link href={price.url} className="group mt-4 flex min-h-12 items-center justify-between gap-4 self-end border border-[#001d2e] bg-[#001d2e] px-4 py-3 text-sm font-bold text-white transition hover:border-[#0043f3] hover:bg-[#0043f3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0043f3]"><span>Build this option</span><span aria-hidden="true" className="text-lg transition-transform group-hover:translate-x-1">→</span></Link></article> })}</div>
+          <div className="mt-5 border border-[#bfd3e0] bg-[#e6f0f5] p-5 text-sm leading-6 text-[#31445e]">These are current Atlas supply-only budget guides. Delivery and installation are reviewed separately after we understand your location, access and site conditions.</div>
         </div>
-        <div className="grid gap-8 md:grid-cols-3">
-          <PriceCard
-            title="Structure Only"
-            price={config.prices.structure.label}
-            summary={`${config.areaLabel} • Steel frame only`}
-            points={[
-              'Steel columns, rafters, and trusses',
-              'Roof structure ready for cladding',
-              'Best when you are managing finishes separately',
-            ]}
-            href="/warehouses"
-            cta="Get Structure Pricing"
-          />
-          <PriceCard
-            title="With Cladding"
-            price={config.prices.cladding.label}
-            summary={`${config.areaLabel} • Fully enclosed shell`}
-            points={[
-              'Steel frame plus roof and wall sheeting',
-              'Weatherproof enclosure for fast occupation',
-              'Most common option for growing businesses',
-            ]}
-            href="/warehouses"
-            cta="Get Shell Pricing"
-            featured
-          />
-          <PriceCard
-            title="Turnkey Build"
-            price={config.prices.turnkey.label}
-            summary={`${config.areaLabel} • Complete project`}
-            points={[
-              'Design, engineering, and construction coordination',
-              'Civil works, finishes, and handover scope',
-              'Best when you want one team managing delivery',
-            ]}
-            href="/warehouses"
-            cta="Start Turnkey Quote"
-          />
-        </div>
-        <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-gray-200 bg-white p-6 text-sm leading-7 text-gray-600">
-          Prices are indicative and exclude VAT, site clearing, geotechnical surprises, transport distance, and any civil works
-          not included in the agreed scope. Final pricing depends on your location, height, access openings, cladding choice,
-          foundations, and finishes.
-        </div>
-      </section>
+      </div>
+    </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="rounded-3xl border border-gray-200 p-8">
-            <h2 className="text-2xl font-bold text-gray-900">What affects the final quote</h2>
-            <ul className="mt-6 space-y-4 text-sm leading-7 text-gray-700">
-              <li><span className="font-semibold text-black">Foundations and slab:</span> poor soil, deeper footings, or slab design can change the budget quickly.</li>
-              <li><span className="font-semibold text-black">Height and door openings:</span> taller eaves and larger roller doors increase steel tonnage and cladding requirements.</li>
-              <li><span className="font-semibold text-black">Location and transport:</span> delivery distance, cranage, and access conditions influence installation costs.</li>
-              <li><span className="font-semibold text-black">Fit-out scope:</span> insulation, partitions, electrical work, and office areas push the build toward turnkey pricing.</li>
-            </ul>
-          </div>
-          <div className="rounded-3xl border border-gray-200 p-8">
-            <h2 className="text-2xl font-bold text-gray-900">Cost per square metre</h2>
-            <ul className="mt-6 space-y-4 text-sm leading-7 text-gray-700">
-              <li><span className="font-semibold text-black">Structure only:</span> {config.pricePerSquareMetre.structure}</li>
-              <li><span className="font-semibold text-black">With cladding:</span> {config.pricePerSquareMetre.cladding}</li>
-              <li><span className="font-semibold text-black">Turnkey build:</span> {config.pricePerSquareMetre.turnkey}</li>
-            </ul>
-            <p className="mt-6 text-sm leading-7 text-gray-700">
-              These ranges help you benchmark value across different warehouse footprints, but the best comparison is still a quote
-              built around your site, access needs, and specification level.
-            </p>
-          </div>
-        </div>
-      </section>
+    <section className="bg-white py-16"><div className="mx-auto grid max-w-7xl gap-10 px-5 md:px-8 lg:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">What you are comparing</p><h2 className="mt-4 text-3xl font-bold">A modular warehouse, priced from its actual configuration</h2><p className="mt-5 text-lg leading-8 text-[#4c607a]">Atlas is a bolted lip channel warehouse system built in 4m bays. The guide changes with the selected span, production length, eave height, steel finish and sheeting scope rather than relying on a generic rate per square metre.</p></div><div className="grid gap-px bg-[#d9e3eb] sm:grid-cols-2">{[["System", `Atlas ${selectedOption.productCode}`], ["Module", "4m bays"], ["Standard eave", `${selectedOption.wallHeight}m`], ["Roof pitch", "15° dual pitch"], ["Delivery", "Quoted separately"], ["Installation", "Reviewed after enquiry"]].map(([label, value]) => <div key={label} className="bg-[#f4f8fb] p-5"><p className="text-xs font-bold uppercase tracking-wider text-[#879bb2]">{label}</p><p className="mt-2 font-bold">{value}</p></div>)}</div></div></section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-8">
-        <div className="rounded-[2rem] border border-gray-200 bg-white p-8 shadow-sm">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#da1a33]">Related warehouse links</p>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">Keep comparing warehouse options</h2>
-            <p className="mt-4 text-gray-700">
-              Use these warehouse pages to move from pricing research into size planning, live configuration, and regional delivery context.
-            </p>
-          </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              { href: "/warehouse-builder", label: "Warehouse builder", description: "Shape a live warehouse design and see an indicative budget." },
-              { href: "/tools/estimator", label: "Warehouse estimator", description: "Run a faster budget check for standard warehouse structures." },
-              { href: "/warehouses", label: "Warehouse systems", description: "Explore Smart Steel warehouse solutions and standard options." },
-              { href: "/warehouse-regions", label: "Warehouse regions", description: "Compare warehouse delivery and project context across South Africa." },
-              { href: "/lightweight-steel-framing", label: "Lightweight steel framing", description: "Understand the LSF system behind faster, cleaner steel warehouse projects." },
-              { href: "/products/lightweight-steel-trusses/roof-truss-prices", label: "Roof truss prices", description: "Compare lightweight steel roof truss budget ranges and quote drivers." },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-[1.5rem] border border-gray-200 bg-gray-50 p-5 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
-              >
-                <p className="text-sm font-semibold text-gray-900">{item.label}</p>
-                <p className="mt-2 text-sm leading-6 text-gray-600">{item.description}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+    <section className="mx-auto max-w-7xl px-5 py-16 md:px-8"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Buyer guidance</p><h2 className="mt-4 text-3xl font-bold">What changes the final project cost?</h2><p className="mt-4 leading-7 text-[#62748c]">The structure guide stays transparent. These project-specific items are reviewed before the final quote.</p></div><div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{[["Site and delivery", "Distance, unloading access and site conditions are assessed before transport is priced."], ["Installation scope", "Erection requirements depend on access, ground conditions, height and the final building scope."], ["Openings and finishes", "Doors, openings, flashing details, sheeting profile and colour are confirmed during project review."], ["Foundations and slab", "Concrete, foundations and ground preparation are not assumed in this supply-only structure guide."]].map(([title, body]) => <div key={title} className="border-t-2 border-[#0043f3] bg-white p-6"><h3 className="text-lg font-bold">{title}</h3><p className="mt-3 leading-7 text-[#62748c]">{body}</p></div>)}</div></section>
 
-      <section className="bg-gray-100 px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-gray-900">Compare other warehouse sizes</h2>
-          <p className="mt-3 max-w-3xl text-gray-700">
-            Browse nearby warehouse footprints to compare estimated cost, floor area, and value before requesting a detailed quote.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            {widths.map((width) => (
-              <button
-                key={width}
-                onClick={() => setSelectedWidth(width)}
-                className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
-                  selectedWidth === width ? 'bg-black text-white' : 'bg-white text-black'
-                }`}
-              >
-                {width}m wide
-              </button>
-            ))}
-          </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-4">
-            {lengths.map((length) => {
-              const pageKey = `${length}x${selectedWidth}`;
-              const matchingPage = availablePages.get(pageKey);
+    <section className="bg-[#e6f0f5] py-14"><div className="mx-auto max-w-7xl px-5 md:px-8"><div className="flex flex-wrap items-end justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Nearby guides</p><h2 className="mt-3 text-3xl font-bold">Compare another target size</h2></div><Link href="/warehouse-cost" className="text-sm font-bold text-[#0043f3]">View every size →</Link></div><div className="mt-7 flex flex-wrap gap-2">{widths.map((width) => <button key={width} onClick={() => setSelectedWidth(width)} className={`px-5 py-3 text-sm font-bold ${selectedWidth === width ? "bg-[#001d2e] text-white" : "bg-white text-[#31445e]"}`}>{width}m wide</button>)}</div><div className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-3">{nearbyLengths.map((length) => { const page = availablePages.get(`${length}x${selectedWidth}`); return <Link key={length} href={page.path} className="border border-[#cad8e2] bg-white p-4 transition hover:border-[#0043f3]"><strong>{length}m x {selectedWidth}m</strong><span className="mt-2 block text-sm text-[#62748c]">View Atlas cost guide →</span></Link> })}</div></div></section>
 
-              if (matchingPage) {
-                return (
-                  <Link
-                    key={pageKey}
-                    href={matchingPage.path}
-                    className="rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                  >
-                    <p className="text-lg font-semibold text-gray-900">
-                      {length}m x {selectedWidth}m
-                    </p>
-                    <p className="mt-1 text-sm text-gray-500">{length * selectedWidth} m² footprint</p>
-                    <p className="mt-5 text-sm font-semibold text-[#da1a33]">View warehouse cost</p>
-                  </Link>
-                );
-              }
+    <section className="mx-auto grid max-w-7xl gap-10 px-5 py-16 md:px-8 lg:grid-cols-[0.7fr_1.3fr]"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Questions answered</p><h2 className="mt-4 text-3xl font-bold">Atlas warehouse cost FAQs</h2></div><div className="space-y-3">{config.faqs.map(({ q, a }, index) => <div key={q} className="border border-[#d9e3eb] bg-white"><button onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)} className="flex w-full items-center justify-between gap-4 p-5 text-left font-bold"><span>{q}</span><span className="text-2xl text-[#0043f3]">{openFaqIndex === index ? "−" : "+"}</span></button>{openFaqIndex === index && <p className="px-5 pb-6 leading-7 text-[#62748c]">{a}</p>}</div>)}</div></section>
 
-              return (
-                <div key={pageKey} className="rounded-2xl border border-dashed border-gray-300 bg-white/70 p-5">
-                  <p className="text-lg font-semibold text-gray-900">
-                    {length}m x {selectedWidth}m
-                  </p>
-                  <p className="mt-1 text-sm text-gray-500">{length * selectedWidth} m² footprint</p>
-                  <p className="mt-4 text-sm text-gray-600">This size is available on request.</p>
-                  <Link href="/tools/estimator" className="mt-5 inline-block text-sm font-semibold text-[#da1a33]">
-                    Request estimate
-                  </Link>
-                  <Link href="/warehouse-builder" className="mt-2 inline-block text-sm font-semibold text-black">
-                    Try warehouse builder
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <WarehouseCatalogue
-        title="Popular Smart Steel warehouse options"
-        subtitle="Use the pricing guide above for budgeting, then compare some of our standard enclosed and agricultural steel building options."
-      />
-
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">FAQs</h2>
-            <p className="mt-4 text-gray-700">
-              Straight answers for buyers comparing the cost of a {config.displaySize} warehouse in South Africa.
-            </p>
-          </div>
-          <div className="space-y-4">
-            {config.faqs.map(({ q, a }, index) => (
-              <div key={q} className="rounded-2xl border border-gray-200 bg-white p-6">
-                <button
-                  onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
-                  className="flex w-full items-center justify-between gap-4 text-left text-lg font-semibold text-gray-900"
-                >
-                  <span>{q}</span>
-                  <span className="text-2xl text-[#da1a33]">{openFaqIndex === index ? '−' : '+'}</span>
-                </button>
-                {openFaqIndex === index && <p className="mt-4 text-sm leading-7 text-gray-700">{a}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-5xl px-6 pb-20">
-        <h2 className="text-3xl font-bold text-gray-900">Steel warehouse builders near {config.nearbyCity}</h2>
-        <p className="mt-4 max-w-3xl text-gray-700">
-          If your project is in Gauteng, compare our regional warehouse pages for Pretoria, Johannesburg, Centurion, and Midrand to
-          see local context and service coverage.
-        </p>
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {nearbyLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="rounded-2xl border border-gray-200 px-5 py-4 text-sm font-semibold text-gray-900 transition hover:border-[#da1a33] hover:text-[#da1a33]">
-              {link.label}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-black px-6 py-20 text-center text-white">
-        <h2 className="text-3xl font-bold md:text-4xl">Get pricing for your {config.displaySize} warehouse</h2>
-        <p className="mx-auto mt-4 max-w-2xl text-gray-300">
-          Use the estimator for a fast budget range, then speak to our team if you need doors, insulation, foundations, or a full
-          turnkey build.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-          <Link href="/tools/estimator" className="rounded-full bg-white px-6 py-3 font-semibold text-black transition hover:bg-[#da1a33] hover:text-white">
-            Start Estimate
-          </Link>
-          <Link href="/warehouse-builder" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
-            Build Your Warehouse
-          </Link>
-          <Link href="/warehouses" className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black">
-            View Warehouse Options
-          </Link>
-        </div>
-      </section>
-    </main>
-  );
+    <section className="bg-gradient-to-r from-[#001d2e] to-[#0043f3] px-5 py-16 text-center text-white"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">Move from research to a real configuration</p><h2 className="mx-auto mt-4 max-w-3xl text-3xl font-bold md:text-5xl">Build and price your Atlas warehouse</h2><p className="mx-auto mt-5 max-w-2xl leading-7 text-white/75">Start with the closest module, then adjust the structure, steel finish and sheeting before requesting a reviewed quote.</p><Link href={selectedOption.prices[selectedFinish].structure_only.url} className="mt-8 inline-flex bg-white px-7 py-4 font-bold text-[#0043f3]">Open the 3D builder →</Link></section>
+  </main>
 }
