@@ -9,18 +9,12 @@ import { ATLAS_WAREHOUSE_WIDTH_OPTIONS } from '../lib/estimates/atlasWarehouseOp
 
 const heroActions = [
   {
-    step: 'Also available',
-    title: 'Atlas Product Range',
-    description: 'Explore Atlas carports, solar structures, ground mounts, and modular warehouse options.',
     href: '/products',
-    cta: 'Explore Atlas products',
+    cta: 'View all Atlas products',
   },
   {
-    step: 'Also available',
-    title: 'Solar Carports',
-    description: 'Covered parking and solar-ready steel support systems for commercial and private sites.',
     href: '/products/cflc-solar-carports',
-    cta: 'View solar carports',
+    cta: 'Explore solar carports',
   },
 ];
 
@@ -32,10 +26,9 @@ const widthDescriptors = {
 };
 
 const heroTrustBullets = [
-  'Modular Atlas warehouse spans from 6m to 12m',
-  'See an indicative supply-only price before you enquire',
-  'Start with the structure, then add the sheeting you need',
-  'Built for South African farms, operations, and commercial sites',
+  '6m–12m standard warehouse spans',
+  '4m modular building bays',
+  'Instant supply-only pricing guide',
 ];
 
 const heroGallery = [
@@ -288,7 +281,7 @@ export default function HomePageClient() {
                   Build and Price Your Warehouse
                 </h2>
 
-                <div className="mt-4 rounded-[1.6rem] border border-[#2d63b8]/25 bg-[#eef4ff] p-4 shadow-sm sm:p-5">
+                <div className="mt-5">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">Warehouse span</p>
                     <div className="mt-3 grid grid-cols-4 gap-2">
@@ -301,12 +294,19 @@ export default function HomePageClient() {
                             type="button"
                             onClick={() => setSelectedWidth(width)}
                             aria-pressed={active}
-                            className={`rounded-xl border px-2 py-3 text-center transition ${
+                            className={`relative overflow-hidden rounded-xl border px-2 pb-3 pt-5 text-center transition ${
                               active
                                 ? 'border-[#0043f3] bg-[#0043f3] text-white shadow-sm'
                                 : 'border-black/10 bg-white text-black hover:border-[#0043f3] hover:bg-[#f7f9ff]'
                             }`}
                           >
+                            {width === 8 && (
+                              <span className={`absolute right-0 top-0 rounded-bl-lg px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.06em] sm:px-2 sm:text-[9px] ${
+                                active ? 'bg-white text-[#0043f3]' : 'bg-[#0043f3] text-white'
+                              }`}>
+                                Most popular
+                              </span>
+                            )}
                             <span className="block text-base font-bold">{width}m</span>
                             <span className={`mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] ${active ? 'text-white/75' : 'text-gray-500'}`}>
                               {widthDescriptors[width]}
@@ -339,7 +339,7 @@ export default function HomePageClient() {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-col gap-3 border-t border-[#2d63b8]/15 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="mt-5 flex flex-col gap-3 border-t border-black/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-500">Starting configuration</p>
                       <p className="mt-1 text-base font-bold text-black">{selectedWidth}m × {selectedLength}m × {selectedHeight}m</p>
@@ -354,61 +354,41 @@ export default function HomePageClient() {
                           height: selectedHeight,
                         },
                       }}
-                      className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#ffcb13] px-5 py-3 text-sm font-bold text-black transition hover:bg-[#e9b800]"
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#ffcb13] px-5 py-3 text-sm font-bold text-black transition hover:bg-[#e9b800]"
                     >
-                      See price &amp; customise in 3D
+                      <Image src="/3d.png" alt="" width={22} height={22} className="h-5 w-5 object-contain" />
+                      See my warehouse price
                     </Link>
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">Also available</span>
                 {heroActions.map((item) => (
                   <Link
-                    key={item.title}
+                    key={item.href}
                     href={item.href}
-                    className="rounded-[1.3rem] border border-black/10 bg-white/88 px-4 py-4 shadow-sm transition hover:border-black/20 hover:bg-white"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#0043f3] transition hover:text-[#001d2e]"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">
-                        {item.step}
-                      </p>
-                      <span className="rounded-full border border-black/10 bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-black">
-                        Also available
-                      </span>
-                    </div>
-                    <h3 className="mt-3 text-lg font-bold text-black">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-gray-700">{item.description}</p>
-                    <div className="mt-3 text-sm font-semibold text-[#da1a33]">
-                      {item.cta}
-                    </div>
+                    {item.cta}
+                    <span aria-hidden="true">↗</span>
                   </Link>
                 ))}
               </div>
             </div>
 
             <div>
-              <div className="inline-flex rounded-full border border-black/10 bg-white/90 px-4 py-2 text-sm font-semibold text-black shadow-sm">
-                Atlas modular warehouse system
-              </div>
-              <h1 className="mt-6 max-w-4xl text-4xl font-bold leading-tight text-black md:text-6xl">
+              <h1 className="max-w-4xl text-4xl font-bold leading-tight text-black md:text-6xl">
                 Build and price your steel warehouse online
               </h1>
-              <p className="mt-6 max-w-3xl text-lg leading-8 text-black/80 md:text-xl">
-                Configure an Atlas modular steel warehouse for your South African project, see an indicative supply-only price, and refine the structure in 3D before requesting a reviewed quote.
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-black/80 md:text-xl">
+                Choose an Atlas warehouse size, see a supply-only price, and refine your structure in 3D before requesting a reviewed quote.
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <span className="rounded-full border border-black/10 bg-white/85 px-4 py-2 text-sm font-semibold text-black shadow-sm">
-                  Used by farms, industrial sites, and growing businesses
-                </span>
-                <span className="rounded-full border border-black/10 bg-white/85 px-4 py-2 text-sm font-semibold text-black shadow-sm">
-                  Planning support across South Africa
-                </span>
-              </div>
-              <ul className="mt-8 space-y-3">
+              <ul className="mt-7 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                 {heroTrustBullets.map((bullet) => (
-                  <li key={bullet} className="flex items-start gap-3 text-base leading-7 text-gray-800">
-                    <span className="mt-1 text-[#2d63b8]">✓</span>
+                  <li key={bullet} className="flex items-center gap-3 text-base font-semibold leading-6 text-gray-800">
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#c1d9e5] text-xs text-[#001d2e]">✓</span>
                     <span>{bullet}</span>
                   </li>
                 ))}
