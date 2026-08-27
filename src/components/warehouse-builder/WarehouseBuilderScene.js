@@ -4,8 +4,62 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { ContactShadows, OrbitControls } from "@react-three/drei"
 import { RotateCw } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { DoubleSide, Path, Shape, Vector3 } from "three"
+import { DataTexture, DoubleSide, LinearFilter, Path, RepeatWrapping, Shape, Vector3 } from "three"
 import { WAREHOUSE_SHEETING_COLORS } from "../../lib/warehouseBuilderStore"
+
+function createSteelSurfaceMap() {
+  const size = 128
+  const data = new Uint8Array(size * size * 4)
+  const crystals = Array.from({ length: 54 }, (_, index) => {
+    const seed = Math.sin((index + 1) * 91.731) * 43758.5453
+    const nextSeed = Math.sin((index + 1) * 47.219) * 24634.6345
+    return {
+      x: (seed - Math.floor(seed)) * size,
+      y: (nextSeed - Math.floor(nextSeed)) * size,
+      tone: 112 + ((index * 37) % 48),
+    }
+  })
+
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const index = (y * size + x) * 4
+      let nearestDistance = Infinity
+      let secondDistance = Infinity
+      let crystalTone = 128
+
+      crystals.forEach((crystal) => {
+        const dx = Math.min(Math.abs(x - crystal.x), size - Math.abs(x - crystal.x))
+        const dy = Math.min(Math.abs(y - crystal.y), size - Math.abs(y - crystal.y))
+        const distance = dx * dx + dy * dy
+        if (distance < nearestDistance) {
+          secondDistance = nearestDistance
+          nearestDistance = distance
+          crystalTone = crystal.tone
+        } else if (distance < secondDistance) {
+          secondDistance = distance
+        }
+      })
+
+      const crystalEdge = Math.sqrt(secondDistance) - Math.sqrt(nearestDistance)
+      const edgeHighlight = crystalEdge < 1.15 ? 18 : 0
+      const fineVariation = Math.sin(x * 1.91 + y * 2.37) * 2.5
+      const value = Math.max(98, Math.min(180, crystalTone + edgeHighlight + fineVariation))
+      data[index] = value
+      data[index + 1] = value
+      data[index + 2] = value
+      data[index + 3] = 255
+    }
+  }
+
+  const texture = new DataTexture(data, size, size)
+  texture.wrapS = RepeatWrapping
+  texture.wrapT = RepeatWrapping
+  texture.repeat.set(5, 5)
+  texture.minFilter = LinearFilter
+  texture.magFilter = LinearFilter
+  texture.needsUpdate = true
+  return texture
+}
 
 function getOpeningPositions(total, span, kind) {
   if (total <= 0) return []
@@ -89,6 +143,7 @@ function WarehouseMesh({
   rollerDoorFace = "front",
   pedestrianDoorFace = "rear",
   sheetingColor = "kalahari-red",
+  steelFinish,
   structureView = false,
 }) {
   const scale = 0.18
@@ -97,6 +152,9 @@ function WarehouseMesh({
   const h = wallHeight * scale
   const ridgeRise = Math.tan((roofPitch * Math.PI) / 180) * (w / 2)
   const isAtlas = systemVariant === "atlas"
+  const selectedSteelFinish = steelFinish || (isAtlas ? "ZAM" : "Mild")
+  const isMildSteel = selectedSteelFinish === "Mild"
+  const isGalvanisedSteel = selectedSteelFinish === "Galv"
   const baySpacing = isAtlas ? 4 : 2.5
   const frameCount = Math.max(2, Math.round(length / baySpacing) + 1)
 
@@ -152,7 +210,7 @@ function WarehouseMesh({
   const selectedSheetingColor = WAREHOUSE_SHEETING_COLORS.find((option) => option.value === sheetingColor)
   const roofColor = selectedSheetingColor?.hex || (isAtlas ? "#6689a3" : "#b91c1c")
   const wallColor = roofColor
-  const steelColor = "#707d8f"
+  const steelColor = isMildSteel ? "#262d31" : isGalvanisedSteel ? "#c9d1d4" : "#d8dfe1"
   const roofHalfSpan = Math.sqrt((w / 2) ** 2 + ridgeRise ** 2)
   const roofAngle = Math.atan2(ridgeRise, w / 2)
   const hasCladding = cladding !== "None" && !structureView
@@ -169,6 +227,9 @@ function WarehouseMesh({
   const wallSecondaryOffset = isAtlas ? columnThickness / 2 + secondaryMemberDepth / 2 : 0
   const roofSheetOffset = rafterThickness / 2 + (isAtlas ? secondaryMemberDepth : 0) + sheetingClearance + roofSheetThickness / 2
   const wallSheetOffset = columnThickness / 2 + (isAtlas ? secondaryMemberDepth : 0) + sheetingClearance + wallSheetThickness / 2
+  const steelSurfaceMap = useMemo(() => createSteelSurfaceMap(), [])
+
+  useEffect(() => () => steelSurfaceMap.dispose(), [steelSurfaceMap])
 
   const concreteMaterialProps = {
     color: "#d9e1e8",
@@ -184,14 +245,24 @@ function WarehouseMesh({
 
   const frameMaterialProps = {
     color: steelColor,
-    metalness: 0.72,
-    roughness: 0.34,
+    metalness: isMildSteel ? 0.4 : isGalvanisedSteel ? 0.54 : 0.58,
+    roughness: isMildSteel ? 0.62 : isGalvanisedSteel ? 0.62 : 0.54,
+    roughnessMap: isMildSteel ? undefined : steelSurfaceMap,
+    bumpMap: isMildSteel ? undefined : steelSurfaceMap,
+    bumpScale: isGalvanisedSteel ? 0.0014 : 0.0025,
+    clearcoat: isMildSteel ? 0 : 0.04,
+    clearcoatRoughness: isGalvanisedSteel ? 0.84 : 0.78,
   }
 
   const braceMaterialProps = {
-    color: "#97a6b8",
-    metalness: 0.58,
-    roughness: 0.4,
+    color: isMildSteel ? "#30383c" : isGalvanisedSteel ? "#bec8cc" : "#cdd6d9",
+    metalness: isMildSteel ? 0.38 : isGalvanisedSteel ? 0.52 : 0.56,
+    roughness: isMildSteel ? 0.66 : isGalvanisedSteel ? 0.64 : 0.56,
+    roughnessMap: isMildSteel ? undefined : steelSurfaceMap,
+    bumpMap: isMildSteel ? undefined : steelSurfaceMap,
+    bumpScale: isGalvanisedSteel ? 0.0012 : 0.002,
+    clearcoat: isMildSteel ? 0 : 0.035,
+    clearcoatRoughness: isGalvanisedSteel ? 0.86 : 0.8,
   }
 
   const roofMaterialProps = {
