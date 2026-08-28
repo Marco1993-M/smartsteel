@@ -7,6 +7,7 @@ import {
   getFollowUpPlan,
   isAtlasEstimate,
 } from "lib/crmEstimateFollowUps"
+import { processDueEstimateFollowUps } from "lib/processEstimateFollowUps"
 
 export const dynamic = "force-dynamic"
 
@@ -121,4 +122,18 @@ export async function PATCH(request) {
   }).eq("id", data.lead_id)
 
   return NextResponse.json({ sequence: data })
+}
+
+export async function POST(request) {
+  const authResponse = await requireOsAuth(request)
+  if (authResponse) return authResponse
+
+  const payload = await request.json().catch(() => ({}))
+  if (payload?.action !== "process_due") {
+    return NextResponse.json({ error: "A valid action is required." }, { status: 400 })
+  }
+
+  const result = await processDueEstimateFollowUps({ requestUrl: request.url })
+  if (result.error) return NextResponse.json({ error: result.error }, { status: result.status || 500 })
+  return NextResponse.json(result)
 }
