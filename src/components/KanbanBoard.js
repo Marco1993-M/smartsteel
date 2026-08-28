@@ -182,6 +182,11 @@ export default function KanbanBoard({
 
     async function loadSequences() {
       try {
+        await fetch("/api/crm/estimate-follow-ups", {
+          method: "POST",
+          headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ action: "process_due" }),
+        })
         const response = await fetch("/api/crm/estimate-follow-ups", {
           cache: "no-store",
           headers: await getOsAuthHeaders(),
@@ -195,7 +200,7 @@ export default function KanbanBoard({
     }
 
     loadSequences()
-    const interval = window.setInterval(loadSequences, 60000)
+    const interval = window.setInterval(loadSequences, 5 * 60000)
     const refreshOnFocus = () => loadSequences()
     window.addEventListener("focus", refreshOnFocus)
     return () => {
