@@ -10,10 +10,12 @@ import {
   buildRegionWarehouseContent,
   getRegionWarehouseConfigs,
 } from "./regionWarehouseData";
+import AtlasRegionWarehouseExperience from "./AtlasRegionWarehouseExperience";
 
 export default function RegionWarehousePageClient({ citySlug }) {
   const content = buildRegionWarehouseContent(citySlug);
   const [selectedWidth, setSelectedWidth] = useState(REGION_WAREHOUSE_WIDTHS[0]);
+  const [selectedLength, setSelectedLength] = useState(20);
 
   const regionLinks = useMemo(
     () =>
@@ -25,6 +27,13 @@ export default function RegionWarehousePageClient({ citySlug }) {
         })),
     [citySlug]
   );
+
+  const buildSizeBuilderHref = (width, length) => {
+    if (!content.prefillBuilderDimensions) return content.pricePath;
+
+    const separator = content.pricePath.includes("?") ? "&" : "?";
+    return `${content.pricePath}${separator}width=${width}&length=${length}`;
+  };
 
   const faqSchema = {
     "@context": "https://schema.org",
@@ -52,7 +61,7 @@ export default function RegionWarehousePageClient({ citySlug }) {
       {
         "@type": "ListItem",
         position: 2,
-        name: "Lightweight Steel Warehouses",
+        name: content.breadcrumbSectionName,
         item: "https://www.smartsteel.co.za/warehouses",
       },
       {
@@ -63,6 +72,22 @@ export default function RegionWarehousePageClient({ citySlug }) {
       },
     ],
   };
+
+  if (content.warehouseSystem === "atlas") {
+    return (
+      <AtlasRegionWarehouseExperience
+        content={content}
+        selectedWidth={selectedWidth}
+        setSelectedWidth={setSelectedWidth}
+        selectedLength={selectedLength}
+        setSelectedLength={setSelectedLength}
+        buildSizeBuilderHref={buildSizeBuilderHref}
+        faqSchema={faqSchema}
+        breadcrumbSchema={breadcrumbSchema}
+        regionLinks={regionLinks}
+      />
+    );
+  }
 
   return (
     <main className="font-sans text-gray-800">
@@ -78,7 +103,7 @@ export default function RegionWarehousePageClient({ citySlug }) {
       <section className="relative flex min-h-[92vh] items-start justify-center overflow-hidden bg-black px-6 text-center text-white">
         <Image
           src={content.heroImage}
-          alt={`Lightweight steel warehouse in ${content.name}`}
+          alt={`${content.pageHeading}`}
           fill
           priority
           sizes="100vw"
@@ -98,11 +123,10 @@ export default function RegionWarehousePageClient({ citySlug }) {
           </div>
 
           <h1 className="max-w-5xl text-4xl font-bold leading-tight text-white sm:text-5xl md:text-6xl">
-            Steel warehouse builders and suppliers in {content.name}
+            {content.pageHeading}
           </h1>
           <p className="mt-4 max-w-3xl text-base text-white/90 sm:text-lg md:text-xl">
-            Lightweight warehouse systems for {content.name} projects that need clear price guidance,
-            practical spans, faster construction, and dependable long-term commercial value.
+            {content.heroDescription}
           </p>
 
           <div className="mt-8 flex items-center gap-4">
@@ -110,7 +134,7 @@ export default function RegionWarehousePageClient({ citySlug }) {
               href={content.pricePath}
               className="inline-flex items-center justify-center rounded-full border border-black bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black"
             >
-              Get Instant Estimate
+              {content.primaryCtaLabel}
             </Link>
             <a
               href="https://wa.me/27828464555?text=Hi%20Smart%20Steel%2C%20I%E2%80%99d%20like%20a%20warehouse%20quote"
@@ -305,8 +329,8 @@ export default function RegionWarehousePageClient({ citySlug }) {
                 </p>
                 <p className="mt-1 text-sm text-gray-500">{selectedWidth * length} m² warehouse</p>
                 <div className="mt-4 flex items-center justify-between text-sm">
-                  <Link href={content.pricePath} className="font-semibold text-[#da1a33]">
-                    Get estimate
+                  <Link href={buildSizeBuilderHref(selectedWidth, length)} className="font-semibold text-[#da1a33]">
+                    {content.sizeCtaLabel}
                   </Link>
                   <Link href="/warehouse-cost" className="text-gray-500 underline">
                     Cost guide
@@ -431,7 +455,7 @@ export default function RegionWarehousePageClient({ citySlug }) {
         </p>
         <div className="flex justify-center gap-4">
           <Link href={content.pricePath} className="rounded-full bg-white px-6 py-3 font-semibold text-black">
-            Start Estimate
+            {content.finalCtaLabel}
           </Link>
           <a href="tel:+27828464555" className="rounded-full border border-white px-6 py-3">
             Call Us

@@ -1,3 +1,8 @@
+import {
+  ATLAS_WAREHOUSE_PRICING_RELEASE,
+  calculateAtlasWarehouseEstimate,
+} from "../../lib/estimates/atlasWarehouseEstimate.js";
+
 const SITE_URL = "https://www.smartsteel.co.za";
 
 export const REGION_WAREHOUSE_WIDTHS = [8, 10, 12];
@@ -43,34 +48,72 @@ const regionWarehousePages = {
     name: "Johannesburg",
     province: "Gauteng",
     legacySlug: "johannesburg-warehouses",
+    warehouseSystem: "atlas",
     heroImage: "/images/johannesburg.webp",
     nearby: ["Roodepoort", "Midrand", "Kempton Park"],
     localZones: ["Aeroton", "Wadeville", "City Deep", "Roodepoort", "Midrand"],
+    metadataTitle: "Atlas Warehouse Builders Johannesburg | Smart Steel OS Pricing",
+    metadataDescription:
+      "Atlas warehouse builders and suppliers in Johannesburg. Compare W-Series sizes, Smart Steel OS price guidance, delivery areas, and modular steel warehouse options.",
     description:
-      "Johannesburg is one of South Africa's busiest commercial and industrial markets, with strong demand for warehouse, distribution, and workshop space.",
+      "Johannesburg is one of South Africa's busiest commercial and industrial markets, with strong demand for warehouse, distribution, and workshop space that can be scoped quickly.",
     intro:
-      "Smart Steel delivers lightweight steel warehouse systems across Johannesburg for buyers who need speed, scalability, and better project control.",
+      "Smart Steel supports Johannesburg warehouse projects with Atlas lip channel warehouses where standard widths, practical spans, and an online builder help you start with a clearer project size.",
     industries: ["distribution", "light industrial", "fleet and logistics"],
-    heroLabel: "Warehouse systems built for Johannesburg distribution and industrial demand",
+    heroLabel: "Atlas warehouse systems built for Johannesburg distribution and industrial demand",
+    heroDescription:
+      "Atlas lip channel warehouse options for Johannesburg projects that need clear price guidance, practical modular spans, faster planning, and an easier way to compare early building sizes.",
     marketFocus:
-      "Johannesburg warehouse projects are usually driven by logistics speed, larger stock volumes, and efficient expansion for growing operations.",
+      "Johannesburg warehouse projects are usually driven by logistics speed, larger stock volumes, and efficient expansion. Atlas gives those buyers a more direct standard-size starting point before final quotation.",
+    localSeoHeadline: "Atlas warehouses for Johannesburg industrial and logistics projects",
+    localSeoCopy:
+      "For Johannesburg buyers, the first question is rarely only whether a steel warehouse can be built. The more useful question is which standard span, enclosure level, access layout, and delivery scope will suit the site. Atlas gives Aeroton, Wadeville, City Deep, Roodepoort, and broader Johannesburg projects a clear starting point before final engineering and site review.",
+    corridorNotes: [
+      "Distribution and dispatch sites around City Deep, Selby, and the M2/M1 logistics routes",
+      "Light industrial workshops and stock-holding facilities around Wadeville, Aeroton, and the south of Johannesburg",
+      "Commercial storage, fleet cover, and depot-style buildings toward Roodepoort, Randburg, and the western corridor",
+    ],
+    decisionFactors: [
+      "Standard W-Series spans make the first size conversation faster",
+      "Smart Steel guide pricing helps you compare structure-only, roofed, and enclosed shell options",
+      "Atlas is Smart Steel's current warehouse direction for projects that fit a modular lip channel system",
+    ],
   },
   midrand: {
     citySlug: "midrand",
     name: "Midrand",
     province: "Gauteng",
     legacySlug: "midrand-warehouses",
+    warehouseSystem: "atlas",
     heroImage: "/images/hero.webp",
     nearby: ["Centurion", "Sandton", "Kempton Park"],
     localZones: ["Waterfall", "Randjespark", "Halfway House", "Kyalami", "Olifantsfontein"],
+    metadataTitle: "Atlas Warehouse Builders Midrand | Smart Steel OS Pricing",
+    metadataDescription:
+      "Atlas warehouse builders and suppliers in Midrand. Compare W-Series sizes, Smart Steel OS price guidance, delivery areas, and modular steel warehouse options.",
     description:
       "Midrand sits between Pretoria and Johannesburg and is ideal for warehousing, logistics, and commercial steel building projects.",
     intro:
-      "Smart Steel supplies lightweight steel warehouses in Midrand for stock holding, distribution space, workshops, and scalable industrial use.",
+      "Smart Steel supports Midrand warehouse projects with Atlas lip channel warehouses where a practical modular footprint, online builder, and clear price guidance help you compare options early.",
     industries: ["logistics", "distribution", "commercial storage"],
-    heroLabel: "Strategic warehouse solutions between Johannesburg and Pretoria",
+    heroLabel: "Atlas warehouse solutions between Johannesburg and Pretoria",
+    heroDescription:
+      "Atlas lip channel warehouse options for Midrand projects that need clear price guidance, practical modular spans, faster planning, and an easier way to compare early building sizes.",
     marketFocus:
-      "Midrand demand is usually centred on warehousing, logistics overflow, and scalable distribution space along the Gauteng corridor.",
+      "Midrand demand is usually centred on warehousing, logistics overflow, and scalable distribution space along the Gauteng corridor. Atlas is the cleaner starting point when the project fits standard widths and a fast configuration process.",
+    localSeoHeadline: "Atlas warehouses for Midrand and the Gauteng corridor",
+    localSeoCopy:
+      "Midrand warehouse projects often start with questions about access, speed, storage capacity, and cost before a final engineering review. Atlas is a practical fit because it starts with W-Series spans, configurable lengths, and a builder that suits Waterfall, Randjespark, Halfway House, Kyalami, Olifantsfontein, and nearby Gauteng corridor sites.",
+    corridorNotes: [
+      "Logistics and overflow warehousing between Johannesburg, Pretoria, and the N1 corridor",
+      "Commercial storage and workshop projects around Randjespark, Halfway House, and Waterfall",
+      "Scalable depots and operational buildings near Kyalami, Olifantsfontein, and Samrand",
+    ],
+    decisionFactors: [
+      "You can start from W08, W10, or W12 instead of an open-ended warehouse brief",
+      "Smart Steel OS price examples make early budget comparison more useful",
+      "Atlas is Smart Steel's current warehouse direction for projects that fit a modular lip channel system",
+    ],
   },
   roodepoort: {
     citySlug: "roodepoort",
@@ -285,6 +328,48 @@ function titleCaseWords(words) {
     .join(" ");
 }
 
+function formatCurrency(value) {
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function buildAtlasPriceExamples() {
+  const examples = [
+    {
+      key: "structure",
+      title: "Structure only",
+      input: { width: 8, length: 20, wallHeight: 3, gableMode: "structure_only", steelFinish: "Galv" },
+      description: "Atlas W08 structure-only example before delivery, installation, slab, sheeting, and site-specific extras.",
+    },
+    {
+      key: "roof",
+      title: "Roof sheeted",
+      input: { width: 10, length: 20, wallHeight: 4.5, gableMode: "roof_only", steelFinish: "Galv", sheetingProfile: "IBR" },
+      description: "Atlas W10 example with roof sheeting included, before walls, delivery, installation, slab, and site-specific extras.",
+    },
+    {
+      key: "enclosed",
+      title: "Enclosed shell",
+      input: { width: 12, length: 20, wallHeight: 4.5, gableMode: "fully_enclosed", steelFinish: "Galv", sheetingProfile: "IBR" },
+      description: "Atlas W12 example with roof and wall sheeting included, before delivery, installation, slab, and site-specific extras.",
+    },
+  ];
+
+  return examples.map((example) => {
+    const estimate = calculateAtlasWarehouseEstimate(example.input);
+    return {
+      ...example,
+      value: `${formatCurrency(estimate.pricing.estimatedTotal)} excl. VAT`,
+      inclusiveValue: `${formatCurrency(estimate.pricing.totalInclVat)} incl. VAT`,
+      model: `ATLAS W${String(example.input.width).padStart(2, "0")} / ${example.input.width}m x ${example.input.length}m`,
+      pricingRelease: estimate.meta.pricingRelease,
+    };
+  });
+}
+
 export function getRegionWarehouseCitySlugs() {
   return Object.keys(regionWarehousePages);
 }
@@ -348,8 +433,10 @@ export function buildRegionWarehouseMetadata(citySlug) {
   if (!config) return {};
 
   const canonicalPath = `/${config.legacySlug}`;
-  const title = `Warehouse Builders ${config.name} | Steel Warehouse Prices | Smart Steel`;
-  const description = `Steel warehouse builders and suppliers in ${config.name}. Compare lightweight warehouse sizes, price guidance, delivery areas, and fast-build steel construction options.`;
+  const title = config.metadataTitle || `Warehouse Builders ${config.name} | Steel Warehouse Prices | Smart Steel`;
+  const description =
+    config.metadataDescription ||
+    `Steel warehouse builders and suppliers in ${config.name}. Compare lightweight warehouse sizes, price guidance, delivery areas, and fast-build steel construction options.`;
 
   return {
     title,
@@ -383,15 +470,21 @@ export function buildRegionWarehouseContent(citySlug) {
   if (!config) return null;
 
   const titlePrefix = titleCaseWords(["steel warehouses", config.name]);
-  const pricePath = "/warehouse-builder";
+  const isAtlasLead = config.warehouseSystem === "atlas";
+  const pricePath = isAtlasLead ? "/warehouse-builder?productType=LCSS%20Warehouse" : "/warehouse-builder";
+  const systemName = isAtlasLead ? "Atlas lip channel warehouse" : "lightweight steel warehouse";
+  const systemPluralName = isAtlasLead ? "Atlas lip channel warehouses" : "lightweight steel warehouses";
+  const atlasPriceExamples = isAtlasLead ? buildAtlasPriceExamples() : [];
   const faqItems = [
     {
       question: `How much does a steel warehouse cost in ${config.name}?`,
-      answer: `As a planning guide, structure-only steel warehouse projects often start around R1,050 to R1,300 per m2, enclosed shells around R1,350 to R1,500 per m2, and turnkey projects around R1,650 to R2,700+ per m2. Final pricing in ${config.name} depends on span, height, cladding, access openings, slab scope, delivery, and installation requirements.`,
+      answer: isAtlasLead
+        ? `Atlas warehouse guide pricing uses the Smart Steel OS Atlas calculator. Current examples range from ${atlasPriceExamples[0].value} for an ${atlasPriceExamples[0].model} structure-only configuration to ${atlasPriceExamples[2].value} for an ${atlasPriceExamples[2].model} enclosed shell. Final pricing in ${config.name} depends on span, height, cladding, access openings, slab scope, delivery, and installation requirements.`
+        : `As a planning guide, structure-only ${systemName} projects often start around R1,050 to R1,300 per m2, enclosed shells around R1,350 to R1,500 per m2, and turnkey projects around R1,650 to R2,700+ per m2. Final pricing in ${config.name} depends on span, height, cladding, access openings, slab scope, delivery, and installation requirements.`,
     },
     {
       question: `Can Smart Steel act as a warehouse builder or supplier in ${config.name}?`,
-      answer: `Yes. Smart Steel supports steel warehouse enquiries in ${config.name} for supply, planning, estimating, and project-specific quotation. The right route depends on whether you need structure-only supply, an enclosed shell, installation, or a fuller turnkey scope.`,
+      answer: `Yes. Smart Steel supports ${systemPluralName} in ${config.name} for supply, planning, estimating, and project-specific quotation. Your best option depends on whether you need structure-only supply, an enclosed shell, installation, or a fuller turnkey scope.`,
     },
     {
       question: `How long does it take to build a steel warehouse in ${config.name}?`,
@@ -403,7 +496,9 @@ export function buildRegionWarehouseContent(citySlug) {
     },
     {
       question: `Can I customise a warehouse for ${config.name}?`,
-      answer: `Yes. We can tailor span, length, cladding, doors, insulation, and layout to suit warehouse, workshop, fleet, agricultural, or mixed-use requirements in ${config.name}.`,
+      answer: isAtlasLead
+        ? `Yes. Atlas gives you a practical modular starting point, and we can still refine length, cladding, doors, insulation, and layout around warehouse, workshop, fleet, agricultural, or mixed-use requirements in ${config.name}.`
+        : `Yes. We can tailor span, length, cladding, doors, insulation, and layout to suit warehouse, workshop, fleet, agricultural, or mixed-use requirements in ${config.name}.`,
     },
   ];
 
@@ -412,37 +507,66 @@ export function buildRegionWarehouseContent(citySlug) {
     titlePrefix,
     pricePath,
     faqItems,
-    lastUpdated: "Updated April 20, 2026",
-    benefits: [
-      "Faster build programmes than many traditional construction routes",
-      "Scalable layouts with practical 8m, 10m, and 12m modular widths",
-      "Galvanized steel systems designed for lower maintenance and long-term durability",
-      "Suitable for warehouses, workshops, storage, fleet cover, and light industrial use",
-    ],
-    pricingBands: [
-      {
-        title: "Structure only",
-        value: "R1,050 to R1,300 per m2",
-        description: "A planning range for the primary lightweight steel frame before cladding, slab, delivery, and site-specific extras.",
-      },
-      {
-        title: "Enclosed shell",
-        value: "R1,350 to R1,500 per m2",
-        description: "A typical guide for steel frame plus roof and wall cladding, subject to openings, height, insulation, and finish.",
-      },
-      {
-        title: "Turnkey project",
-        value: "R1,650 to R2,700+ per m2",
-        description: "Used when the project includes more complete coordination, civil works, finishes, and handover scope.",
-      },
-    ],
+    lastUpdated: isAtlasLead ? "Updated August 28, 2026" : "Updated April 20, 2026",
+    breadcrumbSectionName: isAtlasLead ? "Atlas Warehouses" : "Lightweight Steel Warehouses",
+    pageHeading: isAtlasLead
+      ? `Atlas warehouse builders and suppliers in ${config.name}`
+      : `Steel warehouse builders and suppliers in ${config.name}`,
+    primaryCtaLabel: isAtlasLead ? "Build an Atlas warehouse" : "Get Instant Estimate",
+    sizeCtaLabel: isAtlasLead ? "Open builder" : "Get estimate",
+    finalCtaLabel: isAtlasLead ? "Build an Atlas warehouse" : "Start Estimate",
+    prefillBuilderDimensions: isAtlasLead,
+    atlasPriceExamples,
+    pricingRelease: isAtlasLead ? ATLAS_WAREHOUSE_PRICING_RELEASE : null,
+    heroDescription:
+      config.heroDescription ||
+      `Lightweight warehouse systems for ${config.name} projects that need clear price guidance, practical spans, faster construction, and dependable long-term commercial value.`,
+    benefits: isAtlasLead
+      ? [
+          "Atlas-led planning path for buyers comparing practical standard warehouse widths",
+          "Modular 8m, 10m, and 12m spans that support a clearer online builder journey",
+          "Galvanized lip channel steel systems designed for lower maintenance and long-term durability",
+          "Suitable for warehouses, workshops, storage, fleet cover, and light industrial use",
+        ]
+      : [
+          "Faster build programmes than many traditional construction routes",
+          "Scalable layouts with practical 8m, 10m, and 12m modular widths",
+          "Galvanized steel systems designed for lower maintenance and long-term durability",
+          "Suitable for warehouses, workshops, storage, fleet cover, and light industrial use",
+        ],
+    pricingBands: isAtlasLead
+      ? atlasPriceExamples.map((example) => ({
+          title: example.title,
+          value: example.value,
+          description: `${example.model}. ${example.description}`,
+          inclusiveValue: example.inclusiveValue,
+        }))
+      : [
+          {
+            title: "Structure only",
+            value: "R1,050 to R1,300 per m2",
+            description: "A planning range for the primary lightweight steel frame before cladding, slab, delivery, and site-specific extras.",
+          },
+          {
+            title: "Enclosed shell",
+            value: "R1,350 to R1,500 per m2",
+            description: "A typical guide for steel frame plus roof and wall cladding, subject to openings, height, insulation, and finish.",
+          },
+          {
+            title: "Turnkey project",
+            value: "R1,650 to R2,700+ per m2",
+            description: "Used when the project includes more complete coordination, civil works, finishes, and handover scope.",
+          },
+        ],
     proofStats: [
-      { value: "23321+", label: "lightweight steel meters supplied" },
+      { value: "23321+", label: isAtlasLead ? "steel meters supplied across Smart Steel systems" : "lightweight steel meters supplied" },
       { value: "30%", label: "average cost saving versus heavier conventional builds" },
       { value: "50%", label: "faster build time on many comparable projects" },
     ],
     trustPoints: [
-      "Smart Steel focuses on lightweight steel systems engineered for speed, durability, and clean installation.",
+      isAtlasLead
+        ? "Smart Steel recommends Atlas when a practical lip channel warehouse system and online builder suit the project brief."
+        : "Smart Steel focuses on lightweight steel systems engineered for speed, durability, and clean installation.",
       `We support warehouse projects in ${config.name} and surrounding areas like ${config.localZones.join(", ")}.`,
       "Our modular warehouse system makes it easier to compare widths, lengths, delivery scope, and expansion options before you commit.",
     ],
@@ -485,19 +609,27 @@ export function buildRegionWarehouseContent(citySlug) {
       "What door, cladding, and insulation options will affect final pricing?",
     ],
     searchIntentPoints: [
-      `Steel warehouse builders in ${config.name} for storage, workshop, agricultural, and commercial projects.`,
-      `Warehouse suppliers in ${config.name} for structure-only, enclosed shell, and project-specific steel building scopes.`,
-      `Warehouse construction guidance in ${config.name} covering size, height, cladding, openings, slab planning, and delivery.`,
+      isAtlasLead
+        ? `Atlas warehouse builders in ${config.name} for storage, workshop, agricultural, and commercial projects that fit practical modular spans.`
+        : `Steel warehouse builders in ${config.name} for storage, workshop, agricultural, and commercial projects.`,
+      isAtlasLead
+        ? `Atlas lip channel warehouse suppliers in ${config.name} for structure-only, enclosed shell, and project-specific steel building scopes.`
+        : `Warehouse suppliers in ${config.name} for structure-only, enclosed shell, and project-specific steel building scopes.`,
+      isAtlasLead
+        ? `Warehouse construction guidance in ${config.name} covering Atlas sizing, height, cladding, openings, slab planning, and delivery.`
+        : `Warehouse construction guidance in ${config.name} covering size, height, cladding, openings, slab planning, and delivery.`,
     ],
     internalLinks: [
-      { href: "/warehouse-builder", label: "Build your warehouse online" },
-      { href: "/tools/estimator", label: "Warehouse estimator" },
+      { href: isAtlasLead ? "/warehouse-builder?productType=LCSS%20Warehouse" : "/warehouse-builder", label: isAtlasLead ? "Build an Atlas warehouse online" : "Build your warehouse online" },
+      { href: "/tools/estimator", label: isAtlasLead ? "Atlas warehouse estimator" : "Warehouse estimator" },
       { href: "/warehouses", label: "All warehouse systems" },
       { href: "/warehouse-regions", label: "Warehouse regions hub" },
       { href: "/warehouse-cost", label: "Warehouse cost guide" },
       { href: "/warehouse-cost/10x10", label: "10m x 10m warehouse cost" },
       { href: "/warehouse-cost/20x10", label: "20m x 10m warehouse cost" },
     ],
-    sizeBlurb: `Popular warehouse footprints in ${config.name} start with modular widths of 8m, 10m, and 12m, with lengths scaled to suit storage, workshop, and operational requirements.`,
+    sizeBlurb: isAtlasLead
+      ? `Popular Atlas warehouse footprints in ${config.name} start with modular widths of 8m, 10m, and 12m, with lengths scaled to suit storage, workshop, and operational requirements.`
+      : `Popular warehouse footprints in ${config.name} start with modular widths of 8m, 10m, and 12m, with lengths scaled to suit storage, workshop, and operational requirements.`,
   };
 }
