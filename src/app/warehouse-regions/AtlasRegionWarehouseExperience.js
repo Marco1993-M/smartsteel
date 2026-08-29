@@ -156,169 +156,128 @@ export default function AtlasRegionWarehouseExperience({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
       />
 
-      <section className="relative isolate overflow-hidden bg-[#FFFFFF] px-4 pb-12 pt-32 sm:px-6 sm:pt-36 lg:px-8 lg:pb-16 lg:pt-40">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 top-20 [background-image:linear-gradient(rgba(0,29,46,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(0,29,46,0.08)_1px,transparent_1px)] [background-size:42px_42px] sm:top-24" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(180deg,rgba(255,255,255,0),#001D2E)]" />
-
-        <div className="relative mx-auto max-w-7xl">
-          <div className="flex flex-wrap items-center justify-between gap-5 border-b border-[#001D2E]/18 pb-6">
+      <section className="bg-white px-4 pb-10 pt-24 sm:px-6 sm:pt-28 lg:px-8 lg:pb-14 lg:pt-28">
+        <div className="mx-auto max-w-7xl border border-[#001D2E]/15 bg-white shadow-[0_40px_100px_-72px_rgba(0,29,46,0.72)]">
+          <div className="flex flex-wrap items-center justify-between gap-5 bg-[#001D2E] px-5 py-5 sm:px-8">
             <Image
-              src="/atlas/atlas-logo-horizontal-dark.png"
+              src="/atlas/atlas-logo-horizontal-light.png"
               alt="Atlas by Smart Steel"
               width={320}
               height={50}
               priority
-              className="h-12 w-auto max-w-full object-contain object-left sm:h-14"
+              className="h-10 w-auto max-w-full object-contain object-left sm:h-12"
             />
-            <p className="border-l-2 border-[#0043F3] py-1 pl-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#001D2E]/60">
-              {content.lastUpdated}
-            </p>
+            <div className="flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/58">
+              <span>Product dossier</span>
+              <span className="h-6 w-px bg-white/18" />
+              <span>{content.lastUpdated}</span>
+            </div>
           </div>
 
-          <div className="grid gap-8 pt-10 lg:grid-cols-[0.86fr_1.14fr] lg:items-stretch lg:pt-14">
-            <div className="flex flex-col justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#0043F3]">
-                  Atlas W-Series / Smart Steel South Africa
+          <div className="grid lg:grid-cols-[1.18fr_0.82fr]">
+            <div className="relative overflow-hidden border-b border-[#001D2E]/12 p-6 sm:p-10 lg:border-b-0 lg:border-r lg:p-12">
+              <div className="absolute -right-14 -top-12 select-none font-mono text-[10rem] font-semibold leading-none text-[#C1D9E5]/42 sm:text-[14rem]">
+                {getModelCode(selectedWidth)}
+              </div>
+              <div className="relative max-w-3xl">
+                <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-[#0043F3]">
+                  JHB / W-Series / {getModelCode(selectedWidth)}
                 </p>
-                <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[0.96] text-[#001D2E] sm:text-6xl lg:text-7xl">
-                  Atlas warehouse builders in {content.name}
+                <h1 className="mt-8 text-5xl font-semibold leading-[0.94] text-[#001D2E] sm:text-6xl lg:text-[5rem]">
+                  Atlas warehouse systems for Johannesburg.
                 </h1>
-                <p className="mt-6 max-w-2xl text-base leading-7 text-[#001D2E]/72 sm:text-lg">
+                <p className="mt-7 max-w-2xl text-base leading-7 text-[#001D2E]/68 sm:text-lg">
                   {content.heroDescription}
                 </p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link
+                    href={selectedBuilderHref}
+                    className="group inline-flex items-center gap-3 bg-[#0043F3] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#001D2E]"
+                  >
+                    Build and price this warehouse
+                    <ArrowUpRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+                  </Link>
+                  <a
+                    href="#pricing"
+                    className="inline-flex items-center gap-3 border border-[#001D2E]/20 bg-white px-5 py-3.5 text-sm font-semibold text-[#001D2E] transition hover:border-[#0043F3] hover:text-[#0043F3]"
+                  >
+                    Compare guide prices
+                    <span aria-hidden="true">↓</span>
+                  </a>
+                </div>
               </div>
 
-              <div className="mt-8 grid gap-px border border-[#001D2E]/12 bg-[#001D2E]/12 sm:grid-cols-3">
+              <div className="relative mt-10 grid border-y border-[#001D2E]/14 sm:grid-cols-3">
                 {content.proofStats.map((stat, index) => (
-                  <div key={stat.label} className="relative bg-white/78 p-4 pt-7">
-                    <span className="absolute left-4 top-3 font-mono text-[9px] tracking-[0.16em] text-[#0043F3]">
-                      0{index + 1}
-                    </span>
-                    <p className="text-2xl font-semibold text-[#001D2E]">{stat.value}</p>
-                    <p className="mt-2 text-xs leading-5 text-[#001D2E]/62">{stat.label}</p>
+                  <div key={stat.label} className="border-b border-[#001D2E]/12 py-5 sm:border-b-0 sm:border-r sm:px-5 sm:first:pl-0 sm:last:border-r-0">
+                    <p className="font-mono text-[9px] tracking-[0.16em] text-[#0043F3]">SPEC 0{index + 1}</p>
+                    <p className="mt-3 text-2xl font-semibold text-[#001D2E]">{stat.value}</p>
+                    <p className="mt-2 max-w-[15rem] text-xs leading-5 text-[#001D2E]/58">{stat.label}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-[0.96fr_1.04fr]">
-              <div className="relative min-h-[420px] overflow-hidden border border-[#001D2E]/12 bg-[#001D2E]">
-                <Image
-                  src="/CFLC.webp"
-                  alt={`Atlas lip channel warehouse steel detail for ${content.name}`}
-                  fill
-                  priority
-                  sizes="(min-width: 1024px) 34vw, 100vw"
-                  className="object-cover object-center"
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,29,46,0.03),rgba(0,29,46,0.82))]" />
-                <div className="absolute inset-x-0 bottom-0 p-5 text-[#FFFFFF]">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C1D9E5]">
-                    Atlas W-Series system
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold leading-tight">
-                    A practical lip channel warehouse system for projects that need a clearer starting size.
-                  </p>
+            <aside className="bg-[#F3F7F9] p-5 sm:p-8 lg:p-10">
+              <div className="flex items-start justify-between gap-5">
+                <div>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0043F3]">Configure / 01</p>
+                  <h2 className="mt-2 text-3xl font-semibold text-[#001D2E]">Set the footprint.</h2>
                 </div>
+                <CalculatorIcon className="h-7 w-7 text-[#0043F3]" aria-hidden="true" />
               </div>
 
-              <aside className="border border-[#001D2E]/12 bg-white p-5 shadow-[0_24px_60px_-40px_rgba(0,29,46,0.65)]">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0043F3]">
-                      Fast configuration
-                    </p>
-                    <h2 className="mt-2 text-2xl font-semibold text-[#001D2E]">
-                      Start with {getModelCode(selectedWidth)}
-                    </h2>
-                  </div>
-                  <CalculatorIcon className="h-7 w-7 text-[#0043F3]" aria-hidden="true" />
-                </div>
-
-                <div className="mt-6">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#001D2E]/48">
-                    Span
-                  </p>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
+              <div className="mt-8 border-t border-[#001D2E]/14">
+                <div className="grid grid-cols-[72px_1fr] items-center border-b border-[#001D2E]/14 py-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#001D2E]/45">Span</p>
+                  <div className="grid grid-cols-3 gap-1.5">
                     {REGION_WAREHOUSE_WIDTHS.map((width) => (
-                      <button
-                        key={width}
-                        type="button"
-                        aria-pressed={selectedWidth === width}
-                        onClick={() => setSelectedWidth(width)}
-                        className={`border px-3 py-3 text-sm font-semibold transition ${
-                          selectedWidth === width
-                            ? "border-[#0043F3] bg-[#0043F3] text-white"
-                            : "border-[#001D2E]/12 bg-[#FFFFFF] text-[#001D2E] hover:border-[#0043F3]"
-                        }`}
-                      >
+                      <button key={width} type="button" aria-pressed={selectedWidth === width} onClick={() => setSelectedWidth(width)} className={`px-2 py-3 text-sm font-semibold transition ${selectedWidth === width ? "bg-[#0043F3] text-white" : "bg-white text-[#001D2E] hover:bg-[#C1D9E5]"}`}>
                         {getModelCode(width)}
                       </button>
                     ))}
                   </div>
                 </div>
-
-                <div className="mt-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#001D2E]/48">
-                    Length
-                  </p>
-                  <div className="mt-2 grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-[72px_1fr] items-center border-b border-[#001D2E]/14 py-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#001D2E]/45">Length</p>
+                  <div className="grid grid-cols-4 gap-1.5">
                     {HERO_LENGTHS.map((length) => (
-                      <button
-                        key={length}
-                        type="button"
-                        aria-pressed={selectedLength === length}
-                        onClick={() => setSelectedLength(length)}
-                        className={`border px-3 py-3 text-sm font-semibold transition ${
-                          selectedLength === length
-                            ? "border-[#0043F3] bg-[#0043F3] text-white"
-                            : "border-[#001D2E]/12 bg-[#FFFFFF] text-[#001D2E] hover:border-[#0043F3]"
-                        }`}
-                      >
+                      <button key={length} type="button" aria-pressed={selectedLength === length} onClick={() => setSelectedLength(length)} className={`px-2 py-3 text-sm font-semibold transition ${selectedLength === length ? "bg-[#0043F3] text-white" : "bg-white text-[#001D2E] hover:bg-[#C1D9E5]"}`}>
                         {length}m
                       </button>
                     ))}
                   </div>
                 </div>
+              </div>
 
-                <div className="mt-6 border-y border-[#001D2E]/12 py-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#001D2E]/48">
-                    Selected footprint
-                  </p>
-                  <p className="mt-1 text-3xl font-semibold text-[#001D2E]">
-                    {selectedWidth}m x {selectedLength}m
-                  </p>
-                  <p className="mt-1 text-sm text-[#001D2E]/62">
-                    {formatNumber(selectedArea)} m² Atlas warehouse starting point
-                  </p>
-                  <p className="mt-4 text-sm leading-6 text-[#001D2E]/66">
-                    {selectedModel.bestFor}
-                  </p>
+              <div className="grid grid-cols-[1fr_auto] items-end gap-5 py-7">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-[#001D2E]/45">Selected assembly</p>
+                  <p className="mt-2 text-3xl font-semibold text-[#001D2E]">{selectedWidth} × {selectedLength} × {selectedWallHeight}m</p>
+                  <p className="mt-2 text-xs leading-5 text-[#001D2E]/58">{formatNumber(selectedArea)} m² · {selectedModel.bestFor}</p>
                 </div>
+                <p className="font-mono text-xs font-semibold text-[#0043F3]">{getModelCode(selectedWidth)}</p>
+              </div>
 
-                <div className="mt-5 border-l-2 border-[#0043F3] bg-[#C1D9E5]/45 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0043F3]">
-                    Live structure-only guide
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-[#001D2E]">{structurePrice.value}</p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#001D2E]/48">
-                    Excluding VAT · {selectedWidth}m x {selectedLength}m x {selectedWallHeight}m
-                  </p>
-                  <p className="mt-2 text-xs leading-5 text-[#001D2E]/60">
-                    Supply-only guide. Delivery, installation, foundations, openings, and site requirements are reviewed separately.
-                  </p>
-                </div>
+              <div className="bg-[#001D2E] p-5 text-white">
+                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#C1D9E5]">Structure-only guide / excl. VAT</p>
+                <p className="mt-2 text-3xl font-semibold">{structurePrice.value}</p>
+                <p className="mt-2 text-xs leading-5 text-white/52">Supply only. Site-specific items are reviewed before final quotation.</p>
+              </div>
 
-                <Link
-                  href={selectedBuilderHref}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 bg-[#0043F3] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#001D2E]"
-                >
-                  Configure this Atlas warehouse
-                  <ArrowUpRightIcon className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </aside>
-            </div>
+              <Link href={selectedBuilderHref} className="group mt-2 flex w-full items-center justify-between bg-[#0043F3] px-5 py-4 text-sm font-semibold text-white transition hover:bg-[#001D2E]">
+                Open this assembly in 3D
+                <ArrowUpRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+              </Link>
+            </aside>
+          </div>
+
+          <div className="relative h-52 overflow-hidden border-t border-[#001D2E]/12 sm:h-64">
+            <Image src="/CFLC.webp" alt={`Atlas lip channel warehouse steel detail for ${content.name}`} fill priority sizes="100vw" className="object-cover object-center" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,29,46,0.82),rgba(0,29,46,0.08)_70%)]" />
+            <p className="absolute bottom-6 left-6 max-w-md text-xl font-semibold leading-tight text-white sm:bottom-8 sm:left-10 sm:text-2xl">
+              Cold-formed lip channel members. Modular lengths. One controlled Atlas system.
+            </p>
           </div>
         </div>
       </section>
@@ -328,12 +287,12 @@ export default function AtlasRegionWarehouseExperience({
           aria-label="Atlas warehouse sections"
           className="mx-auto flex max-w-7xl gap-6 overflow-x-auto whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-white/58"
         >
-          <a href="#local-fit" className="transition hover:text-[#C1D9E5]">Local fit</a>
-          <a href="#w-series" className="transition hover:text-[#C1D9E5]">W-Series</a>
-          <a href="#pricing" className="transition hover:text-[#C1D9E5]">Guide pricing</a>
-          <a href="#spec" className="transition hover:text-[#C1D9E5]">Spec</a>
-          <a href="#process" className="transition hover:text-[#C1D9E5]">Process</a>
-          <a href="#faqs" className="transition hover:text-[#C1D9E5]">FAQs</a>
+          <a href="#local-fit" className="transition hover:text-[#C1D9E5]"><span className="font-mono text-[#C1D9E5]">01</span> Local fit</a>
+          <a href="#w-series" className="transition hover:text-[#C1D9E5]"><span className="font-mono text-[#C1D9E5]">02</span> W-Series</a>
+          <a href="#pricing" className="transition hover:text-[#C1D9E5]"><span className="font-mono text-[#C1D9E5]">03</span> Guide pricing</a>
+          <a href="#spec" className="transition hover:text-[#C1D9E5]"><span className="font-mono text-[#C1D9E5]">04</span> Spec</a>
+          <a href="#process" className="transition hover:text-[#C1D9E5]"><span className="font-mono text-[#C1D9E5]">05</span> Process</a>
+          <a href="#faqs" className="transition hover:text-[#C1D9E5]"><span className="font-mono text-[#C1D9E5]">06</span> FAQs</a>
         </nav>
       </section>
 
@@ -379,7 +338,7 @@ export default function AtlasRegionWarehouseExperience({
       </section>
 
       <section id="w-series" className="relative isolate overflow-hidden bg-[#C1D9E5] px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="pointer-events-none absolute inset-0 -z-10 opacity-45 [background-image:linear-gradient(rgba(0,29,46,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,29,46,0.1)_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="pointer-events-none absolute right-[-8rem] top-[-16rem] -z-10 h-[42rem] w-[12rem] rotate-45 bg-white/35" />
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
             <div>
@@ -395,30 +354,20 @@ export default function AtlasRegionWarehouseExperience({
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          <div className="mt-10 border-y border-[#001D2E]/18">
             {ATLAS_W_SERIES.map((model) => (
               <Link
                 key={model.code}
                 href={buildSizeBuilderHref(model.width, selectedLength)}
-                className={`group relative overflow-hidden border p-6 transition hover:-translate-y-1 ${
-                  model.featured
-                    ? "border-[#0043F3] bg-[#0043F3] text-white shadow-[0_24px_60px_-44px_rgba(0,29,46,0.8)]"
-                    : "border-[#001D2E]/12 bg-[#C1D9E5] text-[#001D2E] hover:border-[#0043F3]"
-                }`}
+                className={`group grid gap-4 border-b border-[#001D2E]/18 px-1 py-6 transition last:border-b-0 sm:grid-cols-[110px_120px_1fr_auto] sm:items-center ${model.featured ? "text-[#0043F3]" : "text-[#001D2E] hover:text-[#0043F3]"}`}
               >
-                <span className={`absolute right-0 top-0 h-px w-24 ${model.featured ? "bg-[#C1D9E5]" : "bg-[#0043F3]"}`} />
-                <p className={`font-mono text-sm ${model.featured ? "text-[#C1D9E5]" : "text-[#0043F3]"}`}>
-                  ATLAS {model.code}
-                </p>
-                <p className="mt-8 text-4xl font-semibold">{model.spanLabel}</p>
-                <h3 className="mt-4 text-xl font-semibold">{model.title}</h3>
-                <p className={`mt-3 text-sm leading-6 ${model.featured ? "text-white/70" : "text-[#001D2E]/64"}`}>
-                  {model.bestFor}
-                </p>
-                <span className={`mt-8 inline-flex items-center gap-2 text-sm font-semibold ${model.featured ? "text-[#C1D9E5]" : "text-[#0043F3]"}`}>
-                  Configure {model.code}
-                  <ArrowUpRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
-                </span>
+                <p className="font-mono text-sm font-semibold">ATLAS {model.code}</p>
+                <p className="text-3xl font-semibold text-[#001D2E]">{model.spanLabel}</p>
+                <div>
+                  <h3 className="text-lg font-semibold text-[#001D2E]">{model.title}</h3>
+                  <p className="mt-1 max-w-2xl text-sm leading-6 text-[#001D2E]/60">{model.bestFor}</p>
+                </div>
+                <ArrowUpRightIcon className="h-5 w-5 transition group-hover:translate-x-1 group-hover:-translate-y-1" aria-hidden="true" />
               </Link>
             ))}
           </div>
@@ -443,49 +392,56 @@ export default function AtlasRegionWarehouseExperience({
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="border-y border-white/18">
               {selectedPrices.map((band, index) => (
-                <Link key={band.title} href={band.href} className={`group relative flex min-h-[310px] flex-col overflow-hidden border p-5 transition hover:-translate-y-1 ${index === 0 ? "border-[#0043F3] bg-[#0043F3]/20" : "border-white/14 bg-white/[0.06] hover:border-[#0043F3]"}`}>
-                  <span className={`absolute inset-x-0 top-0 h-1 ${index === 0 ? "bg-[#0043F3]" : "bg-[#C1D9E5]/35"}`} />
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#C1D9E5]">
-                    {band.title}
-                  </p>
-                  <p className="mt-5 text-3xl font-semibold text-white">{band.value}</p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-white/46">Excluding VAT</p>
-                  <p className="mt-4 text-sm leading-6 text-white/62">{band.description}</p>
-                  <span className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-semibold text-[#C1D9E5]">
-                    Build this option
-                    <ArrowUpRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
-                  </span>
+                <Link key={band.title} href={band.href} className={`group grid gap-4 border-b border-white/18 py-5 last:border-b-0 sm:grid-cols-[1fr_170px_28px] sm:items-center ${index === 0 ? "text-white" : "text-white/72 hover:text-white"}`}>
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.13em] text-[#C1D9E5]">{band.title}</p>
+                    <p className="mt-2 text-xs leading-5 text-white/50">{band.description}</p>
+                  </div>
+                  <div className="sm:text-right">
+                    <p className="text-2xl font-semibold text-white">{band.value}</p>
+                    <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/38">Excl. VAT</p>
+                  </div>
+                  <ArrowUpRightIcon className="h-5 w-5 text-[#C1D9E5] transition group-hover:translate-x-1 group-hover:-translate-y-1" aria-hidden="true" />
                 </Link>
               ))}
             </div>
           </div>
 
-          <div className="mt-12 grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-            <div className="grid grid-cols-3 gap-3">
-              {enclosureImages.map((image) => (
-                <div key={image.label} className="border border-white/12 bg-white/90 p-3">
-                  <div className="relative aspect-square">
+          <div className="mt-14 border-y border-white/18">
+            <div className="grid lg:grid-cols-[1.1fr_repeat(3,0.72fr)]">
+              <div className="flex flex-col justify-center border-b border-white/18 py-7 lg:border-b-0 lg:border-r lg:pr-8">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#C1D9E5]">
+                  Scope progression / 01–03
+                </p>
+                <h3 className="mt-4 max-w-md text-2xl font-semibold leading-tight">
+                  See exactly how the Atlas scope builds up.
+                </h3>
+                <p className="mt-4 max-w-lg text-sm leading-6 text-white/58">
+                  Structure, roof, and enclosed shell are priced as separate supply stages. Slab, openings, delivery, installation, and site access are confirmed during review.
+                </p>
+              </div>
+              {enclosureImages.map((image, index) => (
+                <div
+                  key={image.label}
+                  className="group grid grid-cols-[54px_1fr] items-center border-b border-white/18 py-5 last:border-b-0 lg:block lg:border-b-0 lg:border-r lg:px-5 lg:last:border-r-0"
+                >
+                  <p className="font-mono text-xs text-[#C1D9E5]">0{index + 1}</p>
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#F3F7F9] lg:mt-4">
                     <Image
                       src={image.src}
                       alt={`Atlas ${image.label.toLowerCase()} warehouse configuration`}
                       fill
-                      sizes="(min-width: 1024px) 10vw, 30vw"
-                      className="object-contain"
+                      sizes="(min-width: 1024px) 16vw, 70vw"
+                      className="object-contain p-2 transition duration-500 group-hover:scale-[1.04]"
                     />
                   </div>
-                  <p className="mt-2 text-center text-xs font-semibold uppercase tracking-[0.12em] text-[#001D2E]/58">
+                  <p className="col-span-2 mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/68">
                     {image.label}
                   </p>
                 </div>
               ))}
-            </div>
-            <div className="border border-white/14 p-6">
-              <h3 className="text-2xl font-semibold">Know what is included before you request a quote.</h3>
-              <p className="mt-4 text-sm leading-6 text-white/64">
-                Atlas gives you a defined starting point, while slab, doors, sheeting selection, delivery, installation, and site access are still checked before a final number is confirmed.
-              </p>
             </div>
           </div>
         </div>
@@ -512,15 +468,30 @@ export default function AtlasRegionWarehouseExperience({
             </div>
           </div>
 
-          <div className="border border-[#001D2E]/12 bg-[#FFFFFF] p-5">
-            <div className="relative aspect-[4/5] overflow-hidden bg-[#001D2E]">
-              <Image
-                src="/Atlas_warehouses_w08_spec_sheet.png"
-                alt="Atlas W08 warehouse product specification sheet"
-                fill
-                sizes="(min-width: 1024px) 34vw, 100vw"
-                className="object-cover object-center"
-              />
+          <div className="relative min-h-[440px] overflow-hidden bg-[#001D2E] sm:min-h-[560px] lg:min-h-[640px]">
+            <Image
+              src="/Atlas_warehouses_w08_spec_sheet.png"
+              alt="Punched Atlas W08 cold-formed lip channel members"
+              fill
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              className="scale-[1.28] object-cover object-[center_12%]"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,29,46,0.02)_45%,rgba(0,29,46,0.86)_100%)]" />
+            <div className="absolute left-0 top-0 bg-[#0043F3] px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
+              Material study / W08
+            </div>
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-5 p-5 text-white sm:p-7">
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#C1D9E5]">
+                  Cold-formed member
+                </p>
+                <p className="mt-2 max-w-sm text-xl font-semibold leading-tight">
+                  Rolled, punched, and prepared for the Atlas connection system.
+                </p>
+              </div>
+              <span className="hidden border-l border-white/30 pl-4 font-mono text-xs text-white/62 sm:block">
+                ATLAS / SPEC 04
+              </span>
             </div>
           </div>
         </div>
@@ -543,7 +514,7 @@ export default function AtlasRegionWarehouseExperience({
           </div>
 
           <div className="relative mt-10 grid gap-4 overflow-hidden border border-[#001D2E]/12 bg-[#C1D9E5] p-5 lg:grid-cols-[1fr_0.72fr] lg:p-7">
-            <div className="pointer-events-none absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(0,29,46,0.09)_1px,transparent_1px),linear-gradient(90deg,rgba(0,29,46,0.09)_1px,transparent_1px)] [background-size:32px_32px]" />
+            <div className="pointer-events-none absolute left-7 right-7 top-4 h-px bg-[#001D2E]/20 before:absolute before:-left-px before:-top-1 before:h-2 before:w-px before:bg-[#001D2E]/35 after:absolute after:-right-px after:-top-1 after:h-2 after:w-px after:bg-[#001D2E]/35" />
             <div className="relative">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#001D2E]/48">Choose a width</p>
               <div className="mt-3 grid grid-cols-3 gap-2">
