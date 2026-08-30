@@ -4,8 +4,104 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { ContactShadows, OrbitControls } from "@react-three/drei"
 import { RotateCw } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { DataTexture, DoubleSide, LinearFilter, Path, RepeatWrapping, Shape, Vector3 } from "three"
+import { DataTexture, DoubleSide, ExtrudeGeometry, LinearFilter, Path, Quaternion, RepeatWrapping, Shape, Vector3 } from "three"
+import { ATLAS_W06_PROFILES } from "../../lib/atlasW06Geometry"
+import { ATLAS_W08_PROFILES } from "../../lib/atlasW08Geometry"
+import { ATLAS_W10_PROFILES } from "../../lib/atlasW10Geometry"
+import { ATLAS_W12_PROFILES } from "../../lib/atlasW12Geometry"
 import { WAREHOUSE_SHEETING_COLORS } from "../../lib/warehouseBuilderStore"
+
+const ATLAS_PROFILES_BY_SPAN = {
+  6: ATLAS_W06_PROFILES,
+  8: ATLAS_W08_PROFILES,
+  10: ATLAS_W10_PROFILES,
+  12: ATLAS_W12_PROFILES,
+}
+
+function createLippedChannelGeometry(profile, length, scale) {
+  const web = (profile.webMm / 1000) * scale
+  const flange = (profile.flangeMm / 1000) * scale
+  const lip = (profile.lipMm / 1000) * scale
+  const thickness = (profile.thicknessMm / 1000) * scale
+  const halfWeb = web / 2
+  const halfFlange = flange / 2
+  const shape = new Shape()
+
+  shape.moveTo(-halfFlange, -halfWeb)
+  shape.lineTo(halfFlange, -halfWeb)
+  shape.lineTo(halfFlange, -halfWeb + lip)
+  shape.lineTo(halfFlange - thickness, -halfWeb + lip)
+  shape.lineTo(halfFlange - thickness, -halfWeb + thickness)
+  shape.lineTo(-halfFlange + thickness, -halfWeb + thickness)
+  shape.lineTo(-halfFlange + thickness, halfWeb - thickness)
+  shape.lineTo(halfFlange - thickness, halfWeb - thickness)
+  shape.lineTo(halfFlange - thickness, halfWeb - lip)
+  shape.lineTo(halfFlange, halfWeb - lip)
+  shape.lineTo(halfFlange, halfWeb)
+  shape.lineTo(-halfFlange, halfWeb)
+  shape.closePath()
+
+  const geometry = new ExtrudeGeometry(shape, {
+    depth: length,
+    bevelEnabled: false,
+    curveSegments: 1,
+  })
+  geometry.translate(0, 0, -length / 2)
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+function LippedChannelMember({
+  profile,
+  length,
+  scale,
+  materialProps,
+  rotation = [0, 0, 0],
+  backToBack = false,
+}) {
+  const geometry = useMemo(() => createLippedChannelGeometry(profile, length, scale), [length, profile, scale])
+  const pairOffset = ((profile.flangeMm - profile.thicknessMm) / 2000) * scale
+
+  useEffect(() => () => geometry.dispose(), [geometry])
+
+  if (!backToBack) {
+    return (
+      <mesh geometry={geometry} rotation={rotation} castShadow>
+        <meshPhysicalMaterial {...materialProps} side={DoubleSide} />
+      </mesh>
+    )
+  }
+
+  return (
+    <group rotation={rotation}>
+      <mesh geometry={geometry} position={[pairOffset, 0, 0]} castShadow>
+        <meshPhysicalMaterial {...materialProps} side={DoubleSide} />
+      </mesh>
+      <mesh geometry={geometry} position={[-pairOffset, 0, 0]} scale={[-1, 1, 1]} castShadow>
+        <meshPhysicalMaterial {...materialProps} side={DoubleSide} />
+      </mesh>
+    </group>
+  )
+}
+
+function BraceBetween({ start, end, thickness, materialProps }) {
+  const geometry = useMemo(() => {
+    const startPoint = new Vector3(...start)
+    const endPoint = new Vector3(...end)
+    const direction = endPoint.clone().sub(startPoint)
+    const length = direction.length()
+    const midpoint = startPoint.clone().add(endPoint).multiplyScalar(0.5)
+    const quaternion = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), direction.normalize())
+    return { length, midpoint, quaternion }
+  }, [end, start])
+
+  return (
+    <mesh position={geometry.midpoint} quaternion={geometry.quaternion} castShadow>
+      <boxGeometry args={[thickness, thickness, geometry.length]} />
+      <meshPhysicalMaterial {...materialProps} />
+    </mesh>
+  )
+}
 
 function createSteelSurfaceMap() {
   const size = 128
@@ -152,6 +248,7 @@ function WarehouseMesh({
   const h = wallHeight * scale
   const ridgeRise = Math.tan((roofPitch * Math.PI) / 180) * (w / 2)
   const isAtlas = systemVariant === "atlas"
+  const atlasProfiles = ATLAS_PROFILES_BY_SPAN[Number(width)] || ATLAS_W08_PROFILES
   const selectedSteelFinish = steelFinish || (isAtlas ? "ZAM" : "Mild")
   const isMildSteel = selectedSteelFinish === "Mild"
   const isGalvanisedSteel = selectedSteelFinish === "Galv"
@@ -303,30 +400,41 @@ function WarehouseMesh({
 
       {framePositions.map((z) => (
         <group key={z} position={[0, 0, z]}>
-          <mesh position={[-w / 2, h / 2, 0]} castShadow>
-            <boxGeometry args={[columnThickness, h, columnThickness]} />
-            <meshPhysicalMaterial {...frameMaterialProps} />
-          </mesh>
-          <mesh position={[w / 2, h / 2, 0]} castShadow>
-            <boxGeometry args={[columnThickness, h, columnThickness]} />
-            <meshPhysicalMaterial {...frameMaterialProps} />
-          </mesh>
-          <mesh
-            position={[-w / 4, h + ridgeRise / 2, 0]}
-            rotation={[0, 0, roofAngle]}
-            castShadow
-          >
-            <boxGeometry args={[roofHalfSpan, rafterThickness, rafterThickness]} />
-            <meshPhysicalMaterial {...frameMaterialProps} />
-          </mesh>
-          <mesh
-            position={[w / 4, h + ridgeRise / 2, 0]}
-            rotation={[0, 0, -roofAngle]}
-            castShadow
-          >
-            <boxGeometry args={[roofHalfSpan, rafterThickness, rafterThickness]} />
-            <meshPhysicalMaterial {...frameMaterialProps} />
-          </mesh>
+          {isAtlas ? (
+            <>
+              <group position={[-w / 2, h / 2, 0]}>
+                <LippedChannelMember profile={atlasProfiles.column} length={h} scale={scale} materialProps={frameMaterialProps} rotation={[-Math.PI / 2, 0, Math.PI / 2]} backToBack />
+              </group>
+              <group position={[w / 2, h / 2, 0]}>
+                <LippedChannelMember profile={atlasProfiles.column} length={h} scale={scale} materialProps={frameMaterialProps} rotation={[-Math.PI / 2, 0, Math.PI / 2]} backToBack />
+              </group>
+              <group position={[-w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, roofAngle]}>
+                <LippedChannelMember profile={atlasProfiles.rafter} length={roofHalfSpan} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} />
+              </group>
+              <group position={[w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, -roofAngle]}>
+                <LippedChannelMember profile={atlasProfiles.rafter} length={roofHalfSpan} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} />
+              </group>
+            </>
+          ) : (
+            <>
+              <mesh position={[-w / 2, h / 2, 0]} castShadow>
+                <boxGeometry args={[columnThickness, h, columnThickness]} />
+                <meshPhysicalMaterial {...frameMaterialProps} />
+              </mesh>
+              <mesh position={[w / 2, h / 2, 0]} castShadow>
+                <boxGeometry args={[columnThickness, h, columnThickness]} />
+                <meshPhysicalMaterial {...frameMaterialProps} />
+              </mesh>
+              <mesh position={[-w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, roofAngle]} castShadow>
+                <boxGeometry args={[roofHalfSpan, rafterThickness, rafterThickness]} />
+                <meshPhysicalMaterial {...frameMaterialProps} />
+              </mesh>
+              <mesh position={[w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, -roofAngle]} castShadow>
+                <boxGeometry args={[roofHalfSpan, rafterThickness, rafterThickness]} />
+                <meshPhysicalMaterial {...frameMaterialProps} />
+              </mesh>
+            </>
+          )}
           <mesh position={[0, h + ridgeRise, 0]} castShadow>
             <boxGeometry args={[rafterThickness * 1.1, rafterThickness * 1.1, rafterThickness * 1.1]} />
             <meshPhysicalMaterial {...frameMaterialProps} />
@@ -346,26 +454,22 @@ function WarehouseMesh({
               const roofY = h + ridgeRise * (1 - fraction)
 
               return [-1, 1].map((side) => (
-                <mesh
+                <group
                   key={`purlin-${bayIndex}-${fraction}-${side}`}
                   position={[side * xDistanceFromRidge, roofY + roofSecondaryOffset, bayCenterZ]}
-                  castShadow
                 >
-                  <boxGeometry args={[secondaryMemberThickness, secondaryMemberDepth, bayDepth]} />
-                  <meshPhysicalMaterial {...frameMaterialProps} />
-                </mesh>
+                  <LippedChannelMember profile={atlasProfiles.purlin} length={bayDepth} scale={scale} materialProps={frameMaterialProps} />
+                </group>
               ))
             })}
 
             {(enclosureType === "fully_enclosed" || enclosureType === "side_walls") ? [0.08, 0.5, 0.92].flatMap((fraction) => [-1, 1].map((side) => (
-              <mesh
+              <group
                 key={`girt-${bayIndex}-${fraction}-${side}`}
                 position={[side * (w / 2 + wallSecondaryOffset), h * fraction, bayCenterZ]}
-                castShadow
               >
-                <boxGeometry args={[secondaryMemberDepth, secondaryMemberThickness, bayDepth]} />
-                <meshPhysicalMaterial {...frameMaterialProps} />
-              </mesh>
+                <LippedChannelMember profile={atlasProfiles.sideGirt} length={bayDepth} scale={scale} materialProps={frameMaterialProps} />
+              </group>
             ))) : null}
           </group>
         )
@@ -401,6 +505,28 @@ function WarehouseMesh({
                 </mesh>
               </group>
             ))}
+            {isAtlas ? [-1, 1].flatMap((side) => {
+              const roofBraceOffset = 0.012
+              const eave = [side * w / 2, h + roofBraceOffset, 0]
+              const ridge = [0, h + ridgeRise + roofBraceOffset, 0]
+
+              return [
+                <BraceBetween
+                  key={`roof-brace-${bayIndex}-${side}-forward`}
+                  start={[eave[0], eave[1], -bayDepth / 2]}
+                  end={[ridge[0], ridge[1], bayDepth / 2]}
+                  thickness={braceThickness}
+                  materialProps={braceMaterialProps}
+                />,
+                <BraceBetween
+                  key={`roof-brace-${bayIndex}-${side}-reverse`}
+                  start={[ridge[0], ridge[1], -bayDepth / 2]}
+                  end={[eave[0], eave[1], bayDepth / 2]}
+                  thickness={braceThickness}
+                  materialProps={braceMaterialProps}
+                />,
+              ]
+            }) : null}
           </group>
         )
       })}
