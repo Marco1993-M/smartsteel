@@ -103,6 +103,54 @@ function BraceBetween({ start, end, thickness, materialProps }) {
   )
 }
 
+function AtlasEaveConnection({ side, scale, materialProps, boltMaterialProps }) {
+  const plateLength = 0.28 * scale
+  const plateHeight = 0.2 * scale
+  const plateThickness = Math.max(0.012 * scale, 0.0025)
+  const boltRadius = Math.max(0.018 * scale, 0.0025)
+  const boltDepth = plateThickness + 0.003
+  const geometry = useMemo(() => {
+    const x = (value) => value * side
+    const shape = new Shape()
+    shape.moveTo(x(0), -plateHeight * 0.52)
+    shape.lineTo(x(-plateLength * 0.36), -plateHeight * 0.52)
+    shape.lineTo(x(-plateLength), plateHeight * 0.48)
+    shape.lineTo(x(-plateLength * 0.76), plateHeight * 0.62)
+    shape.lineTo(x(-plateLength * 0.2), plateHeight * 0.08)
+    shape.lineTo(x(0), plateHeight * 0.08)
+    shape.closePath()
+
+    const plateGeometry = new ExtrudeGeometry(shape, {
+      depth: plateThickness,
+      bevelEnabled: false,
+      curveSegments: 1,
+    })
+    plateGeometry.translate(0, 0, -plateThickness / 2)
+    plateGeometry.computeVertexNormals()
+    return plateGeometry
+  }, [plateHeight, plateLength, plateThickness, side])
+  const boltPositions = [
+    [-plateLength * 0.28 * side, -plateHeight * 0.28],
+    [-plateLength * 0.68 * side, plateHeight * 0.28],
+  ]
+
+  useEffect(() => () => geometry.dispose(), [geometry])
+
+  return (
+    <group>
+      <mesh geometry={geometry} castShadow>
+        <meshPhysicalMaterial {...materialProps} side={DoubleSide} />
+      </mesh>
+      {boltPositions.map(([x, y], index) => (
+        <mesh key={`${x}-${y}-${index}`} position={[x, y, plateThickness / 2 + 0.002]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+          <cylinderGeometry args={[boltRadius, boltRadius, boltDepth, 12]} />
+          <meshPhysicalMaterial {...boltMaterialProps} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 function createSteelSurfaceMap() {
   const size = 128
   const data = new Uint8Array(size * size * 4)
@@ -280,6 +328,10 @@ function WarehouseMesh({
 
   const garageDoorOpeningWidth =
     garageDoorOpeningType === "double" ? 5 * scale : garageDoorOpeningType === "custom" ? 4 * scale : 2.5 * scale
+  const atlasEaveClosureHeight = isAtlas
+    ? (((atlasProfiles.rafter.webMm / 2) + atlasProfiles.purlin.webMm) / 1000) * scale + 0.0015
+    : 0
+  const roofEndExtension = 0.12
 
   const gableShape = useMemo(() => {
     const shape = new Shape()
@@ -290,40 +342,53 @@ function WarehouseMesh({
     return shape
   }, [ridgeRise, w])
   const wallShapes = useMemo(() => {
-    const build = (face, span) => createWallShape({
+    const build = (face, span, openingSpan = span) => createWallShape({
       span,
-      height: h,
-      garagePositions: rollerDoorFace === face ? getOpeningPositions(rollerDoorCount, span, "garage") : [],
-      pedestrianPositions: pedestrianDoorFace === face ? getOpeningPositions(pedestrianDoorCount, span, "personnel") : [],
+      height: h + (["left", "right"].includes(face) ? atlasEaveClosureHeight : 0),
+      garagePositions: rollerDoorFace === face ? getOpeningPositions(rollerDoorCount, openingSpan, "garage") : [],
+      pedestrianPositions: pedestrianDoorFace === face ? getOpeningPositions(pedestrianDoorCount, openingSpan, "personnel") : [],
       garageWidth: garageDoorOpeningWidth,
     })
     return {
       front: build("front", w),
       rear: build("rear", w),
-      left: build("left", l),
-      right: build("right", l),
+      left: build("left", l + roofEndExtension, l),
+      right: build("right", l + roofEndExtension, l),
     }
-  }, [garageDoorOpeningWidth, h, l, pedestrianDoorCount, pedestrianDoorFace, rollerDoorCount, rollerDoorFace, w])
+  }, [atlasEaveClosureHeight, garageDoorOpeningWidth, h, l, pedestrianDoorCount, pedestrianDoorFace, rollerDoorCount, rollerDoorFace, roofEndExtension, w])
   const selectedSheetingColor = WAREHOUSE_SHEETING_COLORS.find((option) => option.value === sheetingColor)
   const roofColor = selectedSheetingColor?.hex || (isAtlas ? "#6689a3" : "#b91c1c")
   const wallColor = roofColor
   const steelColor = isMildSteel ? "#262d31" : isGalvanisedSteel ? "#c9d1d4" : "#d8dfe1"
   const roofHalfSpan = Math.sqrt((w / 2) ** 2 + ridgeRise ** 2)
+  const atlasRafterLength = roofHalfSpan + 0.04
   const roofAngle = Math.atan2(ridgeRise, w / 2)
   const hasCladding = cladding !== "None" && !structureView
   const columnThickness = 0.042
   const rafterThickness = 0.028
-  const roofSheetThickness = 0.018
-  const ridgeThickness = 0.022
-  const wallSheetThickness = 0.022
+  const atlasRafterDepth = (atlasProfiles.rafter.webMm / 1000) * scale
+  const atlasPurlinDepth = (atlasProfiles.purlin.webMm / 1000) * scale
+  const atlasColumnWallDepth = (atlasProfiles.column.webMm / 1000) * scale
+  const atlasColumnEndDepth = (atlasProfiles.column.flangeMm / 1000) * scale
+  const atlasGirtDepth = (atlasProfiles.sideGirt.flangeMm / 1000) * scale
+  const roofSheetThickness = isAtlas ? 0.0032 : 0.018
+  const ridgeThickness = isAtlas ? 0.004 : 0.022
+  const wallSheetThickness = isAtlas ? roofSheetThickness : 0.022
   const braceThickness = 0.018
   const secondaryMemberThickness = 0.022
   const secondaryMemberDepth = 0.035
   const sheetingClearance = 0.018
-  const roofSecondaryOffset = isAtlas ? rafterThickness / 2 + secondaryMemberDepth / 2 : 0
-  const wallSecondaryOffset = isAtlas ? columnThickness / 2 + secondaryMemberDepth / 2 : 0
-  const roofSheetOffset = rafterThickness / 2 + (isAtlas ? secondaryMemberDepth : 0) + sheetingClearance + roofSheetThickness / 2
-  const wallSheetOffset = columnThickness / 2 + (isAtlas ? secondaryMemberDepth : 0) + sheetingClearance + wallSheetThickness / 2
+  const roofSecondaryOffset = isAtlas ? atlasRafterDepth / 2 + atlasPurlinDepth / 2 : 0
+  const wallSecondaryOffset = isAtlas ? atlasColumnWallDepth / 2 + atlasGirtDepth / 2 : 0
+  const roofSheetOffset = isAtlas
+    ? atlasRafterDepth / 2 + atlasPurlinDepth + 0.0015 + roofSheetThickness / 2
+    : rafterThickness / 2 + sheetingClearance + roofSheetThickness / 2
+  const sideWallSheetOffset = isAtlas
+    ? atlasColumnWallDepth / 2 + atlasGirtDepth + 0.0015 + wallSheetThickness / 2
+    : columnThickness / 2 + sheetingClearance + wallSheetThickness / 2
+  const endWallSheetOffset = isAtlas
+    ? atlasColumnEndDepth / 2 + 0.0015 + wallSheetThickness / 2
+    : sideWallSheetOffset
   const steelSurfaceMap = useMemo(() => createSteelSurfaceMap(), [])
 
   useEffect(() => () => steelSurfaceMap.dispose(), [steelSurfaceMap])
@@ -362,6 +427,12 @@ function WarehouseMesh({
     clearcoatRoughness: isGalvanisedSteel ? 0.86 : 0.8,
   }
 
+  const boltMaterialProps = {
+    color: isMildSteel ? "#11181c" : "#8d989d",
+    metalness: 0.72,
+    roughness: 0.38,
+  }
+
   const roofMaterialProps = {
     color: roofColor,
     metalness: 0.44,
@@ -370,13 +441,15 @@ function WarehouseMesh({
     clearcoatRoughness: 0.4,
   }
 
-  const wallMaterialProps = {
-    color: wallColor,
-    metalness: 0.22,
-    roughness: 0.58,
-    clearcoat: 0.08,
-    clearcoatRoughness: 0.48,
-  }
+  const wallMaterialProps = isAtlas
+    ? { ...roofMaterialProps, color: wallColor }
+    : {
+        color: wallColor,
+        metalness: 0.22,
+        roughness: 0.58,
+        clearcoat: 0.08,
+        clearcoatRoughness: 0.48,
+      }
 
   const ridgeMaterialProps = {
     color: isAtlas ? "#315b78" : "#7f1d1d",
@@ -409,10 +482,16 @@ function WarehouseMesh({
                 <LippedChannelMember profile={atlasProfiles.column} length={h} scale={scale} materialProps={frameMaterialProps} rotation={[-Math.PI / 2, 0, Math.PI / 2]} backToBack />
               </group>
               <group position={[-w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, roofAngle]}>
-                <LippedChannelMember profile={atlasProfiles.rafter} length={roofHalfSpan} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} />
+                <LippedChannelMember profile={atlasProfiles.rafter} length={atlasRafterLength} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} />
               </group>
               <group position={[w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, -roofAngle]}>
-                <LippedChannelMember profile={atlasProfiles.rafter} length={roofHalfSpan} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} />
+                <LippedChannelMember profile={atlasProfiles.rafter} length={atlasRafterLength} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} />
+              </group>
+              <group position={[-w / 2, h, 0.001]}>
+                <AtlasEaveConnection side={-1} scale={scale} materialProps={frameMaterialProps} boltMaterialProps={boltMaterialProps} />
+              </group>
+              <group position={[w / 2, h, 0.001]}>
+                <AtlasEaveConnection side={1} scale={scale} materialProps={frameMaterialProps} boltMaterialProps={boltMaterialProps} />
               </group>
             </>
           ) : (
@@ -535,13 +614,13 @@ function WarehouseMesh({
         <>
           <group position={[-w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, roofAngle]}>
             <mesh position={[0, roofSheetOffset, 0]} receiveShadow>
-              <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
+              <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + roofEndExtension]} />
               <meshPhysicalMaterial {...roofMaterialProps} />
             </mesh>
           </group>
           <group position={[w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, -roofAngle]}>
             <mesh position={[0, roofSheetOffset, 0]} receiveShadow>
-              <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + 0.12]} />
+              <boxGeometry args={[roofHalfSpan + 0.08, roofSheetThickness, l + roofEndExtension]} />
               <meshPhysicalMaterial {...roofMaterialProps} />
             </mesh>
           </group>
@@ -554,28 +633,28 @@ function WarehouseMesh({
 
       {hasCladding && enclosureType === "fully_enclosed" ? (
         <>
-          <mesh position={[0, 0, -l / 2 - wallSheetOffset]} receiveShadow>
+          <mesh position={[0, 0, -l / 2 - endWallSheetOffset]} receiveShadow>
             <shapeGeometry args={[wallShapes.front]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[0, 0, l / 2 + wallSheetOffset]} receiveShadow>
+          <mesh position={[0, 0, l / 2 + endWallSheetOffset]} receiveShadow>
             <shapeGeometry args={[wallShapes.rear]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[-w / 2 - wallSheetOffset, 0, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+          <mesh position={[-w / 2 - sideWallSheetOffset, 0, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
             <shapeGeometry args={[wallShapes.left]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[w / 2 + wallSheetOffset, 0, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+          <mesh position={[w / 2 + sideWallSheetOffset, 0, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
             <shapeGeometry args={[wallShapes.right]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[0, h, -l / 2 - wallSheetOffset]} receiveShadow>
+          <mesh position={[0, h, -l / 2 - endWallSheetOffset]} receiveShadow>
             <shapeGeometry args={[gableShape]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
           <mesh
-            position={[0, h, l / 2 + wallSheetOffset]}
+            position={[0, h, l / 2 + endWallSheetOffset]}
             rotation={[0, Math.PI, 0]}
             receiveShadow
           >
@@ -587,11 +666,11 @@ function WarehouseMesh({
 
       {hasCladding && (enclosureType === "open_sides" || enclosureType === "side_walls") ? (
         <>
-          <mesh position={[-w / 2 - wallSheetOffset, 0, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+          <mesh position={[-w / 2 - sideWallSheetOffset, 0, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
             <shapeGeometry args={[wallShapes.left]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
-          <mesh position={[w / 2 + wallSheetOffset, 0, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+          <mesh position={[w / 2 + sideWallSheetOffset, 0, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
             <shapeGeometry args={[wallShapes.right]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
