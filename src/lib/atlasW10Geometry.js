@@ -3,7 +3,7 @@ import { calculateLippedChannelMassKgPerM } from "./atlasLippedChannelProfiles.j
 export const ATLAS_W10_LENGTHS_M = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60]
 export const ATLAS_W10_EAVE_HEIGHTS_M = [3, 4, 4.5, 5]
 
-const PROFILE = {
+export const ATLAS_W10_PROFILES = {
   column: { webMm: 250, flangeMm: 75, lipMm: 20, thicknessMm: 2.5 },
   rafter: { webMm: 200, flangeMm: 75, lipMm: 20, thicknessMm: 2.5 },
   purlin: { webMm: 175, flangeMm: 65, lipMm: 20, thicknessMm: 2 },
@@ -14,6 +14,8 @@ const PROFILE = {
   gableGirt: { webMm: 150, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
   apexHaunch: { webMm: 175, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
 }
+
+const PROFILE = ATLAS_W10_PROFILES
 
 function round(value, digits = 4) { return Number(Number(value).toFixed(digits)) }
 

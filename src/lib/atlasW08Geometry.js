@@ -4,13 +4,15 @@ export const ATLAS_W08_LENGTHS_M = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48
 export const ATLAS_W08_EAVE_HEIGHTS_M = [3, 4, 4.5, 5]
 export const ATLAS_W08_EXACT_MEMBER_CODES = new Set(["W08-COL", "W08-RAF", "W08-PUR"])
 
-const PROFILE = {
+export const ATLAS_W08_PROFILES = {
   column: { webMm: 200, flangeMm: 75, lipMm: 20, thicknessMm: 2 },
   rafter: { webMm: 200, flangeMm: 75, lipMm: 20, thicknessMm: 2.5 },
   purlin: { webMm: 175, flangeMm: 65, lipMm: 20, thicknessMm: 2 },
   bracing: { webMm: 100, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
   sideGirt: { webMm: 150, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
 }
+
+const PROFILE = ATLAS_W08_PROFILES
 
 function round(value, digits = 4) {
   return Number(Number(value).toFixed(digits))
