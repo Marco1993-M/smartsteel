@@ -21,6 +21,10 @@ import { getAtlasW10PrimaryBenchmark } from "../../lib/atlasW10PricingBenchmarks
 import { ATLAS_W10_EAVE_HEIGHTS_M, ATLAS_W10_LENGTHS_M, applyAtlasW10GeometryToPricing, calculateAtlasW10Geometry } from "../../lib/atlasW10Geometry"
 import { getAtlasW12PrimaryBenchmark } from "../../lib/atlasW12PricingBenchmarks"
 import { ATLAS_W12_EAVE_HEIGHTS_M, ATLAS_W12_LENGTHS_M, applyAtlasW12GeometryToPricing, calculateAtlasW12Geometry } from "../../lib/atlasW12Geometry"
+import {
+  ATLAS_WAREHOUSE_SHEETING_OPTIONS,
+  calculateAtlasWarehouseEstimate,
+} from "../../lib/estimates/atlasWarehouseEstimate"
 import AtlasModuleHero from "./AtlasModuleHero"
 
 const STATUS_LABELS = {
@@ -79,6 +83,9 @@ export default function AtlasPricingWorkspace() {
   const [configurationLengthM, setConfigurationLengthM] = useState(20)
   const [configurationEaveHeightM, setConfigurationEaveHeightM] = useState(3)
   const [configurationMaterial, setConfigurationMaterial] = useState("zam")
+  const [configurationSheetingMode, setConfigurationSheetingMode] = useState("structure_only")
+  const [configurationSheetingProfile, setConfigurationSheetingProfile] = useState("IBR")
+  const [configurationSheetingFinish, setConfigurationSheetingFinish] = useState("galvanised")
 
   useEffect(() => {
     let active = true
@@ -135,6 +142,9 @@ export default function AtlasPricingWorkspace() {
     setConfigurationLengthM(20)
     setConfigurationEaveHeightM(["W06", "W10", "W12"].includes(productCode) ? 4.5 : 3)
     setConfigurationMaterial("zam")
+    setConfigurationSheetingMode("structure_only")
+    setConfigurationSheetingProfile("IBR")
+    setConfigurationSheetingFinish("galvanised")
   }, [productCode])
 
   const geometry = useMemo(() => productCode === "W08"
@@ -176,6 +186,15 @@ export default function AtlasPricingWorkspace() {
     return groups
   }, {})), [configuredRecords])
   const assembledSummary = useMemo(() => summarizeAtlasPricing(configuredRecords), [configuredRecords])
+  const releasedEstimate = useMemo(() => calculateAtlasWarehouseEstimate({
+    width: Number(productCode.slice(1)),
+    length: configurationLengthM,
+    wallHeight: configurationEaveHeightM,
+    steelFinish: configurationMaterial === "mild" ? "Mild" : configurationMaterial === "galvanised" ? "Galv" : "ZAM",
+    gableMode: configurationSheetingMode,
+    sheetingProfile: configurationSheetingProfile,
+    sheetingFinish: configurationSheetingFinish,
+  }), [productCode, configurationLengthM, configurationEaveHeightM, configurationMaterial, configurationSheetingMode, configurationSheetingProfile, configurationSheetingFinish])
   const pricingBenchmark = productCode === "W08" ? getAtlasW08PrimaryBenchmark() : productCode === "W06" ? getAtlasW06PrimaryBenchmark() : productCode === "W10" ? getAtlasW10PrimaryBenchmark() : productCode === "W12" ? getAtlasW12PrimaryBenchmark() : null
   const controlledLengths = productCode === "W06" ? ATLAS_W06_LENGTHS_M : productCode === "W10" ? ATLAS_W10_LENGTHS_M : productCode === "W12" ? ATLAS_W12_LENGTHS_M : ATLAS_W08_LENGTHS_M
   const controlledHeights = productCode === "W06" ? ATLAS_W06_EAVE_HEIGHTS_M : productCode === "W10" ? ATLAS_W10_EAVE_HEIGHTS_M : productCode === "W12" ? ATLAS_W12_EAVE_HEIGHTS_M : ATLAS_W08_EAVE_HEIGHTS_M
@@ -361,21 +380,47 @@ export default function AtlasPricingWorkspace() {
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Eave height</span><select value={configurationEaveHeightM} onChange={(event) => setConfigurationEaveHeightM(Number(event.target.value))} className={inputClass}>{controlledHeights.map((height) => <option key={height} value={height}>{height}m</option>)}</select></label>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Structure material</span><select value={configurationMaterial} onChange={(event) => setConfigurationMaterial(event.target.value)} className={inputClass}><option value="zam">ZAM</option><option value="galvanised">Galvanised</option><option value="mild">Mild steel</option></select></label>
           </div>
+          <div className="mt-4 grid gap-4 border-t border-sky-200 pt-4 sm:grid-cols-3">
+            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting scope</span><select value={configurationSheetingMode} onChange={(event) => setConfigurationSheetingMode(event.target.value)} className={inputClass}>{ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting profile</span><select value={configurationSheetingProfile} onChange={(event) => setConfigurationSheetingProfile(event.target.value)} disabled={configurationSheetingMode === "structure_only"} className={`${inputClass} disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}><option>Corrugated</option><option>IBR</option><option>Concealed Fix</option></select></label>
+            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting finish</span><select value={configurationSheetingFinish} onChange={(event) => setConfigurationSheetingFinish(event.target.value)} disabled={configurationSheetingMode === "structure_only"} className={`${inputClass} disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}><option value="galvanised">Galvanised</option><option value="chromadek">Chromadek</option></select></label>
+          </div>
           <div className="mt-4 grid gap-px border border-sky-200 bg-sky-200 sm:grid-cols-2 lg:grid-cols-5">{[["Portal frames", geometry.portalFrames], ["Rafter cut", `${geometry.rafterCutLengthM}m`], ["Purlin rows", geometry.totalPurlinRows], ["Confirmed mass", `${geometry.confirmedStructuralMassKg.toLocaleString("en-ZA")}kg`], ["Technical holds", geometry.holds.length]].map(([label, value]) => <div key={label} className="bg-white p-3"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-base font-bold text-slate-950">{value}</p></div>)}</div>
         </section>
       ) : null}
 
+      <section className="overflow-hidden border border-[#0043f3] bg-[#0043f3] text-white shadow-xl">
+        <div className="grid gap-px bg-white/15 lg:grid-cols-[minmax(0,1.25fr)_repeat(4,minmax(135px,0.55fr))]">
+          <div className="bg-gradient-to-br from-[#001d2e] to-[#0043f3] p-5 sm:p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Released client guide · same engine as 3D builder</p>
+            <p className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{formatMoney(releasedEstimate.pricing.estimatedTotal)}</p>
+            <p className="mt-2 text-xs leading-5 text-white/70">Excluding VAT · {releasedEstimate.summary.shortDescription}. This is the comparable public guide price for the selected scope above.</p>
+          </div>
+          {[
+            ["Structure steel", releasedEstimate.pricing.steelCost],
+            ["Connections", releasedEstimate.pricing.connectionCost],
+            ["Sheeting", releasedEstimate.pricing.claddingCost],
+            ["40% uplift", releasedEstimate.pricing.markupValue],
+          ].map(([label, value]) => (
+            <div key={label} className="bg-[#001d2e] p-5 sm:p-6">
+              <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-white/45">{label}</p>
+              <p className="mt-2 text-lg font-bold">{formatMoney(value)}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="overflow-hidden border border-slate-900 bg-slate-950 text-white shadow-xl">
         <div className="grid gap-px bg-white/10 lg:grid-cols-[minmax(0,1.35fr)_repeat(3,minmax(150px,0.55fr))]">
           <div className="bg-slate-950 p-5 sm:p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-300">Live assembled {productCode} baseline</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-300">Internal component-register total · not the client guide</p>
             <div className="mt-3 flex flex-wrap items-end gap-4">
               <p className="text-3xl font-bold tracking-tight sm:text-4xl">{formatMoney(assembledSummary.totalCost)}</p>
               <span className={`mb-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${assembledSummary.holdCount ? "bg-amber-300 text-slate-950" : "bg-emerald-300 text-emerald-950"}`}>
                 {assembledSummary.holdCount ? `${assembledSummary.holdCount} holds` : "Quote ready"}
               </span>
             </div>
-            <p className="mt-2 max-w-xl text-xs leading-5 text-slate-400">Calculated from member quantity × cut length × kg/m × the controlled cost rate, followed by one 40% commercial uplift. The source sheet is used only as a variance benchmark.</p>
+            <p className="mt-2 max-w-xl text-xs leading-5 text-slate-400">This diagnostic total only includes pricing rows currently present in the editable OS register. It may omit sheeting, gable members, or ungenerated connection quantities and must not be compared with a completed builder scope.</p>
           </div>
           {[
             ["Calculated cost", assembledSummary.rawCost],

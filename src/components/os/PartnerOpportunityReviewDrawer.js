@@ -48,7 +48,7 @@ export default function PartnerOpportunityReviewDrawer({
   const scopeLabel = config.gableMode === "roof_only"
     ? "Roof sheeting"
     : config.gableMode === "fully_enclosed"
-      ? "Roof and walls sheeted"
+      ? "Roof and side walls sheeted"
       : "Structure only"
   const reviewChecks = [
     ["Customer contact", Boolean(record.customerPhone || record.customerEmail)],
