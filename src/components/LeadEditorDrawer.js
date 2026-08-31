@@ -932,6 +932,8 @@ export default function LeadEditorDrawer({
         "",
       steelFinish: selectedSteelFinish,
       builder_configuration: builderConfiguration,
+      builder_submission_id: builderSubmission?.id || "",
+      design_reference: builderDesignReference,
     })
   }
 

@@ -287,6 +287,17 @@ function buildInitialState(lead, estimate) {
         : getLeadSheetingMode(lead),
     notes: estimate?.notes || "",
     estimateName: stripVersionSuffix(estimate?.title) || "",
+    sourceSubmissionId:
+      estimate?.source_submission_id ||
+      latestInput.sourceSubmissionId ||
+      lead?.builder_submission_id ||
+      "",
+    designReference:
+      estimate?.design_reference ||
+      latestInput.designReference ||
+      lead?.design_reference ||
+      lead?.builder_configuration?.designReference ||
+      "",
   }
 
   return buildProductTypeAdjustedState(initialState, productType)
@@ -472,6 +483,8 @@ function buildEstimateDraft({
     product_type: formState.productType,
     product_type_display: formState.productTypeLabel?.trim() || formState.productType,
     title: `${resolveEstimateTitle(formState, preview)} V${versionNo}`,
+    source_submission_id: formState.sourceSubmissionId || null,
+    design_reference: formState.designReference || null,
     input_data: {
       ...preview.input,
       sku: preview.meta?.sku || null,
@@ -481,6 +494,8 @@ function buildEstimateDraft({
       productType: formState.productType,
       productTypeLabel: formState.productTypeLabel?.trim() || formState.productType,
       discountPercent: Math.min(100, Math.max(0, Number(formState.discountPercent) || 0)),
+      sourceSubmissionId: formState.sourceSubmissionId || null,
+      designReference: formState.designReference || null,
     },
     original_line_items: preview.lineItems,
     line_items: editableLineItems,

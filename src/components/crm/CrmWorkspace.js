@@ -1021,8 +1021,29 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     }
   }
 
-  const handleOpenEstimate = (lead) => {
-    setEstimatingLead(lead)
+  const handleOpenEstimate = async (lead) => {
+    if (!lead?.id || lead.builder_submission_id || lead.design_reference) {
+      setEstimatingLead(lead)
+      return
+    }
+
+    const { data, error } = await supabase
+      .from("warehouse_builder_submissions")
+      .select("id, configuration, summary")
+      .eq("lead_id", lead.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error) console.warn("Could not load the builder reference for this estimate:", error)
+    const configuration = data?.configuration || {}
+    const summary = data?.summary || {}
+    setEstimatingLead({
+      ...lead,
+      builder_submission_id: data?.id || "",
+      design_reference: configuration.designReference || summary.designReference || "",
+      builder_configuration: configuration,
+    })
   }
 
   const handleOpenInvoice = (lead) => {
@@ -1180,6 +1201,8 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       product_type: estimateDraft.product_type,
       product_type_display: estimateDraft.product_type_display || estimateDraft.product_type || "",
       title: `${estimateBaseTitle} V${initialVersion}`,
+      source_submission_id: estimateDraft.source_submission_id || null,
+      design_reference: estimateDraft.design_reference || null,
       input_data: estimateDraft.input_data,
       original_line_items: estimateDraft.original_line_items || [],
       line_items: estimateDraft.line_items,
@@ -1270,7 +1293,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
           break
         }
 
-        if (!missingColumn || !["share_token", "shared_at", "prepared_at", "sent_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url", "product_type_display", "original_line_items"].includes(missingColumn)) {
+        if (!missingColumn || !["share_token", "shared_at", "prepared_at", "sent_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url", "product_type_display", "original_line_items", "source_submission_id", "design_reference"].includes(missingColumn)) {
           alert("Error saving estimate: " + insertResult.error.message)
           return false
         }

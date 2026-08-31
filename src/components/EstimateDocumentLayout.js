@@ -111,6 +111,12 @@ export default function EstimateDocumentLayout({
                 <span className="text-slate-500">Version</span>
                 <span className="font-semibold text-slate-900">{estimate.version_no}</span>
               </div>
+              {documentModel.designReference ? (
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-slate-500">Builder ref.</span>
+                  <span className="font-semibold text-slate-900">{documentModel.designReference}</span>
+                </div>
+              ) : null}
               <div className="flex items-center justify-between gap-4">
                 <span className="text-slate-500">Prepared</span>
                 <span className="font-semibold text-slate-900">{documentModel.createdLabel}</span>
