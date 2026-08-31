@@ -22,6 +22,13 @@ import {
   REGION_WAREHOUSE_WIDTHS,
 } from "./regionWarehouseData";
 import { calculateAtlasWarehouseEstimate } from "../../lib/estimates/atlasWarehouseEstimate.js";
+import {
+  AtlasMasthead,
+  AtlasMaterialStudy,
+  AtlasPrimaryAction,
+  AtlasSecondaryAction,
+  AtlasSectionLabel,
+} from "../../components/atlas/AtlasPagePrimitives.js";
 
 const HERO_LENGTHS = [12, 20, 32, 40];
 
@@ -74,7 +81,7 @@ const pricingScopes = [
   },
   {
     key: "fully_enclosed",
-    title: "Roof and walls sheeted",
+    title: "Roof and side walls sheeted",
     description: "Structure plus galvanised IBR roof and wall sheeting. Openings are reviewed separately.",
   },
 ];
@@ -158,21 +165,7 @@ export default function AtlasRegionWarehouseExperience({
 
       <section className="bg-white px-4 pb-10 pt-24 sm:px-6 sm:pt-28 lg:px-8 lg:pb-14 lg:pt-28">
         <div className="mx-auto max-w-7xl border border-[#001D2E]/15 bg-white shadow-[0_40px_100px_-72px_rgba(0,29,46,0.72)]">
-          <div className="flex flex-wrap items-center justify-between gap-5 bg-[#001D2E] px-5 py-5 sm:px-8">
-            <Image
-              src="/atlas/atlas-logo-horizontal-light.png"
-              alt="Atlas by Smart Steel"
-              width={320}
-              height={50}
-              priority
-              className="h-10 w-auto max-w-full object-contain object-left sm:h-12"
-            />
-            <div className="flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/58">
-              <span>Product dossier</span>
-              <span className="h-6 w-px bg-white/18" />
-              <span>{content.lastUpdated}</span>
-            </div>
-          </div>
+          <AtlasMasthead descriptor="Product dossier" meta={content.lastUpdated} />
 
           <div className="grid lg:grid-cols-[1.18fr_0.82fr]">
             <div className="relative overflow-hidden border-b border-[#001D2E]/12 p-6 sm:p-10 lg:border-b-0 lg:border-r lg:p-12">
@@ -190,20 +183,10 @@ export default function AtlasRegionWarehouseExperience({
                   {content.heroDescription}
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Link
-                    href={selectedBuilderHref}
-                    className="group inline-flex items-center gap-3 bg-[#0043F3] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#001D2E]"
-                  >
+                  <AtlasPrimaryAction href={selectedBuilderHref}>
                     Build and price this warehouse
-                    <ArrowUpRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
-                  </Link>
-                  <a
-                    href="#pricing"
-                    className="inline-flex items-center gap-3 border border-[#001D2E]/20 bg-white px-5 py-3.5 text-sm font-semibold text-[#001D2E] transition hover:border-[#0043F3] hover:text-[#0043F3]"
-                  >
-                    Compare guide prices
-                    <span aria-hidden="true">↓</span>
-                  </a>
+                  </AtlasPrimaryAction>
+                  <AtlasSecondaryAction href="#pricing">Compare guide prices</AtlasSecondaryAction>
                 </div>
               </div>
 
@@ -221,7 +204,7 @@ export default function AtlasRegionWarehouseExperience({
             <aside className="bg-[#F3F7F9] p-5 sm:p-8 lg:p-10">
               <div className="flex items-start justify-between gap-5">
                 <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0043F3]">Configure / 01</p>
+                  <AtlasSectionLabel>Configure / 01</AtlasSectionLabel>
                   <h2 className="mt-2 text-3xl font-semibold text-[#001D2E]">Set the footprint.</h2>
                 </div>
                 <CalculatorIcon className="h-7 w-7 text-[#0043F3]" aria-hidden="true" />
@@ -450,9 +433,7 @@ export default function AtlasRegionWarehouseExperience({
       <section id="spec" className="bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#0043F3]">
-              System specification
-            </p>
+            <AtlasSectionLabel className="text-xs tracking-[0.24em]">System specification</AtlasSectionLabel>
             <h2 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
               Clear Atlas specifications for your project.
             </h2>
@@ -468,32 +449,15 @@ export default function AtlasRegionWarehouseExperience({
             </div>
           </div>
 
-          <div className="relative min-h-[440px] overflow-hidden bg-[#001D2E] sm:min-h-[560px] lg:min-h-[640px]">
-            <Image
-              src="/Atlas_warehouses_w08_spec_sheet.png"
-              alt="Punched Atlas W08 cold-formed lip channel members"
-              fill
-              sizes="(min-width: 1024px) 40vw, 100vw"
-              className="scale-[1.28] object-cover object-[center_12%]"
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,29,46,0.02)_45%,rgba(0,29,46,0.86)_100%)]" />
-            <div className="absolute left-0 top-0 bg-[#0043F3] px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
-              Material study / W08
-            </div>
-            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-5 p-5 text-white sm:p-7">
-              <div>
-                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#C1D9E5]">
-                  Cold-formed member
-                </p>
-                <p className="mt-2 max-w-sm text-xl font-semibold leading-tight">
-                  Rolled, punched, and prepared for the Atlas connection system.
-                </p>
-              </div>
-              <span className="hidden border-l border-white/30 pl-4 font-mono text-xs text-white/62 sm:block">
-                ATLAS / SPEC 04
-              </span>
-            </div>
-          </div>
+          <AtlasMaterialStudy
+            src="/Atlas_warehouses_w08_spec_sheet.png"
+            alt="Punched Atlas W08 cold-formed lip channel members"
+            label="Material study / W08"
+            eyebrow="Cold-formed member"
+            caption="Rolled, punched, and prepared for the Atlas connection system."
+            reference="ATLAS / SPEC 04"
+            imageClassName="scale-[1.28] object-cover object-[center_12%]"
+          />
         </div>
       </section>
 

@@ -81,7 +81,7 @@ export default function WarehouseBuilderSummaryClient() {
   })
   const systemName = isAtlas ? "Atlas W-Series Warehouse" : "Engineered LSF Warehouse"
   const finishName = isAtlas
-    ? `${configuration.steelFinish} · ${configuration.gableMode === "structure_only" ? "Structure only" : configuration.gableMode === "roof_only" ? "Roof sheeting" : "Roof and walls sheeted"}`
+    ? `${configuration.steelFinish} · ${configuration.gableMode === "structure_only" ? "Structure only" : configuration.gableMode === "roof_only" ? "Roof sheeting" : "Roof and side walls sheeted"}`
     : `${configuration.cladding} · ${configuration.enclosureType.replaceAll("_", " ")}`
   const sheetingFinishLabel = configuration.gableMode === "structure_only"
     ? "Not selected"

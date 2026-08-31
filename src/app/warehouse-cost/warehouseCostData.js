@@ -10,7 +10,7 @@ const FINISHES = ["ZAM", "Galv", "Mild"]
 const SCOPES = [
   { key: "structure_only", label: "Structure only", description: "Atlas frame, purlins, bracing and connection hardware." },
   { key: "roof_only", label: "Roof sheeted", description: "Atlas structure with galvanised IBR roof sheeting." },
-  { key: "fully_enclosed", label: "Roof and walls sheeted", description: "Atlas structure with galvanised IBR roof and wall sheeting." },
+  { key: "fully_enclosed", label: "Roof and side walls sheeted", description: "Atlas structure with galvanised IBR roof and side-wall sheeting. Gable ends remain open." },
 ]
 
 const formatDimension = (value) => `${Number.isInteger(value) ? value : value.toFixed(1)}m`
