@@ -220,6 +220,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
     estimateNumber: `${String(estimate?.product_type || "Estimate").slice(0, 3).toUpperCase()}-${String(
       estimate?.version_no || 1
     ).padStart(3, "0")}`,
+    designReference: estimate?.design_reference || input.designReference || "",
     createdLabel: formatEstimateDate(estimate?.created_at),
     validUntilLabel: formatEstimateDate(addDays(estimate?.created_at, 14)),
     clientName: [lead?.name, lead?.last_name].filter(Boolean).join(" ") || "Client not linked",
