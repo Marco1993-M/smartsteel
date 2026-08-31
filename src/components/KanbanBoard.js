@@ -38,6 +38,7 @@ function getFollowUpTiming(lead) {
 
 function matchesSequenceFilter(lead, sequence, filter) {
   if (filter === "all") return true
+  if (["won", "lost"].includes(normalizeStatus(lead.status))) return false
   if (filter === "attention") {
     return Boolean(sequence?.last_response_key) || sequence?.status === "failed" || Boolean(sequence?.last_error) || ["overdue", "today"].includes(getFollowUpTiming(lead)) || !lead?.next_action?.trim()
   }
@@ -49,6 +50,9 @@ function matchesSequenceFilter(lead, sequence, filter) {
 }
 
 function getCardAttention(lead, sequence) {
+  const status = normalizeStatus(lead.status)
+  if (status === "won") return { label: "Won · closed", rail: "bg-emerald-500", score: 0 }
+  if (status === "lost") return { label: "Lost · closed", rail: "bg-slate-300", score: 0 }
   if (sequence?.last_response_key) return { label: "Client response", rail: "bg-emerald-500", score: 600 }
   if (sequence?.status === "failed" || sequence?.last_error) return { label: "Follow-up error", rail: "bg-rose-600", score: 550 }
   const timing = getFollowUpTiming(lead)
@@ -412,7 +416,8 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
   const createdAtLabel = formatCreatedAtLabel(lead.created_at)
   const opportunitySummary = getOpportunitySummary(lead)
   const hasQuoteValue = String(lead.quote_value || "").trim().length > 0
-  const sequencePresentation = getSequencePresentation(sequence)
+  const isClosed = ["won", "lost"].includes(normalizedStatus)
+  const sequencePresentation = isClosed ? null : getSequencePresentation(sequence)
   const attention = getCardAttention(lead, sequence)
   const contextualAction = getContextualAction(lead, sequence)
   const showCreatedAt = shouldShowCreatedAt(lead)
