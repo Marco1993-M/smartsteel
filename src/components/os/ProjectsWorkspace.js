@@ -23,6 +23,7 @@ const VISIT_TYPES = [
   { label: "Pre-start inspection", recordType: "Inspection" },
   { label: "Foundations inspection", recordType: "Inspection" },
   { label: "Structural frame inspection", recordType: "Inspection" },
+  { label: "Structural installation sign-off", recordType: "Stage sign-off" },
   { label: "Roof and cladding inspection", recordType: "Inspection" },
   { label: "Practical completion", recordType: "Inspection" },
 ]
@@ -73,6 +74,20 @@ const CHECKLISTS = {
     "Connections, bolts, and fasteners are complete",
     "Bracing and tie-downs are installed",
     "No unacceptable damage or unapproved alterations visible",
+  ],
+  "Structural installation sign-off": [
+    "Current issued drawings, project scope, and approved structural configuration are available",
+    "Building set-out, footprint, portal spacing, and overall frame arrangement match the issued information",
+    "Columns are correctly positioned, plumb, aligned, and adequately seated at their base connections",
+    "Rafters are aligned, the roof form is consistent, and the ridge and eave junctions are complete",
+    "Purlins, girts, and secondary members required for the agreed structural scope are installed and aligned",
+    "Base, eave, ridge, purlin, girt, and bracing connections are complete for this installation stage",
+    "Bolts, nuts, washers, anchors, and other specified fasteners are present and visually secure",
+    "Wall and roof bracing follows the required continuous load path and is fixed at each connection point",
+    "Members and protective finishes show no unacceptable damage, distortion, corrosion, or unapproved alteration",
+    "Openings, clearances, eave heights, and interfaces with follow-on work match the agreed project scope",
+    "Outstanding snags, exclusions, client-supplied work, and corrective actions are recorded below",
+    "The installed structure is ready for the next agreed stage, subject to the outcome and actions recorded in this sign-off",
   ],
   "Roof and cladding inspection": [
     "Purlins and cladding supports are complete",
@@ -127,6 +142,10 @@ function createVisit(project, selectedType) {
     summary: "",
     outcome: "Open",
     acknowledgement: "",
+    acknowledgementRole: "",
+    acknowledgementCompany: "",
+    acknowledgementDate: "",
+    acceptanceConfirmed: false,
     items: (CHECKLISTS[visitType] || CHECKLISTS["General site visit"]).map((label) => ({
       label,
       status: "Not checked",
@@ -143,6 +162,10 @@ function normalizeVisit(visit) {
     recordType: visit.recordType || (visit.visitType?.includes("inspection") || visit.visitType === "Practical completion" ? "Inspection" : "Site visit"),
     recordState: visit.recordState || "Draft",
     acknowledgement: visit.acknowledgement || "",
+    acknowledgementRole: visit.acknowledgementRole || "",
+    acknowledgementCompany: visit.acknowledgementCompany || "",
+    acknowledgementDate: visit.acknowledgementDate || "",
+    acceptanceConfirmed: Boolean(visit.acceptanceConfirmed),
     items: (visit.items || []).map((item) => ({ status: "Not checked", note: "", ...item })),
     actions: (visit.actions || []).map((action) => ({ priority: "Normal", status: action.closed ? "Resolved" : "Open", ...action })),
     photos: (visit.photos || []).map((photo) => ({ caption: "", linkedItem: "", ...photo })),
@@ -166,6 +189,14 @@ function getVisitProgress(visit) {
     Boolean(visit.summary?.trim()),
     visit.items.length > 0 && visit.items.every((item) => item.status !== "Not checked"),
   ]
+  if (visit.visitType === "Structural installation sign-off") {
+    required.push(
+      Boolean(visit.acknowledgement?.trim()),
+      Boolean(visit.acknowledgementRole?.trim()),
+      Boolean(visit.acknowledgementDate),
+      Boolean(visit.acceptanceConfirmed),
+    )
+  }
   const completed = required.filter(Boolean).length
   return { completed, total: required.length, percent: Math.round((completed / required.length) * 100) }
 }
@@ -278,6 +309,7 @@ function getReportStatusTone(status) {
 }
 
 function SiteReportDocument({ project, visit, company }) {
+  const isStructuralSignoff = visit.visitType === "Structural installation sign-off"
   const checkedItems = visit.items.filter((item) => item.status !== "Not checked")
   const attentionItems = visit.items.filter((item) => ["Attention", "Attention required", "Follow up", "Action required", "Fail"].includes(item.status))
   const openActions = visit.actions.filter((action) => action.status !== "Resolved")
@@ -401,19 +433,40 @@ function SiteReportDocument({ project, visit, company }) {
           ) : <p className="mt-4 border-y border-slate-200 py-5 text-sm text-slate-500">No follow-up actions were recorded during this visit.</p>}
         </section>
 
-        <section className="mt-8 grid grid-cols-2 gap-8 border-t border-slate-200 pt-6">
-          <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Acknowledged by</p><p className="mt-3 text-sm font-semibold">{visit.acknowledgement || "Not recorded"}</p></div>
-          <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Record status</p><p className="mt-3 text-sm font-semibold">{visit.recordState}{visit.issuedAt ? ` · Issued ${new Date(visit.issuedAt).toLocaleDateString("en-ZA")}` : ""}</p></div>
-        </section>
+        {!isStructuralSignoff ? (
+          <section className="mt-8 grid grid-cols-2 gap-8 border-t border-slate-200 pt-6">
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Acknowledged by</p><p className="mt-3 text-sm font-semibold">{visit.acknowledgement || "Not recorded"}</p></div>
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Record status</p><p className="mt-3 text-sm font-semibold">{visit.recordState}{visit.issuedAt ? ` · Issued ${new Date(visit.issuedAt).toLocaleDateString("en-ZA")}` : ""}</p></div>
+          </section>
+        ) : null}
 
         <ReportFooter project={project} visit={visit} company={company} pageLabel="Findings and actions" />
       </section>
+
+      {isStructuralSignoff ? (
+        <section className="site-report-page relative flex min-h-[277mm] flex-col overflow-hidden px-[14mm] py-[12mm]">
+          <div className="absolute right-0 top-0 h-[7px] w-[38mm]" style={{ backgroundColor: company.accent }} />
+          <div className="border-b border-slate-300 pb-6"><p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: company.accent }}>03 · Stage acceptance</p><h2 className="mt-2 text-[28px] font-bold tracking-[-0.04em]">Structural installation sign-off</h2><p className="mt-2 text-xs text-slate-500">Formal acknowledgement of the inspection outcome and recorded outstanding actions.</p></div>
+          <div className="mt-8 grid grid-cols-[1fr_46mm] gap-10 border-y border-slate-300 py-6">
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Project</p><p className="mt-2 text-lg font-bold">{project.name}</p><p className="mt-1 text-sm text-slate-500">{project.projectNumber} · {visit.visitNumber}</p></div>
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Outcome</p><p className="mt-2 text-lg font-bold">{visit.outcome}</p><p className="mt-1 text-xs text-slate-500">{visit.recordState}</p></div>
+          </div>
+          <div className="mt-8 border-l-4 bg-slate-50 px-6 py-5" style={{ borderColor: company.accent }}><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Acceptance statement</p><p className="mt-3 text-sm leading-6 text-slate-700">The parties named below acknowledge the inspection findings, recorded actions, and outcome of this structural installation stage. This record does not replace statutory approval, professional engineering certification, or completion of work excluded from the agreed scope.</p></div>
+          <div className="mt-10 grid grid-cols-2 gap-x-12 gap-y-9">
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Client / site representative</p><p className="mt-3 text-base font-bold">{visit.acknowledgement || "Not recorded"}</p><p className="mt-1 text-xs text-slate-500">{[visit.acknowledgementRole, visit.acknowledgementCompany].filter(Boolean).join(" · ") || "Role and company not recorded"}</p></div>
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Sign-off date</p><p className="mt-3 text-base font-bold">{visit.acknowledgementDate ? formatReportDate(visit.acknowledgementDate) : "Not recorded"}</p><p className="mt-1 text-xs text-slate-500">{visit.acceptanceConfirmed ? "Acceptance confirmed in the project record" : "Acceptance not yet confirmed"}</p></div>
+            <div className="pt-12"><div className="border-b border-slate-600" /><p className="mt-3 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Representative signature</p></div>
+            <div className="pt-12"><div className="border-b border-slate-600" /><p className="mt-3 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Inspector signature · {visit.inspector || "Inspector"}</p></div>
+          </div>
+          <ReportFooter project={project} visit={visit} company={company} pageLabel="Stage acceptance" />
+        </section>
+      ) : null}
 
       {photoPages.map((photos, pageIndex) => (
         <section key={`photos-${pageIndex}`} className="site-report-page relative flex min-h-[277mm] flex-col overflow-hidden px-[14mm] py-[12mm]">
           <div className="absolute right-0 top-0 h-[7px] w-[38mm]" style={{ backgroundColor: company.accent }} />
           <div className="flex items-end justify-between border-b border-slate-300 pb-6">
-            <div><p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: company.accent }}>03 · Photo evidence</p><h2 className="mt-2 text-[28px] font-bold tracking-[-0.04em]">Site photo record</h2><p className="mt-2 text-xs text-slate-500">Dated visual evidence captured as part of this project record.</p></div>
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: company.accent }}>{isStructuralSignoff ? "04" : "03"} · Photo evidence</p><h2 className="mt-2 text-[28px] font-bold tracking-[-0.04em]">Site photo record</h2><p className="mt-2 text-xs text-slate-500">Dated visual evidence captured as part of this project record.</p></div>
             <div className="border-l border-slate-300 pl-5 text-right"><p className="text-2xl font-bold text-slate-900">{visit.photos.length}</p><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Photos recorded</p></div>
           </div>
           <div className="mt-7 grid grid-cols-2 gap-x-5 gap-y-7">
@@ -927,7 +980,24 @@ export default function ProjectsWorkspace() {
             </div>
             {activeVisit.photos.length ? <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{activeVisit.photos.map((photo, index) => <figure key={photo.id} className="overflow-hidden rounded-xl border border-slate-200"><img src={photo.src} alt={photo.caption || photo.name} className="aspect-[4/3] w-full object-cover" /><div className="space-y-2 p-2"><input className="w-full border-0 px-1 py-1 text-sm outline-none" value={photo.caption} onChange={(e) => updateVisit((v) => ({ ...v, photos: v.photos.map((p, i) => i === index ? { ...p, caption: e.target.value } : p) }))} placeholder="Photo caption" /><select className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs" value={photo.linkedItem} onChange={(e) => updateVisit((v) => ({ ...v, photos: v.photos.map((p, i) => i === index ? { ...p, linkedItem: e.target.value } : p) }))}><option value="">General photo</option>{activeVisit.items.map((item) => <option key={item.label} value={item.label}>{item.label}</option>)}</select><div className="flex items-center justify-between"><div className="flex gap-2"><button type="button" disabled={index === 0} onClick={() => updateVisit((v) => { const photos = [...v.photos]; [photos[index - 1], photos[index]] = [photos[index], photos[index - 1]]; return { ...v, photos } })} className="text-xs font-semibold disabled:opacity-30">←</button><button type="button" disabled={index === activeVisit.photos.length - 1} onClick={() => updateVisit((v) => { const photos = [...v.photos]; [photos[index], photos[index + 1]] = [photos[index + 1], photos[index]]; return { ...v, photos } })} className="text-xs font-semibold disabled:opacity-30">→</button></div><button type="button" onClick={() => updateVisit((v) => ({ ...v, photos: v.photos.filter((_, i) => i !== index) }))} className="text-xs font-semibold text-rose-600">Delete</button></div></div></figure>)}</div> : null}
 
-            <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4"><Field label="Acknowledged by"><input className={inputClass} value={activeVisit.acknowledgement} onChange={(e) => updateVisit((v) => ({ ...v, acknowledgement: e.target.value }))} placeholder="Client, contractor, or site representative" /></Field><p className="mt-3 text-xs leading-5 text-slate-500">This field records who received or reviewed the site findings. Formal digital signatures will follow in the production data phase.</p></div>
+            {activeVisit.visitType === "Structural installation sign-off" ? (
+              <div className="mt-8 rounded-xl border border-sky-200 bg-sky-50 p-4 sm:p-5">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-800">Structural stage acceptance</p>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Record the representative who reviewed the installation outcome. The exported report includes signature lines for the representative and inspector.</p>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <Field label="Representative name"><input className={inputClass} value={activeVisit.acknowledgement} onChange={(e) => updateVisit((v) => ({ ...v, acknowledgement: e.target.value }))} placeholder="Client or site representative" /></Field>
+                  <Field label="Role"><input className={inputClass} value={activeVisit.acknowledgementRole} onChange={(e) => updateVisit((v) => ({ ...v, acknowledgementRole: e.target.value }))} placeholder="Owner, site manager..." /></Field>
+                  <Field label="Company"><input className={inputClass} value={activeVisit.acknowledgementCompany} onChange={(e) => updateVisit((v) => ({ ...v, acknowledgementCompany: e.target.value }))} placeholder="Client or contractor" /></Field>
+                  <Field label="Sign-off date"><input type="date" className={inputClass} value={activeVisit.acknowledgementDate} onChange={(e) => updateVisit((v) => ({ ...v, acknowledgementDate: e.target.value }))} /></Field>
+                </div>
+                <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-sky-200 bg-white p-4">
+                  <input type="checkbox" checked={activeVisit.acceptanceConfirmed} onChange={(e) => updateVisit((v) => ({ ...v, acceptanceConfirmed: e.target.checked }))} className="mt-1 h-5 w-5 shrink-0 accent-sky-700" />
+                  <span className="text-sm leading-6 text-slate-700">The representative has reviewed the recorded findings, outstanding actions, and stage outcome. This acknowledgement does not replace statutory approval or professional engineering certification where required.</span>
+                </label>
+              </div>
+            ) : (
+              <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4"><Field label="Acknowledged by"><input className={inputClass} value={activeVisit.acknowledgement} onChange={(e) => updateVisit((v) => ({ ...v, acknowledgement: e.target.value }))} placeholder="Client, contractor, or site representative" /></Field><p className="mt-3 text-xs leading-5 text-slate-500">This field records who received or reviewed the site findings.</p></div>
+            )}
           </section>
         </article>
       </div>
