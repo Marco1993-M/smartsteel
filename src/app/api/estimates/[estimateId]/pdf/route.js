@@ -29,6 +29,8 @@ function buildEstimateFingerprint(estimate) {
     versionNo: estimate?.version_no,
     productType: estimate?.product_type,
     productTypeDisplay: estimate?.product_type_display,
+    sourceSubmissionId: estimate?.source_submission_id,
+    designReference: estimate?.design_reference,
     inputData: estimate?.input_data,
     lineItems: estimate?.line_items,
     subtotal: estimate?.subtotal,
