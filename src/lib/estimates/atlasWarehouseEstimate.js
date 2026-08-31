@@ -42,7 +42,7 @@ export const ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS = Object.keys(MATERIAL_RATES_P
 export const ATLAS_WAREHOUSE_SHEETING_OPTIONS = [
   { value: "structure_only", label: "Structure only" },
   { value: "roof_only", label: "Roof sheeting" },
-  { value: "fully_enclosed", label: "Roof and walls sheeted" },
+  { value: "fully_enclosed", label: "Roof and side walls sheeted" },
 ]
 
 function roundMoney(value) {
@@ -63,7 +63,7 @@ function normalizeSheetingMode(value) {
 
 function sheetingModeLabel(value) {
   if (value === "roof_only") return "Roof sheeting"
-  if (value === "fully_enclosed") return "Roof and walls sheeted"
+  if (value === "fully_enclosed") return "Roof and side walls sheeted"
   return "Structure only"
 }
 
@@ -88,7 +88,11 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
 
   const wallSupportMemberKeys = new Set(["sideGirts", "frontGableColumns", "rearGableColumns"])
   const activeStructuralMembers = Object.entries(geometry.members)
-    .filter(([key]) => gableMode === "fully_enclosed" || !wallSupportMemberKeys.has(key))
+    .filter(([key]) => {
+      if (key === "sideGirts") return gableMode === "fully_enclosed"
+      if (["frontGableColumns", "rearGableColumns"].includes(key)) return false
+      return !wallSupportMemberKeys.has(key)
+    })
     .map(([, member]) => member)
   const structuralLines = activeStructuralMembers.map((member) => {
     const rawCost = member.totalMassKg * (steelRatePerTon / 1000)
@@ -102,10 +106,9 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     })
   })
 
-  const gableColumnCount = gableMode === "fully_enclosed"
-    ? ((geometry.members.frontGableColumns?.quantity || 0) + (geometry.members.rearGableColumns?.quantity || 0)) * quantity
-    : 0
-  const baseBracketCount = geometry.portalFrames * 2 * quantity + gableColumnCount
+  // The standard builder scope leaves both gable ends open. Gable framing and
+  // gable sheeting are reviewed separately when a client requests closed ends.
+  const baseBracketCount = geometry.portalFrames * 2 * quantity
   const ridgeBracketCount = geometry.portalFrames * quantity
   const eaveBracketCount = geometry.portalFrames * 2 * quantity
   const braceMemberCount = (geometry.members.wallBracing.quantity + geometry.members.roofBracing.quantity) * quantity
@@ -130,9 +133,7 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
 
   const roofSheetingArea = gableMode === "structure_only" ? 0 : geometry.rafterCutLengthM * 2 * length * quantity
   const longWallSheetingArea = gableMode === "fully_enclosed" ? wallHeight * length * 2 * quantity : 0
-  const rectangularGableSheetingArea = gableMode === "fully_enclosed" ? width * wallHeight * 2 * quantity : 0
-  const triangularGableSheetingArea = gableMode === "fully_enclosed" ? width * geometry.roofRiseM * quantity : 0
-  const gableSheetingArea = rectangularGableSheetingArea + triangularGableSheetingArea
+  const gableSheetingArea = 0
   const wallSheetingArea = longWallSheetingArea + gableSheetingArea
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
   const sheetingRate = sheetingFinish === "chromadek" ? CHROMADEK_RATE : SHEETING_RATES[sheetingProfile]
@@ -154,6 +155,9 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
   const totalInclVat = totalExclVat + vatValue
   const systemName = `Atlas ${geometry.productCode} Warehouse`
   const sku = buildAtlasWarehouseSku({ width, length, wallHeight, gableMode, steelFinish, sheetingProfile, sheetingFinish })
+  const sheetingDescription = gableMode === "structure_only"
+    ? "structure only"
+    : `${sheetingModeLabel(gableMode).toLowerCase()} with ${sheetingProfile} ${sheetingFinish === "chromadek" ? "Chromadek" : "galvanised"} sheeting`
 
   return {
     input: { ...input, width, length, wallHeight, quantity, steelFinish, gableMode, sheetingProfile, sheetingFinish, pricingModel: "atlas_os_v1", baySpacing: geometry.baySpacingM },
@@ -162,7 +166,7 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     pricing: { steelCost: roundMoney(structuralLines.reduce((sum, item) => sum + item.total, 0)), connectionCost: roundMoney(connectionLines.reduce((sum, item) => sum + item.total, 0)), subTotalBeforeMarkup: roundMoney(subTotalBeforeMarkup), markupRate: COMMERCIAL_UPLIFT_RATE, markupValue: roundMoney(markupValue), commercialUpliftIncludedInRates: 0, vatRate: VAT_RATE, vatValue: roundMoney(vatValue), baseTotal: roundMoney(totalExclVat), markupMultiplier: 1 + COMMERCIAL_UPLIFT_RATE, estimatedTotal: roundMoney(totalExclVat), totalInclVat: roundMoney(totalInclVat), claddingCost: roundMoney(sheetingCost), installationCost: 0 },
     sheeting: { roofSheetingArea: roundMoney(roofSheetingArea), longWallSheetingArea: roundMoney(longWallSheetingArea), gableSheetingArea: roundMoney(gableSheetingArea), wallSheetingArea: roundMoney(wallSheetingArea), totalSheetingArea: roundMoney(totalSheetingArea), openingsDeducted: false },
     lineItems,
-    summary: { title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m ${systemName}`, shortDescription: `${systemName}, ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingModeLabel(gableMode).toLowerCase()}, supply only`, estimateRequest: `${systemName}: ${width}m x ${length}m x ${wallHeight}m, ${steelFinish}, ${sheetingModeLabel(gableMode)}, supply only. Installation and delivery quoted separately.`, layoutNote: "" },
+    summary: { title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m ${systemName}`, shortDescription: `${systemName}, ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}, supply only`, estimateRequest: `${systemName}: ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}, supply only. Installation and delivery quoted separately.`, layoutNote: "" },
     labels: { steelFinish, cladding: sheetingModeLabel(gableMode), sheetingProfile, sheetingFinish: sheetingFinish === "chromadek" ? "Chromadek" : "Galvanised", installation: "Quoted separately", delivery: "Quoted separately", gableMode: sheetingModeLabel(gableMode) },
     meta: { productType: "Atlas Warehouse", internalProductType: "LCSS Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, sku, provisionalItems: ["Gable girts", "Bracket fabrication specifications", "M12 anchor-bolt price"] },
   }
