@@ -1,4 +1,8 @@
 import { formatCurrency } from "./warehouseEstimate"
+import {
+  getAtlasWarehouseIdentityTerms,
+  isAtlasWarehouseProductType,
+} from "../atlasProductIdentity"
 
 export const ESTIMATE_TERMS = [
   "This estimate is based on the scope, dimensions, and site assumptions captured at the time of pricing.",
@@ -42,13 +46,9 @@ function isAtlasEstimate(productType, productTypeLabel) {
   const identity = `${productType || ""} ${productTypeLabel || ""}`.toLowerCase()
 
   return (
-    identity.includes("atlas") ||
-    identity.includes("lcss") ||
-    identity.includes("cflc") ||
-    identity.includes("lip channel") ||
-    identity.includes("lipped channel") ||
-    identity.includes("solar carport") ||
-    identity.includes("solar ground mount")
+    isAtlasWarehouseProductType(productType) ||
+    isAtlasWarehouseProductType(productTypeLabel) ||
+    getAtlasWarehouseIdentityTerms().some((term) => identity.includes(term))
   )
 }
 

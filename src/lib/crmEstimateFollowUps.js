@@ -169,9 +169,10 @@ export function isAtlasEstimate(lead, estimate) {
 
 export function getEstimateBrandIdentity(lead, estimate) {
   const identity = `${lead?.product_type || ""} ${estimate?.product_type || ""} ${estimate?.product_type_display || ""} ${estimate?.title || ""}`.toLowerCase()
-  if (["atlas", "lcss", "cflc", "lip channel", "lipped channel", "solar carport", "solar ground mount"]
+  if (getAtlasWarehouseIdentityTerms()
     .some((term) => identity.includes(term))) return "atlas"
   if (["lsf", "light steel frame", "lightweight steel"]
     .some((term) => identity.includes(term))) return "lsf"
   return "smart-steel"
 }
+import { getAtlasWarehouseIdentityTerms } from "./atlasProductIdentity"

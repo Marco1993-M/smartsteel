@@ -168,6 +168,6 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     lineItems,
     summary: { title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m ${systemName}`, shortDescription: `${systemName}, ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}, supply only`, estimateRequest: `${systemName}: ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}, supply only. Installation and delivery quoted separately.`, layoutNote: "" },
     labels: { steelFinish, cladding: sheetingModeLabel(gableMode), sheetingProfile, sheetingFinish: sheetingFinish === "chromadek" ? "Chromadek" : "Galvanised", installation: "Quoted separately", delivery: "Quoted separately", gableMode: sheetingModeLabel(gableMode) },
-    meta: { productType: "Atlas Warehouse", internalProductType: "LCSS Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, sku, provisionalItems: ["Gable girts", "Bracket fabrication specifications", "M12 anchor-bolt price"] },
+    meta: { productType: "Atlas Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, sku, provisionalItems: ["Gable girts", "Bracket fabrication specifications", "M12 anchor-bolt price"] },
   }
 }

@@ -3,6 +3,7 @@ import {
   ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS,
   ATLAS_WAREHOUSE_WIDTH_OPTIONS,
 } from "./estimates/atlasWarehouseOptions.js"
+import { ATLAS_WAREHOUSE_PRODUCT_TYPE } from "./atlasProductIdentity.js"
 
 export const ATLAS_CONFIGURATION_VERSION = 1
 export const ATLAS_PRODUCT_KEY = "atlas-warehouse"
@@ -14,7 +15,7 @@ export const ATLAS_SHEETING_FINISH_OPTIONS = ["galvanised", "chromadek"]
 export const DEFAULT_ATLAS_CONFIGURATION = Object.freeze({
   version: ATLAS_CONFIGURATION_VERSION,
   productKey: ATLAS_PRODUCT_KEY,
-  productType: "LCSS Warehouse",
+  productType: ATLAS_WAREHOUSE_PRODUCT_TYPE,
   width: 8,
   length: 20,
   wallHeight: 3,
@@ -66,7 +67,7 @@ export function normalizeAtlasConfiguration(input = {}) {
     ...input,
     version: ATLAS_CONFIGURATION_VERSION,
     productKey: ATLAS_PRODUCT_KEY,
-    productType: "LCSS Warehouse",
+    productType: ATLAS_WAREHOUSE_PRODUCT_TYPE,
     width,
     length: numberIn(ATLAS_LENGTH_OPTIONS, input.length, DEFAULT_ATLAS_CONFIGURATION.length),
     wallHeight: numberIn(ATLAS_HEIGHT_OPTIONS, input.wallHeight, defaultHeight),
@@ -144,4 +145,3 @@ export function getAtlasConfigurationSummary(input = {}) {
     reference: createAtlasConfigurationReference(configuration),
   }
 }
-

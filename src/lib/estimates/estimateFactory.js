@@ -2,20 +2,20 @@ import { calculateSolarEstimate } from "./solarEstimate"
 import { calculateTrussEstimate, TRUSS_PRODUCT_TYPES } from "./trussEstimate"
 import { calculateWarehouseEstimate } from "./warehouseEstimate"
 import { calculateAtlasWarehouseEstimate } from "./atlasWarehouseEstimate"
+import { isAtlasWarehouseProductType } from "../atlasProductIdentity"
 
 const SOLAR_PRODUCT_TYPES = ["Solar carport", "Solar ground mount", "Solar structure"]
-const LCSS_PRODUCT_TYPES = ["Atlas Warehouse", "LCSS Warehouse", "CFLC Warehouse", "CFLC warehouse"]
 
 export function isSolarEstimateProduct(productType) {
   return SOLAR_PRODUCT_TYPES.includes(productType)
 }
 
 export function isWarehouseEstimateProduct(productType) {
-  return productType === "LSF Warehouse" || LCSS_PRODUCT_TYPES.includes(productType)
+  return productType === "LSF Warehouse" || isAtlasWarehouseProductType(productType)
 }
 
-export function isLcssEstimateProduct(productType) {
-  return LCSS_PRODUCT_TYPES.includes(productType)
+export function isAtlasWarehouseEstimateProduct(productType) {
+  return isAtlasWarehouseProductType(productType)
 }
 
 export function isTrussEstimateProduct(productType) {
@@ -31,7 +31,7 @@ export function calculateEstimateByProductType(productType, input) {
     return calculateTrussEstimate(input)
   }
 
-  if (isLcssEstimateProduct(productType)) {
+  if (isAtlasWarehouseEstimateProduct(productType)) {
     return calculateAtlasWarehouseEstimate(input)
   }
 
