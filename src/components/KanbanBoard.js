@@ -36,10 +36,15 @@ function getFollowUpTiming(lead) {
   return "future"
 }
 
+function hasHealthyActiveSequence(sequence) {
+  return sequence?.status === "active" && Boolean(sequence.next_send_at) && !sequence.last_error
+}
+
 function matchesSequenceFilter(lead, sequence, filter) {
   if (filter === "all") return true
   if (["won", "lost"].includes(normalizeStatus(lead.status))) return false
   if (filter === "attention") {
+    if (hasHealthyActiveSequence(sequence) && !sequence?.last_response_key) return false
     return Boolean(sequence?.last_response_key) || sequence?.status === "failed" || Boolean(sequence?.last_error) || ["overdue", "today"].includes(getFollowUpTiming(lead)) || !lead?.next_action?.trim()
   }
   if (!sequence) return false
@@ -55,17 +60,18 @@ function getCardAttention(lead, sequence) {
   if (status === "lost") return { label: "Lost · closed", rail: "bg-slate-300", score: 0 }
   if (sequence?.last_response_key) return { label: "Client response", rail: "bg-emerald-500", score: 600 }
   if (sequence?.status === "failed" || sequence?.last_error) return { label: "Follow-up error", rail: "bg-rose-600", score: 550 }
+  if (hasHealthyActiveSequence(sequence)) return { label: "Follow-up automated", rail: "bg-blue-500", score: 250 }
   const timing = getFollowUpTiming(lead)
   if (timing === "overdue") return { label: "Overdue", rail: "bg-rose-500", score: 500 }
   if (timing === "today") return { label: "Due today", rail: "bg-amber-400", score: 450 }
   if (!lead?.next_action?.trim()) return { label: "Needs direction", rail: "bg-amber-400", score: 400 }
-  if (sequence?.status === "active") return { label: "Sequence active", rail: "bg-blue-500", score: 250 }
   return { label: "On track", rail: "bg-slate-200", score: 0 }
 }
 
 function getContextualAction(lead, sequence) {
   if (sequence?.last_response_key) return { label: "Review response", type: "open" }
   if (sequence?.status === "failed" || sequence?.last_error) return { label: "Resolve follow-up", type: "open" }
+  if (hasHealthyActiveSequence(sequence)) return { label: "Open lead", type: "open" }
   switch (normalizeStatus(lead.status)) {
     case "new":
       return { label: "Acknowledge lead", type: "open" }
@@ -418,6 +424,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
   const hasQuoteValue = String(lead.quote_value || "").trim().length > 0
   const isClosed = ["won", "lost"].includes(normalizedStatus)
   const sequencePresentation = isClosed ? null : getSequencePresentation(sequence)
+  const automatedFollowUpActive = !isClosed && hasHealthyActiveSequence(sequence)
   const attention = getCardAttention(lead, sequence)
   const contextualAction = getContextualAction(lead, sequence)
   const showCreatedAt = shouldShowCreatedAt(lead)
@@ -467,7 +474,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-600">
         {isQuoted && hasQuoteValue ? <span className="font-black text-slate-900">{formatZar(lead.quote_value)}</span> : null}
         {isQuoted && hasQuoteValue ? <span className="text-slate-300">•</span> : null}
-        <span>{clientFollowUpStateLabel || followUpLabel}</span>
+        <span>{clientFollowUpStateLabel || (automatedFollowUpActive ? "Follow-up automated" : followUpLabel)}</span>
       </div>
 
       {sequencePresentation ? (
