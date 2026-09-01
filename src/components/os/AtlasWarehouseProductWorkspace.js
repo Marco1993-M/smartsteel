@@ -203,8 +203,9 @@ function W08SpecificationSheet({
     ...(includesWallGirts ? [members.sideGirts] : []),
   ]
   const profileSpecification = (member, fallback) => {
-    const componentCode = member.code === "W08-PUR" ? "W08-SEC" : member.code
-    const saved = componentSpecification(componentCode, fallback)
+    // Purlins and girts are separate members. Do not reuse the legacy W08-SEC
+    // record because its combined description makes excluded girts look included.
+    const saved = componentSpecification(member.code, fallback)
     return `${saved.replace(/\s*[·,]\s*(ZAM|Galvanised|Galv|Mild steel).*$/i, "")} · ${selectedSteelFinish}`
   }
   const componentSchedule = includedMembers.map((member) => ({
