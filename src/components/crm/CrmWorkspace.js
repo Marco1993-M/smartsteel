@@ -134,6 +134,11 @@ function isBeforeToday(dateValue) {
   return date < today
 }
 
+function isCoveredByAutomatedFollowUp(lead, sequencesByLead) {
+  const sequence = sequencesByLead[String(lead?.id || "")]
+  return sequence?.status === "active" && Boolean(sequence.next_send_at) && !sequence.last_error
+}
+
 function readLocalNextActions() {
   if (typeof window === "undefined") return {}
 
@@ -564,6 +569,26 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const [dailyTasks, setDailyTasks] = useState([])
   const [tasksLoading, setTasksLoading] = useState(true)
   const [crmLoadWarning, setCrmLoadWarning] = useState("")
+  const [followUpSequencesByLead, setFollowUpSequencesByLead] = useState({})
+
+  const fetchFollowUpSequences = async () => {
+    const { data, error } = await supabase
+      .from("crm_estimate_follow_up_sequences")
+      .select("lead_id, status, next_send_at, last_error, created_at")
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.warn("Could not load automated follow-up coverage:", error)
+      return
+    }
+
+    const latestByLead = {}
+    for (const sequence of data || []) {
+      const leadId = String(sequence.lead_id || "")
+      if (leadId && !latestByLead[leadId]) latestByLead[leadId] = sequence
+    }
+    setFollowUpSequencesByLead(latestByLead)
+  }
 
   const fetchLeads = async () => {
     setLoading(true)
@@ -653,6 +678,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       setAuthLoading(false)
       fetchLeads()
       fetchDailyTasks()
+      fetchFollowUpSequences()
     }
 
     bootstrapSession()
@@ -671,6 +697,16 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
     return () => subscription.unsubscribe()
   }, [router])
+
+  useEffect(() => {
+    if (!user || typeof window === "undefined") return
+    const interval = window.setInterval(fetchFollowUpSequences, 5 * 60 * 1000)
+    window.addEventListener("focus", fetchFollowUpSequences)
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener("focus", fetchFollowUpSequences)
+    }
+  }, [user])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -1899,15 +1935,18 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       return lead.allocated_to === currentTeamMember
     })
     const activeLeads = scopedLeads.filter((lead) => !["won", "lost"].includes(normalizeStatus(lead.status)))
-    const overdueFollowUps = activeLeads
+    const teamQueueLeads = activeLeads.filter(
+      (lead) => !isCoveredByAutomatedFollowUp(lead, followUpSequencesByLead)
+    )
+    const overdueFollowUps = teamQueueLeads
       .filter((lead) => isBeforeToday(lead.follow_up_at))
       .sort((a, b) => new Date(a.follow_up_at).getTime() - new Date(b.follow_up_at).getTime())
       .slice(0, 6)
-    const dueToday = activeLeads
+    const dueToday = teamQueueLeads
       .filter((lead) => isSameDay(lead.follow_up_at))
       .sort((a, b) => String(a.allocated_to || "").localeCompare(String(b.allocated_to || "")))
       .slice(0, 6)
-    const needsDecision = activeLeads
+    const needsDecision = teamQueueLeads
       .filter((lead) => {
         const staleDays = getDaysSince(getLeadFreshnessDate(lead))
         return !lead.next_action?.trim() || !lead.allocated_to?.trim() || staleDays > 5
@@ -1933,7 +1972,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         needsDecision.length +
         openTasks.length,
     }
-  }, [currentTeamMember, dailyTasks, leads, ownershipView])
+  }, [currentTeamMember, dailyTasks, followUpSequencesByLead, leads, ownershipView])
 
   const topOwnerRow = useMemo(() => {
     return [...accountabilityRows].sort((a, b) => b.owned - a.owned)[0] || null
