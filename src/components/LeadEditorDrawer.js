@@ -39,6 +39,12 @@ import {
 } from "../lib/atlasConfiguration"
 import { ATLAS_WAREHOUSE_WIDTH_OPTIONS } from "../lib/estimates/atlasWarehouseOptions"
 import {
+  ATLAS_WAREHOUSE_PRODUCT_TYPE,
+  getAtlasWarehouseIdentityTerms,
+  isAtlasWarehouseProductType,
+  normalizeAtlasProductType,
+} from "../lib/atlasProductIdentity"
+import {
   WAREHOUSE_LENGTH_OPTIONS,
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../lib/estimates/warehouseEstimate"
@@ -52,14 +58,7 @@ const ESTIMATE_STATUS_OPTIONS = [
   { value: "declined", label: "Declined" },
 ]
 
-const ATLAS_WAREHOUSE_PRODUCT_TYPES = [
-  "Atlas Warehouse",
-  "LCSS Warehouse",
-  "LCSS warehouse",
-  "CFLC Warehouse",
-  "CFLC warehouse",
-]
-const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", ...ATLAS_WAREHOUSE_PRODUCT_TYPES]
+const WAREHOUSE_PRODUCT_TYPES = ["LSF Warehouse", ATLAS_WAREHOUSE_PRODUCT_TYPE]
 const TRUSS_PRODUCT_TYPES = ["LSF trusses", "CFLC trusses"]
 const SOLAR_PRODUCT_TYPES = ["Solar carport", "Solar ground mount", "Solar structure"]
 const ATLAS_STEEL_FINISH_OPTIONS = [
@@ -76,14 +75,6 @@ const SCOPE_PRESET_OPTIONS = {
     "Chromadek cladding",
     "Open-sided",
     "Enclosed shell",
-  ],
-  "LCSS Warehouse": [
-    "Supply only",
-    "Installed",
-    "Open-gable",
-    "Sheeted-gable",
-    "Galv finish",
-    "Mild steel finish",
   ],
   "Atlas Warehouse": [
     "Storage warehouse",
@@ -146,7 +137,7 @@ const SCOPE_PRESET_OPTIONS = {
 }
 
 function getScopeSectionConfig(productType) {
-  if (WAREHOUSE_PRODUCT_TYPES.includes(productType)) {
+  if (WAREHOUSE_PRODUCT_TYPES.includes(normalizeAtlasProductType(productType))) {
     return {
       title: "Capture the warehouse scope up front",
       sizeLabel: "Warehouse Size",
@@ -217,7 +208,7 @@ function includeStoredOption(options, storedValue) {
 }
 
 function getScopeSizeOptions(productType, storedWidth, storedLength) {
-  if (ATLAS_WAREHOUSE_PRODUCT_TYPES.includes(productType)) {
+  if (isAtlasWarehouseProductType(productType)) {
     return {
       widths: includeStoredOption(ATLAS_WAREHOUSE_WIDTH_OPTIONS, storedWidth),
       lengths: includeStoredOption(ATLAS_LENGTH_OPTIONS, storedLength),
@@ -547,7 +538,7 @@ function buildEstimateEmailTemplate(lead, estimate, builderSubmission) {
     toClientFacingSystemName(stripEstimateVersionSuffix(estimate?.title)) ||
     getProjectReference(lead)
   const atlasIdentity = `${lead?.product_type || ""} ${estimate?.product_type_display || ""} ${estimate?.title || ""}`.toLowerCase()
-  const isAtlas = ["atlas", "lcss", "cflc", "lip channel", "lipped channel", "solar carport", "solar ground mount"]
+  const isAtlas = getAtlasWarehouseIdentityTerms()
     .some((term) => atlasIdentity.includes(term))
   const isLsf = !isAtlas && ["lsf", "light steel frame", "lightweight steel"]
     .some((term) => atlasIdentity.includes(term))
@@ -640,7 +631,7 @@ function getGuidedLeadAction(nextBestAction, lead, latestEstimate) {
 
 const NEW_LEAD_PRODUCT_OPTIONS = [
   { value: "LSF Warehouse", label: "LSF Warehouse", note: "Engineered warehouse", icon: Building2 },
-  { value: "LCSS Warehouse", label: "Atlas Warehouse", note: "Lip channel system", icon: Building2 },
+  { value: ATLAS_WAREHOUSE_PRODUCT_TYPE, label: ATLAS_WAREHOUSE_PRODUCT_TYPE, note: "Lip channel system", icon: Building2 },
   { value: "Solar carport", label: "Solar Carport", note: "Parking and solar", icon: CarFront },
   { value: "Solar ground mount", label: "Ground Mount", note: "Open-site solar", icon: PanelsTopLeft },
   { value: "LSF trusses", label: "Steel Trusses", note: "Roof structure", icon: Shapes },
@@ -658,7 +649,7 @@ const NEW_LEAD_NEXT_ACTIONS = [
 function NewLeadIntake({ formData, handleChange, validationErrors, inputClass, fieldLabelClass, onSave }) {
   const setProductType = (productType) => {
     handleChange("product_type", productType)
-    if (ATLAS_WAREHOUSE_PRODUCT_TYPES.includes(productType) && !getSteelFinishFromNotes(formData.notes)) {
+    if (isAtlasWarehouseProductType(productType) && !getSteelFinishFromNotes(formData.notes)) {
       handleChange("notes", setControlledNoteValue(formData.notes, "Steel finish", "ZAM"))
     }
     if (!formData.next_action) {
@@ -751,7 +742,7 @@ function NewLeadIntake({ formData, handleChange, validationErrors, inputClass, f
                   className={`${inputClass} min-h-[92px] resize-none`}
                 />
               </div>
-              {ATLAS_WAREHOUSE_PRODUCT_TYPES.includes(formData.product_type) ? (
+              {isAtlasWarehouseProductType(formData.product_type) ? (
                 <div className="mt-3">
                   <label className={fieldLabelClass}>Structural steel</label>
                   <select
@@ -893,7 +884,8 @@ export default function LeadEditorDrawer({
   const createdAtLabel = formatLeadCreatedAt(formData.created_at);
   const scopeConfig = getScopeSectionConfig(formData.product_type)
   const scopeSizeOptions = getScopeSizeOptions(formData.product_type, formData.width, formData.length)
-  const scopePresetOptions = SCOPE_PRESET_OPTIONS[formData.product_type] || SCOPE_PRESET_OPTIONS.Other
+  const scopePresetOptions =
+    SCOPE_PRESET_OPTIONS[normalizeAtlasProductType(formData.product_type)] || SCOPE_PRESET_OPTIONS.Other
   const fieldLabelClass = "mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500";
   const inputClass = "block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-0";
   const sectionClass = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
@@ -2111,7 +2103,7 @@ export default function LeadEditorDrawer({
 
           {scopeConfig.showWarehouseOptions ? (
             <>
-              {ATLAS_WAREHOUSE_PRODUCT_TYPES.includes(formData.product_type) ? (
+              {isAtlasWarehouseProductType(formData.product_type) ? (
                 <div className="mb-4">
                   <label className={`${fieldLabelClass} mb-2`}>Structural steel</label>
                   <select

@@ -15,16 +15,20 @@ import {
 } from "../lib/estimates/solarEstimate"
 import {
   calculateEstimateByProductType,
-  isLcssEstimateProduct,
+  isAtlasWarehouseEstimateProduct,
   isSolarEstimateProduct,
   isTrussEstimateProduct,
 } from "../lib/estimates/estimateFactory"
 import { TRUSS_ROOF_STYLE_OPTIONS } from "../lib/estimates/trussEstimate"
 import { ATLAS_WAREHOUSE_SHEETING_OPTIONS } from "../lib/estimates/atlasWarehouseOptions"
+import {
+  ATLAS_WAREHOUSE_PRODUCT_TYPE,
+  normalizeAtlasProductType,
+} from "../lib/atlasProductIdentity"
 
 const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
   { value: "LSF Warehouse", label: "LSF Warehouse" },
-  { value: "LCSS Warehouse", label: "Atlas Warehouse" },
+  { value: ATLAS_WAREHOUSE_PRODUCT_TYPE, label: ATLAS_WAREHOUSE_PRODUCT_TYPE },
   { value: "LSF trusses", label: "LSF trusses" },
   { value: "CFLC trusses", label: "CFLC trusses" },
   ...SOLAR_PRODUCT_TYPE_OPTIONS,
@@ -32,26 +36,22 @@ const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
 const INTERNAL_PRODUCT_LABELS = [
   "Atlas Warehouse",
   "LSF Warehouse",
-  "LCSS Warehouse",
-  "LCSS warehouse",
-  "CFLC Warehouse",
-  "CFLC warehouse",
   "Solar carport",
   "Solar ground mount",
   "Solar structure",
   "LSF trusses",
   "CFLC trusses",
 ]
-const LCSS_ALLOWED_WIDTHS = [6, 8, 10, 12]
-const LCSS_ALLOWED_LENGTHS = Array.from({ length: 15 }, (_, index) => (index + 1) * 4)
-const LCSS_ALLOWED_STEEL_FINISHES = ["ZAM", "Galv", "Mild"]
-const LCSS_ALLOWED_GABLE_MODES = ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => option.value)
-const LCSS_ALLOWED_SHEETING_PROFILES = ["Corrugated", "IBR", "Concealed Fix"]
-const LCSS_ALLOWED_SHEETING_FINISHES = ["galvanised", "chromadek"]
+const ATLAS_ALLOWED_WIDTHS = [6, 8, 10, 12]
+const ATLAS_ALLOWED_LENGTHS = Array.from({ length: 15 }, (_, index) => (index + 1) * 4)
+const ATLAS_ALLOWED_STEEL_FINISHES = ["ZAM", "Galv", "Mild"]
+const ATLAS_ALLOWED_GABLE_MODES = ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => option.value)
+const ATLAS_ALLOWED_SHEETING_PROFILES = ["Corrugated", "IBR", "Concealed Fix"]
+const ATLAS_ALLOWED_SHEETING_FINISHES = ["galvanised", "chromadek"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
 
 function getLeadSteelFinish(lead) {
-  if (LCSS_ALLOWED_STEEL_FINISHES.includes(lead?.steelFinish)) return lead.steelFinish
+  if (ATLAS_ALLOWED_STEEL_FINISHES.includes(lead?.steelFinish)) return lead.steelFinish
   const match = String(lead?.notes || "").match(/^Steel finish:\s*(.+)$/im)
   const value = String(match?.[1] || "").toLowerCase()
   if (value.includes("mild")) return "Mild"
@@ -86,7 +86,7 @@ function isCatalogSize(width, length) {
   return WAREHOUSE_WIDTH_OPTIONS.includes(Number(width)) && WAREHOUSE_LENGTH_OPTIONS.includes(Number(length))
 }
 
-function isValidLcssLength(width, length) {
+function isValidAtlasLength(width, length) {
   const normalizedWidth = Number(width)
   const normalizedLength = Number(length)
 
@@ -124,26 +124,26 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
     nextState.productTypeLabel = nextProductType
   }
 
-  if (isLcssEstimateProduct(nextProductType)) {
+  if (isAtlasWarehouseEstimateProduct(nextProductType)) {
     const width = Number(previousState.width)
     const length = Number(previousState.length)
 
-    nextState.width = LCSS_ALLOWED_WIDTHS.includes(width) ? width : 6
-    nextState.length = isValidLcssLength(nextState.width, length) ? length : 12
+    nextState.width = ATLAS_ALLOWED_WIDTHS.includes(width) ? width : 6
+    nextState.length = isValidAtlasLength(nextState.width, length) ? length : 12
     nextState.pricingModel = "atlas_4m"
     nextState.wallHeight =
       Number.isFinite(Number(previousState.wallHeight)) && Number(previousState.wallHeight) > 0
         ? Number(previousState.wallHeight)
         : 3
     nextState.useCustomSize = true
-    nextState.steelFinish = LCSS_ALLOWED_STEEL_FINISHES.includes(previousState.steelFinish)
+    nextState.steelFinish = ATLAS_ALLOWED_STEEL_FINISHES.includes(previousState.steelFinish)
       ? previousState.steelFinish
       : "ZAM"
     nextState.sheetingProfile =
-      LCSS_ALLOWED_SHEETING_PROFILES.includes(previousState.sheetingProfile || previousState.cladding)
+      ATLAS_ALLOWED_SHEETING_PROFILES.includes(previousState.sheetingProfile || previousState.cladding)
         ? previousState.sheetingProfile || previousState.cladding
         : "IBR"
-    nextState.sheetingFinish = LCSS_ALLOWED_SHEETING_FINISHES.includes(previousState.sheetingFinish)
+    nextState.sheetingFinish = ATLAS_ALLOWED_SHEETING_FINISHES.includes(previousState.sheetingFinish)
       ? previousState.sheetingFinish
       : "galvanised"
     nextState.gableMode = normalizeAtlasSheetingMode(previousState.gableMode)
@@ -247,7 +247,7 @@ function buildInitialState(lead, estimate) {
     trussSpacing: Math.max(0.1, Number(latestInput.trussSpacing || 1.2)),
     moduleCount: Math.max(0, Number(latestInput.moduleCount || 0)),
     cladding:
-      isLcssEstimateProduct(productType)
+      isAtlasWarehouseEstimateProduct(productType)
         ? latestInput.cladding || lead?.cladding || "IBR"
         : latestInput.cladding || lead?.cladding || "None",
     claddingInstalled:
@@ -271,14 +271,14 @@ function buildInitialState(lead, estimate) {
     steelFinish:
       latestInput.steelFinish ||
       getLeadSteelFinish(lead) ||
-      (isLcssEstimateProduct(productType) ? "ZAM" : "Galv"),
+      (isAtlasWarehouseEstimateProduct(productType) ? "ZAM" : "Galv"),
     sheetingProfile:
       latestInput.sheetingProfile ||
-      (LCSS_ALLOWED_SHEETING_PROFILES.includes(latestInput.cladding || lead?.cladding)
+      (ATLAS_ALLOWED_SHEETING_PROFILES.includes(latestInput.cladding || lead?.cladding)
         ? latestInput.cladding || lead?.cladding
         : "IBR"),
     sheetingFinish:
-      LCSS_ALLOWED_SHEETING_FINISHES.includes(latestInput.sheetingFinish)
+      ATLAS_ALLOWED_SHEETING_FINISHES.includes(latestInput.sheetingFinish)
         ? latestInput.sheetingFinish
         : getLeadSheetingFinish(lead),
     gableMode:
@@ -480,8 +480,10 @@ function buildEstimateDraft({
     id: existingEstimate?.id,
     lead,
     version_no: versionNo,
-    product_type: formState.productType,
-    product_type_display: formState.productTypeLabel?.trim() || formState.productType,
+    product_type: normalizeAtlasProductType(formState.productType),
+    product_type_display:
+      normalizeAtlasProductType(formState.productTypeLabel?.trim()) ||
+      normalizeAtlasProductType(formState.productType),
     title: `${resolveEstimateTitle(formState, preview)} V${versionNo}`,
     source_submission_id: formState.sourceSubmissionId || null,
     design_reference: formState.designReference || null,
@@ -1019,13 +1021,13 @@ export default function EstimateDrawer({
                           <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
                             {formState.width}m
                           </div>
-                        ) : isLcssEstimateProduct(formState.productType) ? (
+                        ) : isAtlasWarehouseEstimateProduct(formState.productType) ? (
                           <select
                             value={formState.width}
                             onChange={(event) => handleChange("width", Number(event.target.value))}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                           >
-                            {LCSS_ALLOWED_WIDTHS.map((option) => (
+                            {ATLAS_ALLOWED_WIDTHS.map((option) => (
                               <option key={option} value={option}>{option}m</option>
                             ))}
                           </select>
@@ -1062,13 +1064,13 @@ export default function EstimateDrawer({
                           <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
                             {formState.length}m
                           </div>
-                        ) : isLcssEstimateProduct(formState.productType) ? (
+                        ) : isAtlasWarehouseEstimateProduct(formState.productType) ? (
                           <select
                             value={formState.length}
                             onChange={(event) => handleChange("length", Number(event.target.value))}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                           >
-                            {LCSS_ALLOWED_LENGTHS.map((option) => (
+                            {ATLAS_ALLOWED_LENGTHS.map((option) => (
                               <option key={option} value={option}>{option}m</option>
                             ))}
                           </select>
@@ -1098,7 +1100,7 @@ export default function EstimateDrawer({
                         )}
                       </div>
                     </div>
-                    {isLcssEstimateProduct(formState.productType) ? (
+                    {isAtlasWarehouseEstimateProduct(formState.productType) ? (
                       <div className="mt-4">
                         <label className="block text-sm font-medium text-slate-700">Structural steel</label>
                         <select
@@ -1227,7 +1229,7 @@ export default function EstimateDrawer({
 
                   {!isTrussEstimate ? (
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {isLcssEstimateProduct(formState.productType) ? (
+                    {isAtlasWarehouseEstimateProduct(formState.productType) ? (
                       <>
                         <div>
                           <label className="block text-sm font-medium text-slate-700">Sheeting coverage</label>
@@ -1249,7 +1251,7 @@ export default function EstimateDrawer({
                               onChange={(event) => handleChange("sheetingProfile", event.target.value)}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                             >
-                              {LCSS_ALLOWED_SHEETING_PROFILES.map((option) => (
+                              {ATLAS_ALLOWED_SHEETING_PROFILES.map((option) => (
                                 <option key={option} value={option}>{option}</option>
                               ))}
                             </select>
@@ -1299,7 +1301,7 @@ export default function EstimateDrawer({
                         />
                       </div>
                     )}
-                    {!isLcssEstimateProduct(formState.productType) ? <div>
+                    {!isAtlasWarehouseEstimateProduct(formState.productType) ? <div>
                       <label className="block text-sm font-medium text-slate-700">
                         {isGroundMountEstimate ? "Calculated layout" : "Delivery distance (km)"}
                       </label>
@@ -1352,7 +1354,7 @@ export default function EstimateDrawer({
                     </div>
                   ) : null}
 
-                  {isLcssEstimateProduct(formState.productType) ? (
+                  {isAtlasWarehouseEstimateProduct(formState.productType) ? (
                     <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                       Installation and delivery are reviewed and quoted separately.
                     </div>
