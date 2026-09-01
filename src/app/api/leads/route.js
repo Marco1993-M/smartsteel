@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server"
 import { supabaseServer } from "../../../lib/supabase-server"
+import {
+  isAtlasWarehouseProductType,
+  normalizeAtlasProductType,
+} from "../../../lib/atlasProductIdentity"
 
 export const runtime = "nodejs"
 
@@ -22,25 +26,25 @@ function getNextBusinessMorningIso() {
 }
 
 function buildBuilderNotes(payload) {
-  const isLcssWarehouse = ["Atlas Warehouse", "LCSS Warehouse", "CFLC Warehouse"].includes(payload.productType)
+  const isAtlasWarehouse = isAtlasWarehouseProductType(payload.productType)
   const lines = [
     "Warehouse Builder submission",
-    payload.productType ? `System: ${isLcssWarehouse ? "Atlas W-Series Warehouse" : payload.productType}` : null,
+    payload.productType ? `System: ${isAtlasWarehouse ? "Atlas W-Series Warehouse" : payload.productType}` : null,
     "Budget basis: Supply only",
     payload.intendedUse ? `Intended use: ${payload.intendedUse}` : null,
     payload.projectStage ? `Project stage: ${payload.projectStage}` : null,
     payload.targetTimeline ? `Target timeline: ${payload.targetTimeline}` : null,
     `Installation support requested: ${payload.installationInterest ? "Yes" : "No"}`,
-    isLcssWarehouse ? `Steel finish: ${payload.steelFinish}` : null,
-    isLcssWarehouse ? `Sheeting type: ${payload.gableModeLabel}` : `Enclosure: ${payload.enclosureLabel}`,
-    isLcssWarehouse ? null : `Cladding: ${payload.cladding}`,
+    isAtlasWarehouse ? `Steel finish: ${payload.steelFinish}` : null,
+    isAtlasWarehouse ? `Sheeting type: ${payload.gableModeLabel}` : `Enclosure: ${payload.enclosureLabel}`,
+    isAtlasWarehouse ? null : `Cladding: ${payload.cladding}`,
     payload.sheetingColorLabel ? `Sheeting colour: ${payload.sheetingColorLabel}` : null,
     `Roof: ${payload.roofTypeLabel}`,
-    isLcssWarehouse ? null : `Garage door openings: ${payload.rollerDoorCount}`,
-    isLcssWarehouse ? null : payload.garageDoorOpeningTypeLabel ? `Garage opening size: ${payload.garageDoorOpeningTypeLabel}` : null,
-    isLcssWarehouse || !payload.rollerDoorCount ? null : `Main opening wall: ${payload.rollerDoorFace}`,
-    isLcssWarehouse ? null : `Pedestrian door openings: ${payload.pedestrianDoorCount}`,
-    isLcssWarehouse || !payload.pedestrianDoorCount ? null : `Personnel opening wall: ${payload.pedestrianDoorFace}`,
+    isAtlasWarehouse ? null : `Garage door openings: ${payload.rollerDoorCount}`,
+    isAtlasWarehouse ? null : payload.garageDoorOpeningTypeLabel ? `Garage opening size: ${payload.garageDoorOpeningTypeLabel}` : null,
+    isAtlasWarehouse || !payload.rollerDoorCount ? null : `Main opening wall: ${payload.rollerDoorFace}`,
+    isAtlasWarehouse ? null : `Pedestrian door openings: ${payload.pedestrianDoorCount}`,
+    isAtlasWarehouse || !payload.pedestrianDoorCount ? null : `Personnel opening wall: ${payload.pedestrianDoorFace}`,
     payload.province ? `Province: ${payload.province}` : null,
     payload.location ? `Location: ${payload.location}` : null,
     `Delivery support requested: ${payload.deliveryRequired ? "Yes" : "No"}`,
@@ -131,7 +135,7 @@ function getSafeBuilderUrl(value) {
 }
 
 function buildConfigurationReceivedEmailHtml(body) {
-  const isAtlas = ["Atlas Warehouse", "LCSS Warehouse", "CFLC Warehouse"].includes(body.productType)
+  const isAtlas = isAtlasWarehouseProductType(body.productType)
   const firstName = escapeHtml(body.name || "there")
   const systemName = isAtlas ? "Atlas W-Series Warehouse" : "Engineered LSF Warehouse"
   const dimensions = `${body.configuration?.width || "-"}m × ${body.configuration?.length || "-"}m × ${body.configuration?.wallHeight || "-"}m`
@@ -216,7 +220,7 @@ async function sendBuilderConfirmation(body) {
   const resendApiKey = process.env.RESEND_API_KEY
   if (!resendApiKey || !body?.email) return { success: false, reason: "Email service is not configured." }
 
-  const isAtlas = ["Atlas Warehouse", "LCSS Warehouse", "CFLC Warehouse"].includes(body.productType)
+  const isAtlas = isAtlasWarehouseProductType(body.productType)
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -367,7 +371,7 @@ export async function POST(request) {
           notes: buildBuilderNotes(body),
           status: "new",
           lead_source: "Warehouse Builder",
-          product_type: body.productType || "LSF Warehouse",
+          product_type: normalizeAtlasProductType(body.productType) || "LSF Warehouse",
           next_action:
             "Review builder project, confirm scope and site details, then decide the right next step.",
           follow_up_at: getNextBusinessMorningIso(),

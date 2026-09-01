@@ -252,14 +252,14 @@ function VisualChoiceCard({ icon: Icon, image, title, active, onClick, thumbnail
 }
 
 function PrimaryFinishControls({
-  isLcssWarehouse,
+  isAtlasWarehouse,
   steelFinish,
   gableMode,
   cladding,
   enclosureType,
   updateField,
 }) {
-  if (isLcssWarehouse) {
+  if (isAtlasWarehouse) {
     return (
       <div className="grid gap-4">
         <div>
@@ -374,7 +374,7 @@ function ContactField({ label, type = "text", value, onChange, placeholder, requ
 }
 
 function getSystemLabel(productType) {
-  return productType === "LCSS Warehouse" ? "Atlas Lip Channel Warehouse" : "Custom Engineered Warehouse"
+  return productType === "Atlas Warehouse" ? "Atlas Lip Channel Warehouse" : "Custom Engineered Warehouse"
 }
 
 function getClientFacingLineItemLabel(label) {
@@ -421,8 +421,8 @@ export default function WarehouseBuilderClient() {
   const hasInitialisedBuilderRef = useRef(false)
   const sceneSectionRef = useRef(null)
 
-  const isLcssWarehouse = true
-  const builderTheme = isLcssWarehouse
+  const isAtlasWarehouse = true
+  const builderTheme = isAtlasWarehouse
     ? {
         name: "Atlas W-Series",
         eyebrow: "Atlas warehouse builder",
@@ -483,7 +483,7 @@ export default function WarehouseBuilderClient() {
     window.clearTimeout(changeNoticeTimeoutRef.current)
     changeNoticeTimeoutRef.current = window.setTimeout(() => setChangeNotice(""), 1900)
   }
-  const mobileSceneSummary = isLcssWarehouse
+  const mobileSceneSummary = isAtlasWarehouse
     ? `${config.width}m x ${config.length}m · ${gableModeLabel}`
     : `${config.width}m x ${config.length}m · ${enclosureLabel}`
   const mobileSceneControls = [
@@ -501,9 +501,9 @@ export default function WarehouseBuilderClient() {
     },
     {
       key: "enclosure",
-      label: isLcssWarehouse ? "Sheeting" : "Walls",
-      shortLabel: isLcssWarehouse ? gableModeLabel : enclosureLabel,
-      icon: isLcssWarehouse ? HomeModernIcon : ShieldCheckIcon,
+      label: isAtlasWarehouse ? "Sheeting" : "Walls",
+      shortLabel: isAtlasWarehouse ? gableModeLabel : enclosureLabel,
+      icon: isAtlasWarehouse ? HomeModernIcon : ShieldCheckIcon,
     },
   ]
   const shareableConfiguration = useMemo(() => getShareableConfiguration(config), [config])
@@ -588,7 +588,7 @@ export default function WarehouseBuilderClient() {
     const lengthParam = Number(searchParams.get("length"))
     const nextWidthOptions = ATLAS_WAREHOUSE_WIDTH_OPTIONS
 
-    const nextValues = { productType: "LCSS Warehouse" }
+    const nextValues = { productType: "Atlas Warehouse" }
 
     if (Number.isFinite(widthParam) && nextWidthOptions.includes(widthParam)) {
       nextValues.width = widthParam
@@ -645,7 +645,7 @@ export default function WarehouseBuilderClient() {
   }, [shareableConfiguration])
 
   const estimateInput = useMemo(() => {
-    if (isLcssWarehouse) {
+    if (isAtlasWarehouse) {
       const structureOnly = config.gableMode === "structure_only"
       return {
         systemVariant: "atlas",
@@ -668,22 +668,22 @@ export default function WarehouseBuilderClient() {
       deliveryDistance: 0,
       claddingInstalled: false,
     }
-  }, [config, isLcssWarehouse])
+  }, [config, isAtlasWarehouse])
 
   const estimate = useMemo(
-    () => isLcssWarehouse
+    () => isAtlasWarehouse
       ? calculateAtlasWarehouseEstimate(estimateInput)
       : calculateEstimateByProductType(config.productType, estimateInput),
-    [config.productType, estimateInput, isLcssWarehouse]
+    [config.productType, estimateInput, isAtlasWarehouse]
   )
 
   const budgetValue =
     estimate.pricing.estimatedTotal ?? estimate.pricing.baseTotal ?? estimate.pricing.totalInclVat
-  const lcssSheetingCoverage =
-    isLcssWarehouse
+  const atlasSheetingCoverage =
+    isAtlasWarehouse
       ? estimate.sheeting?.totalSheetingArea ?? estimate.sheeting?.roofSheetingArea ?? 0
       : 0
-  const lcssRoofCoverage = isLcssWarehouse ? estimate.sheeting?.roofSheetingArea ?? 0 : 0
+  const atlasRoofCoverage = isAtlasWarehouse ? estimate.sheeting?.roofSheetingArea ?? 0 : 0
   const pricePerSquareMeter =
     config.width && config.length ? Math.round(budgetValue / (config.width * config.length)) : 0
 
@@ -707,7 +707,7 @@ export default function WarehouseBuilderClient() {
   }, [budgetValue])
 
   const sceneProps = useMemo(() => {
-    if (isLcssWarehouse) {
+    if (isAtlasWarehouse) {
       return {
         systemVariant: "atlas",
         width: config.width,
@@ -739,7 +739,7 @@ export default function WarehouseBuilderClient() {
       pedestrianDoorFace: config.pedestrianDoorFace,
       sheetingColor: config.sheetingColor,
     }
-  }, [config, isLcssWarehouse])
+  }, [config, isAtlasWarehouse])
 
   const handleSaveDesign = async () => {
     const shareUrl = buildShareableBuilderUrl(shareableConfiguration)
@@ -766,7 +766,7 @@ export default function WarehouseBuilderClient() {
       }
     }
 
-    trackBuilderEvent("warehouse_builder_design_saved", { system: isLcssWarehouse ? "atlas" : "lsf" })
+    trackBuilderEvent("warehouse_builder_design_saved", { system: isAtlasWarehouse ? "atlas" : "lsf" })
 
     window.setTimeout(() => setSaveStatus(""), 2400)
   }
@@ -777,18 +777,18 @@ export default function WarehouseBuilderClient() {
       "Hi Smart Steel, I would like help with this warehouse design:",
       `${systemLabel} · ${config.width}m x ${config.length}m x ${config.wallHeight}m`,
       `Budget guide excl. VAT: ${formatCurrency(budgetValue)}`,
-      ...(isLcssWarehouse ? [`Atlas SKU: ${estimate.meta.sku}`] : []),
+      ...(isAtlasWarehouse ? [`Atlas SKU: ${estimate.meta.sku}`] : []),
       `Design reference: ${designReference}`,
       shareUrl,
     ].join("\n")
 
     window.open(`https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
-    trackBuilderEvent("warehouse_builder_whatsapp_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
+    trackBuilderEvent("warehouse_builder_whatsapp_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
   }
 
   const handleOpenDesignSummary = () => {
     window.open(buildShareableBuilderUrl(shareableConfiguration, "/warehouse-builder/summary"), "_blank", "noopener,noreferrer")
-    trackBuilderEvent("warehouse_builder_summary_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
+    trackBuilderEvent("warehouse_builder_summary_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
   }
 
   const handleSubmit = async (event) => {
@@ -824,38 +824,38 @@ export default function WarehouseBuilderClient() {
           scope: "supply_only",
           scopeLabel: "Supply only",
           installationInterest: config.installationInterest,
-          enclosureType: isLcssWarehouse ? null : config.enclosureType,
-          enclosureLabel: isLcssWarehouse ? null : enclosureLabel,
+          enclosureType: isAtlasWarehouse ? null : config.enclosureType,
+          enclosureLabel: isAtlasWarehouse ? null : enclosureLabel,
           roofType: config.roofType,
           roofTypeLabel,
           cladding: config.gableMode === "structure_only" ? "None" : config.sheetingProfile,
           sheetingProfile: config.gableMode === "structure_only" ? null : config.sheetingProfile,
           sheetingFinish: config.gableMode === "structure_only" ? null : config.sheetingFinish,
-          rollerDoorCount: isLcssWarehouse ? 0 : config.rollerDoorCount,
-          garageDoorOpeningType: isLcssWarehouse ? null : config.garageDoorOpeningType,
-          garageDoorOpeningTypeLabel: isLcssWarehouse ? null : garageDoorOpeningTypeLabel,
-          pedestrianDoorCount: isLcssWarehouse ? 0 : config.pedestrianDoorCount,
-          rollerDoorFace: isLcssWarehouse ? null : config.rollerDoorFace,
-          pedestrianDoorFace: isLcssWarehouse ? null : config.pedestrianDoorFace,
+          rollerDoorCount: isAtlasWarehouse ? 0 : config.rollerDoorCount,
+          garageDoorOpeningType: isAtlasWarehouse ? null : config.garageDoorOpeningType,
+          garageDoorOpeningTypeLabel: isAtlasWarehouse ? null : garageDoorOpeningTypeLabel,
+          pedestrianDoorCount: isAtlasWarehouse ? 0 : config.pedestrianDoorCount,
+          rollerDoorFace: isAtlasWarehouse ? null : config.rollerDoorFace,
+          pedestrianDoorFace: isAtlasWarehouse ? null : config.pedestrianDoorFace,
           sheetingColor: config.gableMode === "structure_only" ? null : config.sheetingFinish === "chromadek" ? config.sheetingColor : "galvanised",
           sheetingColorLabel: config.gableMode === "structure_only" ? "Not selected" : config.sheetingFinish === "chromadek" ? sheetingColor.label : "Galvanised",
-          steelFinish: isLcssWarehouse ? config.steelFinish : null,
-          gableMode: isLcssWarehouse ? config.gableMode : null,
-          gableModeLabel: isLcssWarehouse ? gableModeLabel : null,
+          steelFinish: isAtlasWarehouse ? config.steelFinish : null,
+          gableMode: isAtlasWarehouse ? config.gableMode : null,
+          gableModeLabel: isAtlasWarehouse ? gableModeLabel : null,
           deliveryRequired: config.deliveryRequired,
           deliveryDistance: config.deliveryRequired ? config.deliveryDistance : 0,
           estimateRequest: estimate.summary.estimateRequest,
           estimatedTotal: budgetValue,
           priceLabel: formatCurrency(budgetValue),
           designReference,
-          atlasSku: isLcssWarehouse ? estimate.meta.sku : null,
-          atlasFamilyCode: isLcssWarehouse ? estimate.meta.productCode : null,
+          atlasSku: isAtlasWarehouse ? estimate.meta.sku : null,
+          atlasFamilyCode: isAtlasWarehouse ? estimate.meta.productCode : null,
           configurationUrl: buildShareableBuilderUrl(shareableConfiguration),
           summaryNote: estimate.summary.layoutNote,
           configuration: {
             productType: config.productType,
-            sku: isLcssWarehouse ? estimate.meta.sku : null,
-            familyCode: isLcssWarehouse ? estimate.meta.productCode : null,
+            sku: isAtlasWarehouse ? estimate.meta.sku : null,
+            familyCode: isAtlasWarehouse ? estimate.meta.productCode : null,
             width: config.width,
             length: config.length,
             wallHeight: config.wallHeight,
@@ -887,29 +887,29 @@ export default function WarehouseBuilderClient() {
           },
           summary: {
             systemLabel,
-            sku: isLcssWarehouse ? estimate.meta.sku : null,
-            familyCode: isLcssWarehouse ? estimate.meta.productCode : null,
+            sku: isAtlasWarehouse ? estimate.meta.sku : null,
+            familyCode: isAtlasWarehouse ? estimate.meta.productCode : null,
             scopeLabel: "Supply only",
             installationInterest: config.installationInterest,
-            enclosureLabel: isLcssWarehouse ? null : enclosureLabel,
+            enclosureLabel: isAtlasWarehouse ? null : enclosureLabel,
             roofTypeLabel,
             priceLabel: formatCurrency(budgetValue),
             estimateRequest: estimate.summary.estimateRequest,
             layoutNote: estimate.summary.layoutNote,
             dimensionsLabel: `${config.width}m x ${config.length}m x ${config.wallHeight}m`,
-            rollerDoorCount: isLcssWarehouse ? 0 : config.rollerDoorCount,
-            garageDoorOpeningType: isLcssWarehouse ? null : config.garageDoorOpeningType,
-            garageDoorOpeningTypeLabel: isLcssWarehouse ? null : garageDoorOpeningTypeLabel,
-            pedestrianDoorCount: isLcssWarehouse ? 0 : config.pedestrianDoorCount,
-            rollerDoorFace: isLcssWarehouse ? null : config.rollerDoorFace,
-            pedestrianDoorFace: isLcssWarehouse ? null : config.pedestrianDoorFace,
+            rollerDoorCount: isAtlasWarehouse ? 0 : config.rollerDoorCount,
+            garageDoorOpeningType: isAtlasWarehouse ? null : config.garageDoorOpeningType,
+            garageDoorOpeningTypeLabel: isAtlasWarehouse ? null : garageDoorOpeningTypeLabel,
+            pedestrianDoorCount: isAtlasWarehouse ? 0 : config.pedestrianDoorCount,
+            rollerDoorFace: isAtlasWarehouse ? null : config.rollerDoorFace,
+            pedestrianDoorFace: isAtlasWarehouse ? null : config.pedestrianDoorFace,
             sheetingProfile: config.gableMode === "structure_only" ? null : config.sheetingProfile,
             sheetingFinish: config.gableMode === "structure_only" ? null : config.sheetingFinish,
             sheetingColor: config.gableMode === "structure_only" ? null : config.sheetingFinish === "chromadek" ? config.sheetingColor : "galvanised",
             sheetingColorLabel: config.gableMode === "structure_only" ? "Not selected" : config.sheetingFinish === "chromadek" ? sheetingColor.label : "Galvanised",
-            steelFinish: isLcssWarehouse ? config.steelFinish : null,
-            gableMode: isLcssWarehouse ? config.gableMode : null,
-            gableModeLabel: isLcssWarehouse ? gableModeLabel : null,
+            steelFinish: isAtlasWarehouse ? config.steelFinish : null,
+            gableMode: isAtlasWarehouse ? config.gableMode : null,
+            gableModeLabel: isAtlasWarehouse ? gableModeLabel : null,
           },
         }),
       })
@@ -923,7 +923,7 @@ export default function WarehouseBuilderClient() {
       setSubmitted(true)
       setLeadForm({ name: "", lastName: "", email: "", phone: "" })
       trackBuilderEvent("warehouse_builder_enquiry_submitted", {
-        system: isLcssWarehouse ? "atlas" : "lsf",
+        system: isAtlasWarehouse ? "atlas" : "lsf",
         value: budgetValue,
         currency: "ZAR",
       })
@@ -934,7 +934,7 @@ export default function WarehouseBuilderClient() {
     }
   }
 
-  const summaryItems = isLcssWarehouse
+  const summaryItems = isAtlasWarehouse
     ? [
         { label: "System", value: systemLabel },
         { label: "Warehouse", value: `${config.width}m x ${config.length}m` },
@@ -954,7 +954,7 @@ export default function WarehouseBuilderClient() {
         { label: "Project stage", value: config.projectStage || "Not selected" },
       ]
 
-  const budgetItems = isLcssWarehouse
+  const budgetItems = isAtlasWarehouse
     ? [
         { label: "Size", value: `${config.width}m x ${config.length}m x ${config.wallHeight}m` },
         { label: "System", value: systemLabel },
@@ -962,7 +962,7 @@ export default function WarehouseBuilderClient() {
         { label: "Sheeting add-on", value: gableModeLabel },
         { label: "Sheeting profile", value: config.gableMode === "structure_only" ? "Not selected" : config.sheetingProfile },
         { label: "Sheeting finish", value: config.gableMode === "structure_only" ? "Not selected" : config.sheetingFinish === "chromadek" ? `Chromadek · ${sheetingColor.label}` : "Galvanised" },
-        { label: "Sheeting coverage", value: `${Math.round(lcssSheetingCoverage).toLocaleString()} sqm` },
+        { label: "Sheeting coverage", value: `${Math.round(atlasSheetingCoverage).toLocaleString()} sqm` },
       ]
     : [
         { label: "Size", value: `${config.width}m x ${config.length}m x ${config.wallHeight}m` },
@@ -974,7 +974,7 @@ export default function WarehouseBuilderClient() {
         },
       ]
 
-  const submittedSummaryItems = isLcssWarehouse
+  const submittedSummaryItems = isAtlasWarehouse
     ? [
         { label: "Atlas SKU", value: estimate.meta.sku },
         { label: "System", value: systemLabel },
@@ -1015,7 +1015,7 @@ export default function WarehouseBuilderClient() {
       ]
 
   const budgetBreakdownItems = useMemo(() => {
-    if (isLcssWarehouse) {
+    if (isAtlasWarehouse) {
       return [
         { label: "Atlas structural steel", value: "Included" },
         { label: "Brackets and connection hardware", value: "Included" },
@@ -1034,7 +1034,7 @@ export default function WarehouseBuilderClient() {
       label: getClientFacingLineItemLabel(item.label || "Item"),
       value: formatCurrency(Number(item.total || 0)),
     }))
-  }, [config.gableMode, config.sheetingProfile, estimate.lineItems, isLcssWarehouse])
+  }, [config.gableMode, config.sheetingProfile, estimate.lineItems, isAtlasWarehouse])
 
   const priceChangeLabel =
     budgetDelta === 0
@@ -1049,15 +1049,15 @@ export default function WarehouseBuilderClient() {
       ? "Request my reviewed quote"
       : "Request my project review"
 
-  const includedItems = isLcssWarehouse
+  const includedItems = isAtlasWarehouse
     ? [
       "The main steel structure sized to your selected warehouse footprint",
         "Column bases, ridge and eave brackets, bracing brackets, and M10 connection fixings",
-        ...(config.gableMode === "structure_only" ? [] : [`${config.sheetingProfile} sheeting with a ${config.sheetingFinish === "chromadek" ? "Chromadek" : "galvanised"} finish across approximately ${Math.round(lcssSheetingCoverage).toLocaleString()} sqm of coverage`]),
+        ...(config.gableMode === "structure_only" ? [] : [`${config.sheetingProfile} sheeting with a ${config.sheetingFinish === "chromadek" ? "Chromadek" : "galvanised"} finish across approximately ${Math.round(atlasSheetingCoverage).toLocaleString()} sqm of coverage`]),
         config.gableMode === "structure_only"
           ? "Sheeting remains optional and can be added before requesting a reviewed quote"
           : gableModeLabel === "Roof sheeting"
-          ? `Roof sheeting priced on approximately ${Math.round(lcssRoofCoverage).toLocaleString()} sqm`
+          ? `Roof sheeting priced on approximately ${Math.round(atlasRoofCoverage).toLocaleString()} sqm`
           : "Roof and wall sheeting allowance based on the selected warehouse footprint",
         "Project context so the next conversation starts with the right detail",
       ]
@@ -1085,7 +1085,7 @@ export default function WarehouseBuilderClient() {
   return (
     <main
       className={`min-h-screen overflow-x-hidden px-4 py-8 transition-colors duration-500 sm:px-6 sm:py-10 lg:px-8 ${
-        isLcssWarehouse
+        isAtlasWarehouse
           ? "bg-[linear-gradient(180deg,#ffffff_0%,#eef6fa_24%,#ffffff_48%,#edf2f6_100%)]"
           : "bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_12%,#fff8f6_24%,#ffffff_42%,#eef3f7_100%)]"
       }`}
@@ -1098,7 +1098,7 @@ export default function WarehouseBuilderClient() {
       <div className="mx-auto min-w-0 max-w-[1540px]">
         <section
           className={`relative overflow-hidden rounded-[1.3rem] border px-4 py-3 shadow-sm transition-all duration-500 sm:rounded-[1.6rem] sm:px-6 sm:py-5 ${
-            isLcssWarehouse
+            isAtlasWarehouse
               ? "border-[#0043f3]/25 bg-[linear-gradient(120deg,#001d2e_0%,#073584_58%,#0043f3_100%)] text-white"
               : "border-slate-200 bg-[linear-gradient(120deg,#020617,#172033)] text-white"
           }`}
@@ -1110,15 +1110,15 @@ export default function WarehouseBuilderClient() {
                 <Image
                   src={builderTheme.logo}
                   alt={builderTheme.name}
-                  width={isLcssWarehouse ? 240 : 150}
+                  width={isAtlasWarehouse ? 240 : 150}
                   height={48}
-                  className={isLcssWarehouse ? "h-6 max-w-[190px] object-contain object-left sm:h-8 sm:max-w-none" : "h-7 w-auto object-contain object-left sm:h-9"}
+                  className={isAtlasWarehouse ? "h-6 max-w-[190px] object-contain object-left sm:h-8 sm:max-w-none" : "h-7 w-auto object-contain object-left sm:h-9"}
                   priority
                 />
                 <span className="hidden h-7 w-px bg-white/20 sm:block" />
                 <p className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] text-white/65 sm:block">Live configuration</p>
               </div>
-              <p className={`hidden text-[11px] font-semibold uppercase tracking-[0.26em] sm:block ${isLcssWarehouse ? "text-[#c1d9e5]" : "text-red-300"}`}>
+              <p className={`hidden text-[11px] font-semibold uppercase tracking-[0.26em] sm:block ${isAtlasWarehouse ? "text-[#c1d9e5]" : "text-red-300"}`}>
                 {builderTheme.eyebrow}
               </p>
               <h1 className="text-xl font-semibold tracking-tight text-white sm:mt-2 sm:text-3xl lg:text-[2rem]">
@@ -1145,7 +1145,7 @@ export default function WarehouseBuilderClient() {
           <div className="flex min-w-0 items-center gap-5">
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold text-slate-500">
-                {systemLabel} · {isLcssWarehouse ? estimate.meta.sku : designReference}
+                {systemLabel} · {isAtlasWarehouse ? estimate.meta.sku : designReference}
               </p>
               <p className="mt-0.5 text-sm font-semibold text-slate-950">{config.width}m × {config.length}m × {config.wallHeight}m</p>
             </div>
@@ -1163,7 +1163,7 @@ export default function WarehouseBuilderClient() {
               type="button"
               onClick={() => {
                 setShowLeadForm(true)
-                trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
+                trackBuilderEvent("warehouse_builder_review_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
               }}
               className="rounded-xl bg-[var(--builder-accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-90"
             >
@@ -1207,7 +1207,7 @@ export default function WarehouseBuilderClient() {
                       reset()
                       setSubmitted(false)
                       setSubmissionResult(null)
-                      trackBuilderEvent("warehouse_builder_reset", { system: isLcssWarehouse ? "atlas" : "lsf" })
+                      trackBuilderEvent("warehouse_builder_reset", { system: isAtlasWarehouse ? "atlas" : "lsf" })
                     }}
                     className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
                   >
@@ -1224,7 +1224,7 @@ export default function WarehouseBuilderClient() {
                     onClick={() => {
                       if (stage.target === "review-summary") {
                         setShowLeadForm(true)
-                        trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
+                        trackBuilderEvent("warehouse_builder_review_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
                         return
                       }
                       scrollToBuilderStage(stage.target)
@@ -1286,7 +1286,7 @@ export default function WarehouseBuilderClient() {
                       </div>
                       <div>
                         <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                          {isLcssWarehouse ? "Wall height" : "Eave height"}
+                          {isAtlasWarehouse ? "Wall height" : "Eave height"}
                         </label>
                         <div className="mt-1.5 grid grid-cols-3 gap-2">
                           {WAREHOUSE_HEIGHT_OPTIONS.map((option) => (
@@ -1312,7 +1312,7 @@ export default function WarehouseBuilderClient() {
                     </div>
                     <div className="border-t border-slate-200 pt-4">
                       <PrimaryFinishControls
-                        isLcssWarehouse={isLcssWarehouse}
+                        isAtlasWarehouse={isAtlasWarehouse}
                         steelFinish={config.steelFinish}
                         gableMode={config.gableMode}
                         cladding={config.cladding}
@@ -1375,7 +1375,7 @@ export default function WarehouseBuilderClient() {
                   </div>
                 </div>
 
-                {!isLcssWarehouse ? (
+                {!isAtlasWarehouse ? (
                     <div id="openings" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                       <StepLabel
                         step="Step 3"
@@ -1456,7 +1456,7 @@ export default function WarehouseBuilderClient() {
 
                 <div id="project-context" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step={isLcssWarehouse ? "Step 3" : "Step 4"}
+                    step={isAtlasWarehouse ? "Step 3" : "Step 4"}
                     title="Tell us about the project"
                     hint="A little project context helps us respond better."
                   />
@@ -1531,7 +1531,7 @@ export default function WarehouseBuilderClient() {
 
                 <div id="delivery" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step={isLcssWarehouse ? "Step 4" : "Step 5"}
+                    step={isAtlasWarehouse ? "Step 4" : "Step 5"}
                     title="Add project location"
                     hint="Location helps us keep the follow-up practical."
                   />
@@ -1575,7 +1575,7 @@ export default function WarehouseBuilderClient() {
 
                 <div id="notes" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step={isLcssWarehouse ? "Step 5" : "Step 6"}
+                    step={isAtlasWarehouse ? "Step 5" : "Step 6"}
                     title="Add anything we should know"
                     hint="Optional notes that could help us review faster."
                   />
@@ -1684,9 +1684,9 @@ export default function WarehouseBuilderClient() {
                   <p className="hidden text-sm text-slate-500 sm:block">Rotate, zoom, and watch the footprint update as you edit the build.</p>
                 </div>
                 <div className={`inline-flex min-w-0 max-w-full self-start items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold sm:max-w-[58%] sm:self-auto ${
-                  isLcssWarehouse ? "bg-[#c1d9e5]/55 text-[#001d2e]" : "bg-slate-100 text-slate-600"
+                  isAtlasWarehouse ? "bg-[#c1d9e5]/55 text-[#001d2e]" : "bg-slate-100 text-slate-600"
                 }`}>
-                  {isLcssWarehouse ? (
+                  {isAtlasWarehouse ? (
                     <Image src="/atlas/atlas-mark-dark.png" alt="" width={18} height={18} className="h-4 w-4 shrink-0 object-contain" />
                   ) : null}
                   <span className="truncate">{systemLabel} · {roofTypeLabel}</span>
@@ -1738,7 +1738,7 @@ export default function WarehouseBuilderClient() {
                             }
                             className={`flex h-11 w-11 items-center justify-center rounded-full border shadow-sm backdrop-blur transition ${
                               isActive
-                                ? isLcssWarehouse
+                                ? isAtlasWarehouse
                                   ? "border-[#0043f3] bg-[#0043f3] text-white"
                                   : "border-slate-900 bg-slate-900 text-white"
                                 : "border-slate-200/90 bg-white/94 text-slate-700"
@@ -1815,16 +1815,16 @@ export default function WarehouseBuilderClient() {
 
                       {activeMobileSceneControl === "enclosure" ? (
                         <select
-                          value={isLcssWarehouse ? config.gableMode : config.enclosureType}
+                          value={isAtlasWarehouse ? config.gableMode : config.enclosureType}
                           onChange={(event) => {
                             const value = event.target.value
-                            updateField(isLcssWarehouse ? "gableMode" : "enclosureType", value)
-                            if (isLcssWarehouse && value !== "structure_only" && config.cladding === "None") updateField("cladding", "IBR")
+                            updateField(isAtlasWarehouse ? "gableMode" : "enclosureType", value)
+                            if (isAtlasWarehouse && value !== "structure_only" && config.cladding === "None") updateField("cladding", "IBR")
                             setActiveMobileSceneControl(null)
                           }}
                           className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"
                         >
-                          {(isLcssWarehouse ? ATLAS_WAREHOUSE_SHEETING_OPTIONS : WAREHOUSE_ENCLOSURE_OPTIONS).map((option) => (
+                          {(isAtlasWarehouse ? ATLAS_WAREHOUSE_SHEETING_OPTIONS : WAREHOUSE_ENCLOSURE_OPTIONS).map((option) => (
                             <option key={option.value} value={option.value}>
                               {option.label}
                             </option>
@@ -1846,7 +1846,7 @@ export default function WarehouseBuilderClient() {
                 <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Build direction</p>
                   <p className="mt-1 text-sm font-semibold text-slate-900">
-                    {isLcssWarehouse ? `${steelFinishLabel} · ${gableModeLabel}` : enclosureLabel}
+                    {isAtlasWarehouse ? `${steelFinishLabel} · ${gableModeLabel}` : enclosureLabel}
                   </p>
                 </div>
                 <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-3">
@@ -1873,7 +1873,7 @@ export default function WarehouseBuilderClient() {
             </div>
 
             <section id="review-summary" className={`hidden scroll-mt-28 rounded-[2rem] border p-5 text-white shadow-sm transition-all duration-500 sm:p-6 xl:block ${
-              isLcssWarehouse
+              isAtlasWarehouse
                 ? "border-[#0043f3]/40 bg-[linear-gradient(140deg,#001d2e_0%,#06347e_58%,#0043f3_130%)]"
                 : "border-slate-200 bg-slate-950"
             }`}>
@@ -1890,12 +1890,12 @@ export default function WarehouseBuilderClient() {
                       {priceChangeLabel}
                     </p>
                     <p className="mt-4 max-w-xl text-sm leading-6 text-slate-300">
-                      {isLcssWarehouse
+                      {isAtlasWarehouse
                         ? "Based on your selected size, wall height, steel finish, and sheeting choice."
                         : "Based on your current structure, enclosure, and opening selections."}
                     </p>
                     <p className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/65">
-                      {isLcssWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
+                      {isAtlasWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
                     </p>
                   </div>
                   <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
@@ -1925,10 +1925,10 @@ export default function WarehouseBuilderClient() {
                   type="button"
                   onClick={() => {
                     setShowLeadForm((open) => !open)
-                    if (!showLeadForm) trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
+                    if (!showLeadForm) trackBuilderEvent("warehouse_builder_review_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
                   }}
                   className={`inline-flex items-center justify-center rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition ${
-                    isLcssWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-[#da1a33] hover:bg-[#bf172d]"
+                    isAtlasWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-[#da1a33] hover:bg-[#bf172d]"
                   }`}
                 >
                   {showLeadForm ? "Hide review form" : reviewCtaLabel}
@@ -2050,7 +2050,7 @@ export default function WarehouseBuilderClient() {
             aria-labelledby="warehouse-review-title"
             className="relative z-10 max-h-[94dvh] w-full overflow-y-auto rounded-t-[2rem] bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]"
           >
-            <div className={`relative p-5 text-white sm:p-7 ${isLcssWarehouse ? "bg-[linear-gradient(120deg,#001d2e,#0043f3)]" : "bg-[linear-gradient(120deg,#020617,#172033)]"}`}>
+            <div className={`relative p-5 text-white sm:p-7 ${isAtlasWarehouse ? "bg-[linear-gradient(120deg,#001d2e,#0043f3)]" : "bg-[linear-gradient(120deg,#020617,#172033)]"}`}>
               <button
                 type="button"
                 aria-label="Close"
@@ -2061,7 +2061,7 @@ export default function WarehouseBuilderClient() {
                 <XMarkIcon className="h-5 w-5" />
               </button>
               <p className="pr-12 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
-                {isLcssWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
+                {isAtlasWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
               </p>
               <h2 id="warehouse-review-title" className="mt-2 pr-12 text-2xl font-semibold sm:text-3xl">
                 {submitted ? "Your project is with Smart Steel" : "Request a reviewed quote"}
@@ -2104,7 +2104,7 @@ export default function WarehouseBuilderClient() {
                 <ContactField label="Email" type="email" value={leadForm.email} onChange={(event) => setLeadForm((current) => ({ ...current, email: event.target.value }))} placeholder="Email address" required />
                 <ContactField label="Phone" type="tel" value={leadForm.phone} onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Phone number" required />
                 <div className="sm:col-span-2">
-                  <button type="submit" disabled={submitting} className={`w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isLcssWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>
+                  <button type="submit" disabled={submitting} className={`w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isAtlasWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>
                     {submitting ? "Sending your project..." : "Send for review"}
                   </button>
                   <p className="mt-3 text-center text-xs leading-5 text-slate-500">Your saved configuration and project details will be sent together. No payment is required.</p>
@@ -2126,7 +2126,7 @@ export default function WarehouseBuilderClient() {
               type="button"
               onClick={() => {
                 setShowLeadForm(true)
-                trackBuilderEvent("warehouse_builder_review_opened", { system: isLcssWarehouse ? "atlas" : "lsf" })
+                trackBuilderEvent("warehouse_builder_review_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
               }}
               className="shrink-0 rounded-xl bg-[var(--builder-accent)] px-4 py-3 text-xs font-semibold text-white"
             >

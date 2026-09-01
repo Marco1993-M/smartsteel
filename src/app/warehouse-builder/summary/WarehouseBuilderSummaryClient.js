@@ -26,10 +26,10 @@ function createDesignReference(configuration) {
 export default function WarehouseBuilderSummaryClient() {
   const searchParams = useSearchParams()
   const configuration = useMemo(() => {
-    const productType = "LCSS Warehouse"
+    const productType = "Atlas Warehouse"
     return {
       productType,
-      width: numberParam(searchParams, "width", productType === "LCSS Warehouse" ? 8 : 10),
+      width: numberParam(searchParams, "width", 8),
       length: numberParam(searchParams, "length", 20),
       wallHeight: numberParam(searchParams, "height", 3),
       cladding: searchParams.get("cladding") || "None",
@@ -49,7 +49,7 @@ export default function WarehouseBuilderSummaryClient() {
     }
   }, [searchParams])
 
-  const isAtlas = configuration.productType === "LCSS Warehouse"
+  const isAtlas = configuration.productType === "Atlas Warehouse"
   const estimate = useMemo(() => {
     const structureOnly = configuration.gableMode === "structure_only"
     return calculateAtlasWarehouseEstimate({

@@ -23,6 +23,7 @@ import {
 } from "./crmReferenceData.js"
 import { supabase } from "./supabase.js"
 import { getOsAuthHeaders } from "../../lib/osClientAuth.js"
+import { normalizeAtlasProductType } from "../../lib/atlasProductIdentity.js"
 
 const STATUS_OPTIONS = ["all", "new", "contacted", "quoted", "won", "lost"]
 const PRODUCT_LINE_FILTER_OPTIONS = ["all", "atlas", "lsf", "general"]
@@ -81,7 +82,7 @@ function normalizeLead(lead) {
     status: normalizeStatus(lead.status),
     next_action: lead.next_action || "",
     lead_source: lead.lead_source || "",
-    product_type: lead.product_type || "",
+    product_type: normalizeAtlasProductType(lead.product_type) || "",
     client_follow_up_state: lead.client_follow_up_state || "",
     quote_value: lead.quote_value || "",
     lost_reason: lead.lost_reason || "",
@@ -93,6 +94,7 @@ function normalizeLead(lead) {
 function buildLeadPersistencePayload(lead) {
   const optionalNumericFields = ["quote_value", "width", "length", "wall_height"]
   const payload = { ...lead }
+  payload.product_type = normalizeAtlasProductType(payload.product_type) || ""
 
   optionalNumericFields.forEach((field) => {
     if (!Object.prototype.hasOwnProperty.call(payload, field)) return
@@ -865,7 +867,6 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       ? "lsf"
       : normalizedProduct.includes("atlas") ||
           normalizedProduct.includes("cflc") ||
-          normalizedProduct.includes("lcss") ||
           normalizedProduct.includes("lip channel") ||
           normalizedProduct.includes("carport") ||
           normalizedProduct.includes("ground mount")

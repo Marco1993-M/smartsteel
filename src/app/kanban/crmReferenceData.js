@@ -1,3 +1,5 @@
+import { normalizeAtlasProductType } from "../../lib/atlasProductIdentity.js"
+
 export const TEAM_MEMBERS = ["Stefan", "Niel", "Victor", "Marco"]
 
 export const LEAD_SOURCE_OPTIONS = [
@@ -30,12 +32,6 @@ export const PRODUCT_TYPE_META = {
     family: "Warehouses",
     lane: "Structural system",
     description: "Light steel frame warehouse projects.",
-  },
-  "LCSS Warehouse": {
-    line: "Atlas",
-    family: "Warehouses",
-    lane: "Structural system",
-    description: "Lip channel warehouse projects.",
   },
   "Atlas Warehouse": {
     line: "Atlas",
@@ -88,7 +84,7 @@ export const PRODUCT_TYPE_META = {
 }
 
 export function getProductTypeMeta(productType) {
-  return PRODUCT_TYPE_META[String(productType || "").trim()] || PRODUCT_TYPE_META.Other
+  return PRODUCT_TYPE_META[String(normalizeAtlasProductType(productType) || "").trim()] || PRODUCT_TYPE_META.Other
 }
 
 export function getOpportunityDisplayTitle(lead) {
