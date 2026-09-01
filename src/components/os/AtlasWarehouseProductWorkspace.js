@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -275,13 +274,10 @@ function W08SpecificationSheet({
   return (
     <article className="product-spec-sheet mx-auto w-full max-w-[210mm] bg-white text-slate-950 shadow-xl print:shadow-none">
       <section className="product-spec-page product-spec-cover relative overflow-hidden bg-slate-950">
-        <Image
+        <img
           src="/Atlas_warehouses_w08_spec_sheet.png"
           alt="Atlas W08 Product Specification Sheet"
-          fill
-          priority
-          sizes="(max-width: 900px) 100vw, 210mm"
-          className="object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute left-[14mm] top-[14mm] w-[72mm] border-l-4 border-sky-500 bg-white/95 px-5 py-4 shadow-xl">
           <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-sky-700">Configuration specification</p>
