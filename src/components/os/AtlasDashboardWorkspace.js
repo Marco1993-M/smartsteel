@@ -185,7 +185,7 @@ export default function AtlasDashboardWorkspace() {
               <Link href="/os/atlas/products" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-black text-[#0043f3] transition hover:bg-[#c1d9e5]">
                 Open W08 product <ArrowUpRight className="h-4 w-4" />
               </Link>
-              <Link href="/warehouse-builder?productType=LCSS%20Warehouse&width=8&length=20" className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/10">
+              <Link href="/warehouse-builder?productType=Atlas%20Warehouse&width=8&length=20" className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/10">
                 Test live builder
               </Link>
             </div>

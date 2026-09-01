@@ -20,16 +20,17 @@ import {
 } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { ATLAS_PRODUCT_RANGE, getAtlasProduct, withAtlasProduct } from "../../lib/atlasProductRange"
+import {
+  ATLAS_W08_EAVE_HEIGHTS_M,
+  ATLAS_W08_LENGTHS_M,
+  calculateAtlasW08Geometry,
+} from "../../lib/atlasW08Geometry"
 import AtlasSkuRegistry from "./AtlasSkuRegistry"
 
-const W08_SPEC_LENGTHS = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
-const W08_SPEC_BAY_SPACING = 4
-const W08_SPEC_ROOF_PURLIN_ROWS = 8
 const W08_SPEC_SCOPES = [
-  { name: "Structure only", detail: "Primary frame, provisional secondary steel, bracing, and the connection schedule once approved." },
-  { name: "Roof sheeted", detail: "Standard structure with roof sheeting and applicable roof closures once the cladding schedule is approved." },
-  { name: "Fully enclosed", detail: "Default sheeted configuration with the roof, long walls, and both gable ends enclosed." },
-  { name: "Open-gable project option", detail: "One or both gable ends may be opened where the project scope requires access or an open-ended structure." },
+  { value: "structure_only", name: "Structure only", detail: "Primary frame, purlins, wall and roof bracing, brackets, and connection hardware. No girts or sheeting." },
+  { value: "roof_only", name: "Roof sheeted", detail: "Structure-only scope plus selected roof sheeting and roof fixings. No wall girts or wall sheeting." },
+  { value: "fully_enclosed", name: "Roof and side walls sheeted", detail: "Roof-sheeted scope plus side girts and long-wall sheeting. Gable ends remain open." },
 ]
 const W08_ROOF_SHEETING_STANDARD = [
   ["Standard profile", "IBR", "Mid-range Atlas roof and wall sheeting option"],
@@ -166,7 +167,14 @@ function formatScheduleQuantity(value, maximumFractionDigits = 1) {
   return Number(value).toLocaleString("en-ZA", { maximumFractionDigits })
 }
 
-function W08SpecificationSheet({ bom, components, selectedLength }) {
+function W08SpecificationSheet({
+  bom,
+  components,
+  selectedLength,
+  selectedHeight,
+  selectedScope,
+  selectedSteelFinish,
+}) {
   const revision = bom?.revisionCode || "DRAFT"
   const componentMap = new Map((components || []).map((component) => [component.componentCode, component]))
   const componentSpecification = (code, fallback) => {
@@ -179,93 +187,85 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
     ].filter(Boolean)
     return savedValues.length ? [...new Set(savedValues)].join(" · ") : fallback
   }
-  const bayCount = selectedLength / W08_SPEC_BAY_SPACING
-  const portalCount = bayCount + 1
-  const memberCount = portalCount * 2
-  const bracedBayCount = Math.ceil(bayCount / 4)
-  const roofPurlinLength = W08_SPEC_ROOF_PURLIN_ROWS * selectedLength
-  const componentSchedule = [
+  const geometry = calculateAtlasW08Geometry({
+    lengthM: selectedLength,
+    eaveHeightM: selectedHeight,
+  })
+  const { bays: bayCount, portalFrames: portalCount, members } = geometry
+  const selectedScopeDetails = W08_SPEC_SCOPES.find((scope) => scope.value === selectedScope)
+  const includesWallGirts = selectedScope === "fully_enclosed"
+  const includesSheeting = selectedScope !== "structure_only"
+  const includedMembers = [
+    members.columns,
+    members.rafters,
+    members.purlins,
+    members.wallBracing,
+    members.roofBracing,
+    ...(includesWallGirts ? [members.sideGirts] : []),
+  ]
+  const profileSpecification = (member, fallback) => {
+    const componentCode = member.code === "W08-PUR" ? "W08-SEC" : member.code
+    const saved = componentSpecification(componentCode, fallback)
+    return `${saved.replace(/\s*[·,]\s*(ZAM|Galvanised|Galv|Mild steel).*$/i, "")} · ${selectedSteelFinish}`
+  }
+  const componentSchedule = includedMembers.map((member) => ({
+    code: member.code,
+    component: member.label,
+    specification: profileSpecification(member, {
+      "W08-COL": "200 x 75 x 20 x 2.0mm BMT lipped channel · paired back-to-back",
+      "W08-RAF": "200 x 75 x 20 x 2.5mm BMT lipped channel",
+      "W08-PUR": "175 x 65 x 20 x 2.0mm BMT lipped channel",
+      "W08-XBW": "100 x 50 x 20 x 2.0mm BMT lipped channel",
+      "W08-XBR": "100 x 50 x 20 x 2.0mm BMT lipped channel",
+      "W08-GRT": "150 x 50 x 20 x 2.0mm BMT lipped channel",
+    }[member.code]),
+    function: member.rule,
+    quantity: member.quantity,
+    cutLength: member.cutLengthM,
+    totalLength: member.totalLengthM,
+    unit: "lengths",
+    status: "Geometry controlled",
+  }))
+  const baseBracketCount = portalCount * 2
+  const ridgeBracketCount = portalCount
+  const eaveBracketCount = portalCount * 2
+  const bracingMemberCount = members.wallBracing.quantity + members.roofBracing.quantity
+  const bracingBracketCount = bracingMemberCount * 2
+  const m10SetCount =
+    ridgeBracketCount * 8 +
+    eaveBracketCount * 8 +
+    bracingBracketCount * 2 +
+    members.purlins.quantity * 2 +
+    (includesWallGirts ? members.sideGirts.quantity * 2 : 0)
+  const connectionSchedule = [
     {
-      code: "W08-COL-01",
-      component: "Columns",
-      specification: componentSpecification("W08-COL", "200 x 75 x 20 x 2.0mm BMT ZAM lipped channel, two channels back-to-back"),
-      function: "Each column position is one structural assembly made from two back-to-back channels.",
-      quantity: memberCount,
-      unit: "assemblies",
-      basis: `2 column positions per portal x ${portalCount} portals = ${memberCount} assemblies / ${memberCount * 2} channels`,
-      status: "Calculated",
+      code: "W08-BAS", component: "Column base brackets", quantity: baseBracketCount, unit: "each",
+      specification: "Atlas W08 column base bracket · provisional geometry", basis: `2 column positions × ${portalCount} portals`, status: "Geometry pending",
     },
     {
-      code: "W08-RAF-01",
-      component: "Rafters",
-      specification: componentSpecification("W08-RAF", "200 x 75 x 20 x 2.5mm BMT ZAM lipped channel"),
-      function: "One single lipped channel rafter runs on each roof slope; rafters are not back-to-back.",
-      quantity: memberCount,
-      unit: "each",
-      basis: `2 single rafters per portal x ${portalCount} portals`,
-      status: "Calculated",
+      code: "W08-EAV", component: "Eave brackets", quantity: eaveBracketCount, unit: "each",
+      specification: "Atlas W08 bolted eave connection", basis: `2 per portal × ${portalCount} portals`, status: "Geometry pending",
     },
     {
-      code: "W08-XBR-01",
-      component: "X-bracing sets",
-      specification: componentSpecification("W08-XBR", "100 x 50 x 20 x 2.0mm BMT ZAM lipped channel"),
-      function: "Provides longitudinal stability in braced bays 1, 5, 9, and every fourth bay position thereafter.",
-      quantity: bracedBayCount,
-      unit: "sets",
-      basis: `${bayCount} bays · bracing at bay positions 1, 5, 9...`,
-      status: "Profile pending",
+      code: "W08-RDG", component: "Ridge brackets", quantity: ridgeBracketCount, unit: "each",
+      specification: "Atlas W08 bolted ridge connection", basis: `1 per portal × ${portalCount} portals`, status: "Geometry pending",
     },
     {
-      code: "W08-CON-EV01",
-      component: "Eave brackets",
-      specification: "Atlas W08 bolted eave connection",
-      function: "Connects each column to its corresponding rafter at eave level.",
-      quantity: memberCount,
-      unit: "each",
-      basis: `2 per portal x ${portalCount} portals`,
-      status: "Geometry pending",
+      code: "W08-XBR-BRK", component: "Bracing brackets", quantity: bracingBracketCount, unit: "each",
+      specification: "Atlas bracing connection bracket · provisional geometry", basis: `${bracingMemberCount} brace members × 2 ends`, status: "Geometry pending",
     },
     {
-      code: "W08-CON-AP01",
-      component: "Ridge brackets",
-      specification: "Atlas W08 bolted ridge connection",
-      function: "Joins the two rafter members at the roof ridge.",
-      quantity: portalCount,
-      unit: "set",
-      basis: `1 set per portal x ${portalCount} portals`,
-      status: "Geometry pending",
+      code: "W08-M10-SET", component: "M10 connection sets", quantity: m10SetCount, unit: "sets",
+      specification: "M10 x 30mm · Class 8.8 · zinc plated · matching nut and washer", basis: "Bracket, bracing and secondary-member connection schedule", status: "Controlled allowance",
     },
     {
-      code: "W08-CON-FA01",
-      component: "Nuts, bolts and washers",
-      specification: "Structural grade, size and finish to approved connection schedule",
-      function: "Fastener pack for frame, bracket, bracing and secondary-steel connections.",
-      quantity: "As scheduled",
-      unit: "pack",
-      basis: "Generated from the approved connection and fixing schedule",
-      status: "Specification required",
-    },
-    {
-      code: "W08-CON-AN01",
-      component: "Floor anchoring brackets",
-      specification: "Atlas W08 column base connection",
-      function: "Connects each column position to the approved concrete foundation interface.",
-      quantity: memberCount,
-      unit: "each",
-      basis: `1 per column x ${memberCount} columns`,
-      status: "Foundation review",
-    },
-    {
-      code: "W08-SEC-01",
-      component: "Roof purlins",
-      specification: componentSpecification("W08-SEC", "175 x 65 x 20 x 2.0mm ZAM roof purlins; 150 x 50 x 20 x 2.0mm ZAM side and gable girts"),
-      function: "Supports roof sheeting across the standard W08 dual-pitch roof arrangement.",
-      quantity: roofPurlinLength,
-      unit: "linear m",
-      basis: `${W08_SPEC_ROOF_PURLIN_ROWS} roof rows x ${selectedLength}m using the confirmed 1,500mm c/c standard`,
-      status: "Confirmed standard",
+      code: "W08-ANC", component: "M12 anchor bolts", quantity: baseBracketCount * 4, unit: "each",
+      specification: "M12 anchor bolt · final type and price to confirm", basis: `${baseBracketCount} base brackets × 4 anchors`, status: "Foundation review",
     },
   ]
+  const selectedSize = `8m x ${selectedLength}m x ${selectedHeight}m`
+  const scheduledStructuralMassKg = includedMembers.reduce((total, member) => total + member.totalMassKg, 0)
+  const totalPages = includesSheeting ? 5 : 4
   const issuedDate = new Date().toLocaleDateString("en-ZA", {
     day: "numeric",
     month: "long",
@@ -283,6 +283,14 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
           sizes="(max-width: 900px) 100vw, 210mm"
           className="object-cover"
         />
+        <div className="absolute left-[14mm] top-[14mm] w-[72mm] border-l-4 border-sky-500 bg-white/95 px-5 py-4 shadow-xl">
+          <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-sky-700">Configuration specification</p>
+          <p className="mt-2 text-[22px] font-bold tracking-[-0.04em] text-slate-950">{selectedSize}</p>
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
+            <span className="text-[9px] font-bold text-slate-700">{selectedScopeDetails?.name}</span>
+            <span className="text-[8px] font-bold uppercase tracking-[0.12em] text-slate-500">{selectedSteelFinish}</span>
+          </div>
+        </div>
       </section>
 
       <section className="product-spec-page relative flex flex-col overflow-hidden px-[14mm] py-[12mm]">
@@ -303,7 +311,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
 
         <section className="mt-7">
           <div className="grid grid-cols-3 border-y border-slate-300 bg-slate-950 text-white">
-            {[["Product code", "W08"], ["Selected size", `8m x ${selectedLength}m x 3m`], ["Approved bay spacing", "4m"]].map(([label, value], index) => (
+            {[["Product code", "W08"], ["Selected size", selectedSize], ["Supplied scope", selectedScopeDetails?.name || "Structure only"]].map(([label, value], index) => (
               <div key={label} className={`px-4 py-4 ${index < 2 ? "border-r border-white/15" : ""}`}>
                 <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
                 <p className="mt-2 text-base font-bold">{value}</p>
@@ -317,11 +325,11 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
           <div className="mt-3 grid grid-cols-2 border-t-2 border-slate-900">
             {[
               ["Span", "8m", "Fixed W08 product width"],
-              ["Length", "4m bays", "Standard modular lengths to 48m within a 50m engineering envelope"],
-              ["Eave height", "3m to 5m", "3m default; the standard W08 system supports heights up to 5m"],
+              ["Length", `${selectedLength}m`, `${bayCount} x 4m modular bays`],
+              ["Eave height", `${selectedHeight}m`, "Selected W08 column height"],
               ["Roof form", "Dual pitch", "15-degree standard geometry"],
-              ["Assembly", "Bolted", "Connection selection is confirmed for the project configuration"],
-              ["Gable ends", "Closed by default", "One or both may be opened by project selection"],
+              ["Steel finish", selectedSteelFinish, "Applied to the structural lipped-channel members"],
+              ["Gable ends", "Open", "No gable framing, girts or sheeting in this configuration"],
             ].map(([label, value, detail], index) => (
               <div key={label} className={`border-b border-slate-200 py-3 ${index % 2 === 0 ? "pr-6" : "border-l pl-6"}`}>
                 <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
@@ -333,15 +341,17 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
         </section>
 
         <section className="mt-7">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Available commercial scope</p>
-          <div className="mt-3 grid grid-cols-4 gap-2">
-            {W08_SPEC_SCOPES.map((scope, index) => (
-              <div key={scope.name} className="border border-slate-300 p-3">
-                <span className="font-mono text-[9px] font-bold text-sky-700">0{index + 1}</span>
-                <p className="mt-2 text-xs font-bold">{scope.name}</p>
-                <p className="mt-1.5 text-[9px] leading-4 text-slate-500">{scope.detail}</p>
-              </div>
-            ))}
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Configuration boundary</p>
+          <div className="mt-3 grid grid-cols-[1.2fr_1fr] border border-slate-300">
+            <div className="bg-sky-50 p-4">
+              <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-sky-700">Included in this issue</p>
+              <p className="mt-2 text-sm font-bold">{selectedScopeDetails?.name}</p>
+              <p className="mt-1.5 text-[9px] leading-4 text-slate-600">{selectedScopeDetails?.detail}</p>
+            </div>
+            <div className="border-l border-slate-300 p-4">
+              <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">Not included</p>
+              <p className="mt-2 text-[9px] leading-4 text-slate-600">Foundations, slab, delivery and installation are excluded. Final issued engineering and approved bracket fabrication details remain required before production.</p>
+            </div>
           </div>
         </section>
 
@@ -350,7 +360,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
           <p className="mt-2 text-[10px] leading-4 text-slate-700">This specification describes the standard W08 product arrangement. Final connections, foundations, anchors, cladding selections, openings, delivery scope, and installation requirements are confirmed against the selected project configuration and site conditions.</p>
         </section>
 
-        <SpecFooter page="2 of 4" revision={revision} />
+        <SpecFooter page={`2 of ${totalPages}`} revision={revision} />
       </section>
 
       <section className="product-spec-page relative flex flex-col overflow-hidden px-[14mm] py-[12mm]">
@@ -359,7 +369,7 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-700">02 · Assembly reference</p>
             <h2 className="mt-2 text-[28px] font-bold tracking-[-0.04em]">What goes into this structure</h2>
-            <p className="mt-2 text-xs text-slate-500">Calculated for the selected 8m x {selectedLength}m x 3m W08 configuration.</p>
+            <p className="mt-2 text-xs text-slate-500">Calculated for the selected {selectedSize} · {selectedScopeDetails?.name} configuration.</p>
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold">{portalCount}</p>
@@ -368,11 +378,11 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
         </header>
 
         <section className="mt-5">
-          <div className="grid grid-cols-[20mm_30mm_1fr_18mm_17mm] border-b-2 border-slate-900 pb-2 text-[7px] font-bold uppercase tracking-[0.12em] text-slate-500">
-            <span>Component ID</span><span>Component</span><span>Specification and quantity basis</span><span className="text-right">Qty</span><span className="text-right">Unit</span>
+          <div className="grid grid-cols-[19mm_28mm_1fr_13mm_20mm_20mm] border-b-2 border-slate-900 pb-2 text-[7px] font-bold uppercase tracking-[0.12em] text-slate-500">
+            <span>Component ID</span><span>Member</span><span>Profile and rule</span><span className="text-right">Qty</span><span className="text-right">Cut length</span><span className="text-right">Total</span>
           </div>
           {componentSchedule.map((item) => (
-            <div key={item.code} className="grid break-inside-avoid grid-cols-[20mm_30mm_1fr_18mm_17mm] border-b border-slate-200 py-2.5">
+            <div key={item.code} className="grid break-inside-avoid grid-cols-[19mm_28mm_1fr_13mm_20mm_20mm] border-b border-slate-200 py-2.5">
               <span className="font-mono text-[8px] font-bold text-sky-700">{item.code}</span>
               <div className="pr-3">
                 <p className="text-[10px] font-bold text-slate-900">{item.component}</p>
@@ -380,10 +390,10 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
               <div className="pr-4">
                 <p className="text-[9px] font-semibold leading-4 text-slate-800">{item.specification}</p>
                 <p className="text-[8px] leading-3.5 text-slate-500">{item.function}</p>
-                <p className="mt-1 text-[8px] leading-3.5 text-sky-700">{item.basis}</p>
               </div>
               <span className="text-right text-[11px] font-bold tabular-nums">{formatScheduleQuantity(item.quantity)}</span>
-              <span className="text-right text-[8px] font-semibold text-slate-600">{item.unit}</span>
+              <span className="text-right text-[9px] font-semibold text-slate-700">{formatScheduleQuantity(item.cutLength, 3)}m</span>
+              <span className="text-right text-[9px] font-semibold text-slate-700">{formatScheduleQuantity(item.totalLength, 2)}m</span>
             </div>
           ))}
         </section>
@@ -391,8 +401,8 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
         <section className="mt-6 grid grid-cols-3 border-y border-slate-300 bg-slate-50">
           {[
             ["Portal frames", portalCount],
-            ["Primary channels", memberCount * 3],
-            ["Roof purlins", `${formatScheduleQuantity(roofPurlinLength)}m`],
+            ["Primary channels", members.columns.quantity + members.rafters.quantity],
+            ["Scheduled mass", `${formatScheduleQuantity(scheduledStructuralMassKg, 1)}kg`],
           ].map(([label, value], index) => (
             <div key={label} className={`px-4 py-3 ${index < 2 ? "border-r border-slate-300" : ""}`}>
               <p className="text-[7px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
@@ -405,10 +415,56 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
           Quantities follow the approved W08 4m modular rule. Roof purlins use a maximum 1,500mm c/c spacing and bracing follows bay positions 1, 5, 9 and onward. Final fixing quantities, anchors, and foundation interfaces remain to be confirmed before procurement or construction.
         </div>
 
-        <SpecFooter page="3 of 4" revision={revision} />
+        <SpecFooter page={`3 of ${totalPages}`} revision={revision} />
       </section>
 
       <section className="product-spec-page relative flex flex-col overflow-hidden px-[14mm] py-[12mm]">
+        <div className="absolute right-0 top-0 h-[7px] w-[44mm] bg-sky-600" />
+        <header className="flex items-end justify-between gap-8 border-b border-slate-300 pb-6">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-700">03 · Connection schedule</p>
+            <h2 className="mt-2 text-[28px] font-bold tracking-[-0.04em]">Brackets, bolts and anchors</h2>
+            <p className="mt-2 text-xs text-slate-500">Procurement quantities for the selected {selectedSize} pilot configuration.</p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold">{connectionSchedule.reduce((sum, item) => sum + item.quantity, 0)}</p>
+            <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">Scheduled items</p>
+          </div>
+        </header>
+
+        <section className="mt-6">
+          <div className="grid grid-cols-[22mm_34mm_1fr_16mm] border-b-2 border-slate-900 pb-2 text-[7px] font-bold uppercase tracking-[0.12em] text-slate-500">
+            <span>Item ID</span><span>Item</span><span>Specification and quantity basis</span><span className="text-right">Qty</span>
+          </div>
+          {connectionSchedule.map((item) => (
+            <div key={item.code} className="grid break-inside-avoid grid-cols-[22mm_34mm_1fr_16mm] border-b border-slate-200 py-3">
+              <span className="font-mono text-[8px] font-bold text-sky-700">{item.code}</span>
+              <p className="pr-3 text-[10px] font-bold text-slate-900">{item.component}</p>
+              <div className="pr-4">
+                <p className="text-[9px] font-semibold leading-4 text-slate-800">{item.specification}</p>
+                <p className="mt-0.5 text-[8px] leading-3.5 text-slate-500">{item.basis}</p>
+                <p className="mt-1 text-[7px] font-bold uppercase tracking-[0.1em] text-amber-700">{item.status}</p>
+              </div>
+              <span className="text-right text-[11px] font-bold tabular-nums">{formatScheduleQuantity(item.quantity)}</span>
+            </div>
+          ))}
+        </section>
+
+        <section className="mt-7 grid grid-cols-2 gap-4">
+          <div className="border-l-4 border-amber-400 bg-amber-50 px-4 py-4">
+            <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-amber-900">Production holds</p>
+            <p className="mt-2 text-[9px] leading-4 text-slate-700">Do not fabricate brackets or procure anchors from this schedule until the controlled bracket drawings, foundation design and issued engineering package are approved.</p>
+          </div>
+          <div className="border-l-4 border-sky-600 bg-sky-50 px-4 py-4">
+            <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-sky-900">Pilot verification</p>
+            <p className="mt-2 text-[9px] leading-4 text-slate-700">Record actual cut lengths, fit-up observations, fixing usage and any deviations during the 8m x 8m pilot build so the controlled W08 record can be revised.</p>
+          </div>
+        </section>
+
+        <SpecFooter page={`4 of ${totalPages}`} revision={revision} />
+      </section>
+
+      {includesSheeting ? <section className="product-spec-page relative flex flex-col overflow-hidden px-[14mm] py-[12mm]">
         <div className="absolute right-0 top-0 h-[7px] w-[44mm] bg-sky-600" />
         <header className="flex items-end justify-between gap-8 border-b border-slate-300 pb-6">
           <div>
@@ -496,8 +552,8 @@ function W08SpecificationSheet({ bom, components, selectedLength }) {
           </div>
         </section>
 
-        <SpecFooter page="4 of 4" revision={revision} />
-      </section>
+        <SpecFooter page="5 of 5" revision={revision} />
+      </section> : null}
     </article>
   )
 }
@@ -511,8 +567,19 @@ export default function AtlasWarehouseProductWorkspace() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [specPreviewOpen, setSpecPreviewOpen] = useState(false)
-  const [specLength, setSpecLength] = useState(20)
+  const [specLength, setSpecLength] = useState(8)
+  const [specHeight, setSpecHeight] = useState(3)
+  const [specScope, setSpecScope] = useState("structure_only")
+  const [specSteelFinish, setSpecSteelFinish] = useState("ZAM")
   const [selectedProductCode, setSelectedProductCode] = useState(initialProductCode)
+
+  useEffect(() => {
+    if (!specPreviewOpen) return undefined
+    const previousTitle = document.title
+    const scopeLabel = W08_SPEC_SCOPES.find((scope) => scope.value === specScope)?.name || "Structure only"
+    document.title = `Atlas-W08-8x${specLength}x${specHeight}-${scopeLabel.replaceAll(" ", "-")}`
+    return () => { document.title = previousTitle }
+  }, [specHeight, specLength, specPreviewOpen, specScope])
 
   useEffect(() => {
     if (getAtlasProduct(requestedProductCode)) setSelectedProductCode(requestedProductCode)
@@ -573,10 +640,28 @@ export default function AtlasWarehouseProductWorkspace() {
             <ArrowLeft className="h-4 w-4" /> Back to product
           </button>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <label className="flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-              Structure length
+            <label className="flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700">
+              Length
               <select value={specLength} onChange={(event) => setSpecLength(Number(event.target.value))} className="bg-transparent font-bold text-slate-950 outline-none">
-                {W08_SPEC_LENGTHS.map((length) => <option key={length} value={length}>{length}m</option>)}
+                {ATLAS_W08_LENGTHS_M.map((length) => <option key={length} value={length}>{length}m</option>)}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700">
+              Eave
+              <select value={specHeight} onChange={(event) => setSpecHeight(Number(event.target.value))} className="bg-transparent font-bold text-slate-950 outline-none">
+                {ATLAS_W08_EAVE_HEIGHTS_M.map((height) => <option key={height} value={height}>{height}m</option>)}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700">
+              Scope
+              <select value={specScope} onChange={(event) => setSpecScope(event.target.value)} className="max-w-[145px] bg-transparent font-bold text-slate-950 outline-none">
+                {W08_SPEC_SCOPES.map((scope) => <option key={scope.value} value={scope.value}>{scope.name}</option>)}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700">
+              Steel
+              <select value={specSteelFinish} onChange={(event) => setSpecSteelFinish(event.target.value)} className="bg-transparent font-bold text-slate-950 outline-none">
+                {["ZAM", "Galvanised", "Mild steel"].map((finish) => <option key={finish} value={finish}>{finish}</option>)}
               </select>
             </label>
             <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white">
@@ -584,7 +669,14 @@ export default function AtlasWarehouseProductWorkspace() {
             </button>
           </div>
         </div>
-        <W08SpecificationSheet bom={bom} components={data.components} selectedLength={specLength} />
+        <W08SpecificationSheet
+          bom={bom}
+          components={data.components}
+          selectedLength={specLength}
+          selectedHeight={specHeight}
+          selectedScope={specScope}
+          selectedSteelFinish={specSteelFinish}
+        />
       </div>
     )
   }
@@ -678,7 +770,7 @@ export default function AtlasWarehouseProductWorkspace() {
             <h1 className="mt-2 max-w-3xl text-3xl font-bold tracking-[-0.04em] text-white sm:text-5xl">{PRODUCT.name}</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">{PRODUCT.summary}</p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Link href="/warehouse-builder?productType=LCSS%20Warehouse&width=8&length=20" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#0043f3] transition hover:bg-[#c1d9e5]">Open live builder <ArrowUpRight className="h-4 w-4" /></Link>
+              <Link href="/warehouse-builder?productType=Atlas%20Warehouse&width=8&length=20" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#0043f3] transition hover:bg-[#c1d9e5]">Open live builder <ArrowUpRight className="h-4 w-4" /></Link>
               <Link href={withAtlasProduct("/os/atlas/bom", selectedProductCode)} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">Review W08 BOM</Link>
               <button type="button" onClick={() => setSpecPreviewOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">
                 <FileText className="h-4 w-4" /> Preview spec sheet
@@ -714,7 +806,7 @@ export default function AtlasWarehouseProductWorkspace() {
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Length logic</p>
           <h3 className="mt-1 text-xl font-bold text-slate-950">Start with one 4m bay</h3>
           <p className="mt-2 text-sm leading-6 text-slate-600">The smallest standard arrangement is a 4m-long x 8m-wide structure. Add further 4m bays without creating another warehouse product.</p>
-          <div className="mt-5 flex flex-wrap gap-2">{W08_SPEC_LENGTHS.map((length) => <span key={length} className={`rounded-xl border px-3 py-2 text-xs font-bold ${length === 20 ? "border-sky-300 bg-sky-50 text-sky-800" : "border-slate-200 bg-white text-slate-700"}`}>{length}m</span>)}</div>
+          <div className="mt-5 flex flex-wrap gap-2">{ATLAS_W08_LENGTHS_M.map((length) => <span key={length} className={`rounded-xl border px-3 py-2 text-xs font-bold ${length === 20 ? "border-sky-300 bg-sky-50 text-sky-800" : "border-slate-200 bg-white text-slate-700"}`}>{length}m</span>)}</div>
           <p className="mt-3 text-xs text-slate-500">Standard 4m modules extend to 48m. The confirmed engineering envelope permits lengths up to 50m without additional engineering implications.</p>
         </aside>
       </section>
