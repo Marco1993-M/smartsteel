@@ -9,6 +9,7 @@ export const runtime = "nodejs"
 
 const REVIEW_STATUSES = ["submitted", "in_review", "changes_requested", "quoted", "closed"]
 const FULFILMENT_STATUSES = ["production_planning", "in_production", "ready_for_dispatch", "delivered", "complete", "cancelled"]
+const PRODUCTION_ACTIONS = ["update_fulfilment", "update_production_plan"]
 
 function makeTemporaryOrderReference(reference) {
   return `TEMP-${String(reference || "AFGRI").toUpperCase()}`
@@ -142,6 +143,12 @@ function normalizeOpportunity(row) {
     estimatedDeliveryDate: row.estimated_delivery_date || "",
     fulfilmentNote: row.fulfilment_note || "",
     fulfilmentUpdatedAt: row.fulfilment_updated_at || "",
+    productionOwner: row.production_owner || "",
+    plannedStartDate: row.planned_start_date || "",
+    plannedCompletionDate: row.planned_completion_date || "",
+    productionHoldReason: row.production_hold_reason || "",
+    manufacturingChecklist: Array.isArray(row.manufacturing_checklist) ? row.manufacturing_checklist : [],
+    productionPlanUpdatedAt: row.production_plan_updated_at || "",
     orderDocuments: (row.partner_order_documents || []).map((document) => ({ id: document.id, type: document.document_type, name: document.file_name, mimeType: document.mime_type, size: Number(document.file_size || 0), createdAt: document.created_at })),
     handoffEvents: [...(row.partner_handoff_events || [])].sort((left, right) => new Date(right.created_at) - new Date(left.created_at)).map((event) => ({ id: event.id, type: event.event_type, actorScope: event.actor_scope, summary: event.summary, detail: event.detail || {}, createdAt: event.created_at })),
     updatedAt: row.updated_at,
@@ -204,13 +211,13 @@ export async function PATCH(request) {
   const id = String(body.id || "").trim()
   const action = String(body.action || "").trim()
   const status = String(body.status || "").trim()
-  if (!id || (action !== "update_fulfilment" && !REVIEW_STATUSES.includes(status))) {
+  if (!id || (!PRODUCTION_ACTIONS.includes(action) && !REVIEW_STATUSES.includes(status))) {
     return NextResponse.json({ error: "Choose a valid opportunity and review status." }, { status: 400 })
   }
 
   const { data: currentOpportunity, error: currentOpportunityError } = await supabaseServer
     .from("partner_opportunities")
-    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id, estimated_dispatch_date, estimated_delivery_date, fulfilment_note")
+    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, production_owner, planned_start_date, planned_completion_date, production_hold_reason, manufacturing_checklist")
     .eq("id", id)
     .single()
   if (currentOpportunityError || !currentOpportunity) {
@@ -252,6 +259,54 @@ export async function PATCH(request) {
       actor_scope: "smart_steel",
       summary: `Order moved to ${fulfilmentStatus.replaceAll("_", " ")}.`,
       detail: fulfilmentUpdates,
+    }])
+    return NextResponse.json({ record: normalizeOpportunity(data) })
+  }
+
+  if (action === "update_production_plan") {
+    if (!currentOpportunity.internal_project_id) {
+      return NextResponse.json({ error: "Accept the AFGRI instruction before creating a production plan." }, { status: 409 })
+    }
+    const checklist = Array.isArray(body.manufacturingChecklist)
+      ? body.manufacturingChecklist.slice(0, 20).map((item, index) => ({
+          id: String(item?.id || `check-${index + 1}`).slice(0, 80),
+          label: String(item?.label || "").trim().slice(0, 160),
+          complete: Boolean(item?.complete),
+        })).filter((item) => item.label)
+      : []
+    const now = new Date().toISOString()
+    const productionUpdates = {
+      production_owner: String(body.productionOwner || "").trim().slice(0, 120),
+      planned_start_date: String(body.plannedStartDate || "").trim() || null,
+      planned_completion_date: String(body.plannedCompletionDate || "").trim() || null,
+      production_hold_reason: String(body.productionHoldReason || "").trim().slice(0, 500),
+      manufacturing_checklist: checklist,
+      production_plan_updated_at: now,
+      updated_at: now,
+    }
+    const { data: project } = await supabaseServer.from("os_projects").select("record").eq("id", currentOpportunity.internal_project_id).maybeSingle()
+    if (project?.record) {
+      await supabaseServer.from("os_projects").update({ record: {
+        ...project.record,
+        productionOwner: productionUpdates.production_owner,
+        plannedStartDate: productionUpdates.planned_start_date || "",
+        plannedCompletionDate: productionUpdates.planned_completion_date || "",
+        productionHoldReason: productionUpdates.production_hold_reason,
+        manufacturingChecklist: checklist,
+        productionPlanUpdatedAt: now,
+        updatedAt: now,
+      } }).eq("id", currentOpportunity.internal_project_id)
+    }
+    const { data, error } = await supabaseServer.from("partner_opportunities").update(productionUpdates).eq("id", id)
+      .select("*, partner_product_releases(product_code, name, release_version), partner_organizations(key, name), partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)").single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await supabaseServer.from("partner_handoff_events").insert([{
+      partner_id: currentOpportunity.partner_id,
+      opportunity_id: id,
+      event_type: "production_plan_updated",
+      actor_scope: "smart_steel",
+      summary: productionUpdates.production_hold_reason ? "Production plan updated with a hold." : "Production plan updated.",
+      detail: { owner: productionUpdates.production_owner, plannedStartDate: productionUpdates.planned_start_date, plannedCompletionDate: productionUpdates.planned_completion_date, completedChecks: checklist.filter((item) => item.complete).length, totalChecks: checklist.length },
     }])
     return NextResponse.json({ record: normalizeOpportunity(data) })
   }
