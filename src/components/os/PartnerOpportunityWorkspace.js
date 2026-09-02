@@ -9,8 +9,8 @@ const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
   in_review: { label: "In review", className: "bg-blue-100 text-blue-800", action: "Approve price", next: "quoted" },
   changes_requested: { label: "AFGRI update", className: "bg-orange-100 text-orange-800", action: "Resume review", next: "in_review" },
-  quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Close opportunity", next: "closed" },
-  closed: { label: "Closed", className: "bg-slate-100 text-slate-600", action: "Reopen review", next: "in_review" },
+  quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Accept AFGRI instruction", next: "closed" },
+  closed: { label: "Order active", className: "bg-blue-100 text-blue-800", action: "", next: "closed" },
 }
 
 const money = new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 })
@@ -73,6 +73,26 @@ export default function PartnerOpportunityWorkspace() {
     }
   }
 
+  async function updateFulfilment(fields) {
+    setSaving(true)
+    setError("")
+    try {
+      const response = await fetch("/api/os/partner-opportunities", {
+        method: "PATCH",
+        headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ id: selected.id, action: "update_fulfilment", ...fields }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "Could not update fulfilment.")
+      setSelected(payload.record)
+      setRecords((current) => current.map((record) => record.id === payload.record.id ? payload.record : record))
+    } catch (saveError) {
+      setError(saveError.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const active = records.filter((record) => record.status !== "closed")
   const shown = filter === "active" ? active : records.filter((record) => record.status === filter)
   const newCount = records.filter((record) => record.status === "submitted").length
@@ -101,7 +121,7 @@ export default function PartnerOpportunityWorkspace() {
         </div>
       </section>
 
-      {selected ? <PartnerOpportunityReviewDrawer record={selected} notes={reviewNotes} setNotes={setReviewNotes} quoteResponse={quoteResponse} setQuoteResponse={setQuoteResponse} saving={saving} onClose={() => setSelected(null)} onAdvance={advanceRecord} /> : null}
+      {selected ? <PartnerOpportunityReviewDrawer record={selected} notes={reviewNotes} setNotes={setReviewNotes} quoteResponse={quoteResponse} setQuoteResponse={setQuoteResponse} saving={saving} onClose={() => setSelected(null)} onAdvance={advanceRecord} onFulfilmentUpdate={updateFulfilment} /> : null}
     </div>
   )
 }

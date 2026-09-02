@@ -18,7 +18,7 @@ const FILTERS = [
   ["draft", "Drafts"],
   ["waiting", "With Smart Steel"],
   ["quoted", "Price approved"],
-  ["complete", "Completed"],
+  ["orders", "Orders"],
 ]
 
 function matchesFilter(record, filter) {
@@ -26,15 +26,15 @@ function matchesFilter(record, filter) {
   if (filter === "action") return ["draft", "changes_requested"].includes(record.status) || record.partner_order_status === "ready_for_order"
   if (filter === "waiting") return ["submitted", "in_review"].includes(record.status)
   if (filter === "quoted") return record.status === "quoted"
-  if (filter === "complete") return record.status === "closed" || ["order_submitted", "acknowledged"].includes(record.partner_order_status)
+  if (filter === "orders") return ["order_submitted", "acknowledged"].includes(record.partner_order_status)
   return record.status === filter
 }
 
 function statusLabel(record) {
   if (record.partner_order_status === "ready_for_order") return "Your action"
   if (record.partner_order_status === "order_submitted") return "Order submitted"
-  if (record.partner_order_status === "acknowledged") return "Completed"
-  return ({ draft: "Draft", submitted: "Submitted", in_review: "In review", changes_requested: "Update requested", quoted: "Price approved", closed: "Closed" })[record.status] || record.status
+  if (record.partner_order_status === "acknowledged") return record.fulfilment_status === "complete" ? "Complete" : (record.fulfilment_status || "production planning").replaceAll("_", " ")
+  return ({ draft: "Draft", submitted: "Submitted", in_review: "In review", changes_requested: "Update requested", quoted: "Price approved", closed: "Order active" })[record.status] || record.status
 }
 
 export default function PartnerOpportunitiesWorkspace() {
@@ -131,7 +131,7 @@ function OpportunityCard({ record, onEdit, onDocument, preparing, onUpdated }) {
     || Math.max(0, ...(record.partner_submissions || []).map((submission) => Number(submission.version || 0)))
   return <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h2 className="truncate text-lg font-black">{record.customer_name}</h2><span className="rounded-full bg-[#c1d9e5] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#0043f3]">{statusLabel(record)}</span></div><p className="mt-1 text-xs text-slate-500">{record.reference}{record.site_location ? ` · ${record.site_location}` : ""}</p>{config.sku ? <p className="mt-2 break-all font-mono text-[10px] font-black text-[#0043f3]">{config.sku}</p> : null}</div><div className="sm:text-right"><p className="text-sm font-black">{config.width}m × {config.length}m × {config.wallHeight}m</p><p className="mt-1 text-xs text-slate-500">{config.steelFinish} · {config.gableMode === "structure_only" ? "Structure only" : "Sheeting selected"}</p>{record.final_quote_amount_ex_vat ? <p className="mt-2 font-black text-[#0043f3]">{currency.format(record.final_quote_amount_ex_vat)} excl. VAT</p> : null}</div></div>
     {record.status === "changes_requested" && informationRequest ? <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4"><div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-700"><RotateCcw className="h-4 w-4" /></span><div><p className="text-[9px] font-black uppercase tracking-[0.15em] text-orange-700">Smart Steel needs an update{submissionVersion ? ` · Submission V${submissionVersion}` : ""}</p><p className="mt-1.5 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-800">{informationRequest.request_text || informationRequest.requestText}</p>{informationRequest.due_at || informationRequest.dueAt ? <p className="mt-2 text-xs font-black text-orange-800">Requested by {formatDate(informationRequest.due_at || informationRequest.dueAt)}</p> : null}</div></div></div> : null}
-    <div className="mt-4 border-t border-slate-200 pt-4">{canEdit ? <button type="button" onClick={onEdit} className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-black text-white sm:w-auto ${record.status === "changes_requested" ? "bg-orange-600" : "bg-[#0043f3]"}`}>{record.status === "changes_requested" ? <RotateCcw className="h-4 w-4" /> : null}{record.status === "changes_requested" ? "Update and resubmit" : "Continue draft"}</button> : ["submitted", "in_review"].includes(record.status) ? <p className="text-sm font-semibold text-slate-500">Smart Steel is reviewing submission V{submissionVersion || 1}. No action is needed from you.</p> : record.status === "quoted" ? <div><button type="button" disabled={preparing} onClick={onDocument} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] px-4 text-sm font-black text-[#0043f3] sm:w-auto">{preparing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{preparing ? "Preparing..." : "Price confirmation"}</button><PartnerOrderHandoff record={record} onSubmitted={onUpdated} /></div> : <p className="text-sm font-semibold text-emerald-700">This opportunity is complete and remains available for reference.</p>}</div>
+    <div className="mt-4 border-t border-slate-200 pt-4">{canEdit ? <button type="button" onClick={onEdit} className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-black text-white sm:w-auto ${record.status === "changes_requested" ? "bg-orange-600" : "bg-[#0043f3]"}`}>{record.status === "changes_requested" ? <RotateCcw className="h-4 w-4" /> : null}{record.status === "changes_requested" ? "Update and resubmit" : "Continue draft"}</button> : ["submitted", "in_review"].includes(record.status) ? <p className="text-sm font-semibold text-slate-500">Smart Steel is reviewing submission V{submissionVersion || 1}. No action is needed from you.</p> : ["quoted", "closed"].includes(record.status) ? <div>{record.status === "quoted" ? <button type="button" disabled={preparing} onClick={onDocument} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] px-4 text-sm font-black text-[#0043f3] sm:w-auto">{preparing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{preparing ? "Preparing..." : "Price confirmation"}</button> : null}<PartnerOrderHandoff record={record} onSubmitted={onUpdated} /></div> : null}</div>
   </article>
 }
 

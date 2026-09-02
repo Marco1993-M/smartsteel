@@ -25,9 +25,17 @@ const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
   in_review: { label: "In review", className: "bg-blue-100 text-blue-800", action: "Approve price", next: "quoted" },
   changes_requested: { label: "AFGRI update requested", className: "bg-orange-100 text-orange-800", action: "Resume review", next: "in_review" },
-  quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Close opportunity", next: "closed" },
-  closed: { label: "Closed", className: "bg-slate-100 text-slate-600", action: "Reopen review", next: "in_review" },
+  quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Accept AFGRI instruction", next: "closed" },
+  closed: { label: "Order active", className: "bg-blue-100 text-blue-800", action: "", next: "closed" },
 }
+
+const FULFILMENT_OPTIONS = [
+  ["production_planning", "Production planning"],
+  ["in_production", "In production"],
+  ["ready_for_dispatch", "Ready for dispatch"],
+  ["delivered", "Delivered"],
+  ["complete", "Complete"],
+]
 
 const money = new Intl.NumberFormat("en-ZA", {
   style: "currency",
@@ -44,10 +52,12 @@ export default function PartnerOpportunityReviewDrawer({
   saving,
   onClose,
   onAdvance,
+  onFulfilmentUpdate,
 }) {
   const [preparingDocument, setPreparingDocument] = useState(false)
   const [showChangeRequest, setShowChangeRequest] = useState(false)
   const [changeRequest, setChangeRequest] = useState({ text: "", dueAt: "" })
+  const [fulfilment, setFulfilment] = useState({ status: record.fulfilmentStatus || "production_planning", dispatchDate: record.estimatedDispatchDate || "", deliveryDate: record.estimatedDeliveryDate || "", note: record.fulfilmentNote || "" })
   const meta = STATUS_META[record.status] || STATUS_META.submitted
   const config = record.configuration || {}
   const proposal = record.proposedQuote
@@ -68,6 +78,7 @@ export default function PartnerOpportunityReviewDrawer({
   useEffect(() => {
     setShowChangeRequest(false)
     setChangeRequest({ text: "", dueAt: "" })
+    setFulfilment({ status: record.fulfilmentStatus || "production_planning", dispatchDate: record.estimatedDispatchDate || "", deliveryDate: record.estimatedDeliveryDate || "", note: record.fulfilmentNote || "" })
   }, [record.id])
 
   function requestChanges() {
@@ -306,15 +317,16 @@ export default function PartnerOpportunityReviewDrawer({
             </section>
           ) : null}
           {record.internalProjectId ? <button type="button" onClick={() => window.location.assign(`/os/projects?projectId=${record.internalProjectId}`)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#001d2e] px-5 text-sm font-black text-white"><ExternalLink className="h-4 w-4" />Open linked Atlas project</button> : null}
+          {record.internalProjectId ? <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Order fulfilment</p><p className="mt-1 text-sm text-slate-600">Keep AFGRI informed after the commercial handoff.</p><div className="mt-4 grid gap-3 sm:grid-cols-2"><QuoteField label="Current stage"><select value={fulfilment.status} onChange={(event) => setFulfilment((current) => ({ ...current, status: event.target.value }))} className="min-h-11 w-full rounded-xl border border-blue-200 bg-white px-3 text-base">{FULFILMENT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></QuoteField><QuoteField label="Estimated dispatch"><input type="date" value={fulfilment.dispatchDate} onChange={(event) => setFulfilment((current) => ({ ...current, dispatchDate: event.target.value }))} /></QuoteField><QuoteField label="Estimated delivery"><input type="date" value={fulfilment.deliveryDate} onChange={(event) => setFulfilment((current) => ({ ...current, deliveryDate: event.target.value }))} /></QuoteField><QuoteField label="Partner update"><textarea rows="2" value={fulfilment.note} onChange={(event) => setFulfilment((current) => ({ ...current, note: event.target.value }))} placeholder="Optional progress note visible to AFGRI" /></QuoteField></div><button type="button" disabled={saving} onClick={() => onFulfilmentUpdate({ fulfilmentStatus: fulfilment.status, estimatedDispatchDate: fulfilment.dispatchDate, estimatedDeliveryDate: fulfilment.deliveryDate, fulfilmentNote: fulfilment.note })} className="mt-4 min-h-11 w-full rounded-xl bg-[#0043f3] px-4 text-sm font-black text-white disabled:opacity-50">{saving ? "Saving..." : "Update order progress"}</button></section> : null}
           {record.handoffEvents?.length ? <section><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Handoff history</p><div className="mt-3 space-y-3 border-l border-slate-200 pl-4">{record.handoffEvents.slice(0, 6).map((event) => <div key={event.id}><p className="text-sm font-bold text-slate-800">{event.summary}</p><p className="mt-1 text-xs text-slate-400">{formatDateTime(event.createdAt)}</p></div>)}</div></section> : null}
         </div>
 
-        <footer className="border-t border-slate-200 bg-white p-4 sm:p-5">
+        {record.status !== "closed" ? <footer className="border-t border-slate-200 bg-white p-4 sm:p-5">
           <button type="button" disabled={saving || record.status === "changes_requested" || (record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus))} onClick={() => onAdvance(meta.next)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-5 text-sm font-black text-white disabled:opacity-50">
             {record.status === "in_review" ? <FileCheck2 className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-            {saving ? "Saving..." : record.status === "changes_requested" ? "Waiting for AFGRI resubmission" : record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus) ? "Waiting for AFGRI order" : record.status === "quoted" ? "Acknowledge order and close" : meta.action}
+            {saving ? "Saving..." : record.status === "changes_requested" ? "Waiting for AFGRI resubmission" : record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus) ? "Waiting for AFGRI instruction" : record.status === "quoted" ? "Accept instruction and open project" : meta.action}
           </button>
-        </footer>
+        </footer> : null}
       </aside>
     </div>
   )
