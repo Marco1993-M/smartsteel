@@ -8,6 +8,11 @@ import { calculateAfgriPartnerPrice } from "lib/partnerCommercialTerms"
 export const runtime = "nodejs"
 
 const REVIEW_STATUSES = ["submitted", "in_review", "changes_requested", "quoted", "closed"]
+const FULFILMENT_STATUSES = ["production_planning", "in_production", "ready_for_dispatch", "delivered", "complete", "cancelled"]
+
+function makeTemporaryOrderReference(reference) {
+  return `TEMP-${String(reference || "AFGRI").toUpperCase()}`
+}
 
 async function nextAtlasProjectNumber() {
   const year = new Date().getFullYear()
@@ -51,6 +56,10 @@ async function ensureInternalProject(opportunity) {
     partnerOpportunityReference: opportunity.reference,
     afgriOrderReference: opportunity.afgri_order_reference || "",
     source: "AFGRI partner order",
+    fulfilmentStatus: "production_planning",
+    estimatedDispatchDate: opportunity.estimated_dispatch_date || "",
+    estimatedDeliveryDate: opportunity.estimated_delivery_date || "",
+    fulfilmentNote: opportunity.fulfilment_note || "",
     archived: false,
     visits: [],
     createdAt: new Date().toISOString(),
@@ -128,6 +137,11 @@ function normalizeOpportunity(row) {
     customerDecisionAt: row.customer_decision_at || "",
     internalProjectId: row.internal_project_id || "",
     handoffAcknowledgedAt: row.handoff_acknowledged_at || "",
+    fulfilmentStatus: row.fulfilment_status || "not_started",
+    estimatedDispatchDate: row.estimated_dispatch_date || "",
+    estimatedDeliveryDate: row.estimated_delivery_date || "",
+    fulfilmentNote: row.fulfilment_note || "",
+    fulfilmentUpdatedAt: row.fulfilment_updated_at || "",
     orderDocuments: (row.partner_order_documents || []).map((document) => ({ id: document.id, type: document.document_type, name: document.file_name, mimeType: document.mime_type, size: Number(document.file_size || 0), createdAt: document.created_at })),
     handoffEvents: [...(row.partner_handoff_events || [])].sort((left, right) => new Date(right.created_at) - new Date(left.created_at)).map((event) => ({ id: event.id, type: event.event_type, actorScope: event.actor_scope, summary: event.summary, detail: event.detail || {}, createdAt: event.created_at })),
     updatedAt: row.updated_at,
@@ -188,18 +202,58 @@ export async function PATCH(request) {
 
   const body = await request.json()
   const id = String(body.id || "").trim()
+  const action = String(body.action || "").trim()
   const status = String(body.status || "").trim()
-  if (!id || !REVIEW_STATUSES.includes(status)) {
+  if (!id || (action !== "update_fulfilment" && !REVIEW_STATUSES.includes(status))) {
     return NextResponse.json({ error: "Choose a valid opportunity and review status." }, { status: 400 })
   }
 
   const { data: currentOpportunity, error: currentOpportunityError } = await supabaseServer
     .from("partner_opportunities")
-    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id")
+    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id, estimated_dispatch_date, estimated_delivery_date, fulfilment_note")
     .eq("id", id)
     .single()
   if (currentOpportunityError || !currentOpportunity) {
     return NextResponse.json({ error: "That partner opportunity could not be found." }, { status: 404 })
+  }
+
+  if (action === "update_fulfilment") {
+    const fulfilmentStatus = String(body.fulfilmentStatus || "").trim()
+    if (!currentOpportunity.internal_project_id || !FULFILMENT_STATUSES.includes(fulfilmentStatus)) {
+      return NextResponse.json({ error: "Accept the AFGRI instruction before updating fulfilment." }, { status: 409 })
+    }
+    const now = new Date().toISOString()
+    const fulfilmentUpdates = {
+      fulfilment_status: fulfilmentStatus,
+      estimated_dispatch_date: String(body.estimatedDispatchDate || "").trim() || null,
+      estimated_delivery_date: String(body.estimatedDeliveryDate || "").trim() || null,
+      fulfilment_note: String(body.fulfilmentNote || "").trim(),
+      fulfilment_updated_at: now,
+      updated_at: now,
+    }
+    const { data: project } = await supabaseServer.from("os_projects").select("record").eq("id", currentOpportunity.internal_project_id).maybeSingle()
+    if (project?.record) {
+      await supabaseServer.from("os_projects").update({ record: {
+        ...project.record,
+        fulfilmentStatus,
+        estimatedDispatchDate: fulfilmentUpdates.estimated_dispatch_date || "",
+        estimatedDeliveryDate: fulfilmentUpdates.estimated_delivery_date || "",
+        fulfilmentNote: fulfilmentUpdates.fulfilment_note,
+        updatedAt: now,
+      } }).eq("id", currentOpportunity.internal_project_id)
+    }
+    const { data, error } = await supabaseServer.from("partner_opportunities").update(fulfilmentUpdates).eq("id", id)
+      .select("*, partner_product_releases(product_code, name, release_version), partner_organizations(key, name), partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)").single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await supabaseServer.from("partner_handoff_events").insert([{
+      partner_id: currentOpportunity.partner_id,
+      opportunity_id: id,
+      event_type: "fulfilment_updated",
+      actor_scope: "smart_steel",
+      summary: `Order moved to ${fulfilmentStatus.replaceAll("_", " ")}.`,
+      detail: fulfilmentUpdates,
+    }])
+    return NextResponse.json({ record: normalizeOpportunity(data) })
   }
 
   if (status === "changes_requested") {
@@ -276,6 +330,7 @@ export async function PATCH(request) {
     updates.customer_decision = "pending"
     updates.customer_decision_note = ""
     updates.customer_decision_at = null
+    updates.afgri_order_reference = currentOpportunity.afgri_order_reference || makeTemporaryOrderReference(currentOpportunity.reference)
   }
   if (status === "closed" && currentOrderStatus === "order_submitted") {
     try {
@@ -285,6 +340,8 @@ export async function PATCH(request) {
     }
     updates.partner_order_status = "acknowledged"
     updates.handoff_acknowledged_at = new Date().toISOString()
+    updates.fulfilment_status = "production_planning"
+    updates.fulfilment_updated_at = new Date().toISOString()
   }
 
   const { data, error } = await supabaseServer

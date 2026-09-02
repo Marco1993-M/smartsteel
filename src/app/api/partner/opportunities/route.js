@@ -15,7 +15,7 @@ export async function GET(request) {
 
   let query = supabaseServer
     .from("partner_opportunities")
-    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at, internal_project_id, handoff_acknowledged_at, updated_at, partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at, resolved_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
+    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at, internal_project_id, handoff_acknowledged_at, fulfilment_status, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, fulfilment_updated_at, updated_at, partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at, resolved_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
     .eq("partner_id", context.membership.partner_id)
     .order("updated_at", { ascending: false })
 
@@ -146,6 +146,27 @@ export async function PATCH(request) {
       actor_id: context.user.id,
       summary,
       detail,
+    }])
+    return NextResponse.json({ opportunity: data })
+  }
+  if (action === "update_order_reference") {
+    const orderReference = String(body.afgriOrderReference || "").trim()
+    if (!["order_submitted", "acknowledged"].includes(existing.partner_order_status) || !orderReference) {
+      return NextResponse.json({ error: "Add a valid AFGRI reference after the instruction has been submitted." }, { status: 409 })
+    }
+    const { data, error } = await supabaseServer.from("partner_opportunities").update({
+      afgri_order_reference: orderReference,
+      updated_at: new Date().toISOString(),
+    }).eq("id", existing.id).select("id, afgri_order_reference").single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await supabaseServer.from("partner_handoff_events").insert([{
+      partner_id: context.membership.partner_id,
+      opportunity_id: existing.id,
+      event_type: "order_reference_updated",
+      actor_scope: "partner",
+      actor_id: context.user.id,
+      summary: `AFGRI updated the instruction reference to ${orderReference}.`,
+      detail: { orderReference },
     }])
     return NextResponse.json({ opportunity: data })
   }
