@@ -6,10 +6,12 @@ import {
   Check,
   CheckCircle2,
   Download,
+  ExternalLink,
   FileCheck2,
   LoaderCircle,
   Mail,
   MapPin,
+  Paperclip,
   Phone,
   RotateCcw,
   UserRound,
@@ -292,11 +294,19 @@ export default function PartnerOpportunityReviewDrawer({
                 {record.partnerOrderNotes ? <p className="mt-2 text-sm leading-6 text-slate-600">{record.partnerOrderNotes}</p> : null}
                 <p className="mt-2 text-xs font-semibold text-slate-500">Price valid until {formatDate(record.priceValidUntil)}</p>
               </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <HandoffStatus label="Commercial response" value={record.commercialResponseStatus === "acknowledged" ? "Acknowledged" : record.commercialResponseStatus === "clarification_requested" ? "Clarification requested" : "Awaiting AFGRI"} tone={record.commercialResponseStatus === "acknowledged" ? "green" : record.commercialResponseStatus === "clarification_requested" ? "amber" : "slate"} />
+                <HandoffStatus label="Customer decision" value={record.customerDecision === "proceeding" ? "Proceeding" : record.customerDecision === "on_hold" ? "On hold" : record.customerDecision === "not_proceeding" ? "Not proceeding" : "Not recorded"} tone={record.customerDecision === "proceeding" ? "green" : record.customerDecision === "on_hold" ? "amber" : "slate"} />
+              </div>
+              {record.commercialResponseNote ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-slate-700"><strong>AFGRI note:</strong> {record.commercialResponseNote}</p> : null}
+              {record.orderDocuments?.length ? <div className="rounded-2xl border border-slate-200 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Order documents</p><div className="mt-3 space-y-2">{record.orderDocuments.map((document) => <div key={document.id} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700"><Paperclip className="h-4 w-4 text-[#0043f3]" /><span className="min-w-0 truncate">{document.name}</span><span className="ml-auto shrink-0 text-[10px] uppercase text-slate-400">{document.type.replaceAll("_", " ")}</span></div>)}</div></div> : null}
               <button type="button" disabled={preparingDocument} onClick={openPriceConfirmation} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] bg-white px-5 text-sm font-black text-[#0043f3] disabled:cursor-wait disabled:opacity-65">
                 {preparingDocument ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {preparingDocument ? "Preparing document..." : "Preview AFGRI price confirmation"}
               </button>
             </section>
           ) : null}
+          {record.internalProjectId ? <button type="button" onClick={() => window.location.assign(`/os/projects?projectId=${record.internalProjectId}`)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#001d2e] px-5 text-sm font-black text-white"><ExternalLink className="h-4 w-4" />Open linked Atlas project</button> : null}
+          {record.handoffEvents?.length ? <section><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Handoff history</p><div className="mt-3 space-y-3 border-l border-slate-200 pl-4">{record.handoffEvents.slice(0, 6).map((event) => <div key={event.id}><p className="text-sm font-bold text-slate-800">{event.summary}</p><p className="mt-1 text-xs text-slate-400">{formatDateTime(event.createdAt)}</p></div>)}</div></section> : null}
         </div>
 
         <footer className="border-t border-slate-200 bg-white p-4 sm:p-5">
@@ -312,6 +322,11 @@ export default function PartnerOpportunityReviewDrawer({
 
 function ProposalAmount({ label, value }) {
   return <div className="bg-[#001d2e] p-4"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">{label}</p><p className="mt-1 text-sm font-black text-white">{money.format(value || 0)}</p></div>
+}
+
+function HandoffStatus({ label, value, tone }) {
+  const toneClass = tone === "green" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : tone === "amber" ? "border-amber-200 bg-amber-50 text-amber-800" : "border-slate-200 bg-slate-50 text-slate-700"
+  return <div className={`rounded-xl border p-4 ${toneClass}`}><p className="text-[9px] font-bold uppercase tracking-[0.14em] opacity-65">{label}</p><p className="mt-1 text-sm font-black">{value}</p></div>
 }
 
 function ContactLine({ icon: Icon, value }) {
