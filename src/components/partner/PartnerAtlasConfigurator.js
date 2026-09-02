@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, ArrowRight, Check, PackageCheck, Send, X } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, PackageCheck, RotateCcw, Send, X } from "lucide-react"
 import WarehouseBuilderScene from "../warehouse-builder/WarehouseBuilderScene"
 import { getPartnerAuthHeaders } from "../../lib/partnerClientAuth"
 import { normalizeAtlasConfiguration } from "../../lib/atlasConfiguration"
@@ -36,6 +36,9 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
     siteLocation: initialOpportunity?.site_location || "",
     notes: initialOpportunity?.notes || "",
   })
+  const isResubmission = initialOpportunity?.status === "changes_requested"
+  const informationRequest = initialOpportunity?.current_information_request
+    || initialOpportunity?.partner_information_requests?.find((request) => request.status === "open")
 
   function update(field, value) {
     setConfiguration((current) => normalizeAtlasConfiguration({ ...current, [field]: value }))
@@ -108,7 +111,8 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
       </header>
 
       <main className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 lg:px-10">
-        <div className="mb-5"><p className="text-xs font-black uppercase tracking-[0.2em] text-[#0043f3]">{initialOpportunity ? `Continue ${initialOpportunity.reference}` : "New AFGRI opportunity"}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-[#001d2e] sm:text-4xl">Configure the Atlas W{String(width).padStart(2, "0")}</h1></div>
+        <div className="mb-5"><p className={`text-xs font-black uppercase tracking-[0.2em] ${isResubmission ? "text-orange-700" : "text-[#0043f3]"}`}>{isResubmission ? `Update ${initialOpportunity.reference}` : initialOpportunity ? `Continue ${initialOpportunity.reference}` : "New AFGRI opportunity"}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-[#001d2e] sm:text-4xl">Configure the Atlas W{String(width).padStart(2, "0")}</h1></div>
+        {isResubmission && informationRequest ? <section className="mb-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 sm:p-5"><div className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-700"><RotateCcw className="h-4 w-4" /></span><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">Update requested by Smart Steel</p><p className="mt-1.5 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-800">{informationRequest.request_text || informationRequest.requestText}</p><p className="mt-2 text-xs font-bold text-orange-800">Update the configuration or customer details below, then resubmit the same opportunity.</p></div></div></section> : null}
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_440px] xl:items-start">
           <section className="xl:sticky xl:top-20">
             <div className="rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
@@ -126,9 +130,9 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
               {error ? <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
               <div className="mt-7 grid grid-cols-2 gap-3">
                 <button type="button" onClick={step > 1 ? () => setStep((current) => current - 1) : onClose} className="min-h-12 rounded-xl border border-slate-300 text-sm font-black">{step > 1 ? "Back" : "Cancel"}</button>
-                {step < 3 ? <button type="button" disabled={!preview || previewing} onClick={() => setStep((current) => current + 1)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#0043f3] text-sm font-black text-white disabled:opacity-50">Next <ArrowRight className="h-4 w-4" /></button> : <button type="button" disabled={saving || !preview || !customer.customerName.trim()} onClick={() => saveOpportunity(true)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-3 text-sm font-black text-white disabled:opacity-50"><Send className="h-4 w-4" /> {saving ? "Sending..." : "Send for review"}</button>}
+                {step < 3 ? <button type="button" disabled={!preview || previewing} onClick={() => setStep((current) => current + 1)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#0043f3] text-sm font-black text-white disabled:opacity-50">Next <ArrowRight className="h-4 w-4" /></button> : <button type="button" disabled={saving || !preview || !customer.customerName.trim()} onClick={() => saveOpportunity(true)} className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-black text-white disabled:opacity-50 ${isResubmission ? "bg-orange-600" : "bg-[#0043f3]"}`}><Send className="h-4 w-4" /> {saving ? "Sending..." : isResubmission ? "Resubmit for review" : "Send for review"}</button>}
               </div>
-              {step === 3 ? <button type="button" disabled={saving || !preview || !customer.customerName.trim()} onClick={() => saveOpportunity(false)} className="mt-3 min-h-11 w-full text-sm font-bold text-slate-500">Save as draft instead</button> : null}
+              {step === 3 ? <button type="button" disabled={saving || !preview || !customer.customerName.trim()} onClick={() => saveOpportunity(false)} className="mt-3 min-h-11 w-full text-sm font-bold text-slate-500">{isResubmission ? "Save changes and finish later" : "Save as draft instead"}</button> : null}
             </div>
           </section>
         </div>

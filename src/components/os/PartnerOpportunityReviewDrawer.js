@@ -11,16 +11,18 @@ import {
   Mail,
   MapPin,
   Phone,
+  RotateCcw,
   UserRound,
   X,
 } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { closeProtectedPdfWindow, openProtectedPdfWindow, showProtectedPdf } from "../../lib/openProtectedPdf"
 
 const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
   in_review: { label: "In review", className: "bg-blue-100 text-blue-800", action: "Approve price", next: "quoted" },
+  changes_requested: { label: "AFGRI update requested", className: "bg-orange-100 text-orange-800", action: "Resume review", next: "in_review" },
   quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Close opportunity", next: "closed" },
   closed: { label: "Closed", className: "bg-slate-100 text-slate-600", action: "Reopen review", next: "in_review" },
 }
@@ -42,6 +44,8 @@ export default function PartnerOpportunityReviewDrawer({
   onAdvance,
 }) {
   const [preparingDocument, setPreparingDocument] = useState(false)
+  const [showChangeRequest, setShowChangeRequest] = useState(false)
+  const [changeRequest, setChangeRequest] = useState({ text: "", dueAt: "" })
   const meta = STATUS_META[record.status] || STATUS_META.submitted
   const config = record.configuration || {}
   const proposal = record.proposedQuote
@@ -58,6 +62,19 @@ export default function PartnerOpportunityReviewDrawer({
   ]
   const finalAmount = Number(quoteResponse.finalQuoteAmountExVat || 0)
   const variance = proposal ? finalAmount - proposal.amountExVat : 0
+
+  useEffect(() => {
+    setShowChangeRequest(false)
+    setChangeRequest({ text: "", dueAt: "" })
+  }, [record.id])
+
+  function requestChanges() {
+    if (!changeRequest.text.trim()) return
+    onAdvance("changes_requested", {
+      informationRequest: changeRequest.text,
+      informationRequestDueAt: changeRequest.dueAt ? `${changeRequest.dueAt}T17:00:00+02:00` : "",
+    })
+  }
 
   async function openPriceConfirmation() {
     const previewWindow = openProtectedPdfWindow("Preparing AFGRI price confirmation")
@@ -186,6 +203,19 @@ export default function PartnerOpportunityReviewDrawer({
             </section>
           ) : null}
 
+          {record.currentInformationRequest ? (
+            <section className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
+              <div className="flex items-start gap-3">
+                <RotateCcw className="mt-0.5 h-5 w-5 shrink-0 text-orange-700" />
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-orange-700">Waiting for AFGRI · submission V{record.submissionVersion}</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-800">{record.currentInformationRequest.requestText}</p>
+                  {record.currentInformationRequest.dueAt ? <p className="mt-2 text-xs font-bold text-orange-800">Requested by {formatDateTime(record.currentInformationRequest.dueAt)}</p> : null}
+                </div>
+              </div>
+            </section>
+          ) : null}
+
           {proposal ? (
             <section className="grid gap-4 border-y border-slate-200 py-5 sm:grid-cols-2">
               <ScopeList title="Included" items={proposal.inclusions} />
@@ -203,6 +233,22 @@ export default function PartnerOpportunityReviewDrawer({
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Internal review note</span>
             <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows="3" placeholder="Record anything the Smart Steel team must confirm before release." className="mt-2 w-full rounded-xl border border-slate-300 p-4 text-base outline-none focus:border-[#0043f3]" />
           </label>
+
+          {["submitted", "in_review"].includes(record.status) ? (
+            <section className="rounded-2xl border border-orange-200 bg-orange-50/60 p-5">
+              <button type="button" onClick={() => setShowChangeRequest((current) => !current)} className="flex min-h-11 w-full items-center justify-between gap-4 text-left text-sm font-black text-orange-900">
+                <span className="inline-flex items-center gap-2"><RotateCcw className="h-4 w-4" />Request changes from AFGRI</span>
+                <span>{showChangeRequest ? "Close" : "Open"}</span>
+              </button>
+              {showChangeRequest ? (
+                <div className="mt-4 space-y-3 border-t border-orange-200 pt-4">
+                  <label className="block text-xs font-bold text-slate-700">What must be changed or supplied?<textarea value={changeRequest.text} onChange={(event) => setChangeRequest((current) => ({ ...current, text: event.target.value }))} rows="4" placeholder="Be specific so the salesperson can resolve this without an email or phone call." className="mt-2 w-full rounded-xl border border-orange-200 bg-white p-4 text-base font-normal outline-none focus:border-orange-500" /></label>
+                  <label className="block text-xs font-bold text-slate-700">Requested by (optional)<input type="date" value={changeRequest.dueAt} onChange={(event) => setChangeRequest((current) => ({ ...current, dueAt: event.target.value }))} className="mt-2 min-h-11 w-full rounded-xl border border-orange-200 bg-white px-3 text-base font-normal outline-none" /></label>
+                  <button type="button" disabled={saving || !changeRequest.text.trim()} onClick={requestChanges} className="min-h-11 w-full rounded-xl bg-orange-600 px-4 text-sm font-black text-white disabled:opacity-40">Send correction request</button>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           {record.status === "in_review" || record.status === "quoted" ? (
             <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
@@ -254,9 +300,9 @@ export default function PartnerOpportunityReviewDrawer({
         </div>
 
         <footer className="border-t border-slate-200 bg-white p-4 sm:p-5">
-          <button type="button" disabled={saving || (record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus))} onClick={() => onAdvance(meta.next)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-5 text-sm font-black text-white disabled:opacity-50">
+          <button type="button" disabled={saving || record.status === "changes_requested" || (record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus))} onClick={() => onAdvance(meta.next)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-5 text-sm font-black text-white disabled:opacity-50">
             {record.status === "in_review" ? <FileCheck2 className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-            {saving ? "Saving..." : record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus) ? "Waiting for AFGRI order" : record.status === "quoted" ? "Acknowledge order and close" : meta.action}
+            {saving ? "Saving..." : record.status === "changes_requested" ? "Waiting for AFGRI resubmission" : record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus) ? "Waiting for AFGRI order" : record.status === "quoted" ? "Acknowledge order and close" : meta.action}
           </button>
         </footer>
       </aside>
@@ -287,4 +333,9 @@ function QuoteField({ label, children }) {
 function formatDate(value) {
   if (!value) return "—"
   return new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${value}T12:00:00`))
+}
+
+function formatDateTime(value) {
+  if (!value) return "—"
+  return new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value))
 }

@@ -8,6 +8,7 @@ import PartnerOpportunityReviewDrawer from "./PartnerOpportunityReviewDrawer"
 const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
   in_review: { label: "In review", className: "bg-blue-100 text-blue-800", action: "Approve price", next: "quoted" },
+  changes_requested: { label: "AFGRI update", className: "bg-orange-100 text-orange-800", action: "Resume review", next: "in_review" },
   quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Close opportunity", next: "closed" },
   closed: { label: "Closed", className: "bg-slate-100 text-slate-600", action: "Reopen review", next: "in_review" },
 }
@@ -52,14 +53,14 @@ export default function PartnerOpportunityWorkspace() {
     })
   }
 
-  async function advanceRecord(status) {
+  async function advanceRecord(status, extra = {}) {
     setSaving(true)
     setError("")
     try {
       const response = await fetch("/api/os/partner-opportunities", {
         method: "PATCH",
         headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ id: selected.id, status, internalReviewNotes: reviewNotes, ...quoteResponse }),
+        body: JSON.stringify({ id: selected.id, status, internalReviewNotes: reviewNotes, ...quoteResponse, ...extra }),
       })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error || "Could not update the opportunity.")
@@ -76,6 +77,7 @@ export default function PartnerOpportunityWorkspace() {
   const shown = filter === "active" ? active : records.filter((record) => record.status === filter)
   const newCount = records.filter((record) => record.status === "submitted").length
   const reviewingCount = records.filter((record) => record.status === "in_review").length
+  const changesCount = records.filter((record) => record.status === "changes_requested").length
   const quotedCount = records.filter((record) => record.status === "quoted").length
 
   return (
@@ -85,15 +87,15 @@ export default function PartnerOpportunityWorkspace() {
           <div><p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">AFGRI opportunity desk</p><h2 className="mt-3 max-w-3xl text-3xl font-black tracking-[-0.04em] sm:text-4xl">Turn partner interest into a reviewed quote.</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">Only submitted requests appear here. Open one, confirm the project detail and move it to the next clear step.</p></div>
           <button type="button" onClick={loadRecords} className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 bg-white/10 px-4 text-sm font-bold transition hover:bg-white/15"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh</button>
         </div>
-        <div className="mt-6 grid grid-cols-3 gap-px overflow-hidden bg-white/15">
-          {[["New", newCount], ["In review", reviewingCount], ["Quoted", quotedCount]].map(([label, count]) => <div key={label} className="bg-[#063379]/75 p-4"><p className="text-2xl font-black sm:text-3xl">{count}</p><p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-blue-100 sm:text-[10px]">{label}</p></div>)}
+        <div className="mt-6 grid grid-cols-4 gap-px overflow-hidden bg-white/15">
+          {[["New", newCount], ["In review", reviewingCount], ["AFGRI update", changesCount], ["Quoted", quotedCount]].map(([label, count]) => <div key={label} className="bg-[#063379]/75 p-4"><p className="text-2xl font-black sm:text-3xl">{count}</p><p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-blue-100 sm:text-[10px]">{label}</p></div>)}
         </div>
       </section>
 
       {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{error}</p> : null}
 
       <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-slate-500">Review queue</p><h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Partner opportunities</h3></div><div className="flex gap-2 overflow-x-auto">{[["active", "Active"], ["submitted", "New"], ["in_review", "In review"], ["quoted", "Quoted"], ["closed", "Closed"]].map(([value, label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold ${filter === value ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600"}`}>{label}</button>)}</div></div>
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-slate-500">Review queue</p><h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Partner opportunities</h3></div><div className="flex gap-2 overflow-x-auto">{[["active", "Active"], ["submitted", "New"], ["in_review", "In review"], ["changes_requested", "With AFGRI"], ["quoted", "Quoted"], ["closed", "Closed"]].map(([value, label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold ${filter === value ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600"}`}>{label}</button>)}</div></div>
         <div className="mt-5 space-y-3">
           {loading ? <p className="py-10 text-center text-sm text-slate-500">Loading opportunities...</p> : shown.length === 0 ? <div className="grid min-h-48 place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-center"><div><Inbox className="mx-auto h-7 w-7 text-slate-300" /><p className="mt-3 text-sm font-bold text-slate-600">No opportunities in this view.</p></div></div> : shown.map((record) => <OpportunityRow key={record.id} record={record} onOpen={() => openRecord(record)} />)}
         </div>
