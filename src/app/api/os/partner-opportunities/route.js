@@ -9,6 +9,57 @@ export const runtime = "nodejs"
 
 const REVIEW_STATUSES = ["submitted", "in_review", "changes_requested", "quoted", "closed"]
 
+async function nextAtlasProjectNumber() {
+  const year = new Date().getFullYear()
+  const prefix = `ATL-${year}-`
+  const { data, error } = await supabaseServer.from("os_projects").select("project_number").like("project_number", `${prefix}%`)
+  if (error) throw error
+  const highest = (data || []).reduce((value, row) => {
+    const sequence = Number(String(row.project_number || "").slice(prefix.length))
+    return Number.isFinite(sequence) ? Math.max(value, sequence) : value
+  }, 0)
+  return `${prefix}${String(highest + 1).padStart(3, "0")}`
+}
+
+async function ensureInternalProject(opportunity) {
+  if (opportunity.internal_project_id) return opportunity.internal_project_id
+  const { data: existing, error: existingError } = await supabaseServer
+    .from("os_projects")
+    .select("id")
+    .contains("record", { sourcePartnerOpportunityId: opportunity.id })
+    .maybeSingle()
+  if (existingError) throw existingError
+  if (existing?.id) return existing.id
+
+  const config = opportunity.configuration || {}
+  const projectNumber = await nextAtlasProjectNumber()
+  const id = `project-${crypto.randomUUID()}`
+  const product = `Atlas W${String(config.width || "").padStart(2, "0")} Warehouse`
+  const name = `${opportunity.customer_name} · ${product}`
+  const scope = `${config.width}m × ${config.length}m × ${config.wallHeight}m · ${config.steelFinish || "Steel finish pending"} · ${config.gableMode === "structure_only" ? "Structure only" : config.gableMode === "roof_only" ? "Roof sheeted" : "Roof and walls sheeted"}`
+  const record = {
+    id, projectNumber, companyKey: "atlas", name,
+    clientName: opportunity.customer_name,
+    address: opportunity.site_location || "",
+    system: product,
+    siteContact: opportunity.customer_phone || opportunity.customer_email || "",
+    contractor: "Smart Steel",
+    projectManager: "",
+    scope,
+    references: [opportunity.reference, opportunity.afgri_order_reference].filter(Boolean).join(" · "),
+    sourcePartnerOpportunityId: opportunity.id,
+    partnerOpportunityReference: opportunity.reference,
+    afgriOrderReference: opportunity.afgri_order_reference || "",
+    source: "AFGRI partner order",
+    archived: false,
+    visits: [],
+    createdAt: new Date().toISOString(),
+  }
+  const { error } = await supabaseServer.from("os_projects").insert([{ id, project_number: projectNumber, company_key: "atlas", name, archived: false, record }])
+  if (error) throw error
+  return id
+}
+
 function latestByDate(records = []) {
   return [...records].sort((left, right) => new Date(right.created_at || 0) - new Date(left.created_at || 0))[0] || null
 }
@@ -69,6 +120,16 @@ function normalizeOpportunity(row) {
     afgriOrderReference: row.afgri_order_reference || "",
     partnerOrderNotes: row.partner_order_notes || "",
     orderSubmittedAt: row.order_submitted_at || "",
+    commercialResponseStatus: row.commercial_response_status || "pending",
+    commercialResponseNote: row.commercial_response_note || "",
+    commercialRespondedAt: row.commercial_responded_at || "",
+    customerDecision: row.customer_decision || "pending",
+    customerDecisionNote: row.customer_decision_note || "",
+    customerDecisionAt: row.customer_decision_at || "",
+    internalProjectId: row.internal_project_id || "",
+    handoffAcknowledgedAt: row.handoff_acknowledged_at || "",
+    orderDocuments: (row.partner_order_documents || []).map((document) => ({ id: document.id, type: document.document_type, name: document.file_name, mimeType: document.mime_type, size: Number(document.file_size || 0), createdAt: document.created_at })),
+    handoffEvents: [...(row.partner_handoff_events || [])].sort((left, right) => new Date(right.created_at) - new Date(left.created_at)).map((event) => ({ id: event.id, type: event.event_type, actorScope: event.actor_scope, summary: event.summary, detail: event.detail || {}, createdAt: event.created_at })),
     updatedAt: row.updated_at,
     currentInformationRequest: currentInformationRequest
       ? {
@@ -107,7 +168,7 @@ export async function GET(request) {
   const partnerKey = String(new URL(request.url).searchParams.get("partner") || "afgri").trim().toLowerCase()
   const { data, error } = await supabaseServer
     .from("partner_opportunities")
-    .select("*, partner_product_releases(product_code, name, release_version), partner_organizations!inner(key, name), partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at)")
+    .select("*, partner_product_releases(product_code, name, release_version), partner_organizations!inner(key, name), partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
     .eq("partner_organizations.key", partnerKey)
     .in("status", REVIEW_STATUSES)
     .order("submitted_at", { ascending: false, nullsFirst: false })
@@ -134,7 +195,7 @@ export async function PATCH(request) {
 
   const { data: currentOpportunity, error: currentOpportunityError } = await supabaseServer
     .from("partner_opportunities")
-    .select("id, partner_id, status")
+    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id")
     .eq("id", id)
     .single()
   if (currentOpportunityError || !currentOpportunity) {
@@ -209,14 +270,28 @@ export async function PATCH(request) {
     updates.partner_order_status = "ready_for_order"
     updates.ready_for_order_at = new Date().toISOString()
     updates.price_valid_until = validUntil.toISOString().slice(0, 10)
+    updates.commercial_response_status = "pending"
+    updates.commercial_response_note = ""
+    updates.commercial_responded_at = null
+    updates.customer_decision = "pending"
+    updates.customer_decision_note = ""
+    updates.customer_decision_at = null
   }
-  if (status === "closed" && currentOrderStatus === "order_submitted") updates.partner_order_status = "acknowledged"
+  if (status === "closed" && currentOrderStatus === "order_submitted") {
+    try {
+      updates.internal_project_id = await ensureInternalProject(currentOpportunity)
+    } catch (projectError) {
+      return NextResponse.json({ error: `The AFGRI order is valid, but its internal project could not be created: ${projectError.message}` }, { status: 500 })
+    }
+    updates.partner_order_status = "acknowledged"
+    updates.handoff_acknowledged_at = new Date().toISOString()
+  }
 
   const { data, error } = await supabaseServer
     .from("partner_opportunities")
     .update(updates)
     .eq("id", id)
-    .select("*, partner_product_releases(product_code, name, release_version), partner_organizations(key, name), partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at)")
+    .select("*, partner_product_releases(product_code, name, release_version), partner_organizations(key, name), partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -227,6 +302,17 @@ export async function PATCH(request) {
     .update({ review_status: submissionReviewStatus, reviewed_at: new Date().toISOString() })
     .eq("opportunity_id", id)
     .eq("version", data.partner_submissions?.reduce((maximum, submission) => Math.max(maximum, submission.version), 0) || 0)
+
+  if (["quoted", "closed"].includes(status)) {
+    await supabaseServer.from("partner_handoff_events").insert([{
+      partner_id: currentOpportunity.partner_id,
+      opportunity_id: id,
+      event_type: status === "quoted" ? "commercial_record_released" : "handoff_acknowledged",
+      actor_scope: "smart_steel",
+      summary: status === "quoted" ? "Smart Steel released the approved supplier price and scope to AFGRI." : `Smart Steel acknowledged the AFGRI instruction and opened project ${updates.internal_project_id}.`,
+      detail: status === "quoted" ? { amountExVat: finalQuoteAmountExVat } : { projectId: updates.internal_project_id, orderReference: data.afgri_order_reference },
+    }])
+  }
 
   return NextResponse.json({ record: normalizeOpportunity(data) })
 }

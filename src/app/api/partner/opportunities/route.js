@@ -15,7 +15,7 @@ export async function GET(request) {
 
   let query = supabaseServer
     .from("partner_opportunities")
-    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, updated_at, partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at, resolved_at)")
+    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at, internal_project_id, handoff_acknowledged_at, updated_at, partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at, resolved_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
     .eq("partner_id", context.membership.partner_id)
     .order("updated_at", { ascending: false })
 
@@ -90,10 +90,80 @@ export async function PATCH(request) {
     .eq("membership_id", context.membership.id)
     .single()
   if (existingError || !existing) return NextResponse.json({ error: "That draft could not be found." }, { status: 404 })
+  if (["acknowledge_commercial", "request_clarification", "customer_decision"].includes(action)) {
+    if (existing.status !== "quoted") {
+      return NextResponse.json({ error: "Smart Steel must approve the supplier price before this response can be recorded." }, { status: 409 })
+    }
+
+    const now = new Date().toISOString()
+    const updates = { updated_at: now }
+    let eventType = action
+    let summary = ""
+    let detail = {}
+
+    if (action === "acknowledge_commercial") {
+      updates.commercial_response_status = "acknowledged"
+      updates.commercial_response_note = String(body.note || "").trim()
+      updates.commercial_responded_at = now
+      summary = "AFGRI acknowledged the approved supplier price and scope."
+    }
+
+    if (action === "request_clarification") {
+      const note = String(body.note || "").trim()
+      if (!note) return NextResponse.json({ error: "Explain what needs clarification." }, { status: 400 })
+      updates.commercial_response_status = "clarification_requested"
+      updates.commercial_response_note = note
+      updates.commercial_responded_at = now
+      summary = "AFGRI requested clarification on the approved commercial record."
+      detail = { note }
+    }
+
+    if (action === "customer_decision") {
+      const decision = String(body.customerDecision || "").trim()
+      if (!["pending", "proceeding", "on_hold", "not_proceeding"].includes(decision)) {
+        return NextResponse.json({ error: "Choose a valid customer decision." }, { status: 400 })
+      }
+      updates.customer_decision = decision
+      updates.customer_decision_note = String(body.note || "").trim()
+      updates.customer_decision_at = now
+      summary = `AFGRI recorded the customer decision as ${decision.replaceAll("_", " ")}.`
+      detail = { decision, note: updates.customer_decision_note }
+    }
+
+    const { data, error } = await supabaseServer
+      .from("partner_opportunities")
+      .update(updates)
+      .eq("id", existing.id)
+      .select("id, reference, status, partner_order_status, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at")
+      .single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    await supabaseServer.from("partner_handoff_events").insert([{
+      partner_id: context.membership.partner_id,
+      opportunity_id: existing.id,
+      event_type: eventType,
+      actor_scope: "partner",
+      actor_id: context.user.id,
+      summary,
+      detail,
+    }])
+    return NextResponse.json({ opportunity: data })
+  }
   if (action === "submit_order") {
     const orderReference = String(body.afgriOrderReference || "").trim()
     if (existing.status !== "quoted" || existing.partner_order_status !== "ready_for_order") {
       return NextResponse.json({ error: "This configuration is not ready for an AFGRI order yet." }, { status: 409 })
+    }
+    const { data: commercialState } = await supabaseServer
+      .from("partner_opportunities")
+      .select("commercial_response_status, customer_decision")
+      .eq("id", existing.id)
+      .single()
+    if (commercialState?.commercial_response_status !== "acknowledged") {
+      return NextResponse.json({ error: "Acknowledge the approved supplier price and scope before submitting the AFGRI order." }, { status: 409 })
+    }
+    if (commercialState?.customer_decision !== "proceeding") {
+      return NextResponse.json({ error: "Record that the customer is proceeding before submitting the AFGRI order." }, { status: 409 })
     }
     if (!orderReference) return NextResponse.json({ error: "Add the AFGRI order or reference number." }, { status: 400 })
     const { data, error } = await supabaseServer
@@ -109,6 +179,15 @@ export async function PATCH(request) {
       .select("id, reference, status, partner_order_status, afgri_order_reference, order_submitted_at")
       .single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await supabaseServer.from("partner_handoff_events").insert([{
+      partner_id: context.membership.partner_id,
+      opportunity_id: existing.id,
+      event_type: "order_submitted",
+      actor_scope: "partner",
+      actor_id: context.user.id,
+      summary: `AFGRI submitted order reference ${orderReference}.`,
+      detail: { orderReference, notes: String(body.partnerOrderNotes || "").trim() },
+    }])
     return NextResponse.json({ opportunity: data })
   }
   if (!customerName) return NextResponse.json({ error: "Add the customer name before saving." }, { status: 400 })
