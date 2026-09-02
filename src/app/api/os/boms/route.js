@@ -140,6 +140,10 @@ export async function PATCH(request) {
       return NextResponse.json({ error: "Unsupported BOM status." }, { status: 400 })
     }
 
+    if (body.status === "approved") {
+      const { data: target } = await supabaseServer.from("os_boms").select("platform_key, code").eq("id", bomId).single()
+      if (target) await supabaseServer.from("os_boms").update({ status: "superseded" }).eq("platform_key", target.platform_key).eq("code", target.code).eq("status", "approved").neq("id", bomId)
+    }
     const { data, error } = await supabaseServer
       .from("os_boms")
       .update({ status: body.status })
@@ -158,6 +162,10 @@ export async function PATCH(request) {
   }
 
   if (action === "add_line") {
+    const { data: parent } = await supabaseServer.from("os_boms").select("status").eq("id", bomId).single()
+    if (["approved", "superseded"].includes(parent?.status)) {
+      return NextResponse.json({ error: "Approved BOM revisions are locked. Create a new revision before changing its lines." }, { status: 409 })
+    }
     const description = String(body?.description || "").trim()
     const lineNumber = Number(body?.lineNumber)
     const quantity = Number(body?.quantity)
@@ -201,6 +209,10 @@ export async function PATCH(request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
   } else if (action === "delete_line") {
+    const { data: parent } = await supabaseServer.from("os_boms").select("status").eq("id", bomId).single()
+    if (["approved", "superseded"].includes(parent?.status)) {
+      return NextResponse.json({ error: "Approved BOM revisions are locked. Create a new revision before changing its lines." }, { status: 409 })
+    }
     const lineId = String(body?.lineId || "").trim()
     if (!lineId) return NextResponse.json({ error: "BOM line is required." }, { status: 400 })
 
@@ -209,6 +221,8 @@ export async function PATCH(request) {
   } else {
     return NextResponse.json({ error: "Unsupported BOM action." }, { status: 400 })
   }
+
+  await supabaseServer.from("os_boms").update({ updated_at: new Date().toISOString() }).eq("id", bomId)
 
   const { data, error } = await supabaseServer
     .from("os_boms")

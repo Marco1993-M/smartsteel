@@ -4,12 +4,13 @@ import { supabaseServer } from "lib/supabase-server"
 import { isSchemaMissingError } from "lib/osPhase1bData"
 import { calculateAtlasWarehouseEstimate } from "lib/estimates/atlasWarehouseEstimate"
 import { calculateAfgriPartnerPrice } from "lib/partnerCommercialTerms"
+import { createManufacturingBomSnapshot, getBomSnapshotState, getLatestApprovedAtlasBom } from "lib/manufacturingBomSnapshot"
 
 export const runtime = "nodejs"
 
 const REVIEW_STATUSES = ["submitted", "in_review", "changes_requested", "quoted", "closed"]
 const FULFILMENT_STATUSES = ["production_planning", "in_production", "ready_for_dispatch", "delivered", "complete", "cancelled"]
-const PRODUCTION_ACTIONS = ["update_fulfilment", "update_production_plan", "release_production"]
+const PRODUCTION_ACTIONS = ["update_fulfilment", "update_production_plan", "release_production", "adopt_bom_snapshot"]
 
 function makeTemporaryOrderReference(reference) {
   return `TEMP-${String(reference || "AFGRI").toUpperCase()}`
@@ -74,7 +75,7 @@ function latestByDate(records = []) {
   return [...records].sort((left, right) => new Date(right.created_at || 0) - new Date(left.created_at || 0))[0] || null
 }
 
-function normalizeOpportunity(row) {
+function normalizeOpportunity(row, latestBom = null) {
   let proposedQuote = null
   try {
     const estimate = calculateAtlasWarehouseEstimate(row.configuration || {})
@@ -154,6 +155,10 @@ function normalizeOpportunity(row) {
     productionReleasedBy: row.production_released_by || "",
     productionReleaseRevision: row.production_release_revision || "",
     productionReleaseNote: row.production_release_note || "",
+    manufacturingBomSnapshot: row.manufacturing_bom_snapshot || null,
+    manufacturingBomAdoptedAt: row.manufacturing_bom_adopted_at || "",
+    manufacturingBomAdoptedBy: row.manufacturing_bom_adopted_by || "",
+    manufacturingBomState: getBomSnapshotState(row.manufacturing_bom_snapshot, latestBom),
     orderDocuments: (row.partner_order_documents || []).map((document) => ({ id: document.id, type: document.document_type, name: document.file_name, mimeType: document.mime_type, size: Number(document.file_size || 0), createdAt: document.created_at })),
     handoffEvents: [...(row.partner_handoff_events || [])].sort((left, right) => new Date(right.created_at) - new Date(left.created_at)).map((event) => ({ id: event.id, type: event.event_type, actorScope: event.actor_scope, summary: event.summary, detail: event.detail || {}, createdAt: event.created_at })),
     updatedAt: row.updated_at,
@@ -205,7 +210,9 @@ export async function GET(request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ schemaReady: true, records: (data || []).map(normalizeOpportunity) })
+  const bomPairs = await Promise.all((data || []).map(async (row) => [row.id, await getLatestApprovedAtlasBom(supabaseServer, row.configuration || {})]))
+  const latestBomByOpportunity = new Map(bomPairs)
+  return NextResponse.json({ schemaReady: true, records: (data || []).map((row) => normalizeOpportunity(row, latestBomByOpportunity.get(row.id))) })
 }
 
 export async function PATCH(request) {
@@ -222,7 +229,7 @@ export async function PATCH(request) {
 
   const { data: currentOpportunity, error: currentOpportunityError } = await supabaseServer
     .from("partner_opportunities")
-    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, production_owner, planned_start_date, planned_completion_date, production_hold_reason, manufacturing_checklist, production_release_status, production_released_at, production_released_by, production_release_revision, production_release_note")
+    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, production_owner, planned_start_date, planned_completion_date, production_hold_reason, manufacturing_checklist, production_release_status, production_released_at, production_released_by, production_release_revision, production_release_note, manufacturing_bom_snapshot, manufacturing_bom_adopted_at, manufacturing_bom_adopted_by")
     .eq("id", id)
     .single()
   if (currentOpportunityError || !currentOpportunity) {
@@ -271,11 +278,54 @@ export async function PATCH(request) {
     return NextResponse.json({ record: normalizeOpportunity(data) })
   }
 
+  if (action === "adopt_bom_snapshot") {
+    if (!currentOpportunity.internal_project_id) {
+      return NextResponse.json({ error: "Accept the AFGRI instruction before adopting a production BOM." }, { status: 409 })
+    }
+    const latestBom = await getLatestApprovedAtlasBom(supabaseServer, currentOpportunity.configuration || {})
+    if (!latestBom) {
+      return NextResponse.json({ error: `Approve the Atlas W${String(currentOpportunity.configuration?.width || "").padStart(2, "0")} BOM before preparing this order.` }, { status: 409 })
+    }
+    const snapshot = createManufacturingBomSnapshot(latestBom, currentOpportunity.configuration || {})
+    const now = new Date().toISOString()
+    const adoptedBy = String(body.adoptedBy || "Smart Steel production team").trim().slice(0, 120)
+    const wasReleased = currentOpportunity.production_release_status === "released"
+    const updates = {
+      manufacturing_bom_snapshot: snapshot,
+      manufacturing_bom_adopted_at: now,
+      manufacturing_bom_adopted_by: adoptedBy,
+      updated_at: now,
+    }
+    if (wasReleased) {
+      updates.production_release_status = "revoked"
+      updates.production_released_at = null
+      updates.production_released_by = ""
+      updates.production_release_note = "Release revoked because a newer approved BOM revision was adopted."
+    }
+    const { data, error } = await supabaseServer.from("partner_opportunities").update(updates).eq("id", id)
+      .select("*, partner_product_releases(product_code, name, release_version), partner_organizations(key, name), partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)").single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await supabaseServer.from("partner_handoff_events").insert([{
+      partner_id: currentOpportunity.partner_id,
+      opportunity_id: id,
+      event_type: "manufacturing_bom_adopted",
+      actor_scope: "smart_steel",
+      summary: `${snapshot.source.code} ${snapshot.source.revision} adopted for manufacturing.`,
+      detail: { bomId: snapshot.source.id, revision: snapshot.source.revision, sku: snapshot.sku, lineCount: snapshot.materialSchedule.length, releaseRevoked: wasReleased },
+    }])
+    return NextResponse.json({ record: normalizeOpportunity(data, latestBom) })
+  }
+
   if (action === "release_production") {
     if (!currentOpportunity.internal_project_id) {
       return NextResponse.json({ error: "Accept the AFGRI instruction before releasing production." }, { status: 409 })
     }
     const release = Boolean(body.release)
+    const latestBom = release ? await getLatestApprovedAtlasBom(supabaseServer, currentOpportunity.configuration || {}) : null
+    const bomState = getBomSnapshotState(currentOpportunity.manufacturing_bom_snapshot, latestBom)
+    if (release && bomState.status !== "current") {
+      return NextResponse.json({ error: bomState.status === "missing" ? "Approve a controlled Atlas BOM before release." : "Adopt the latest approved BOM revision before release." }, { status: 409 })
+    }
     const checklist = Array.isArray(currentOpportunity.manufacturing_checklist) ? currentOpportunity.manufacturing_checklist : []
     const releaseChecks = ["release", "materials"]
     const incompleteChecks = releaseChecks.filter((id) => !checklist.some((item) => item?.id === id && item?.complete))
