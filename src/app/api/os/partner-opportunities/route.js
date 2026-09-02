@@ -9,7 +9,7 @@ export const runtime = "nodejs"
 
 const REVIEW_STATUSES = ["submitted", "in_review", "changes_requested", "quoted", "closed"]
 const FULFILMENT_STATUSES = ["production_planning", "in_production", "ready_for_dispatch", "delivered", "complete", "cancelled"]
-const PRODUCTION_ACTIONS = ["update_fulfilment", "update_production_plan"]
+const PRODUCTION_ACTIONS = ["update_fulfilment", "update_production_plan", "release_production"]
 
 function makeTemporaryOrderReference(reference) {
   return `TEMP-${String(reference || "AFGRI").toUpperCase()}`
@@ -149,6 +149,11 @@ function normalizeOpportunity(row) {
     productionHoldReason: row.production_hold_reason || "",
     manufacturingChecklist: Array.isArray(row.manufacturing_checklist) ? row.manufacturing_checklist : [],
     productionPlanUpdatedAt: row.production_plan_updated_at || "",
+    productionReleaseStatus: row.production_release_status || "draft",
+    productionReleasedAt: row.production_released_at || "",
+    productionReleasedBy: row.production_released_by || "",
+    productionReleaseRevision: row.production_release_revision || "",
+    productionReleaseNote: row.production_release_note || "",
     orderDocuments: (row.partner_order_documents || []).map((document) => ({ id: document.id, type: document.document_type, name: document.file_name, mimeType: document.mime_type, size: Number(document.file_size || 0), createdAt: document.created_at })),
     handoffEvents: [...(row.partner_handoff_events || [])].sort((left, right) => new Date(right.created_at) - new Date(left.created_at)).map((event) => ({ id: event.id, type: event.event_type, actorScope: event.actor_scope, summary: event.summary, detail: event.detail || {}, createdAt: event.created_at })),
     updatedAt: row.updated_at,
@@ -217,7 +222,7 @@ export async function PATCH(request) {
 
   const { data: currentOpportunity, error: currentOpportunityError } = await supabaseServer
     .from("partner_opportunities")
-    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, production_owner, planned_start_date, planned_completion_date, production_hold_reason, manufacturing_checklist")
+    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, production_owner, planned_start_date, planned_completion_date, production_hold_reason, manufacturing_checklist, production_release_status, production_released_at, production_released_by, production_release_revision, production_release_note")
     .eq("id", id)
     .single()
   if (currentOpportunityError || !currentOpportunity) {
@@ -228,6 +233,9 @@ export async function PATCH(request) {
     const fulfilmentStatus = String(body.fulfilmentStatus || "").trim()
     if (!currentOpportunity.internal_project_id || !FULFILMENT_STATUSES.includes(fulfilmentStatus)) {
       return NextResponse.json({ error: "Accept the AFGRI instruction before updating fulfilment." }, { status: 409 })
+    }
+    if (fulfilmentStatus === "in_production" && currentOpportunity.production_release_status !== "released") {
+      return NextResponse.json({ error: "Release the manufacturing pack before moving this order into production." }, { status: 409 })
     }
     const now = new Date().toISOString()
     const fulfilmentUpdates = {
@@ -263,6 +271,40 @@ export async function PATCH(request) {
     return NextResponse.json({ record: normalizeOpportunity(data) })
   }
 
+  if (action === "release_production") {
+    if (!currentOpportunity.internal_project_id) {
+      return NextResponse.json({ error: "Accept the AFGRI instruction before releasing production." }, { status: 409 })
+    }
+    const release = Boolean(body.release)
+    const checklist = Array.isArray(currentOpportunity.manufacturing_checklist) ? currentOpportunity.manufacturing_checklist : []
+    const releaseChecks = ["release", "materials"]
+    const incompleteChecks = releaseChecks.filter((id) => !checklist.some((item) => item?.id === id && item?.complete))
+    if (release && (!currentOpportunity.production_owner || !currentOpportunity.planned_start_date || !currentOpportunity.planned_completion_date || currentOpportunity.production_hold_reason || incompleteChecks.length)) {
+      return NextResponse.json({ error: "Assign an owner, set both planned dates, clear the hold, and complete the scope and material checks before release." }, { status: 409 })
+    }
+    const now = new Date().toISOString()
+    const releaseUpdates = {
+      production_release_status: release ? "released" : "revoked",
+      production_released_at: release ? now : null,
+      production_released_by: release ? String(body.releasedBy || "Smart Steel team").trim().slice(0, 120) : "",
+      production_release_revision: release ? String(body.revision || "R1").trim().slice(0, 40) : "",
+      production_release_note: String(body.note || "").trim().slice(0, 500),
+      updated_at: now,
+    }
+    const { data, error } = await supabaseServer.from("partner_opportunities").update(releaseUpdates).eq("id", id)
+      .select("*, partner_product_releases(product_code, name, release_version), partner_organizations(key, name), partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)").single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await supabaseServer.from("partner_handoff_events").insert([{
+      partner_id: currentOpportunity.partner_id,
+      opportunity_id: id,
+      event_type: release ? "production_released" : "production_release_revoked",
+      actor_scope: "smart_steel",
+      summary: release ? `Manufacturing pack ${releaseUpdates.production_release_revision} released for production.` : "Production release revoked.",
+      detail: { revision: releaseUpdates.production_release_revision, releasedBy: releaseUpdates.production_released_by, note: releaseUpdates.production_release_note },
+    }])
+    return NextResponse.json({ record: normalizeOpportunity(data) })
+  }
+
   if (action === "update_production_plan") {
     if (!currentOpportunity.internal_project_id) {
       return NextResponse.json({ error: "Accept the AFGRI instruction before creating a production plan." }, { status: 409 })
@@ -275,6 +317,16 @@ export async function PATCH(request) {
         })).filter((item) => item.label)
       : []
     const now = new Date().toISOString()
+    const currentChecklist = Array.isArray(currentOpportunity.manufacturing_checklist) ? currentOpportunity.manufacturing_checklist : []
+    const checkComplete = (items, id) => items.some((item) => item?.id === id && item?.complete)
+    const releaseCriticalChange = currentOpportunity.production_release_status === "released" && (
+      String(currentOpportunity.production_owner || "") !== String(body.productionOwner || "").trim().slice(0, 120)
+      || String(currentOpportunity.planned_start_date || "") !== String(body.plannedStartDate || "").trim()
+      || String(currentOpportunity.planned_completion_date || "") !== String(body.plannedCompletionDate || "").trim()
+      || String(currentOpportunity.production_hold_reason || "") !== String(body.productionHoldReason || "").trim().slice(0, 500)
+      || checkComplete(currentChecklist, "release") !== checkComplete(checklist, "release")
+      || checkComplete(currentChecklist, "materials") !== checkComplete(checklist, "materials")
+    )
     const productionUpdates = {
       production_owner: String(body.productionOwner || "").trim().slice(0, 120),
       planned_start_date: String(body.plannedStartDate || "").trim() || null,
@@ -283,6 +335,12 @@ export async function PATCH(request) {
       manufacturing_checklist: checklist,
       production_plan_updated_at: now,
       updated_at: now,
+    }
+    if (releaseCriticalChange) {
+      productionUpdates.production_release_status = "revoked"
+      productionUpdates.production_released_at = null
+      productionUpdates.production_released_by = ""
+      productionUpdates.production_release_note = "Release automatically revoked after a production-critical plan change."
     }
     const { data: project } = await supabaseServer.from("os_projects").select("record").eq("id", currentOpportunity.internal_project_id).maybeSingle()
     if (project?.record) {
@@ -305,8 +363,8 @@ export async function PATCH(request) {
       opportunity_id: id,
       event_type: "production_plan_updated",
       actor_scope: "smart_steel",
-      summary: productionUpdates.production_hold_reason ? "Production plan updated with a hold." : "Production plan updated.",
-      detail: { owner: productionUpdates.production_owner, plannedStartDate: productionUpdates.planned_start_date, plannedCompletionDate: productionUpdates.planned_completion_date, completedChecks: checklist.filter((item) => item.complete).length, totalChecks: checklist.length },
+      summary: releaseCriticalChange ? "Production plan changed and its release was revoked." : productionUpdates.production_hold_reason ? "Production plan updated with a hold." : "Production plan updated.",
+      detail: { owner: productionUpdates.production_owner, plannedStartDate: productionUpdates.planned_start_date, plannedCompletionDate: productionUpdates.planned_completion_date, completedChecks: checklist.filter((item) => item.complete).length, totalChecks: checklist.length, releaseRevoked: releaseCriticalChange },
     }])
     return NextResponse.json({ record: normalizeOpportunity(data) })
   }
