@@ -15,7 +15,7 @@ export async function GET(request) {
 
   let query = supabaseServer
     .from("partner_opportunities")
-    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, updated_at")
+    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, updated_at, partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at, resolved_at)")
     .eq("partner_id", context.membership.partner_id)
     .order("updated_at", { ascending: false })
 
@@ -112,7 +112,9 @@ export async function PATCH(request) {
     return NextResponse.json({ opportunity: data })
   }
   if (!customerName) return NextResponse.json({ error: "Add the customer name before saving." }, { status: 400 })
-  if (existing.status !== "draft") return NextResponse.json({ error: "Submitted opportunities can no longer be edited." }, { status: 409 })
+  if (!["draft", "changes_requested"].includes(existing.status)) {
+    return NextResponse.json({ error: "This opportunity is currently locked while Smart Steel reviews it." }, { status: 409 })
+  }
 
   let resolved
   try {
@@ -125,7 +127,7 @@ export async function PATCH(request) {
     return NextResponse.json({ error: error.message }, { status: 409 })
   }
 
-  const status = body.submit ? "submitted" : "draft"
+  const status = body.submit ? "submitted" : existing.status === "changes_requested" ? "changes_requested" : "draft"
   const { data, error } = await supabaseServer
     .from("partner_opportunities")
     .update({
