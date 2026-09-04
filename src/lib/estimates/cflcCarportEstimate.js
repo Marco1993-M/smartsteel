@@ -1,9 +1,6 @@
 import { formatCurrency } from "./warehouseEstimate"
 
 const VAT_RATE = 0.15
-const DELIVERY_RATE = 19
-const DELIVERY_MINIMUM = 1350
-
 const SINGLE_CARPORT_PRICE_INCL_VAT = 14386.64
 const DOUBLE_CARPORT_PRICE_INCL_VAT = 16848.48
 const PRICE_PER_EXTRA_WIDTH_METER =
@@ -65,13 +62,12 @@ export function getCflcCarportOption(value) {
 export function calculateCflcCarportEstimate(input = {}) {
   const option = getCflcCarportOption(input.size)
   const quantity = Math.max(1, Math.round(Number(input.quantity) || 1))
-  const deliveryDistance = Math.max(0, Number(input.deliveryDistance) || 0)
+  const projectLocation = String(input.projectLocation || "").trim()
 
   const basePriceExVatPerUnit = option.basePriceInclVat / (1 + VAT_RATE)
   const structureTotalExVat = basePriceExVatPerUnit * quantity
-  const deliveryTotalExVat =
-    deliveryDistance > 0 ? Math.max(deliveryDistance * DELIVERY_RATE, DELIVERY_MINIMUM) : 0
-  const totalExVat = structureTotalExVat + deliveryTotalExVat
+  const deliveryTotalExVat = 0
+  const totalExVat = structureTotalExVat
   const vatAmount = totalExVat * VAT_RATE
   const totalInclVat = totalExVat + vatAmount
 
@@ -81,7 +77,7 @@ export function calculateCflcCarportEstimate(input = {}) {
       width: option.width,
       length: option.length,
       quantity,
-      deliveryDistance,
+      projectLocation,
     },
     lineItems: [
       buildLineItem({ code: "main-frame", label: "Main frame" }),
@@ -89,13 +85,10 @@ export function calculateCflcCarportEstimate(input = {}) {
       buildLineItem({ code: "purlins", label: "Purlins / hats" }),
       buildLineItem({ code: "fasteners", label: "Fasteners" }),
       buildLineItem({ code: "drawings", label: "Drawings / installation guide" }),
-      ...(deliveryDistance > 0
-        ? [buildLineItem({ code: "delivery", label: "Delivery" })]
-        : []),
     ],
     summary: {
-      title: `${quantity > 1 ? `${quantity} x ` : ""}${option.label} CFLC carport kit`,
-      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}CFLC carport kit · ${option.label}${deliveryDistance > 0 ? ` · Delivery ${deliveryDistance}km` : ""}`,
+      title: `${quantity > 1 ? `${quantity} x ` : ""}${option.label} Atlas carport`,
+      estimateRequest: `${quantity > 1 ? `${quantity} x ` : ""}Atlas carport · ${option.label}${projectLocation ? ` · ${projectLocation}` : ""}`,
       layoutNote: option.bestFor,
     },
     pricing: {
@@ -108,14 +101,13 @@ export function calculateCflcCarportEstimate(input = {}) {
     },
     labels: {
       size: option.label,
-      delivery:
-        deliveryDistance > 0 ? `${deliveryDistance} km delivery` : "Collection or delivery to be confirmed",
+      delivery: projectLocation ? `To be reviewed for ${projectLocation}` : "To be confirmed after location review",
       quantity: `${quantity}`,
     },
     meta: {
-      productType: "CFLC Carport",
+      productType: "Atlas Carport",
       productGroup: "carport",
-      sourceModel: "CFLC carport kit pricing",
+      sourceModel: "Atlas carport baseline pricing",
     },
     helpers: {
       totalExVatLabel: formatCurrency(roundMoney(totalExVat)),
