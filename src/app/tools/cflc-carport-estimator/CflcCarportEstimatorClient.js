@@ -15,6 +15,15 @@ const PROCEED_TIMING_OPTIONS = [
   { value: "one_to_three_months", label: "1 to 3 months" },
   { value: "just_pricing", label: "Just pricing for now" },
 ]
+const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
+
+function WhatsAppIcon({ className = "h-5 w-5" }) {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" className={`${className} fill-current`}>
+      <path d="M16 3.2a12.7 12.7 0 0 0-10.9 19.2L3.5 28.8l6.6-1.7A12.8 12.8 0 1 0 16 3.2Zm0 23.2a10.4 10.4 0 0 1-5.3-1.5l-.4-.2-3.9 1 1-3.8-.3-.4A10.4 10.4 0 1 1 16 26.4Zm5.7-7.8c-.3-.1-1.7-.9-2-.9s-.5-.1-.7.2-.8.9-.9 1.1-.4.3-.7.1a8.5 8.5 0 0 1-2.5-1.5 9.4 9.4 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5s0-.4 0-.5l-.9-2.1c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.4 1 2.8 1.2 3 .2.3.3.5a12 12 0 0 0 4.6 4c.6.3 1 .5 1.4.6.6.2 1.2.2 1.6.1.5-.1 1.7-.7 1.9-1.4s.2-1.2.1-1.4-.3-.2-.6-.4Z" />
+    </svg>
+  )
+}
 
 function createDesignReference() {
   const stamp = new Date().toISOString().slice(2, 10).replaceAll("-", "")
@@ -70,6 +79,18 @@ export default function CflcCarportEstimatorClient({ initialInput = {} }) {
   const [submitSuccess, setSubmitSuccess] = useState("")
   const estimate = useMemo(() => calculateCflcCarportEstimate(formState), [formState])
   const selectedOption = CFLC_CARPORT_SIZE_OPTIONS.find((option) => option.value === formState.size)
+  const whatsappMessage = [
+    "Hi Smart Steel, I'd like to discuss an Atlas carport.",
+    "",
+    `Configuration: ${estimate.labels.size}`,
+    `Quantity: ${formState.quantity}`,
+    `Structure price guide: ${formatCurrency(estimate.pricing.totalExVat)} excl. VAT`,
+    `Project location: ${formState.projectLocation.trim() || "To be confirmed"}`,
+    `Reference: ${designReference}`,
+    "",
+    "Please contact me about the next step.",
+  ].join("\n")
+  const whatsappHref = `https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`
 
   const changeField = (field, value) => {
     setFormState((current) => ({ ...current, [field]: value }))
@@ -238,7 +259,7 @@ export default function CflcCarportEstimatorClient({ initialInput = {} }) {
             ) : null}
 
             {step === 3 ? (
-              <form onSubmit={handleSubmit} className="mt-7">
+              <form id="atlas-carport-enquiry" onSubmit={handleSubmit} className="mt-7">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#0043f3]">Step 3</p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-[-0.035em]">Where should we send the next step?</h2>
                 <p className="mt-2 text-sm text-[#001d2e]/55">Reference {designReference}</p>
@@ -276,20 +297,47 @@ export default function CflcCarportEstimatorClient({ initialInput = {} }) {
 
           <aside className="self-start border border-[#001d2e]/15 bg-white lg:sticky lg:top-24">
             <div className="bg-[#001d2e] p-6 text-white sm:p-7">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#c1d9e5]">Structure price guide</p>
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#c1d9e5]">Your current guide</p>
+                <span className="border border-white/20 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white/65">Excl. VAT</span>
+              </div>
               <p className="mt-3 text-4xl font-semibold tracking-[-0.04em]">{formatCurrency(estimate.pricing.totalExVat)}</p>
-              <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-white/55">Excluding VAT</p>
-              <p className="mt-5 border-t border-white/15 pt-4 text-sm font-semibold">{selectedOption?.label}</p>
-              {formState.quantity > 1 ? <p className="mt-1 text-sm text-white/60">{formState.quantity} structures included</p> : null}
+              <div className="mt-5 grid grid-cols-2 gap-px bg-white/15">
+                <div className="bg-[#001d2e] py-3 pr-3">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/45">Configuration</p>
+                  <p className="mt-1 text-sm font-semibold">{selectedOption?.label}</p>
+                </div>
+                <div className="bg-[#001d2e] py-3 pl-4">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/45">Quantity</p>
+                  <p className="mt-1 text-sm font-semibold">{formState.quantity} {formState.quantity === 1 ? "structure" : "structures"}</p>
+                </div>
+              </div>
             </div>
             <div className="p-6 sm:p-7">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Included</p>
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">What is included</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#001d2e]/40">Ref {designReference}</p>
+              </div>
               <ul className="mt-4 grid gap-3 text-sm font-semibold">
                 {estimate.lineItems.map((item) => <li key={item.code} className="flex gap-3"><span className="text-[#0043f3]">✓</span>{item.label}</li>)}
               </ul>
-              <p className="mt-6 border-t border-[#001d2e]/10 pt-5 text-sm leading-6 text-[#001d2e]/60">
-                A planning guide for the Atlas structure. Sheeting, foundations, delivery, and installation are reviewed separately.
-              </p>
+              <div className="mt-6 border-y border-[#001d2e]/10 py-5">
+                <p className="text-sm font-bold">A clear starting point, reviewed before you commit.</p>
+                <div className="mt-4 grid gap-2 text-xs font-semibold text-[#001d2e]/60 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                  <span>✓ No payment required</span>
+                  <span>✓ Site needs confirmed</span>
+                  <span>✓ Final quote reviewed</span>
+                </div>
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <button type="button" onClick={() => setStep(3)} className="flex items-center justify-between bg-[#0043f3] px-4 py-3 text-sm font-bold text-white hover:bg-[#0036c7]">
+                  Request reviewed quote <span aria-hidden="true">→</span>
+                </button>
+                <a href={whatsappHref} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366] px-4 py-3 text-sm font-bold text-[#0b2715] hover:bg-[#1fbd58]">
+                  <WhatsAppIcon /> WhatsApp us
+                </a>
+              </div>
+              <p className="mt-4 text-xs leading-5 text-[#001d2e]/48">Delivery, installation, foundations, and final site requirements are confirmed separately.</p>
               <div className="mt-5 flex flex-wrap gap-4 text-sm font-bold">
                 <Link href="/products/cflc-carport-kits" className="border-b border-[#001d2e]/30">Atlas carports</Link>
                 <Link href="/products/cflc-solar-carports" className="border-b border-[#001d2e]/30">Solar carports</Link>
@@ -300,15 +348,20 @@ export default function CflcCarportEstimatorClient({ initialInput = {} }) {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#001d2e]/15 bg-white/95 p-3 backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
-          <div>
+        <div className="mx-auto flex max-w-lg items-center gap-2">
+          <div className="mr-auto min-w-0">
             <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#001d2e]/45">Guide excl. VAT</p>
-            <p className="text-xl font-bold">{formatCurrency(estimate.pricing.totalExVat)}</p>
+            <p className="truncate text-lg font-bold">{formatCurrency(estimate.pricing.totalExVat)}</p>
           </div>
+          <a href={whatsappHref} target="_blank" rel="noreferrer" aria-label="Discuss this Atlas carport on WhatsApp" className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#25D366] text-[#0b2715]">
+            <WhatsAppIcon />
+          </a>
           {step < 3 ? (
-            <button type="button" onClick={() => setStep(step + 1)} className="bg-[#0043f3] px-5 py-3 text-sm font-bold text-white">Continue</button>
+            <button type="button" onClick={() => setStep(step + 1)} className="h-11 shrink-0 bg-[#0043f3] px-4 text-sm font-bold text-white">{step === 1 ? "Continue" : "Request quote"}</button>
           ) : (
-            <span className="text-xs font-bold text-[#001d2e]/55">Complete the form above</span>
+            <button type="submit" form="atlas-carport-enquiry" disabled={isSubmitting || Boolean(submitSuccess)} className="h-11 shrink-0 bg-[#0043f3] px-4 text-sm font-bold text-white disabled:opacity-50">
+              {isSubmitting ? "Sending..." : submitSuccess ? "Sent" : "Send enquiry"}
+            </button>
           )}
         </div>
       </div>
