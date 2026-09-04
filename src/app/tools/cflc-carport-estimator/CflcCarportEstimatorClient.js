@@ -184,9 +184,16 @@ export default function CflcCarportEstimatorClient({ initialInput = {} }) {
                             Popular
                           </span>
                         ) : null}
-                        <div className="flex h-10 items-end gap-0.5 overflow-hidden">
+                        <div className="grid h-10 max-w-full grid-flow-col auto-cols-[24px] items-center justify-center gap-1 overflow-hidden">
                           {Array.from({ length: index + 1 }, (_, carIndex) => (
-                            <Image key={carIndex} src="/car.png" alt="" width={42} height={24} className="h-auto min-w-0 flex-1 object-contain" />
+                            <Image
+                              key={carIndex}
+                              src="/car.png"
+                              alt=""
+                              width={24}
+                              height={24}
+                              className="h-6 w-6 object-contain"
+                            />
                           ))}
                         </div>
                         <p className="mt-4 text-sm font-bold">
