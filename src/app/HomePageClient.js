@@ -192,20 +192,6 @@ const homepageQuestions = [
   },
 ];
 
-const featuredProjects = [
-  {
-    image: '/projects/atkv.jpg',
-    title: '5x8m Structure for ATKV, Bergville',
-    description: 'A compact steel structure delivered with clean detailing and fast installation.',
-  },
-  {
-    image: '/images/solar-carport-1.webp',
-    title: 'Solar Carport Structure',
-    description:
-      'A steel solar carport structure showing how Smart Steel systems can support covered parking, solar-ready layouts, and practical site upgrades.',
-  },
-];
-
 const structuredData = [
   smartSteelOrganizationSchema,
   smartSteelWebsiteSchema,
@@ -348,7 +334,7 @@ export default function HomePageClient() {
                       href={{
                         pathname: '/warehouse-builder',
                         query: {
-                          productType: 'LCSS Warehouse',
+                          productType: 'Atlas Warehouse',
                           width: selectedWidth,
                           length: selectedLength,
                           height: selectedHeight,
@@ -575,34 +561,94 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      <section className="bg-white px-6 py-20">
+      <section className="overflow-hidden bg-white px-6 py-20 text-[#071d2b] md:py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#da1a33]">Proof matters</p>
-            <h2 className="mt-4 text-3xl font-bold md:text-5xl">Recent steel structure projects</h2>
-            <p className="mt-5 text-lg leading-8 text-gray-700">
-              Buyers trust steel when they can see the work. These examples show practical
-              steel structures across kit, warehouse, and solar-ready support requirements.
+          <div className="grid items-end gap-8 lg:grid-cols-[1.25fr_0.75fr]">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#0043f3]">
+                Proof matters
+              </p>
+              <h2 className="mt-4 max-w-3xl text-3xl font-bold leading-tight md:text-5xl">
+                Built work, not just renderings.
+              </h2>
+            </div>
+            <p className="max-w-xl text-base leading-7 text-[#526878] lg:justify-self-end">
+              See how Smart Steel structures move from fabricated components to useful,
+              finished infrastructure on real South African sites.
             </p>
           </div>
 
-          <div className="mt-12 grid gap-8 md:grid-cols-2">
-            {featuredProjects.map((project) => (
-              <div key={project.title} className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-                <div className="relative h-80 w-full">
-                  <Image src={project.image} alt={project.title} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold text-black">{project.title}</h3>
-                  <p className="mt-3 text-gray-700">{project.description}</p>
+          <article className="mt-12 overflow-hidden rounded-[2rem] border border-[#cad9e2] bg-white text-[#071d2b] shadow-[0_24px_70px_rgba(7,29,43,0.10)] md:rounded-[2.5rem]">
+            <div className="grid lg:grid-cols-[1.45fr_0.55fr]">
+              <div className="relative min-h-[340px] overflow-hidden sm:min-h-[480px] lg:min-h-[610px]">
+                <Image
+                  src="/projects/Solar Carports_Centurion Golf Club/7.webp"
+                  alt="Completed solar carport parking at Centurion Golf Club"
+                  fill
+                  sizes="(min-width: 1024px) 72vw, 100vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#071d2b]/90 via-[#071d2b]/35 to-transparent px-6 pb-6 pt-24 text-white md:px-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c1d9e5]">
+                    Completed installation
+                  </p>
+                  <p className="mt-2 text-xl font-bold md:text-2xl">Centurion Golf Club</p>
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="mt-8">
-            <Link href="/recent" className="inline-block rounded-full bg-black px-6 py-3 font-semibold text-white transition hover:bg-[#da1a33]">
-              Explore Recent Projects
+              <div className="grid grid-cols-2 lg:grid-cols-1">
+                <div className="relative min-h-48 overflow-hidden border-b border-l border-white/15 sm:min-h-60 lg:min-h-0">
+                  <Image
+                    src="/projects/Solar Carports_Centurion Golf Club/1.webp"
+                    alt="Solar carport steel structures during installation at Centurion Golf Club"
+                    fill
+                    sizes="(min-width: 1024px) 28vw, 50vw"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="relative min-h-48 overflow-hidden border-b border-l border-white/15 sm:min-h-60 lg:min-h-0">
+                  <Image
+                    src="/projects/Solar Carports_Centurion Golf Club/3.webp"
+                    alt="Close view of the galvanised solar carport steelwork"
+                    fill
+                    sizes="(min-width: 1024px) 28vw, 50vw"
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-8 p-7 md:p-10 lg:grid-cols-[1fr_auto] lg:items-end">
+              <div className="max-w-3xl">
+                <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#315066]">
+                  <span className="rounded-full border border-[#c1d9e5] bg-[#eef6f9] px-3 py-2">Centurion, Gauteng</span>
+                  <span className="rounded-full border border-[#c1d9e5] bg-[#eef6f9] px-3 py-2">Solar carport</span>
+                  <span className="rounded-full border border-[#c1d9e5] bg-[#eef6f9] px-3 py-2">Commercial parking</span>
+                </div>
+                <h3 className="mt-5 text-2xl font-bold md:text-3xl">
+                  Solar-ready parking, proven on site.
+                </h3>
+                <p className="mt-3 max-w-2xl leading-7 text-[#4d6170]">
+                  This project combines everyday covered parking with a steel structure designed
+                  to carry a working solar array, turning existing parking space into productive infrastructure.
+                </p>
+              </div>
+              <Link
+                href="/products/cflc-solar-carports"
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#0043f3] px-6 py-3 font-semibold text-white transition hover:bg-[#001d2e]"
+              >
+                Explore solar carports <span className="ml-3 text-lg" aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </article>
+
+          <div className="mt-8 flex flex-col gap-5 border-t border-[#cad9e2] pt-8 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#718797]">More built work</p>
+              <p className="mt-2 text-lg font-semibold">Warehouses, steel structures, and project installations.</p>
+            </div>
+            <Link href="/recent" className="inline-flex items-center font-semibold text-[#0043f3] transition hover:text-[#071d2b]">
+              View recent projects <span className="ml-3 text-lg" aria-hidden="true">→</span>
             </Link>
           </div>
         </div>
