@@ -46,7 +46,7 @@ const proofPoints = [
 
 const processSteps = [
   ["01", "Choose the parking size", "Select the number of vehicles or the closest footprint for your site."],
-  ["02", "See a starting estimate", "Review a practical structure-only budget and adjust the quantity or delivery requirement."],
+  ["02", "See a starting estimate", "Review a practical structure-only budget and add the project location for delivery review."],
   ["03", "Send the project details", "Submit the selected layout so the Smart Steel team can confirm scope, lead time, and final pricing."],
 ]
 

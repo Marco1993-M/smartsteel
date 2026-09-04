@@ -4,12 +4,29 @@ const SITE_URL = "https://www.smartsteel.co.za"
 const PAGE_PATH = "/tools/cflc-carport-estimator"
 const SHARE_IMAGE = `${SITE_URL}/CFLC_carport.webp`
 
-export const metadata = {
-  title: "CFLC Carport Estimator | Lip Channel Carport Pricing",
+const calculatorSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Atlas Carport Price Calculator",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Any",
   description:
-    "Estimate a Smart Steel CFLC and lip channel carport kit online, including single, double, three-bay, and four-bay parking cover options before you enquire.",
+    "Calculate a starting price for an Atlas steel carport covering one to four parking bays in South Africa.",
+  url: `${SITE_URL}${PAGE_PATH}`,
+  provider: {
+    "@type": "Organization",
+    name: "Smart Steel",
+    url: SITE_URL,
+  },
+}
+
+export const metadata = {
+  title: "Atlas Carport Price Calculator | Steel Carports South Africa",
+  description:
+    "Calculate an Atlas steel carport starting price for one to four parking bays. Compare practical lip channel carport sizes before requesting a reviewed quote.",
   keywords: [
-    "CFLC carport estimator",
+    "Atlas carport calculator",
+    "steel carport prices South Africa",
     "lip channel carport pricing",
     "carport cost estimator South Africa",
     "steel carport quote",
@@ -19,9 +36,9 @@ export const metadata = {
     canonical: PAGE_PATH,
   },
   openGraph: {
-    title: "CFLC Carport Estimator | Lip Channel Carport Pricing",
+    title: "Atlas Carport Price Calculator | Smart Steel",
     description:
-      "Use the Smart Steel CFLC carport estimator for a clearer starting budget on single, double, three-bay, and four-bay carport kits.",
+      "Choose one to four parking bays and see an immediate Atlas steel carport starting price before you enquire.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -31,15 +48,15 @@ export const metadata = {
         url: SHARE_IMAGE,
         width: 1200,
         height: 630,
-        alt: "Smart Steel CFLC carport estimator",
+        alt: "Atlas steel carport price calculator by Smart Steel",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CFLC Carport Estimator | Lip Channel Carport Pricing",
+    title: "Atlas Carport Price Calculator | Smart Steel",
     description:
-      "Use the Smart Steel CFLC carport estimator for a clearer starting budget on single, double, three-bay, and four-bay carport kits.",
+      "Choose one to four parking bays and see an immediate Atlas steel carport starting price before you enquire.",
     images: [SHARE_IMAGE],
   },
 }
@@ -48,12 +65,18 @@ export default async function CflcCarportEstimatorPage({ searchParams }) {
   const params = await searchParams
 
   return (
-    <CflcCarportEstimatorClient
-      initialInput={{
-        size: params?.size,
-        quantity: params?.quantity,
-        deliveryDistance: params?.deliveryDistance,
-      }}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(calculatorSchema) }}
+      />
+      <CflcCarportEstimatorClient
+        initialInput={{
+          size: params?.size,
+          quantity: params?.quantity,
+          projectLocation: params?.location,
+        }}
+      />
+    </>
   )
 }

@@ -197,7 +197,7 @@ function buildWarehouseFeaturedSelection({ modelCode, width, length, family, bes
     weight: `${estimate.materials.totalSteelKg}kg steel before optional extras`,
     packInfo,
     modelCode,
-    ctaHref: `/warehouse-builder?productType=LCSS%20Warehouse&width=${width}&length=${length}`,
+    ctaHref: `/warehouse-builder?productType=Atlas%20Warehouse&width=${width}&length=${length}`,
     ctaLabel: "Configure this model",
   })
 }
