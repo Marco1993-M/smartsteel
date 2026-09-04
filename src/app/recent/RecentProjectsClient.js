@@ -2,241 +2,142 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+
+const numberedGallery = (folder, order) => order.map((number) => `/projects/${folder}/${number}.webp`);
 
 const projects = [
   {
-    image: '/projects/Solar Carports_Centurion Golf Club/7.webp',
-    gallery: [
-      '/projects/Solar Carports_Centurion Golf Club/7.webp',
-      '/projects/Solar Carports_Centurion Golf Club/1.webp',
-      '/projects/Solar Carports_Centurion Golf Club/2.webp',
-      '/projects/Solar Carports_Centurion Golf Club/3.webp',
-      '/projects/Solar Carports_Centurion Golf Club/4.webp',
-      '/projects/Solar Carports_Centurion Golf Club/5.webp',
-      '/projects/Solar Carports_Centurion Golf Club/6.webp'
-    ],
-    title: 'Solar Carports at Centurion Golf Club',
-    tag: 'Commercial',
-    keywords: ['Atlas Solar Carports', 'Covered Parking', 'Solar Infrastructure'],
+    cover: '/projects/Solar Carports_Centurion Golf Club/7.webp',
+    gallery: numberedGallery('Solar Carports_Centurion Golf Club', [7, 1, 2, 3, 4, 5, 6]),
+    title: 'Solar carports at Centurion Golf Club',
+    system: 'Atlas',
+    application: 'Solar carport',
     location: 'Centurion, Gauteng',
-    builder: 'Smart Steel',
-    fabricator: 'Smart Steel',
-    description:
-      'A commercial solar-carport installation at Centurion Golf Club, combining covered parking with steel support structures for a working solar array. The project shows the structure during installation, its connection detailing, and the completed parking area in everyday use.'
+    stage: 'Completed',
+    description: 'A completed solar-carport project that turns an existing parking area into useful covered parking and a working platform for solar panels.'
   },
   {
-    image: '/projects/commercial1.jpg',
-    gallery: [
-      '/projects/commercial1.jpg',
-      '/projects/commercial2.jpg',
-      '/projects/commercial3.jpg',
-      '/projects/commercial4.jpg'
-    ],
-    title: 'Spa & Coffee',
-    tag: 'Commercial',
-    keywords: ['Infrastructure', 'Modular Construction'],
-    architect: 'Pequeño',
-    builder: 'Pequeño',
-    fabricator: 'LSF Steel Supply',
-    description:
-      'Nestled in the heart of urban tranquility, Spa & Coffee redefines relaxation with its innovative fusion of wellness and café culture, delivered through cutting-edge modular construction...'
+    cover: '/projects/Somerset West/2.webp',
+    gallery: numberedGallery('Somerset West', [2, 1, 3, 4]),
+    title: 'Light steel frame structure in Somerset West',
+    system: 'LSF',
+    application: 'Residential structure',
+    location: 'Somerset West, Western Cape',
+    stage: 'Structure installation',
+    description: 'A lightweight steel frame taking shape on site, with wall panels and roof framing assembled into a precise, open structural shell.'
   },
   {
-    image: '/projects/residential1.jpg',
-    gallery: [
-      '/projects/residential1.jpg',
-      '/projects/residential2.jpg',
-      '/projects/residential3.jpg',
-      '/projects/residential4.jpg',
-      '/projects/residential5.jpg'
-    ],
-    title: 'Roof Overhaul',
-    tag: 'Residential',
-    keywords: ['Infrastructure', 'Roof Construction'],
-    architect: 'Designed by Smart Steel',
-    builder: 'Smart Steel',
-    fabricator: 'LSF Steel Supply',
-    description:
-      'Elevating an existing flat roof into a roof that won&apos;t be moved, this residential retrofit showcases innovative lightweight steel construction...'
+    cover: '/projects/Karongwe/5.webp',
+    gallery: numberedGallery('Karongwe', [5, 1, 2, 3, 4, 6, 7]),
+    title: 'Light steel frame project in Hoedspruit',
+    system: 'LSF',
+    application: 'Building structure',
+    location: 'Hoedspruit, Limpopo',
+    stage: 'Structure installation',
+    description: 'A substantial lightweight steel frame project documented from delivery and wall erection through to roof-truss installation and sheeting.'
   },
   {
-    image: '/projects/atkv.jpg',
-    gallery: [
-      '/projects/atkv.jpg',
-      '/projects/atkv1.jpg',
-      '/projects/atkv2.jpg',
-      '/projects/atkv3.jpg',
-      '/projects/atkv4.jpg',
-      '/projects/atkv5.jpg',
-      '/projects/atkv6.jpg',
-      '/projects/atkv7.jpg',
-      '/projects/atkv8.jpg',
-      '/projects/atkv9.jpg',
-      '/projects/atkv10.jpg'
-    ],
-    title: '5x8m Lightweight Steel Stage for ATKV Bergville',
-    tag: 'Commercial',
-    keywords: ['Infrastructure', 'Roof Construction'],
-    architect: 'Designed by Smart Steel',
-    builder: 'Smart Steel',
-    fabricator: 'Smart Steel',
-    description:
-      'A 5x8m lightweight steel stage was constructed for ATKV in just 2 days, showcasing the efficiency and versatility of lightweight steel construction.'
-  },
+    cover: '/projects/atkv.jpg',
+    gallery: ['/projects/atkv.jpg', ...Array.from({ length: 10 }, (_, index) => `/projects/atkv${index + 1}.jpg`)],
+    title: '5m x 8m steel stage for ATKV',
+    system: 'LSF',
+    application: 'Commercial structure',
+    location: 'Bergville, KwaZulu-Natal',
+    stage: 'Completed',
+    description: 'A compact lightweight steel stage structure completed for ATKV, showing how an efficient steel system can support a practical commercial application.'
+  }
 ];
 
-const filters = ['All', 'Commercial', 'Residential', 'Industrial'];
+const filters = ['All', 'Atlas', 'LSF'];
 
 export default function RecentProjectsClient() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [modalProject, setModalProject] = useState(null);
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  const visibleProjects = activeFilter === 'All' ? projects : projects.filter((project) => project.system === activeFilter);
 
-  const filteredProjects =
-    activeFilter === 'All'
-      ? projects
-      : projects.filter((project) => project.tag === activeFilter);
-
-  const handlePrev = () => {
-    setCurrentImageIdx((prev) =>
-      prev === 0 ? modalProject.gallery.length - 1 : prev - 1
-    );
+  const openProject = (project) => {
+    setModalProject(project);
+    setCurrentImageIdx(0);
   };
 
-  const handleNext = () => {
-    setCurrentImageIdx((prev) =>
-      prev === modalProject.gallery.length - 1 ? 0 : prev + 1
-    );
+  const changeImage = (direction) => {
+    setCurrentImageIdx((current) => (current + direction + modalProject.gallery.length) % modalProject.gallery.length);
   };
 
   return (
-    <main className="font-sans text-gray-800 px-4 py-12 bg-white">
-      <section className="max-w-6xl mx-auto mb-10">
-        <h1 className="text-4xl font-bold mb-4 text-left">Project Gallery</h1>
-        <p className="text-lg text-gray-700 text-left">
-          Lightweight steel has been used across residential and commercial buildings across South Africa. Whether you&apos;re
-          building your home or a large-scale commercial project, explore and be inspired by projects that showcase the use
-          of lightweight steel.
-        </p>
-      </section>
-
-      <div className="flex flex-wrap gap-4 mb-10 border-b border-gray-300 max-w-6xl mx-auto">
-        {filters.map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setActiveFilter(filter)}
-            className={`pb-2 text-lg font-medium transition border-b-4 ${
-              activeFilter === filter
-                ? 'border-[#da1a33] text-[#da1a33]'
-                : 'border-transparent text-gray-600 hover:text-black'
-            }`}
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
-
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
-        {filteredProjects.map((project, idx) => (
-          <div key={idx} className="shadow rounded-lg overflow-hidden bg-white">
-            <div className="relative w-full h-64">
-              <Image
-                src={project.image}
-                alt={project.title}
-                fill
-                className="rounded-t-lg object-cover"
-              />
+    <main className="min-h-screen bg-white text-[#071d2b]">
+      <section className="px-4 pb-16 pt-4 sm:px-6 sm:pt-5 lg:px-8">
+        <div className="mx-auto max-w-[1500px] overflow-hidden rounded-[2rem] bg-white sm:rounded-[3rem]">
+          <div className="grid lg:grid-cols-[0.82fr_1.18fr]">
+            <div className="flex flex-col justify-center px-7 py-12 sm:px-12 lg:px-16 lg:py-20">
+              <p className="mb-5 text-xs font-bold uppercase tracking-[0.28em] text-[#0043f3]">Recent projects</p>
+              <h1 className="max-w-3xl text-4xl font-bold leading-[0.98] sm:text-6xl lg:text-7xl">Steel systems, proven on site.</h1>
+              <p className="mt-7 max-w-xl text-base leading-7 text-[#52677d] sm:text-lg">Explore Atlas and lightweight steel projects delivered across South Africa, from solar parking to complete building structures.</p>
             </div>
-            <div className="p-6">
-              <span className="inline-block border border-[#da1a33] text-[#da1a33] text-xs uppercase font-semibold px-3 py-1 rounded-full mb-2">
-                {project.tag}
-              </span>
-              <h3
-                className="text-xl font-bold mb-2 cursor-pointer text-[#1e2a39] hover:underline"
-                onClick={() => {
-                  setModalProject(project);
-                  setCurrentImageIdx(0);
-                }}
-              >
-                {project.title}
-              </h3>
-              <p className="text-sm text-gray-600">
-                {project.keywords.join(' / ')}
-              </p>
+            <div className="relative min-h-[360px] lg:min-h-[590px]">
+              <Image src="/projects/Solar Carports_Centurion Golf Club/7.webp" alt="Completed solar carports at Centurion Golf Club" fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 58vw" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#071d2b]/55 via-transparent to-transparent lg:bg-gradient-to-r lg:from-white lg:via-white/10" />
+              <div className="absolute bottom-6 left-6 right-6 border-l-4 border-[#0043f3] bg-white/95 p-5 text-[#071d2b] backdrop-blur sm:bottom-10 sm:left-10 sm:max-w-md">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#0043f3]">Featured project</p>
+                <p className="mt-2 text-xl font-bold">Centurion Golf Club solar carports</p>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-24 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1500px]">
+          <div className="mb-10 flex flex-col gap-6 border-b border-[#cbd7df] pb-8 sm:flex-row sm:items-end sm:justify-between">
+            <div><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#0043f3]">Built work</p><h2 className="mt-3 text-3xl font-bold sm:text-5xl">Projects in the field.</h2></div>
+            <div className="flex gap-2" aria-label="Filter projects">
+              {filters.map((filter) => <button key={filter} type="button" onClick={() => setActiveFilter(filter)} className={`min-h-11 border px-5 text-sm font-bold transition ${activeFilter === filter ? 'border-[#0043f3] bg-[#0043f3] text-white' : 'border-[#cbd7df] bg-white hover:border-[#0043f3]'}`}>{filter}</button>)}
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {visibleProjects.map((project, index) => (
+              <button key={project.title} type="button" onClick={() => openProject(project)} className="group overflow-hidden rounded-[1.75rem] border border-[#d7e0e6] bg-white text-left transition hover:-translate-y-1 hover:border-[#0043f3] hover:shadow-xl sm:rounded-[2.25rem]">
+                <div className="relative aspect-[4/3] overflow-hidden bg-[#dce5ea] sm:aspect-[16/10]">
+                  <Image src={project.cover} alt={project.title} fill className="object-cover transition duration-700 group-hover:scale-[1.03]" sizes="(max-width: 1024px) 100vw, 50vw" />
+                  <span className={`absolute left-5 top-5 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] ${project.system === 'Atlas' ? 'bg-[#0043f3] text-white' : 'bg-white text-[#071d2b]'}`}>{project.system} system</span>
+                </div>
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-center justify-between gap-4 text-xs font-bold uppercase tracking-[0.16em] text-[#667b91]"><span>{project.location}</span><span>{String(index + 1).padStart(2, '0')}</span></div>
+                  <h3 className="mt-4 text-2xl font-bold leading-tight sm:text-3xl">{project.title}</h3>
+                  <div className="mt-6 flex items-center justify-between border-t border-[#d7e0e6] pt-5"><span className="text-sm text-[#52677d]">{project.application} · {project.stage}</span><span className="text-sm font-bold text-[#0043f3]">View project →</span></div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-8 rounded-[2rem] bg-[#c1d9e5] px-7 py-10 sm:px-12 lg:flex-row lg:items-center lg:justify-between lg:py-14">
+          <div><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#0043f3]">Plan your project</p><h2 className="mt-3 max-w-3xl text-3xl font-bold sm:text-5xl">Move from inspiration to a practical starting price.</h2></div>
+          <div className="flex flex-col gap-3 sm:flex-row"><Link href="/products" className="flex min-h-12 items-center justify-center border border-[#071d2b] px-6 font-bold hover:bg-white">Explore products</Link><Link href="/warehouse-builder" className="flex min-h-12 items-center justify-center bg-[#0043f3] px-6 font-bold text-white hover:bg-[#0038ce]">Build a warehouse</Link></div>
+        </div>
+      </section>
 
       {modalProject && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-2 sm:p-4"
-          onClick={() => setModalProject(null)}
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setModalProject(null)}
-              className="absolute top-2 right-2 text-3xl text-gray-600 hover:text-red-600 z-50"
-              aria-label="Close modal"
-            >
-              &times;
-            </button>
-
-            <div className="relative w-full h-[80vh] sm:h-[400px]">
-              <Image
-                src={modalProject.gallery[currentImageIdx]}
-                alt={modalProject.title}
-                fill
-                className="object-cover"
-              />
-              <button
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow"
-                onClick={handlePrev}
-              >
-                <FaChevronLeft />
-              </button>
-              <button
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow"
-                onClick={handleNext}
-              >
-                <FaChevronRight />
-              </button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#071d2b]/90 p-3 sm:p-6" onClick={() => setModalProject(null)} role="presentation">
+          <div className="relative grid max-h-[94vh] w-full max-w-7xl overflow-y-auto bg-white lg:grid-cols-[1.35fr_0.65fr]" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label={modalProject.title}>
+            <div className="relative min-h-[55vh] bg-[#e6edf1] lg:min-h-[82vh]">
+              <Image src={modalProject.gallery[currentImageIdx]} alt={`${modalProject.title}, image ${currentImageIdx + 1}`} fill className="object-contain" sizes="(max-width: 1024px) 100vw, 68vw" />
+              <button type="button" onClick={() => changeImage(-1)} aria-label="Previous image" className="absolute left-4 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center bg-white shadow"><FaChevronLeft /></button>
+              <button type="button" onClick={() => changeImage(1)} aria-label="Next image" className="absolute right-4 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center bg-white shadow"><FaChevronRight /></button>
             </div>
-
-            <div className="flex gap-2 px-4 py-3 overflow-x-auto">
-              {modalProject.gallery.map((thumb, i) => (
-                <div
-                  key={i}
-                  className={`relative w-20 h-16 border-2 ${
-                    i === currentImageIdx
-                      ? 'border-[#da1a33]'
-                      : 'border-transparent'
-                  } cursor-pointer flex-shrink-0`}
-                  onClick={() => setCurrentImageIdx(i)}
-                >
-                  <Image src={thumb} alt={`thumb-${i}`} fill className="object-cover" />
-                </div>
-              ))}
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6 px-6 py-6 text-sm text-gray-700">
-              <div className="space-y-2">
-                <p><strong>Project:</strong> {modalProject.title}</p>
-                <p><strong>Segment:</strong> {modalProject.tag}</p>
-                <p><strong>Application type:</strong> {modalProject.keywords.join(', ')}</p>
-                {modalProject.location && <p><strong>Location:</strong> {modalProject.location}</p>}
-                {modalProject.architect && <p><strong>Architect:</strong> {modalProject.architect}</p>}
-                {modalProject.builder && <p><strong>Builder:</strong> {modalProject.builder}</p>}
-                {modalProject.fabricator && <p><strong>Fabricator:</strong> {modalProject.fabricator}</p>}
-              </div>
-              <div>
-                <p className="font-semibold mb-2">Description</p>
-                <p>{modalProject.description}</p>
-              </div>
+            <div className="flex flex-col p-6 sm:p-9">
+              <button type="button" onClick={() => setModalProject(null)} className="ml-auto text-sm font-bold uppercase tracking-[0.18em] text-[#52677d]">Close ×</button>
+              <p className="mt-8 text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">{modalProject.system} · {modalProject.stage}</p>
+              <h2 className="mt-3 text-3xl font-bold leading-tight">{modalProject.title}</h2>
+              <p className="mt-5 leading-7 text-[#52677d]">{modalProject.description}</p>
+              <dl className="mt-8 space-y-4 border-t border-[#d7e0e6] pt-6 text-sm"><div className="flex justify-between gap-6"><dt className="text-[#789]">Location</dt><dd className="text-right font-bold">{modalProject.location}</dd></div><div className="flex justify-between gap-6"><dt className="text-[#789]">Application</dt><dd className="text-right font-bold">{modalProject.application}</dd></div></dl>
+              <div className="mt-8 flex gap-2 overflow-x-auto pb-2">{modalProject.gallery.map((image, index) => <button key={image} type="button" onClick={() => setCurrentImageIdx(index)} className={`relative h-16 w-20 flex-none overflow-hidden border-2 ${index === currentImageIdx ? 'border-[#0043f3]' : 'border-transparent'}`} aria-label={`View image ${index + 1}`}><Image src={image} alt="" fill className="object-cover" sizes="80px" /></button>)}</div>
             </div>
           </div>
         </div>
