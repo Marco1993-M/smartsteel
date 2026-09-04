@@ -6,6 +6,26 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const projects = [
   {
+    image: '/projects/Solar Carports_Centurion Golf Club/7.webp',
+    gallery: [
+      '/projects/Solar Carports_Centurion Golf Club/7.webp',
+      '/projects/Solar Carports_Centurion Golf Club/1.webp',
+      '/projects/Solar Carports_Centurion Golf Club/2.webp',
+      '/projects/Solar Carports_Centurion Golf Club/3.webp',
+      '/projects/Solar Carports_Centurion Golf Club/4.webp',
+      '/projects/Solar Carports_Centurion Golf Club/5.webp',
+      '/projects/Solar Carports_Centurion Golf Club/6.webp'
+    ],
+    title: 'Solar Carports at Centurion Golf Club',
+    tag: 'Commercial',
+    keywords: ['Atlas Solar Carports', 'Covered Parking', 'Solar Infrastructure'],
+    location: 'Centurion, Gauteng',
+    builder: 'Smart Steel',
+    fabricator: 'Smart Steel',
+    description:
+      'A commercial solar-carport installation at Centurion Golf Club, combining covered parking with steel support structures for a working solar array. The project shows the structure during installation, its connection detailing, and the completed parking area in everyday use.'
+  },
+  {
     image: '/projects/commercial1.jpg',
     gallery: [
       '/projects/commercial1.jpg',
@@ -208,9 +228,10 @@ export default function RecentProjectsClient() {
                 <p><strong>Project:</strong> {modalProject.title}</p>
                 <p><strong>Segment:</strong> {modalProject.tag}</p>
                 <p><strong>Application type:</strong> {modalProject.keywords.join(', ')}</p>
-                <p><strong>Architect:</strong> {modalProject.architect}</p>
-                <p><strong>Builder:</strong> {modalProject.builder}</p>
-                <p><strong>Fabricator:</strong> {modalProject.fabricator}</p>
+                {modalProject.location && <p><strong>Location:</strong> {modalProject.location}</p>}
+                {modalProject.architect && <p><strong>Architect:</strong> {modalProject.architect}</p>}
+                {modalProject.builder && <p><strong>Builder:</strong> {modalProject.builder}</p>}
+                {modalProject.fabricator && <p><strong>Fabricator:</strong> {modalProject.fabricator}</p>}
               </div>
               <div>
                 <p className="font-semibold mb-2">Description</p>

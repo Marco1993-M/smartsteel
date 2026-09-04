@@ -1,14 +1,14 @@
 import RecentProjectsClient from "./RecentProjectsClient";
 
 export const metadata = {
-  title: "Recent Projects | Smart Steel",
+  title: "Recent Steel Structure Projects | Smart Steel South Africa",
   description:
-    "A gallery of recent Smart Steel projects and installation examples.",
+    "Explore completed Smart Steel projects, including Atlas solar carports, commercial steel structures, lightweight steel framing, and installation examples across South Africa.",
   alternates: {
     canonical: "/recent",
   },
   robots: {
-    index: false,
+    index: true,
     follow: true,
   },
 };
