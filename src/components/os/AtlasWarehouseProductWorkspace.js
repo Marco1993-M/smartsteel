@@ -625,6 +625,10 @@ export default function AtlasWarehouseProductWorkspace() {
   const readinessPercentage = Math.round((readinessCount / readiness.length) * 100)
   const selectedProduct = ATLAS_PRODUCT_RANGE.find((product) => product.code === selectedProductCode) || ATLAS_PRODUCT_RANGE[0]
   const selectProduct = (productCode) => {
+    if (productCode === "SOLAR-CARPORT") {
+      router.push("/os/atlas/solar-pricing")
+      return
+    }
     setSelectedProductCode(productCode)
     router.replace(withAtlasProduct("/os/atlas/products", productCode), { scroll: false })
   }
