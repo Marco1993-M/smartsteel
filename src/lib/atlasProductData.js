@@ -6,7 +6,7 @@ export const ATLAS_W_SERIES = [
     title: "Compact warehouse footprint",
     bestFor: "Storage, workshops, smaller agricultural operations, and covered work areas.",
     configuration: "Configurable length in practical bays",
-    href: "/warehouse-builder?productType=LCSS%20Warehouse&width=8&length=20",
+    href: "/warehouse-builder?productType=Atlas%20Warehouse&width=8&length=20",
   },
   {
     code: "W10",
@@ -15,7 +15,7 @@ export const ATLAS_W_SERIES = [
     title: "Balanced everyday warehouse",
     bestFor: "Operational storage, workshops, distribution support, and mixed-use commercial space.",
     configuration: "Configurable length in practical bays",
-    href: "/warehouse-builder?productType=LCSS%20Warehouse&width=10&length=20",
+    href: "/warehouse-builder?productType=Atlas%20Warehouse&width=10&length=20",
     featured: true,
   },
   {
@@ -25,7 +25,7 @@ export const ATLAS_W_SERIES = [
     title: "Wider operational space",
     bestFor: "Larger storage, agricultural equipment, production support, and commercial operations.",
     configuration: "Configurable length in practical bays",
-    href: "/warehouse-builder?productType=LCSS%20Warehouse&width=12&length=20",
+    href: "/warehouse-builder?productType=Atlas%20Warehouse&width=12&length=20",
   },
 ]
 
