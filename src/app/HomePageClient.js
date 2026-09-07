@@ -236,17 +236,12 @@ export default function HomePageClient() {
         />
       ))}
 
+      <div
+        style={{
+          background: 'linear-gradient(180deg, #ffffff 0%, #ffffff 5%, #eef5fc 28%, #dce9f5 68%, #cbddec 100%)',
+        }}
+      >
       <section className="relative overflow-hidden px-4 pb-10 pt-20 sm:px-6 md:pb-18 md:pt-28">
-        <Image
-          src="/warehouse-13m.jpg"
-          alt="Smart Steel Atlas modular steel warehouse system in South Africa"
-          fill
-          priority
-          quality={85}
-          sizes="100vw"
-          className="object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(244,248,253,0.96)_12%,rgba(238,243,251,0.92)_32%,rgba(238,243,251,0.92)_100%)]" />
         <div className="relative z-10 mx-auto max-w-7xl">
           <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-8">
             <div className="order-2 space-y-3 lg:order-1 lg:space-y-4">
@@ -385,7 +380,7 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      <section className="bg-[#eef3fb] px-6 pb-10">
+      <section className="px-6 pb-10">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-12">
             {heroGallery.map((item) => (
@@ -405,6 +400,7 @@ export default function HomePageClient() {
           </div>
         </div>
       </section>
+      </div>
 
       <section className="bg-white px-6 pb-6 pt-10 md:pt-14">
         <div className="mx-auto max-w-6xl">
