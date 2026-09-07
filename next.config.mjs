@@ -3,8 +3,9 @@ const nextConfig = {
   images: {
     qualities: [75, 85],
   },
+  // Resolve aliases and traced files from the project being built on every host.
   turbopack: {
-    root: '/Users/marcogerritsen/Desktop/Dev Files/smartsteel',
+    root: process.cwd(),
   },
   outputFileTracingIncludes: {
     "/api/estimates/*/pdf": [
