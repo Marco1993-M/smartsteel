@@ -15,7 +15,17 @@ const DEFAULT_SOLAR_PANEL_WIDTH_METERS = 1.134
 const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
 const SolarCarportPreview = dynamic(
   () => import("../../../components/solar-carport/SolarCarportPreview"),
-  { ssr: false, loading: () => <div className="h-[270px] animate-pulse border border-[#c1d9e5] bg-[#edf3f7] sm:h-[320px]" /> }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid h-[290px] place-items-center rounded-[1.6rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)] sm:h-[360px]">
+        <div className="text-center">
+          <span className="mx-auto block h-2 w-24 animate-pulse rounded-full bg-[#0043f3]/25" />
+          <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#667b91]">Preparing Atlas 3D view</p>
+        </div>
+      </div>
+    ),
+  }
 )
 
 const SOLAR_CARPORT_WIDTH_OPTIONS = [1, 2, 4, 6, 8].map((parkingCount) => ({
@@ -237,28 +247,32 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     <main className="min-h-screen overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#edf4f8_18rem,#edf4f8_100%)] px-4 pb-28 pt-24 text-[#001d2e] sm:px-6 sm:pt-28 lg:px-8 lg:pb-10">
       <div className="mx-auto max-w-[1380px]">
         <section
-          className="relative overflow-hidden border border-[#001d2e] bg-[#001d2e] px-6 py-10 text-white shadow-[0_24px_70px_-42px_rgba(0,29,46,0.9)] sm:px-9 sm:py-12 lg:px-12"
+          className="relative overflow-hidden rounded-[1.3rem] border border-[#0043f3]/25 bg-[#001d2e] px-4 py-4 text-white shadow-sm sm:rounded-[1.6rem] sm:px-6 sm:py-5"
           style={{ background: "linear-gradient(118deg, #001d2e 0%, #073c8d 58%, #0043f3 100%)" }}
         >
-          <div className="pointer-events-none absolute -right-24 -top-40 h-[34rem] w-48 rotate-[42deg] bg-white/10" />
-          <div className="pointer-events-none absolute -right-4 -top-32 h-[34rem] w-32 rotate-[42deg] bg-[#c1d9e5]/15" />
-          <div className="relative max-w-4xl">
-            <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={320} height={50} className="h-10 w-auto max-w-full object-contain object-left sm:h-12" priority />
-            <p className="mt-8 text-xs font-bold uppercase tracking-[0.25em] text-[#c1d9e5]">
-              Atlas Solar Carport Estimator
-            </p>
-            <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-[-0.05em] text-white sm:text-5xl lg:text-6xl">
-              Price your Atlas solar carport before you enquire.
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/75 sm:text-lg">
-              Choose the parking layout and see a practical structure-only starting budget immediately. No contact details are needed until you decide to continue.
-            </p>
-            <Link
-              href="/products"
-              className="mt-6 inline-flex border-b border-white/45 pb-1 text-sm font-bold text-white transition hover:border-white"
-            >
-              Explore all Smart Steel products
-            </Link>
+          <div className="pointer-events-none absolute -right-24 -top-36 h-72 w-72 rotate-45 border-[28px] border-white/[0.07]" />
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="mb-2 flex items-center gap-3 sm:mb-4">
+                <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={240} height={48} className="h-6 max-w-[190px] object-contain object-left sm:h-8 sm:max-w-none" priority />
+                <span className="hidden h-7 w-px bg-white/20 sm:block" />
+                <p className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] text-white/65 sm:block">Live configuration</p>
+              </div>
+              <p className="hidden text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c1d9e5] sm:block">Atlas solar carport estimator</p>
+              <h1 className="text-xl font-semibold tracking-tight text-white sm:mt-2 sm:text-3xl lg:text-[2rem]">
+                Build and price your Atlas solar carport
+              </h1>
+              <p className="mt-2 hidden max-w-2xl text-sm leading-6 text-white/70 sm:block">
+                Configure a modular ZAM steel carport and see the structure-only budget update live.
+              </p>
+            </div>
+            <div className="hidden flex-wrap gap-2 sm:flex lg:max-w-[460px] lg:justify-end">
+              {["Interactive 3D preview", "Live guide excl. VAT", "ZAM steel system"].map((item) => (
+                <span key={item} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75 backdrop-blur">
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -291,15 +305,6 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
         <section className="mt-6 grid items-start gap-6 lg:grid-cols-12">
           <div className="min-w-0 border border-[#c1d9e5] bg-white p-4 shadow-[0_24px_60px_-48px_rgba(0,29,46,0.8)] sm:p-6 lg:sticky lg:top-24 lg:col-span-7">
             <SolarCarportPreview parkingCount={selectedParkingCount} rowLength={formState.length} />
-            <div className="mt-4 flex items-center justify-between gap-4 border-t border-[#c1d9e5] pt-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0043f3]">Live Atlas configuration</p>
-                <p className="mt-1 text-sm font-bold text-[#001d2e]">
-                  {selectedParkingCount === 1 ? "Single car" : `${selectedParkingCount} cars`} · {formState.length === 6 ? "Single row" : "Double row"}
-                </p>
-              </div>
-              <p className="shrink-0 text-sm font-semibold text-[#001d2e]/55">ZAM steel</p>
-            </div>
           </div>
 
           <div id="solar-carport-workspace" className="min-w-0 space-y-4 scroll-mt-24 lg:col-span-5">
