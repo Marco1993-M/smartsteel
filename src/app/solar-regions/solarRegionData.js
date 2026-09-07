@@ -1,6 +1,6 @@
 const SITE_URL = "https://www.smartsteel.co.za";
 
-export const SOLAR_CARPORT_WIDTHS = [3, 5, 7.5, 10];
+export const SOLAR_CARPORT_WIDTHS = [2.75, 5.5, 11, 16.5, 22];
 export const SOLAR_CARPORT_LENGTHS = [6, 12];
 
 const solarRegionPages = {

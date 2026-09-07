@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server"
 import { supabaseServer } from "../../../lib/supabase-server"
+import { readSolarPricing } from '../../../lib/solarCarportPricingServer'
+import { calculateAtlasSolarCarportEstimate } from '../../../lib/estimates/atlasSolarCarportEstimate'
+import { validateSolarEstimateInput } from '../../../lib/estimates/solarEstimate'
 import {
   isAtlasWarehouseProductType,
   normalizeAtlasProductType,
@@ -360,6 +363,17 @@ export async function POST(request) {
       )
     }
 
+    if (body.lead_source === 'Solar Carport Estimator') {
+      const release = await readSolarPricing()
+      if (!release) return NextResponse.json({ error: 'Solar pricing is currently unavailable.' }, { status: 503 })
+      const current = calculateAtlasSolarCarportEstimate(validateSolarEstimateInput({ ...body.solarInput, productType: 'Solar carport' }), release)
+      if (body.solarPricingRevision !== release.revision || Number(body.quote_value) !== current.pricing.estimatedTotal) {
+        return NextResponse.json({ error: 'Pricing has changed. Please review the updated estimate and submit again.' }, { status: 409 })
+      }
+      body.quote_value = current.pricing.estimatedTotal
+      body.estimate_request = current.summary.estimateRequest
+      body.notes = `${body.notes || ''}\nOS solar pricing revision: ${release.revision}`
+    }
     const insertPayload = isBuilderSubmission
       ? {
           name: body.name,
