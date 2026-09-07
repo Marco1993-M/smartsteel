@@ -76,7 +76,7 @@ function normalizeAtlasSheetingMode(value) {
 
 function getLeadSheetingMode(lead) {
   const source = `${lead?.estimate_request || ""}\n${lead?.notes || ""}`.toLowerCase()
-  if (/roof and walls|fully enclosed|sheeted gable/.test(source)) return "fully_enclosed"
+  if (/roof and (?:side )?walls|fully enclosed|sheeted gable/.test(source)) return "fully_enclosed"
   if (/roof sheeting|roof only|open gable/.test(source)) return "roof_only"
   return "structure_only"
 }
@@ -236,13 +236,15 @@ function stripVersionSuffix(title) {
 
 function buildInitialState(lead, estimate) {
   const latestInput = estimate?.input_data || {}
+  const builderConfiguration = lead?.builder_configuration || {}
   const productType =
     latestInput.productType ||
     estimate?.product_type ||
+    builderConfiguration.productType ||
     lead?.product_type ||
     "LSF Warehouse"
-  const width = Number(latestInput.width || lead?.width || 8)
-  const length = Number(latestInput.length || lead?.length || 10)
+  const width = Number(latestInput.width || builderConfiguration.width || lead?.width || 8)
+  const length = Number(latestInput.length || builderConfiguration.length || lead?.length || 10)
   const solarProduct = isSolarEstimateProduct(productType)
   const useCustomSize =
     typeof latestInput.useCustomSize === "boolean"
@@ -260,7 +262,7 @@ function buildInitialState(lead, estimate) {
     width,
     length,
     useCustomSize,
-    wallHeight: Number(latestInput.wallHeight || lead?.wall_height || 3),
+    wallHeight: Number(latestInput.wallHeight || builderConfiguration.wallHeight || lead?.wall_height || 3),
     quantity: Math.max(1, Number(latestInput.quantity || 1)),
     discountPercent: Math.min(100, Math.max(0, Number(latestInput.discountPercent || 0))),
     roofStyle: latestInput.roofStyle || "dual_pitch",
@@ -269,8 +271,8 @@ function buildInitialState(lead, estimate) {
     moduleCount: Math.max(0, Number(latestInput.moduleCount || 0)),
     cladding:
       isAtlasWarehouseEstimateProduct(productType)
-        ? latestInput.cladding || lead?.cladding || "IBR"
-        : latestInput.cladding || lead?.cladding || "None",
+        ? latestInput.cladding || builderConfiguration.cladding || builderConfiguration.sheetingProfile || lead?.cladding || "IBR"
+        : latestInput.cladding || builderConfiguration.cladding || lead?.cladding || "None",
     claddingInstalled:
       typeof latestInput.claddingInstalled === "boolean"
         ? latestInput.claddingInstalled
@@ -291,21 +293,27 @@ function buildInitialState(lead, estimate) {
         : false,
     steelFinish:
       latestInput.steelFinish ||
+      builderConfiguration.steelFinish ||
       getLeadSteelFinish(lead) ||
       (isAtlasWarehouseEstimateProduct(productType) ? "ZAM" : "Galv"),
     sheetingProfile:
       latestInput.sheetingProfile ||
-      (ATLAS_ALLOWED_SHEETING_PROFILES.includes(latestInput.cladding || lead?.cladding)
-        ? latestInput.cladding || lead?.cladding
+      builderConfiguration.sheetingProfile ||
+      (ATLAS_ALLOWED_SHEETING_PROFILES.includes(latestInput.cladding || builderConfiguration.cladding || lead?.cladding)
+        ? latestInput.cladding || builderConfiguration.cladding || lead?.cladding
         : "IBR"),
     sheetingFinish:
       ATLAS_ALLOWED_SHEETING_FINISHES.includes(latestInput.sheetingFinish)
         ? latestInput.sheetingFinish
-        : getLeadSheetingFinish(lead),
+        : ATLAS_ALLOWED_SHEETING_FINISHES.includes(builderConfiguration.sheetingFinish)
+          ? builderConfiguration.sheetingFinish
+          : getLeadSheetingFinish(lead),
     gableMode:
       latestInput.gableMode
         ? normalizeAtlasSheetingMode(latestInput.gableMode)
-        : getLeadSheetingMode(lead),
+        : builderConfiguration.gableMode
+          ? normalizeAtlasSheetingMode(builderConfiguration.gableMode)
+          : getLeadSheetingMode(lead),
     notes: estimate?.notes || "",
     estimateName: stripVersionSuffix(estimate?.title) || "",
     sourceSubmissionId:

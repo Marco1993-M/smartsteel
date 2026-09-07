@@ -1058,7 +1058,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   }
 
   const handleOpenEstimate = async (lead) => {
-    if (!lead?.id || lead.builder_submission_id || lead.design_reference) {
+    if (!lead?.id || lead.builder_configuration) {
       setEstimatingLead(lead)
       return
     }
@@ -1071,13 +1071,17 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       .limit(1)
       .maybeSingle()
 
-    if (error) console.warn("Could not load the builder reference for this estimate:", error)
+    if (error) {
+      console.warn("Could not load the builder reference for this estimate:", error)
+      setEstimatingLead(lead)
+      return
+    }
     const configuration = data?.configuration || {}
     const summary = data?.summary || {}
     setEstimatingLead({
       ...lead,
-      builder_submission_id: data?.id || "",
-      design_reference: configuration.designReference || summary.designReference || "",
+      builder_submission_id: data?.id || lead.builder_submission_id || "",
+      design_reference: configuration.designReference || summary.designReference || lead.design_reference || "",
       builder_configuration: configuration,
     })
   }
