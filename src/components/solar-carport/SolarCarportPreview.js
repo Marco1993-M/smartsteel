@@ -1,9 +1,10 @@
 "use client"
 
-import { Canvas } from "@react-three/fiber"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { ContactShadows, OrbitControls } from "@react-three/drei"
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
+import Atlas3DViewerShell from "../atlas/Atlas3DViewerShell"
 import ChannelGeometry from "./ChannelGeometry"
 import { calculateSolarCarportGeometry } from 'lib/atlasSolarCarportGeometry'
 import {
@@ -56,7 +57,28 @@ function SolarPanel({ x, y, z, width, depth, pitchDirection = 1 }) {
   )
 }
 
-function CantileverRow({ parkingCount, direction = 1, offsetZ = 0 }) {
+function CameraRig({ position, target, controlsRef }) {
+  const { camera } = useThree()
+  const movingRef = useRef(true)
+  const destination = useMemo(() => new THREE.Vector3(...position), [position])
+  const targetDestination = useMemo(() => new THREE.Vector3(...target), [target])
+
+  useEffect(() => {
+    movingRef.current = true
+  }, [destination, targetDestination])
+
+  useFrame(() => {
+    if (!movingRef.current) return
+    camera.position.lerp(destination, 0.1)
+    controlsRef.current?.target.lerp(targetDestination, 0.1)
+    controlsRef.current?.update()
+    if (camera.position.distanceTo(destination) < 0.02) movingRef.current = false
+  })
+
+  return null
+}
+
+function CantileverRow({ parkingCount, direction = 1, offsetZ = 0, structureView = false }) {
   const structureLength = parkingCount * MODULE_WIDTH
   const schedule = calculateSolarCarportGeometry({ width: structureLength, length: 6 })
   const frameCount = schedule.frames
@@ -118,7 +140,7 @@ function CantileverRow({ parkingCount, direction = 1, offsetZ = 0 }) {
         ))
       })}
 
-      {Array.from({ length: panelColumns }, (_, column) =>
+      {!structureView && Array.from({ length: panelColumns }, (_, column) =>
         Array.from({ length: panelRows }, (_, row) => {
           const x = -structureLength / 2 + panelWidth / 2 + column * (structureLength / panelColumns)
           const localZ = -ROOF_DEPTH / 2 + panelDepth / 2 + row * (ROOF_DEPTH / panelRows)
@@ -140,7 +162,7 @@ function CantileverRow({ parkingCount, direction = 1, offsetZ = 0 }) {
   )
 }
 
-function SolarCarportModel({ parkingCount, rowLength }) {
+function SolarCarportModel({ parkingCount, rowLength, structureView }) {
   const isDoubleRow = rowLength === 12
   const structureLength = parkingCount * MODULE_WIDTH
   const slabDepth = isDoubleRow ? ROOF_DEPTH * 2 + 1.3 : ROOF_DEPTH + 1.2
@@ -151,11 +173,11 @@ function SolarCarportModel({ parkingCount, rowLength }) {
     <group position={[0, -1.18, 0]} scale={Math.min(1, 8.8 / structureLength)}>
       {isDoubleRow ? (
         <>
-          <CantileverRow parkingCount={parkingCount} direction={1} offsetZ={-rearColumnOffset - centreGap} />
-          <CantileverRow parkingCount={parkingCount} direction={-1} offsetZ={rearColumnOffset + centreGap} />
+          <CantileverRow parkingCount={parkingCount} direction={1} offsetZ={-rearColumnOffset - centreGap} structureView={structureView} />
+          <CantileverRow parkingCount={parkingCount} direction={-1} offsetZ={rearColumnOffset + centreGap} structureView={structureView} />
         </>
       ) : (
-        <CantileverRow parkingCount={parkingCount} />
+        <CantileverRow parkingCount={parkingCount} structureView={structureView} />
       )}
 
       <mesh position={[0, -0.04, 0]} receiveShadow>
@@ -168,25 +190,55 @@ function SolarCarportModel({ parkingCount, rowLength }) {
 
 export default function SolarCarportPreview({ parkingCount, rowLength }) {
   const controlsRef = useRef(null)
+  const [cameraView, setCameraView] = useState("overview")
+  const isDoubleRow = rowLength === 12
+  const structureLength = parkingCount * MODULE_WIDTH
+  const modelScale = Math.min(1, 8.8 / structureLength)
+  const displayWidth = structureLength * modelScale
+  const displayDepth = (isDoubleRow ? ROOF_DEPTH * 2 + 0.4 : ROOF_DEPTH) * modelScale
+  const cameraDistance = Math.max(7.4, Math.sqrt(displayWidth ** 2 + displayDepth ** 2) * 1.02)
+  const cameraPositions = useMemo(() => ({
+    overview: [cameraDistance * 0.72, cameraDistance * 0.46, -cameraDistance * 0.78],
+    structure: [-cameraDistance * 0.7, cameraDistance * 0.42, -cameraDistance * 0.72],
+    front: [0, cameraDistance * 0.3, -cameraDistance],
+    side: [cameraDistance, cameraDistance * 0.32, 0],
+  }), [cameraDistance])
+  const orbitTarget = [0, -0.05, 0]
+  const configurationLabel = `${parkingCount === 1 ? "Single car" : `${parkingCount} cars`} · ${isDoubleRow ? "Double row butterfly" : "Single row cantilever"}`
+  const description = `Interactive 3D model of an Atlas ${configurationLabel.toLowerCase()} solar carport in ZAM steel. Use the view controls or drag to rotate.`
+
+  const resetView = () => {
+    setCameraView("overview")
+    controlsRef.current?.reset()
+  }
 
   return (
-    <div className="relative h-[270px] overflow-hidden border border-[#c1d9e5] bg-[#edf3f7] sm:h-[320px]">
-      <div className="pointer-events-none absolute left-4 top-4 z-10">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">Live product preview</p>
-        <p className="mt-1 text-sm font-semibold text-[#001d2e]">{parkingCount === 1 ? "Single car" : `${parkingCount} cars`} · {rowLength === 12 ? "Double row butterfly" : "Single row cantilever"}</p>
-      </div>
-      <button type="button" onClick={() => controlsRef.current?.reset()} className="absolute right-3 top-3 z-10 border border-[#c1d9e5] bg-white/90 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#001d2e] shadow-sm" aria-label="Reset 3D view">Reset view</button>
+    <Atlas3DViewerShell
+      title="Live Atlas configuration"
+      subtitle={configurationLabel}
+      badge="ZAM steel"
+      description={description}
+      views={[
+        { value: "overview", label: "Overview" },
+        { value: "structure", label: "Structure" },
+        { value: "front", label: "Front" },
+        { value: "side", label: "Side" },
+      ]}
+      activeView={cameraView}
+      onViewChange={setCameraView}
+      onReset={resetView}
+    >
       <Canvas camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
         <color attach="background" args={["#edf3f7"]} />
+        <fog attach="fog" args={["#edf3f7", 10, 18]} />
         <ambientLight intensity={1.35} />
         <directionalLight position={[5, 8, 6]} intensity={1.8} castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} />
         <directionalLight position={[-5, 3, -4]} intensity={0.45} />
-        <SolarCarportModel parkingCount={parkingCount} rowLength={rowLength} />
+        <CameraRig position={cameraPositions[cameraView]} target={orbitTarget} controlsRef={controlsRef} />
+        <SolarCarportModel parkingCount={parkingCount} rowLength={rowLength} structureView={cameraView === "structure"} />
         <ContactShadows position={[0, -1.2, 0]} opacity={0.28} scale={14} blur={2.4} far={4} resolution={256} color="#8293a0" />
-        <OrbitControls ref={controlsRef} makeDefault enablePan={false} minDistance={6} maxDistance={15} minPolarAngle={Math.PI / 5} maxPolarAngle={Math.PI / 2.05} />
+        <OrbitControls ref={controlsRef} makeDefault enablePan={false} target={orbitTarget} minDistance={5.5} maxDistance={cameraDistance * 1.7} minPolarAngle={Math.PI / 5} maxPolarAngle={Math.PI / 2.05} />
       </Canvas>
-      <p className="pointer-events-none absolute bottom-3 left-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#667b91]">Drag to rotate</p>
-      <span className="absolute bottom-3 right-3 bg-white/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#001d2e]">ZAM steel standard</span>
-    </div>
+    </Atlas3DViewerShell>
   )
 }

@@ -40,7 +40,7 @@ export default function AtlasWSeriesLandingPage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  href="/warehouse-builder?productType=LCSS%20Warehouse"
+                  href="/warehouse-builder?productType=Atlas%20Warehouse"
                   className="rounded-full bg-[#d9a441] px-6 py-3.5 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f]"
                 >
                   Build my Atlas warehouse
@@ -257,7 +257,7 @@ export default function AtlasWSeriesLandingPage() {
             <p>Atlas is developed by Smart Steel, combining engineering, manufacturing, and practical construction experience into a repeatable modular infrastructure platform.</p>
             <p>For a warehouse project, that means you can start with a clear system, a real footprint, and a supply-only budget guide before your project moves into detailed review.</p>
             <div className="pt-3">
-              <Link href="/warehouse-builder?productType=LCSS%20Warehouse" className="inline-flex rounded-full bg-[#121a20] px-6 py-3.5 text-sm font-semibold text-[#f3f0e9] transition hover:bg-[#1c5b57]">
+              <Link href="/warehouse-builder?productType=Atlas%20Warehouse" className="inline-flex rounded-full bg-[#121a20] px-6 py-3.5 text-sm font-semibold text-[#f3f0e9] transition hover:bg-[#1c5b57]">
                 Configure my Atlas warehouse
               </Link>
             </div>
