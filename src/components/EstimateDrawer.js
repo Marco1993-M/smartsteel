@@ -50,6 +50,13 @@ const ATLAS_ALLOWED_GABLE_MODES = ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) 
 const ATLAS_ALLOWED_SHEETING_PROFILES = ["Corrugated", "IBR", "Concealed Fix"]
 const ATLAS_ALLOWED_SHEETING_FINISHES = ["galvanised", "chromadek"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
+const SOLAR_CARPORT_WIDTH_OPTIONS = [2.75, 5.5, 11, 16.5, 22]
+const SOLAR_CARPORT_LENGTH_OPTIONS = [6, 12]
+const SOLAR_PANEL_AREA_M2 = 2.278 * 1.134
+
+function getSolarCarportPanelCount(width, length) {
+  return Math.max(1, Math.floor((Number(width) * Number(length) * 0.82) / SOLAR_PANEL_AREA_M2))
+}
 
 function getLeadSteelFinish(lead) {
   if (ATLAS_ALLOWED_STEEL_FINISHES.includes(lead?.steelFinish)) return lead.steelFinish
@@ -187,6 +194,19 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
     nextState.includeTransport =
       typeof previousState.includeTransport === "boolean" ? previousState.includeTransport : false
     nextState.steelFinish = previousState.steelFinish || "Galv"
+
+    if (nextProductType === "Solar carport") {
+      nextState.width = SOLAR_CARPORT_WIDTH_OPTIONS.includes(Number(previousState.width))
+        ? Number(previousState.width)
+        : 5.5
+      nextState.length = SOLAR_CARPORT_LENGTH_OPTIONS.includes(Number(previousState.length))
+        ? Number(previousState.length)
+        : 6
+      nextState.wallHeight = 2.44
+      nextState.moduleCount = getSolarCarportPanelCount(nextState.width, nextState.length)
+      nextState.steelFinish = "ZAM"
+      return nextState
+    }
 
     if (nextProductType === "Solar ground mount") {
       return applyGroundMountDefaults(nextState)
@@ -534,6 +554,7 @@ export default function EstimateDrawer({
   const [revisionMode, setRevisionMode] = useState("new")
   const previousProductTypeRef = useRef(buildInitialState(lead, latestEstimate).productType)
   const isSolarEstimate = isSolarEstimateProduct(formState.productType)
+  const isSolarCarportEstimate = formState.productType === "Solar carport"
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
   const isTrussEstimate = isTrussEstimateProduct(formState.productType)
   const solarPricing = useSolarCarportEstimate({ ...formState, quantity: 1 }, true)
@@ -689,6 +710,10 @@ export default function EstimateDrawer({
 
       if ((field === "moduleCount" || field === "productType") && nextState.productType === "Solar ground mount") {
         return applyGroundMountDefaults(nextState)
+      }
+
+      if (nextState.productType === "Solar carport" && (field === "width" || field === "length")) {
+        nextState.moduleCount = getSolarCarportPanelCount(nextState.width, nextState.length)
       }
 
       return nextState
@@ -1034,6 +1059,18 @@ export default function EstimateDrawer({
                               <option key={option} value={option}>{option}m</option>
                             ))}
                           </select>
+                        ) : isSolarCarportEstimate ? (
+                          <select
+                            value={formState.width}
+                            onChange={(event) => handleChange("width", Number(event.target.value))}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          >
+                            {SOLAR_CARPORT_WIDTH_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}m · {option === 2.75 ? "single car" : `${Math.round(option / 2.75)} cars`}
+                              </option>
+                            ))}
+                          </select>
                         ) : formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
                           <input
                             type="number"
@@ -1076,6 +1113,15 @@ export default function EstimateDrawer({
                             {ATLAS_ALLOWED_LENGTHS.map((option) => (
                               <option key={option} value={option}>{option}m</option>
                             ))}
+                          </select>
+                        ) : isSolarCarportEstimate ? (
+                          <select
+                            value={formState.length}
+                            onChange={(event) => handleChange("length", Number(event.target.value))}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                          >
+                            <option value={6}>6m · single row</option>
+                            <option value={12}>12m · double row</option>
                           </select>
                         ) : formState.useCustomSize || isSolarEstimate || isTrussEstimate ? (
                           <input
@@ -1172,6 +1218,10 @@ export default function EstimateDrawer({
                         {isGroundMountEstimate ? (
                           <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
                             Structure-only baseline
+                          </div>
+                        ) : isSolarCarportEstimate ? (
+                          <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
+                            2.44m low edge · 2.95m high edge
                           </div>
                         ) : (
                           <input
@@ -1325,6 +1375,18 @@ export default function EstimateDrawer({
                       )}
                     </div> : null}
                   </div>
+                  ) : null}
+
+                  {isSolarCarportEstimate ? (
+                    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-slate-700">
+                      This estimate follows the controlled Atlas solar-carport layouts and live OS pricing. Custom heights or pitches require an engineering review and should be recorded in the estimate notes.
+                    </div>
+                  ) : null}
+
+                  {isSolarCarportEstimate && solarPricingPending ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+                      {solarPricing.error || "Loading current OS solar-carport pricing…"}
+                    </div>
                   ) : null}
 
                   {isGroundMountEstimate ? (
