@@ -5,7 +5,7 @@ import { ContactShadows, OrbitControls } from "@react-three/drei"
 import { useMemo, useRef } from "react"
 import * as THREE from "three"
 import ChannelGeometry from "./ChannelGeometry"
-import { calculateSolarCarportGeometry } from '@/lib/atlasSolarCarportGeometry'
+import { calculateSolarCarportGeometry } from 'lib/atlasSolarCarportGeometry'
 import {
   ATLAS_SOLAR_CARPORT_PROFILES,
   ATLAS_SOLAR_CARPORT_PURLIN_COUNT,
@@ -13,7 +13,7 @@ import {
   ATLAS_SOLAR_CARPORT_RAFTER_LENGTH_METRES,
   sectionEnvelopeMetres,
   solarCarportPurlinProfile,
-} from "@/lib/atlasSolarCarportProfiles"
+} from "lib/atlasSolarCarportProfiles"
 
 const STEEL = { color: "#d4dadd", metalness: 0.55, roughness: 0.38 }
 const PANEL = { color: "#173b5c", metalness: 0.35, roughness: 0.2 }
