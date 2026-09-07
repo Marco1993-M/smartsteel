@@ -4,8 +4,8 @@ import Image from "next/image"
 import dynamic from "next/dynamic"
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { useSolarCarportEstimate } from '@/lib/useSolarCarportEstimate'
-import { ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES } from "@/lib/atlasSolarCarportProfiles"
+import { useSolarCarportEstimate } from 'lib/useSolarCarportEstimate'
+import { ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES } from "lib/atlasSolarCarportProfiles"
 import { calculateSolarEstimate, formatCurrency } from "../../../lib/estimates/solarEstimate"
 
 const DEFAULT_CLEARANCE_HEIGHT = 2.4
