@@ -236,7 +236,7 @@ export default function HomePageClient() {
         />
       ))}
 
-      <section className="relative overflow-hidden px-4 pb-12 pt-24 sm:px-6 md:pb-18 md:pt-28">
+      <section className="relative overflow-hidden px-4 pb-10 pt-20 sm:px-6 md:pb-18 md:pt-28">
         <Image
           src="/warehouse-13m.jpg"
           alt="Smart Steel Atlas modular steel warehouse system in South Africa"
@@ -248,29 +248,29 @@ export default function HomePageClient() {
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(244,248,253,0.96)_12%,rgba(238,243,251,0.92)_32%,rgba(238,243,251,0.92)_100%)]" />
         <div className="relative z-10 mx-auto max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-            <div className="space-y-4">
-              <div className="rounded-[2rem] border border-black/10 bg-white/92 p-4 shadow-sm backdrop-blur-sm sm:p-8">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/8 pb-4">
+          <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-8">
+            <div className="order-2 space-y-3 lg:order-1 lg:space-y-4">
+              <div className="rounded-[1.5rem] border border-black/10 bg-white/92 p-4 shadow-sm backdrop-blur-sm sm:rounded-[2rem] sm:p-8">
+                <div className="flex items-center justify-between gap-3 border-b border-black/8 pb-3 sm:pb-4">
                   <Image
                     src="/atlas/atlas-logo-horizontal-dark.png"
                     alt="Atlas System developed by Smart Steel"
                     width={210}
                     height={64}
-                    className="h-10 w-auto object-contain object-left sm:h-11"
+                    className="h-8 w-auto object-contain object-left sm:h-11"
                   />
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#2d63b8] sm:text-xs sm:tracking-[0.16em]">
                     Online warehouse builder
                   </p>
                 </div>
-                <h2 className="mt-5 text-2xl font-bold leading-tight text-black sm:text-4xl">
+                <h2 className="mt-4 text-xl font-bold leading-tight text-black sm:mt-5 sm:text-4xl">
                   Build and Price Your Warehouse
                 </h2>
 
-                <div className="mt-5">
+                <div className="mt-4 sm:mt-5">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">Warehouse span</p>
-                    <div className="mt-3 grid grid-cols-4 gap-2">
+                    <div className="mt-2.5 grid grid-cols-4 gap-2 sm:mt-3">
                       {ATLAS_WAREHOUSE_WIDTH_OPTIONS.map((width) => {
                         const active = selectedWidth === width;
 
@@ -280,14 +280,14 @@ export default function HomePageClient() {
                             type="button"
                             onClick={() => setSelectedWidth(width)}
                             aria-pressed={active}
-                            className={`relative overflow-hidden rounded-xl border px-2 pb-3 pt-5 text-center transition ${
+                            className={`relative min-h-[68px] overflow-hidden rounded-xl border px-1.5 pb-2 pt-3 text-center transition sm:min-h-0 sm:px-2 sm:pb-3 sm:pt-5 ${
                               active
                                 ? 'border-[#0043f3] bg-[#0043f3] text-white shadow-sm'
                                 : 'border-black/10 bg-white text-black hover:border-[#0043f3] hover:bg-[#f7f9ff]'
                             }`}
                           >
                             {width === 8 && (
-                              <span className={`absolute right-0 top-0 rounded-bl-lg px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.06em] sm:px-2 sm:text-[9px] ${
+                              <span className={`absolute right-0 top-0 hidden rounded-bl-lg px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.06em] sm:inline sm:px-2 sm:text-[9px] ${
                                 active ? 'bg-white text-[#0043f3]' : 'bg-[#0043f3] text-white'
                               }`}>
                                 Most popular
@@ -303,13 +303,13 @@ export default function HomePageClient() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_0.72fr]">
+                  <div className="mt-4 grid grid-cols-[1fr_auto] items-end gap-4 sm:grid-cols-[1fr_0.72fr]">
                     <label className="block">
                       <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">Building length</span>
                       <select
                         value={selectedLength}
                         onChange={(event) => setSelectedLength(Number(event.target.value))}
-                        className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-base font-semibold text-black outline-none transition focus:border-[#0043f3] focus:ring-2 focus:ring-[#0043f3]/15"
+                        className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none transition focus:border-[#0043f3] focus:ring-2 focus:ring-[#0043f3]/15 sm:px-4 sm:py-3 sm:text-base"
                       >
                         {ATLAS_LENGTH_OPTIONS.map((length) => (
                           <option key={length} value={length}>{length}m · {length / 4} {length === 4 ? 'bay' : 'bays'}</option>
@@ -317,15 +317,15 @@ export default function HomePageClient() {
                       </select>
                     </label>
 
-                    <div className="flex items-end pb-3 sm:justify-end">
+                    <div className="flex items-end pb-2.5 sm:pb-3 sm:justify-end">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2d63b8]">Standard eave height</p>
-                        <p className="mt-2 text-base font-bold text-black">{selectedHeight}m</p>
+                        <p className="mt-2 text-sm font-bold text-black sm:text-base">{selectedHeight}m</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-5 flex flex-col gap-3 border-t border-black/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="mt-4 flex flex-col gap-3 border-t border-black/10 pt-4 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:pt-5">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-500">Starting configuration</p>
                       <p className="mt-1 text-base font-bold text-black">{selectedWidth}m × {selectedLength}m × {selectedHeight}m</p>
@@ -349,7 +349,7 @@ export default function HomePageClient() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-2">
+              <div className="hidden flex-wrap items-center gap-x-6 gap-y-2 px-2 sm:flex">
                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">Also available</span>
                 {heroActions.map((item) => (
                   <Link
@@ -364,14 +364,15 @@ export default function HomePageClient() {
               </div>
             </div>
 
-            <div>
-              <h1 className="max-w-4xl text-4xl font-bold leading-tight text-black md:text-6xl">
+            <div className="order-1 lg:order-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0043f3] sm:text-xs">Atlas warehouse systems</p>
+              <h1 className="mt-2 max-w-4xl text-3xl font-bold leading-[1.08] text-black sm:text-4xl md:text-6xl">
                 Build and price your steel warehouse online
               </h1>
-              <p className="mt-5 max-w-3xl text-lg leading-8 text-black/80 md:text-xl">
+              <p className="mt-3 max-w-3xl text-base leading-6 text-black/75 sm:mt-5 sm:text-lg sm:leading-8 md:text-xl">
                 Choose an Atlas warehouse size, see a supply-only price, and refine your structure in 3D before requesting a reviewed quote.
               </p>
-              <ul className="mt-7 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <ul className="mt-5 hidden gap-3 sm:grid sm:grid-cols-3 lg:mt-7 lg:grid-cols-1">
                 {heroTrustBullets.map((bullet) => (
                   <li key={bullet} className="flex items-center gap-3 text-base font-semibold leading-6 text-gray-800">
                     <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#c1d9e5] text-xs text-[#001d2e]">✓</span>
