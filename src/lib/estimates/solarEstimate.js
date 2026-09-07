@@ -1,4 +1,5 @@
 import { formatCurrency } from "./warehouseEstimate"
+import { calculateAtlasSolarCarportEstimate } from './atlasSolarCarportEstimate.js'
 
 const DEFAULT_MARKUP = 1.32
 const DEFAULT_DELIVERY_MINIMUM = 1350
@@ -270,7 +271,7 @@ export function validateSolarEstimateInput(input) {
   const moduleCount = Math.max(0, Math.round(Number(input?.moduleCount) || 0))
   const deliveryDistance = Math.max(Number(input?.deliveryDistance) || 0, 0)
   const scope = input?.scope || (input?.claddingInstalled ? "supply_install" : "supply_only")
-  const steelFinish = productType === "Solar ground mount" ? "ZAM" : input?.steelFinish || "Galv"
+  const steelFinish = ["Solar ground mount", "Solar carport"].includes(productType) ? "ZAM" : input?.steelFinish || "Galv"
   const transportTrips = Math.max(0, Math.round(Number(input?.transportTrips) || 0))
   const includeStructureLabour =
     typeof input?.includeStructureLabour === "boolean" ? input.includeStructureLabour : false
@@ -586,6 +587,7 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
 
 export function calculateSolarEstimate(input) {
   const normalized = validateSolarEstimateInput(input)
+  if (normalized.productType === 'Solar carport') return calculateAtlasSolarCarportEstimate(normalized, input.solarPricingRelease || null)
   const {
     productType,
     width,
