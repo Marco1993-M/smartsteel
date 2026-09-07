@@ -1,6 +1,7 @@
 "use client"
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react"
+import { useSolarCarportEstimate } from "../lib/useSolarCarportEstimate"
 import { Dialog, Transition } from "@headlessui/react"
 import { ArrowLeft, Link2, Plus, Printer, Save, Trash2 } from "lucide-react"
 import {
@@ -535,10 +536,12 @@ export default function EstimateDrawer({
   const isSolarEstimate = isSolarEstimateProduct(formState.productType)
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
   const isTrussEstimate = isTrussEstimateProduct(formState.productType)
+  const solarPricing = useSolarCarportEstimate({ ...formState, quantity: 1 }, true)
+  const solarPricingPending = formState.productType === "Solar carport" && !solarPricing.estimate
   const preview = useMemo(() => {
     // Line items describe one priced unit. The estimate quantity is applied only
     // to the final sell total so changing it never rewrites edited line items.
-    const unitPreview = calculateEstimateByProductType(formState.productType, {
+    const unitPreview = solarPricing.estimate || calculateEstimateByProductType(formState.productType, {
       ...formState,
       quantity: 1,
     })
@@ -556,7 +559,7 @@ export default function EstimateDrawer({
       },
       summary: quantitySummary,
     }
-  }, [formState])
+  }, [formState, solarPricing.estimate])
   const [editableLineItems, setEditableLineItems] = useState(() =>
     buildEditableLineItemsFromEstimate(
       preview.lineItems,
@@ -1621,7 +1624,8 @@ export default function EstimateDrawer({
                                 onClick={() => openEstimateDocument(buildEstimatePdfUrl(estimate.id))}
                                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
                               >
-                                <Printer size={16} />
+                                {solarPricingPending && <span>{solarPricing.error || "Loading OS pricing…"}</span>}
+                  <Printer size={16} />
                                 Open PDF
                               </button>
                             ) : null}
@@ -1668,7 +1672,7 @@ export default function EstimateDrawer({
                 <button
                   type="button"
                   onClick={handlePrimarySaveAndOpen}
-                  disabled={isSaving}
+                  disabled={isSaving || solarPricingPending}
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Printer size={16} />
@@ -1677,7 +1681,7 @@ export default function EstimateDrawer({
                 <button
                   type="button"
                   onClick={handlePrimarySave}
-                  disabled={isSaving}
+                  disabled={isSaving || solarPricingPending}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Save size={16} />
