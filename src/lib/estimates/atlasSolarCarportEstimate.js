@@ -2,13 +2,16 @@ import { calculateSolarCarportGeometry } from '../atlasSolarCarportGeometry.js'
 
 export const SOLAR_COST_DEFAULTS = {
   zamRatePerTon: 28840, wastePercent: 0, fabricationPerKg: 0,
-  hardwarePerSquareMetre: 80, moduleSupportEach: 145,
+  anchorBracketEach: 350, armBracketEach: 175, purlinBracketEach: 40,
+  anchorBoltEach: 0, connectionBoltSetEach: 12, moduleSupportEach: 145,
   installationPerSquareMetre: 200, deliveryPerKm: 19, deliveryMinimum: 1350,
   upliftPercent: 40,
 }
 export const SOLAR_COST_LABELS = {
   zamRatePerTon: 'ZAM cost / ton', wastePercent: 'Steel waste %', fabricationPerKg: 'Fabrication / kg (provisional)',
-  hardwarePerSquareMetre: 'Hardware allowance / m² (provisional)', moduleSupportEach: 'Module supports / panel',
+  anchorBracketEach: 'Column anchoring bracket / each', armBracketEach: 'Diagonal-arm bracket / each',
+  purlinBracketEach: 'Purlin bracket / each', anchorBoltEach: 'Foundation anchor / each',
+  connectionBoltSetEach: 'Complete connection bolt set / each', moduleSupportEach: 'Module supports / panel',
   installationPerSquareMetre: 'Installation / m²', deliveryPerKm: 'Delivery / km', deliveryMinimum: 'Minimum delivery', upliftPercent: 'Uplift on cost %',
 }
 const money = n => Math.round((n + Number.EPSILON) * 100) / 100
@@ -17,7 +20,7 @@ export function calculateAtlasSolarCarportEstimate(input, release = null) {
   try { geometry = calculateSolarCarportGeometry(input) }
   catch (error) {
     if (release) throw error
-    geometry = { members: [], totalSteelKg: 0 }
+    geometry = { members: [], connections: [], totalSteelKg: 0 }
   }
   const quantity = Math.max(1, Math.round(Number(input.quantity) || 1))
   const modules = Math.max(0, Number(input.moduleCount) || 0) * quantity
@@ -32,7 +35,14 @@ export function calculateAtlasSolarCarportEstimate(input, release = null) {
     const kg = geometry.totalSteelKg * quantity
     add('SC-WASTE', 'Steel waste allowance', kg, 'kg', c.zamRatePerTon / 1000 * c.wastePercent / 100)
     add('SC-FAB', 'Fabrication allowance (provisional)', kg, 'kg', c.fabricationPerKg)
-    add('SC-HARDWARE', 'Connection hardware allowance (provisional)', totalArea, 'm²', c.hardwarePerSquareMetre)
+    const connectionRates = {
+      'SC-BRK-BASE': c.anchorBracketEach,
+      'SC-BRK-ARM': c.armBracketEach,
+      'SC-BRK-PUR': c.purlinBracketEach,
+      'SC-ANC': c.anchorBoltEach,
+      'SC-BLT': c.connectionBoltSetEach,
+    }
+    geometry.connections.forEach(item => add(item.code, `${item.label} (provisional)`, item.quantity * quantity, item.unit, connectionRates[item.code]))
     add('SC-MODULE', 'Module support interfaces', modules, 'each', c.moduleSupportEach)
     if (input.scope === 'supply_install') add('SC-INSTALL', 'Installation', totalArea, 'm²', c.installationPerSquareMetre)
     if (Number(input.deliveryDistance) > 0) add('SC-DELIVERY', 'Delivery', 1, 'lot', Math.max(c.deliveryMinimum, Number(input.deliveryDistance) * c.deliveryPerKm))
@@ -41,7 +51,7 @@ export function calculateAtlasSolarCarportEstimate(input, release = null) {
   const markupMultiplier = 1 + (release?.costs.upliftPercent ?? 40) / 100
   const estimatedTotal = release ? money(baseTotal * markupMultiplier) : null
   return {
-    input, lineItems: lines, members: geometry.members,
+    input, lineItems: lines, members: geometry.members, connections: geometry.connections,
     summary: { title: `${input.width}m x ${input.length}m Atlas Solar Carport`, estimateRequest: `${input.width}m x ${input.length}m · ZAM · ${quantity} structure(s) · ${scope}`, layoutNote: 'Nominal member lengths; connection detailing subject to manufacturing review.' },
     pricing: { baseTotal, markupMultiplier, estimatedTotal, competitorLow: estimatedTotal, competitorHigh: estimatedTotal },
     totals: { area, totalArea, totalModules: modules, steelKg: geometry.totalSteelKg * quantity },

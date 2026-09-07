@@ -45,7 +45,7 @@ export const ATLAS_PRODUCT_RANGE = [
     family: "Solar structures",
     status: "Commercially active",
     summary: "Parking structures designed to support practical solar layouts.",
-    available: false,
+    available: true,
   },
   {
     code: "GROUND-MOUNT",

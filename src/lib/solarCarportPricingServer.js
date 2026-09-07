@@ -7,7 +7,12 @@ export async function readSolarPricing() {
   const { data, error } = await supabaseServer.from('os_catalog_items').select('id,metadata,updated_at')
     .eq('platform_key', 'atlas').eq('kind', 'module').eq('title', SOLAR_PRICING_TITLE).maybeSingle()
   if (error) throw new Error('Could not load OS solar pricing.')
-  return data ? { ...data.metadata.solarPricing, id: data.id } : null
+  if (!data?.metadata?.solarPricing) return null
+  return {
+    ...data.metadata.solarPricing,
+    costs: { ...SOLAR_COST_DEFAULTS, ...data.metadata.solarPricing.costs },
+    id: data.id,
+  }
 }
 export function validateSolarCosts(costs) {
   const result = {}

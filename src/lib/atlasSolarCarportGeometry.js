@@ -32,5 +32,16 @@ export function calculateSolarCarportGeometry({ width = 5.5, length = 6 } = {}) 
     member('SC-PER', 'Front and rear perimeter purlins', profiles.rafter, 2 * bays, purlinLength),
     member('SC-PUR', 'Internal purlins', profiles.purlin, 4 * bays, purlinLength),
   ]
-  return { cars, rows, bays, frames, frameSpacing, depth, pitch, frontHeight, rearColumnHeight, rearZ, baseZ, frontArmZ: baseZ - frontRun, rearArmZ: baseZ + rearRun, members, totalSteelKg: members.reduce((sum, m) => sum + m.totalMassKg, 0) }
+  const connection = (code, label, quantity, basis) => ({ code, label, quantity, unit: 'each', basis, status: 'provisional' })
+  const baseBrackets = frames * rows
+  const armBrackets = frames * rows * 2
+  const purlinBrackets = bays * rows * 6 * 2
+  const connections = [
+    connection('SC-BRK-BASE', 'Column anchoring brackets', baseBrackets, `${frames} frames × ${rows} row(s)`),
+    connection('SC-BRK-ARM', 'Diagonal-arm connection brackets', armBrackets, `${frames} frames × 2 arms × ${rows} row(s)`),
+    connection('SC-BRK-PUR', 'Purlin connection brackets', purlinBrackets, `${bays * rows * 6} purlin lengths × 2 ends`),
+    connection('SC-ANC', 'Foundation anchor bolts', baseBrackets * 4, `${baseBrackets} anchoring brackets × 4 anchors`),
+    connection('SC-BLT', 'Complete connection bolt sets', armBrackets * 2 + purlinBrackets, `${armBrackets} arm brackets × 2 plus ${purlinBrackets} purlin brackets × 1`),
+  ]
+  return { cars, rows, bays, frames, frameSpacing, depth, pitch, frontHeight, rearColumnHeight, rearZ, baseZ, frontArmZ: baseZ - frontRun, rearArmZ: baseZ + rearRun, members, connections, totalSteelKg: members.reduce((sum, m) => sum + m.totalMassKg, 0) }
 }
