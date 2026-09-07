@@ -75,7 +75,7 @@ export default function AppShell({ children }) {
     <>
       <Navbar />
       {showBuilderBanner ? (
-        <div className="absolute left-0 top-16 z-40 w-full">
+        <div className="absolute left-0 top-16 z-40 hidden w-full md:block">
           <div className="flex w-full flex-col items-center justify-between gap-2 border-y border-white/25 bg-[#2d63b8]/92 px-4 py-2.5 text-center text-white shadow-lg backdrop-blur sm:flex-row sm:gap-3 sm:px-6 sm:py-3 lg:px-8 sm:text-left">
             <p className="text-sm font-medium leading-5 sm:text-base sm:leading-6">
               Build and price your custom warehouse at factory-direct rates with the Smart Steel online builder.
@@ -96,7 +96,7 @@ export default function AppShell({ children }) {
           </div>
         </div>
       ) : null}
-      <div className="pt-10">{children}</div>
+      <div className={showBuilderBanner ? "pt-0 md:pt-10" : "pt-10"}>{children}</div>
       <Footer />
     </>
   )

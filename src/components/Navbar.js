@@ -63,8 +63,8 @@ export default function Navbar() {
   }
 
   return (
-   <nav className="absolute top-0 left-0 w-full z-50 bg-transparent text-black">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+   <nav className="absolute left-0 top-0 z-50 w-full bg-white/95 text-black backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
+  <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
     <Link href="/" className="flex items-center">
           <Image
             src="/Logo.png"
@@ -72,7 +72,7 @@ export default function Navbar() {
             width={100}
             height={100}
             priority
-            style={{ width: 'auto', height: 'auto' }}
+            className="h-12 w-auto object-contain md:h-[100px]"
           />
         </Link>
 
@@ -118,7 +118,7 @@ export default function Navbar() {
         {/* Mobile Menu Toggle */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden focus:outline-none"
+          className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white/80 md:hidden focus:outline-none"
           aria-label="Toggle menu"
         >
           <svg
