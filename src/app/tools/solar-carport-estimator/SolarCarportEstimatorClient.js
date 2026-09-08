@@ -178,6 +178,23 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     setSubmitSuccess("")
   }
 
+  const resetConfiguration = () => {
+    setFormState({
+      width: defaultWidth,
+      length: defaultLength,
+      wallHeight: DEFAULT_CLEARANCE_HEIGHT,
+      quantity: initialQuantity > 0 ? initialQuantity : 1,
+      moduleCount: calculateEstimatedPanelCount(defaultWidth, defaultLength),
+      deliveryDistance: 0,
+      scope: "supply_only",
+      proceedTiming: "",
+    })
+    setActiveStage("configure")
+    setShowEnquiryForm(false)
+    setSubmitError("")
+    setSubmitSuccess("")
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     if (!estimate.meta.pricingReady) { setSubmitError('Please wait for current pricing before submitting.'); return }
@@ -307,8 +324,23 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             <SolarCarportPreview parkingCount={selectedParkingCount} rowLength={formState.length} />
           </div>
 
-          <div id="solar-carport-workspace" className="min-w-0 space-y-4 scroll-mt-24 lg:col-span-5">
-          <div className="grid grid-cols-3 border border-[#c1d9e5] bg-white p-1 shadow-[0_18px_40px_-32px_rgba(0,29,46,0.75)]">
+          <div id="solar-carport-workspace" className="min-w-0 scroll-mt-24 lg:col-span-5">
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3 px-1">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Plan details</h2>
+              <p className="mt-1 text-xs text-slate-500">Configure, review, and send your Atlas enquiry.</p>
+            </div>
+            <button
+              type="button"
+              onClick={resetConfiguration}
+              className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              Reset
+            </button>
+          </div>
+
+          <nav aria-label="Estimator progress" className="mb-4 grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
             {[
               { id: "configure", label: "Configure" },
               { id: "review", label: "Review" },
@@ -321,31 +353,31 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   setActiveStage(stage.id)
                   setShowEnquiryForm(stage.id === "enquire")
                 }}
-                className={`flex min-h-12 items-center justify-center gap-2 px-2 text-xs font-bold transition sm:text-sm ${
+                className={`flex min-w-0 items-center justify-center gap-1.5 border-r border-slate-200 px-1.5 py-2.5 text-[10px] font-semibold transition last:border-r-0 sm:text-xs ${
                   activeStage === stage.id
-                    ? "bg-[#001d2e] text-white"
-                    : "text-[#52647f] hover:bg-[#edf4f8] hover:text-[#001d2e]"
+                    ? "bg-white text-slate-900"
+                    : "text-slate-400 hover:text-slate-600"
                 }`}
               >
-                <span className={`grid h-5 w-5 place-items-center rounded-full text-[10px] ${activeStage === stage.id ? "bg-[#0043f3]" : "border border-[#c1d9e5]"}`}>
+                <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] ${activeStage === stage.id ? "bg-[#0043f3] text-white" : "border border-slate-300 bg-white"}`}>
                   {index + 1}
                 </span>
-                {stage.label}
+                <span className="truncate">{stage.label}</span>
               </button>
             ))}
-          </div>
+          </nav>
 
-          <div className={`${activeStage === "configure" ? "block" : "hidden"} border border-[#c1d9e5] bg-white p-4 shadow-[0_24px_60px_-48px_rgba(0,29,46,0.8)] sm:p-6`}>
+          <div className={`${activeStage === "configure" ? "block" : "hidden"} rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4`}>
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#0043f3]">
-              <span className="mt-6 block">Step 1: Your starting layout</span>
+              Step 1
             </p>
-            <h2 className="mt-3 text-2xl font-bold tracking-[-0.035em] text-[#001d2e] sm:text-3xl">
-              Choose the parking layout
+            <h2 className="mt-2 text-xl font-bold tracking-[-0.025em] text-[#001d2e]">
+              Set the parking layout
             </h2>
 
             <div className="mt-6">
               <p className="text-sm font-semibold text-slate-700">How many cars should the structure cover?</p>
-              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
                 {SOLAR_CARPORT_WIDTH_OPTIONS.map((option) => {
                   const isSelected = formState.width === option.width
                   return (
@@ -353,28 +385,25 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                       key={option.parkingCount}
                       type="button"
                       onClick={() => handleFieldChange("width", option.width)}
-                      className={`relative min-h-[112px] border p-4 text-left transition ${
+                      aria-pressed={isSelected}
+                      className={`group relative min-h-[92px] min-w-[88px] flex-1 rounded-xl border px-2.5 py-3 text-center transition ${
                         isSelected
-                          ? "border-[#0043f3] bg-[#0043f3] text-white shadow-[0_16px_30px_-24px_rgba(0,67,243,0.9)]"
-                          : "border-[#c1d9e5] bg-[#f6f9fb] text-[#001d2e] hover:border-[#0043f3]"
+                          ? "border-[#0043f3] bg-[#0043f3] text-white shadow-[0_12px_24px_-20px_rgba(0,67,243,0.9)]"
+                          : "border-[#c1d9e5] bg-[#f6f9fb] text-[#001d2e] hover:border-[#0043f3] hover:bg-white"
                       }`}
                     >
-                      <div
-                        className="grid h-7 w-full max-w-[116px] items-center gap-1 overflow-hidden"
-                        style={{ gridTemplateColumns: `repeat(${option.parkingCount}, minmax(0, 1fr))` }}
-                        aria-hidden="true"
-                      >
-                        {Array.from({ length: option.parkingCount }, (_, index) => (
-                          <img
-                            key={index}
-                            src="/car.png"
-                            alt=""
-                            className={`h-6 min-w-0 max-w-full justify-self-center object-contain ${isSelected ? "brightness-0 invert" : ""}`}
-                          />
-                        ))}
+                      <div className="flex items-center justify-center gap-1.5" aria-hidden="true">
+                        <img
+                          src="/car.png"
+                          alt=""
+                          className={`h-6 w-4 object-contain ${isSelected ? "brightness-0 invert" : ""}`}
+                        />
+                        <span className={`text-[10px] font-bold ${isSelected ? "text-white/70" : "text-slate-400"}`}>
+                          ×{option.parkingCount}
+                        </span>
                       </div>
-                      <p className={`mt-3 text-xs font-bold uppercase tracking-[0.16em] ${isSelected ? "text-[#c1d9e5]" : "text-[#0043f3]"}`}>{option.label}</p>
-                      <p className="mt-2 text-xl font-semibold">{option.width}m wide</p>
+                      <p className="mt-2 text-sm font-bold">{option.parkingCount === 1 ? "Single" : `${option.parkingCount} cars`}</p>
+                      <p className={`mt-0.5 text-[11px] font-semibold ${isSelected ? "text-[#c1d9e5]" : "text-[#667b91]"}`}>{option.width}m</p>
                     </button>
                   )
                 })}
@@ -383,7 +412,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
 
             <div className="mt-6">
               <p className="text-sm font-semibold text-slate-700">How should the parking run?</p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="mt-3 grid grid-cols-2 gap-2">
                 {SOLAR_CARPORT_LENGTH_OPTIONS.map((option) => {
                   const isSelected = formState.length === option.value
                   return (
@@ -391,14 +420,17 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                       key={option.value}
                       type="button"
                       onClick={() => handleFieldChange("length", option.value)}
-                      className={`border p-4 text-left transition ${
+                      aria-pressed={isSelected}
+                      className={`min-h-[72px] rounded-xl border px-3 py-3 text-left transition ${
                         isSelected
                           ? "border-[#0043f3] bg-[#0043f3] text-white"
-                          : "border-[#c1d9e5] bg-[#f6f9fb] text-[#001d2e] hover:border-[#0043f3]"
+                          : "border-[#c1d9e5] bg-[#f6f9fb] text-[#001d2e] hover:border-[#0043f3] hover:bg-white"
                       }`}
                     >
-                      <p className={`text-xs font-bold uppercase tracking-[0.16em] ${isSelected ? "text-[#c1d9e5]" : "text-[#0043f3]"}`}>{option.label}</p>
-                      <p className="mt-2 text-sm leading-5 opacity-75">{option.value === 6 ? "One practical parking row" : "Parking on both sides of the structure"}</p>
+                      <p className="text-sm font-bold">{option.value === 6 ? "Single row" : "Double row"}</p>
+                      <p className={`mt-1 text-xs leading-4 ${isSelected ? "text-white/70" : "text-[#667b91]"}`}>
+                        {option.value === 6 ? "6m · one side" : "12m · back to back"}
+                      </p>
                     </button>
                   )
                 })}
@@ -406,15 +438,15 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-[0.8fr_1.2fr]">
-              <div className="border border-[#c1d9e5] bg-white p-4">
+              <div className="rounded-xl border border-[#c1d9e5] bg-white p-4">
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Structures</p>
                 <div className="mt-3 flex items-center justify-between gap-3">
-                  <button type="button" onClick={() => handleFieldChange("quantity", Math.max(1, formState.quantity - 1))} className="grid h-9 w-9 place-items-center border border-[#c1d9e5] text-lg font-semibold text-[#001d2e] transition hover:border-[#0043f3]" aria-label="Remove structure">-</button>
+                  <button type="button" onClick={() => handleFieldChange("quantity", Math.max(1, formState.quantity - 1))} className="grid h-9 w-9 place-items-center rounded-lg border border-[#c1d9e5] text-lg font-semibold text-[#001d2e] transition hover:border-[#0043f3]" aria-label="Remove structure">-</button>
                   <p className="text-lg font-semibold">{formState.quantity}</p>
-                  <button type="button" onClick={() => handleFieldChange("quantity", formState.quantity + 1)} className="grid h-9 w-9 place-items-center border border-[#c1d9e5] text-lg font-semibold text-[#001d2e] transition hover:border-[#0043f3]" aria-label="Add structure">+</button>
+                  <button type="button" onClick={() => handleFieldChange("quantity", formState.quantity + 1)} className="grid h-9 w-9 place-items-center rounded-lg border border-[#c1d9e5] text-lg font-semibold text-[#001d2e] transition hover:border-[#0043f3]" aria-label="Add structure">+</button>
                 </div>
               </div>
-              <div className="border border-[#c1d9e5] bg-[#edf4f8] p-4">
+              <div className="rounded-xl border border-[#c1d9e5] bg-[#edf4f8] p-4">
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Estimated solar capacity</p>
                 <p className="mt-2 text-lg font-semibold text-[#121a20]">{formState.moduleCount} panels per structure</p>
                 <p className="mt-1 text-xs leading-5 text-[#121a20]/60">Based on a standard {DEFAULT_SOLAR_PANEL_WATTAGE}W panel layout.</p>
@@ -423,13 +455,13 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
 
             <div className="mt-5 flex items-center justify-between gap-4 border-t border-[#c1d9e5] pt-5">
               <p className="text-sm font-semibold text-[#52647f]">{formState.moduleCount} panels · ZAM steel</p>
-              <button type="button" onClick={() => setActiveStage("review")} className="bg-[#0043f3] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#073c8d]">
+              <button type="button" onClick={() => setActiveStage("review")} className="rounded-xl bg-[#0043f3] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#073c8d]">
                 Review estimate
               </button>
             </div>
           </div>
 
-          <div className={`${activeStage === "configure" ? "hidden" : "block"} border border-[#001d2e] bg-[#001d2e] p-5 text-white shadow-[0_24px_60px_-44px_rgba(0,29,46,0.95)] sm:p-6`}>
+          <div className={`${activeStage === "configure" ? "hidden" : "block"} rounded-[1.6rem] border border-[#001d2e] bg-[#001d2e] p-5 text-white sm:p-6`}>
             {activeStage === "review" ? (
             <>
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#c1d9e5]">
@@ -439,7 +471,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               Your Atlas solar carport estimate
             </h2>
 
-            <div className="mt-6 overflow-hidden border border-white/15 bg-[linear-gradient(125deg,#073c8d_0%,#0043f3_100%)] text-white">
+            <div className="mt-6 overflow-hidden rounded-2xl border border-white/15 bg-[linear-gradient(125deg,#073c8d_0%,#0043f3_100%)] text-white">
               <div className="px-6 py-6">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#c1d9e5]">
                   Structure-only starting budget
@@ -454,7 +486,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="border border-white/15 bg-white/[0.06] px-4 py-4">
+              <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Size
                 </p>
@@ -462,19 +494,19 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   {formatDimension(formState.width)} x {formatDimension(formState.length)}
                 </p>
               </div>
-              <div className="border border-white/15 bg-white/[0.06] px-4 py-4">
+              <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Structures
                 </p>
                 <p className="mt-2 text-sm font-semibold text-white">{formState.quantity}</p>
               </div>
-              <div className="border border-white/15 bg-white/[0.06] px-4 py-4">
+              <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Solar panels
                 </p>
                 <p className="mt-2 text-sm font-semibold text-white">{estimate.labels.modules}</p>
               </div>
-              <div className="border border-white/15 bg-white/[0.06] px-4 py-4">
+              <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Estimate scope
                 </p>
@@ -482,7 +514,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               </div>
             </div>
 
-            <div className="mt-6 border border-white/15 bg-white/[0.06] p-5">
+            <div className="mt-6 rounded-2xl border border-white/15 bg-white/[0.06] p-5">
               <p className="text-sm font-semibold text-white">Included in this estimate</p>
               <div className="mt-4 space-y-3">
                 {estimate.lineItems.map((item) => (
@@ -501,7 +533,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   setShowEnquiryForm(true)
                   setActiveStage("enquire")
                 }}
-                className="bg-white px-6 py-3 text-sm font-bold text-[#0043f3] transition hover:bg-[#c1d9e5]"
+                className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#0043f3] transition hover:bg-[#c1d9e5]"
               >
                 Continue with this estimate
               </button>
@@ -510,13 +542,13 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                 target="_blank"
                 rel="noreferrer"
                 onClick={reportAtlasSolarCarportConversion}
-                className="border border-[#25D366] bg-[#25D366] px-6 py-3 text-sm font-bold text-[#0b2715] transition hover:bg-[#1fbd58]"
+                className="rounded-xl border border-[#25D366] bg-[#25D366] px-6 py-3 text-sm font-bold text-[#0b2715] transition hover:bg-[#1fbd58]"
               >
                 Send via WhatsApp
               </a>
               <Link
                 href="/solar"
-                className="border border-white/30 px-6 py-3 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
+                className="rounded-xl border border-white/30 px-6 py-3 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
               >
                 Back to solar page
               </Link>
@@ -525,7 +557,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             ) : null}
 
             {activeStage === "enquire" && showEnquiryForm ? (
-              <form id="solar-carport-enquiry" onSubmit={handleSubmit} className="border border-[#c1d9e5] bg-white p-5 text-[#001d2e] sm:p-6">
+              <form id="solar-carport-enquiry" onSubmit={handleSubmit} className="rounded-2xl border border-[#c1d9e5] bg-white p-5 text-[#001d2e] sm:p-6">
                 <button type="button" onClick={() => setActiveStage("review")} className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">
                   ← Back to estimate
                 </button>
@@ -542,7 +574,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                     Name
                     <input
                       type="text"
-                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={enquiryState.name}
                       onChange={(event) => handleEnquiryChange("name", event.target.value)}
                     />
@@ -552,7 +584,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                     Email
                     <input
                       type="email"
-                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={enquiryState.email}
                       onChange={(event) => handleEnquiryChange("email", event.target.value)}
                     />
@@ -562,7 +594,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                     Phone
                     <input
                       type="text"
-                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={enquiryState.phone}
                       onChange={(event) => handleEnquiryChange("phone", event.target.value)}
                     />
@@ -571,7 +603,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
                     How soon are you looking to proceed?
                     <select
-                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={formState.proceedTiming}
                       onChange={(event) => handleFieldChange("proceedTiming", event.target.value)}
                     >
@@ -588,7 +620,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                     Anything else we should know?
                     <textarea
                       rows={4}
-                      className="mt-2 block w-full border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+                      className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900"
                       value={enquiryState.notes}
                       onChange={(event) => handleEnquiryChange("notes", event.target.value)}
                     />
@@ -606,13 +638,14 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   <button
                     type="submit"
                     disabled={isSubmitting || !estimate.meta.pricingReady}
-                    className="bg-[#0043f3] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#073c8d] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-xl bg-[#0043f3] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#073c8d] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSubmitting ? "Saving enquiry..." : "Send enquiry"}
                   </button>
                 </div>
               </form>
             ) : null}
+          </div>
           </div>
           </div>
         </section>
