@@ -24,6 +24,10 @@ import {
   TEAM_MEMBERS,
 } from "../../lib/crmReferenceData"
 import { supabase } from "../../lib/supabase"
+import {
+  indexLatestFollowUpSequences,
+  isCoveredByAutomatedFollowUp,
+} from "../../lib/crmFollowUpCoverage"
 
 const STATUS_OPTIONS = ["all", "new", "contacted", "quoted", "won", "lost"]
 const PRODUCT_LINE_FILTER_OPTIONS = ["all", "atlas", "lsf", "general"]
@@ -132,11 +136,6 @@ function isBeforeToday(dateValue) {
   today.setHours(0, 0, 0, 0)
   date.setHours(0, 0, 0, 0)
   return date < today
-}
-
-function isCoveredByAutomatedFollowUp(lead, sequencesByLead) {
-  const sequence = sequencesByLead[String(lead?.id || "")]
-  return sequence?.status === "active" && Boolean(sequence.next_send_at) && !sequence.last_error
 }
 
 function readLocalNextActions() {
@@ -582,12 +581,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       return
     }
 
-    const latestByLead = {}
-    for (const sequence of data || []) {
-      const leadId = String(sequence.lead_id || "")
-      if (leadId && !latestByLead[leadId]) latestByLead[leadId] = sequence
-    }
-    setFollowUpSequencesByLead(latestByLead)
+    setFollowUpSequencesByLead(indexLatestFollowUpSequences(data || []))
   }
 
   const fetchLeads = async () => {
