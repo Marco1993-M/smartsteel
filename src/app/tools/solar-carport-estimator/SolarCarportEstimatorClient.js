@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import dynamic from "next/dynamic"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useSolarCarportEstimate } from 'lib/useSolarCarportEstimate'
 import { ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES } from "lib/atlasSolarCarportProfiles"
@@ -13,6 +13,8 @@ const DEFAULT_SOLAR_PANEL_WATTAGE = 550
 const DEFAULT_SOLAR_PANEL_LENGTH_METERS = 2.278
 const DEFAULT_SOLAR_PANEL_WIDTH_METERS = 1.134
 const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
+const SOLAR_CARPORT_PLAN_STORAGE_KEY = "atlas-solar-carport-plan-v1"
+const PARKING_RUN_CLEARANCE_METRES = 7.5
 const SolarCarportPreview = dynamic(
   () => import("../../../components/solar-carport/SolarCarportPreview"),
   {
@@ -116,6 +118,8 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     moduleCount: calculateEstimatedPanelCount(defaultWidth, defaultLength),
   }])
   const [selectedRunId, setSelectedRunId] = useState("run-1")
+  const [planLoaded, setPlanLoaded] = useState(false)
+  const [saveStatus, setSaveStatus] = useState("Loading saved plan...")
   const [enquiryState, setEnquiryState] = useState({
     name: "",
     email: "",
@@ -148,12 +152,49 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   const selectedParkingCount = selectedRun?.parkingCount || 2
   const totalParkingSpaces = parkingRuns.reduce((sum, run) => sum + run.parkingCount * (run.length === 12 ? 2 : 1), 0)
   const totalPanelCapacity = parkingRuns.reduce((sum, run) => sum + run.moduleCount, 0)
+  const estimatedPowerKwp = totalPanelCapacity * DEFAULT_SOLAR_PANEL_WATTAGE / 1000
+  const siteWidth = Math.max(...parkingRuns.map((run) => run.width))
+  const siteDepth = parkingRuns.reduce((sum, run) => sum + run.length, 0)
+    + Math.max(0, parkingRuns.length - 1) * PARKING_RUN_CLEARANCE_METRES
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(SOLAR_CARPORT_PLAN_STORAGE_KEY) || "null")
+      if (Array.isArray(saved?.parkingRuns) && saved.parkingRuns.length > 0) {
+        const validRuns = saved.parkingRuns.filter((run) =>
+          SOLAR_CARPORT_WIDTH_OPTIONS.some((option) => option.width === Number(run.width))
+          && SOLAR_CARPORT_LENGTH_OPTIONS.some((option) => option.value === Number(run.length))
+        )
+        if (validRuns.length > 0) {
+          setParkingRuns(validRuns)
+          const run = validRuns.find((item) => item.id === saved.selectedRunId) || validRuns[0]
+          setSelectedRunId(run.id)
+          setFormState((current) => ({ ...current, width: run.width, length: run.length, moduleCount: run.moduleCount }))
+        }
+      }
+    } catch {
+      window.localStorage.removeItem(SOLAR_CARPORT_PLAN_STORAGE_KEY)
+    } finally {
+      setPlanLoaded(true)
+      setSaveStatus("Saved on this device")
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!planLoaded) return undefined
+    setSaveStatus("Saving...")
+    const timer = window.setTimeout(() => {
+      window.localStorage.setItem(SOLAR_CARPORT_PLAN_STORAGE_KEY, JSON.stringify({ parkingRuns, selectedRunId }))
+      setSaveStatus("Saved on this device")
+    }, 350)
+    return () => window.clearTimeout(timer)
+  }, [parkingRuns, planLoaded, selectedRunId])
 
   const whatsappMessage = [
     "Hi Smart Steel, I'd like to discuss an Atlas solar carport.",
     "",
     `Layout: ${parkingRuns.length} parking run${parkingRuns.length === 1 ? "" : "s"}, ${totalParkingSpaces} spaces total`,
-    ...parkingRuns.map((run, index) => `Run ${String.fromCharCode(65 + index)}: ${run.parkingCount} spaces, ${run.length === 12 ? "double-sided butterfly" : "single-sided"}`),
+    ...parkingRuns.map((run, index) => `Run ${String.fromCharCode(65 + index)}: ${run.parkingCount * (run.length === 12 ? 2 : 1)} spaces, ${run.length === 12 ? "double-sided butterfly" : "single-sided"}`),
     `Estimated panel capacity: ${totalPanelCapacity} panels total`,
     `Structure-only starting budget: ${priceLabel} excl. VAT`,
     "",
@@ -198,8 +239,22 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   }
 
   const addParkingRun = () => {
-    const source = selectedRun || parkingRuns[parkingRuns.length - 1]
-    const nextRun = { ...source, id: `run-${Date.now()}` }
+    const width = SOLAR_CARPORT_WIDTH_OPTIONS[1].width
+    const length = 6
+    const nextRun = {
+      id: `run-${Date.now()}`,
+      width,
+      length,
+      parkingCount: 2,
+      moduleCount: calculateEstimatedPanelCount(width, length),
+    }
+    setParkingRuns((runs) => [...runs, nextRun])
+    selectParkingRun(nextRun)
+  }
+
+  const duplicateParkingRun = () => {
+    if (!selectedRun) return
+    const nextRun = { ...selectedRun, id: `run-${Date.now()}` }
     setParkingRuns((runs) => [...runs, nextRun])
     selectParkingRun(nextRun)
   }
@@ -373,7 +428,16 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
 
         <section className="mt-6 grid items-start gap-6 lg:grid-cols-12">
           <div className="min-w-0 border border-[#c1d9e5] bg-white p-4 shadow-[0_24px_60px_-48px_rgba(0,29,46,0.8)] sm:p-6 lg:sticky lg:top-24 lg:col-span-7">
-            <SolarCarportPreview parkingCount={selectedParkingCount} rowLength={selectedRun?.length || 6} parkingRuns={parkingRuns} />
+            <SolarCarportPreview
+              parkingCount={selectedParkingCount}
+              rowLength={selectedRun?.length || 6}
+              parkingRuns={parkingRuns}
+              selectedRunId={selectedRunId}
+              onSelectRun={(runId) => {
+                const run = parkingRuns.find((item) => item.id === runId)
+                if (run) selectParkingRun(run)
+              }}
+            />
           </div>
 
           <div id="solar-carport-workspace" className="min-w-0 scroll-mt-24 lg:col-span-5">
@@ -381,7 +445,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
           <div className="mb-4 flex items-center justify-between gap-3 px-1">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Plan details</h2>
-              <p className="mt-1 text-xs text-slate-500">Configure, review, and send your Atlas enquiry.</p>
+              <p className="mt-1 text-xs text-slate-500">{saveStatus}</p>
             </div>
             <button
               type="button"
@@ -492,7 +556,10 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             <div className="mt-6">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Parking runs</p>
-                <button type="button" onClick={addParkingRun} className="rounded-full bg-[#0043f3] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#073c8d]">+ Add run</button>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={duplicateParkingRun} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200">Duplicate</button>
+                  <button type="button" onClick={addParkingRun} className="rounded-full bg-[#0043f3] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#073c8d]">+ Add run</button>
+                </div>
               </div>
               <div className="mt-3 space-y-2">
                 {parkingRuns.map((run, index) => {
@@ -511,16 +578,26 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               </div>
             </div>
 
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               <div className="rounded-xl border border-[#c1d9e5] bg-white p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Complete layout</p>
-                <p className="mt-2 text-lg font-semibold text-[#121a20]">{totalParkingSpaces} parking spaces</p>
-                <p className="mt-1 text-xs text-[#121a20]/60">Across {parkingRuns.length} run{parkingRuns.length === 1 ? "" : "s"}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0043f3]">Spaces</p>
+                <p className="mt-1 text-lg font-semibold text-[#121a20]">{totalParkingSpaces}</p>
+                <p className="text-xs text-[#121a20]/60">{parkingRuns.length} run{parkingRuns.length === 1 ? "" : "s"}</p>
               </div>
               <div className="rounded-xl border border-[#c1d9e5] bg-[#edf4f8] p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Estimated solar capacity</p>
-                <p className="mt-2 text-lg font-semibold text-[#121a20]">{totalPanelCapacity} panels total</p>
-                <p className="mt-1 text-xs leading-5 text-[#121a20]/60">Based on a standard {DEFAULT_SOLAR_PANEL_WATTAGE}W panel layout.</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0043f3]">Footprint</p>
+                <p className="mt-1 text-lg font-semibold text-[#121a20]">{formatDimension(siteWidth)} × {formatDimension(siteDepth)}</p>
+                <p className="text-xs text-[#121a20]/60">Includes 7.5m clear aisles</p>
+              </div>
+              <div className="rounded-xl border border-[#c1d9e5] bg-[#edf4f8] p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0043f3]">Panels</p>
+                <p className="mt-1 text-lg font-semibold text-[#121a20]">{totalPanelCapacity}</p>
+                <p className="text-xs text-[#121a20]/60">Indicative layout</p>
+              </div>
+              <div className="rounded-xl border border-[#c1d9e5] bg-white p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0043f3]">Solar capacity</p>
+                <p className="mt-1 text-lg font-semibold text-[#121a20]">{estimatedPowerKwp.toFixed(1)} kWp</p>
+                <p className="text-xs text-[#121a20]/60">At {DEFAULT_SOLAR_PANEL_WATTAGE}W per panel</p>
               </div>
             </div>
 
