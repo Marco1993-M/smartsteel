@@ -67,8 +67,8 @@ function sheetingModeLabel(value) {
   return "Structure only"
 }
 
-function buildLineItem({ code, label, quantity, unit, unitRate, total, provisional = false }) {
-  return { code, label, quantity: roundMoney(quantity), unit, unitRate: roundMoney(unitRate), total: roundMoney(total), provisional }
+function buildLineItem({ code, label, quantity, unit, unitRate, total, provisional = false, priceIncludesMarkup = false }) {
+  return { code, label, quantity: roundMoney(quantity), unit, unitRate: roundMoney(unitRate), total: roundMoney(total), provisional, priceIncludesMarkup }
 }
 
 export function calculateAtlasWarehouseEstimate(input = {}) {
@@ -145,12 +145,15 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     unit: "sqm",
     unitRate: sheetingRate,
     total: sheetingCost,
+    priceIncludesMarkup: true,
   })] : []
 
   const lineItems = [...structuralLines, ...connectionLines, ...sheetingLines]
-  const subTotalBeforeMarkup = lineItems.reduce((total, item) => total + item.total, 0)
-  const markupValue = subTotalBeforeMarkup * COMMERCIAL_UPLIFT_RATE
-  const totalExclVat = subTotalBeforeMarkup + markupValue
+  const structuralAndConnectionCost = [...structuralLines, ...connectionLines]
+    .reduce((total, item) => total + item.total, 0)
+  const subTotalBeforeMarkup = structuralAndConnectionCost
+  const markupValue = structuralAndConnectionCost * COMMERCIAL_UPLIFT_RATE
+  const totalExclVat = structuralAndConnectionCost + markupValue + sheetingCost
   const vatValue = totalExclVat * VAT_RATE
   const totalInclVat = totalExclVat + vatValue
   const systemName = `Atlas ${geometry.productCode} Warehouse`
