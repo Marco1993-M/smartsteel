@@ -393,6 +393,16 @@ function applyMarkupToLineItem(item, markupMultiplier) {
   const quantity = Number(item.quantity ?? 0)
   const unitRate = Number(item.unitRate ?? 0)
   const baseTotal = Number(item.total ?? quantity * unitRate)
+
+  if (item.priceIncludesMarkup) {
+    return {
+      ...item,
+      unitRate: roundMoney(unitRate),
+      total: roundMoney(baseTotal),
+      priceIncludesMarkup: true,
+    }
+  }
+
   const sellTotal = roundMoney(baseTotal * markupMultiplier)
   const sellUnitRate = quantity > 0 ? roundMoney(sellTotal / quantity) : roundMoney(unitRate * markupMultiplier)
 
