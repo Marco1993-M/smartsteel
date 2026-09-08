@@ -28,11 +28,17 @@ const SolarCarportPreview = dynamic(
   }
 )
 
-const SOLAR_CARPORT_WIDTH_OPTIONS = [1, 2, 4, 6, 8].map((parkingCount) => ({
+const SOLAR_CARPORT_QUICK_WIDTH_OPTIONS = [1, 2, 4, 6, 8].map((parkingCount) => ({
   parkingCount,
   width: parkingCount * ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES,
   label: parkingCount === 1 ? "Single car" : `${parkingCount} cars`,
 }))
+const SOLAR_CARPORT_MORE_WIDTH_OPTIONS = [10, 12, 14, 16, 18, 20].map((parkingCount) => ({
+  parkingCount,
+  width: parkingCount * ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES,
+  label: `${parkingCount} cars`,
+}))
+const SOLAR_CARPORT_WIDTH_OPTIONS = [...SOLAR_CARPORT_QUICK_WIDTH_OPTIONS, ...SOLAR_CARPORT_MORE_WIDTH_OPTIONS]
 const SOLAR_CARPORT_LENGTH_OPTIONS = [
   { value: 6, label: "Single Row (6m)" },
   { value: 12, label: "Double Row (12m)" },
@@ -496,7 +502,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             <div className="mt-6">
               <p className="text-sm font-semibold text-slate-700">How many spaces should this run cover{selectedRun?.length === 12 ? " per side" : ""}?</p>
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-                {SOLAR_CARPORT_WIDTH_OPTIONS.map((option) => {
+                {SOLAR_CARPORT_QUICK_WIDTH_OPTIONS.map((option) => {
                   const isSelected = selectedRun?.width === option.width
                   return (
                     <button
@@ -526,6 +532,23 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   )
                 })}
               </div>
+              <label className="mt-3 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                More sizes
+                <select
+                  value={SOLAR_CARPORT_MORE_WIDTH_OPTIONS.some((option) => option.width === selectedRun?.width) ? selectedRun.width : ""}
+                  onChange={(event) => {
+                    if (event.target.value) handleFieldChange("width", Number(event.target.value))
+                  }}
+                  className="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold normal-case tracking-normal text-[#001d2e]"
+                >
+                  <option value="">Choose 10 to 20 spaces per side</option>
+                  {SOLAR_CARPORT_MORE_WIDTH_OPTIONS.map((option) => (
+                    <option key={option.parkingCount} value={option.width}>
+                      {option.parkingCount} spaces per side · {formatDimension(option.width)} wide
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
 
             <div className="mt-6">
