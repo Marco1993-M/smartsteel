@@ -10,12 +10,12 @@ export async function POST(request) {
     const input = validateSolarEstimateInput({ ...body.input, productType: 'Solar carport' })
     const release = await readSolarPricing()
     if (!release) return NextResponse.json({ error: 'Solar pricing is awaiting OS confirmation.' }, { status: 503 })
-    const estimate = calculateAtlasSolarCarportEstimate(input, release)
+    const estimate = calculateAtlasSolarCarportEstimate({ ...input, parkingRuns: body.input?.parkingRuns }, release)
     if (body.internal) {
       const auth = await requireOsAuth(request)
       if (auth) return auth
     } else {
-      delete estimate.lineItems
+      estimate.lineItems = estimate.lineItems.map(({ code, label }) => ({ code, label }))
       delete estimate.pricing.baseTotal
       delete estimate.pricing.markupMultiplier
     }

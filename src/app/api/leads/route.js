@@ -366,7 +366,10 @@ export async function POST(request) {
     if (body.lead_source === 'Solar Carport Estimator') {
       const release = await readSolarPricing()
       if (!release) return NextResponse.json({ error: 'Solar pricing is currently unavailable.' }, { status: 503 })
-      const current = calculateAtlasSolarCarportEstimate(validateSolarEstimateInput({ ...body.solarInput, productType: 'Solar carport' }), release)
+      const current = calculateAtlasSolarCarportEstimate({
+        ...validateSolarEstimateInput({ ...body.solarInput, productType: 'Solar carport' }),
+        parkingRuns: body.solarInput?.parkingRuns,
+      }, release)
       if (body.solarPricingRevision !== release.revision || Number(body.quote_value) !== current.pricing.estimatedTotal) {
         return NextResponse.json({ error: 'Pricing has changed. Please review the updated estimate and submit again.' }, { status: 409 })
       }

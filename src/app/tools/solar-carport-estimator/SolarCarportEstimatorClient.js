@@ -70,7 +70,7 @@ function calculateEstimatedPanelCount(width, length) {
   return Math.max(1, Math.floor((usableArea * 0.82) / panelArea))
 }
 
-function buildEstimatorNotes({ estimate, formState, enquiryNotes }) {
+function buildEstimatorNotes({ estimate, formState, enquiryNotes, priceLabel, parkingRuns }) {
   const lines = [
     "Solar carport estimator enquiry",
     `Scope: ${estimate.labels.scope}`,
@@ -80,9 +80,7 @@ function buildEstimatorNotes({ estimate, formState, enquiryNotes }) {
     `Delivery: ${estimate.labels.delivery}`,
     formState.proceedTiming ? `Looking to proceed: ${PROCEED_TIMING_OPTIONS.find((option) => option.value === formState.proceedTiming)?.label || formState.proceedTiming}` : null,
     enquiryNotes?.trim() ? `Client notes: ${enquiryNotes.trim()}` : null,
-    `Selected width: ${formatDimension(formState.width)}`,
-    `Selected length: ${formatDimension(formState.length)}`,
-    `Quantity: ${formState.quantity}`,
+    ...parkingRuns.map((run, index) => `Run ${String.fromCharCode(65 + index)}: ${run.parkingCount * (run.length === 12 ? 2 : 1)} spaces · ${run.length === 12 ? "double-sided butterfly" : "single-sided"}`),
   ].filter(Boolean)
 
   return lines.join("\n")
@@ -110,6 +108,14 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   })
   const [showEnquiryForm, setShowEnquiryForm] = useState(false)
   const [activeStage, setActiveStage] = useState("configure")
+  const [parkingRuns, setParkingRuns] = useState(() => [{
+    id: "run-1",
+    width: defaultWidth,
+    length: defaultLength,
+    parkingCount: defaultWidth / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES,
+    moduleCount: calculateEstimatedPanelCount(defaultWidth, defaultLength),
+  }])
+  const [selectedRunId, setSelectedRunId] = useState("run-1")
   const [enquiryState, setEnquiryState] = useState({
     name: "",
     email: "",
@@ -131,21 +137,24 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
         moduleCount: formState.moduleCount,
         deliveryDistance: formState.deliveryDistance,
         scope: formState.scope,
+        parkingRuns,
       }),
-    [formState]
+    [formState, parkingRuns]
   )
   const livePricing = useSolarCarportEstimate(unpricedEstimate.input)
   const estimate = livePricing.estimate || unpricedEstimate
   const priceLabel = estimate.meta.pricingReady ? formatCurrency(estimate.pricing.estimatedTotal) : livePricing.error ? 'Price on request' : 'Loading price…'
-  const selectedParkingCount = SOLAR_CARPORT_WIDTH_OPTIONS.find(
-    (option) => option.width === formState.width
-  )?.parkingCount || 2
+  const selectedRun = parkingRuns.find((run) => run.id === selectedRunId) || parkingRuns[0]
+  const selectedParkingCount = selectedRun?.parkingCount || 2
+  const totalParkingSpaces = parkingRuns.reduce((sum, run) => sum + run.parkingCount * (run.length === 12 ? 2 : 1), 0)
+  const totalPanelCapacity = parkingRuns.reduce((sum, run) => sum + run.moduleCount, 0)
 
   const whatsappMessage = [
     "Hi Smart Steel, I'd like to discuss an Atlas solar carport.",
     "",
-    `Layout: ${formState.quantity} ${formState.quantity === 1 ? "structure" : "structures"}, ${formatDimension(formState.width)} wide x ${formatDimension(formState.length)}`,
-    `Estimated panel capacity: ${formState.moduleCount} panels per structure`,
+    `Layout: ${parkingRuns.length} parking run${parkingRuns.length === 1 ? "" : "s"}, ${totalParkingSpaces} spaces total`,
+    ...parkingRuns.map((run, index) => `Run ${String.fromCharCode(65 + index)}: ${run.parkingCount} spaces, ${run.length === 12 ? "double-sided butterfly" : "single-sided"}`),
+    `Estimated panel capacity: ${totalPanelCapacity} panels total`,
     `Structure-only starting budget: ${priceLabel} excl. VAT`,
     "",
     "Please get in touch with me about the next step.",
@@ -165,8 +174,41 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
 
       return nextState
     })
+    if (field === "width" || field === "length") {
+      setParkingRuns((runs) => runs.map((run) => {
+        if (run.id !== selectedRunId) return run
+        const next = { ...run, [field]: value }
+        next.parkingCount = next.width / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES
+        next.moduleCount = calculateEstimatedPanelCount(next.width, next.length)
+        return next
+      }))
+    }
     setSubmitError("")
     setSubmitSuccess("")
+  }
+
+  const selectParkingRun = (run) => {
+    setSelectedRunId(run.id)
+    setFormState((current) => ({
+      ...current,
+      width: run.width,
+      length: run.length,
+      moduleCount: run.moduleCount,
+    }))
+  }
+
+  const addParkingRun = () => {
+    const source = selectedRun || parkingRuns[parkingRuns.length - 1]
+    const nextRun = { ...source, id: `run-${Date.now()}` }
+    setParkingRuns((runs) => [...runs, nextRun])
+    selectParkingRun(nextRun)
+  }
+
+  const removeParkingRun = (runId) => {
+    if (parkingRuns.length === 1) return
+    const nextRuns = parkingRuns.filter((run) => run.id !== runId)
+    setParkingRuns(nextRuns)
+    if (selectedRunId === runId) selectParkingRun(nextRuns[0])
   }
 
   const handleEnquiryChange = (field, value) => {
@@ -190,6 +232,14 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       proceedTiming: "",
     })
     setActiveStage("configure")
+    setParkingRuns([{
+      id: "run-1",
+      width: defaultWidth,
+      length: defaultLength,
+      parkingCount: defaultWidth / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES,
+      moduleCount: calculateEstimatedPanelCount(defaultWidth, defaultLength),
+    }])
+    setSelectedRunId("run-1")
     setShowEnquiryForm(false)
     setSubmitError("")
     setSubmitSuccess("")
@@ -231,6 +281,8 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             estimate,
             formState,
             enquiryNotes: enquiryState.notes,
+            priceLabel,
+            parkingRuns,
           }),
         }),
       })
@@ -298,7 +350,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             <div className="min-w-0 border-r border-[#c1d9e5] pr-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0043f3]">Current configuration</p>
               <p className="mt-1 truncate text-sm font-bold text-[#001d2e]">
-                {selectedParkingCount === 1 ? "Single car" : `${selectedParkingCount} cars`} · {formState.length === 6 ? "Single row" : "Double row"} · {formState.moduleCount} panels
+                {parkingRuns.length} run{parkingRuns.length === 1 ? "" : "s"} · {totalParkingSpaces} spaces · {totalPanelCapacity} panels
               </p>
             </div>
             <div>
@@ -321,7 +373,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
 
         <section className="mt-6 grid items-start gap-6 lg:grid-cols-12">
           <div className="min-w-0 border border-[#c1d9e5] bg-white p-4 shadow-[0_24px_60px_-48px_rgba(0,29,46,0.8)] sm:p-6 lg:sticky lg:top-24 lg:col-span-7">
-            <SolarCarportPreview parkingCount={selectedParkingCount} rowLength={formState.length} />
+            <SolarCarportPreview parkingCount={selectedParkingCount} rowLength={selectedRun?.length || 6} parkingRuns={parkingRuns} />
           </div>
 
           <div id="solar-carport-workspace" className="min-w-0 scroll-mt-24 lg:col-span-5">
@@ -376,10 +428,10 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             </h2>
 
             <div className="mt-6">
-              <p className="text-sm font-semibold text-slate-700">How many cars should the structure cover?</p>
+              <p className="text-sm font-semibold text-slate-700">How many spaces should this run cover{selectedRun?.length === 12 ? " per side" : ""}?</p>
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
                 {SOLAR_CARPORT_WIDTH_OPTIONS.map((option) => {
-                  const isSelected = formState.width === option.width
+                  const isSelected = selectedRun?.width === option.width
                   return (
                     <button
                       key={option.parkingCount}
@@ -414,7 +466,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               <p className="text-sm font-semibold text-slate-700">How should the parking run?</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {SOLAR_CARPORT_LENGTH_OPTIONS.map((option) => {
-                  const isSelected = formState.length === option.value
+                  const isSelected = selectedRun?.length === option.value
                   return (
                     <button
                       key={option.value}
@@ -437,24 +489,43 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-[0.8fr_1.2fr]">
+            <div className="mt-6">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Parking runs</p>
+                <button type="button" onClick={addParkingRun} className="rounded-full bg-[#0043f3] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#073c8d]">+ Add run</button>
+              </div>
+              <div className="mt-3 space-y-2">
+                {parkingRuns.map((run, index) => {
+                  const isSelected = run.id === selectedRunId
+                  const spaces = run.parkingCount * (run.length === 12 ? 2 : 1)
+                  return (
+                    <div key={run.id} className={`flex items-center gap-2 rounded-xl border p-2 transition ${isSelected ? "border-[#0043f3] bg-[#edf4ff]" : "border-slate-200 bg-white"}`}>
+                      <button type="button" onClick={() => selectParkingRun(run)} className="min-w-0 flex-1 px-2 py-1 text-left">
+                        <span className="text-xs font-bold text-[#0043f3]">Run {String.fromCharCode(65 + index)}</span>
+                        <span className="ml-2 text-sm font-semibold text-[#001d2e]">{spaces} spaces · {run.length === 12 ? "Butterfly" : "Single-sided"}</span>
+                      </button>
+                      <button type="button" onClick={() => removeParkingRun(run.id)} disabled={parkingRuns.length === 1} className="rounded-lg px-2 py-1 text-xs font-semibold text-slate-400 hover:bg-white hover:text-red-600 disabled:opacity-30">Remove</button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-[#c1d9e5] bg-white p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Structures</p>
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <button type="button" onClick={() => handleFieldChange("quantity", Math.max(1, formState.quantity - 1))} className="grid h-9 w-9 place-items-center rounded-lg border border-[#c1d9e5] text-lg font-semibold text-[#001d2e] transition hover:border-[#0043f3]" aria-label="Remove structure">-</button>
-                  <p className="text-lg font-semibold">{formState.quantity}</p>
-                  <button type="button" onClick={() => handleFieldChange("quantity", formState.quantity + 1)} className="grid h-9 w-9 place-items-center rounded-lg border border-[#c1d9e5] text-lg font-semibold text-[#001d2e] transition hover:border-[#0043f3]" aria-label="Add structure">+</button>
-                </div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Complete layout</p>
+                <p className="mt-2 text-lg font-semibold text-[#121a20]">{totalParkingSpaces} parking spaces</p>
+                <p className="mt-1 text-xs text-[#121a20]/60">Across {parkingRuns.length} run{parkingRuns.length === 1 ? "" : "s"}</p>
               </div>
               <div className="rounded-xl border border-[#c1d9e5] bg-[#edf4f8] p-4">
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Estimated solar capacity</p>
-                <p className="mt-2 text-lg font-semibold text-[#121a20]">{formState.moduleCount} panels per structure</p>
+                <p className="mt-2 text-lg font-semibold text-[#121a20]">{totalPanelCapacity} panels total</p>
                 <p className="mt-1 text-xs leading-5 text-[#121a20]/60">Based on a standard {DEFAULT_SOLAR_PANEL_WATTAGE}W panel layout.</p>
               </div>
             </div>
 
             <div className="mt-5 flex items-center justify-between gap-4 border-t border-[#c1d9e5] pt-5">
-              <p className="text-sm font-semibold text-[#52647f]">{formState.moduleCount} panels · ZAM steel</p>
+              <p className="text-sm font-semibold text-[#52647f]">{parkingRuns.length} run{parkingRuns.length === 1 ? "" : "s"} · ZAM steel</p>
               <button type="button" onClick={() => setActiveStage("review")} className="rounded-xl bg-[#0043f3] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#073c8d]">
                 Review estimate
               </button>
@@ -491,14 +562,14 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   Size
                 </p>
                 <p className="mt-2 text-sm font-semibold text-white">
-                  {formatDimension(formState.width)} x {formatDimension(formState.length)}
+                  {parkingRuns.length} parking run{parkingRuns.length === 1 ? "" : "s"}
                 </p>
               </div>
               <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Structures
+                  Parking spaces
                 </p>
-                <p className="mt-2 text-sm font-semibold text-white">{formState.quantity}</p>
+                <p className="mt-2 text-sm font-semibold text-white">{totalParkingSpaces}</p>
               </div>
               <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
