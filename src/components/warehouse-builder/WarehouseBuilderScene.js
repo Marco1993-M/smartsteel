@@ -205,6 +205,80 @@ function createSteelSurfaceMap() {
   return texture
 }
 
+function createSheetingProfileMaps(profileName) {
+  const width = 256
+  const height = 32
+  const bumpData = new Uint8Array(width * height * 4)
+  const roughnessData = new Uint8Array(width * height * 4)
+  const profile = profileName === "Corrugated" || profileName === "Concealed Fix" ? profileName : "IBR"
+
+  const profileHeightAt = (x) => {
+    if (profile === "Corrugated") {
+      const period = 24
+      return 128 + Math.sin((x / period) * Math.PI * 2) * 74
+    }
+
+    if (profile === "Concealed Fix") {
+      const period = 84
+      const local = x % period
+      const seamDistance = Math.min(local, period - local)
+      const seam = Math.max(0, 1 - seamDistance / 5) ** 1.35
+      const stiffenerA = Math.max(0, 1 - Math.abs(local - period * 0.38) / 2.2)
+      const stiffenerB = Math.max(0, 1 - Math.abs(local - period * 0.62) / 2.2)
+      return 82 + seam * 158 + (stiffenerA + stiffenerB) * 25
+    }
+
+    const period = 58
+    const local = x % period
+    const ribDistance = Math.min(local, period - local)
+    const rib = Math.max(0, 1 - ribDistance / 8)
+    const shoulder = Math.max(0, 1 - ribDistance / 13) * 0.34
+    const panStiffenerA = Math.max(0, 1 - Math.abs(local - period * 0.38) / 2.4)
+    const panStiffenerB = Math.max(0, 1 - Math.abs(local - period * 0.62) / 2.4)
+    return 76 + rib * 145 + shoulder * 45 + (panStiffenerA + panStiffenerB) * 18
+  }
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const index = (y * width + x) * 4
+      const heightValue = Math.max(0, Math.min(255, profileHeightAt(x)))
+      const fineVariation = Math.sin(x * 0.71 + y * 1.37) * 3
+      const roughnessValue = Math.max(92, Math.min(210, 176 - (heightValue - 128) * 0.18 + fineVariation))
+
+      bumpData[index] = heightValue
+      bumpData[index + 1] = heightValue
+      bumpData[index + 2] = heightValue
+      bumpData[index + 3] = 255
+      roughnessData[index] = roughnessValue
+      roughnessData[index + 1] = roughnessValue
+      roughnessData[index + 2] = roughnessValue
+      roughnessData[index + 3] = 255
+    }
+  }
+
+  const configureTexture = (data, rotation = 0) => {
+    const texture = new DataTexture(data, width, height)
+    texture.wrapS = RepeatWrapping
+    texture.wrapT = RepeatWrapping
+    // Keep the formed-sheet rhythm fine while the bump map supplies the visible depth.
+    texture.repeat.set(8, 1)
+    texture.center.set(0.5, 0.5)
+    texture.rotation = rotation
+    texture.minFilter = LinearFilter
+    texture.magFilter = LinearFilter
+    texture.needsUpdate = true
+    return texture
+  }
+
+  return {
+    wallBumpMap: configureTexture(bumpData),
+    wallRoughnessMap: configureTexture(roughnessData),
+    roofBumpMap: configureTexture(bumpData, Math.PI / 2),
+    roofRoughnessMap: configureTexture(roughnessData, Math.PI / 2),
+    bumpScale: profile === "Corrugated" ? 0.016 : profile === "Concealed Fix" ? 0.024 : 0.021,
+  }
+}
+
 function getOpeningPositions(total, span, kind) {
   if (total <= 0) return []
   const usableSpan = span * (kind === "personnel" ? 0.76 : 0.68)
@@ -390,8 +464,15 @@ function WarehouseMesh({
     ? atlasColumnEndDepth / 2 + 0.0015 + wallSheetThickness / 2
     : sideWallSheetOffset
   const steelSurfaceMap = useMemo(() => createSteelSurfaceMap(), [])
+  const sheetingSurfaceMaps = useMemo(() => createSheetingProfileMaps(cladding), [cladding])
 
   useEffect(() => () => steelSurfaceMap.dispose(), [steelSurfaceMap])
+  useEffect(() => () => {
+    sheetingSurfaceMaps.wallBumpMap.dispose()
+    sheetingSurfaceMaps.wallRoughnessMap.dispose()
+    sheetingSurfaceMaps.roofBumpMap.dispose()
+    sheetingSurfaceMaps.roofRoughnessMap.dispose()
+  }, [sheetingSurfaceMaps])
 
   const concreteMaterialProps = {
     color: "#d9e1e8",
@@ -437,12 +518,20 @@ function WarehouseMesh({
     color: roofColor,
     metalness: 0.44,
     roughness: 0.42,
+    bumpMap: isAtlas ? sheetingSurfaceMaps.roofBumpMap : undefined,
+    bumpScale: isAtlas ? sheetingSurfaceMaps.bumpScale : 0,
+    roughnessMap: isAtlas ? sheetingSurfaceMaps.roofRoughnessMap : undefined,
     clearcoat: 0.18,
     clearcoatRoughness: 0.4,
   }
 
   const wallMaterialProps = isAtlas
-    ? { ...roofMaterialProps, color: wallColor }
+    ? {
+        ...roofMaterialProps,
+        color: wallColor,
+        bumpMap: sheetingSurfaceMaps.wallBumpMap,
+        roughnessMap: sheetingSurfaceMaps.wallRoughnessMap,
+      }
     : {
         color: wallColor,
         metalness: 0.22,
@@ -758,7 +847,6 @@ export default function WarehouseBuilderScene(props) {
         onPointerDown={() => setHasInteracted(true)}
       >
         <color attach="background" args={["#edf3f8"]} />
-        <fog attach="fog" args={["#edf3f8", 8.5, 14]} />
         <ambientLight intensity={1.15} />
         <directionalLight
           position={[5.5, 7.5, 4.8]}

@@ -230,7 +230,6 @@ export default function SolarCarportPreview({ parkingCount, rowLength }) {
     >
       <Canvas camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
         <color attach="background" args={["#edf3f7"]} />
-        <fog attach="fog" args={["#edf3f7", 10, 18]} />
         <ambientLight intensity={1.35} />
         <directionalLight position={[5, 8, 6]} intensity={1.8} castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} />
         <directionalLight position={[-5, 3, -4]} intensity={0.45} />
