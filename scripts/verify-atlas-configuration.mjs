@@ -36,13 +36,35 @@ for (const fixture of fixtures) {
   assert.ok(estimate.pricing.estimatedTotal > 0)
 }
 
+const corrugatedEstimate = calculateAtlasWarehouseEstimate({
+  width: 8,
+  length: 20,
+  wallHeight: 3,
+  steelFinish: "ZAM",
+  gableMode: "fully_enclosed",
+  sheetingProfile: "Corrugated",
+  sheetingFinish: "galvanised",
+})
+const corrugatedSheetingLine = corrugatedEstimate.lineItems.find((item) => item.code === "W08-SHT")
+assert.equal(corrugatedSheetingLine.unitRate, 160)
+assert.equal(corrugatedSheetingLine.priceIncludesMarkup, true)
+assert.equal(corrugatedSheetingLine.total, corrugatedEstimate.pricing.claddingCost)
+assert.equal(
+  corrugatedEstimate.pricing.estimatedTotal,
+  Math.round((
+    corrugatedEstimate.pricing.subTotalBeforeMarkup
+    + corrugatedEstimate.pricing.markupValue
+    + corrugatedEstimate.pricing.claddingCost
+  ) * 100) / 100
+)
+
 const legacyConfiguration = normalizeAtlasConfiguration({
   productType: "CFLC Warehouse",
   width: "8",
   length: "20",
   wallHeight: "3",
 })
-assert.equal(legacyConfiguration.productType, "LCSS Warehouse")
+assert.equal(legacyConfiguration.productType, "Atlas Warehouse")
 assert.equal(legacyConfiguration.width, 8)
 assert.equal(legacyConfiguration.length, 20)
 
