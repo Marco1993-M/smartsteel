@@ -162,7 +162,7 @@ function CantileverRow({ parkingCount, direction = 1, offsetZ = 0, structureView
   )
 }
 
-function SolarCarportModel({ parkingCount, rowLength, structureView }) {
+function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale = 1, positionZ = 0 }) {
   const isDoubleRow = rowLength === 12
   const structureLength = parkingCount * MODULE_WIDTH
   const slabDepth = isDoubleRow ? ROOF_DEPTH * 2 + 1.3 : ROOF_DEPTH + 1.2
@@ -170,7 +170,7 @@ function SolarCarportModel({ parkingCount, rowLength, structureView }) {
   const centreGap = 0.08
 
   return (
-    <group position={[0, -1.18, 0]} scale={Math.min(1, 8.8 / structureLength)}>
+    <group position={[0, -1.18, positionZ]} scale={modelScale}>
       {isDoubleRow ? (
         <>
           <CantileverRow parkingCount={parkingCount} direction={1} offsetZ={-rearColumnOffset - centreGap} structureView={structureView} />
@@ -188,14 +188,21 @@ function SolarCarportModel({ parkingCount, rowLength, structureView }) {
   )
 }
 
-export default function SolarCarportPreview({ parkingCount, rowLength }) {
+export default function SolarCarportPreview({ parkingCount, rowLength, parkingRuns }) {
   const controlsRef = useRef(null)
   const [cameraView, setCameraView] = useState("overview")
-  const isDoubleRow = rowLength === 12
-  const structureLength = parkingCount * MODULE_WIDTH
-  const modelScale = Math.min(1, 8.8 / structureLength)
-  const displayWidth = structureLength * modelScale
-  const displayDepth = (isDoubleRow ? ROOF_DEPTH * 2 + 0.4 : ROOF_DEPTH) * modelScale
+  const runs = parkingRuns?.length ? parkingRuns : [{ parkingCount, length: rowLength }]
+  const maxStructureLength = Math.max(...runs.map((run) => run.parkingCount * MODULE_WIDTH))
+  const modelScale = Math.min(1, 8.8 / maxStructureLength)
+  const runGap = 1.8
+  const runDepths = runs.map((run) => Number(run.length) === 12 ? ROOF_DEPTH * 2 + 0.4 : ROOF_DEPTH)
+  const totalDepth = runDepths.reduce((sum, depth) => sum + depth, 0) + Math.max(0, runs.length - 1) * runGap
+  const runOffsets = runDepths.map((depth, index) => {
+    const before = runDepths.slice(0, index).reduce((sum, item) => sum + item, 0) + index * runGap
+    return -totalDepth / 2 + before + depth / 2
+  })
+  const displayWidth = maxStructureLength * modelScale
+  const displayDepth = totalDepth * modelScale
   const cameraDistance = Math.max(7.4, Math.sqrt(displayWidth ** 2 + displayDepth ** 2) * 1.02)
   const cameraPositions = useMemo(() => ({
     overview: [cameraDistance * 0.72, cameraDistance * 0.46, -cameraDistance * 0.78],
@@ -204,7 +211,10 @@ export default function SolarCarportPreview({ parkingCount, rowLength }) {
     side: [cameraDistance, cameraDistance * 0.32, 0],
   }), [cameraDistance])
   const orbitTarget = [0, -0.05, 0]
-  const configurationLabel = `${parkingCount === 1 ? "Single car" : `${parkingCount} cars`} · ${isDoubleRow ? "Double row butterfly" : "Single row cantilever"}`
+  const totalSpaces = runs.reduce((sum, run) => sum + run.parkingCount * (Number(run.length) === 12 ? 2 : 1), 0)
+  const configurationLabel = runs.length === 1
+    ? `${totalSpaces === 1 ? "Single car" : `${totalSpaces} cars`} · ${Number(runs[0].length) === 12 ? "Double row butterfly" : "Single row cantilever"}`
+    : `${runs.length} parking runs · ${totalSpaces} spaces`
   const description = `Interactive 3D model of an Atlas ${configurationLabel.toLowerCase()} solar carport in ZAM steel. Use the view controls or drag to rotate.`
 
   const resetView = () => {
@@ -234,8 +244,17 @@ export default function SolarCarportPreview({ parkingCount, rowLength }) {
         <directionalLight position={[5, 8, 6]} intensity={1.8} castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} />
         <directionalLight position={[-5, 3, -4]} intensity={0.45} />
         <CameraRig position={cameraPositions[cameraView]} target={orbitTarget} controlsRef={controlsRef} />
-        <SolarCarportModel parkingCount={parkingCount} rowLength={rowLength} structureView={cameraView === "structure"} />
-        <ContactShadows position={[0, -1.2, 0]} opacity={0.28} scale={14} blur={2.4} far={4} resolution={256} color="#8293a0" />
+        {runs.map((run, index) => (
+          <SolarCarportModel
+            key={run.id || index}
+            parkingCount={run.parkingCount}
+            rowLength={run.length}
+            structureView={cameraView === "structure"}
+            modelScale={modelScale}
+            positionZ={runOffsets[index] * modelScale}
+          />
+        ))}
+        <ContactShadows position={[0, -1.2, 0]} opacity={0.28} scale={Math.max(14, displayDepth * 1.3)} blur={2.4} far={4} resolution={256} color="#8293a0" />
         <OrbitControls ref={controlsRef} makeDefault enablePan={false} target={orbitTarget} minDistance={5.5} maxDistance={cameraDistance * 1.7} minPolarAngle={Math.PI / 5} maxPolarAngle={Math.PI / 2.05} />
       </Canvas>
     </Atlas3DViewerShell>
