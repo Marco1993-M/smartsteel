@@ -10,8 +10,6 @@ import { calculateSolarEstimate, formatCurrency } from "../../../lib/estimates/s
 
 const DEFAULT_CLEARANCE_HEIGHT = 2.4
 const DEFAULT_SOLAR_PANEL_WATTAGE = 550
-const DEFAULT_SOLAR_PANEL_LENGTH_METERS = 2.278
-const DEFAULT_SOLAR_PANEL_WIDTH_METERS = 1.134
 const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
 const SOLAR_CARPORT_PLAN_STORAGE_KEY = "atlas-solar-carport-plan-v1"
 const PARKING_RUN_CLEARANCE_METRES = 7.5
@@ -61,15 +59,15 @@ function formatDimension(value) {
 }
 
 function calculateEstimatedPanelCount(width, length) {
-  const usableArea = Number(width) * Number(length)
-  const panelArea = DEFAULT_SOLAR_PANEL_LENGTH_METERS * DEFAULT_SOLAR_PANEL_WIDTH_METERS
+  const parkingBaysPerSide = Number(width) / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES
+  const cantileverSides = Number(length) / 6
 
-  if (!Number.isFinite(usableArea) || usableArea <= 0 || !Number.isFinite(panelArea) || panelArea <= 0) {
+  if (!Number.isFinite(parkingBaysPerSide) || parkingBaysPerSide <= 0 || ![1, 2].includes(cantileverSides)) {
     return 0
   }
 
-  // Keep a practical allowance for spacing, edge offsets, and structure layout.
-  return Math.max(1, Math.floor((usableArea * 0.82) / panelArea))
+  // The Atlas roof grid carries six panels per parking bay on each cantilever side.
+  return Math.round(parkingBaysPerSide * 6 * cantileverSides)
 }
 
 function buildEstimatorNotes({ estimate, formState, enquiryNotes, priceLabel, parkingRuns }) {
@@ -161,10 +159,15 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     try {
       const saved = JSON.parse(window.localStorage.getItem(SOLAR_CARPORT_PLAN_STORAGE_KEY) || "null")
       if (Array.isArray(saved?.parkingRuns) && saved.parkingRuns.length > 0) {
-        const validRuns = saved.parkingRuns.filter((run) =>
-          SOLAR_CARPORT_WIDTH_OPTIONS.some((option) => option.width === Number(run.width))
-          && SOLAR_CARPORT_LENGTH_OPTIONS.some((option) => option.value === Number(run.length))
-        )
+        const validRuns = saved.parkingRuns
+          .filter((run) =>
+            SOLAR_CARPORT_WIDTH_OPTIONS.some((option) => option.width === Number(run.width))
+            && SOLAR_CARPORT_LENGTH_OPTIONS.some((option) => option.value === Number(run.length))
+          )
+          .map((run) => ({
+            ...run,
+            moduleCount: calculateEstimatedPanelCount(Number(run.width), Number(run.length)),
+          }))
         if (validRuns.length > 0) {
           setParkingRuns(validRuns)
           const run = validRuns.find((item) => item.id === saved.selectedRunId) || validRuns[0]
