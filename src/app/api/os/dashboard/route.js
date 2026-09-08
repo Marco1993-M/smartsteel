@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { requireOsAuth } from "lib/osRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
+import {
+  indexLatestFollowUpSequences,
+  isCoveredByAutomatedFollowUp,
+} from "lib/crmFollowUpCoverage"
 
 export const runtime = "nodejs"
 
@@ -24,8 +28,11 @@ function leadName(lead) {
   return [lead.name, lead.last_name].filter(Boolean).join(" ").trim() || "Unnamed lead"
 }
 
-function buildPriorities(leads, tasks, documents) {
-  const overdueFollowUps = leads
+function buildPriorities(leads, tasks, documents, sequencesByLead) {
+  const manuallyActionableLeads = leads.filter(
+    (lead) => !isCoveredByAutomatedFollowUp(lead, sequencesByLead)
+  )
+  const overdueFollowUps = manuallyActionableLeads
     .filter((lead) => !["won", "lost"].includes(String(lead.status || "").toLowerCase()) && isBeforeToday(lead.follow_up_at))
     .map((lead) => ({
       id: `lead-${lead.id}`,
@@ -53,7 +60,7 @@ function buildPriorities(leads, tasks, documents) {
       href: document.platform_key === "atlas" ? "/os/atlas/documents" : "/os/lsf/documents",
     }))
 
-  const newLeads = leads
+  const newLeads = manuallyActionableLeads
     .filter((lead) => String(lead.status || "").toLowerCase() === "new")
     .map((lead) => ({
       id: `new-lead-${lead.id}`,
@@ -70,24 +77,29 @@ export async function GET(request) {
   const authResponse = await requireOsAuth(request)
   if (authResponse) return authResponse
 
-  const [leadsResult, tasksResult, documentsResult] = await Promise.all([
+  const [leadsResult, tasksResult, documentsResult, sequencesResult] = await Promise.all([
     supabaseServer.from("leads").select("id, name, last_name, status, next_action, follow_up_at, created_at").order("created_at", { ascending: false }).limit(100),
     supabaseServer.from("tasks").select("id, title, due_date").eq("completed", false).order("due_date", { ascending: true }).limit(20),
     supabaseServer.from("os_documents").select("id, title, platform_key, status").eq("status", "needs_review").limit(10),
+    supabaseServer.from("crm_estimate_follow_up_sequences").select("lead_id, status, next_send_at, last_error, created_at").order("created_at", { ascending: false }),
   ])
 
   const warnings = []
   if (leadsResult.error) warnings.push("CRM priorities are temporarily unavailable.")
   if (tasksResult.error) warnings.push("Reminders are temporarily unavailable.")
   if (documentsResult.error) warnings.push("Document reviews are temporarily unavailable.")
+  if (sequencesResult.error) warnings.push("Automated follow-up coverage is temporarily unavailable.")
 
   const leads = leadsResult.error ? [] : leadsResult.data || []
   const tasks = tasksResult.error ? [] : tasksResult.data || []
   const documents = documentsResult.error ? [] : documentsResult.data || []
+  const sequencesByLead = sequencesResult.error
+    ? {}
+    : indexLatestFollowUpSequences(sequencesResult.data || [])
   const weekStart = startOfCurrentWeek()
 
   return NextResponse.json({
-    priorities: buildPriorities(leads, tasks, documents),
+    priorities: buildPriorities(leads, tasks, documents, sequencesByLead),
     pulse: {
       newLeadsThisWeek: leads.filter((lead) => lead.created_at && lead.created_at >= weekStart).length,
       activeQuotes: leads.filter((lead) => String(lead.status || "").toLowerCase() === "quoted").length,
