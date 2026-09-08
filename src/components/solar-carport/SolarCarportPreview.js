@@ -1,7 +1,7 @@
 "use client"
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { ContactShadows, OrbitControls } from "@react-three/drei"
+import { ContactShadows, Html, OrbitControls } from "@react-three/drei"
 import { useEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import Atlas3DViewerShell from "../atlas/Atlas3DViewerShell"
@@ -162,7 +162,7 @@ function CantileverRow({ parkingCount, direction = 1, offsetZ = 0, structureView
   )
 }
 
-function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale = 1, positionZ = 0 }) {
+function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale = 1, positionZ = 0, label, selected, onSelect }) {
   const isDoubleRow = rowLength === 12
   const structureLength = parkingCount * MODULE_WIDTH
   const slabDepth = isDoubleRow ? ROOF_DEPTH * 2 + 1.3 : ROOF_DEPTH + 1.2
@@ -170,7 +170,16 @@ function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale 
   const centreGap = 0.08
 
   return (
-    <group position={[0, -1.18, positionZ]} scale={modelScale}>
+    <group
+      position={[0, -1.18, positionZ]}
+      scale={modelScale}
+      onClick={(event) => {
+        event.stopPropagation()
+        onSelect?.()
+      }}
+      onPointerOver={() => { document.body.style.cursor = "pointer" }}
+      onPointerOut={() => { document.body.style.cursor = "default" }}
+    >
       {isDoubleRow ? (
         <>
           <CantileverRow parkingCount={parkingCount} direction={1} offsetZ={-rearColumnOffset - centreGap} structureView={structureView} />
@@ -184,17 +193,29 @@ function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale 
         <boxGeometry args={[structureLength + 1.1, 0.07, slabDepth]} />
         <meshStandardMaterial color="#d9dde0" roughness={0.95} />
       </mesh>
+      {selected ? (
+        <mesh position={[0, 1.3, 0]}>
+          <boxGeometry args={[structureLength + 0.5, 3.4, slabDepth + 0.35]} />
+          <meshBasicMaterial color="#0043f3" transparent opacity={0.08} depthWrite={false} />
+        </mesh>
+      ) : null}
+      <Html position={[0, 3.25, 0]} center distanceFactor={8} style={{ pointerEvents: "none" }}>
+        <span className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] shadow-sm ${selected ? "border-[#0043f3] bg-[#0043f3] text-white" : "border-slate-200 bg-white/95 text-[#001d2e]"}`}>
+          {label}
+        </span>
+      </Html>
     </group>
   )
 }
 
-export default function SolarCarportPreview({ parkingCount, rowLength, parkingRuns }) {
+export default function SolarCarportPreview({ parkingCount, rowLength, parkingRuns, selectedRunId, onSelectRun }) {
   const controlsRef = useRef(null)
   const [cameraView, setCameraView] = useState("overview")
   const runs = parkingRuns?.length ? parkingRuns : [{ parkingCount, length: rowLength }]
   const maxStructureLength = Math.max(...runs.map((run) => run.parkingCount * MODULE_WIDTH))
   const modelScale = Math.min(1, 8.8 / maxStructureLength)
-  const runGap = 1.8
+  // Planning clearance between parallel parking runs; site layouts remain subject to review.
+  const runGap = 7.5
   const runDepths = runs.map((run) => Number(run.length) === 12 ? ROOF_DEPTH * 2 + 0.4 : ROOF_DEPTH)
   const totalDepth = runDepths.reduce((sum, depth) => sum + depth, 0) + Math.max(0, runs.length - 1) * runGap
   const runOffsets = runDepths.map((depth, index) => {
@@ -252,6 +273,9 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
             structureView={cameraView === "structure"}
             modelScale={modelScale}
             positionZ={runOffsets[index] * modelScale}
+            label={`Run ${String.fromCharCode(65 + index)}`}
+            selected={run.id === selectedRunId}
+            onSelect={() => onSelectRun?.(run.id)}
           />
         ))}
         <ContactShadows position={[0, -1.2, 0]} opacity={0.28} scale={Math.max(14, displayDepth * 1.3)} blur={2.4} far={4} resolution={256} color="#8293a0" />
