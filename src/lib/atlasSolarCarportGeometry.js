@@ -3,7 +3,7 @@ import { calculateLippedChannelMassKgPerM } from './atlasLippedChannelProfiles.j
 
 export function calculateSolarCarportGeometry({ width = 5.5, length = 6 } = {}) {
   const cars = Number(width) / parkingWidth
-  if (![1, 2, 4, 6, 8].includes(cars) || ![6, 12].includes(Number(length))) throw new Error('Choose a supported Atlas parking layout.')
+  if (![1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20].includes(cars) || ![6, 12].includes(Number(length))) throw new Error('Choose a supported Atlas parking layout.')
   const pitch = 5 * Math.PI / 180
   const depth = rafterLength * Math.cos(pitch)
   const rearColumnHeight = 2.44
