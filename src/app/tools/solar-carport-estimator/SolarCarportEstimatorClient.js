@@ -353,7 +353,6 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       setSubmitSuccess(
         "Your solar carport enquiry has been saved. The Smart Steel team can now pick it up in the CRM and follow up properly."
       )
-      setShowEnquiryForm(false)
       setEnquiryState({
         name: "",
         email: "",
@@ -609,113 +608,82 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             </div>
           </div>
 
-          <div className={`${activeStage === "configure" ? "hidden" : "block"} rounded-[1.6rem] border border-[#001d2e] bg-[#001d2e] p-5 text-white sm:p-6`}>
+          <div className={`${activeStage === "configure" ? "hidden" : "block"} rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4`}>
             {activeStage === "review" ? (
             <>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#c1d9e5]">
-              Step 2: Your starting budget
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#0043f3]">
+              Step 2
             </p>
-            <h2 className="mt-3 text-2xl font-bold tracking-[-0.035em] text-white">
-              Your Atlas solar carport estimate
+            <h2 className="mt-2 text-xl font-bold tracking-[-0.025em] text-[#001d2e]">
+              Review your starting plan
             </h2>
 
-            <div className="mt-6 overflow-hidden rounded-2xl border border-white/15 bg-[linear-gradient(125deg,#073c8d_0%,#0043f3_100%)] text-white">
-              <div className="px-6 py-6">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#c1d9e5]">
-                  Structure-only starting budget
-                </p>
-                <p className="mt-3 text-4xl font-bold tracking-[-0.04em] sm:text-5xl">
-                  {priceLabel}
-                </p>
-                <p className="mt-2 text-sm text-slate-300">
-                  Excl. VAT
-                </p>
+            <div className="mt-5 rounded-2xl border border-[#0043f3]/20 bg-white p-5 shadow-sm">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">Structure-only guide</p>
+                  <p className="mt-1 text-3xl font-bold tracking-[-0.04em] text-[#001d2e]">{priceLabel}</p>
+                </div>
+                <p className="pb-1 text-xs font-semibold text-slate-500">Excl. VAT</p>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Size
-                </p>
-                <p className="mt-2 text-sm font-semibold text-white">
-                  {parkingRuns.length} parking run{parkingRuns.length === 1 ? "" : "s"}
-                </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Layout</p>
+                <p className="mt-1 text-sm font-semibold text-[#001d2e]">{parkingRuns.length} run{parkingRuns.length === 1 ? "" : "s"} · {totalParkingSpaces} spaces</p>
               </div>
-              <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Parking spaces
-                </p>
-                <p className="mt-2 text-sm font-semibold text-white">{totalParkingSpaces}</p>
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Footprint</p>
+                <p className="mt-1 text-sm font-semibold text-[#001d2e]">{formatDimension(siteWidth)} × {formatDimension(siteDepth)}</p>
               </div>
-              <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Solar panels
-                </p>
-                <p className="mt-2 text-sm font-semibold text-white">{estimate.labels.modules}</p>
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Solar</p>
+                <p className="mt-1 text-sm font-semibold text-[#001d2e]">{totalPanelCapacity} panels · {estimatedPowerKwp.toFixed(1)} kWp</p>
               </div>
-              <div className="rounded-xl border border-white/15 bg-white/[0.06] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Estimate scope
-                </p>
-                <p className="mt-2 text-sm font-semibold text-white">{estimate.labels.scope}</p>
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Scope</p>
+                <p className="mt-1 text-sm font-semibold text-[#001d2e]">{estimate.labels.scope} · ZAM</p>
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-white/15 bg-white/[0.06] p-5">
-              <p className="text-sm font-semibold text-white">Included in this estimate</p>
-              <div className="mt-4 space-y-3">
-                {estimate.lineItems.map((item) => (
-                  <div key={item.code} className="flex items-start gap-3 text-sm">
-                    <span className="mt-1 h-2 w-2 bg-[#c1d9e5]" />
-                    <p className="font-medium text-white/80">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <p className="mt-4 text-xs leading-5 text-slate-500">Includes the configured ZAM steel structures, connection allowances, and module-support interfaces. Final foundations, delivery, and site requirements are reviewed with your enquiry.</p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <button
+                type="button"
+                onClick={() => setActiveStage("configure")}
+                className="px-2 py-2 text-sm font-semibold text-slate-500 transition hover:text-[#001d2e]"
+              >
+                Back to layout
+              </button>
               <button
                 type="button"
                 onClick={() => {
                   setShowEnquiryForm(true)
                   setActiveStage("enquire")
                 }}
-                className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#0043f3] transition hover:bg-[#c1d9e5]"
+                className="rounded-xl bg-[#0043f3] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#073c8d]"
               >
-                Continue with this estimate
+                Request reviewed quote
               </button>
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                onClick={reportAtlasSolarCarportConversion}
-                className="rounded-xl border border-[#25D366] bg-[#25D366] px-6 py-3 text-sm font-bold text-[#0b2715] transition hover:bg-[#1fbd58]"
-              >
-                Send via WhatsApp
-              </a>
-              <Link
-                href="/solar"
-                className="rounded-xl border border-white/30 px-6 py-3 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
-              >
-                Back to solar page
-              </Link>
             </div>
             </>
             ) : null}
 
             {activeStage === "enquire" && showEnquiryForm ? (
-              <form id="solar-carport-enquiry" onSubmit={handleSubmit} className="rounded-2xl border border-[#c1d9e5] bg-white p-5 text-[#001d2e] sm:p-6">
-                <button type="button" onClick={() => setActiveStage("review")} className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">
-                  ← Back to estimate
-                </button>
-                <h3 className="text-lg font-bold text-[#001d2e]">
-                  Send your details to Smart Steel
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Once you send this through, your enquiry is saved in our CRM and the team can
-                  follow up with the next step.
-                </p>
+              <form id="solar-carport-enquiry" onSubmit={handleSubmit} className="text-[#001d2e]">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#0043f3]">Step 3</p>
+                <h2 className="mt-2 text-xl font-bold tracking-[-0.025em] text-[#001d2e]">Request a reviewed quote</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Send the plan to Smart Steel and we’ll confirm the site-specific scope with you.</p>
+
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-[#0043f3]/15 bg-white px-4 py-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Your saved plan</p>
+                    <p className="mt-1 text-sm font-semibold text-[#001d2e]">{totalParkingSpaces} spaces · {parkingRuns.length} run{parkingRuns.length === 1 ? "" : "s"}</p>
+                  </div>
+                  <p className="shrink-0 text-sm font-bold text-[#0043f3]">{priceLabel}</p>
+                </div>
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <label className="text-sm font-semibold text-slate-700">
@@ -782,13 +750,16 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   <p className="mt-4 text-sm font-medium text-green-700">{submitSuccess}</p>
                 ) : null}
 
-                <div className="mt-6 flex flex-wrap gap-3">
+                <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+                  <button type="button" onClick={() => setActiveStage("review")} className="px-2 py-2 text-sm font-semibold text-slate-500 transition hover:text-[#001d2e]">
+                    Back to review
+                  </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || !estimate.meta.pricingReady}
                     className="rounded-xl bg-[#0043f3] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#073c8d] disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isSubmitting ? "Saving enquiry..." : "Send enquiry"}
+                    {isSubmitting ? "Sending..." : "Send to Smart Steel"}
                   </button>
                 </div>
               </form>
