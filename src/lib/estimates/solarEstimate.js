@@ -587,7 +587,7 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
 
 export function calculateSolarEstimate(input) {
   const normalized = validateSolarEstimateInput(input)
-  if (normalized.productType === 'Solar carport') return calculateAtlasSolarCarportEstimate(normalized, input.solarPricingRelease || null)
+  if (normalized.productType === 'Solar carport') return calculateAtlasSolarCarportEstimate({ ...normalized, parkingRuns: input.parkingRuns }, input.solarPricingRelease || null)
   const {
     productType,
     width,
