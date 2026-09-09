@@ -91,6 +91,11 @@ export default function Navbar() {
             <span className="absolute left-0 -bottom-0.5 w-0 h-0.5 bg-[#da1a33] transition-all duration-300 group-hover:w-full"></span>
           </div>
 
+          <Link href="/solar" className="relative group px-3 py-2">
+            <span>Solar</span>
+            <span className="absolute left-0 -bottom-0.5 w-0 h-0.5 bg-[#da1a33] transition-all duration-300 group-hover:w-full"></span>
+          </Link>
+
           <div
             onMouseEnter={() => handleAboutHover(true)}
             onMouseLeave={() => handleAboutHover(false)}
@@ -140,6 +145,14 @@ export default function Navbar() {
       {menuOpen && (
         <div className="md:hidden px-4 pb-4 space-y-2 bg-[#515151] text-white">
           <Link href="/" className="block hover:text-[#da1a33]">Home</Link>
+
+          <Link
+            href="/solar"
+            onClick={() => setMenuOpen(false)}
+            className="mt-4 block border-y border-white/15 py-3 text-base font-semibold hover:text-[#da1a33]"
+          >
+            Solar Solutions
+          </Link>
 
           <p className="mt-4 font-semibold">For Professionals</p>
           <Link href="/product-advantages" className="block ml-4 hover:text-[#da1a33]">Product Advantages</Link>
