@@ -66,7 +66,7 @@ function CameraRig({ position, target, controlsRef }) {
 }
 
 function GroundMountArray({ layouts, selectedRunId, onSelectRun, structureView }) {
-  const rows = layouts.slice(0, 6).flatMap((layout, runIndex) => {
+  const rows = layouts.slice(0, 10).flatMap((layout, runIndex) => {
     const displayedRows = Math.min(layout.rows, 2)
     const panelsRemaining = Math.min(layout.pricedPanelCount, displayedRows * 60)
     return Array.from({ length: displayedRows }, (_, rowIndex) => {
@@ -139,7 +139,7 @@ export default function GroundMountPreview({ layouts, selectedRunId, onSelectRun
   const controlsRef = useRef(null)
   const [view, setView] = useState("overview")
   const safeLayouts = layouts?.length ? layouts : []
-  const displayRows = Math.min(safeLayouts.reduce((total, layout) => total + layout.rows, 0), 6)
+  const displayRows = Math.min(safeLayouts.reduce((total, layout) => total + layout.rows, 0), 10)
   const width = Math.min(Math.max(...safeLayouts.map((layout) => layout.width), 2.4), 24)
   const depth = displayRows * ROW_DEPTH + Math.max(0, displayRows - 1) * ROW_GAP
   const distance = Math.max(8, Math.sqrt(width ** 2 + depth ** 2) * 0.86)
