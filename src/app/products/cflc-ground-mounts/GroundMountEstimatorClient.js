@@ -41,6 +41,7 @@ const PROCEED_TIMING_OPTIONS = [
 const GROUND_MOUNT_QUICK_PANEL_OPTIONS = [6, 12, 18, 24, 30]
 const GROUND_MOUNT_MORE_PANEL_OPTIONS = [36, 42, 48, 54, 60]
 const GROUND_MOUNT_MAX_PANELS_PER_RUN = 60
+const GROUND_MOUNT_MAX_RUNS = 10
 
 const STEP_CONFIG = [
   {
@@ -196,12 +197,14 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
   }
 
   const addGroundMountRun = () => {
+    if (groundMountRuns.length >= GROUND_MOUNT_MAX_RUNS) return
     const id = `run-${Date.now()}`
     setGroundMountRuns((runs) => [...runs, { id, panelCount: 36 }])
     setSelectedRunId(id)
   }
 
   const duplicateGroundMountRun = () => {
+    if (groundMountRuns.length >= GROUND_MOUNT_MAX_RUNS) return
     const id = `run-${Date.now()}`
     setGroundMountRuns((runs) => [...runs, { id, panelCount: selectedRun?.panelCount || 36 }])
     setSelectedRunId(id)
@@ -391,10 +394,11 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Ground-mount runs</p>
                   <div className="flex gap-2">
-                    <button type="button" onClick={duplicateGroundMountRun} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200">Duplicate</button>
-                    <button type="button" onClick={addGroundMountRun} className="rounded-full bg-[#0043f3] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#073c8d]">+ Add run</button>
+                    <button type="button" onClick={duplicateGroundMountRun} disabled={groundMountRuns.length >= GROUND_MOUNT_MAX_RUNS} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40">Duplicate</button>
+                    <button type="button" onClick={addGroundMountRun} disabled={groundMountRuns.length >= GROUND_MOUNT_MAX_RUNS} className="rounded-full bg-[#0043f3] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#073c8d] disabled:cursor-not-allowed disabled:opacity-40">+ Add run</button>
                   </div>
                 </div>
+                {groundMountRuns.length >= GROUND_MOUNT_MAX_RUNS ? <p className="mt-2 text-xs font-medium text-slate-500">Maximum 10 runs reached.</p> : null}
                 <div className="mt-3 space-y-2">
                   {groundMountRuns.map((run, index) => (
                     <div key={run.id} className={`flex items-center gap-2 rounded-xl border p-2 ${run.id === selectedRunId ? "border-[#0043f3] bg-[#edf4ff]" : "border-slate-200 bg-white"}`}>
