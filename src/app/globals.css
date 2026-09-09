@@ -108,6 +108,10 @@ body {
     linear-gradient(132deg, transparent 78%, rgb(255 255 255 / 0.08) 78%, rgb(255 255 255 / 0.08) 79%, transparent 79%);
 }
 
+.atlas-public-hero.atlas-solar-hero::after {
+  display: none;
+}
+
 .atlas-public-hero > [class*="pointer-events-none"][class*="inset-0"] {
   opacity: 0.3 !important;
   background-image:

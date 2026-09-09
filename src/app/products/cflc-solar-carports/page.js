@@ -123,42 +123,36 @@ export default function AtlasSolarCarportsPage() {
     <main className="atlas-brand min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#eef6fa_17rem,#eef6fa_100%)] pb-16 pt-24 text-[#001d2e] sm:pt-28">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <section className="atlas-public-hero mx-4 overflow-hidden border shadow-sm sm:mx-6 lg:mx-8">
-        <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
-          <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(18,26,32,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(18,26,32,0.06)_1px,transparent_1px)] [background-size:42px_42px]" />
-          <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full border border-[#d9a441]/45" />
-          <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+      <section className="atlas-public-hero atlas-solar-hero mx-4 overflow-hidden border shadow-sm sm:mx-6 lg:mx-8">
+        <div className="relative mx-auto max-w-7xl px-5 py-9 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
+          <div className="relative grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-14">
             <div className="max-w-3xl">
-              <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={320} height={50} className="h-10 w-auto max-w-full object-contain object-left" priority />
-              <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas Solar Carports</p>
-              <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-5xl lg:text-6xl">
-                Atlas solar carports for parking that works harder.
+              <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={280} height={44} className="h-8 w-auto max-w-full object-contain object-left sm:h-9" priority />
+              <p className="mt-8 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas Solar Carports</p>
+              <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl lg:text-[3.5rem]">
+                Plan your solar parking layout in 3D.
               </h1>
-              <p className="mt-6 max-w-2xl text-base leading-7 text-[#121a20]/70 sm:text-lg">
-                Atlas solar carports give commercial sites a practical way to add everyday parking cover while creating a solar-ready structure around repeatable components and bolted assembly principles.
+              <p className="mt-5 max-w-xl text-base leading-7 text-[#121a20]/70 sm:text-lg">
+                Build single or multi-row parking layouts, see the solar capacity, and receive a live structure-only price before you enquire.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/tools/solar-carport-estimator" className="inline-flex items-center justify-center bg-[#d9a441] px-6 py-3.5 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f]">
-                  Price my solar carport <span className="ml-2 text-lg leading-none">→</span>
+              <div className="mt-7 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                <Link href="/tools/solar-carport-estimator" className="group inline-flex min-h-16 w-full items-center justify-between gap-6 rounded-xl bg-[#ffcf1a] px-5 py-3.5 text-left text-[#001d2e] shadow-[0_18px_36px_-22px_rgba(0,0,0,0.75)] transition hover:-translate-y-0.5 hover:bg-[#ffda4d] sm:w-auto sm:min-w-[340px]">
+                  <span>
+                    <span className="block text-base font-bold">Build my solar carport in 3D</span>
+                    <span className="mt-0.5 block text-xs font-semibold text-[#001d2e]/65">Plan the layout and see a live price</span>
+                  </span>
+                  <span className="text-2xl transition group-hover:translate-x-1">→</span>
                 </Link>
-                <a href="#how-it-works" className="inline-flex items-center justify-center border border-[#121a20]/20 bg-white/75 px-6 py-3.5 text-sm font-semibold text-[#121a20] transition hover:border-[#121a20] hover:bg-white">
-                  How Atlas works
+                <a href="#how-it-works" className="inline-flex items-center border-b border-white/30 pb-1 text-sm font-semibold text-white/75 transition hover:border-white hover:text-white">
+                  See how the process works
                 </a>
               </div>
-              <div className="mt-6 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#121a20]/65">
-                <span className="border border-[#121a20]/15 bg-white/75 px-3 py-2">No contact details to see a starting estimate</span>
-                <span className="border border-[#121a20]/15 bg-white/75 px-3 py-2">Structure-only guide</span>
-                <span className="border border-[#121a20]/15 bg-white/75 px-3 py-2">Site review for delivery and installation</span>
-              </div>
+              <p className="mt-4 text-xs font-medium text-white/55">No contact details required to start building.</p>
             </div>
 
-            <div className="relative min-h-[340px] overflow-hidden border border-[#121a20]/15 bg-[#1c5b57] sm:min-h-[400px]">
+            <div className="relative min-h-[300px] overflow-hidden rounded-[1.5rem] border border-white/15 bg-[#001d2e] shadow-[0_28px_60px_-38px_rgba(0,0,0,0.9)] sm:min-h-[380px]">
               <Image src="/solar_carport_hero.webp" alt="Atlas solar carport structure by Smart Steel" fill priority sizes="(min-width: 1024px) 44vw, 100vw" className="object-cover" />
-              <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(18,26,32,0.05),rgba(18,26,32,0.77))]" />
-              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d9a441]">Atlas solar structure</p>
-                <p className="mt-3 max-w-md text-2xl font-semibold leading-tight text-[#f3f0e9]">Parking cover and solar potential, designed as one practical structure.</p>
-              </div>
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(0,29,46,0.02),rgba(0,29,46,0.24))]" />
             </div>
           </div>
         </div>
