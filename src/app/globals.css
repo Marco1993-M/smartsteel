@@ -160,6 +160,14 @@ body {
   color: white !important;
 }
 
+.atlas-ground-mount-workspace input,
+.atlas-ground-mount-workspace select,
+.atlas-ground-mount-workspace textarea,
+.atlas-ground-mount-workspace button,
+.atlas-ground-mount-workspace a {
+  border-radius: 0.75rem;
+}
+
 .os-input {
   width: 100%;
   border: 1px solid rgb(203 213 225);

@@ -1,53 +1,15 @@
 import Image from "next/image"
 import Link from "next/link"
 import GroundMountEstimatorClient from "./GroundMountEstimatorClient"
-import {
-  calculateSolarEstimate,
-  formatCurrency,
-  getGroundMountLayout,
-} from "../../../lib/estimates/solarEstimate"
 
 const SITE_URL = "https://www.smartsteel.co.za"
 const PAGE_PATH = "/products/cflc-ground-mounts"
 const SHARE_IMAGE = `${SITE_URL}/solar_ground_mount.webp`
 
-const examplePanelCounts = [6, 12, 36, 60]
-
-const groundMountExamples = examplePanelCounts.map((panelCount) => {
-  const layout = getGroundMountLayout(panelCount)
-  const estimate = calculateSolarEstimate({
-    productType: "Solar ground mount",
-    moduleCount: panelCount,
-    quantity: 1,
-    width: layout.width,
-    length: layout.length,
-    wallHeight: 0,
-    scope: "supply_only",
-    includeStructureLabour: false,
-    includeSolarBrackets: false,
-    includeTransport: false,
-    transportTrips: 0,
-    deliveryDistance: 0,
-  })
-
-  return {
-    panelCount,
-    bayCount: layout.bayCount,
-    pricedPanelCount: layout.pricedPanelCount,
-    width: layout.width,
-    length: layout.length,
-    pricePerPanel: estimate.pricing.estimatedTotal / layout.pricedPanelCount,
-    priceFrom: formatCurrency(estimate.pricing.estimatedTotal),
-  }
-})
-
-const heroBenchmarkExample =
-  groundMountExamples.find((item) => item.panelCount === 36) || groundMountExamples[0]
-
 export const metadata = {
   title: "Atlas Solar Ground Mounts South Africa | Smart Steel",
   description:
-    "Price Atlas solar ground mount structures in South Africa. Start with panel count, compare modular ZAM steel layouts, and get a budget before you enquire.",
+    "Price Atlas solar ground mount structures in South Africa. Start with panel count, explore a modular ZAM steel layout, and get a budget before you enquire.",
   keywords: [
     "Atlas solar ground mounts",
     "solar ground mount",
@@ -63,7 +25,7 @@ export const metadata = {
   openGraph: {
     title: "Atlas Solar Ground Mounts | Smart Steel",
     description:
-      "Start with your panel count, compare practical solar ground mount layouts, and get a clearer budget before you enquire.",
+      "Start with your panel count, explore a practical solar ground mount layout, and get a clearer budget before you enquire.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -81,7 +43,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Atlas Solar Ground Mounts | Smart Steel",
     description:
-      "Compare practical solar ground mount layouts and estimate your project budget before you enquire.",
+      "Explore a practical solar ground mount layout and estimate your project budget before you enquire.",
     images: [SHARE_IMAGE],
   },
 }
@@ -103,7 +65,7 @@ const quickAnswers = [
   {
     question: "How is the structure priced?",
     answer:
-      "The solar ground mount system now uses a modular 6-panel expansion layout for smaller sizes, with a standard 36-panel option for larger starting structures.",
+      "The solar ground mount system starts with a 6-panel base structure and expands in repeatable 6-panel modules. Larger sites can be planned as multiple independent runs.",
   },
   {
     question: "What steel finish is used?",
@@ -189,7 +151,7 @@ const faqs = [
   {
     question: "How many panels fit on one bay?",
     answer:
-      "Smaller layouts use a 6-panel modular expansion system, while larger starting layouts can move onto the standard 36-panel structure.",
+      "Each bay supports 6 panels. Runs therefore grow in practical steps of 6, such as 6, 12, 18, 24, and 30 panels.",
   },
   {
     question: "Do I need the exact final panel count before I enquire?",
@@ -240,14 +202,6 @@ const productSchema = {
   image: [SHARE_IMAGE],
   url: `${SITE_URL}${PAGE_PATH}`,
   category: "Solar ground mount structures",
-  offers: {
-    "@type": "AggregateOffer",
-    priceCurrency: "ZAR",
-    lowPrice: groundMountExamples[0]?.priceFrom?.replace(/[^0-9]/g, "") || "0",
-    offerCount: `${groundMountExamples.length}`,
-    availability: "https://schema.org/InStock",
-    url: `${SITE_URL}${PAGE_PATH}#ground-mount-estimator`,
-  },
 }
 
 const breadcrumbSchema = {
@@ -277,49 +231,37 @@ const breadcrumbSchema = {
 
 export default function AtlasGroundMountsPage() {
   return (
-    <main className="atlas-brand min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#eef6fa_17rem,#eef6fa_100%)] pb-16 pt-24 text-[#001d2e] sm:pt-28">
+    <main className="atlas-brand min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#eef6fa_17rem,#eef6fa_100%)] pb-28 pt-24 text-[#001d2e] sm:pt-28 lg:pb-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
-      <section className="atlas-public-hero mx-4 overflow-hidden border shadow-sm sm:mx-6 lg:mx-8">
-        <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
-          <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(18,26,32,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(18,26,32,0.06)_1px,transparent_1px)] [background-size:42px_42px]" />
-          <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full border border-[#d9a441]/45" />
-          <div className="relative grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-            <div className="atlas-hero-island"><GroundMountEstimatorClient variant="hero" /></div>
-            <div>
-              <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={320} height={50} className="h-10 w-auto max-w-full object-contain object-left" priority />
-              <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas Solar Ground Mounts</p>
-              <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-5xl lg:text-6xl">Price your solar ground mount before you enquire.</h1>
-              <p className="mt-6 max-w-2xl text-base leading-7 text-[#121a20]/70 sm:text-lg">Start with panel count and get an immediate structure budget for a modular Atlas ground mount manufactured from ZAM corrosion-resistant steel.</p>
-              <div className="mt-7 grid overflow-hidden border border-[#121a20]/15 bg-white sm:grid-cols-2">
-                <div className="border-b border-[#121a20]/10 p-4 sm:border-b-0 sm:border-r"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1c5b57]">Competitive structure pricing</p><p className="mt-2 text-xl font-semibold">Less than R 1,250 per panel</p></div>
-                <div className="p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1c5b57]">Material advantage</p><p className="mt-2 text-xl font-semibold">ZAM corrosion-resistant steel</p></div>
-              </div>
-              <div className="mt-6 grid gap-3 text-sm leading-6 text-[#121a20]/70">
-                {["Panel count in, practical layout out.", "Clear pricing before a formal quote.", "Suited to farms, commercial arrays, and off-grid sites.", "Installation reviewed around the real site conditions."].map((item) => <p key={item} className="border-l-2 border-[#d9a441] pl-3">{item}</p>)}
-              </div>
+      <section className="relative mx-4 overflow-hidden rounded-[1.3rem] border border-[#0043f3]/25 bg-[linear-gradient(120deg,#001d2e_0%,#073584_58%,#0043f3_100%)] px-4 py-4 text-white shadow-sm sm:mx-6 sm:rounded-[1.6rem] sm:px-6 sm:py-5 lg:mx-8">
+        <div className="pointer-events-none absolute -right-24 -top-36 h-72 w-72 rotate-45 border-[28px] border-white/[0.07]" />
+        <div className="relative mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-2 flex items-center gap-3 sm:mb-4">
+              <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={240} height={48} className="h-6 max-w-[190px] object-contain object-left sm:h-8 sm:max-w-none" priority />
+              <span className="hidden h-7 w-px bg-white/20 sm:block" />
+              <p className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] text-white/65 sm:block">Live configuration</p>
             </div>
+            <p className="hidden text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c1d9e5] sm:block">Atlas ground mount estimator</p>
+            <h1 className="text-xl font-semibold tracking-tight text-white sm:mt-2 sm:text-3xl lg:text-[2rem]">Build and price your Atlas ground mount</h1>
+            <p className="mt-2 hidden max-w-2xl text-sm leading-6 text-white/70 sm:block">Set the panel count, inspect the indicative structure in 3D, and see the structure-only budget update.</p>
+          </div>
+          <div className="hidden flex-wrap gap-2 sm:flex lg:max-w-[460px] lg:justify-end">
+            {["Interactive 3D preview", "Budget guide excl. VAT", "ZAM steel system"].map((item) => (
+              <span key={item} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75 backdrop-blur">{item}</span>
+            ))}
           </div>
         </div>
       </section>
 
+      <GroundMountEstimatorClient variant="workspace" />
+
       <section className="mx-auto max-w-7xl px-5 pt-8 sm:px-8 lg:px-10">
         <div className="grid overflow-hidden border border-[#121a20]/15 bg-white lg:grid-cols-4">
           {quickAnswers.map((item, index) => <div key={item.question} className="border-b border-[#121a20]/10 p-5 last:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"><p className="font-mono text-xs text-[#1c5b57]">0{index + 1}</p><h2 className="mt-4 font-semibold">{item.question}</h2><p className="mt-3 text-sm leading-6 text-[#121a20]/65">{item.answer}</p></div>)}
-        </div>
-      </section>
-
-      <section id="ground-mount-options" className="mx-auto max-w-7xl scroll-mt-24 px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
-        <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Common starting points</p><h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Compare Atlas ground mount sizes.</h2><p className="mt-4 text-base leading-7 text-[#121a20]/65">These structure-only guides use ZAM steel and include the Atlas connection brackets. Prices exclude VAT, delivery, foundations, and installation.</p></div>
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {groundMountExamples.map((item) => (
-            <article key={item.panelCount} className="overflow-hidden border border-[#121a20]/15 bg-white">
-              <div className="relative h-44 bg-[#1c5b57]"><Image src={galleryImages[0].src} alt={`${item.panelCount}-panel Atlas ground mount`} fill sizes="(min-width:1024px) 25vw, 50vw" className="object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-[#121a20]/55 to-transparent" /><span className="absolute bottom-4 left-4 text-xs font-semibold uppercase tracking-[0.18em] text-white">{item.panelCount} panels</span></div>
-              <div className="p-5"><p className="font-mono text-xs text-[#1c5b57]">{item.bayCount} BAY{item.bayCount === 1 ? "" : "S"}</p><h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em]">{item.priceFrom}</h3><p className="mt-1 text-xs text-[#121a20]/50">Excl. VAT · structure only</p><div className="mt-5 border-t border-[#121a20]/10 pt-4 text-sm"><p>{item.width}m x {item.length}m indicative layout</p><p className="mt-2 text-[#121a20]/60">Priced for {item.pricedPanelCount} panels</p></div><a href="#ground-mount-estimator" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#1c5b57]">Price this layout <span aria-hidden="true">↗</span></a></div>
-            </article>
-          ))}
         </div>
       </section>
 
