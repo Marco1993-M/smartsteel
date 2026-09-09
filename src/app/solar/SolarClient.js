@@ -9,7 +9,7 @@ import { getSolarRegionConfigs } from "../solar-regions/solarRegionData";
 const serviceSchema = {
   "@context": "https://schema.org",
   "@type": "Service",
-  name: "Solar Carports & Solar-Ready Steel Structures",
+  name: "Solar Steel Solutions",
   description:
     "Smart Steel designs and supplies solar carports, solar-ready parking structures, roof frames, and steel support systems for South African projects.",
   provider: {
@@ -23,7 +23,7 @@ const serviceSchema = {
     name: "South Africa",
   },
   serviceType:
-    "Solar carports, solar-ready steel structures, parking canopies, roof frames, and steel support systems",
+    "Solar carports, ground mounts, roof support structures, and custom solar steel systems",
   url: "https://www.smartsteel.co.za/solar",
 };
 
@@ -68,40 +68,47 @@ const faqSchema = {
 
 const offerCards = [
   {
-    title: "Solar carports",
+    title: "Atlas solar carports",
     description:
-      "Covered parking structures designed to support solar generation, improve site usability, and create visible long-term value.",
-    href: "/solar-carports",
-    cta: "Explore solar carports",
+      "Configure single, butterfly, and multi-run commercial parking layouts with a live 3D model and structure-only price.",
+    href: "/products/cflc-solar-carports",
+    cta: "Explore Atlas carports",
   },
   {
-    title: "Roof-mounted support structures",
+    title: "Atlas ground mounts",
     description:
-      "Steel framing that gives solar projects a cleaner structural base for commercial roofs, retrofits, and broader building integration.",
+      "Modular steel support for solar arrays installed independently from buildings and parking areas.",
+    href: "/products/cflc-ground-mounts",
+    cta: "Explore ground mounts",
+  },
+  {
+    title: "Roof support systems",
+    description:
+      "Lightweight steel roof structures and project-specific support solutions for new builds and coordinated solar installations.",
     href: "/products/lightweight-steel-trusses",
-    cta: "View roof structure systems",
+    cta: "View roof systems",
   },
   {
-    title: "Commercial steel support systems",
+    title: "Custom solar steel",
     description:
-      "Practical steel solutions for business parks, schools, estates, fleet parking, and sites that need more than a basic shade canopy.",
+      "Project-specific steelwork for commercial, agricultural, and operational sites that fall outside the standard Atlas systems.",
     href: "/contact",
     cta: "Discuss your project",
   },
 ];
 
 const valuePoints = [
-  "Covered parking and solar intent planned together from the start",
-  "Cleaner steel detailing for commercial, institutional, and parking-heavy sites",
+  "The structural system selected around the array, site, and operational requirement",
+  "Cleaner steel detailing for commercial, institutional, agricultural, and parking sites",
   "Faster installation and more predictable site delivery than ad hoc fabrication",
   "Practical design support for business parks, offices, schools, estates, and fleet environments",
 ];
 
 const trustProof = [
   {
-    title: "Built for real parking demand",
+    title: "Built for real site requirements",
     description:
-      "Our solar-ready structures are planned for office parks, schools, estates, retail parking, and operational sites that need practical long-term use, not temporary shade.",
+      "Our solar-ready structures are planned around practical access, array layout, installation, and long-term use rather than treating the steel as an afterthought.",
   },
   {
     title: "Structured for South African conditions",
@@ -140,14 +147,14 @@ const useCases = [
       "Create covered parking, strengthen the site experience, and support visible energy infrastructure where daytime vehicle demand is high.",
   },
   {
-    title: "Schools, churches, and institutions",
+    title: "Open land and agricultural sites",
     description:
-      "Add parking cover and a stronger solar story for education and community environments that need durability and low maintenance.",
+      "Use modular ground-mounted support where arrays need to remain independent from buildings and parking structures.",
   },
   {
-    title: "Retail and mixed-use developments",
+    title: "Commercial roofs and new buildings",
     description:
-      "Use solar carports to improve parking quality, support cleaner energy positioning, and add more commercial value to busy sites.",
+      "Coordinate lightweight roof framing and solar support requirements early in the building and energy-design process.",
   },
   {
     title: "Fleet yards and operational parking",
@@ -158,9 +165,9 @@ const useCases = [
 
 const processSteps = [
   {
-    title: "Define the site and parking intent",
+    title: "Define the site and solar intent",
     description:
-      "We review the parking layout, bay count, circulation, and the role solar generation needs to play in the project.",
+      "We review the array location, site use, access, structural constraints, and the role the steel system needs to play.",
   },
   {
     title: "Set the steel scope and structural direction",
@@ -200,12 +207,14 @@ const pricingDrivers = [
 ];
 
 const internalLinks = [
+  { href: "/products/cflc-solar-carports", label: "Atlas solar carports" },
+  { href: "/products/cflc-ground-mounts", label: "Atlas ground mounts" },
   { href: "/solar-carports", label: "Solar carport regions" },
   { href: "/pretoria-solar-carports", label: "Solar carports Pretoria" },
   { href: "/johannesburg-solar-carports", label: "Solar carports Johannesburg" },
   { href: "/midrand-solar-carports", label: "Solar carports Midrand" },
   { href: "/warehouses", label: "Warehouse systems" },
-  { href: "/products/lightweight-steel-trusses", label: "LSF roof trusses" },
+  { href: "/products/lightweight-steel-trusses", label: "LSF roof support systems" },
 ];
 
 export default function SolarClient() {
@@ -226,75 +235,52 @@ export default function SolarClient() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
-      <section className="relative overflow-hidden bg-[#f5f6f8] px-6 pb-24 pt-28">
-        <div className="absolute inset-y-0 right-0 w-[42%] bg-gradient-to-l from-[#f0d6d8] via-[#f7e8e9] to-transparent" />
+      <section className="relative overflow-hidden bg-[#f5f6f8] px-6 pb-20 pt-28">
+        <div className="absolute inset-y-0 right-0 w-[46%] bg-gradient-to-l from-[#e4edf7] via-[#edf3f9] to-transparent" />
         <div className="absolute inset-x-0 top-0 z-0 h-32 bg-gradient-to-b from-white via-white/95 to-transparent md:h-40" />
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="relative z-10">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-              Solar-Ready Steel Structures
+              Smart Steel Solar Solutions
             </p>
             <h1 className="mt-5 max-w-4xl text-4xl font-bold tracking-tight text-gray-900 md:text-6xl">
-              Solar carports and steel structures built for real South African sites
+              Steel systems for solar infrastructure
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-gray-700">
-              Smart Steel helps clients create covered parking, solar-ready structures, and
-              energy-linked steel systems that feel commercially credible, structurally disciplined,
-              and built for long-term use.
+              Find the right structural route for solar parking, ground-mounted arrays, roof support,
+              or a custom commercial project. Start with a standard Atlas system where it fits, then
+              move into site-specific review.
             </p>
-
-            <div className="mt-6 flex flex-wrap gap-2">
-              {["Office parks", "Schools", "Retail parking", "Business campuses", "Fleet yards"].map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-gray-200 bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/solar-carports"
+                href="/products/cflc-solar-carports"
                 className="rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-black"
               >
-                Explore solar carports
+                Build an Atlas solar carport
               </Link>
               <Link
-                href="/tools/solar-carport-estimator"
+                href="/contact"
                 className="rounded-full border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-900 transition hover:border-[#da1a33] hover:text-[#da1a33]"
               >
-                Estimate your solar carport
+                Discuss a custom project
               </Link>
-            </div>
-
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-[1.75rem] border border-gray-200 bg-white p-5 shadow-sm">
-                <p className="text-3xl font-bold text-gray-900">Dual purpose</p>
-                <p className="mt-2 text-sm text-gray-600">covered parking plus solar intent in one structure</p>
-              </div>
-              <div className="rounded-[1.75rem] border border-gray-200 bg-white p-5 shadow-sm">
-                <p className="text-3xl font-bold text-gray-900">Regional support</p>
-                <p className="mt-2 text-sm text-gray-600">for Pretoria, Johannesburg, Midrand, Cape Town, and more</p>
-              </div>
-              <div className="rounded-[1.75rem] border border-gray-200 bg-white p-5 shadow-sm">
-                <p className="text-3xl font-bold text-gray-900">Commercial focus</p>
-                <p className="mt-2 text-sm text-gray-600">sites that need structure, parking quality, and stronger energy positioning</p>
-              </div>
             </div>
           </div>
 
           <div className="relative z-10">
-            <div className="overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-[#00000014]">
-              <Image
-                src="/solar-hero.jpg"
-                alt="Smart Steel solar carport and solar-ready steel structure"
-                width={900}
-                height={780}
-                className="h-full w-full object-cover"
-                priority
-              />
+            <div className="rounded-[2rem] border border-gray-200 bg-white p-4 shadow-xl shadow-[#00000010] sm:p-5">
+              <p className="px-2 pb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Choose a solar structure</p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {offerCards.map((card, index) => (
+                  <Link key={card.title} href={card.href} className={`group rounded-[1.25rem] border p-4 transition hover:-translate-y-0.5 hover:shadow-md ${index === 0 ? "border-[#da1a33]/30 bg-[#fff6f7]" : "border-gray-200 bg-[#f8f9fa]"}`}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#da1a33]">{index === 0 ? "3D builder available" : "Solar system"}</p>
+                    <h2 className="mt-2 text-lg font-bold text-gray-900">{card.title}</h2>
+                    <p className="mt-2 text-xs leading-5 text-gray-600">{card.description}</p>
+                    <p className="mt-3 text-xs font-semibold text-[#da1a33]">{card.cta} →</p>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -369,37 +355,6 @@ export default function SolarClient() {
             </div>
           </div>
 
-          <div className="mt-16 mb-10 max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-              Solar Solutions
-            </p>
-            <h2 className="mt-4 text-3xl font-bold md:text-4xl">
-              Solar structures planned around real project requirements
-            </h2>
-            <p className="mt-4 text-lg leading-8 text-gray-700">
-              Smart Steel supports a wider solar-ready steel category, from covered parking and
-              roof support structures to broader commercial steel applications. Start here to see
-              the main options, then move into the solution that best suits your site, energy
-              goals, and parking layout.
-            </p>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-3">
-            {offerCards.map((card) => (
-              <Link
-                key={card.title}
-                href={card.href}
-                className="rounded-[2rem] border border-gray-200 bg-gradient-to-b from-white to-[#f7f8f9] p-7 shadow-sm transition hover:-translate-y-1 hover:border-[#da1a33] hover:shadow-lg"
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">
-                  Smart Steel Solar
-                </p>
-                <h3 className="mt-4 text-2xl font-bold text-gray-900">{card.title}</h3>
-                <p className="mt-4 text-sm leading-6 text-gray-600">{card.description}</p>
-                <p className="mt-6 text-sm font-semibold text-[#da1a33]">{card.cta}</p>
-              </Link>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -410,12 +365,11 @@ export default function SolarClient() {
               Why Buyers Choose Smart Steel
             </p>
             <h2 className="mt-4 text-3xl font-bold md:text-4xl">
-              Better steel thinking for parking, solar integration, and site value
+              Better steel thinking for solar integration and long-term site value
             </h2>
             <p className="mt-5 max-w-3xl text-lg leading-8 text-white/80">
-              The opportunity is not just to put panels over cars. It is to design a structure that
-              improves the parking environment, supports solar generation properly, and still looks
-              like a serious long-term commercial asset.
+              The opportunity is not simply to support panels. It is to select and detail a steel
+              system that suits the array, site operations, installation route, and long-term use.
             </p>
           </div>
 
@@ -507,11 +461,11 @@ export default function SolarClient() {
                 Pricing & Scope
               </p>
               <h2 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
-                What usually affects solar carport cost
+                What usually affects solar structure cost
               </h2>
               <p className="mt-4 text-lg leading-8 text-gray-700">
-                Solar carport quotes vary because the project is not just about steel tonnage. The
-                parking layout, structural span, foundations, solar intent, and site conditions all
+                Solar structure quotes vary because the project is not just about steel tonnage.
+                Layout, structural span, foundations, array requirements, and site conditions all
                 shape the final scope.
               </p>
             </div>
@@ -625,24 +579,24 @@ export default function SolarClient() {
             Next Step
           </p>
           <h2 className="mt-4 text-3xl font-bold md:text-5xl">
-            Ready to scope a solar-ready steel project properly?
+            Start with the system that fits your solar project.
           </h2>
           <p className="mt-5 max-w-3xl text-lg leading-8 text-white/85">
-            Tell us whether you are planning covered parking, a solar-ready structure, or a broader
-            steel-and-energy application, and we will help you move into the right quote path.
+            Configure an Atlas solar carport online, explore a standard ground mount, or bring us a
+            custom structural requirement for review.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/tools/solar-carport-estimator"
               className="rounded-full bg-white px-6 py-3 font-semibold text-[#da1a33] transition hover:bg-black hover:text-white"
             >
-              Estimate your solar carport
+              Build an Atlas solar carport
             </Link>
             <Link
-              href="/solar-carports"
+              href="/contact"
               className="rounded-full border border-white px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-[#da1a33]"
             >
-              Compare solar carport regions
+              Discuss another solar structure
             </Link>
           </div>
         </div>
