@@ -1,260 +1,125 @@
-'use client';
+'use client'
 
-import { useState, useRef } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+const productLinks = [
+  { href: '/warehouse-builder', title: 'Atlas Warehouses', copy: 'Configure and price a modular steel warehouse in 3D.' },
+  { href: '/products/cflc-solar-carports', title: 'Atlas Solar Carports', copy: 'Plan commercial solar parking with a live 3D layout.' },
+  { href: '/products/cflc-ground-mounts', title: 'Atlas Ground Mounts', copy: 'Build modular solar arrays from six-panel bays.' },
+  { href: '/products', title: 'All Products', copy: 'Explore the complete Smart Steel product range.' },
+]
+
+const professionalLinks = [
+  { href: '/architect-advantages', title: 'Architects & Specifiers', copy: 'Product advantages and specification support.' },
+  { href: '/steel-fabrication-installation', title: 'Builders & Installers', copy: 'Fabrication, installation, and project capability.' },
+  { href: '/resources', title: 'Technical Resources', copy: 'Guides and useful project information.' },
+]
+
+function Chevron({ open }) {
+  return <svg viewBox="0 0 20 20" aria-hidden="true" className={`h-3.5 w-3.5 transition ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m5 7.5 5 5 5-5" /></svg>
+}
+
+function DesktopMenu({ label, name, openMenu, setOpenMenu, children }) {
+  const open = openMenu === name
+  return (
+    <div>
+      <button type="button" onClick={() => setOpenMenu(open ? null : name)} aria-expanded={open} className={`flex items-center gap-1.5 rounded-full px-3 py-2 transition ${open ? 'bg-[#edf4ff] text-[#0043f3]' : 'text-[#001d2e] hover:bg-slate-100'}`}>
+        {label}<Chevron open={open} />
+      </button>
+      {open ? children : null}
+    </div>
+  )
+}
 
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [showForHomeBanner, setShowForHomeBanner] = useState(false);
-  const [showAboutBanner, setShowAboutBanner] = useState(false);
-  const [showProfessionalsBanner, setShowProfessionalsBanner] = useState(false);
+  const pathname = usePathname()
+  const navRef = useRef(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [openMenu, setOpenMenu] = useState(null)
 
-  const timeoutRef = useRef(null);
+  useEffect(() => {
+    setMobileOpen(false)
+    setOpenMenu(null)
+  }, [pathname])
 
-  function handleForHomeHover(state) {
-    clearTimeout(timeoutRef.current);
-    if (state) {
-      setShowForHomeBanner(true);
-      setShowAboutBanner(false);
-      setShowProfessionalsBanner(false);
-    } else {
-      timeoutRef.current = setTimeout(() => {
-        setShowForHomeBanner(false);
-      }, 200); 
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (!navRef.current?.contains(event.target)) setOpenMenu(null)
     }
-  }
-
-  function handleAboutHover(state) {
-    clearTimeout(timeoutRef.current);
-    if (state) {
-      setShowAboutBanner(true);
-      setShowForHomeBanner(false);
-      setShowProfessionalsBanner(false);
-    } else {
-      timeoutRef.current = setTimeout(() => {
-        setShowAboutBanner(false);
-      }, 200); 
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setOpenMenu(null)
+        setMobileOpen(false)
+      }
     }
-  }
-
-  function handleProfessionalsHover(state) {
-    clearTimeout(timeoutRef.current);
-    if (state) {
-      setShowProfessionalsBanner(true);
-      setShowAboutBanner(false);
-      setShowForHomeBanner(false);
-    } else {
-      timeoutRef.current = setTimeout(() => {
-        setShowProfessionalsBanner(false);
-      }, 200); 
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
     }
-  }
+  }, [])
 
-  function handleBannerHover(bannerSetter) {
-    clearTimeout(timeoutRef.current);
-    bannerSetter(true);
-  }
-
-  function handleBannerLeave(bannerSetter) {
-    timeoutRef.current = setTimeout(() => {
-      bannerSetter(false);
-    }, 200); 
-  }
+  const desktopLinkClass = (href) => `rounded-full px-3 py-2 transition ${pathname === href || pathname.startsWith(`${href}/`) ? 'bg-[#edf4ff] text-[#0043f3]' : 'text-[#001d2e] hover:bg-slate-100'}`
 
   return (
-   <nav className="absolute left-0 top-0 z-50 w-full bg-white/95 text-black backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
-  <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-    <Link href="/" className="flex items-center">
-          <Image
-            src="/Logo.png"
-            alt="Smart Steel Logo"
-            width={100}
-            height={100}
-            priority
-            className="h-12 w-auto object-contain md:h-14"
-          />
+    <nav ref={navRef} className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-white/95 text-[#001d2e] shadow-[0_12px_30px_-28px_rgba(0,29,46,0.65)] backdrop-blur-xl">
+      <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-10">
+        <Link href="/" aria-label="Smart Steel home" className="flex shrink-0 items-center">
+          <Image src="/Logo.png" alt="Smart Steel" width={132} height={72} priority className="h-14 w-auto object-contain" />
         </Link>
 
-        <div className="text-xl font-bold">
-          <Link href="/"></Link>
+        <div className="hidden items-center gap-1 text-sm font-semibold lg:flex">
+          <DesktopMenu label="Products" name="products" openMenu={openMenu} setOpenMenu={setOpenMenu}>
+            <div className="absolute inset-x-0 top-full border-b border-slate-200 bg-white shadow-[0_24px_45px_-32px_rgba(0,29,46,0.55)]">
+              <div className="mx-auto grid max-w-[1440px] grid-cols-4 gap-3 px-10 py-6">
+                {productLinks.map((item, index) => <Link key={item.href} href={item.href} className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-5 transition hover:border-[#0043f3]/35 hover:bg-white"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">0{index + 1}</p><p className="mt-3 text-base font-bold">{item.title}</p><p className="mt-2 text-xs font-normal leading-5 text-slate-500">{item.copy}</p></Link>)}
+              </div>
+            </div>
+          </DesktopMenu>
+
+          <Link href="/solar" className={desktopLinkClass('/solar')}>Solar</Link>
+
+          <DesktopMenu label="For Professionals" name="professionals" openMenu={openMenu} setOpenMenu={setOpenMenu}>
+            <div className="absolute inset-x-0 top-full border-b border-slate-200 bg-white shadow-[0_24px_45px_-32px_rgba(0,29,46,0.55)]">
+              <div className="mx-auto grid max-w-5xl grid-cols-3 gap-3 px-8 py-6">
+                {professionalLinks.map((item) => <Link key={item.href} href={item.href} className="rounded-2xl border border-slate-200 p-5 transition hover:border-[#0043f3]/35 hover:bg-slate-50"><p className="text-base font-bold">{item.title}</p><p className="mt-2 text-xs font-normal leading-5 text-slate-500">{item.copy}</p></Link>)}
+              </div>
+            </div>
+          </DesktopMenu>
+
+          <Link href="/company" className={desktopLinkClass('/company')}>About</Link>
+          <Link href="/contact" className="ml-2 rounded-full bg-[#001d2e] px-5 py-2.5 text-white transition hover:bg-[#0043f3]">Contact</Link>
         </div>
 
-        {/* Desktop Links */}
-        <div className="hidden md:flex space-x-6 text-sm font-medium">
-          <div
-            onMouseEnter={() => handleProfessionalsHover(true)}
-            onMouseLeave={() => handleProfessionalsHover(false)}
-            className="relative group px-3 py-2 cursor-pointer select-none"
-          >
-            <span className="relative z-10">For Professionals</span>
-            <span className="absolute left-0 -bottom-0.5 w-0 h-0.5 bg-[#da1a33] transition-all duration-300 group-hover:w-full"></span>
-          </div>
-
-          <Link href="/solar" className="relative group px-3 py-2">
-            <span>Solar</span>
-            <span className="absolute left-0 -bottom-0.5 w-0 h-0.5 bg-[#da1a33] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-
-          <div
-            onMouseEnter={() => handleAboutHover(true)}
-            onMouseLeave={() => handleAboutHover(false)}
-            className="relative group px-3 py-2 cursor-pointer select-none"
-          >
-            <span className="relative z-10">About</span>
-            <span className="absolute left-0 -bottom-0.5 w-0 h-0.5 bg-[#da1a33] transition-all duration-300 group-hover:w-full"></span>
-          </div>
-
-          <div
-            onMouseEnter={() => handleForHomeHover(true)}
-            onMouseLeave={() => handleForHomeHover(false)}
-            className="relative group px-3 py-2 cursor-pointer select-none"
-          >
-            <span className="relative z-10">For Your Home</span>
-            <span className="absolute left-0 -bottom-0.5 w-0 h-0.5 bg-[#da1a33] transition-all duration-300 group-hover:w-full"></span>
-          </div>
-
-          <Link href="/contact" className="relative group px-3 py-2">
-            <span>Contact</span>
-            <span className="absolute left-0 -bottom-0.5 w-0 h-0.5 bg-[#da1a33] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-        </div>
-
-        {/* Mobile Menu Toggle */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white/80 md:hidden focus:outline-none"
-          aria-label="Toggle menu"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            {menuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
+        <button type="button" onClick={() => setMobileOpen((open) => !open)} aria-expanded={mobileOpen} aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'} className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-[#001d2e] shadow-sm lg:hidden">
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2">{mobileOpen ? <path d="m6 6 12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}</svg>
         </button>
       </div>
 
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div className="md:hidden px-4 pb-4 space-y-2 bg-[#515151] text-white">
-          <Link href="/" className="block hover:text-[#da1a33]">Home</Link>
-
-          <Link
-            href="/solar"
-            onClick={() => setMenuOpen(false)}
-            className="mt-4 block border-y border-white/15 py-3 text-base font-semibold hover:text-[#da1a33]"
-          >
-            Solar Solutions
-          </Link>
-
-          <p className="mt-4 font-semibold">For Professionals</p>
-          <Link href="/product-advantages" className="block ml-4 hover:text-[#da1a33]">Product Advantages</Link>
-          <Link href="/resources" className="block ml-4 hover:text-[#da1a33]">Technical Resources</Link>
-          <Link href="/resources" className="block ml-4 hover:text-[#da1a33]">Installation Guides</Link>
-
-          <p className="mt-4 font-semibold">About</p>
-          <Link href="/company" className="block ml-4 hover:text-[#da1a33]">Company</Link>
-          <Link href="/sustainability" className="block ml-4 hover:text-[#da1a33]">Sustainability</Link>
-          <Link href="/news" className="block ml-4 hover:text-[#da1a33]">News & Events</Link>
-
-          <p className="mt-4 font-semibold">For Your Home</p>
-          <Link href="/architect-advantages" className="block ml-4 hover:text-[#da1a33]">Product Advantages</Link>
-          <Link href="/warranty" className="block ml-4 hover:text-[#da1a33]">Warranty</Link>
-          <a href="/brochures/resilient.pdf" download className="block ml-4 hover:text-[#da1a33]">Download Brochure</a>
-
-          <Link href="/contact" className="block mt-4 hover:text-[#da1a33]">Contact</Link>
-        </div>
-      )}
-
-      {/* --- HOVER BANNERS for Desktop --- */}
-
-      {showProfessionalsBanner && (
-        <div
-          onMouseEnter={() => handleBannerHover(setShowProfessionalsBanner)}
-          onMouseLeave={() => handleBannerLeave(setShowProfessionalsBanner)}
-          className="absolute top-full left-0 w-full bg-white text-black shadow-lg border-t border-gray-300"
-          style={{ minHeight: '200px', zIndex: 1000 }}
-        >
-          <div className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-3 gap-8">
-            <div>
-              <h3 className="text-xl font-semibold text-[#da1a33] mb-4">Architect / Specifiers</h3>
-              <ul className="space-y-2">
-                <li><Link href="/architect-advantages" className="hover:underline">Product Advantages</Link></li>
-                <li><Link href="/resources" className="hover:underline">Technical Resources</Link></li>
-              </ul>
+      {mobileOpen ? (
+        <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto border-t border-slate-200 bg-white lg:hidden">
+          <div className="mx-auto max-w-xl px-5 py-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Explore</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Link href="/warehouse-builder" className="rounded-2xl bg-[#001d2e] p-4 text-white"><span className="text-sm font-bold">Warehouses</span><span className="mt-1 block text-xs text-white/60">Build in 3D</span></Link>
+              <Link href="/solar" className="rounded-2xl bg-[#0043f3] p-4 text-white"><span className="text-sm font-bold">Solar Solutions</span><span className="mt-1 block text-xs text-white/65">Carports & ground mounts</span></Link>
             </div>
-            <div>
-              <h3 className="text-xl font-semibold text-[#da1a33] mb-4">Builder / Installers</h3>
-              <ul className="space-y-2">
-                <li><Link href="/product-advantages" className="hover:underline">Product Advantages</Link></li>
-                <li><Link href="/resources" className="hover:underline">Technical Resources</Link></li>
-                <li><Link href="/resources" className="hover:underline">Installation Guides</Link></li>
-              </ul>
+
+            <div className="mt-5 divide-y divide-slate-200 border-y border-slate-200">
+              <Link href="/products" className="flex items-center justify-between py-4 text-sm font-semibold">All products <span aria-hidden="true">→</span></Link>
+              <Link href="/architect-advantages" className="flex items-center justify-between py-4 text-sm font-semibold">For professionals <span aria-hidden="true">→</span></Link>
+              <Link href="/resources" className="flex items-center justify-between py-4 text-sm font-semibold">Resources <span aria-hidden="true">→</span></Link>
+              <Link href="/company" className="flex items-center justify-between py-4 text-sm font-semibold">About Smart Steel <span aria-hidden="true">→</span></Link>
             </div>
-            <div>
-              <h3 className="text-xl font-semibold text-[#da1a33] mb-4">Fabricators</h3>
-              <ul className="space-y-2">
-                <li><Link href="/steel-fabrication-installation" className="hover:underline">Steel Fabrication &amp; Installation</Link></li>
-                <li><Link href="/structural-steel-fabricators" className="hover:underline">Structural Steel Fabricators</Link></li>
-                <li><Link href="/product-advantages" className="hover:underline">Product Advantages</Link></li>
-                <li><Link href="/resources" className="hover:underline">Technical Resources</Link></li>
-              </ul>
-            </div>
+
+            <Link href="/contact" className="mt-5 flex min-h-12 items-center justify-center rounded-xl bg-[#001d2e] px-5 text-sm font-bold text-white">Talk to Smart Steel</Link>
           </div>
         </div>
-      )}
-
-      {showAboutBanner && (
-        <div
-          onMouseEnter={() => handleBannerHover(setShowAboutBanner)}
-          onMouseLeave={() => handleBannerLeave(setShowAboutBanner)}
-          className="absolute top-full left-0 w-full bg-white text-black shadow-lg border-t border-gray-300"
-          style={{ minHeight: '200px', zIndex: 1000 }}
-        >
-          <div className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-3 gap-8">
-            <div><Link href="/company" className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">Company</Link><p>Learn about our history, mission, and team.</p></div>
-            <div><Link href="/sustainability" className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">Sustainability</Link><p>How we build eco-friendly and efficient steel structures.</p></div>
-            <div><Link href="/news" className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">News & Events</Link><p>Stay updated with the latest company updates and events.</p></div>
-          </div>
-        </div>
-      )}
-
-      {showForHomeBanner && (
-        <div
-          onMouseEnter={() => handleBannerHover(setShowForHomeBanner)}
-          onMouseLeave={() => handleBannerLeave(setShowForHomeBanner)}
-          className="absolute top-full left-0 w-full bg-white text-black shadow-lg border-t border-gray-300"
-          style={{ minHeight: '200px', zIndex: 1000 }}
-        >
-          <div className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-3 gap-8">
-            <div>
-              <Link href="/product-advantages" className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">Product Advantages</Link>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Lightweight & Durable</li>
-                <li>Fast Assembly Kits</li>
-                <li>Eco-Friendly Materials</li>
-                <li>Custom Designs Available</li>
-              </ul>
-            </div>
-            <div>
-              <Link href="/warranty" className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">Warranty</Link>
-              <p>10-year structural warranty on all steel frames. Peace of mind guaranteed.</p>
-            </div>
-            <div>
-              <a href="/brochures/resilient.pdf" download className="text-xl font-semibold text-[#da1a33] hover:underline mb-2 block">Smart Steel Brochure</a>
-              <p>Download our full product brochure.</p>
-              <a href="/brochures/resilient.pdf" download className="inline-block mt-4 px-6 py-3 bg-[#da1a33] text-white rounded hover:bg-[#bf172d] transition">Download PDF</a>
-            </div>
-          </div>
-        </div>
-      )}
+      ) : null}
     </nav>
-  );
+  )
 }
