@@ -61,6 +61,12 @@ export default function PartnerOpportunityReviewDrawer({
   const meta = STATUS_META[record.status] || STATUS_META.submitted
   const config = record.configuration || {}
   const proposal = record.proposedQuote
+  const installationScope = record.installationScope || {}
+  const installationItems = [
+    installationScope.foundation && "Foundation",
+    installationScope.structure && "Structure",
+    installationScope.sheeting && "Sheeting",
+  ].filter(Boolean)
   const scopeLabel = config.gableMode === "roof_only"
     ? "Roof sheeting"
     : config.gableMode === "fully_enclosed"
@@ -68,7 +74,7 @@ export default function PartnerOpportunityReviewDrawer({
       : "Structure only"
   const reviewChecks = [
     ["Customer contact", Boolean(record.customerPhone || record.customerEmail)],
-    ["Site location", Boolean(record.siteLocation)],
+    ["Site location", !installationScope.requested || Boolean(record.siteLocation)],
     ["Controlled configuration", Boolean(proposal?.pricingRelease)],
     ["Proposed price", Number(proposal?.amountExVat) > 0],
   ]
@@ -207,6 +213,16 @@ export default function PartnerOpportunityReviewDrawer({
               {record.customerEmail ? <ContactLine icon={Mail} value={record.customerEmail} /> : null}
               {record.siteLocation ? <ContactLine icon={MapPin} value={record.siteLocation} /> : null}
             </div>
+          </section>
+
+          <section className={`rounded-2xl border p-5 ${installationScope.requested ? "border-blue-200 bg-blue-50" : "border-slate-200 bg-slate-50"}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${installationScope.requested ? "text-[#0043f3]" : "text-slate-400"}`}>Installation request</p>
+            {installationScope.requested ? (
+              <>
+                <p className="mt-2 text-sm font-black text-[#001d2e]">Review requested for {installationItems.length ? installationItems.join(", ") : "scope to be confirmed"}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">Location: {record.siteLocation || "Missing"}. Site clearance, earthworks and services are excluded.</p>
+              </>
+            ) : <p className="mt-2 text-sm font-semibold text-slate-600">No installation review requested. Treat as supply only.</p>}
           </section>
 
           {record.partnerNotes ? (
