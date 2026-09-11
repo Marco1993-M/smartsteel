@@ -66,7 +66,7 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
   const issueDate = new Date(opportunity.quoted_at || opportunity.updated_at || Date.now())
   const validUntil = opportunity.price_valid_until
     ? new Date(`${opportunity.price_valid_until}T12:00:00`)
-    : addDays(issueDate, 14)
+    : addDays(issueDate, 10)
   const approvedExVat = Number(opportunity.final_quote_amount_ex_vat)
   const vat = approvedExVat * 0.15
   const recommendedPrice = approvedExVat / 0.95
