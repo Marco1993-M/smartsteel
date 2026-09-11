@@ -57,6 +57,7 @@ async function ensureInternalProject(opportunity) {
     sourcePartnerOpportunityId: opportunity.id,
     partnerOpportunityReference: opportunity.reference,
     afgriOrderReference: opportunity.afgri_order_reference || "",
+    installationScope: opportunity.installation_scope || { requested: false, foundation: false, structure: false, sheeting: false },
     source: "AFGRI partner order",
     fulfilmentStatus: "production_planning",
     estimatedDispatchDate: opportunity.estimated_dispatch_date || "",
@@ -115,6 +116,7 @@ function normalizeOpportunity(row, latestBom = null) {
     customerPhone: row.customer_phone,
     customerEmail: row.customer_email,
     siteLocation: row.site_location,
+    installationScope: row.installation_scope || { requested: false, foundation: false, structure: false, sheeting: false },
     configuration: row.configuration || {},
     indicativeAmountExVat: Number(row.indicative_amount_ex_vat || 0),
     partnerNotes: row.notes || "",
@@ -229,7 +231,7 @@ export async function PATCH(request) {
 
   const { data: currentOpportunity, error: currentOpportunityError } = await supabaseServer
     .from("partner_opportunities")
-    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, configuration, afgri_order_reference, internal_project_id, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, production_owner, planned_start_date, planned_completion_date, production_hold_reason, manufacturing_checklist, production_release_status, production_released_at, production_released_by, production_release_revision, production_release_note, manufacturing_bom_snapshot, manufacturing_bom_adopted_at, manufacturing_bom_adopted_by")
+    .select("id, partner_id, status, reference, customer_name, customer_phone, customer_email, site_location, installation_scope, configuration, afgri_order_reference, internal_project_id, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, production_owner, planned_start_date, planned_completion_date, production_hold_reason, manufacturing_checklist, production_release_status, production_released_at, production_released_by, production_release_revision, production_release_note, manufacturing_bom_snapshot, manufacturing_bom_adopted_at, manufacturing_bom_adopted_by")
     .eq("id", id)
     .single()
   if (currentOpportunityError || !currentOpportunity) {
@@ -483,7 +485,7 @@ export async function PATCH(request) {
   if (status === "quoted") updates.quoted_at = new Date().toISOString()
   if (status === "quoted") {
     const validUntil = new Date()
-    validUntil.setDate(validUntil.getDate() + 14)
+    validUntil.setDate(validUntil.getDate() + 10)
     updates.partner_order_status = "ready_for_order"
     updates.ready_for_order_at = new Date().toISOString()
     updates.price_valid_until = validUntil.toISOString().slice(0, 10)

@@ -21,13 +21,27 @@ function expiredPriceResponse() {
   )
 }
 
+function normalizeInstallationScope(value) {
+  const requested = Boolean(value?.requested)
+  return {
+    requested,
+    foundation: requested && Boolean(value?.foundation),
+    structure: requested && Boolean(value?.structure),
+    sheeting: requested && Boolean(value?.sheeting),
+  }
+}
+
+function hasInstallationSelection(scope) {
+  return scope.foundation || scope.structure || scope.sheeting
+}
+
 export async function GET(request) {
   const context = await getPartnerRequestContext(request)
   if (context.response) return context.response
 
   let query = supabaseServer
     .from("partner_opportunities")
-    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at, internal_project_id, handoff_acknowledged_at, fulfilment_status, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, fulfilment_updated_at, updated_at, partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at, resolved_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
+    .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, installation_scope, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at, internal_project_id, handoff_acknowledged_at, fulfilment_status, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, fulfilment_updated_at, updated_at, partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at, resolved_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
     .eq("partner_id", context.membership.partner_id)
     .order("updated_at", { ascending: false })
 
@@ -44,8 +58,16 @@ export async function POST(request) {
   const body = await request.json()
   const customerName = String(body.customerName || "").trim()
   const productReleaseId = String(body.productReleaseId || "").trim()
+  const siteLocation = String(body.siteLocation || "").trim()
+  const installationScope = normalizeInstallationScope(body.installationScope)
   if (!customerName || !productReleaseId) {
     return NextResponse.json({ error: "Add the customer name and choose a released product." }, { status: 400 })
+  }
+  if (installationScope.requested && !siteLocation) {
+    return NextResponse.json({ error: "Add the project location for an installation review." }, { status: 400 })
+  }
+  if (installationScope.requested && !hasInstallationSelection(installationScope)) {
+    return NextResponse.json({ error: "Choose at least one installation scope for Smart Steel to review." }, { status: 400 })
   }
 
   let resolved
@@ -72,7 +94,8 @@ export async function POST(request) {
       customer_name: customerName,
       customer_phone: String(body.customerPhone || "").trim(),
       customer_email: String(body.customerEmail || "").trim(),
-      site_location: String(body.siteLocation || "").trim(),
+      site_location: siteLocation,
+      installation_scope: installationScope,
       configuration: resolved.safeRelease.configuration,
       indicative_amount_ex_vat: resolved.safeRelease.commercial.amountExVat,
       notes: String(body.notes || "").trim(),
@@ -92,6 +115,8 @@ export async function PATCH(request) {
   const id = String(body.id || "").trim()
   const action = String(body.action || "").trim()
   const customerName = String(body.customerName || "").trim()
+  const siteLocation = String(body.siteLocation || "").trim()
+  const installationScope = normalizeInstallationScope(body.installationScope)
   if (!id) return NextResponse.json({ error: "Choose an opportunity before saving." }, { status: 400 })
 
   const { data: existing, error: existingError } = await supabaseServer
@@ -231,6 +256,12 @@ export async function PATCH(request) {
     return NextResponse.json({ opportunity: data })
   }
   if (!customerName) return NextResponse.json({ error: "Add the customer name before saving." }, { status: 400 })
+  if (installationScope.requested && !siteLocation) {
+    return NextResponse.json({ error: "Add the project location for an installation review." }, { status: 400 })
+  }
+  if (installationScope.requested && !hasInstallationSelection(installationScope)) {
+    return NextResponse.json({ error: "Choose at least one installation scope for Smart Steel to review." }, { status: 400 })
+  }
   if (!["draft", "changes_requested"].includes(existing.status)) {
     return NextResponse.json({ error: "This opportunity is currently locked while Smart Steel reviews it." }, { status: 409 })
   }
@@ -255,7 +286,8 @@ export async function PATCH(request) {
       customer_name: customerName,
       customer_phone: String(body.customerPhone || "").trim(),
       customer_email: String(body.customerEmail || "").trim(),
-      site_location: String(body.siteLocation || "").trim(),
+      site_location: siteLocation,
+      installation_scope: installationScope,
       configuration: resolved.safeRelease.configuration,
       indicative_amount_ex_vat: resolved.safeRelease.commercial.amountExVat,
       notes: String(body.notes || "").trim(),
