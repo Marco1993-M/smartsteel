@@ -9,6 +9,18 @@ function makeReference() {
   return `AF-${new Date().toISOString().slice(2, 10).replaceAll("-", "")}-${crypto.randomUUID().slice(0, 5).toUpperCase()}`
 }
 
+function isExpiredPrice(value) {
+  if (!value) return false
+  return value < new Date().toISOString().slice(0, 10)
+}
+
+function expiredPriceResponse() {
+  return NextResponse.json(
+    { error: "This approved price has expired. Ask Smart Steel to review and reissue it before proceeding." },
+    { status: 409 },
+  )
+}
+
 export async function GET(request) {
   const context = await getPartnerRequestContext(request)
   if (context.response) return context.response
@@ -84,7 +96,7 @@ export async function PATCH(request) {
 
   const { data: existing, error: existingError } = await supabaseServer
     .from("partner_opportunities")
-    .select("id, product_release_id, status, partner_order_status")
+    .select("id, product_release_id, status, partner_order_status, price_valid_until")
     .eq("id", id)
     .eq("partner_id", context.membership.partner_id)
     .eq("membership_id", context.membership.id)
@@ -93,6 +105,12 @@ export async function PATCH(request) {
   if (["acknowledge_commercial", "request_clarification", "customer_decision"].includes(action)) {
     if (existing.status !== "quoted") {
       return NextResponse.json({ error: "Smart Steel must approve the supplier price before this response can be recorded." }, { status: 409 })
+    }
+    if (isExpiredPrice(existing.price_valid_until) && action === "acknowledge_commercial") {
+      return expiredPriceResponse()
+    }
+    if (isExpiredPrice(existing.price_valid_until) && action === "customer_decision" && body.customerDecision === "proceeding") {
+      return expiredPriceResponse()
     }
 
     const now = new Date().toISOString()
@@ -175,6 +193,7 @@ export async function PATCH(request) {
     if (existing.status !== "quoted" || existing.partner_order_status !== "ready_for_order") {
       return NextResponse.json({ error: "This configuration is not ready for an AFGRI order yet." }, { status: 409 })
     }
+    if (isExpiredPrice(existing.price_valid_until)) return expiredPriceResponse()
     const { data: commercialState } = await supabaseServer
       .from("partner_opportunities")
       .select("commercial_response_status, customer_decision")
