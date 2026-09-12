@@ -18,6 +18,7 @@ import {
   UsersRound,
 } from "lucide-react"
 import { useSupabaseAuth } from "../../lib/supabaseAuth"
+import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { OS_SECTIONS, OS_STATUS_META, getOsSection } from "../../lib/osNavigation"
 
 const SECTION_ICONS = {
@@ -36,6 +37,7 @@ export default function OsShellLayout({ children }) {
   const pathname = usePathname()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [newPartnerOpportunityCount, setNewPartnerOpportunityCount] = useState(0)
   const { user, loading } = useSupabaseAuth(
     `/login?redirect=${encodeURIComponent(pathname || "/os")}`
   )
@@ -44,6 +46,36 @@ export default function OsShellLayout({ children }) {
   useEffect(() => {
     setSidebarCollapsed(window.localStorage.getItem("smartsteel-os-sidebar") === "collapsed")
   }, [])
+
+  useEffect(() => {
+    if (!user) return undefined
+
+    let active = true
+
+    async function refreshPartnerCue() {
+      try {
+        const response = await fetch("/api/os/partner-notifications", {
+          cache: "no-store",
+          headers: await getOsAuthHeaders(),
+        })
+        if (!response.ok) return
+        const payload = await response.json()
+        if (active) setNewPartnerOpportunityCount(Number(payload.newOpportunityCount || 0))
+      } catch {
+        // A navigation cue should never interrupt the main OS workspace.
+      }
+    }
+
+    refreshPartnerCue()
+    const interval = window.setInterval(refreshPartnerCue, 60 * 1000)
+    window.addEventListener("focus", refreshPartnerCue)
+
+    return () => {
+      active = false
+      window.clearInterval(interval)
+      window.removeEventListener("focus", refreshPartnerCue)
+    }
+  }, [user])
 
   function toggleSidebar() {
     setSidebarCollapsed((current) => {
@@ -116,14 +148,15 @@ export default function OsShellLayout({ children }) {
               const isActive =
                 pathname === section.href || (section.href !== "/os" && pathname?.startsWith(`${section.href}/`))
               const SectionIcon = SECTION_ICONS[section.key] || LayoutDashboard
+              const showPartnerCue = section.key === "partners" && newPartnerOpportunityCount > 0
 
               return (
                 <Link
                   key={section.key}
                   href={section.href}
                   onClick={() => setMobileNavOpen(false)}
-                  title={sidebarCollapsed ? section.label : undefined}
-                  className={`min-w-0 rounded-xl px-3 py-2.5 transition lg:block lg:rounded-2xl lg:py-3 ${
+                  title={sidebarCollapsed ? `${section.label}${showPartnerCue ? ` · ${newPartnerOpportunityCount} new` : ""}` : undefined}
+                  className={`relative min-w-0 rounded-xl px-3 py-2.5 transition lg:block lg:rounded-2xl lg:py-3 ${
                     sidebarCollapsed ? "lg:px-3" : "lg:px-4"
                   } ${
                     isActive
@@ -156,6 +189,12 @@ export default function OsShellLayout({ children }) {
                       <p className={`text-sm font-semibold whitespace-nowrap ${sidebarCollapsed ? "lg:hidden" : ""}`}>{section.label}</p>
                     </div>
                   </div>
+                  {showPartnerCue ? (
+                    <span className={`absolute right-2 top-2 inline-flex min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-black leading-4 text-slate-950 shadow-sm ring-2 ${isActive ? "ring-white" : "ring-slate-900"}`}>
+                      {newPartnerOpportunityCount > 99 ? "99+" : newPartnerOpportunityCount}
+                      <span className="sr-only"> new partner opportunities</span>
+                    </span>
+                  ) : null}
                   <p className={`mt-1 hidden text-xs leading-5 ${sidebarCollapsed ? "" : "lg:block"} ${isActive ? "text-slate-600" : "text-slate-400"}`}>
                     {section.description}
                   </p>
