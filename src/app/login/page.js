@@ -38,6 +38,20 @@ export default function LoginPage() {
       return
     }
 
+    const accessResponse = await fetch("/api/os/session", {
+      cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ""}`,
+      },
+    })
+
+    if (!accessResponse.ok) {
+      await supabase.auth.signOut()
+      setError("This account does not have access to Smart Steel OS.")
+      setIsSubmitting(false)
+      return
+    }
+
     router.replace(redirectTo)
   }
 
