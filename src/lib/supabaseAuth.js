@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "./supabase"
+import { getOsAuthHeaders } from "./osClientAuth"
 
 /**
  * Custom hook to get the authenticated Supabase user.
@@ -20,7 +21,17 @@ export function useSupabaseAuth(redirectPath = "/login") {
       if (!session) {
         router.replace(redirectPath)
       } else {
-        setUser(session.user)
+        const response = await fetch("/api/os/session", {
+          cache: "no-store",
+          headers: await getOsAuthHeaders(),
+        })
+
+        if (!response.ok) {
+          await supabase.auth.signOut()
+          router.replace(redirectPath)
+        } else {
+          setUser(session.user)
+        }
       }
       setLoading(false)
     }
@@ -33,8 +44,6 @@ export function useSupabaseAuth(redirectPath = "/login") {
         if (!session) {
           setUser(null)
           router.replace(redirectPath)
-        } else {
-          setUser(session.user)
         }
       }
     )
