@@ -11,14 +11,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [redirectTo, setRedirectTo] = useState("/os/crm")
+  const [redirectTo, setRedirectTo] = useState("/os")
 
   useEffect(() => {
     if (typeof window === "undefined") return
 
     const nextRedirect = new URLSearchParams(window.location.search).get("redirect")
     if (nextRedirect) {
-      setRedirectTo(nextRedirect)
+      setRedirectTo(nextRedirect === "/kanban" ? "/os" : nextRedirect)
     }
   }, [])
 

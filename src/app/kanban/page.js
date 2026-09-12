@@ -1,5 +1,5 @@
-import CrmWorkspacePage from "./CrmWorkspacePage"
+import { redirect } from "next/navigation"
 
 export default function KanbanPage() {
-  return <CrmWorkspacePage mode="legacy" />
+  redirect("/os/crm")
 }
