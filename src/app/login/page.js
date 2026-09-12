@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [redirectTo, setRedirectTo] = useState("/kanban")
+  const [redirectTo, setRedirectTo] = useState("/os/crm")
 
   useEffect(() => {
     if (typeof window === "undefined") return
