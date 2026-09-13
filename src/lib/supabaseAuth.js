@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "./supabase"
-import { getOsAuthHeaders } from "./osClientAuth"
+import { getOsAuthHeaders, refreshOsAuthHeaders } from "./osClientAuth"
 
 /**
  * Custom hook to get the authenticated Supabase user.
@@ -21,15 +21,27 @@ export function useSupabaseAuth(redirectPath = "/login") {
       if (!session) {
         router.replace(redirectPath)
       } else {
-        const response = await fetch("/api/os/session", {
+        let response = await fetch("/api/os/session", {
           cache: "no-store",
           headers: await getOsAuthHeaders(),
         })
 
-        if (!response.ok) {
-          await supabase.auth.signOut()
+        if (response.status === 401) {
+          try {
+            response = await fetch("/api/os/session", {
+              cache: "no-store",
+              headers: await refreshOsAuthHeaders(),
+            })
+          } catch {
+            // The confirmed auth failure below handles an unavailable refresh.
+          }
+        }
+
+        if (response.status === 401 || response.status === 403) {
+          await supabase.auth.signOut({ scope: "local" })
           router.replace(redirectPath)
         } else {
+          // Preserve the local session during temporary API or database failures.
           setUser(session.user)
         }
       }
