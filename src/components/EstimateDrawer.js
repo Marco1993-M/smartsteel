@@ -27,6 +27,11 @@ import {
   normalizeAtlasProductType,
 } from "../lib/atlasProductIdentity"
 import { CUSTOM_ENGINEERED_PROJECT_TYPE } from "../lib/estimates/customProjectEstimate"
+import {
+  ATLAS_SOLAR_CARPORT_PARKING_COUNTS,
+  getAtlasSolarCarportPanelCount,
+  getAtlasSolarCarportWidth,
+} from "../lib/atlasSolarCarportLayouts"
 
 const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
   { value: CUSTOM_ENGINEERED_PROJECT_TYPE, label: "Custom engineered project" },
@@ -53,12 +58,10 @@ const ATLAS_ALLOWED_GABLE_MODES = ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) 
 const ATLAS_ALLOWED_SHEETING_PROFILES = ["Corrugated", "IBR", "Concealed Fix"]
 const ATLAS_ALLOWED_SHEETING_FINISHES = ["galvanised", "chromadek"]
 const TRUSS_ROOF_STYLES = TRUSS_ROOF_STYLE_OPTIONS.map((option) => option.value)
-const SOLAR_CARPORT_WIDTH_OPTIONS = [2.75, 5.5, 11, 16.5, 22]
+const SOLAR_CARPORT_WIDTH_OPTIONS = ATLAS_SOLAR_CARPORT_PARKING_COUNTS.map(getAtlasSolarCarportWidth)
 const SOLAR_CARPORT_LENGTH_OPTIONS = [6, 12]
-const SOLAR_PANEL_AREA_M2 = 2.278 * 1.134
-
 function getSolarCarportPanelCount(width, length) {
-  return Math.max(1, Math.floor((Number(width) * Number(length) * 0.82) / SOLAR_PANEL_AREA_M2))
+  return getAtlasSolarCarportPanelCount(width, length)
 }
 
 function getLeadSteelFinish(lead) {
@@ -290,6 +293,7 @@ function buildInitialState(lead, estimate) {
       lead?.product_type ||
       productType,
     preparedFor: latestInput.preparedFor || getDefaultPreparedFor(lead),
+    pricingRelease: latestInput.pricingRelease ?? null,
     width,
     length,
     useCustomSize,
@@ -404,6 +408,12 @@ function buildEditableLineItem(item, overrides = {}) {
     typeof overrides.priceIncludesMarkup === "boolean"
       ? overrides.priceIncludesMarkup
       : Boolean(overrides.manual)
+  const hasPricingOverride = Object.hasOwn(overrides, "quantity") || Object.hasOwn(overrides, "unitRate")
+  const total = Object.hasOwn(overrides, "total")
+    ? Number(overrides.total)
+    : hasPricingOverride
+      ? quantity * unitRate
+      : Number(item.total ?? quantity * unitRate)
   return {
     id: overrides.id || item.code,
     code: item.code,
@@ -411,7 +421,7 @@ function buildEditableLineItem(item, overrides = {}) {
     quantity,
     unit,
     unitRate,
-    total: roundMoney(quantity * unitRate),
+    total: roundMoney(total),
     originalQuantity: Number(item.quantity ?? 0),
     originalUnitRate: Number(item.unitRate ?? 0),
     originalUnit: item.unit,
@@ -564,7 +574,10 @@ function buildEstimateDraft({
       ...preview.input,
       sku: preview.meta?.sku || null,
       familyCode: preview.meta?.productCode || null,
-      pricingRelease: preview.meta?.pricingRelease || null,
+      pricingRelease:
+        saveMode === "update" && formState.pricingRelease != null
+          ? formState.pricingRelease
+          : preview.meta?.pricingRevision ?? preview.meta?.pricingRelease ?? null,
       useCustomSize: formState.useCustomSize,
       productType: formState.productType,
       productTypeLabel: formState.productTypeLabel?.trim() || formState.productType,
