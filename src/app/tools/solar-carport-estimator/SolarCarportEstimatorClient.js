@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useSolarCarportEstimate } from 'lib/useSolarCarportEstimate'
 import { ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES } from "lib/atlasSolarCarportProfiles"
+import { getAtlasSolarCarportPanelCount } from "lib/atlasSolarCarportLayouts"
 import { calculateSolarEstimate, formatCurrency } from "../../../lib/estimates/solarEstimate"
 
 const DEFAULT_CLEARANCE_HEIGHT = 2.4
@@ -65,15 +66,7 @@ function formatDimension(value) {
 }
 
 function calculateEstimatedPanelCount(width, length) {
-  const parkingBaysPerSide = Number(width) / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES
-  const cantileverSides = Number(length) / 6
-
-  if (!Number.isFinite(parkingBaysPerSide) || parkingBaysPerSide <= 0 || ![1, 2].includes(cantileverSides)) {
-    return 0
-  }
-
-  // The Atlas roof grid carries six panels per parking bay on each cantilever side.
-  return Math.round(parkingBaysPerSide * 6 * cantileverSides)
+  return getAtlasSolarCarportPanelCount(width, length)
 }
 
 function buildEstimatorNotes({ estimate, formState, enquiryNotes, priceLabel, parkingRuns }) {
