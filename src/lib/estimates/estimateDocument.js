@@ -3,6 +3,7 @@ import {
   getAtlasWarehouseIdentityTerms,
   isAtlasWarehouseProductType,
 } from "../atlasProductIdentity"
+import { CUSTOM_ENGINEERED_PROJECT_TYPE } from "./customProjectEstimate"
 
 export const ESTIMATE_TERMS = [
   "This estimate is based on the scope, dimensions, and site assumptions captured at the time of pricing.",
@@ -103,6 +104,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
   const solarProduct = isSolarProduct(productType)
   const groundMountProduct = productType === "Solar ground mount"
   const trussProduct = isTrussProduct(productType)
+  const customProject = productType === CUSTOM_ENGINEERED_PROJECT_TYPE
   const roofStyleLabel = getRoofStyleLabel(input.roofStyle)
   const layoutNote =
     Number(input.length || 0) > 0 &&
@@ -118,7 +120,26 @@ export function buildEstimateDisplayModel(estimate, lead) {
       ? `${quantity > 1 ? `${quantity} x ` : ""}${formatDimension(input.width)} x ${formatDimension(input.length)} ${productTypeLabel} Quotation`
       : `${productTypeLabel} Quotation`
   const quotationTitle = getSavedEstimateTitle(estimate) || generatedQuotationTitle
-  const summaryFields = trussProduct
+  const summaryFields = customProject
+    ? [
+        { label: "Width", value: formatDimension(input.width) },
+        { label: "Length", value: formatDimension(input.length) },
+        { label: "Height", value: formatDimension(input.wallHeight) },
+        { label: "Quantity", value: `${quantity}` },
+        {
+          label: "Structural systems",
+          value: Array.isArray(input.structuralSystems) && input.structuralSystems.length
+            ? input.structuralSystems.join(" + ")
+            : "To be confirmed",
+        },
+        { label: "Panels / modules", value: moduleCount > 0 ? `${totalModuleCount}` : "Not applicable" },
+        {
+          label: "Delivery",
+          value: Number(input.deliveryDistance) > 0 ? `${Number(input.deliveryDistance)} km` : "Collection / not specified",
+        },
+        { label: "Installation", value: input.claddingInstalled ? "Included" : "Reviewed separately" },
+      ]
+    : trussProduct
     ? [
         { label: "Span", value: formatDimension(input.width) },
         { label: "Building length", value: formatDimension(input.length) },
@@ -246,7 +267,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
         : "Collection / not specified",
     installationLabel: input.claddingInstalled ? "Included" : "Structure supply only",
     summaryFields,
-    notes: [layoutNote, estimate?.notes].filter(Boolean).join("\n\n"),
+    notes: [layoutNote, customProject ? input.projectScope : "", estimate?.notes].filter(Boolean).join("\n\n"),
     lineItems,
     hasDiscount: discountPercent > 0 && discountAmount > 0,
     discountPercentLabel: `${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 2 }).format(discountPercent)}%`,

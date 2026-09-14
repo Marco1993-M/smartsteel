@@ -3,6 +3,7 @@ import { calculateTrussEstimate, TRUSS_PRODUCT_TYPES } from "./trussEstimate"
 import { calculateWarehouseEstimate } from "./warehouseEstimate"
 import { calculateAtlasWarehouseEstimate } from "./atlasWarehouseEstimate"
 import { isAtlasWarehouseProductType } from "../atlasProductIdentity"
+import { calculateCustomProjectEstimate, CUSTOM_ENGINEERED_PROJECT_TYPE } from "./customProjectEstimate"
 
 const SOLAR_PRODUCT_TYPES = ["Solar carport", "Solar ground mount", "Solar structure"]
 
@@ -23,6 +24,10 @@ export function isTrussEstimateProduct(productType) {
 }
 
 export function calculateEstimateByProductType(productType, input) {
+  if (productType === CUSTOM_ENGINEERED_PROJECT_TYPE) {
+    return calculateCustomProjectEstimate(input)
+  }
+
   if (isSolarEstimateProduct(productType)) {
     return calculateSolarEstimate(input)
   }
