@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import { useSolarCarportEstimate } from "../lib/useSolarCarportEstimate"
 import { Dialog, Transition } from "@headlessui/react"
-import { ArrowLeft, Link2, Plus, Printer, Save, Trash2 } from "lucide-react"
+import { ArrowLeft, ChevronDown, Link2, Plus, Printer, Save, Trash2 } from "lucide-react"
 import {
   formatCurrency,
   WAREHOUSE_CLADDING_OPTIONS,
@@ -26,8 +26,10 @@ import {
   ATLAS_WAREHOUSE_PRODUCT_TYPE,
   normalizeAtlasProductType,
 } from "../lib/atlasProductIdentity"
+import { CUSTOM_ENGINEERED_PROJECT_TYPE } from "../lib/estimates/customProjectEstimate"
 
 const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
+  { value: CUSTOM_ENGINEERED_PROJECT_TYPE, label: "Custom engineered project" },
   { value: "LSF Warehouse", label: "LSF Warehouse" },
   { value: ATLAS_WAREHOUSE_PRODUCT_TYPE, label: ATLAS_WAREHOUSE_PRODUCT_TYPE },
   { value: "LSF trusses", label: "LSF trusses" },
@@ -35,6 +37,7 @@ const ESTIMATE_PRODUCT_TYPE_OPTIONS = [
   ...SOLAR_PRODUCT_TYPE_OPTIONS,
 ]
 const INTERNAL_PRODUCT_LABELS = [
+  CUSTOM_ENGINEERED_PROJECT_TYPE,
   "Atlas Warehouse",
   "LSF Warehouse",
   "Solar carport",
@@ -130,6 +133,25 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
 
   if (!previousState.productTypeLabel?.trim() || INTERNAL_PRODUCT_LABELS.includes(previousState.productTypeLabel)) {
     nextState.productTypeLabel = nextProductType
+  }
+
+  if (nextProductType === CUSTOM_ENGINEERED_PROJECT_TYPE) {
+    return {
+      ...nextState,
+      productTypeLabel: previousState.productType === nextProductType
+        ? previousState.productTypeLabel
+        : "Custom solar structure",
+      useCustomSize: true,
+      width: Math.max(0.1, Number(previousState.width) || 1),
+      length: Math.max(0.1, Number(previousState.length) || 1),
+      wallHeight: Math.max(0, Number(previousState.wallHeight) || 0),
+      moduleCount: Math.max(0, Math.round(Number(previousState.moduleCount) || 0)),
+      structuralSystems: Array.isArray(previousState.structuralSystems)
+        ? previousState.structuralSystems
+        : ["LSF", "CFLC"],
+      projectScope: previousState.projectScope || "",
+      internalSiteNotes: previousState.internalSiteNotes || "",
+    }
   }
 
   if (isAtlasWarehouseEstimateProduct(nextProductType)) {
@@ -269,6 +291,9 @@ function buildInitialState(lead, estimate) {
     roofPitch: Math.max(1, Number(latestInput.roofPitch || 15)),
     trussSpacing: Math.max(0.1, Number(latestInput.trussSpacing || 1.2)),
     moduleCount: Math.max(0, Number(latestInput.moduleCount || 0)),
+    structuralSystems: Array.isArray(latestInput.structuralSystems) ? latestInput.structuralSystems : [],
+    projectScope: latestInput.projectScope || "",
+    internalSiteNotes: latestInput.internalSiteNotes || "",
     cladding:
       isAtlasWarehouseEstimateProduct(productType)
         ? latestInput.cladding || builderConfiguration.cladding || builderConfiguration.sheetingProfile || lead?.cladding || "IBR"
@@ -537,6 +562,9 @@ function buildEstimateDraft({
       discountPercent: Math.min(100, Math.max(0, Number(formState.discountPercent) || 0)),
       sourceSubmissionId: formState.sourceSubmissionId || null,
       designReference: formState.designReference || null,
+      structuralSystems: formState.structuralSystems || [],
+      projectScope: formState.projectScope || "",
+      internalSiteNotes: formState.internalSiteNotes || "",
     },
     original_line_items: preview.lineItems,
     line_items: editableLineItems,
@@ -575,6 +603,7 @@ export default function EstimateDrawer({
   const isSolarCarportEstimate = formState.productType === "Solar carport"
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
   const isTrussEstimate = isTrussEstimateProduct(formState.productType)
+  const isCustomProject = formState.productType === CUSTOM_ENGINEERED_PROJECT_TYPE
   const solarPricing = useSolarCarportEstimate({ ...formState, quantity: 1 }, true)
   const solarPricingPending = formState.productType === "Solar carport" && !solarPricing.estimate
   const preview = useMemo(() => {
@@ -736,6 +765,14 @@ export default function EstimateDrawer({
 
       return nextState
     })
+  }
+
+  const toggleStructuralSystem = (system) => {
+    const current = Array.isArray(formState.structuralSystems) ? formState.structuralSystems : []
+    handleChange(
+      "structuralSystems",
+      current.includes(system) ? current.filter((item) => item !== system) : [...current, system]
+    )
   }
 
   const updateLineItem = (id, updates) => {
@@ -1031,7 +1068,7 @@ export default function EstimateDrawer({
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    {!isSolarEstimate && !isTrussEstimate ? (
+                    {!isSolarEstimate && !isTrussEstimate && !isCustomProject ? (
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
@@ -1183,6 +1220,38 @@ export default function EstimateDrawer({
                       </div>
                     ) : null}
                   </div>
+
+                  {isCustomProject ? (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 sm:p-5">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">Engineering review required</p>
+                          <h3 className="mt-1 text-lg font-bold text-slate-950">Custom project brief</h3>
+                          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">This scope is not connected to a standard Atlas BOM. Add reviewed pricing as manual line items below.</p>
+                        </div>
+                        <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Custom scope</span>
+                      </div>
+                      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700">Panel / module count (if applicable)</label>
+                          <input type="number" min="0" step="1" value={formState.moduleCount} onChange={(event) => handleChange("moduleCount", Math.max(0, Math.round(Number(event.target.value) || 0)))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700">Structural systems</label>
+                          <div className="mt-1 flex min-h-10 flex-wrap gap-2">
+                            {["LSF", "CFLC", "Structural steel", "Other"].map((system) => {
+                              const selected = formState.structuralSystems?.includes(system)
+                              return <button key={system} type="button" onClick={() => toggleStructuralSystem(system)} className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-600"}`}>{system}</button>
+                            })}
+                          </div>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-slate-700">Project scope</label>
+                          <textarea rows={3} value={formState.projectScope} onChange={(event) => handleChange("projectScope", event.target.value)} placeholder="Describe the structure, arrangement, interfaces and included work." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
 
                   {isTrussEstimate ? (
                     <div className="grid gap-4 sm:grid-cols-3">
@@ -1458,16 +1527,24 @@ export default function EstimateDrawer({
                     </label>
                   ) : null}
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700">Estimate notes</label>
-                    <textarea
-                      rows={3}
-                      value={formState.notes}
-                      onChange={(event) => handleChange("notes", event.target.value)}
-                      placeholder="Optional notes for this revision..."
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    />
-                  </div>
+                  <details className="group rounded-2xl border border-slate-200 bg-white" open={isCustomProject || undefined}>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 sm:px-5">
+                      <div><p className="font-semibold text-slate-950">Notes, assumptions and site information</p><p className="mt-1 text-xs text-slate-500">Keep internal site context separate from wording shown to the customer.</p></div>
+                      <ChevronDown className="h-5 w-5 shrink-0 text-slate-400 transition group-open:rotate-180" />
+                    </summary>
+                    <div className="grid gap-4 border-t border-slate-200 p-4 sm:grid-cols-2 sm:p-5">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Internal site notes</label>
+                        <textarea rows={4} value={formState.internalSiteNotes} onChange={(event) => handleChange("internalSiteNotes", event.target.value)} placeholder="Access, ground conditions, constraints, contacts or information still required..." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                        <p className="mt-1 text-xs text-slate-500">Stored with the estimate for Smart Steel only. Not printed on the quote.</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Customer-facing quote notes</label>
+                        <textarea rows={4} value={formState.notes} onChange={(event) => handleChange("notes", event.target.value)} placeholder="Scope assumptions, inclusions, exclusions or qualifications for this estimate..." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                        <p className="mt-1 text-xs text-slate-500">Included in the Project Notes section of the estimate and PDF.</p>
+                      </div>
+                    </div>
+                  </details>
 
                   <div id="estimate-pricing" className="scroll-mt-36 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
