@@ -244,7 +244,10 @@ export function buildEstimateDisplayModel(estimate, lead) {
     designReference: estimate?.design_reference || input.designReference || "",
     createdLabel: formatEstimateDate(estimate?.created_at),
     validUntilLabel: formatEstimateDate(addDays(estimate?.created_at, 14)),
-    clientName: [lead?.name, lead?.last_name].filter(Boolean).join(" ") || "Client not linked",
+    clientName:
+      String(input.preparedFor || "").trim() ||
+      [lead?.name, lead?.last_name].filter(Boolean).join(" ").replace(/\s+website enquiry\s*$/i, "").trim() ||
+      "Client not linked",
     clientEmail: lead?.email || "Not supplied",
     clientPhone: lead?.phone || "Not supplied",
     productType,
