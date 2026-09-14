@@ -1,10 +1,11 @@
 import { ATLAS_SOLAR_CARPORT_PROFILES as profiles, ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES as parkingWidth, ATLAS_SOLAR_CARPORT_RAFTER_LENGTH_METRES as rafterLength } from './atlasSolarCarportProfiles.js'
 import { calculateLippedChannelMassKgPerM } from './atlasLippedChannelProfiles.js'
 import { ATLAS_M10_COMPLETE_SET } from './atlasConnectionStandards.js'
+import { ATLAS_SOLAR_CARPORT_PARKING_COUNTS, ATLAS_SOLAR_CARPORT_ROW_LENGTHS } from './atlasSolarCarportLayouts.js'
 
 export function calculateSolarCarportGeometry({ width = 5.5, length = 6 } = {}) {
   const cars = Number(width) / parkingWidth
-  if (![1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20].includes(cars) || ![6, 12].includes(Number(length))) throw new Error('Choose a supported Atlas parking layout.')
+  if (!ATLAS_SOLAR_CARPORT_PARKING_COUNTS.includes(cars) || !ATLAS_SOLAR_CARPORT_ROW_LENGTHS.includes(Number(length))) throw new Error('Choose a supported Atlas parking layout.')
   const pitch = 5 * Math.PI / 180
   const depth = rafterLength * Math.cos(pitch)
   const rearColumnHeight = 2.44
