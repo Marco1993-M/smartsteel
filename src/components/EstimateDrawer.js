@@ -256,6 +256,14 @@ function stripVersionSuffix(title) {
   return String(title || "").replace(/\s+V\d+$/i, "").trim()
 }
 
+function getDefaultPreparedFor(lead) {
+  return [lead?.name, lead?.last_name]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+website enquiry\s*$/i, "")
+    .trim()
+}
+
 function buildInitialState(lead, estimate) {
   const latestInput = estimate?.input_data || {}
   const builderConfiguration = lead?.builder_configuration || {}
@@ -281,6 +289,7 @@ function buildInitialState(lead, estimate) {
       estimate?.product_type ||
       lead?.product_type ||
       productType,
+    preparedFor: latestInput.preparedFor || getDefaultPreparedFor(lead),
     width,
     length,
     useCustomSize,
@@ -559,6 +568,7 @@ function buildEstimateDraft({
       useCustomSize: formState.useCustomSize,
       productType: formState.productType,
       productTypeLabel: formState.productTypeLabel?.trim() || formState.productType,
+      preparedFor: formState.preparedFor?.trim() || getDefaultPreparedFor(lead),
       discountPercent: Math.min(100, Math.max(0, Number(formState.discountPercent) || 0)),
       sourceSubmissionId: formState.sourceSubmissionId || null,
       designReference: formState.designReference || null,
@@ -1033,7 +1043,20 @@ export default function EstimateDrawer({
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-900">Prepared for</label>
+                        <input
+                          type="text"
+                          value={formState.preparedFor}
+                          onChange={(event) => handleChange("preparedFor", event.target.value)}
+                          placeholder="Customer or organisation name"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                        <p className="mt-2 text-xs leading-5 text-slate-500">
+                          Controls the customer name shown on this estimate without changing the CRM lead.
+                        </p>
+                      </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-900">Document title</label>
                         <input
