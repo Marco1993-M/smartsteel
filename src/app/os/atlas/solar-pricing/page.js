@@ -43,7 +43,7 @@ export default function SolarPricingPage() {
     finally { setSaving(false) }
   }
   const estimate = costs && calculateAtlasSolarCarportEstimate({ width, length, quantity: 1, moduleCount: 0, scope: 'supply_only' }, { costs })
-  const connectionCosts = estimate?.lineItems.filter(item => item.code.startsWith('SC-BRK') || ['SC-ANC', 'SC-BLT'].includes(item.code)) || []
+  const connectionCosts = estimate?.lineItems.filter(item => item.code.startsWith('SC-BRK') || item.code === 'SC-ANC' || item.code.startsWith('SC-BLT')) || []
   return <main className="space-y-6 px-3 py-4 text-slate-900 sm:px-6 sm:py-6">
     <AtlasModuleHero eyebrow="SOLAR-CARPORT pricing control" title="Control the complete solar carport cost." description="Member geometry, ZAM rates, connection components and commercial uplift feed one released price across the website and CRM." status={release ? `Pricing revision ${release.revision}` : 'Initial pricing setup'} actionHref="/tools/solar-carport-estimator" actionLabel="Open website estimator" />
     {message && <p role="status" className="border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">{message}</p>}
