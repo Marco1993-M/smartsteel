@@ -1,9 +1,10 @@
 import { calculateSolarCarportGeometry } from '../atlasSolarCarportGeometry.js'
+import { ATLAS_M10_COMPLETE_SET } from '../atlasConnectionStandards.js'
 
 export const SOLAR_COST_DEFAULTS = {
   zamRatePerTon: 28840, wastePercent: 0, fabricationPerKg: 0,
   anchorBracketEach: 350, armBracketEach: 175, purlinBracketEach: 40,
-  anchorBoltEach: 0, connectionBoltSetEach: 12, moduleSupportEach: 145,
+  anchorBoltEach: 0, connectionBoltSetEach: ATLAS_M10_COMPLETE_SET.costRate, moduleSupportEach: 145,
   installationPerSquareMetre: 200, deliveryPerKm: 19, deliveryMinimum: 1350,
   upliftPercent: 40,
 }
@@ -11,7 +12,7 @@ export const SOLAR_COST_LABELS = {
   zamRatePerTon: 'ZAM cost / ton', wastePercent: 'Steel waste %', fabricationPerKg: 'Fabrication / kg (provisional)',
   anchorBracketEach: 'Rear-post anchoring bracket / each', armBracketEach: 'Shared diagonal anchoring bracket / each',
   purlinBracketEach: 'Purlin bracket / each', anchorBoltEach: 'Foundation anchor / each',
-  connectionBoltSetEach: 'Complete connection bolt set / each', moduleSupportEach: 'Module supports / panel',
+  connectionBoltSetEach: 'Atlas M10 x 30mm complete set / each', moduleSupportEach: 'Module supports / panel',
   installationPerSquareMetre: 'Installation / m²', deliveryPerKm: 'Delivery / km', deliveryMinimum: 'Minimum delivery', upliftPercent: 'Uplift on cost %',
 }
 const money = n => Math.round((n + Number.EPSILON) * 100) / 100
@@ -93,7 +94,7 @@ export function calculateAtlasSolarCarportEstimate(input, release = null) {
       'SC-BLT-ARM-TOP': c.connectionBoltSetEach,
       'SC-BLT-PUR': c.connectionBoltSetEach,
     }
-    geometry.connections.forEach(item => add(item.code, `${item.label} (provisional)`, item.quantity * quantity, item.unit, connectionRates[item.code]))
+    geometry.connections.forEach(item => add(item.code, `${item.label}${item.specification ? ` · ${item.specification}` : ''} (provisional)`, item.quantity * quantity, item.unit, connectionRates[item.code]))
     add('SC-MODULE', 'Module support interfaces', modules, 'each', c.moduleSupportEach)
     if (input.scope === 'supply_install') add('SC-INSTALL', 'Installation', totalArea, 'm²', c.installationPerSquareMetre)
     if (Number(input.deliveryDistance) > 0) add('SC-DELIVERY', 'Delivery', 1, 'lot', Math.max(c.deliveryMinimum, Number(input.deliveryDistance) * c.deliveryPerKm))

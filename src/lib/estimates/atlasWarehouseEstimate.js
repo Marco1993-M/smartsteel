@@ -4,6 +4,7 @@ import { calculateAtlasW10Geometry } from "../atlasW10Geometry.js"
 import { calculateAtlasW12Geometry } from "../atlasW12Geometry.js"
 import { ATLAS_WAREHOUSE_PRICING_RELEASE } from "../atlasPricingRelease.js"
 import { buildAtlasWarehouseSku } from "../atlasSkuRegistry.js"
+import { ATLAS_M10_COMPLETE_SET } from "../atlasConnectionStandards.js"
 const VAT_RATE = 0.15
 // Controlled Atlas material and component rates are cost rates. Apply the
 // approved commercial uplift exactly once after all priced inputs are added.
@@ -16,16 +17,8 @@ const CONNECTION_RATES = {
   eaveBracket: 175,
   ridgeBracket: 850,
   bracingBracket: 40,
-  m10CompleteSet: 12,
+  m10CompleteSet: ATLAS_M10_COMPLETE_SET.costRate,
   m12AnchorBolt: 0,
-}
-const M10_COMPLETE_SET = {
-  specification: "M10 x 30mm · Class 8.8 · zinc plated · matching nut and washer",
-  setsPerEaveBracket: 8,
-  setsPerRidgeBracket: 8,
-  setsPerBracingBracket: 2,
-  setsPerPurlinEnd: 1,
-  setsPerGirtEnd: 1,
 }
 const GEOMETRY_BY_WIDTH = {
   6: calculateAtlasW06Geometry,
@@ -116,18 +109,18 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
   const purlinMemberCount = geometry.members.purlins.quantity * quantity
   const girtMemberCount = gableMode === "fully_enclosed" ? geometry.members.sideGirts.quantity * quantity : 0
   const m10CompleteSetCount =
-    ridgeBracketCount * M10_COMPLETE_SET.setsPerRidgeBracket
-    + eaveBracketCount * M10_COMPLETE_SET.setsPerEaveBracket
-    + bracingBracketCount * M10_COMPLETE_SET.setsPerBracingBracket
-    + purlinMemberCount * 2 * M10_COMPLETE_SET.setsPerPurlinEnd
-    + girtMemberCount * 2 * M10_COMPLETE_SET.setsPerGirtEnd
+    ridgeBracketCount * ATLAS_M10_COMPLETE_SET.setsPerRidgeBracket
+    + eaveBracketCount * ATLAS_M10_COMPLETE_SET.setsPerEaveBracket
+    + bracingBracketCount * ATLAS_M10_COMPLETE_SET.setsPerBracingBracket
+    + purlinMemberCount * 2 * ATLAS_M10_COMPLETE_SET.setsPerPurlinEnd
+    + girtMemberCount * 2 * ATLAS_M10_COMPLETE_SET.setsPerGirtEnd
   const anchorBoltCount = baseBracketCount * 4
   const connectionLines = [
     buildLineItem({ code: `${geometry.productCode}-BAS`, label: "Column base brackets", quantity: baseBracketCount, unit: "each", unitRate: CONNECTION_RATES.baseBracket, total: baseBracketCount * CONNECTION_RATES.baseBracket, provisional: true }),
     buildLineItem({ code: `${geometry.productCode}-RDG`, label: "Ridge brackets", quantity: ridgeBracketCount, unit: "each", unitRate: CONNECTION_RATES.ridgeBracket, total: ridgeBracketCount * CONNECTION_RATES.ridgeBracket, provisional: true }),
     buildLineItem({ code: `${geometry.productCode}-EAV`, label: "Eave brackets", quantity: eaveBracketCount, unit: "each", unitRate: CONNECTION_RATES.eaveBracket, total: eaveBracketCount * CONNECTION_RATES.eaveBracket, provisional: true }),
     buildLineItem({ code: `${geometry.productCode}-XBR-BRK`, label: "Bracing connection brackets", quantity: bracingBracketCount, unit: "each", unitRate: CONNECTION_RATES.bracingBracket, total: bracingBracketCount * CONNECTION_RATES.bracingBracket, provisional: true }),
-    buildLineItem({ code: `${geometry.productCode}-M10-SET`, label: `Complete M10 connection sets · ${M10_COMPLETE_SET.specification}`, quantity: m10CompleteSetCount, unit: "set", unitRate: CONNECTION_RATES.m10CompleteSet, total: m10CompleteSetCount * CONNECTION_RATES.m10CompleteSet }),
+    buildLineItem({ code: `${geometry.productCode}-M10-SET`, label: `Complete M10 connection sets · ${ATLAS_M10_COMPLETE_SET.specification}`, quantity: m10CompleteSetCount, unit: "set", unitRate: CONNECTION_RATES.m10CompleteSet, total: m10CompleteSetCount * CONNECTION_RATES.m10CompleteSet }),
     buildLineItem({ code: `${geometry.productCode}-ANC`, label: "M12 anchor bolts (price to confirm)", quantity: anchorBoltCount, unit: "each", unitRate: CONNECTION_RATES.m12AnchorBolt, total: anchorBoltCount * CONNECTION_RATES.m12AnchorBolt, provisional: true }),
   ]
 

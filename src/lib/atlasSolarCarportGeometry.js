@@ -1,5 +1,6 @@
 import { ATLAS_SOLAR_CARPORT_PROFILES as profiles, ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES as parkingWidth, ATLAS_SOLAR_CARPORT_RAFTER_LENGTH_METRES as rafterLength } from './atlasSolarCarportProfiles.js'
 import { calculateLippedChannelMassKgPerM } from './atlasLippedChannelProfiles.js'
+import { ATLAS_M10_COMPLETE_SET } from './atlasConnectionStandards.js'
 
 export function calculateSolarCarportGeometry({ width = 5.5, length = 6 } = {}) {
   const cars = Number(width) / parkingWidth
@@ -32,7 +33,7 @@ export function calculateSolarCarportGeometry({ width = 5.5, length = 6 } = {}) 
     member('SC-PER', 'Front and rear perimeter purlins', profiles.rafter, 2 * bays, purlinLength),
     member('SC-PUR', 'Internal purlins', profiles.purlin, 4 * bays, purlinLength),
   ]
-  const connection = (code, label, quantity, basis) => ({ code, label, quantity, unit: 'each', basis, status: 'provisional' })
+  const connection = (code, label, quantity, basis, specification = '') => ({ code, label, quantity, unit: 'each', basis, specification, status: 'provisional' })
   const baseBrackets = frames * rows
   const armBrackets = frames * rows
   const purlinBrackets = bays * rows * 6 * 2
@@ -41,10 +42,10 @@ export function calculateSolarCarportGeometry({ width = 5.5, length = 6 } = {}) 
     connection('SC-BRK-ARM', 'Shared diagonal-arm anchoring brackets', armBrackets, `${frames} frames × ${rows} row(s)`),
     connection('SC-BRK-PUR', 'Purlin connection brackets', purlinBrackets, `${bays * rows * 6} purlin lengths × 2 ends`),
     connection('SC-ANC', 'Foundation anchor bolts', (baseBrackets + armBrackets) * 2, `${baseBrackets + armBrackets} anchoring brackets × 2 anchors`),
-    connection('SC-BLT-BASE', 'Rear-post bracket bolt sets', baseBrackets * 2, `${baseBrackets} post brackets × 2 bolt sets`),
-    connection('SC-BLT-ARM-BASE', 'Diagonal base bolt sets', armBrackets * 4, `${armBrackets} shared diagonal brackets × 4 bolt sets`),
-    connection('SC-BLT-ARM-TOP', 'Diagonal-to-rafter bolt sets', armBrackets * 4, `${armBrackets} frames × 2 arms × 2 direct bolt sets`),
-    connection('SC-BLT-PUR', 'Purlin connection bolt sets', purlinBrackets, `${purlinBrackets} purlin brackets × 1 bolt set`),
+    connection('SC-BLT-BASE', 'Rear-post bracket M10 sets', baseBrackets * 2, `${baseBrackets} post brackets × 2 bolt sets`, ATLAS_M10_COMPLETE_SET.specification),
+    connection('SC-BLT-ARM-BASE', 'Diagonal base M10 sets', armBrackets * 4, `${armBrackets} shared diagonal brackets × 4 bolt sets`, ATLAS_M10_COMPLETE_SET.specification),
+    connection('SC-BLT-ARM-TOP', 'Diagonal-to-rafter M10 sets', armBrackets * 4, `${armBrackets} frames × 2 arms × 2 direct bolt sets`, ATLAS_M10_COMPLETE_SET.specification),
+    connection('SC-BLT-PUR', 'Purlin connection M10 sets', purlinBrackets, `${purlinBrackets} purlin brackets × 1 bolt set`, ATLAS_M10_COMPLETE_SET.specification),
   ]
   return { cars, rows, bays, frames, frameSpacing, depth, pitch, frontHeight, rearColumnHeight, rearZ, baseZ, frontArmZ: baseZ - frontRun, rearArmZ: baseZ + rearRun, members, connections, totalSteelKg: members.reduce((sum, m) => sum + m.totalMassKg, 0) }
 }
