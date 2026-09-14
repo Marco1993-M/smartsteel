@@ -9,7 +9,7 @@ export const SOLAR_COST_DEFAULTS = {
 }
 export const SOLAR_COST_LABELS = {
   zamRatePerTon: 'ZAM cost / ton', wastePercent: 'Steel waste %', fabricationPerKg: 'Fabrication / kg (provisional)',
-  anchorBracketEach: 'Column anchoring bracket / each', armBracketEach: 'Diagonal-arm bracket / each',
+  anchorBracketEach: 'Rear-post anchoring bracket / each', armBracketEach: 'Shared diagonal anchoring bracket / each',
   purlinBracketEach: 'Purlin bracket / each', anchorBoltEach: 'Foundation anchor / each',
   connectionBoltSetEach: 'Complete connection bolt set / each', moduleSupportEach: 'Module supports / panel',
   installationPerSquareMetre: 'Installation / m²', deliveryPerKm: 'Delivery / km', deliveryMinimum: 'Minimum delivery', upliftPercent: 'Uplift on cost %',
@@ -88,7 +88,10 @@ export function calculateAtlasSolarCarportEstimate(input, release = null) {
       'SC-BRK-ARM': c.armBracketEach,
       'SC-BRK-PUR': c.purlinBracketEach,
       'SC-ANC': c.anchorBoltEach,
-      'SC-BLT': c.connectionBoltSetEach,
+      'SC-BLT-BASE': c.connectionBoltSetEach,
+      'SC-BLT-ARM-BASE': c.connectionBoltSetEach,
+      'SC-BLT-ARM-TOP': c.connectionBoltSetEach,
+      'SC-BLT-PUR': c.connectionBoltSetEach,
     }
     geometry.connections.forEach(item => add(item.code, `${item.label} (provisional)`, item.quantity * quantity, item.unit, connectionRates[item.code]))
     add('SC-MODULE', 'Module support interfaces', modules, 'each', c.moduleSupportEach)

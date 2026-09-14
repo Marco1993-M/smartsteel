@@ -34,14 +34,17 @@ export function calculateSolarCarportGeometry({ width = 5.5, length = 6 } = {}) 
   ]
   const connection = (code, label, quantity, basis) => ({ code, label, quantity, unit: 'each', basis, status: 'provisional' })
   const baseBrackets = frames * rows
-  const armBrackets = frames * rows * 2
+  const armBrackets = frames * rows
   const purlinBrackets = bays * rows * 6 * 2
   const connections = [
-    connection('SC-BRK-BASE', 'Column anchoring brackets', baseBrackets, `${frames} frames × ${rows} row(s)`),
-    connection('SC-BRK-ARM', 'Diagonal-arm connection brackets', armBrackets, `${frames} frames × 2 arms × ${rows} row(s)`),
+    connection('SC-BRK-BASE', 'Rear-post anchoring brackets', baseBrackets, `${frames} frames × ${rows} row(s)`),
+    connection('SC-BRK-ARM', 'Shared diagonal-arm anchoring brackets', armBrackets, `${frames} frames × ${rows} row(s)`),
     connection('SC-BRK-PUR', 'Purlin connection brackets', purlinBrackets, `${bays * rows * 6} purlin lengths × 2 ends`),
-    connection('SC-ANC', 'Foundation anchor bolts', baseBrackets * 4, `${baseBrackets} anchoring brackets × 4 anchors`),
-    connection('SC-BLT', 'Complete connection bolt sets', armBrackets * 2 + purlinBrackets, `${armBrackets} arm brackets × 2 plus ${purlinBrackets} purlin brackets × 1`),
+    connection('SC-ANC', 'Foundation anchor bolts', (baseBrackets + armBrackets) * 2, `${baseBrackets + armBrackets} anchoring brackets × 2 anchors`),
+    connection('SC-BLT-BASE', 'Rear-post bracket bolt sets', baseBrackets * 2, `${baseBrackets} post brackets × 2 bolt sets`),
+    connection('SC-BLT-ARM-BASE', 'Diagonal base bolt sets', armBrackets * 4, `${armBrackets} shared diagonal brackets × 4 bolt sets`),
+    connection('SC-BLT-ARM-TOP', 'Diagonal-to-rafter bolt sets', armBrackets * 4, `${armBrackets} frames × 2 arms × 2 direct bolt sets`),
+    connection('SC-BLT-PUR', 'Purlin connection bolt sets', purlinBrackets, `${purlinBrackets} purlin brackets × 1 bolt set`),
   ]
   return { cars, rows, bays, frames, frameSpacing, depth, pitch, frontHeight, rearColumnHeight, rearZ, baseZ, frontArmZ: baseZ - frontRun, rearArmZ: baseZ + rearRun, members, connections, totalSteelKg: members.reduce((sum, m) => sum + m.totalMassKg, 0) }
 }
