@@ -410,7 +410,11 @@ function getLeadFirstName(lead) {
 }
 
 function getLeadFullName(lead) {
-  return normalizePersonName([lead?.name, lead?.last_name].filter(Boolean).join(" ")) || "Client"
+  const name = [lead?.name, lead?.last_name]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+(?:website enquiry|solar carport enquiry|warehouse builder)\s*$/i, "")
+  return normalizePersonName(name) || "Client"
 }
 
 function getProjectReference(lead) {
@@ -452,14 +456,18 @@ function buildFollowUpTemplate(templateKey, lead) {
   switch (templateKey) {
     case "estimate_request_acknowledgement":
       return {
-        subject: "Smart Steel | Estimate request received",
+        subject: "We have received your Smart Steel estimate request",
         body: `Good day ${getLeadFullName(lead)},
 
 Thank you for sending through your estimate request for ${projectReference}.
 
-We have received the project information and will review the scope before preparing your estimate. If we need any additional measurements, drawings, site information, or clarification, we will contact you.
+Your request is now with ${ownerName}, who will review the project information and confirm the next meaningful step. If any measurements, drawings, site information or clarification are still needed, we will let you know clearly.
 
-If there is anything else you would like us to consider, you are welcome to reply to this email and send it through.`,
+You can reply to this email with photos, sketches or anything else you would like us to consider. You do not need to have every technical detail worked out before we help you move forward.
+
+Kind regards,
+${ownerName}
+Smart Steel`,
       }
     case "estimate_follow_up":
       return {
