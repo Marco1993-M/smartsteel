@@ -8,19 +8,19 @@ export const dynamic = "force-dynamic"
 const RESPONSE_ACTIONS = {
   call_me: {
     cancel: true,
-    nextAction: "Client requested a call about the estimate. Contact them as soon as possible.",
+    nextAction: "Client is ready to proceed. Contact them to confirm the order and project handoff requirements.",
   },
   request_changes: {
     cancel: true,
     nextAction: "Client would like changes to the estimate. Contact them to confirm the required revisions.",
   },
   considering: {
-    cancel: false,
-    nextAction: "Client is still considering the estimate. The scheduled follow-up sequence remains active.",
+    cancel: true,
+    nextAction: "Client is planning for later. Contact them to agree a suitable future follow-up date.",
   },
   not_proceeding: {
     cancel: true,
-    nextAction: "Client is not proceeding right now. Review whether to nurture the opportunity or mark it stalled.",
+    nextAction: "Client no longer needs the project. Review and close or retain the opportunity as appropriate.",
   },
 }
 
