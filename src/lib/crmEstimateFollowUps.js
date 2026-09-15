@@ -1,54 +1,55 @@
 const FOLLOW_UP_STEPS = [
   {
     number: 1,
-    businessDays: 3,
-    subject: (estimate) => `Following up on ${estimate.title || "your Smart Steel estimate"}`,
-    heading: "Did you receive your estimate?",
-    message: (clientName) => `Good day ${clientName},\n\nI wanted to make sure the estimate reached you and that the proposed scope is clear. If you would like us to explain anything or adjust the configuration, simply reply to this email and we will help.`,
+    businessDays: 2,
+    subject: (estimate) => `Does ${estimate.title || "your Smart Steel estimate"} fit your project?`,
+    heading: "Does the proposed scope fit?",
+    message: (clientName) => `Good day ${clientName},\n\nThe estimate was prepared around the project information we received. Please check that the proposed size, scope and included work match what you need.\n\nIf something needs to change or you would like any part explained, reply to this email and we will help refine it.`,
   },
   {
     number: 2,
-    businessDays: 3,
-    subject: (estimate) => `Can we refine ${estimate.title || "your Smart Steel estimate"}?`,
-    heading: "Would an adjustment help?",
-    message: (clientName) => `Good day ${clientName},\n\nI am checking in on the estimate we sent. If the scope, budget or timing needs to change, we can review practical alternatives with you rather than leaving you with a proposal that does not quite fit.`,
+    businessDays: 5,
+    subject: (estimate) => `A clearer way to compare ${estimate.title || "your steel estimate"}`,
+    heading: "Compare the complete scope",
+    message: (clientName) => `Good day ${clientName},\n\nSteel quotations can look similar while covering different work. A useful comparison should check the dimensions, steel specification, foundations, delivery, installation and exclusions, not only the final amount.\n\nIf you are comparing options, send us the points you are unsure about and we will help you compare the scope clearly. You can also view examples of completed Smart Steel work below.`,
+    showProof: true,
   },
   {
     number: 3,
-    businessDays: 5,
-    subject: (estimate) => `Should we keep ${estimate.title || "your project"} open?`,
-    heading: "Should we keep your project open?",
-    message: (clientName) => `Good day ${clientName},\n\nThis is our final scheduled follow-up on the estimate. If the project is still being considered, reply when convenient and we will keep helping. If the timing is not right, that is completely fine and we can reconnect when you are ready.`,
+    businessDays: 7,
+    subject: (estimate) => `What is the right next step for ${estimate.title || "your project"}?`,
+    heading: "What suits you next?",
+    message: (clientName) => `Good day ${clientName},\n\nThis is our final scheduled follow-up on the estimate. Please choose the option below that best reflects where the project stands.\n\nWe can help you proceed, revise the scope, reconnect at a better time, or close the follow-up for now.`,
   },
 ]
 
 export const ESTIMATE_RESPONSE_OPTIONS = [
   {
     key: "call_me",
-    label: "I'm interested - please call me",
-    shortLabel: "Please call me",
-    helper: "The Smart Steel team will contact you to discuss the next step.",
+    label: "Ready to proceed",
+    shortLabel: "Ready to proceed",
+    helper: "Smart Steel will contact you to confirm the next step.",
     marker: "01",
   },
   {
     key: "request_changes",
-    label: "I'd like to change the estimate",
+    label: "I need a change",
     shortLabel: "I need changes",
     helper: "We will contact you to understand what should be revised.",
     marker: "02",
   },
   {
     key: "considering",
-    label: "I'm still considering it",
-    shortLabel: "Still considering",
-    helper: "No pressure. We will keep the estimate open and check in later.",
+    label: "Planning for later",
+    shortLabel: "Planning for later",
+    helper: "We will keep the project context and reconnect at a more suitable time.",
     marker: "03",
   },
   {
     key: "not_proceeding",
-    label: "I'm not proceeding right now",
-    shortLabel: "Not proceeding",
-    helper: "We will pause the follow-ups. You can return whenever the timing is right.",
+    label: "No longer needed",
+    shortLabel: "No longer needed",
+    helper: "We will stop the follow-ups. You are welcome to return in future.",
     marker: "04",
   },
 ]
@@ -89,11 +90,16 @@ export function buildFollowUpCopy({ stepNumber, lead, estimate }) {
   const step = getFollowUpStep(stepNumber)
   if (!step) return null
 
-  const clientName = [lead?.name, lead?.last_name].filter(Boolean).join(" ").trim() || "there"
+  const clientName = [lead?.name, lead?.last_name]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+(?:website enquiry|solar carport enquiry|warehouse builder)\s*$/i, "")
+    .trim() || "there"
   return {
     subject: step.subject(estimate || {}),
     heading: step.heading,
     body: step.message(clientName),
+    showProof: Boolean(step.showProof),
   }
 }
 
@@ -141,6 +147,11 @@ export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, i
           <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${escapedTitle}</p>
         </div>
         <a href="${shareUrl}" style="display:inline-block;padding:13px 18px;background:${accent};color:#fff;text-decoration:none;font-size:14px;font-weight:700;">View estimate</a>
+        ${copy.showProof ? `<div style="margin-top:22px;padding:18px;background:#f8fafc;border:1px solid #dbe4ee;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:${accent};">Completed work</p>
+          <p style="margin:0 0 12px;color:#475569;font-size:13px;line-height:1.6;">See recent Smart Steel structures and installations completed on real South African sites.</p>
+          <a href="https://www.smartsteel.co.za/recent" style="color:${accent};font-size:13px;font-weight:700;">View recent projects →</a>
+        </div>` : ""}
         ${responseBaseUrl ? `<div style="margin-top:28px;padding-top:24px;border-top:1px solid #e2e8f0;">
           <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:${accent};">One quick question</p>
           <h2 style="margin:0 0 15px;font-size:19px;line-height:1.3;color:#0f172a;">Where are you with your project?</h2>
@@ -175,4 +186,4 @@ export function getEstimateBrandIdentity(lead, estimate) {
     .some((term) => identity.includes(term))) return "lsf"
   return "smart-steel"
 }
-import { getAtlasWarehouseIdentityTerms } from "./atlasProductIdentity"
+import { getAtlasWarehouseIdentityTerms } from "./atlasProductIdentity.js"
