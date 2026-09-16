@@ -42,6 +42,7 @@ function hasHealthyActiveSequence(sequence) {
 
 function matchesSequenceFilter(lead, sequence, filter) {
   if (filter === "all") return true
+  if (filter === "completed") return sequence?.status === "completed"
   if (["won", "lost"].includes(normalizeStatus(lead.status))) return false
   if (filter === "attention") {
     if (hasHealthyActiveSequence(sequence) && !sequence?.last_response_key) return false
@@ -50,7 +51,6 @@ function matchesSequenceFilter(lead, sequence, filter) {
   if (!sequence) return false
   if (filter === "active") return sequence.status === "active" && !sequence.last_response_key
   if (filter === "responded") return Boolean(sequence.last_response_key)
-  if (filter === "completed") return sequence.status === "completed"
   return true
 }
 
@@ -423,7 +423,9 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
   const opportunitySummary = getOpportunitySummary(lead)
   const hasQuoteValue = String(lead.quote_value || "").trim().length > 0
   const isClosed = ["won", "lost"].includes(normalizedStatus)
-  const sequencePresentation = isClosed ? null : getSequencePresentation(sequence)
+  const sequencePresentation = isClosed && sequence?.status !== "completed"
+    ? null
+    : getSequencePresentation(sequence)
   const automatedFollowUpActive = !isClosed && hasHealthyActiveSequence(sequence)
   const attention = getCardAttention(lead, sequence)
   const contextualAction = getContextualAction(lead, sequence)
