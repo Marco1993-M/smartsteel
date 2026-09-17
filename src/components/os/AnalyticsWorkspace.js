@@ -361,7 +361,7 @@ function LtvCacCard({ metric, periodLabel }) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Commercial efficiency</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Lifetime value to acquisition cost</h2>
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Lifetime value to acquisition cost · all sources</h2>
             </div>
             <span className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] ${
               metric?.ready
@@ -388,13 +388,14 @@ function LtvCacCard({ metric, periodLabel }) {
               <p className="mt-2 text-xs text-slate-500">{Math.round(Number(metric?.grossMarginRate || 0) * 100)}% margin · {metric?.lifetimeProjectsPerCustomer || 1} lifetime project</p>
             </div>
             <div className="bg-white p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Paid CAC</p>
-              <p className="mt-3 text-2xl font-bold tracking-tight text-slate-950">{metric?.cac ? formatCurrency(metric.cac) : "Pending"}</p>
-              <p className="mt-2 text-xs text-slate-500">{metric?.paidWonCustomers || 0} paid-attributed won customer{metric?.paidWonCustomers === 1 ? "" : "s"}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Blended CAC (estimate)</p>
+              <p className="mt-3 text-2xl font-bold tracking-tight text-slate-950">{metric?.cac != null ? formatCurrency(metric.cac) : "Pending"}</p>
+              <p className="mt-2 text-xs text-slate-500">{metric?.wonCustomers || 0} won lead{metric?.wonCustomers === 1 ? "" : "s"} across all sources</p>
             </div>
           </div>
 
           <p className="mt-4 text-xs leading-5 text-slate-500">{metric?.basis}</p>
+          <p className="mt-2 text-xs leading-5 text-amber-700">{metric?.costCoverage}</p>
         </div>
         <aside className={`p-5 sm:p-7 ${metric?.ready ? (healthy ? "bg-emerald-50" : "bg-amber-50") : "bg-slate-50"}`}>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Reading the metric</p>
@@ -403,11 +404,11 @@ function LtvCacCard({ metric, periodLabel }) {
               ? healthy
                 ? "Acquisition is producing healthy contribution value."
                 : "The ratio needs more margin, repeat value, or lower acquisition cost."
-              : "Complete the missing attribution before using this ratio."}
+              : "More data is needed to calculate this ratio."}
           </p>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             {metric?.ready
-              ? `${formatCurrency(metric.averageWonValue)} average won value and ${formatCurrency(metric.paidAcquisitionCost)} paid spend are included in this period.`
+              ? `${formatCurrency(metric.averageWonValue)} average won value and ${formatCurrency(metric.acquisitionCost)} recorded acquisition spend are included in this period.`
               : metric?.blocker}
           </p>
         </aside>
