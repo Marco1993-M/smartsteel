@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { supabaseServer } from "lib/supabase-server"
 import { getEstimateResponseOption } from "lib/crmEstimateFollowUps"
 
+import { ESTIMATE_DECLINE_REASONS, parseDeclineFeedback } from "lib/estimateDeclineReasons.mjs"
+
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -20,7 +22,7 @@ const RESPONSE_ACTIONS = {
   },
   not_proceeding: {
     cancel: true,
-    nextAction: "Client no longer needs the project. Review and close or retain the opportunity as appropriate.",
+    nextAction: "Client requested follow-ups stop. Review their feedback and confirm their intentions before marking Lost.",
   },
 }
 
@@ -34,6 +36,15 @@ export async function POST(request) {
     if (!token || !option || !action) {
       return NextResponse.json({ error: "Choose a valid response." }, { status: 400 })
     }
+
+    let feedback
+    try {
+      feedback = parseDeclineFeedback(option.key, payload.declineReason, payload.declineComment)
+    } catch (validationError) {
+      return NextResponse.json({ error: validationError.message }, { status: 400 })
+    }
+    const reasonLabel = ESTIMATE_DECLINE_REASONS.find((item) => item.key === feedback.reason)?.label
+    const feedbackNote = [reasonLabel ? `Reason: ${reasonLabel}.` : "", feedback.comment ? `Client comment: ${feedback.comment}` : ""].filter(Boolean).join(" ")
 
     const { data: sequence, error } = await supabaseServer
       .from("crm_estimate_follow_up_sequences")
@@ -52,6 +63,7 @@ export async function POST(request) {
       estimate_id: sequence.estimate_id,
       response_key: option.key,
       response_label: option.label,
+      ...(feedback.reason || feedback.comment ? { decline_reason: feedback.reason, decline_comment: feedback.comment } : {}),
       user_agent: request.headers.get("user-agent") || null,
     }])
 
@@ -77,7 +89,7 @@ export async function POST(request) {
 
     await supabaseServer.from("crm_estimate_follow_up_sequences").update(sequenceUpdate).eq("id", sequence.id)
 
-    const leadUpdate = { next_action: action.nextAction }
+    const leadUpdate = { next_action: [action.nextAction, feedbackNote].filter(Boolean).join(" ") }
     if (action.cancel) leadUpdate.follow_up_at = null
     await supabaseServer.from("leads").update(leadUpdate).eq("id", sequence.lead_id)
 
@@ -85,7 +97,7 @@ export async function POST(request) {
       lead_id: sequence.lead_id,
       type: "follow_up",
       user_name: "Client response",
-      description: `Client selected: ${option.label}. ${action.cancel ? "Remaining automatic follow-ups were cancelled." : "The automatic sequence remains active."}`,
+      description: `Client selected: ${option.label}. ${action.cancel ? "Remaining automatic follow-ups were cancelled." : "The automatic sequence remains active."} ${feedbackNote}`,
       timestamp: respondedAt,
     }])
 

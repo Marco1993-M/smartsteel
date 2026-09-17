@@ -4,36 +4,17 @@ import Image from "next/image"
 import { useState } from "react"
 import { Check, Clock3, PauseCircle, Phone, RefreshCw } from "lucide-react"
 
-const OPTIONS = [
-  {
-    key: "call_me",
-    label: "I'm interested - please call me",
-    helper: "The Smart Steel team will contact you to discuss the next step.",
-    icon: Phone,
-  },
-  {
-    key: "request_changes",
-    label: "I'd like to change the estimate",
-    helper: "We will contact you to understand what should be revised.",
-    icon: RefreshCw,
-  },
-  {
-    key: "considering",
-    label: "I'm still considering it",
-    helper: "No pressure. We will keep the estimate open and check in later.",
-    icon: Clock3,
-  },
-  {
-    key: "not_proceeding",
-    label: "I'm not proceeding right now",
-    helper: "We will pause the follow-ups. You can return whenever the timing is right.",
-    icon: PauseCircle,
-  },
-]
+import { ESTIMATE_DECLINE_REASONS } from "lib/estimateDeclineReasons.mjs"
+import { ESTIMATE_RESPONSE_OPTIONS } from "lib/crmEstimateFollowUps"
+
+const RESPONSE_ICONS = { call_me: Phone, request_changes: RefreshCw, considering: Clock3, not_proceeding: PauseCircle }
+const OPTIONS = ESTIMATE_RESPONSE_OPTIONS.map((option) => ({ ...option, icon: RESPONSE_ICONS[option.key] }))
 
 export default function EstimateResponseClient({ token, estimateTitle, clientName, initialChoice, isAtlas }) {
   const validInitialChoice = OPTIONS.some((option) => option.key === initialChoice) ? initialChoice : ""
   const [choice, setChoice] = useState(validInitialChoice)
+  const [declineReason, setDeclineReason] = useState("")
+  const [declineComment, setDeclineComment] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(null)
   const [error, setError] = useState("")
@@ -47,7 +28,7 @@ export default function EstimateResponseClient({ token, estimateTitle, clientNam
       const response = await fetch("/api/crm/estimate-follow-ups/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, choice }),
+        body: JSON.stringify({ token, choice, ...(choice === "not_proceeding" ? { declineReason, declineComment } : {}) }),
       })
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(result.error || "We could not record your response.")
@@ -139,6 +120,20 @@ export default function EstimateResponseClient({ token, estimateTitle, clientNam
                   )
                 })}
               </div>
+
+              {choice === "not_proceeding" ? (
+                <fieldset className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-5">
+                  <legend className="px-1 text-sm font-bold text-slate-900">What’s the main reason you’re not proceeding? (Optional)</legend>
+                  <p className="text-sm text-slate-600">Your feedback helps us improve. You can confirm without answering.</p>
+                  <label className="block text-sm font-medium text-slate-700" htmlFor="decline-reason">Main reason</label>
+                  <select id="decline-reason" value={declineReason} onChange={(event) => setDeclineReason(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm">
+                    <option value="">Prefer not to say</option>
+                    {ESTIMATE_DECLINE_REASONS.map((reason) => <option key={reason.key} value={reason.key}>{reason.label}</option>)}
+                  </select>
+                  <label className="block text-sm font-medium text-slate-700" htmlFor="decline-comment">Anything else you’d like us to know? (Optional)</label>
+                  <textarea id="decline-comment" value={declineComment} onChange={(event) => setDeclineComment(event.target.value)} maxLength={1000} rows={3} className="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm" />
+                </fieldset>
+              ) : null}
 
               {selected ? (
                 <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">

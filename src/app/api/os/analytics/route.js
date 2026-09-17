@@ -1,3 +1,4 @@
+import { buildDeclineSummary } from "lib/estimateDeclineReasons.mjs"
 import { NextResponse } from "next/server"
 import { buildCommercialEfficiency } from "lib/commercialEfficiency.mjs"
 import { requireOsAuth } from "lib/osRouteAuth"
@@ -182,7 +183,7 @@ export async function GET(request) {
   const start = atStartOfDay(new Date(end.getTime() - days * 24 * 60 * 60 * 1000))
   const previousStart = atStartOfDay(new Date(start.getTime() - days * 24 * 60 * 60 * 1000))
 
-  const [leadsResult, estimatesResult, connectionsResult, marketingResult] = await Promise.all([
+  const [leadsResult, estimatesResult, connectionsResult, marketingResult, responsesResult] = await Promise.all([
     fetchAll(() =>
       supabaseServer
         .from("leads")
@@ -206,6 +207,15 @@ export async function GET(request) {
         .eq("dimension_key", "summary")
         .gte("metric_date", previousStart.toISOString().slice(0, 10))
         .order("metric_date", { ascending: true })
+    ),
+    fetchAll(() =>
+      supabaseServer
+        .from("crm_estimate_follow_up_responses")
+        .select("id, sequence_id, response_key, decline_reason, created_at")
+        .gte("created_at", start.toISOString())
+        .lt("created_at", end.toISOString())
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
     ),
   ])
 
@@ -274,6 +284,9 @@ export async function GET(request) {
       searchConsole: marketing.search_console,
       googleAds: marketing.google_ads,
     },
+    declineFeedback: responsesResult.error
+      ? { available: false, total: 0, withReason: 0, reasons: [] }
+      : { available: true, ...buildDeclineSummary(responsesResult.data || []) },
     commercialEfficiency,
     warnings,
   })
