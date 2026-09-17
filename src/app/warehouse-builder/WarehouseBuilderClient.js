@@ -22,6 +22,7 @@ import WarehouseBuilderScene from "../../components/warehouse-builder/WarehouseB
 import { calculateEstimateByProductType } from "../../lib/estimates/estimateFactory"
 import { calculateAtlasWarehouseEstimate } from "../../lib/estimates/atlasWarehouseEstimate"
 import {
+  ATLAS_HEIGHT_OPTIONS,
   ATLAS_LENGTH_OPTIONS,
   DEFAULT_ATLAS_CONFIGURATION,
   createAtlasConfigurationReference,
@@ -37,7 +38,6 @@ import {
   WAREHOUSE_CLADDING_OPTIONS,
   WAREHOUSE_ENCLOSURE_OPTIONS,
   WAREHOUSE_GARAGE_OPENING_OPTIONS,
-  WAREHOUSE_HEIGHT_OPTIONS,
   WAREHOUSE_LENGTH_OPTIONS,
 } from "../../lib/estimates/warehouseEstimate"
 import {
@@ -612,7 +612,7 @@ export default function WarehouseBuilderClient() {
     const steelFinishParam = searchParams.get("steelFinish")
     const sheetingParam = searchParams.get("sheeting")
 
-    if (WAREHOUSE_HEIGHT_OPTIONS.includes(heightParam)) nextValues.wallHeight = heightParam
+    if (ATLAS_HEIGHT_OPTIONS.includes(heightParam)) nextValues.wallHeight = heightParam
     if (WAREHOUSE_CLADDING_OPTIONS.includes(claddingParam)) nextValues.cladding = claddingParam
     if (WAREHOUSE_ENCLOSURE_OPTIONS.some((option) => option.value === enclosureParam)) nextValues.enclosureType = enclosureParam
     if (searchParams.has("rollerDoors") && Number.isFinite(rollerDoorParam)) nextValues.rollerDoorCount = Math.min(6, Math.max(0, rollerDoorParam))
@@ -1288,8 +1288,8 @@ export default function WarehouseBuilderClient() {
                         <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                           {isAtlasWarehouse ? "Wall height" : "Eave height"}
                         </label>
-                        <div className="mt-1.5 grid grid-cols-3 gap-2">
-                          {WAREHOUSE_HEIGHT_OPTIONS.map((option) => (
+                        <div className="mt-1.5 grid grid-cols-4 gap-2">
+                          {ATLAS_HEIGHT_OPTIONS.map((option) => (
                             <button
                               key={option}
                               type="button"

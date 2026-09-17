@@ -8,6 +8,22 @@ const widths = [8, 10, 12]
 const lengths = Array.from({ length: 19 }, (_, index) => 5 + index * 2.5)
 const availablePages = new Map(getWarehouseCostSlugs().map((slug) => getWarehouseCostPageConfig(slug)).filter(Boolean).map((config) => [`${config.length}x${config.width}`, config]))
 
+function builderHref(url, slug, placement) {
+  const separator = url.includes("?") ? "&" : "?"
+  return `${url}${separator}source=warehouse-cost&sourcePage=${encodeURIComponent(slug)}&sourcePlacement=${encodeURIComponent(placement)}`
+}
+
+function reportBuilderStart({ config, option, finish, scope, placement }) {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return
+  window.gtag("event", "atlas_builder_start", {
+    source_page: `/warehouse-cost/${config.slug}`,
+    source_placement: placement,
+    warehouse_size: `${option.width}x${option.length}`,
+    steel_finish: finish,
+    sheeting_scope: scope,
+  })
+}
+
 function buildSchemas(config) {
   return [
     { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
@@ -27,6 +43,7 @@ export default function WarehouseCostPageClient({ slug }) {
   const [openFaqIndex, setOpenFaqIndex] = useState(0)
   if (!config) return null
   const selectedOption = config.atlasOptions[selectedOptionIndex] ?? config.atlasOptions[0]
+  const selectedStartingPrice = selectedOption.prices[selectedFinish].structure_only
   const nearbyLengths = lengths
     .filter((length) => Math.abs(length - config.length) <= 10)
     .slice(0, 9)
@@ -45,9 +62,18 @@ export default function WarehouseCostPageClient({ slug }) {
         </div>
         <div className="border-l border-white/20 lg:pl-8">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">Current starting guide</p>
-          <p className="mt-3 text-4xl font-bold">{selectedOption.prices.ZAM.structure_only.label}</p>
-          <p className="mt-2 text-sm text-white/70">{selectedOption.width}m x {selectedOption.length}m x {selectedOption.wallHeight}m · ZAM · structure only · excl. VAT</p>
-          <a href="#atlas-pricing" className="mt-6 inline-flex bg-white px-6 py-3 font-bold text-[#0043f3] transition hover:bg-[#c1d9e5]">Compare Atlas options ↓</a>
+          <p className="mt-3 text-4xl font-bold">{selectedStartingPrice.label}</p>
+          <p className="mt-2 text-sm text-white/70">{selectedOption.width}m x {selectedOption.length}m x {selectedOption.wallHeight}m · {selectedFinish} · structure only · excl. VAT</p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              href={builderHref(selectedStartingPrice.url, config.slug, "hero")}
+              onClick={() => reportBuilderStart({ config, option: selectedOption, finish: selectedFinish, scope: "structure_only", placement: "hero" })}
+              className="inline-flex min-h-12 items-center justify-center bg-white px-6 py-3 font-bold text-[#0043f3] transition hover:bg-[#c1d9e5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              Continue this build in 3D →
+            </Link>
+            <a href="#atlas-pricing" className="inline-flex min-h-12 items-center justify-center px-2 py-3 font-bold text-white underline decoration-white/40 underline-offset-4 transition hover:decoration-white">Compare options ↓</a>
+          </div>
         </div>
       </div>
     </section>
@@ -62,7 +88,7 @@ export default function WarehouseCostPageClient({ slug }) {
 
         <div>
           <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Live Atlas pricing</p><h2 className="mt-3 text-3xl font-bold md:text-4xl">Select how much of the building you need</h2></div><p className="text-sm font-semibold text-[#62748c]">Supply only · excl. VAT</p></div>
-          <div className="mt-7 grid gap-4 md:grid-cols-3">{config.scopes.map((scope, index) => { const price = selectedOption.prices[selectedFinish][scope.key]; return <article key={scope.key} className={`grid min-h-[390px] grid-rows-[32px_64px_88px_72px_24px_auto] border bg-white p-6 shadow-[0_12px_36px_rgba(0,29,46,0.05)] ${index === 0 ? "border-[#0043f3]" : "border-[#d9e3eb]"}`}><span className={`${index === 0 ? "visible" : "invisible"} self-start justify-self-start bg-[#0043f3] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white`}>Starting point</span><h3 className="flex items-start pt-4 text-xl font-bold leading-7">{scope.label}</h3><p className="pt-3 text-sm leading-6 text-[#62748c]">{scope.description}</p><p className="flex items-end text-3xl font-bold">{price.label}</p><p className="text-xs font-bold uppercase tracking-wider text-[#93a5bb]">Excluding VAT</p><Link href={price.url} className="group mt-4 flex min-h-12 items-center justify-between gap-4 self-end border border-[#001d2e] bg-[#001d2e] px-4 py-3 text-sm font-bold text-white transition hover:border-[#0043f3] hover:bg-[#0043f3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0043f3]"><span>Build this option</span><span aria-hidden="true" className="text-lg transition-transform group-hover:translate-x-1">→</span></Link></article> })}</div>
+          <div className="mt-7 grid gap-4 md:grid-cols-3">{config.scopes.map((scope, index) => { const price = selectedOption.prices[selectedFinish][scope.key]; return <article key={scope.key} className={`grid min-h-[390px] grid-rows-[32px_64px_88px_72px_24px_auto] border bg-white p-6 shadow-[0_12px_36px_rgba(0,29,46,0.05)] ${index === 0 ? "border-[#0043f3]" : "border-[#d9e3eb]"}`}><span className={`${index === 0 ? "visible" : "invisible"} self-start justify-self-start bg-[#0043f3] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white`}>Starting point</span><h3 className="flex items-start pt-4 text-xl font-bold leading-7">{scope.label}</h3><p className="pt-3 text-sm leading-6 text-[#62748c]">{scope.description}</p><p className="flex items-end text-3xl font-bold">{price.label}</p><p className="text-xs font-bold uppercase tracking-wider text-[#93a5bb]">Excluding VAT</p><Link href={builderHref(price.url, config.slug, `price-${scope.key}`)} onClick={() => reportBuilderStart({ config, option: selectedOption, finish: selectedFinish, scope: scope.key, placement: "price-card" })} className="group mt-4 flex min-h-12 items-center justify-between gap-4 self-end border border-[#001d2e] bg-[#001d2e] px-4 py-3 text-sm font-bold text-white transition hover:border-[#0043f3] hover:bg-[#0043f3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0043f3]"><span>Continue in the 3D builder</span><span aria-hidden="true" className="text-lg transition-transform group-hover:translate-x-1">→</span></Link></article> })}</div>
           <div className="mt-5 border border-[#bfd3e0] bg-[#e6f0f5] p-5 text-sm leading-6 text-[#31445e]">These are current Atlas supply-only budget guides. Delivery and installation are reviewed separately after we understand your location, access and site conditions.</div>
         </div>
       </div>
@@ -76,6 +102,6 @@ export default function WarehouseCostPageClient({ slug }) {
 
     <section className="mx-auto grid max-w-7xl gap-10 px-5 py-16 md:px-8 lg:grid-cols-[0.7fr_1.3fr]"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Questions answered</p><h2 className="mt-4 text-3xl font-bold">Atlas warehouse cost FAQs</h2></div><div className="space-y-3">{config.faqs.map(({ q, a }, index) => <div key={q} className="border border-[#d9e3eb] bg-white"><button onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)} className="flex w-full items-center justify-between gap-4 p-5 text-left font-bold"><span>{q}</span><span className="text-2xl text-[#0043f3]">{openFaqIndex === index ? "−" : "+"}</span></button>{openFaqIndex === index && <p className="px-5 pb-6 leading-7 text-[#62748c]">{a}</p>}</div>)}</div></section>
 
-    <section className="bg-gradient-to-r from-[#001d2e] to-[#0043f3] px-5 py-16 text-center text-white"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">Move from research to a real configuration</p><h2 className="mx-auto mt-4 max-w-3xl text-3xl font-bold md:text-5xl">Build and price your Atlas warehouse</h2><p className="mx-auto mt-5 max-w-2xl leading-7 text-white/75">Start with the closest module, then adjust the structure, steel finish and sheeting before requesting a reviewed quote.</p><Link href={selectedOption.prices[selectedFinish].structure_only.url} className="mt-8 inline-flex bg-white px-7 py-4 font-bold text-[#0043f3]">Open the 3D builder →</Link></section>
+    <section className="bg-gradient-to-r from-[#001d2e] to-[#0043f3] px-5 py-16 text-center text-white"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">Move from research to a real configuration</p><h2 className="mx-auto mt-4 max-w-3xl text-3xl font-bold md:text-5xl">Build and price your Atlas warehouse</h2><p className="mx-auto mt-5 max-w-2xl leading-7 text-white/75">Your selected {selectedOption.width}m x {selectedOption.length}m Atlas structure will open in the builder with the {selectedFinish} finish already applied. You can refine it there before requesting a reviewed quote.</p><Link href={builderHref(selectedStartingPrice.url, config.slug, "closing-cta")} onClick={() => reportBuilderStart({ config, option: selectedOption, finish: selectedFinish, scope: "structure_only", placement: "closing-cta" })} className="mt-8 inline-flex bg-white px-7 py-4 font-bold text-[#0043f3]">Continue my warehouse in 3D →</Link></section>
   </main>
 }

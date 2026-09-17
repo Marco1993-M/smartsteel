@@ -38,12 +38,12 @@ function getDefaultHeight(width) {
 
 function buildBuilderUrl({ width, length, wallHeight, steelFinish, gableMode }) {
   const params = new URLSearchParams({
-    productType: "LCSS Warehouse",
+    productType: "Atlas Warehouse",
     width: String(width),
     length: String(length),
-    wallHeight: String(wallHeight),
+    height: String(wallHeight),
     steelFinish,
-    gableMode,
+    sheeting: gableMode,
     sheetingProfile: "IBR",
     sheetingFinish: "galvanised",
   })
