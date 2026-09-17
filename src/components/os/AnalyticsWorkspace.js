@@ -535,6 +535,29 @@ export default function AnalyticsWorkspace() {
 
           <LtvCacCard metric={data.commercialEfficiency} periodLabel={data.period.label} />
 
+          <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Client feedback · {data.period.label}</p>
+            <h2 className="mt-1 text-xl font-bold text-slate-950">Why clients aren’t proceeding</h2>
+            {!data.declineFeedback?.available ? (
+              <p className="mt-4 text-sm text-slate-500">Decline feedback is unavailable. Check that the decline-reasons database migration has been applied.</p>
+            ) : (
+              <>
+                <p className="mt-3 text-sm text-slate-600">{data.declineFeedback.total} quote responses not proceeding · {data.declineFeedback.withReason} supplied a reason.</p>
+                <p className="mt-2 text-xs leading-5 text-slate-500">Latest confirmed answer per quote sequence submitted in this period. Percentages include skipped reasons. These are client responses, not leads marked Lost.</p>
+                {data.declineFeedback.total ? (
+                  <div className="mt-5 space-y-4">
+                    {data.declineFeedback.reasons.map((reason) => (
+                      <div key={reason.key}>
+                        <div className="flex justify-between gap-4 text-sm"><span className="text-slate-700">{reason.label}</span><span className="shrink-0 font-semibold text-slate-900">{reason.value} · {reason.percentage}%</span></div>
+                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-sky-500" style={{ width: `${reason.percentage}%` }} /></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="mt-4 text-sm text-slate-500">No clients selected “No longer needed” in this period.</p>}
+              </>
+            )}
+          </section>
+
           <section className="grid overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)] xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
             <article className="min-w-0 p-5 sm:p-7">
               <div className="flex flex-wrap items-start justify-between gap-3">
