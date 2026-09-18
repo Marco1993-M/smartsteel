@@ -20,7 +20,7 @@ const projects = [
   },
   {
     cover: '/projects/Somerset West/2.webp',
-    gallery: numberedGallery('Somerset West', [2, 1, 3, 4]),
+    gallery: numberedGallery('Somerset West', [2, 1, 3, 4, 5, 6, 7]),
     title: 'Light steel frame structure in Somerset West',
     system: 'LSF',
     application: 'Residential structure',
