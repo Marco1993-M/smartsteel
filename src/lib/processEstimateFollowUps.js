@@ -125,7 +125,7 @@ export async function processDueEstimateFollowUps({ requestUrl, limit = 25 } = {
       next_action: completed
         ? "Automatic estimate follow-ups completed. Review the lead and decide whether to call, nurture or mark unresponsive."
         : `Automatic estimate follow-up ${stepNumber} sent. Awaiting the client's reply.`,
-    }).eq("id", lead.id)
+    }).eq("id", lead.id).not("status", "in", "(won,lost)")
 
     results.push({ id: sequence.id, status: completed ? "completed" : "sent", stepNumber, nextSendAt })
   }

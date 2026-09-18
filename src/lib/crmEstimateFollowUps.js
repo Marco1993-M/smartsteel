@@ -158,10 +158,10 @@ export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, i
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             ${[0, 2].map((startIndex) => `<tr>
               ${ESTIMATE_RESPONSE_OPTIONS.slice(startIndex, startIndex + 2).map((option, optionIndex) => `<td class="response-cell" width="50%" valign="top" style="padding:${startIndex === 0 ? "0" : "6px"} ${optionIndex === 0 ? "6px" : "0"} 6px ${optionIndex === 0 ? "0" : "6px"};">
-                <a class="response-card" href="${responseBaseUrl}?choice=${option.key}" style="display:block;min-height:126px;padding:16px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;text-decoration:none;">
+                <a class="response-card" href="${option.key === "call_me" ? `${shareUrl}#accept-quote` : `${responseBaseUrl}?choice=${option.key}`}" style="display:block;min-height:126px;padding:16px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;text-decoration:none;">
                   <span style="display:inline-block;margin:0 0 13px;padding:8px 9px;background:${option.key === "call_me" ? accent : "#c1d9e5"};color:${option.key === "call_me" ? "#ffffff" : dark};font-size:11px;font-weight:800;letter-spacing:1px;">${option.marker}</span>
-                  <span style="display:block;font-size:13px;font-weight:800;line-height:1.4;">${option.label}</span>
-                  <span style="display:block;margin-top:7px;color:#64748b;font-size:11px;font-weight:400;line-height:1.55;">${option.helper}</span>
+                  <span style="display:block;font-size:13px;font-weight:800;line-height:1.4;">${option.key === "call_me" ? "Review &amp; accept quote" : option.label}</span>
+                  <span style="display:block;margin-top:7px;color:#64748b;font-size:11px;font-weight:400;line-height:1.55;">${option.key === "call_me" ? "Review your quote and the next steps, then confirm acceptance online." : option.helper}</span>
                 </a>
               </td>`).join("")}
             </tr>`).join("")}
