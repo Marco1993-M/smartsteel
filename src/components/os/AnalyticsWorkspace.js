@@ -2,276 +2,70 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { ArrowRight, ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Send, Target, TrendingUp, Users } from "lucide-react"
+import { ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Users, RefreshCw, ArrowDownToLine, Clock3, MessageSquare, Layers3, BarChart3, ChevronRight } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
-const PERIODS = [
-  { days: 30, label: "30 days" },
-  { days: 90, label: "90 days" },
-  { days: 365, label: "12 months" },
-]
+const PERIODS = [{ days: 30, label: '30 days' }, { days: 90, label: '90 days' }, { days: 365, label: '12 months' }]
+const TABS = [{ key: 'overview', label: 'Overview', icon: BarChart3 }, { key: 'pipeline', label: 'Pipeline & quotes', icon: Layers3 }, { key: 'clients', label: 'Clients & feedback', icon: MessageSquare }, { key: 'marketing', label: 'Marketing', icon: Megaphone }]
+const money = (value) => value == null ? '—' : new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(value)
+const formatCurrency = money
+const formatNumber = (value, maximumFractionDigits = 0) => new Intl.NumberFormat('en-ZA', { maximumFractionDigits }).format(value || 0)
+const changeLabel = (value) => value == null ? 'No prior baseline' : `${value > 0 ? '+' : ''}${value}%`
+const percent = (value) => value == null ? '—' : `${value}%`
+const formatSyncDate = (value) => value ? `Updated ${new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}` : 'Not synced yet'
+const panel = 'min-w-0 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6'
+const button = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat("en-ZA", {
-    style: "currency",
-    currency: "ZAR",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0))
+function Heading({ eyebrow, title, detail, aside }) {
+  return <div className="mb-5 flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{eyebrow}</p><h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-950">{title}</h2>{detail && <p className="mt-2 max-w-2xl text-xs leading-5 text-slate-500">{detail}</p>}</div>{aside}</div>
 }
-
-function formatNumber(value, maximumFractionDigits = 0) {
-  return new Intl.NumberFormat("en-ZA", { maximumFractionDigits }).format(Number(value || 0))
+function Empty({ children }) { return <p className="rounded-xl border border-dashed border-slate-200 p-6 text-sm leading-6 text-slate-500">{children}</p> }
+function Stat({ label, value, note, dark = false }) {
+  return <div className={`min-w-0 rounded-2xl border p-5 ${dark ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-950'}`}><p className={`text-[11px] font-semibold ${dark ? 'text-sky-200' : 'text-slate-500'}`}>{label}</p><p className="mt-3 break-words text-3xl font-semibold tracking-tight tabular-nums">{value}</p><p className={`mt-3 text-xs leading-5 ${dark ? 'text-slate-300' : 'text-slate-500'}`}>{note}</p></div>
 }
-
-function formatSyncDate(value) {
-  if (!value) return "Not synced yet"
-  return `Updated ${new Date(value).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
+function PerformanceTable({ rows, label }) {
+  const [sort, setSort] = useState('wonValue')
+  const sorted = [...rows].sort((a, b) => (b[sort] ?? -1) - (a[sort] ?? -1))
+  return <section className={panel}><Heading eyebrow="Acquisition cohort" title={label} detail="Leads created in the selected period, using their current outcome. Open opportunities may still convert." aside={<label className="text-xs text-slate-500">Sort by <select className="ml-2 rounded-lg border border-slate-200 p-2 text-slate-800" value={sort} onChange={(event) => setSort(event.target.value)}><option value="wonValue">Won value</option><option value="leads">Lead volume</option><option value="winRate">Win rate</option></select></label>} />
+    {!rows.length ? <Empty>No leads in this period.</Empty> : <div className="overflow-x-auto"><table className="w-full min-w-[540px] text-left text-sm"><thead className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500"><tr>{['Name', 'Leads', 'Quoted', 'Won', 'Win rate', 'Won value'].map((text) => <th key={text} className="px-2 py-3 first:pl-0">{text}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{sorted.map((row) => <tr key={row.label} className="hover:bg-slate-50"><th scope="row" className="max-w-[220px] py-4 pr-3 font-medium text-slate-800">{row.label}</th><td className="px-2 tabular-nums">{row.leads}</td><td className="px-2 tabular-nums">{row.quoted ?? '—'}</td><td className="px-2 tabular-nums">{row.won}</td><td className="px-2"><span className="rounded-md bg-sky-50 px-2 py-1 text-sky-800">{percent(row.winRate)}</span></td><td className="whitespace-nowrap px-2 font-semibold tabular-nums">{money(row.wonValue)}</td></tr>)}</tbody></table></div>}
+  </section>
 }
-
-function ChangeBadge({ value, dark = false }) {
-  const number = Number(value || 0)
-  const positive = number > 0
-  const negative = number < 0
-  return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${positive ? (dark ? "text-emerald-300" : "text-emerald-700") : negative ? (dark ? "text-rose-300" : "text-rose-700") : dark ? "text-slate-400" : "text-slate-500"}`}>
-      {positive ? <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" /> : null}
-      {positive ? "+" : ""}{number}% vs previous period
-    </span>
-  )
+function Ageing({ insights }) {
+  const buckets = insights.pipeline.ageBuckets
+  const max = Math.max(1, ...buckets.map((bucket) => bucket.value))
+  return <section className={panel}><Heading eyebrow="Live pipeline · all open leads" title="How long have quotes been waiting?" detail="Age since the first recorded quote send. Values use the current CRM quote value once per opportunity." aside={<Clock3 className="h-5 w-5 text-sky-600" />} />
+    {!insights.estimatesAvailable ? <Empty>Quote data is temporarily unavailable.</Empty> : !insights.pipeline.quotedCount ? <Empty>No open opportunities with a recorded sent quote.</Empty> : <div className="space-y-5">{buckets.map((bucket, index) => <div key={bucket.label}><div className="mb-2 flex justify-between gap-3 text-xs"><span className="font-medium text-slate-700">{bucket.label} <span className="ml-1 text-slate-400">· {bucket.count} quotes</span></span><span className="font-semibold tabular-nums">{money(bucket.value)}</span></div><div className="h-2 rounded-full bg-slate-100"><div className={`h-2 rounded-full ${index >= 3 ? 'bg-amber-400' : 'bg-sky-500'}`} style={{ width: `${bucket.value / max * 100}%` }} /></div></div>)}</div>}
+  </section>
 }
-
-function MetricCard({ eyebrow, value, helper, changeValue, tone = "white", icon: Icon }) {
-  const accents = { white: "text-white", blue: "text-sky-300", dark: "text-amber-300", green: "text-emerald-300" }
-  return (
-    <article className="relative min-w-0 px-4 py-5 sm:px-6 sm:py-6">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:text-[11px]">{eyebrow}</p>
-        {Icon ? <Icon className={`h-4 w-4 shrink-0 ${accents[tone]}`} aria-hidden="true" /> : null}
-      </div>
-      <p className="mt-3 break-words text-[1.45rem] font-bold leading-none tracking-[-0.04em] text-white sm:text-3xl">{value}</p>
-      <p className="mt-2 truncate text-xs text-slate-400 sm:text-sm">{helper}</p>
-      {changeValue !== undefined ? <div className="mt-3"><ChangeBadge value={changeValue} dark /></div> : null}
-    </article>
-  )
+function Attention({ attention }) {
+  const [filter, setFilter] = useState('All')
+  const [showAll, setShowAll] = useState(false)
+  const rows = attention.leads.filter((lead) => filter === 'All' || lead.reasons.includes(filter))
+  return <section className={panel}><Heading eyebrow="Your next moves · live" title="Opportunities needing attention" detail={`${attention.total} opportunities · ${attention.overdue} overdue follow-ups · ${attention.noNextAction} without a next action. Signals can overlap.`} aside={<Link href="/os/crm" className={button}>Open CRM <ArrowUpRight size={14} /></Link>} />
+    <div className="mb-4 flex flex-wrap gap-2">{['All', 'Follow-up overdue', 'No next action', 'Quote open 31+ days'].map((item) => <button key={item} type="button" aria-pressed={filter === item} onClick={() => { setFilter(item); setShowAll(false) }} className={`rounded-full px-3 py-2 text-xs font-medium ${filter === item ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{item}</button>)}</div>
+    {!rows.length ? <Empty>No opportunities match this attention filter.</Empty> : <div className="divide-y divide-slate-100">{rows.slice(0, showAll ? undefined : 6).map((lead) => <Link key={lead.id} href={`/os/crm?leadId=${encodeURIComponent(lead.id)}`} className="group flex items-start justify-between gap-4 rounded-lg py-4 hover:bg-slate-50"><div className="min-w-0"><p className="font-semibold text-slate-800 group-hover:text-sky-700">{lead.name}</p><p className="mt-1 text-xs text-slate-500">{lead.product} · {lead.age == null ? 'Age unavailable' : `${lead.age} days since enquiry`}</p><div className="mt-2 flex flex-wrap gap-1.5">{lead.reasons.map((reason) => <span key={reason} className="rounded bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-800">{reason}</span>)}</div>{lead.nextAction && <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">{lead.nextAction}</p>}</div><div className="flex shrink-0 items-center gap-2 pt-1 text-sm font-semibold tabular-nums">{money(lead.value)}<ChevronRight size={14} className="text-slate-400" /></div></Link>)}</div>}
+    {rows.length > 6 && <button className={`${button} mt-4`} onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer' : `Show all ${rows.length}`}</button>}
+  </section>
 }
-
-function GrowthSignals({ data }) {
-  const metrics = data.metrics
-  const topProduct = data.products?.[0]
-  const topSource = data.sources?.[0]
-  const signals = [
-    {
-      label: "Lead growth",
-      value: `${metrics.changes.leads > 0 ? "+" : ""}${metrics.changes.leads}%`,
-      target: "Target: positive growth",
-      healthy: metrics.changes.leads >= 0,
-      note: metrics.changes.leads >= 0 ? "Demand is holding above the previous period." : "New demand has softened versus the previous period.",
-    },
-    {
-      label: "Leads receiving estimates",
-      value: `${metrics.quoteRate}%`,
-      target: "Working target: 50%+",
-      healthy: metrics.quoteRate >= 50,
-      note: metrics.quoteRate >= 50 ? "At least half of new leads are reaching an estimate." : "More qualified leads need to progress to an estimate.",
-    },
-    {
-      label: "Lead-to-win conversion",
-      value: `${metrics.winRate}%`,
-      target: "Working target: 15%+",
-      healthy: metrics.winRate >= 15,
-      note: metrics.winRate >= 15 ? "The current cohort is converting at a healthy starting rate." : "Review quote fit and follow-up quality for this cohort.",
-    },
-    {
-      label: "Follow-up discipline",
-      value: data.attention.overdueFollowUps === 0 ? "Clear" : `${data.attention.overdueFollowUps} overdue`,
-      target: "Target: zero overdue",
-      healthy: data.attention.overdueFollowUps === 0,
-      note: data.attention.overdueFollowUps === 0 ? "Every active follow-up is currently accounted for." : "These leads need attention before more demand is added.",
-    },
-  ]
-  const healthyCount = signals.filter((signal) => signal.healthy).length
-  const priority = signals.find((signal) => !signal.healthy)
-
-  return (
-    <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_310px]">
-        <div className="p-5 sm:p-7">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Growth signals</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Performance against our KPIs</h2>
-            </div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700">
-              <Target className="h-3.5 w-3.5" aria-hidden="true" /> {healthyCount} of {signals.length} on track
-            </span>
-          </div>
-          <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 sm:grid-cols-2 xl:grid-cols-4">
-            {signals.map((signal) => (
-              <article key={signal.label} className="min-w-0 bg-white p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span className={`h-2.5 w-2.5 rounded-full ${signal.healthy ? "bg-emerald-500" : "bg-amber-400"}`} aria-hidden="true" />
-                  <span className={`text-[10px] font-bold uppercase tracking-[0.12em] ${signal.healthy ? "text-emerald-700" : "text-amber-800"}`}>{signal.healthy ? "On track" : "Needs focus"}</span>
-                </div>
-                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{signal.label}</p>
-                <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{signal.value}</p>
-                <p className="mt-1 text-[11px] font-semibold text-slate-500">{signal.target}</p>
-                <p className="mt-3 text-xs leading-5 text-slate-600">{signal.note}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-        <aside className="flex flex-col justify-between bg-[linear-gradient(150deg,_#082f49,_#0f172a)] p-5 text-white sm:p-7">
-          <div>
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-400 text-slate-950"><TrendingUp className="h-5 w-5" aria-hidden="true" /></span>
-            <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-300">Recommended action</p>
-            <h3 className="mt-2 text-xl font-bold leading-tight text-white">{priority ? priority.label : "Protect the momentum"}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-300">{priority?.note || `${topProduct?.label || "The leading product"} is creating the strongest demand. Keep response time and estimate quality consistent.`}</p>
-          </div>
-          <div className="mt-6 border-t border-white/10 pt-5">
-            <p className="text-xs text-slate-400">Leading signal</p>
-            <p className="mt-1 text-sm font-semibold text-white">{topProduct?.label || "Product demand pending"}{topSource ? ` via ${topSource.label}` : ""}</p>
-            <Link href="/os/crm" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-sky-300 transition hover:text-white">Review the pipeline <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
-          </div>
-        </aside>
-      </div>
-    </section>
-  )
+function ActivityChart({ trend, available }) {
+  const max = Math.max(1, ...trend.flatMap((row) => [row.leads, row.estimatesSent]))
+  return <section className={panel}><Heading eyebrow="Activity in selected period" title="Enquiries & quotes sent" detail="Quote sends include revisions and can relate to leads from earlier periods." aside={<div className="flex gap-3 text-[10px] text-slate-500"><span>● Enquiries</span><span className="text-sky-600">● Quote sends</span></div>} />
+    <div className="flex h-48 items-end gap-2 sm:gap-4">{trend.map((row) => <div key={row.key} className="group relative flex h-full min-w-0 flex-1 flex-col justify-end" tabIndex={0} aria-label={`${row.label}: ${row.leads} enquiries, ${available ? row.estimatesSent : 'unavailable'} quote sends`}><div className="pointer-events-none absolute bottom-full left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 p-2 text-[10px] text-white group-hover:block group-focus:block">{row.leads} enquiries · {available ? row.estimatesSent : '—'} sends</div><div className="flex h-36 items-end justify-center gap-1"><div className="w-5 max-w-[40%] rounded-t bg-slate-800" style={{ height: `${row.leads / max * 100}%` }} /><div className="w-5 max-w-[40%] rounded-t bg-sky-400" style={{ height: `${available ? row.estimatesSent / max * 100 : 0}%` }} /></div><p className="mt-3 truncate text-center text-[9px] text-slate-500 sm:text-[10px]">{row.label}</p></div>)}</div>
+    {!available && <p className="mt-3 text-xs text-amber-700">Quote activity is unavailable.</p>}
+  </section>
 }
-
-function TrendChart({ data }) {
-  const [activeIndex, setActiveIndex] = useState(Math.max(0, data.length - 1))
-  const width = 760
-  const height = 260
-  const inset = { top: 20, right: 22, bottom: 28, left: 46 }
-  const maxValue = Math.max(1, ...data.flatMap((item) => [item.leads, item.estimatesSent]))
-  const chartMax = Math.max(4, Math.ceil(maxValue / 4) * 4)
-  const baseline = height - inset.bottom
-  const point = (value, index) => {
-    const x = data.length === 1 ? width / 2 : inset.left + (index / (data.length - 1)) * (width - inset.left - inset.right)
-    const y = baseline - (value / chartMax) * (baseline - inset.top)
-    return [x, y]
-  }
-  const smoothPath = (key) => {
-    const points = data.map((item, index) => point(item[key], index))
-    if (!points.length) return ""
-    if (points.length === 1) return `M ${points[0][0]} ${points[0][1]}`
-    return points.slice(1).reduce((pathValue, current, index) => {
-      const previous = points[index]
-      const controlOffset = (current[0] - previous[0]) * 0.42
-      return `${pathValue} C ${previous[0] + controlOffset} ${previous[1]}, ${current[0] - controlOffset} ${current[1]}, ${current[0]} ${current[1]}`
-    }, `M ${points[0][0]} ${points[0][1]}`)
-  }
-  const leadPath = smoothPath("leads")
-  const estimatePath = smoothPath("estimatesSent")
-  const safeActiveIndex = Math.min(activeIndex, Math.max(0, data.length - 1))
-  const activeItem = data[safeActiveIndex]
-  const [activeX, activeLeadY] = activeItem ? point(activeItem.leads, safeActiveIndex) : [0, 0]
-  const [, activeEstimateY] = activeItem ? point(activeItem.estimatesSent, safeActiveIndex) : [0, 0]
-  const totalLeads = data.reduce((sum, item) => sum + item.leads, 0)
-  const totalEstimates = data.reduce((sum, item) => sum + item.estimatesSent, 0)
-
-  return (
-    <div className="mt-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-wrap gap-5 text-xs font-semibold text-slate-600">
-          <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-sky-600 shadow-[0_0_0_4px_rgba(2,132,199,0.1)]" />Leads <strong className="text-slate-950">{totalLeads}</strong></span>
-          <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.12)]" />Estimates <strong className="text-slate-950">{totalEstimates}</strong></span>
-        </div>
-        {activeItem ? (
-          <div className="flex items-center gap-4 rounded-xl bg-slate-950 px-3.5 py-2 text-white shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">{activeItem.label}</p>
-            <p className="text-xs"><strong className="text-sky-300">{activeItem.leads}</strong> leads</p>
-            <p className="text-xs"><strong className="text-amber-300">{activeItem.estimatesSent}</strong> sent</p>
-          </div>
-        ) : null}
-      </div>
-      <div className="mt-3 overflow-hidden rounded-[1.35rem] border border-slate-200 bg-[radial-gradient(circle_at_15%_0%,_rgba(14,165,233,0.08),_transparent_32%),linear-gradient(180deg,_#f8fafc,_#ffffff)] px-1 pt-3 shadow-inner sm:px-2">
-        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Lead and estimate trend" className="h-auto w-full">
-          <defs>
-            <linearGradient id="lead-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
-            </linearGradient>
-            <filter id="line-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#0284c7" floodOpacity="0.18" />
-            </filter>
-          </defs>
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const y = baseline - ratio * (baseline - inset.top)
-            return <g key={ratio}><line x1={inset.left} x2={width - inset.right} y1={y} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray={ratio === 0 ? "0" : "4 8"} /><text x={inset.left - 12} y={y + 4} textAnchor="end" fill="#94a3b8" fontSize="11" fontWeight="600">{Math.round(chartMax * ratio)}</text></g>
-          })}
-          {data.length ? <path d={`${leadPath} L ${point(0, data.length - 1)[0]} ${baseline} L ${point(0, 0)[0]} ${baseline} Z`} fill="url(#lead-area)" /> : null}
-          {activeItem ? <line x1={activeX} x2={activeX} y1={inset.top} y2={baseline} stroke="#cbd5e1" strokeWidth="1.5" strokeDasharray="4 6" /> : null}
-          <path d={leadPath} fill="none" stroke="#0284c7" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" filter="url(#line-glow)" />
-          <path d={estimatePath} fill="none" stroke="#f59e0b" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-          {data.map((item, index) => {
-            const [leadX, leadY] = point(item.leads, index)
-            const [sentX, sentY] = point(item.estimatesSent, index)
-            const selected = index === safeActiveIndex
-            return (
-              <g key={item.key}>
-                {selected ? <><circle cx={leadX} cy={leadY} r="10" fill="#0284c7" opacity="0.14" /><circle cx={sentX} cy={sentY} r="10" fill="#f59e0b" opacity="0.14" /></> : null}
-                <circle cx={leadX} cy={leadY} r={selected ? "5.5" : "3.5"} fill="#0284c7" stroke="white" strokeWidth="2"><title>{`${item.label}: ${item.leads} leads`}</title></circle>
-                <circle cx={sentX} cy={sentY} r={selected ? "5.5" : "3.5"} fill="#f59e0b" stroke="white" strokeWidth="2"><title>{`${item.label}: ${item.estimatesSent} estimates sent`}</title></circle>
-                <circle cx={leadX} cy={(leadY + sentY) / 2} r="20" fill="transparent" tabIndex="0" role="button" aria-label={`${item.label}: ${item.leads} leads and ${item.estimatesSent} estimates sent`} onMouseEnter={() => setActiveIndex(index)} onFocus={() => setActiveIndex(index)} onClick={() => setActiveIndex(index)} className="cursor-pointer outline-none" />
-              </g>
-            )
-          })}
-          {activeItem ? <><circle cx={activeX} cy={activeLeadY} r="2" fill="white" pointerEvents="none" /><circle cx={activeX} cy={activeEstimateY} r="2" fill="white" pointerEvents="none" /></> : null}
-        </svg>
-        <div className="grid grid-cols-3 gap-2 px-11 pb-3 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400 sm:text-[10px]">
-          <span>{data[0]?.label}</span>
-          <span className="text-center">{data[Math.floor(data.length / 2)]?.label}</span>
-          <span className="text-right">{data[data.length - 1]?.label}</span>
-        </div>
-      </div>
-    </div>
-  )
+function Feedback({ data }) {
+  const feedback = data.insights.feedback
+  const decline = data.declineFeedback
+  return <div className="grid items-start gap-5 lg:grid-cols-2"><section className={panel}><Heading eyebrow="Confirmed client responses" title="What clients are telling us" detail="Latest answer per quote sequence submitted during this period. These responses never automatically move a lead to Lost." />
+    {!feedback.available ? <Empty>Client responses are temporarily unavailable.</Empty> : <><div className="mb-6 grid grid-cols-2 gap-3"><Stat label="Follow-up response rate" value={percent(feedback.responseRate)} note={feedback.rateAvailable ? `${feedback.respondedCount} of ${feedback.sentCount} quotes followed up in this period received a CTA response after the send.` : 'Follow-up send records unavailable.'} /><Stat label="Quote sequences with replies" value={feedback.total} note="Includes replies to earlier follow-ups. Direct email replies and phone calls are not counted." /></div><div className="space-y-4">{feedback.choices.map((choice) => <div key={choice.key}><div className="mb-2 flex justify-between text-sm"><span className="text-slate-600">{choice.label}</span><strong>{choice.count}</strong></div><div className="h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-sky-500" style={{ width: `${feedback.total ? choice.count / feedback.total * 100 : 0}%` }} /></div></div>)}</div></>}
+  </section><section className={panel}><Heading eyebrow="Learn from every quote" title="Why clients aren’t proceeding" detail="Latest confirmed answer per sequence in this period. Percentages include skipped reasons; this is feedback, not a Lost-column count." />
+    {!decline?.available ? <Empty>Decline reasons are unavailable. The decline-feedback database update may still be required.</Empty> : !decline.total ? <Empty>No clients selected “No longer needed” in this period.</Empty> : <><p className="mb-6 text-sm text-slate-600"><strong className="text-slate-900">{decline.total}</strong> not proceeding · <strong className="text-slate-900">{decline.withReason}</strong> supplied a reason</p><div className="space-y-5">{decline.reasons.map((reason) => <div key={reason.key}><div className="mb-2 flex justify-between gap-3 text-xs"><span className="text-slate-600">{reason.label}</span><strong className="shrink-0">{reason.value} · {reason.percentage}%</strong></div><div className="h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-amber-400" style={{ width: `${reason.percentage}%` }} /></div></div>)}</div></>}
+  </section></div>
 }
-
-function RankedList({ items, emptyLabel, accent = "sky" }) {
-  const [activeIndex, setActiveIndex] = useState(0)
-  const max = Math.max(1, ...items.map((item) => item.value))
-  const total = items.reduce((sum, item) => sum + item.value, 0)
-  const safeActiveIndex = Math.min(activeIndex, Math.max(0, items.length - 1))
-  const activeItem = items[safeActiveIndex]
-  const activeShare = activeItem && total > 0 ? Math.round((activeItem.value / total) * 1000) / 10 : 0
-  const isAmber = accent === "amber"
-  const barClass = isAmber ? "bg-[linear-gradient(90deg,_#fbbf24,_#f59e0b)]" : "bg-[linear-gradient(90deg,_#38bdf8,_#0284c7)]"
-  const selectedClass = isAmber ? "border-amber-300 bg-amber-50/70" : "border-sky-300 bg-sky-50/70"
-  const readoutClass = isAmber ? "bg-amber-400 text-slate-950" : "bg-slate-950 text-white"
-  if (!items.length) return <p className="mt-5 text-sm text-slate-500">{emptyLabel}</p>
-  return (
-    <div className="mt-5">
-      {activeItem ? (
-        <div className={`flex items-end justify-between gap-4 rounded-2xl px-4 py-3.5 ${readoutClass}`}>
-          <div className="min-w-0">
-            <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${isAmber ? "text-slate-700" : "text-slate-400"}`}>Current leader</p>
-            <p className="mt-1 truncate text-sm font-bold">{activeItem.label}</p>
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="text-2xl font-bold leading-none">{activeItem.value}</p>
-            <p className={`mt-1 text-[10px] font-semibold ${isAmber ? "text-slate-700" : "text-slate-400"}`}>{activeShare}% of demand</p>
-          </div>
-        </div>
-      ) : null}
-      <div className="mt-3 space-y-2">
-      {items.map((item, index) => (
-        <button key={item.label} type="button" onMouseEnter={() => setActiveIndex(index)} onFocus={() => setActiveIndex(index)} onClick={() => setActiveIndex(index)} className={`w-full rounded-xl border p-3 text-left transition ${index === safeActiveIndex ? selectedClass : "border-transparent hover:border-slate-200 hover:bg-slate-50"}`} aria-pressed={index === safeActiveIndex}>
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span className="flex min-w-0 items-center gap-2.5 truncate font-semibold text-slate-800"><i className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg text-[10px] not-italic ${index === safeActiveIndex ? (isAmber ? "bg-amber-400 text-slate-950" : "bg-sky-600 text-white") : "bg-slate-100 text-slate-500"}`}>{index + 1}</i><span className="truncate">{item.label}</span></span>
-            <span className="shrink-0 text-xs font-bold text-slate-500">{total > 0 ? Math.round((item.value / total) * 100) : 0}%</span>
-          </div>
-          <div className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200/60">
-            <div className={`h-full rounded-full transition-[width] duration-500 ${barClass}`} style={{ width: `${Math.max(4, (item.value / max) * 100)}%` }} />
-          </div>
-        </button>
-      ))}
-      </div>
-    </div>
-  )
+function Efficiency({ metric }) {
+  return <section className={panel}><Heading eyebrow="Commercial efficiency · partial-cost estimate" title="Lifetime value / acquisition cost" detail={metric.basis} /><div className="grid gap-3 sm:grid-cols-3"><Stat label="LTV:CAC" value={metric.ready ? `${metric.ltvCacRatio.toFixed(2)}:1` : 'Pending'} note={metric.ready ? 'All acquisition sources included' : metric.blocker} dark /><Stat label="Estimated contribution LTV" value={money(metric.contributionLtv)} note="30% assumed margin · one lifetime project" /><Stat label="Blended CAC" value={money(metric.cac)} note={`${metric.wonCustomers} won leads treated as customers`} /></div><p className="mt-4 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-800">{metric.costCoverage}</p></section>
 }
-
 function MarketingMetric({ label, value, icon: Icon, helper }) {
   return (
     <div className="min-w-0 p-3.5 sm:p-4">
@@ -316,15 +110,15 @@ function MarketingSourceCard({ connection, metrics, type, schemaReady, syncingSo
           <div className="mt-5 grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200">
             {isSearch ? (
               <>
-                <MarketingMetric label="Impressions" value={formatNumber(metrics.impressions)} icon={Eye} helper={`${metrics.changes.impressions >= 0 ? "+" : ""}${metrics.changes.impressions}%`} />
+                <MarketingMetric label="Impressions" value={formatNumber(metrics.impressions)} icon={Eye} helper={changeLabel(metrics.changes.impressions)} />
                 <MarketingMetric label="Clicks" value={formatNumber(metrics.clicks)} icon={MousePointerClick} helper={`${metrics.ctr}% CTR`} />
                 <MarketingMetric label="Average position" value={metrics.averagePosition ?? "—"} icon={Search} />
-                <MarketingMetric label="Organic leads" value="Next" icon={Users} helper="Attribution wave" />
+                <MarketingMetric label="Click-through rate" value={`${metrics.ctr}%`} icon={Users} helper="Clicks / impressions" />
               </>
             ) : (
               <>
-                <MarketingMetric label="Spend" value={formatCurrency(metrics.cost)} icon={Banknote} helper={`${metrics.changes.cost >= 0 ? "+" : ""}${metrics.changes.cost}%`} />
-                <MarketingMetric label="Conversions" value={formatNumber(metrics.conversions, 1)} icon={CircleCheck} helper={`${metrics.changes.conversions >= 0 ? "+" : ""}${metrics.changes.conversions}%`} />
+                <MarketingMetric label="Spend" value={formatCurrency(metrics.cost)} icon={Banknote} helper={changeLabel(metrics.changes.cost)} />
+                <MarketingMetric label="Conversions" value={formatNumber(metrics.conversions, 1)} icon={CircleCheck} helper={changeLabel(metrics.changes.conversions)} />
                 <MarketingMetric label="Cost / conversion" value={formatCurrency(metrics.costPerConversion)} icon={MousePointerClick} />
                 <MarketingMetric label="ROAS" value={`${metrics.roas}x`} icon={ArrowUpRight} />
               </>
@@ -349,271 +143,95 @@ function MarketingSourceCard({ connection, metrics, type, schemaReady, syncingSo
   )
 }
 
-function LtvCacCard({ metric, periodLabel }) {
-  const ratio = Number(metric?.ltvCacRatio || 0)
-  const healthy = ratio >= 3
-  const developing = ratio > 0 && ratio < 3
 
-  return (
-    <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="p-5 sm:p-7">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Commercial efficiency</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Lifetime value to acquisition cost · all sources</h2>
-            </div>
-            <span className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] ${
-              metric?.ready
-                ? healthy
-                  ? "bg-emerald-100 text-emerald-700"
-                  : developing
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-rose-100 text-rose-700"
-                : "bg-slate-100 text-slate-600"
-            }`}>
-              {metric?.ready ? (healthy ? "Healthy" : developing ? "Developing" : "Needs attention") : "Awaiting data"}
-            </span>
-          </div>
-
-          <div className="mt-6 grid gap-px overflow-hidden border border-slate-200 bg-slate-200 sm:grid-cols-3">
-            <div className="bg-slate-950 p-5 text-white">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-300">LTV:CAC ratio</p>
-              <p className="mt-3 text-4xl font-bold tracking-[-0.05em]">{metric?.ready ? `${ratio.toFixed(2)}:1` : "Pending"}</p>
-              <p className="mt-2 text-xs text-slate-400">{periodLabel}</p>
-            </div>
-            <div className="bg-white p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Contribution LTV</p>
-              <p className="mt-3 text-2xl font-bold tracking-tight text-slate-950">{formatCurrency(metric?.contributionLtv)}</p>
-              <p className="mt-2 text-xs text-slate-500">{Math.round(Number(metric?.grossMarginRate || 0) * 100)}% margin · {metric?.lifetimeProjectsPerCustomer || 1} lifetime project</p>
-            </div>
-            <div className="bg-white p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Blended CAC (estimate)</p>
-              <p className="mt-3 text-2xl font-bold tracking-tight text-slate-950">{metric?.cac != null ? formatCurrency(metric.cac) : "Pending"}</p>
-              <p className="mt-2 text-xs text-slate-500">{metric?.wonCustomers || 0} won lead{metric?.wonCustomers === 1 ? "" : "s"} across all sources</p>
-            </div>
-          </div>
-
-          <p className="mt-4 text-xs leading-5 text-slate-500">{metric?.basis}</p>
-          <p className="mt-2 text-xs leading-5 text-amber-700">{metric?.costCoverage}</p>
-        </div>
-        <aside className={`p-5 sm:p-7 ${metric?.ready ? (healthy ? "bg-emerald-50" : "bg-amber-50") : "bg-slate-50"}`}>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Reading the metric</p>
-          <p className="mt-3 text-lg font-bold text-slate-950">
-            {metric?.ready
-              ? healthy
-                ? "Acquisition is producing healthy contribution value."
-                : "The ratio needs more margin, repeat value, or lower acquisition cost."
-              : "More data is needed to calculate this ratio."}
-          </p>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            {metric?.ready
-              ? `${formatCurrency(metric.averageWonValue)} average won value and ${formatCurrency(metric.acquisitionCost)} recorded acquisition spend are included in this period.`
-              : metric?.blocker}
-          </p>
-        </aside>
-      </div>
-    </section>
-  )
+function exportPerformance(data) {
+  const rows = [['Period', data.period.label], ['Basis', 'Leads created in period; current outcomes; won value excl. VAT'], ['Type', 'Name', 'Leads', 'Quoted', 'Won', 'Win rate (%)', 'Won value (ZAR)']]
+  for (const [type, records] of [['Product', data.insights.products], ['Source', data.insights.sources]]) {
+    records.forEach((row) => rows.push([type, row.label, row.leads, row.quoted, row.won, row.winRate, row.wonValue]))
+  }
+  const csv = rows.map((row) => row.map((value) => {
+    let text = String(value ?? '')
+    if (/^[\s]*[=+\-@]/.test(text)) text = `'${text}`
+    return `"${text.replaceAll('"', '""')}"`
+  }).join(',')).join('\r\n')
+  const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' }))
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `smart-steel-performance-${data.period.days}-days.csv`
+  anchor.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 export default function AnalyticsWorkspace() {
   const [days, setDays] = useState(30)
+  const [tab, setTab] = useState('overview')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
-  const [syncingSource, setSyncingSource] = useState("")
-  const [syncMessage, setSyncMessage] = useState("")
-
+  const [syncingSource, setSyncingSource] = useState('')
+  const [syncMessage, setSyncMessage] = useState('')
   useEffect(() => {
-    let active = true
-    async function loadAnalytics() {
+    const controller = new AbortController()
+    async function load() {
       setLoading(true)
-      setError("")
+      setError('')
       try {
-        const response = await fetch(`/api/os/analytics?days=${days}`, {
-          cache: "no-store",
-          headers: await getOsAuthHeaders(),
-        })
+        const response = await fetch(`/api/os/analytics?days=${days}`, { cache: 'no-store', headers: await getOsAuthHeaders(), signal: controller.signal })
         const payload = await response.json()
-        if (!response.ok) throw new Error(payload.error || "Could not load analytics.")
-        if (active) setData(payload)
-      } catch (loadError) {
-        if (active) setError(loadError.message)
+        if (!response.ok) throw new Error(payload.error || 'Could not load analytics.')
+        if (!controller.signal.aborted) setData(payload)
+      } catch (failure) {
+        if (!controller.signal.aborted) setError(failure.message)
       } finally {
-        if (active) setLoading(false)
+        if (!controller.signal.aborted) setLoading(false)
       }
     }
-    loadAnalytics()
-    return () => { active = false }
+    load()
+    return () => controller.abort()
   }, [days, refreshKey])
-
   async function syncMarketingSource(source) {
     setSyncingSource(source)
-    setSyncMessage("")
-    const route = source === "search_console" ? "search-console" : "google-ads"
+    setSyncMessage('')
     try {
-      const response = await fetch(`/api/os/analytics/sync/${route}`, {
-        method: "POST",
-        headers: await getOsAuthHeaders(),
-      })
+      const response = await fetch(`/api/os/analytics/sync/${source === 'search_console' ? 'search-console' : 'google-ads'}`, { method: 'POST', headers: await getOsAuthHeaders() })
       const payload = await response.json()
-      if (!response.ok) throw new Error(payload.error || "The sync could not be completed.")
-      setSyncMessage(`${source === "search_console" ? "Search Console" : "Google Ads"} updated with ${payload.imported || 0} daily records.`)
-      setRefreshKey((current) => current + 1)
-    } catch (syncError) {
-      setSyncMessage(syncError.message)
-      setRefreshKey((current) => current + 1)
-    } finally {
-      setSyncingSource("")
-    }
+      if (!response.ok) throw new Error(payload.error || 'Sync failed.')
+      setSyncMessage(`${source === 'search_console' ? 'Search Console' : 'Google Ads'} updated: ${payload.imported || 0} daily records.`)
+      setRefreshKey((value) => value + 1)
+    } catch (failure) { setSyncMessage(failure.message) }
+    finally { setSyncingSource('') }
   }
-
+  const insights = data?.insights
   const metrics = data?.metrics
-  const maxFunnel = Math.max(1, ...(data?.funnel || []).map((item) => item.value))
-  const marketingConnections = Object.fromEntries((data?.marketing?.connections || []).map((connection) => [connection.source, connection]))
+  const connections = Object.fromEntries((data?.marketing?.connections || []).map((item) => [item.source, item]))
+  const comparison = (value) => value == null ? 'No prior-period baseline' : `${value > 0 ? '+' : ''}${value}% vs previous period`
 
-  return (
-    <div className="w-full min-w-0 max-w-full space-y-5 overflow-x-hidden px-3 py-4 sm:space-y-7 sm:px-6 sm:py-6">
-      <section className="relative overflow-hidden rounded-[1.75rem] bg-[radial-gradient(circle_at_88%_0%,_rgba(14,165,233,0.2),_transparent_28%),radial-gradient(circle_at_72%_110%,_rgba(251,191,36,0.12),_transparent_30%),linear-gradient(145deg,_#020617,_#111827)] text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
-        <div className="absolute right-0 top-0 h-full w-1/3 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.03))]" aria-hidden="true" />
-        <div className="relative grid gap-5 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-300">Commercial intelligence</p>
-            <h1 className="mt-2 max-w-3xl text-2xl font-bold tracking-[-0.04em] text-white sm:text-4xl">Know what is moving the business.</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-              Follow lead flow, estimate activity, conversion, and the product lines creating demand.
-            </p>
-          </div>
-          <div className="grid grid-cols-3 rounded-xl border border-white/10 bg-white/5 p-1 backdrop-blur">
-            {PERIODS.map((period) => (
-              <button
-                key={period.days}
-                type="button"
-                onClick={() => setDays(period.days)}
-                className={`rounded-lg px-3 py-2.5 text-xs font-semibold transition sm:px-4 ${days === period.days ? "bg-white text-slate-950 shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
-              >
-                {period.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        {metrics ? (
-          <div className="relative grid grid-cols-2 divide-x divide-y divide-white/10 border-t border-white/10 lg:grid-cols-4 lg:divide-y-0">
-            <MetricCard eyebrow="New leads" value={metrics.leadCount} helper={data.period.label} changeValue={metrics.changes.leads} tone="blue" icon={Users} />
-            <MetricCard eyebrow="Estimates sent" value={metrics.sentCount} helper={`${metrics.preparedCount} prepared`} changeValue={metrics.changes.sent} icon={Send} />
-            <MetricCard eyebrow="Won opportunities" value={metrics.wonCount} helper={`${metrics.winRate}% of new leads`} changeValue={metrics.changes.won} tone="green" icon={CircleCheck} />
-            <MetricCard eyebrow="Won value excl. VAT" value={formatCurrency(metrics.wonValue)} helper={`${formatCurrency(metrics.pipelineValue)} active pipeline`} changeValue={metrics.changes.wonValue} tone="dark" icon={Banknote} />
-          </div>
-        ) : null}
-      </section>
-
-      {error ? <section className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">{error}</section> : null}
-      {data?.warnings?.length ? <section className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">{data.warnings.join(" ")}</section> : null}
-
-      {loading || !metrics ? (
-        <section className="rounded-3xl border border-slate-200 bg-white px-5 py-12 text-center text-sm text-slate-500 shadow-sm">Loading commercial performance...</section>
-      ) : (
-        <>
-          <GrowthSignals data={data} />
-
-          <section>
-            <div className="mb-3 flex flex-wrap items-end justify-between gap-3 px-1 sm:mb-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Marketing performance</p>
-                <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Search demand and paid growth</h2>
-              </div>
-              {!data.marketing?.schemaReady ? <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">Analytics SQL required</span> : null}
-            </div>
-            <div className="grid overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)] lg:grid-cols-2 lg:divide-x lg:divide-slate-200">
-              <MarketingSourceCard connection={marketingConnections.search_console} metrics={data.marketing?.searchConsole} type="search" schemaReady={data.marketing?.schemaReady} syncingSource={syncingSource} onSync={syncMarketingSource} />
-              <MarketingSourceCard connection={marketingConnections.google_ads} metrics={data.marketing?.googleAds} type="ads" schemaReady={data.marketing?.schemaReady} syncingSource={syncingSource} onSync={syncMarketingSource} />
-            </div>
-            {syncMessage ? <p className={`mt-3 rounded-xl px-4 py-3 text-sm ${syncMessage.includes("updated with") ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{syncMessage}</p> : null}
-          </section>
-
-          <LtvCacCard metric={data.commercialEfficiency} periodLabel={data.period.label} />
-
-          <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Client feedback · {data.period.label}</p>
-            <h2 className="mt-1 text-xl font-bold text-slate-950">Why clients aren’t proceeding</h2>
-            {!data.declineFeedback?.available ? (
-              <p className="mt-4 text-sm text-slate-500">Decline feedback is unavailable. Check that the decline-reasons database migration has been applied.</p>
-            ) : (
-              <>
-                <p className="mt-3 text-sm text-slate-600">{data.declineFeedback.total} quote responses not proceeding · {data.declineFeedback.withReason} supplied a reason.</p>
-                <p className="mt-2 text-xs leading-5 text-slate-500">Latest confirmed answer per quote sequence submitted in this period. Percentages include skipped reasons. These are client responses, not leads marked Lost.</p>
-                {data.declineFeedback.total ? (
-                  <div className="mt-5 space-y-4">
-                    {data.declineFeedback.reasons.map((reason) => (
-                      <div key={reason.key}>
-                        <div className="flex justify-between gap-4 text-sm"><span className="text-slate-700">{reason.label}</span><span className="shrink-0 font-semibold text-slate-900">{reason.value} · {reason.percentage}%</span></div>
-                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-sky-500" style={{ width: `${reason.percentage}%` }} /></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : <p className="mt-4 text-sm text-slate-500">No clients selected “No longer needed” in this period.</p>}
-              </>
-            )}
-          </section>
-
-          <section className="grid overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)] xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-            <article className="min-w-0 p-5 sm:p-7">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Commercial movement</p>
-                  <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950">Lead and estimate activity</h2>
-                </div>
-                <p className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">{data.period.label}</p>
-              </div>
-              <TrendChart data={data.trend} />
-            </article>
-
-            <article className="bg-[linear-gradient(155deg,_#020617,_#172033)] p-5 text-white sm:p-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">Lead cohort</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-white">Conversion path</h2>
-              <div className="mt-5 space-y-4">
-                {data.funnel.map((item, index) => (
-                  <div key={item.key} className="relative">
-                    <div className="flex items-end justify-between gap-4">
-                      <div className="flex items-center gap-3"><span className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-bold ${index === data.funnel.length - 1 ? "bg-amber-400 text-slate-950" : "bg-white/10 text-white"}`}>{index + 1}</span><div><p className="text-sm font-semibold text-white">{item.label}</p><p className="text-xs text-slate-400">{item.rate}% of leads</p></div></div>
-                      <p className="text-2xl font-bold text-white">{item.value}</p>
-                    </div>
-                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10"><div className={`h-full rounded-full ${index === data.funnel.length - 1 ? "bg-amber-400" : "bg-sky-400"}`} style={{ width: `${(item.value / maxFunnel) * 100}%` }} /></div>
-                  </div>
-                ))}
-              </div>
-            </article>
-          </section>
-
-          <section className="grid overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)] lg:grid-cols-2 lg:divide-x lg:divide-slate-200">
-            <article className="p-5 sm:p-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Where demand starts</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950">Lead sources</h2>
-              <RankedList items={data.sources} emptyLabel="No lead-source data in this period." />
-            </article>
-            <article className="border-t border-slate-200 p-5 sm:p-7 lg:border-t-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">What clients want</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950">Product demand</h2>
-              <RankedList items={data.products} emptyLabel="No product data in this period." accent="amber" />
-            </article>
-          </section>
-
-          <section className="grid gap-4 border-t border-slate-200 px-1 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-2">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Keep the data useful</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950">CRM housekeeping</h2>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="border-l-2 border-rose-400 py-1 pl-3 text-xs font-semibold text-rose-700">{data.attention.overdueFollowUps} overdue follow-ups</span>
-                <span className="border-l-2 border-amber-400 py-1 pl-3 text-xs font-semibold text-amber-800">{data.attention.missingSource} missing sources</span>
-                <span className="border-l-2 border-slate-300 py-1 pl-3 text-xs font-semibold text-slate-700">{data.attention.missingProduct} missing products</span>
-              </div>
-            </div>
-            <Link href="/os/crm" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800">Open CRM <ArrowUpRight className="h-4 w-4" aria-hidden="true" /></Link>
-          </section>
-        </>
-      )}
+  return <div className="min-h-screen min-w-0 bg-[#f5f7fa] px-4 py-6 text-slate-900 sm:px-7 lg:px-9">
+    <div className="mx-auto max-w-[1500px] space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-5">
+        <div><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-sky-500" />Smart Steel / Commercial intelligence</div><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Business performance<span className="text-sky-500">.</span></h1><p className="mt-2 text-sm text-slate-500">Understand the pipeline. Improve the next conversation.</p></div>
+        <div className="flex flex-wrap items-center gap-2"><button type="button" className={button} disabled={loading} onClick={() => setRefreshKey((value) => value + 1)} aria-label="Refresh analytics"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />Refresh</button><button type="button" className={button} disabled={loading || Boolean(error) || !insights} onClick={() => exportPerformance(data)}><ArrowDownToLine size={14} />Export performance</button><div className="flex rounded-lg border border-slate-200 bg-white p-1">{PERIODS.map((period) => <button key={period.days} type="button" aria-pressed={days === period.days} onClick={() => setDays(period.days)} className={`rounded-md px-3 py-2 text-xs font-semibold transition ${days === period.days ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>{period.label}</button>)}</div></div>
+      </header>
+      <nav aria-label="Analytics sections" className="flex gap-1 overflow-x-auto border-b border-slate-200">{TABS.map(({ key, label, icon: Icon }) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)} className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-3.5 text-xs font-semibold transition ${tab === key ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500 hover:text-slate-900'}`}><Icon size={15} />{label}</button>)}</nav>
+      {loading ? <div role="status" className="space-y-5"><p className="text-sm text-slate-500">Loading business performance…</p><div className="grid animate-pulse gap-4 sm:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map((key) => <div key={key} className="h-36 rounded-2xl bg-slate-200" />)}</div><div className="h-64 animate-pulse rounded-2xl bg-slate-200" /></div> : error ? <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800"><p>{error}</p><button className={`${button} mt-4`} onClick={() => setRefreshKey((value) => value + 1)}>Try again</button></div> : insights && metrics ? <>
+        {!!data.warnings?.length && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">{data.warnings.join(' ')}</p>}
+        <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-500"><p><strong className="font-semibold text-slate-700">{data.period.label}</strong> · Acquisition cohorts use lead creation date; live pipeline includes all open leads.</p><p>As of {new Date(data.period.end).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}</p></div>
+        {tab === 'overview' && <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Stat label="Live pipeline value" value={money(insights.pipeline.value)} note={`${insights.pipeline.count} open opportunities · CRM quote values, excl. VAT`} dark /><Stat label="New enquiries" value={metrics.leadCount} note={comparison(metrics.changes.leads)} /><Stat label="Cohort won value" value={money(metrics.wonValue)} note={`${metrics.wonCount} wins from leads created in this period; not revenue booked in the period.`} /><Stat label="Quote-to-win conversion" value={insights.estimatesAvailable ? percent(insights.quotes.winRate) : '—'} note={`${insights.quotes.wonCount} won / ${insights.quotes.quotedCount} quoted leads in this acquisition cohort`} /></div>
+          <div className="grid items-start gap-5 xl:grid-cols-[1.3fr_1fr]"><ActivityChart trend={data.trend} available={insights.estimatesAvailable} /><section className="rounded-2xl bg-slate-900 p-6 text-white"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-300">Where to focus</p><h2 className="mt-3 text-2xl font-semibold tracking-tight">Keep the next step moving.</h2><div className="mt-6 divide-y divide-white/10">{[{ label: 'Overdue follow-ups', value: insights.attention.overdue, target: 'pipeline' }, { label: 'Open leads without a sent quote', value: insights.estimatesAvailable ? insights.pipeline.awaitingQuote : '—', target: 'pipeline' }, { label: 'Confirmed client responses this period', value: insights.feedback.available ? insights.feedback.total : '—', target: 'clients' }].map((item) => <button key={item.label} onClick={() => setTab(item.target)} className="flex w-full items-center justify-between gap-4 py-4 text-left text-sm hover:text-sky-300"><span className="text-slate-300">{item.label}</span><span className="flex items-center gap-3 text-xl font-semibold">{item.value}<ChevronRight size={14} /></span></button>)}</div></section></div>
+          <Attention attention={insights.attention} />
+          <div className="grid items-start gap-5 xl:grid-cols-2"><Ageing insights={insights} /><PerformanceTable rows={insights.products} label="Which products turn into business?" /></div>
+        </>}
+        {tab === 'pipeline' && <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Stat label="Open quoted value" value={insights.estimatesAvailable ? money(insights.pipeline.quotedValue) : '—'} note={`${insights.pipeline.quotedCount} open opportunities with a sent quote · all dates`} dark /><Stat label="Enquiry → first quote" value={insights.estimatesAvailable && insights.quotes.medianDays != null ? `${insights.quotes.medianDays} days` : '—'} note={`Median calendar days · ${insights.quotes.timingSample} valid send timestamps in the lead cohort`} /><Stat label="Awaiting first quote" value={insights.estimatesAvailable ? insights.pipeline.awaitingQuote : '—'} note={insights.pipeline.oldestAwaitingDays == null ? 'No measurable waiting time' : `Oldest open enquiry: ${insights.pipeline.oldestAwaitingDays} days. Includes unqualified leads.`} /><Stat label="Quote sends in period" value={insights.estimatesAvailable ? metrics.sentCount : '—'} note="Send activity, including revisions and older leads" /></div>
+          <div className="grid items-start gap-5 lg:grid-cols-2"><Ageing insights={insights} /><section className={panel}><Heading eyebrow="Acquisition cohort" title="From enquiry to outcome" detail="Current outcomes of leads created in the selected period. These counts are not a strict funnel: a win can exist without a recorded quote." /><div className="space-y-5">{[{ label: 'Enquiries received', value: metrics.leadCount }, { label: 'With a sent quote', value: insights.estimatesAvailable ? insights.quotes.quotedCount : null }, { label: 'Currently won', value: metrics.wonCount }].map((row) => <div key={row.label}><div className="mb-2 flex justify-between text-sm"><span className="text-slate-600">{row.label}</span><strong>{row.value ?? '—'}</strong></div><div className="h-3 rounded-full bg-slate-100"><div className="h-3 rounded-full bg-sky-500" style={{ width: `${metrics.leadCount ? (row.value || 0) / metrics.leadCount * 100 : 0}%` }} /></div></div>)}</div><p className="mt-6 text-xs leading-5 text-slate-500">Recent cohorts have had less time to convert. Compare like-for-like periods before drawing conclusions.</p></section></div>
+          <Attention attention={insights.attention} />
+        </>}
+        {tab === 'clients' && <><Feedback data={data} /><PerformanceTable rows={insights.products} label="Product performance" /><section className={panel}><Heading eyebrow="Data quality" title="Make the next report more useful" /><div className="flex flex-wrap gap-3 text-sm"><span className="rounded-lg bg-amber-50 px-4 py-3 text-amber-800">{data.attention.missingSource} new leads without a source</span><span className="rounded-lg bg-slate-100 px-4 py-3 text-slate-700">{data.attention.missingProduct} new leads without a product</span></div></section></>}
+        {tab === 'marketing' && <><PerformanceTable rows={insights.sources} label="Which sources bring customers?" /><Efficiency metric={data.commercialEfficiency} /><section><Heading eyebrow="Connected channels" title="Search demand & paid acquisition" detail="Platform conversions are separate from CRM wins. Source performance above uses recorded CRM attribution." /><div className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white lg:grid-cols-2 lg:divide-x lg:divide-slate-200"><MarketingSourceCard connection={connections.search_console} metrics={data.marketing.searchConsole} type="search" schemaReady={data.marketing.schemaReady} syncingSource={syncingSource} onSync={syncMarketingSource} /><MarketingSourceCard connection={connections.google_ads} metrics={data.marketing.googleAds} type="ads" schemaReady={data.marketing.schemaReady} syncingSource={syncingSource} onSync={syncMarketingSource} /></div>{syncMessage && <p role="status" className="mt-3 rounded-lg bg-slate-100 p-3 text-sm text-slate-700">{syncMessage}</p>}</section></>}
+        <footer className="flex flex-wrap justify-between gap-3 border-t border-slate-200 py-5 text-[11px] leading-5 text-slate-500"><p>CRM values exclude VAT. Pipeline values are opportunities, not guaranteed revenue.</p><p>Live pipeline · Acquisition cohorts · Confirmed feedback</p></footer>
+      </> : <Empty>Analytics data is not available. Refresh to try again.</Empty>}
     </div>
-  )
+  </div>
 }
