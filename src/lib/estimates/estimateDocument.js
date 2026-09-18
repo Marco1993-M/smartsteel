@@ -12,6 +12,17 @@ export const ESTIMATE_TERMS = [
   "Any changes to dimensions, cladding, finishes, delivery distance, or structural requirements may result in a revised estimate.",
 ]
 
+export const ESTIMATE_DELIVERY_TERMS = [
+  {
+    title: "Site Access",
+    text: "The client is responsible for ensuring suitable access and a safe offloading area for delivery vehicles appropriate to the size and length of the materials ordered. Any access restrictions or special delivery requirements must be communicated to Smart Steel before dispatch. Additional handling, equipment or secondary transport required due to site access limitations may be for the client’s account.",
+  },
+  {
+    title: "Transport Pricing",
+    text: "Transport is quoted as a fixed amount based on the anticipated delivery requirements and is not calculated on a per-kilogram basis. Final load weight, packing configuration and vehicle selection may vary.",
+  },
+]
+
 export const ESTIMATE_EXCLUSIONS = [
   "Civil works, foundations, and concrete slabs unless specifically included in writing.",
   "Electrical work, solar modules, inverters, and balance-of-system components unless clearly itemised.",
