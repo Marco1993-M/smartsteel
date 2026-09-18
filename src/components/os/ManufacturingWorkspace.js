@@ -1,5 +1,6 @@
 "use client"
 
+import CustomerOrders from "./CustomerOrders"
 import { useEffect, useState } from "react"
 import { ArrowRight, CalendarDays, CheckCircle2, ChevronDown, ClipboardCheck, Factory, FileText, LockKeyhole, MapPin, PackageCheck, PauseCircle, Printer, RefreshCw, ShieldCheck, Truck, UserRound, X } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
@@ -162,13 +163,15 @@ export default function ManufacturingWorkspace() {
   return <div className="min-w-0 space-y-5 px-4 py-5 sm:px-6 sm:py-6">
     <section className="overflow-hidden rounded-[28px] border border-[#0043f3] bg-[linear-gradient(125deg,#001d2e_0%,#063379_58%,#0043f3_100%)] p-5 text-white shadow-xl sm:p-7">
       <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-        <div><div className="flex items-center gap-2 text-[#c1d9e5]"><Factory className="h-4 w-4" /><p className="text-[11px] font-bold uppercase tracking-[0.2em]">Manufacturing control</p></div><h1 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">From accepted order to delivery.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">One operational view for planning, production, dispatch, and completed Atlas orders.</p></div>
+        <div><div className="flex items-center gap-2 text-[#c1d9e5]"><Factory className="h-4 w-4" /><p className="text-[11px] font-bold uppercase tracking-[0.2em]">Manufacturing control</p></div><h1 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">From accepted order to delivery.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">Customer quote acceptances and partner orders, from specification confirmation to delivery.</p></div>
         <button type="button" onClick={loadRecords} className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 bg-white/10 px-4 text-sm font-bold hover:bg-white/15"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</button>
       </div>
       <div className="mt-6 grid grid-cols-3 gap-px overflow-hidden bg-white/15"><Metric label="Active orders" value={active.length} /><Metric label="In production" value={productionCount} /><Metric label="Dispatch ready" value={dispatchCount} /></div>
     </section>
 
     {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</p> : null}
+
+    <CustomerOrders />
 
     <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center"><div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-slate-500">Production queue</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Orders in motion</h2></div><div className="flex gap-2 overflow-x-auto">{[["active", "Active"], ...STAGES].map(([value, label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold ${filter === value ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600"}`}>{label}</button>)}</div></div>

@@ -284,7 +284,7 @@ export default function EstimateDocumentLayout({
               Terms
             </h2>
             <ul className="mt-4 list-none space-y-3 pl-0 text-sm leading-6 text-slate-700">
-              {ESTIMATE_TERMS.map((item) => (
+              {(documentModel.terms || ESTIMATE_TERMS).map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -295,7 +295,7 @@ export default function EstimateDocumentLayout({
               Exclusions
             </h2>
             <ul className="mt-4 list-none space-y-3 pl-0 text-sm leading-6 text-slate-700">
-              {ESTIMATE_EXCLUSIONS.map((item) => (
+              {(documentModel.exclusions || ESTIMATE_EXCLUSIONS).map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -305,7 +305,7 @@ export default function EstimateDocumentLayout({
         <section className={`estimate-card mt-6 border border-slate-200 bg-white p-6 shadow-sm ${cardShape}`}>
           <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Delivery Terms</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
-            {ESTIMATE_DELIVERY_TERMS.map((term) => (
+            {(documentModel.deliveryTerms || ESTIMATE_DELIVERY_TERMS).map((term) => (
               <p key={term.title}><strong className="font-semibold text-slate-900">{term.title}: </strong>{term.text}</p>
             ))}
           </div>
