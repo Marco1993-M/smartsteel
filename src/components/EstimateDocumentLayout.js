@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { ESTIMATE_EXCLUSIONS, ESTIMATE_TERMS } from "../lib/estimates/estimateDocument"
+import { ESTIMATE_DELIVERY_TERMS, ESTIMATE_EXCLUSIONS, ESTIMATE_TERMS } from "../lib/estimates/estimateDocument"
 import { formatCurrency } from "../lib/estimates/warehouseEstimate"
 
 export default function EstimateDocumentLayout({
@@ -302,13 +302,22 @@ export default function EstimateDocumentLayout({
           </section>
         </div>
 
+        <section className={`estimate-card mt-6 border border-slate-200 bg-white p-6 shadow-sm ${cardShape}`}>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Delivery Terms</h2>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+            {ESTIMATE_DELIVERY_TERMS.map((term) => (
+              <p key={term.title}><strong className="font-semibold text-slate-900">{term.title}: </strong>{term.text}</p>
+            ))}
+          </div>
+        </section>
+
         <section className={`estimate-card estimate-acceptance mt-8 border border-slate-200 bg-white p-6 shadow-sm ${cardShape}`}>
           <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
             Acceptance
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-700">
             By signing or approving this quotation, the client confirms that the quoted scope,
-            principal commercial terms, and exclusions have been reviewed and accepted.
+            principal commercial terms (including Site Access and Transport Pricing), and exclusions have been reviewed and accepted.
           </p>
           <div className="mt-8 grid grid-cols-3 gap-6">
             <div>
