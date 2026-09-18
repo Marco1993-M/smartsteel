@@ -1,3 +1,4 @@
+import { buildAnalyticsInsights } from "lib/analyticsInsights.mjs"
 import { buildDeclineSummary } from "lib/estimateDeclineReasons.mjs"
 import { NextResponse } from "next/server"
 import { buildCommercialEfficiency } from "lib/commercialEfficiency.mjs"
@@ -24,7 +25,7 @@ function percentage(part, total) {
 }
 
 function change(current, previous) {
-  if (previous === 0) return current > 0 ? 100 : 0
+  if (previous === 0) return current > 0 ? null : 0
   return Math.round(((current - previous) / previous) * 1000) / 10
 }
 
@@ -183,19 +184,20 @@ export async function GET(request) {
   const start = atStartOfDay(new Date(end.getTime() - days * 24 * 60 * 60 * 1000))
   const previousStart = atStartOfDay(new Date(start.getTime() - days * 24 * 60 * 60 * 1000))
 
-  const [leadsResult, estimatesResult, connectionsResult, marketingResult, responsesResult] = await Promise.all([
+  const [leadsResult, estimatesResult, connectionsResult, marketingResult, responsesResult, emailsResult] = await Promise.all([
     fetchAll(() =>
       supabaseServer
         .from("leads")
-        .select("id, created_at, updated_at, status, lead_source, product_type, quote_value, follow_up_at")
-        .gte("created_at", previousStart.toISOString())
+        .select("id, name, last_name, next_action, created_at, updated_at, status, lead_source, product_type, quote_value, follow_up_at")
         .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
     ),
     fetchAll(() =>
       supabaseServer
         .from("estimates")
         .select("id, lead_id, created_at, prepared_at, sent_at, status, total")
         .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
     ),
     supabaseServer
       .from("os_analytics_connections")
@@ -211,12 +213,18 @@ export async function GET(request) {
     fetchAll(() =>
       supabaseServer
         .from("crm_estimate_follow_up_responses")
-        .select("id, sequence_id, response_key, decline_reason, created_at")
+        .select("id, sequence_id, estimate_id, response_key, decline_reason, created_at")
         .gte("created_at", start.toISOString())
         .lt("created_at", end.toISOString())
         .order("created_at", { ascending: true })
         .order("id", { ascending: true })
     ),
+    fetchAll(() => supabaseServer.from("crm_email_events")
+      .select("id, estimate_id, sent_at")
+      .eq("email_type", "follow_up")
+      .gte("sent_at", start.toISOString())
+      .lt("sent_at", end.toISOString())
+      .order("sent_at", { ascending: true }).order("id", { ascending: true })),
   ])
 
   if (leadsResult.error) {
@@ -287,6 +295,11 @@ export async function GET(request) {
     declineFeedback: responsesResult.error
       ? { available: false, total: 0, withReason: 0, reasons: [] }
       : { available: true, ...buildDeclineSummary(responsesResult.data || []) },
+    insights: buildAnalyticsInsights({
+      leads, estimates, responses: responsesResult.data || [], emails: emailsResult.data || [],
+      start: start.toISOString(), end: end.toISOString(),
+      estimatesAvailable: !estimatesResult.error, responsesAvailable: !responsesResult.error, emailsAvailable: !emailsResult.error,
+    }),
     commercialEfficiency,
     warnings,
   })
