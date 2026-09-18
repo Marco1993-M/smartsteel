@@ -68,7 +68,7 @@ export async function POST(request) {
     }])
 
     if (responseRecord.error) {
-      return NextResponse.json({ error: "We could not record your response. Please try again." }, { status: 500 })
+      return NextResponse.json({ error: responseRecord.error.code === "P0001" ? responseRecord.error.message : "We could not record your response. Please try again." }, { status: responseRecord.error.code === "P0001" ? 409 : 500 })
     }
 
     const sequenceUpdate = {
@@ -91,7 +91,7 @@ export async function POST(request) {
 
     const leadUpdate = { next_action: [action.nextAction, feedbackNote].filter(Boolean).join(" ") }
     if (action.cancel) leadUpdate.follow_up_at = null
-    await supabaseServer.from("leads").update(leadUpdate).eq("id", sequence.lead_id)
+    await supabaseServer.from("leads").update(leadUpdate).eq("id", sequence.lead_id).not("status", "in", "(won,lost)")
 
     await supabaseServer.from("lead_activities").insert([{
       lead_id: sequence.lead_id,

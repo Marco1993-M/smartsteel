@@ -82,7 +82,7 @@ function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }
 
               <p style="margin:0 0 20px;color:#475569;font-size:13px;line-height:1.65;">The reviewed estimate is attached as a PDF. You can also open the secure online version below.</p>
               <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="${accent}" style="border-radius:4px;">
-                <a href="${escapeHtml(shareUrl)}" style="display:inline-block;padding:14px 20px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;">View reviewed estimate</a>
+                <a href="${escapeHtml(shareUrl)}" style="display:inline-block;padding:14px 20px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;">Review &amp; accept quote</a>
               </td></tr></table>
 
               <p style="margin:26px 0 0;color:#64748b;font-size:12px;line-height:1.6;">Prepared for ${escapeHtml(clientName)}. Please refer to the attached estimate for the confirmed scope, exclusions, validity and commercial terms.</p>
@@ -117,7 +117,7 @@ export async function POST(request) {
       supabaseServer.from("leads").select("id, name, last_name, email, product_type").eq("id", leadId).single(),
       // Keep the send lookup limited to columns guaranteed by the estimate schema.
       // Optional display fields are deliberately tolerated by the estimate save flow.
-      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token, product_type").eq("id", estimateId).single(),
+      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token, product_type, status").eq("id", estimateId).single(),
     ])
 
     if (leadError) {
@@ -132,6 +132,7 @@ export async function POST(request) {
     if (!estimate || !recordIdsMatch(estimate.lead_id, lead.id)) {
       return NextResponse.json({ error: "Estimate not found for this lead." }, { status: 404 })
     }
+    if (["accepted", "cancelled", "superseded", "declined"].includes(estimate.status)) return NextResponse.json({ error: "Create and send a new quote version instead of resending a closed quote." }, { status: 409 })
     if (!lead.email) return NextResponse.json({ error: "The lead does not have an email address." }, { status: 400 })
     if (!estimate.share_token) return NextResponse.json({ error: "Save the estimate before sending it." }, { status: 400 })
 
