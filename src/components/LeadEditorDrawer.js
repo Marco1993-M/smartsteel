@@ -847,6 +847,8 @@ export default function LeadEditorDrawer({
   const [confirmingEmailSent, setConfirmingEmailSent] = useState(false);
   const [sendingBrandedProposal, setSendingBrandedProposal] = useState(false)
   const [validationErrors, setValidationErrors] = useState({});
+  const [savingLead, setSavingLead] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectHandoffError, setProjectHandoffError] = useState("");
   const [updatingEstimateStatus, setUpdatingEstimateStatus] = useState(false)
@@ -911,6 +913,7 @@ export default function LeadEditorDrawer({
     : ""
   const guidedAction = getGuidedLeadAction(nextBestAction, formData, latestEstimate)
   const isUnresponsive = formData.client_follow_up_state === "unresponsive"
+  const isSavedUnresponsive = lead?.client_follow_up_state === "unresponsive" && normalizeStatus(lead?.status) === "lost"
 
   const openEstimateCreator = () => {
     onCreateEstimate?.({
@@ -1218,6 +1221,7 @@ export default function LeadEditorDrawer({
     setConfirmingEmailSent(false)
     setShowEmailComposer(false)
     setValidationErrors({});
+    setSaveError("");
   }, [lead]);
 
   const handleChange = (field, value) => {
@@ -1288,7 +1292,9 @@ export default function LeadEditorDrawer({
     }
   };
 
-  const handleSaveClick = () => {
+  const handleSaveClick = async () => {
+    if (savingLead) return;
+    setSaveError("");
     const errors = {};
 
     if (!formData.name?.trim()) errors.name = "First name is required.";
@@ -1317,13 +1323,21 @@ export default function LeadEditorDrawer({
     setValidationErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
-    onSave({
-      ...formData,
-      name: normalizePersonName(formData.name),
-      last_name: normalizePersonName(formData.last_name),
-      status: normalizeStatus(formData.status),
-      quote_value: isNew ? null : formData.quote_value,
-    });
+    setSavingLead(true);
+    try {
+      const saved = await onSave({
+        ...formData,
+        name: normalizePersonName(formData.name),
+        last_name: normalizePersonName(formData.last_name),
+        status: normalizeStatus(formData.status),
+        quote_value: isNew ? null : formData.quote_value,
+      });
+      if (saved === false) setSaveError("The lead was not saved. Resolve the reported error and try again.");
+    } catch (error) {
+      setSaveError(error.message || "The lead could not be saved. Please try again.");
+    } finally {
+      setSavingLead(false);
+    }
   };
 
   const applyEmailTemplate = (templateKey) => {
@@ -2573,11 +2587,11 @@ export default function LeadEditorDrawer({
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">
-                    {isUnresponsive ? "This lead is archived as unresponsive" : "Has the client gone silent?"}
+                    {isUnresponsive ? (isSavedUnresponsive ? "This lead is archived as unresponsive" : "Unresponsive selected — not saved yet") : "Has the client gone silent?"}
                   </p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
                     {isUnresponsive
-                      ? "The full client history is preserved and the lead no longer appears in active follow-up work."
+                      ? (isSavedUnresponsive ? "The full client history is preserved and the lead no longer appears in active follow-up work." : "Select Save changes to move this lead to Lost. Its history will be preserved.")
                       : "Use this after the planned follow-ups have been completed without a response."}
                   </p>
                 </div>
@@ -3159,6 +3173,13 @@ export default function LeadEditorDrawer({
 
                   {/* Footer */}
                   <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur sm:p-4 sm:px-6">
+                    {(saveError || Object.values(validationErrors).some(Boolean)) && (
+                      <div role="alert" className="mx-auto mb-3 max-h-32 max-w-5xl overflow-y-auto rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                        <p className="font-semibold">Changes have not been saved.</p>
+                        {saveError ? <p>{saveError}</p> : null}
+                        {Object.values(validationErrors).filter(Boolean).map((message) => <p key={message}>{message}</p>)}
+                      </div>
+                    )}
                     <div className="mx-auto flex max-w-5xl flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div className="hidden sm:block">
                         {!isNew && (
@@ -3172,9 +3193,10 @@ export default function LeadEditorDrawer({
                       </div>
                       <button
                         onClick={handleSaveClick}
+                        disabled={savingLead}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
                       >
-                        <Save size={16} /> {isNew ? "Add lead" : "Save changes"}
+                        <Save size={16} /> {savingLead ? "Saving..." : isNew ? "Add lead" : "Save changes"}
                       </button>
                     </div>
                   </div>
