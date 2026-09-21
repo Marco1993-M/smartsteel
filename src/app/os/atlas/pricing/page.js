@@ -1,9 +1,8 @@
-import AtlasPricingWorkspace from "../../../../components/os/AtlasPricingWorkspace"
-import Link from 'next/link'
+import AtlasPricingWorkspace from '../../../../components/os/AtlasPricingWorkspace'
 import { redirect } from 'next/navigation'
-
-export default async function AtlasPricingPage({ searchParams }) {
-  const params = await searchParams
-  if (params?.product === 'SOLAR-CARPORT') redirect('/os/atlas/solar-pricing')
-  return <><Link className="m-6 inline-block border border-blue-200 px-5 py-3 font-semibold text-blue-700" href="/os/atlas/solar-pricing">Solar carport member costing and website pricing →</Link><AtlasPricingWorkspace /></>
+export default async function AtlasPricingPage({searchParams}) {
+ const {product='W08'}=await searchParams
+ if(product==='SOLAR-CARPORT') redirect('/os/atlas/solar-pricing?product=SOLAR-CARPORT')
+ if(!['W06','W08','W10','W12'].includes(product)) redirect('/os/atlas')
+ return <AtlasPricingWorkspace key={product} />
 }

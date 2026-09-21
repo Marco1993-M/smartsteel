@@ -1,19 +1,22 @@
+import { getAtlasProduct, withAtlasProduct } from "../../../../lib/atlasProductRange"
 import {
   ATLAS_ENGINEERING_REFERENCES,
   ATLAS_ENGINEERING_STREAMS,
 } from "../../../../lib/osProductData"
 import AtlasModuleHero from "../../../../components/os/AtlasModuleHero"
 
-export default function AtlasEngineeringPage() {
+export default async function AtlasEngineeringPage({ searchParams }) {
+  const params = await searchParams
+  const product = getAtlasProduct(params?.product || "W08")
   return (
     <div className="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
       <AtlasModuleHero
         eyebrow="Atlas engineering control"
-        title="Keep the design basis visible."
-        description="Bring assumptions, standard details, limits and review triggers into one controlled technical layer that supports dependable pricing, quoting and fabrication handoff."
+        title={`${product?.name || "Atlas"} engineering references`}
+        description="Shared Atlas engineering guidance. These references do not establish product-specific engineering approval; confirm the selected product’s design basis and site requirements before release."
         status="Technical control"
-        actionHref="/os/atlas/components"
-        actionLabel="Review component records"
+        actionHref={withAtlasProduct("/os/atlas/materials", product?.code)}
+        actionLabel="Review product schedule"
       />
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">

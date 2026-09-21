@@ -1,17 +1,20 @@
+import { getAtlasProduct, withAtlasProduct } from "../../../../lib/atlasProductRange"
 import DocumentsWorkspace from "../../../../components/os/DocumentsWorkspace"
 import AtlasModuleHero from "../../../../components/os/AtlasModuleHero"
 import { ATLAS_DOCUMENT_RULES } from "../../../../lib/osProductData"
 
-export default function AtlasDocumentsPage() {
+export default async function AtlasDocumentsPage({ searchParams }) {
+  const params = await searchParams
+  const product = getAtlasProduct(params?.product || "W08")
   return (
     <div>
       <div className="px-3 pt-4 sm:px-6 sm:pt-6">
         <AtlasModuleHero
           eyebrow="Atlas document control"
-          title="Issue the right product information."
-          description="Keep product sheets, references and revisions linked to the Atlas system so client-facing information remains controlled as the product develops."
+          title={`${product?.name || "Atlas"} · Document library`}
+          description="Shared Atlas document library. Records are currently linked by product family, not warehouse size. Check the product code and revision before using a document for the selected product."
           status="Revision control"
-          actionHref="/os/atlas/products"
+          actionHref={withAtlasProduct("/os/atlas/products", product?.code)}
           actionLabel="Open product source"
         />
       </div>

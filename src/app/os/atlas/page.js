@@ -1,5 +1,2 @@
-import AtlasDashboardWorkspace from "../../../components/os/AtlasDashboardWorkspace"
-
-export default function AtlasOsPage() {
-  return <AtlasDashboardWorkspace />
-}
+import AtlasProductHome from '../../../components/os/AtlasProductHome'
+export default function AtlasOsPage() { return <AtlasProductHome /> }
