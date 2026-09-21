@@ -179,7 +179,7 @@ export async function PATCH(request) {
     if (approvalComponentError) {
       return NextResponse.json({ error: approvalComponentError.message }, { status: 500 })
     }
-    if (approvalComponent.component_code === "W08-CON") {
+    if (/^W(06|08|10|12)-CON$/.test(approvalComponent.component_code || "")) {
       const { data: connectionItems, error: connectionError } = await supabaseServer
         .from("os_component_items")
         .select("status, quantity, size_spec, grade_spec, finish_spec")
@@ -196,7 +196,7 @@ export async function PATCH(request) {
         item.finish_spec !== "To be confirmed"
       )
       if (!connectionReady) {
-        return NextResponse.json({ error: "Complete and approve every connection-pack item before approving W08-CON." }, { status: 400 })
+        return NextResponse.json({ error: `Complete and approve every connection-pack item before approving ${approvalComponent.component_code}.` }, { status: 400 })
       }
     }
     updatePayload.technical_approved_by = approver
