@@ -1,3 +1,4 @@
+import { portalForKey } from "lib/partnerPortals.mjs"
 import { NextResponse } from "next/server"
 import { getPartnerRequestContext } from "lib/partnerRouteAuth"
 import { createPartnerPriceConfirmationPdf } from "lib/partnerPriceConfirmation"
@@ -18,8 +19,9 @@ export async function GET(request, { params }) {
   if (!data) return NextResponse.json({ error: "Price confirmation not found." }, { status: 404 })
 
   try {
-    const pdf = await createPartnerPriceConfirmationPdf(data)
-    return new NextResponse(pdf, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="AFGRI-Atlas-${data.reference}-price-confirmation.pdf"`, "Cache-Control": "private, no-store" } })
+    const portal = portalForKey(context.membership.partner_organizations.key)
+    const pdf = await createPartnerPriceConfirmationPdf(data, portal)
+    return new NextResponse(pdf, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${portal.name}-Atlas-${data.reference}-price-confirmation.pdf"`, "Cache-Control": "private, no-store" } })
   } catch (documentError) {
     return NextResponse.json({ error: documentError.message }, { status: 409 })
   }

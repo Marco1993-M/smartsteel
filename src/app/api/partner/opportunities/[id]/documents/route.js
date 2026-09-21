@@ -76,7 +76,7 @@ export async function POST(request, { params }) {
     event_type: "order_document_uploaded",
     actor_scope: "partner",
     actor_id: context.user.id,
-    summary: `${documentType.replaceAll("_", " ")} uploaded by AFGRI.`,
+    summary: `${documentType.replaceAll("_", " ")} uploaded by Partner.`,
     detail: { documentId: data.id, fileName: file.name, documentType },
   }])
 

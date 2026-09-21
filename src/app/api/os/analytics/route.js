@@ -1,3 +1,4 @@
+import { buildAnalyticsPeriod, shiftMonth, monthLabel, monthStart } from "lib/analyticsPeriods.mjs"
 import { buildAnalyticsInsights } from "lib/analyticsInsights.mjs"
 import { buildDeclineSummary } from "lib/estimateDeclineReasons.mjs"
 import { NextResponse } from "next/server"
@@ -7,7 +8,6 @@ import { supabaseServer } from "lib/supabase-server"
 
 export const runtime = "nodejs"
 
-const ALLOWED_PERIODS = new Set([30, 90, 365])
 const ACTIVE_ESTIMATE_STATUSES = new Set(["sent", "accepted", "declined", "superseded"])
 const MARKETING_SOURCES = ["search_console", "google_ads"]
 
@@ -95,24 +95,22 @@ function buildPeriodSummary(leads, estimates, start, end) {
   }
 }
 
-function buildTrend(leads, estimates, start, end, days) {
-  const bucketDays = days <= 30 ? 7 : days <= 90 ? 14 : 30
-  const buckets = []
-
-  for (let cursor = new Date(start); cursor < end; cursor.setDate(cursor.getDate() + bucketDays)) {
-    const bucketStart = new Date(cursor)
-    const bucketEnd = new Date(Math.min(end.getTime(), new Date(cursor).setDate(cursor.getDate() + bucketDays)))
-    const cohort = leads.filter((lead) => within(lead.created_at, bucketStart, bucketEnd))
-    buckets.push({
-      key: bucketStart.toISOString(),
-      label: bucketStart.toLocaleDateString("en-ZA", { day: "numeric", month: "short" }),
+function buildTrend(leads, estimates, selectedMonth, now) {
+  return Array.from({ length: 12 }, (_, index) => {
+    const month = shiftMonth(selectedMonth, index - 11)
+    const start = monthStart(month)
+    const end = new Date(Math.min(monthStart(shiftMonth(month, 1)).getTime(), now.getTime()))
+    const cohort = leads.filter((lead) => within(lead.created_at, start, end))
+    return {
+      key: month,
+      label: new Intl.DateTimeFormat("en-ZA", { month: "short", year: "2-digit", timeZone: "Africa/Johannesburg" }).format(start),
+      fullLabel: monthLabel(month),
+      partial: end < monthStart(shiftMonth(month, 1)),
       leads: cohort.length,
       won: cohort.filter((lead) => String(lead.status || "").toLowerCase() === "won").length,
-      estimatesSent: estimates.filter((estimate) => within(estimate.sent_at, bucketStart, bucketEnd)).length,
-    })
-  }
-
-  return buckets
+      estimatesSent: estimates.filter((estimate) => within(estimate.sent_at, start, end)).length,
+    }
+  })
 }
 
 function groupBy(records, getKey, getValue = () => 1) {
@@ -155,11 +153,11 @@ function sumMetrics(records) {
   }
 }
 
-function buildMarketingSummary(records, start, end, previousStart) {
+function buildMarketingSummary(records, start, end, previousStart, previousEnd) {
   const bySource = Object.fromEntries(MARKETING_SOURCES.map((source) => {
     const sourceRecords = records.filter((record) => record.source === source)
-    const current = sumMetrics(sourceRecords.filter((record) => within(record.metric_date, start, end)))
-    const previous = sumMetrics(sourceRecords.filter((record) => within(record.metric_date, previousStart, start)))
+    const current = sumMetrics(sourceRecords.filter((record) => within(`${record.metric_date}T00:00:00+02:00`, start, end)))
+    const previous = sumMetrics(sourceRecords.filter((record) => within(`${record.metric_date}T00:00:00+02:00`, previousStart, previousEnd)))
     return [source, {
       ...current,
       changes: {
@@ -178,11 +176,14 @@ export async function GET(request) {
   const authResponse = await requireOsAuth(request)
   if (authResponse) return authResponse
 
-  const requestedDays = Number(new URL(request.url).searchParams.get("days"))
-  const days = ALLOWED_PERIODS.has(requestedDays) ? requestedDays : 30
-  const end = new Date()
-  const start = atStartOfDay(new Date(end.getTime() - days * 24 * 60 * 60 * 1000))
-  const previousStart = atStartOfDay(new Date(start.getTime() - days * 24 * 60 * 60 * 1000))
+  const now = new Date()
+  let period
+  try { period = buildAnalyticsPeriod(new URL(request.url).searchParams.get("month"), now) }
+  catch (error) { return NextResponse.json({ error: error.message }, { status: 400 }) }
+  const start = new Date(period.start)
+  const end = new Date(period.end)
+  const previousStart = new Date(period.previousStart)
+  const previousEnd = new Date(period.previousEnd)
 
   const [leadsResult, estimatesResult, connectionsResult, marketingResult, responsesResult, emailsResult] = await Promise.all([
     fetchAll(() =>
@@ -207,7 +208,7 @@ export async function GET(request) {
         .from("os_analytics_daily_metrics")
         .select("metric_date, source, impressions, clicks, cost, conversions, conversion_value, average_position")
         .eq("dimension_key", "summary")
-        .gte("metric_date", previousStart.toISOString().slice(0, 10))
+        .gte("metric_date", `${shiftMonth(period.month, -1)}-01`)
         .order("metric_date", { ascending: true })
     ),
     fetchAll(() =>
@@ -240,22 +241,17 @@ export async function GET(request) {
   const leads = leadsResult.data || []
   const estimates = estimatesResult.error ? [] : estimatesResult.data || []
   const current = buildPeriodSummary(leads, estimates, start, end)
-  const previous = buildPeriodSummary(leads, estimates, previousStart, start)
+  const previous = buildPeriodSummary(leads, estimates, previousStart, previousEnd)
   const currentLeads = leads.filter((lead) => within(lead.created_at, start, end))
   const today = atStartOfDay(new Date())
   const activeLeads = leads.filter((lead) => !["won", "lost"].includes(String(lead.status || "").toLowerCase()))
   const connectionRows = connectionsResult.error ? [] : connectionsResult.data || []
   const connectionMap = Object.fromEntries(connectionRows.map((connection) => [connection.source, connection]))
-  const marketing = buildMarketingSummary(marketingResult.error ? [] : marketingResult.data || [], start, end, previousStart)
+  const marketing = buildMarketingSummary(marketingResult.error ? [] : marketingResult.data || [], start, end, previousStart, previousEnd)
   const commercialEfficiency = buildCommercialEfficiency(currentLeads, marketingResult.error ? null : marketing.google_ads.cost)
 
   return NextResponse.json({
-    period: {
-      days,
-      start: start.toISOString(),
-      end: end.toISOString(),
-      label: days === 365 ? "Last 12 months" : `Last ${days} days`,
-    },
+    period,
     metrics: {
       ...current,
       changes: {
@@ -271,7 +267,7 @@ export async function GET(request) {
       { key: "quoted", label: "Estimate sent", value: current.quotedLeadCount, rate: current.quoteRate },
       { key: "won", label: "Won", value: current.wonCount, rate: current.winRate },
     ],
-    trend: buildTrend(leads, estimates, start, end, days),
+    trend: buildTrend(leads, estimates, period.month, now),
     sources: groupBy(currentLeads, (lead) => normalize(lead.lead_source)).slice(0, 6),
     products: groupBy(currentLeads, (lead) => normalize(lead.product_type)).slice(0, 6),
     attention: {
@@ -297,7 +293,7 @@ export async function GET(request) {
       : { available: true, ...buildDeclineSummary(responsesResult.data || []) },
     insights: buildAnalyticsInsights({
       leads, estimates, responses: responsesResult.data || [], emails: emailsResult.data || [],
-      start: start.toISOString(), end: end.toISOString(),
+      start: start.toISOString(), end: end.toISOString(), now: now.toISOString(),
       estimatesAvailable: !estimatesResult.error, responsesAvailable: !responsesResult.error, emailsAvailable: !emailsResult.error,
     }),
     commercialEfficiency,

@@ -13,7 +13,7 @@ const FULFILMENT_STATUSES = ["production_planning", "in_production", "ready_for_
 const PRODUCTION_ACTIONS = ["update_fulfilment", "update_production_plan", "release_production", "adopt_bom_snapshot"]
 
 function makeTemporaryOrderReference(reference) {
-  return `TEMP-${String(reference || "AFGRI").toUpperCase()}`
+  return `TEMP-${String(reference || "Partner").toUpperCase()}`
 }
 
 async function nextAtlasProjectNumber() {
@@ -58,7 +58,7 @@ async function ensureInternalProject(opportunity) {
     partnerOpportunityReference: opportunity.reference,
     afgriOrderReference: opportunity.afgri_order_reference || "",
     installationScope: opportunity.installation_scope || { requested: false, foundation: false, structure: false, sheeting: false },
-    source: "AFGRI partner order",
+    source: "Partner partner order",
     fulfilmentStatus: "production_planning",
     estimatedDispatchDate: opportunity.estimated_dispatch_date || "",
     estimatedDeliveryDate: opportunity.estimated_delivery_date || "",
@@ -241,7 +241,7 @@ export async function PATCH(request) {
   if (action === "update_fulfilment") {
     const fulfilmentStatus = String(body.fulfilmentStatus || "").trim()
     if (!currentOpportunity.internal_project_id || !FULFILMENT_STATUSES.includes(fulfilmentStatus)) {
-      return NextResponse.json({ error: "Accept the AFGRI instruction before updating fulfilment." }, { status: 409 })
+      return NextResponse.json({ error: "Accept the Partner instruction before updating fulfilment." }, { status: 409 })
     }
     if (fulfilmentStatus === "in_production" && currentOpportunity.production_release_status !== "released") {
       return NextResponse.json({ error: "Release the manufacturing pack before moving this order into production." }, { status: 409 })
@@ -282,7 +282,7 @@ export async function PATCH(request) {
 
   if (action === "adopt_bom_snapshot") {
     if (!currentOpportunity.internal_project_id) {
-      return NextResponse.json({ error: "Accept the AFGRI instruction before adopting a production BOM." }, { status: 409 })
+      return NextResponse.json({ error: "Accept the Partner instruction before adopting a production BOM." }, { status: 409 })
     }
     const latestBom = await getLatestApprovedAtlasBom(supabaseServer, currentOpportunity.configuration || {})
     if (!latestBom) {
@@ -320,7 +320,7 @@ export async function PATCH(request) {
 
   if (action === "release_production") {
     if (!currentOpportunity.internal_project_id) {
-      return NextResponse.json({ error: "Accept the AFGRI instruction before releasing production." }, { status: 409 })
+      return NextResponse.json({ error: "Accept the Partner instruction before releasing production." }, { status: 409 })
     }
     const release = Boolean(body.release)
     const latestBom = release ? await getLatestApprovedAtlasBom(supabaseServer, currentOpportunity.configuration || {}) : null
@@ -359,7 +359,7 @@ export async function PATCH(request) {
 
   if (action === "update_production_plan") {
     if (!currentOpportunity.internal_project_id) {
-      return NextResponse.json({ error: "Accept the AFGRI instruction before creating a production plan." }, { status: 409 })
+      return NextResponse.json({ error: "Accept the Partner instruction before creating a production plan." }, { status: 409 })
     }
     const checklist = Array.isArray(body.manufacturingChecklist)
       ? body.manufacturingChecklist.slice(0, 20).map((item, index) => ({
@@ -431,7 +431,7 @@ export async function PATCH(request) {
       return NextResponse.json({ error: "Changes can only be requested while the opportunity is under review." }, { status: 409 })
     }
     if (!requestText) {
-      return NextResponse.json({ error: "Explain exactly what AFGRI needs to change or provide." }, { status: 400 })
+      return NextResponse.json({ error: "Explain exactly what Partner needs to change or provide." }, { status: 400 })
     }
 
     const { data: latestSubmission } = await supabaseServer
@@ -458,7 +458,7 @@ export async function PATCH(request) {
     : Number(body.finalQuoteAmountExVat)
   const quoteUrl = String(body.quoteUrl || "").trim()
   if (status === "quoted" && (!Number.isFinite(finalQuoteAmountExVat) || finalQuoteAmountExVat <= 0)) {
-    return NextResponse.json({ error: "Add the approved amount before returning this price to AFGRI." }, { status: 400 })
+    return NextResponse.json({ error: "Add the approved amount before returning this price to Partner." }, { status: 400 })
   }
   let currentOrderStatus = "not_ready"
   if (status === "closed") {
@@ -470,7 +470,7 @@ export async function PATCH(request) {
     if (currentError) return NextResponse.json({ error: currentError.message }, { status: 500 })
     currentOrderStatus = current?.partner_order_status || "not_ready"
     if (currentOrderStatus !== "order_submitted" && currentOrderStatus !== "acknowledged") {
-      return NextResponse.json({ error: "Wait for AFGRI to submit its order reference before closing this opportunity." }, { status: 409 })
+      return NextResponse.json({ error: "Wait for Partner to submit its order reference before closing this opportunity." }, { status: 409 })
     }
   }
 
@@ -501,7 +501,7 @@ export async function PATCH(request) {
     try {
       updates.internal_project_id = await ensureInternalProject(currentOpportunity)
     } catch (projectError) {
-      return NextResponse.json({ error: `The AFGRI order is valid, but its internal project could not be created: ${projectError.message}` }, { status: 500 })
+      return NextResponse.json({ error: `The Partner order is valid, but its internal project could not be created: ${projectError.message}` }, { status: 500 })
     }
     updates.partner_order_status = "acknowledged"
     updates.handoff_acknowledged_at = new Date().toISOString()
@@ -531,7 +531,7 @@ export async function PATCH(request) {
       opportunity_id: id,
       event_type: status === "quoted" ? "commercial_record_released" : "handoff_acknowledged",
       actor_scope: "smart_steel",
-      summary: status === "quoted" ? "Smart Steel released the approved supplier price and scope to AFGRI." : `Smart Steel acknowledged the AFGRI instruction and opened project ${updates.internal_project_id}.`,
+      summary: status === "quoted" ? "Smart Steel released the approved supplier price and scope to Partner." : `Smart Steel acknowledged the Partner instruction and opened project ${updates.internal_project_id}.`,
       detail: status === "quoted" ? { amountExVat: finalQuoteAmountExVat } : { projectId: updates.internal_project_id, orderReference: data.afgri_order_reference },
     }])
   }

@@ -5,8 +5,8 @@ import { resolvePartnerReleasedAtlasConfiguration } from "lib/partnerReleasedAtl
 
 export const runtime = "nodejs"
 
-function makeReference() {
-  return `AF-${new Date().toISOString().slice(2, 10).replaceAll("-", "")}-${crypto.randomUUID().slice(0, 5).toUpperCase()}`
+function makeReference(partnerKey) {
+  return `${partnerKey === "afgri" ? "AF" : partnerKey.toUpperCase()}-${new Date().toISOString().slice(2, 10).replaceAll("-", "")}-${crypto.randomUUID().slice(0, 5).toUpperCase()}`
 }
 
 function isExpiredPrice(value) {
@@ -89,7 +89,7 @@ export async function POST(request) {
       membership_id: context.membership.id,
       product_release_id: productReleaseId,
       price_release_id: resolved.priceRelease.id,
-      reference: makeReference(),
+      reference: makeReference(context.membership.partner_organizations.key),
       status,
       customer_name: customerName,
       customer_phone: String(body.customerPhone || "").trim(),
@@ -148,7 +148,7 @@ export async function PATCH(request) {
       updates.commercial_response_status = "acknowledged"
       updates.commercial_response_note = String(body.note || "").trim()
       updates.commercial_responded_at = now
-      summary = "AFGRI acknowledged the approved supplier price and scope."
+      summary = "Partner acknowledged the approved supplier price and scope."
     }
 
     if (action === "request_clarification") {
@@ -157,7 +157,7 @@ export async function PATCH(request) {
       updates.commercial_response_status = "clarification_requested"
       updates.commercial_response_note = note
       updates.commercial_responded_at = now
-      summary = "AFGRI requested clarification on the approved commercial record."
+      summary = "Partner requested clarification on the approved commercial record."
       detail = { note }
     }
 
@@ -169,7 +169,7 @@ export async function PATCH(request) {
       updates.customer_decision = decision
       updates.customer_decision_note = String(body.note || "").trim()
       updates.customer_decision_at = now
-      summary = `AFGRI recorded the customer decision as ${decision.replaceAll("_", " ")}.`
+      summary = `Partner recorded the customer decision as ${decision.replaceAll("_", " ")}.`
       detail = { decision, note: updates.customer_decision_note }
     }
 
@@ -195,7 +195,7 @@ export async function PATCH(request) {
   if (action === "update_order_reference") {
     const orderReference = String(body.afgriOrderReference || "").trim()
     if (!["order_submitted", "acknowledged"].includes(existing.partner_order_status) || !orderReference) {
-      return NextResponse.json({ error: "Add a valid AFGRI reference after the instruction has been submitted." }, { status: 409 })
+      return NextResponse.json({ error: "Add a valid Partner reference after the instruction has been submitted." }, { status: 409 })
     }
     const { data, error } = await supabaseServer.from("partner_opportunities").update({
       afgri_order_reference: orderReference,
@@ -208,7 +208,7 @@ export async function PATCH(request) {
       event_type: "order_reference_updated",
       actor_scope: "partner",
       actor_id: context.user.id,
-      summary: `AFGRI updated the instruction reference to ${orderReference}.`,
+      summary: `Partner updated the instruction reference to ${orderReference}.`,
       detail: { orderReference },
     }])
     return NextResponse.json({ opportunity: data })
@@ -216,7 +216,7 @@ export async function PATCH(request) {
   if (action === "submit_order") {
     const orderReference = String(body.afgriOrderReference || "").trim()
     if (existing.status !== "quoted" || existing.partner_order_status !== "ready_for_order") {
-      return NextResponse.json({ error: "This configuration is not ready for an AFGRI order yet." }, { status: 409 })
+      return NextResponse.json({ error: "This configuration is not ready for an Partner order yet." }, { status: 409 })
     }
     if (isExpiredPrice(existing.price_valid_until)) return expiredPriceResponse()
     const { data: commercialState } = await supabaseServer
@@ -225,12 +225,12 @@ export async function PATCH(request) {
       .eq("id", existing.id)
       .single()
     if (commercialState?.commercial_response_status !== "acknowledged") {
-      return NextResponse.json({ error: "Acknowledge the approved supplier price and scope before submitting the AFGRI order." }, { status: 409 })
+      return NextResponse.json({ error: "Acknowledge the approved supplier price and scope before submitting the Partner order." }, { status: 409 })
     }
     if (commercialState?.customer_decision !== "proceeding") {
-      return NextResponse.json({ error: "Record that the customer is proceeding before submitting the AFGRI order." }, { status: 409 })
+      return NextResponse.json({ error: "Record that the customer is proceeding before submitting the Partner order." }, { status: 409 })
     }
-    if (!orderReference) return NextResponse.json({ error: "Add the AFGRI order or reference number." }, { status: 400 })
+    if (!orderReference) return NextResponse.json({ error: "Add the Partner order or reference number." }, { status: 400 })
     const { data, error } = await supabaseServer
       .from("partner_opportunities")
       .update({
@@ -250,7 +250,7 @@ export async function PATCH(request) {
       event_type: "order_submitted",
       actor_scope: "partner",
       actor_id: context.user.id,
-      summary: `AFGRI submitted order reference ${orderReference}.`,
+      summary: `Partner submitted order reference ${orderReference}.`,
       detail: { orderReference, notes: String(body.partnerOrderNotes || "").trim() },
     }])
     return NextResponse.json({ opportunity: data })
