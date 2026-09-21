@@ -24,8 +24,8 @@ import { closeProtectedPdfWindow, openProtectedPdfWindow, showProtectedPdf } fro
 const STATUS_META = {
   submitted: { label: "New request", className: "bg-amber-100 text-amber-800", action: "Begin review", next: "in_review" },
   in_review: { label: "In review", className: "bg-blue-100 text-blue-800", action: "Approve price", next: "quoted" },
-  changes_requested: { label: "AFGRI update requested", className: "bg-orange-100 text-orange-800", action: "Resume review", next: "in_review" },
-  quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Accept AFGRI instruction", next: "closed" },
+  changes_requested: { label: "Partner update requested", className: "bg-orange-100 text-orange-800", action: "Resume review", next: "in_review" },
+  quoted: { label: "Price approved", className: "bg-emerald-100 text-emerald-800", action: "Accept Partner instruction", next: "closed" },
   closed: { label: "Order active", className: "bg-blue-100 text-blue-800", action: "", next: "closed" },
 }
 
@@ -96,7 +96,7 @@ export default function PartnerOpportunityReviewDrawer({
   }
 
   async function openPriceConfirmation() {
-    const previewWindow = openProtectedPdfWindow("Preparing AFGRI price confirmation")
+    const previewWindow = openProtectedPdfWindow("Preparing Partner price confirmation")
     try {
       setPreparingDocument(true)
       const response = await fetch(`/api/os/partner-opportunities/${record.id}/price-confirmation`, {
@@ -132,7 +132,7 @@ export default function PartnerOpportunityReviewDrawer({
                 {meta.label}
               </span>
               <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">{record.customerName}</h2>
-              <p className="mt-1 text-sm text-slate-500">{record.reference} · {record.partner?.name || "AFGRI"}</p>
+              <p className="mt-1 text-sm text-slate-500">{record.reference} · {record.partner?.name || "Partner"}</p>
             </div>
             <button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100" aria-label="Close">
               <X className="h-5 w-5" />
@@ -145,7 +145,7 @@ export default function PartnerOpportunityReviewDrawer({
             <section className="overflow-hidden rounded-2xl bg-[#001d2e] text-white">
               <div className="grid gap-px bg-white/15 sm:grid-cols-[1.35fr_0.65fr]">
                 <div className="bg-[linear-gradient(135deg,#001d2e,#063379)] p-5 sm:p-6">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Proposed AFGRI supply price</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Proposed Partner supply price</p>
                   <p className="mt-3 text-4xl font-black tracking-tight">{money.format(proposal.amountExVat)}</p>
                   <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-white/55">Excl. VAT</p>
                 </div>
@@ -162,7 +162,7 @@ export default function PartnerOpportunityReviewDrawer({
               </div>
               <div className="grid gap-px border-t border-white/10 bg-white/10 sm:grid-cols-2">
                 <div className="bg-[#001d2e] px-4 py-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">Recommended customer price</p><p className="mt-1 text-sm font-black">{money.format(proposal.recommendedCustomerPriceExVat)}</p></div>
-                <div className="bg-[#001d2e] px-4 py-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">AFGRI partner adjustment · {Math.round(proposal.partnerAdjustmentRate * 100)}%</p><p className="mt-1 text-sm font-black text-[#c1d9e5]">− {money.format(proposal.partnerAdjustmentAmount)}</p></div>
+                <div className="bg-[#001d2e] px-4 py-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">Partner partner adjustment · {Math.round(proposal.partnerAdjustmentRate * 100)}%</p><p className="mt-1 text-sm font-black text-[#c1d9e5]">− {money.format(proposal.partnerAdjustmentAmount)}</p></div>
               </div>
             </section>
           ) : (
@@ -237,7 +237,7 @@ export default function PartnerOpportunityReviewDrawer({
               <div className="flex items-start gap-3">
                 <RotateCcw className="mt-0.5 h-5 w-5 shrink-0 text-orange-700" />
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-orange-700">Waiting for AFGRI · submission V{record.submissionVersion}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-orange-700">Waiting for Partner · submission V{record.submissionVersion}</p>
                   <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-800">{record.currentInformationRequest.requestText}</p>
                   {record.currentInformationRequest.dueAt ? <p className="mt-2 text-xs font-bold text-orange-800">Requested by {formatDateTime(record.currentInformationRequest.dueAt)}</p> : null}
                 </div>
@@ -266,7 +266,7 @@ export default function PartnerOpportunityReviewDrawer({
           {["submitted", "in_review"].includes(record.status) ? (
             <section className="rounded-2xl border border-orange-200 bg-orange-50/60 p-5">
               <button type="button" onClick={() => setShowChangeRequest((current) => !current)} className="flex min-h-11 w-full items-center justify-between gap-4 text-left text-sm font-black text-orange-900">
-                <span className="inline-flex items-center gap-2"><RotateCcw className="h-4 w-4" />Request changes from AFGRI</span>
+                <span className="inline-flex items-center gap-2"><RotateCcw className="h-4 w-4" />Request changes from Partner</span>
                 <span>{showChangeRequest ? "Close" : "Open"}</span>
               </button>
               {showChangeRequest ? (
@@ -283,7 +283,7 @@ export default function PartnerOpportunityReviewDrawer({
             <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Price returned to AFGRI</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Price returned to Partner</p>
                   <p className="mt-1 text-sm text-slate-600">Confirm the approved amount. A formal proposal can be attached now or added later.</p>
                 </div>
                 {proposal ? (
@@ -315,32 +315,32 @@ export default function PartnerOpportunityReviewDrawer({
             <section className="space-y-3">
               <div className={`rounded-2xl border p-5 ${record.partnerOrderStatus === "order_submitted" || record.partnerOrderStatus === "acknowledged" ? "border-emerald-200 bg-emerald-50" : "border-blue-200 bg-blue-50"}`}>
                 <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${record.partnerOrderStatus === "order_submitted" || record.partnerOrderStatus === "acknowledged" ? "text-emerald-700" : "text-[#0043f3]"}`}>
-                  {record.partnerOrderStatus === "order_submitted" || record.partnerOrderStatus === "acknowledged" ? "AFGRI order received" : "Ready for AFGRI order"}
+                  {record.partnerOrderStatus === "order_submitted" || record.partnerOrderStatus === "acknowledged" ? "Partner order received" : "Ready for Partner order"}
                 </p>
-                {record.afgriOrderReference ? <p className="mt-2 font-mono text-lg font-black text-slate-950">{record.afgriOrderReference}</p> : <p className="mt-2 text-sm leading-6 text-slate-600">AFGRI has the approved configuration and price. The next action belongs to the salesperson.</p>}
+                {record.afgriOrderReference ? <p className="mt-2 font-mono text-lg font-black text-slate-950">{record.afgriOrderReference}</p> : <p className="mt-2 text-sm leading-6 text-slate-600">Partner has the approved configuration and price. The next action belongs to the salesperson.</p>}
                 {record.partnerOrderNotes ? <p className="mt-2 text-sm leading-6 text-slate-600">{record.partnerOrderNotes}</p> : null}
                 <p className="mt-2 text-xs font-semibold text-slate-500">Price valid until {formatDate(record.priceValidUntil)}</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <HandoffStatus label="Commercial response" value={record.commercialResponseStatus === "acknowledged" ? "Acknowledged" : record.commercialResponseStatus === "clarification_requested" ? "Clarification requested" : "Awaiting AFGRI"} tone={record.commercialResponseStatus === "acknowledged" ? "green" : record.commercialResponseStatus === "clarification_requested" ? "amber" : "slate"} />
+                <HandoffStatus label="Commercial response" value={record.commercialResponseStatus === "acknowledged" ? "Acknowledged" : record.commercialResponseStatus === "clarification_requested" ? "Clarification requested" : "Awaiting Partner"} tone={record.commercialResponseStatus === "acknowledged" ? "green" : record.commercialResponseStatus === "clarification_requested" ? "amber" : "slate"} />
                 <HandoffStatus label="Customer decision" value={record.customerDecision === "proceeding" ? "Proceeding" : record.customerDecision === "on_hold" ? "On hold" : record.customerDecision === "not_proceeding" ? "Not proceeding" : "Not recorded"} tone={record.customerDecision === "proceeding" ? "green" : record.customerDecision === "on_hold" ? "amber" : "slate"} />
               </div>
-              {record.commercialResponseNote ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-slate-700"><strong>AFGRI note:</strong> {record.commercialResponseNote}</p> : null}
+              {record.commercialResponseNote ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-slate-700"><strong>Partner note:</strong> {record.commercialResponseNote}</p> : null}
               {record.orderDocuments?.length ? <div className="rounded-2xl border border-slate-200 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Order documents</p><div className="mt-3 space-y-2">{record.orderDocuments.map((document) => <div key={document.id} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700"><Paperclip className="h-4 w-4 text-[#0043f3]" /><span className="min-w-0 truncate">{document.name}</span><span className="ml-auto shrink-0 text-[10px] uppercase text-slate-400">{document.type.replaceAll("_", " ")}</span></div>)}</div></div> : null}
               <button type="button" disabled={preparingDocument} onClick={openPriceConfirmation} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] bg-white px-5 text-sm font-black text-[#0043f3] disabled:cursor-wait disabled:opacity-65">
-                {preparingDocument ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {preparingDocument ? "Preparing document..." : "Preview AFGRI price confirmation"}
+                {preparingDocument ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {preparingDocument ? "Preparing document..." : "Preview Partner price confirmation"}
               </button>
             </section>
           ) : null}
           {record.internalProjectId ? <button type="button" onClick={() => window.location.assign(`/os/projects?projectId=${record.internalProjectId}`)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#001d2e] px-5 text-sm font-black text-white"><ExternalLink className="h-4 w-4" />Open linked Atlas project</button> : null}
-          {record.internalProjectId ? <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Order fulfilment</p><p className="mt-1 text-sm text-slate-600">Keep AFGRI informed after the commercial handoff.</p><div className="mt-4 grid gap-3 sm:grid-cols-2"><QuoteField label="Current stage"><select value={fulfilment.status} onChange={(event) => setFulfilment((current) => ({ ...current, status: event.target.value }))} className="min-h-11 w-full rounded-xl border border-blue-200 bg-white px-3 text-base">{FULFILMENT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></QuoteField><QuoteField label="Estimated dispatch"><input type="date" value={fulfilment.dispatchDate} onChange={(event) => setFulfilment((current) => ({ ...current, dispatchDate: event.target.value }))} /></QuoteField><QuoteField label="Estimated delivery"><input type="date" value={fulfilment.deliveryDate} onChange={(event) => setFulfilment((current) => ({ ...current, deliveryDate: event.target.value }))} /></QuoteField><QuoteField label="Partner update"><textarea rows="2" value={fulfilment.note} onChange={(event) => setFulfilment((current) => ({ ...current, note: event.target.value }))} placeholder="Optional progress note visible to AFGRI" /></QuoteField></div><button type="button" disabled={saving} onClick={() => onFulfilmentUpdate({ fulfilmentStatus: fulfilment.status, estimatedDispatchDate: fulfilment.dispatchDate, estimatedDeliveryDate: fulfilment.deliveryDate, fulfilmentNote: fulfilment.note })} className="mt-4 min-h-11 w-full rounded-xl bg-[#0043f3] px-4 text-sm font-black text-white disabled:opacity-50">{saving ? "Saving..." : "Update order progress"}</button></section> : null}
+          {record.internalProjectId ? <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Order fulfilment</p><p className="mt-1 text-sm text-slate-600">Keep Partner informed after the commercial handoff.</p><div className="mt-4 grid gap-3 sm:grid-cols-2"><QuoteField label="Current stage"><select value={fulfilment.status} onChange={(event) => setFulfilment((current) => ({ ...current, status: event.target.value }))} className="min-h-11 w-full rounded-xl border border-blue-200 bg-white px-3 text-base">{FULFILMENT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></QuoteField><QuoteField label="Estimated dispatch"><input type="date" value={fulfilment.dispatchDate} onChange={(event) => setFulfilment((current) => ({ ...current, dispatchDate: event.target.value }))} /></QuoteField><QuoteField label="Estimated delivery"><input type="date" value={fulfilment.deliveryDate} onChange={(event) => setFulfilment((current) => ({ ...current, deliveryDate: event.target.value }))} /></QuoteField><QuoteField label="Partner update"><textarea rows="2" value={fulfilment.note} onChange={(event) => setFulfilment((current) => ({ ...current, note: event.target.value }))} placeholder="Optional progress note visible to Partner" /></QuoteField></div><button type="button" disabled={saving} onClick={() => onFulfilmentUpdate({ fulfilmentStatus: fulfilment.status, estimatedDispatchDate: fulfilment.dispatchDate, estimatedDeliveryDate: fulfilment.deliveryDate, fulfilmentNote: fulfilment.note })} className="mt-4 min-h-11 w-full rounded-xl bg-[#0043f3] px-4 text-sm font-black text-white disabled:opacity-50">{saving ? "Saving..." : "Update order progress"}</button></section> : null}
           {record.handoffEvents?.length ? <section><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Handoff history</p><div className="mt-3 space-y-3 border-l border-slate-200 pl-4">{record.handoffEvents.slice(0, 6).map((event) => <div key={event.id}><p className="text-sm font-bold text-slate-800">{event.summary}</p><p className="mt-1 text-xs text-slate-400">{formatDateTime(event.createdAt)}</p></div>)}</div></section> : null}
         </div>
 
         {record.status !== "closed" ? <footer className="border-t border-slate-200 bg-white p-4 sm:p-5">
           <button type="button" disabled={saving || record.status === "changes_requested" || (record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus))} onClick={() => onAdvance(meta.next)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-5 text-sm font-black text-white disabled:opacity-50">
             {record.status === "in_review" ? <FileCheck2 className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-            {saving ? "Saving..." : record.status === "changes_requested" ? "Waiting for AFGRI resubmission" : record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus) ? "Waiting for AFGRI instruction" : record.status === "quoted" ? "Accept instruction and open project" : meta.action}
+            {saving ? "Saving..." : record.status === "changes_requested" ? "Waiting for Partner resubmission" : record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus) ? "Waiting for Partner instruction" : record.status === "quoted" ? "Accept instruction and open project" : meta.action}
           </button>
         </footer> : null}
       </aside>

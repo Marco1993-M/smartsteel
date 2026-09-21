@@ -40,7 +40,7 @@ function SelectField({ label, value, onChange, children }) {
   )
 }
 
-export default function PartnerReleaseWorkspace() {
+export default function PartnerReleaseWorkspace({ partnerKey = "afgri" }) {
   const [records, setRecords] = useState([])
   const [form, setForm] = useState(DEFAULT_FORM)
   const [loading, setLoading] = useState(true)
@@ -54,7 +54,7 @@ export default function PartnerReleaseWorkspace() {
     setLoading(true)
     setError("")
     try {
-      const response = await fetch("/api/os/partner-releases?partner=afgri", {
+      const response = await fetch(`/api/os/partner-releases?partner=${encodeURIComponent(partnerKey)}`, {
         cache: "no-store",
         headers: await getOsAuthHeaders(),
       })
@@ -91,7 +91,7 @@ export default function PartnerReleaseWorkspace() {
         method: "POST",
         headers: await getOsAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
-          partnerKey: "afgri",
+          partnerKey,
           approvedBy: form.approvedBy,
           validFrom: form.validFrom,
           validUntil: form.validUntil || null,
@@ -100,7 +100,7 @@ export default function PartnerReleaseWorkspace() {
       })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error || "Could not publish the partner release.")
-      setSuccess(`${payload.productRelease.name} was published to the AFGRI release register.`)
+      setSuccess(`${payload.productRelease.name} was published to the Partner release register.`)
       await loadRecords()
     } catch (publishError) {
       setError(publishError.message)
@@ -117,7 +117,7 @@ export default function PartnerReleaseWorkspace() {
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">
               <LockKeyhole className="h-4 w-4" /> Controlled commercial publishing
             </div>
-            <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">Release only what AFGRI is approved to sell.</h2>
+            <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">Release only what Partner is approved to sell.</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100 sm:text-base">Every published configuration receives an immutable product snapshot, final indicative amount, approver and validity period.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -211,7 +211,7 @@ export default function PartnerReleaseWorkspace() {
           </section>
 
           <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-center justify-between gap-4"><div><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Release register</p><h3 className="mt-2 text-xl font-bold text-slate-950">AFGRI commercial snapshots</h3></div><BadgeCheck className="h-6 w-6 text-blue-600" /></div>
+            <div className="flex items-center justify-between gap-4"><div><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Release register</p><h3 className="mt-2 text-xl font-bold text-slate-950">Partner commercial snapshots</h3></div><BadgeCheck className="h-6 w-6 text-blue-600" /></div>
             <div className="mt-5 space-y-3">
               {loading ? <p className="text-sm text-slate-500">Loading releases...</p> : records.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">No configurations have been released yet.</p> : records.map((record) => (
                 <article key={record.id} className="grid gap-3 rounded-xl border border-slate-200 p-4 sm:grid-cols-[1fr_auto] sm:items-center">

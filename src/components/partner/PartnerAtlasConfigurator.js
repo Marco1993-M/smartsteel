@@ -1,5 +1,7 @@
 "use client"
 
+import { usePartnerPortal } from "./PartnerPortalContext"
+
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, ArrowRight, Check, PackageCheck, RotateCcw, Send, X } from "lucide-react"
@@ -22,6 +24,7 @@ function getReleasedWidth(product) {
 }
 
 export default function PartnerAtlasConfigurator({ product, initialOpportunity = null, onClose, onCreated }) {
+  const portal = usePartnerPortal()
   const width = getReleasedWidth(product)
   const [step, setStep] = useState(1)
   const [configuration, setConfiguration] = useState(() => normalizeAtlasConfiguration(initialOpportunity?.configuration || { width, length: 20, wallHeight: 3 }))
@@ -123,7 +126,7 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
       </header>
 
       <main className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 lg:px-10">
-        <div className="mb-5"><p className={`text-xs font-black uppercase tracking-[0.2em] ${isResubmission ? "text-orange-700" : "text-[#0043f3]"}`}>{isResubmission ? `Update ${initialOpportunity.reference}` : initialOpportunity ? `Continue ${initialOpportunity.reference}` : "New AFGRI opportunity"}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-[#001d2e] sm:text-4xl">Configure the Atlas W{String(width).padStart(2, "0")}</h1></div>
+        <div className="mb-5"><p className={`text-xs font-black uppercase tracking-[0.2em] ${isResubmission ? "text-orange-700" : "text-[#0043f3]"}`}>{isResubmission ? `Update ${initialOpportunity.reference}` : initialOpportunity ? `Continue ${initialOpportunity.reference}` : `New ${portal.name} opportunity`}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-[#001d2e] sm:text-4xl">Configure the Atlas W{String(width).padStart(2, "0")}</h1></div>
         {isResubmission && informationRequest ? <section className="mb-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 sm:p-5"><div className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-700"><RotateCcw className="h-4 w-4" /></span><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">Update requested by Smart Steel</p><p className="mt-1.5 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-800">{informationRequest.request_text || informationRequest.requestText}</p><p className="mt-2 text-xs font-bold text-orange-800">Update the configuration or customer details below, then resubmit the same opportunity.</p></div></div></section> : null}
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_440px] xl:items-start">
           <section className="xl:sticky xl:top-20">

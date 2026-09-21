@@ -1,5 +1,7 @@
 "use client"
 
+import { usePartnerPortal } from "./PartnerPortalContext"
+
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -38,6 +40,7 @@ function statusLabel(record) {
 }
 
 export default function PartnerOpportunitiesWorkspace() {
+  const portal = usePartnerPortal()
   const router = useRouter()
   const [session, setSession] = useState(null)
   const [products, setProducts] = useState([])
@@ -90,7 +93,7 @@ export default function PartnerOpportunitiesWorkspace() {
   }, [records, filter, search])
 
   async function openPriceConfirmation(record) {
-    const previewWindow = openProtectedPdfWindow("Preparing AFGRI price confirmation")
+    const previewWindow = openProtectedPdfWindow(`Preparing ${portal.name} price confirmation`)
     setPreparingId(record.id)
     try {
       const response = await fetch(`/api/partner/opportunities/${record.id}/price-confirmation`, { headers: await getPartnerAuthHeaders() })
@@ -112,7 +115,7 @@ export default function PartnerOpportunitiesWorkspace() {
   return <main className="min-h-screen bg-[#eef4f8] text-[#001d2e]">
     <header className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 lg:px-10"><div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><Link href="/partner" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-200" aria-label="Dashboard"><ArrowLeft className="h-4 w-4" /></Link><Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas by Smart Steel" width={155} height={45} className="h-9 w-auto object-contain" priority /></div><div className="flex items-center gap-3"><p className="hidden text-sm font-bold sm:block">{session?.membership?.partner?.name}</p><button type="button" onClick={async () => { await partnerSupabase.auth.signOut(); router.replace("/partner/login") }} className="grid h-10 w-10 place-items-center rounded-full border border-slate-200" aria-label="Sign out"><LogOut className="h-4 w-4" /></button></div></div></header>
     <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 sm:py-8 lg:px-10">
-      <section className="rounded-[1.75rem] bg-[linear-gradient(130deg,#001d2e,#063783_55%,#0043f3)] p-6 text-white sm:p-8"><p className="text-xs font-black uppercase tracking-[0.2em] text-[#c1d9e5]">AFGRI opportunities</p><h1 className="mt-2 text-4xl font-black tracking-[-0.05em]">Every opportunity, one clear next step.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-white/70">Search the complete history while keeping records requiring your action at the top.</p></section>
+      <section className="rounded-[1.75rem] bg-[linear-gradient(130deg,#001d2e,#063783_55%,#0043f3)] p-6 text-white sm:p-8"><p className="text-xs font-black uppercase tracking-[0.2em] text-[#c1d9e5]">{portal.name} opportunities</p><h1 className="mt-2 text-4xl font-black tracking-[-0.05em]">Every opportunity, one clear next step.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-white/70">Search the complete history while keeping records requiring your action at the top.</p></section>
       {error ? <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
       <section className="mt-5 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:p-5"><div className="relative"><Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search customer, reference, SKU or location" className="min-h-12 w-full rounded-xl border border-slate-200 pl-11 pr-4 text-base outline-none focus:border-[#0043f3]" /></div><div className="mt-3 flex gap-2 overflow-x-auto pb-1">{FILTERS.map(([value, label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-black ${filter === value ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600"}`}>{label}</button>)}</div></section>
       <div className="mt-5 flex items-center justify-between"><p className="text-sm font-bold text-slate-500">{shown.length} {shown.length === 1 ? "opportunity" : "opportunities"}</p><Link href="/partner" className="text-sm font-black text-[#0043f3]">Dashboard</Link></div>
