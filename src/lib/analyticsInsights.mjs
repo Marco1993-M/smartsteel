@@ -12,8 +12,8 @@ const median = (values) => {
 const inPeriod = (value, start, end) => date(value) >= date(start) && date(value) < date(end)
 const sent = (estimate) => Boolean(estimate.sent_at) || ['sent', 'accepted', 'declined', 'superseded'].includes(estimate.status)
 
-export function buildAnalyticsInsights({ leads, estimates = [], responses = [], emails = [], start, end, estimatesAvailable = true, responsesAvailable = true, emailsAvailable = true }) {
-  const now = date(end)
+export function buildAnalyticsInsights({ leads, estimates = [], responses = [], emails = [], start, end, now: asOf = end, estimatesAvailable = true, responsesAvailable = true, emailsAvailable = true }) {
+  const now = date(asOf)
   const byLead = new Map()
   for (const estimate of estimates) {
     const id = String(estimate.lead_id)
