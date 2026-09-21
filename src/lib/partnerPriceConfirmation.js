@@ -26,7 +26,7 @@ function escapeHtml(value) {
 
 function imageData(file) {
   try {
-    return `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), "public", file)).toString("base64")}`
+    return `data:${/\.jpe?g$/i.test(file) ? "image/jpeg" : "image/png"};base64,${fs.readFileSync(path.join(process.cwd(), "public", file)).toString("base64")}`
   } catch {
     return ""
   }
@@ -56,7 +56,7 @@ function supplyRows(estimate) {
   ]
 }
 
-export async function createPartnerPriceConfirmationPdf(opportunity) {
+export async function createPartnerPriceConfirmationPdf(opportunity, portal) {
   if (opportunity.status !== "quoted" || Number(opportunity.final_quote_amount_ex_vat) <= 0) {
     throw new Error("This price must be approved before a confirmation document can be issued.")
   }
@@ -74,7 +74,9 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
   const documentNumber = `APC-${opportunity.reference}-R1`
   const rows = supplyRows(estimate)
   const atlasLogo = imageData("atlas/atlas-logo-horizontal-dark.png")
-  const afgriLogo = imageData("afgri-logo-colour-cropped.png")
+  if (!portal?.name || !portal?.logo) throw new Error("Partner branding is required for this confirmation.")
+  const partnerName = escapeHtml(portal.name)
+  const partnerLogo = imageData(portal.logo.replace(/^\//, ""))
 
   const html = `<!doctype html>
   <html><head><meta charset="utf-8"><style>
@@ -134,11 +136,11 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
     .note p { margin:3mm 0 0; color:#52657d; font-size:9px; line-height:1.55; white-space:pre-wrap; }
   </style></head><body>
     <section class="page"><div class="brandline"></div><div class="slash"></div>
-      <div class="logos">${atlasLogo ? `<img src="${atlasLogo}">` : "<strong>ATLAS BY SMART STEEL</strong>"}${afgriLogo ? `<img src="${afgriLogo}">` : "<strong>AFGRI</strong>"}</div>
+      <div class="logos">${atlasLogo ? `<img src="${atlasLogo}">` : "<strong>ATLAS BY SMART STEEL</strong>"}${partnerLogo ? `<img src="${partnerLogo}">` : `<strong>${partnerName}</strong>`}</div>
       <p class="eyebrow">Partner price confirmation</p>
       <h1>${escapeHtml(estimate.summary.title)}</h1>
-      <p class="lede">A reviewed Atlas supply configuration prepared for ${escapeHtml(opportunity.customer_name)} through AFGRI. This document confirms the approved partner price and the exact configuration used for that approval.</p>
-      <div class="price-card"><div class="price-main"><div class="label">Approved AFGRI price</div><div class="amount">${money.format(approvedExVat)}</div><div class="sub">Excluding VAT</div></div><div class="price-side"><div class="label">Total including VAT</div><div class="amount">${money.format(approvedExVat + vat)}</div><div class="sub">VAT ${money.format(vat)}</div></div></div>
+      <p class="lede">A reviewed Atlas supply configuration prepared for ${escapeHtml(opportunity.customer_name)} through ${partnerName}. This document confirms the approved partner price and the exact configuration used for that approval.</p>
+      <div class="price-card"><div class="price-main"><div class="label">Approved ${partnerName} price</div><div class="amount">${money.format(approvedExVat)}</div><div class="sub">Excluding VAT</div></div><div class="price-side"><div class="label">Total including VAT</div><div class="amount">${money.format(approvedExVat + vat)}</div><div class="sub">VAT ${money.format(vat)}</div></div></div>
       <div class="facts">
         <div class="fact"><div class="label">Reference</div><div class="value">${escapeHtml(opportunity.reference)}</div></div>
         <div class="fact"><div class="label">Issued</div><div class="value">${date.format(issueDate)}</div></div>
@@ -147,7 +149,7 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
         <div class="fact"><div class="label">Site</div><div class="value">${escapeHtml(opportunity.site_location || "To be confirmed")}</div></div>
         <div class="fact"><div class="label">Document</div><div class="value">${escapeHtml(documentNumber)}</div></div>
       </div>
-      <div class="commercial"><div class="commercial-box"><div class="label">Recommended customer price excl. VAT</div><div class="value">${money.format(recommendedPrice)}</div></div><div class="commercial-box accent"><div class="label">AFGRI partner adjustment · 5%</div><div class="value">-${money.format(adjustment)}</div></div></div>
+      <div class="commercial"><div class="commercial-box"><div class="label">Recommended customer price excl. VAT</div><div class="value">${money.format(recommendedPrice)}</div></div><div class="commercial-box accent"><div class="label">${partnerName} partner adjustment · 5%</div><div class="value">-${money.format(adjustment)}</div></div></div>
       <div class="footer"><span>ATLAS SYSTEM · DEVELOPED BY SMART STEEL</span><span>${escapeHtml(documentNumber)} · PAGE 1 OF 3</span></div>
     </section>
     <section class="page"><div class="brandline"></div>
@@ -164,7 +166,7 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
       <div class="footer"><span>ATLAS SYSTEM · CONFIRMED SUPPLY CONFIGURATION</span><span>${escapeHtml(documentNumber)} · PAGE 2 OF 3</span></div>
     </section>
     <section class="page"><div class="brandline"></div><div class="slash"></div>
-      <div class="logos">${atlasLogo ? `<img src="${atlasLogo}">` : "<strong>ATLAS BY SMART STEEL</strong>"}${afgriLogo ? `<img src="${afgriLogo}">` : "<strong>AFGRI</strong>"}</div>
+      <div class="logos">${atlasLogo ? `<img src="${atlasLogo}">` : "<strong>ATLAS BY SMART STEEL</strong>"}${partnerLogo ? `<img src="${partnerLogo}">` : `<strong>${partnerName}</strong>`}</div>
       <div class="section-head"><h2>Commercial record</h2><span>Partner handoff</span></div>
       <div class="conditions">
         <div class="condition"><h3>Included</h3><ul><li>Atlas structural members for the configuration shown.</li><li>Connection hardware allowances included in the approved price.</li><li>Selected sheeting only where recorded above.</li><li>Smart Steel review of the released commercial configuration.</li></ul></div>
@@ -172,7 +174,7 @@ export async function createPartnerPriceConfirmationPdf(opportunity) {
       </div>
       <div class="notes">
         <div class="note"><div class="label">Project notes</div><p>${escapeHtml(opportunity.notes || "No additional project notes were recorded.")}</p></div>
-        <div class="note"><div class="label">Smart Steel message</div><p>${escapeHtml(opportunity.partner_quote_message || "The reviewed Atlas configuration and approved AFGRI price are ready for the next customer discussion.")}</p></div>
+        <div class="note"><div class="label">Smart Steel message</div><p>${escapeHtml(opportunity.partner_quote_message || `The reviewed Atlas configuration and approved ${portal.name} price are ready for the next customer discussion.`)}</p></div>
       </div>
       <div class="notice"><strong>Commercial record:</strong> This partner price confirmation is not a customer quotation, tax invoice, engineering certificate, purchase order, or instruction to manufacture. Price and scope apply only to the configuration recorded above. Any change to size, finish, sheeting, site requirements, or supply scope requires a new review. Manufacture proceeds only after the required formal order, technical confirmation, and agreed payment conditions.</div>
       <div class="footer"><span>SMART STEEL · info@smartsteel.co.za · smartsteel.co.za</span><span>${escapeHtml(documentNumber)} · PAGE 3 OF 3</span></div>
