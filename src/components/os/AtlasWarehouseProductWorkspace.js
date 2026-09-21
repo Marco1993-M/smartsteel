@@ -684,7 +684,7 @@ export default function AtlasWarehouseProductWorkspace() {
 
   return (
     <div className="space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
-      <section className="overflow-hidden border border-slate-200 bg-white shadow-sm">
+      <section className="hidden overflow-hidden border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-700">Atlas product range</p>
