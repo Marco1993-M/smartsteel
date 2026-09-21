@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Users, RefreshCw, ArrowDownToLine, Clock3, MessageSquare, Layers3, BarChart3 } from "lucide-react"
+import { currentAnalyticsMonth } from "../../lib/analyticsPeriods.mjs"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
-const PERIODS = [{ days: 30, label: '30 days' }, { days: 90, label: '90 days' }, { days: 365, label: '12 months' }]
+
 const TABS = [{ key: 'overview', label: 'Overview', icon: BarChart3 }, { key: 'pipeline', label: 'Pipeline & quotes', icon: Layers3 }, { key: 'clients', label: 'Clients & feedback', icon: MessageSquare }, { key: 'marketing', label: 'Marketing', icon: Megaphone }]
 const money = (value) => value == null ? '—' : new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(value)
 const formatCurrency = money
@@ -38,8 +39,9 @@ function Ageing({ insights }) {
 }
 function ActivityChart({ trend, available }) {
   const max = Math.max(1, ...trend.flatMap((row) => [row.leads, row.estimatesSent]))
-  return <section className={panel}><Heading eyebrow="Activity in selected period" title="Enquiries & quotes sent" detail="Quote sends include revisions and can relate to leads from earlier periods." aside={<div className="flex gap-3 text-[10px] text-slate-500"><span>● Enquiries</span><span className="text-sky-600">● Quote sends</span></div>} />
-    <div className="flex h-48 items-end gap-2 sm:gap-4">{trend.map((row) => <div key={row.key} className="group relative flex h-full min-w-0 flex-1 flex-col justify-end" tabIndex={0} aria-label={`${row.label}: ${row.leads} enquiries, ${available ? row.estimatesSent : 'unavailable'} quote sends`}><div className="pointer-events-none absolute bottom-full left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 p-2 text-[10px] text-white group-hover:block group-focus:block">{row.leads} enquiries · {available ? row.estimatesSent : '—'} sends</div><div className="flex h-36 items-end justify-center gap-1"><div className="w-5 max-w-[40%] rounded-t bg-slate-800" style={{ height: `${row.leads / max * 100}%` }} /><div className="w-5 max-w-[40%] rounded-t bg-sky-400" style={{ height: `${available ? row.estimatesSent / max * 100 : 0}%` }} /></div><p className="mt-3 truncate text-center text-[9px] text-slate-500 sm:text-[10px]">{row.label}</p></div>)}</div>
+  return <section className={panel}><Heading eyebrow="12-month trend · ending in selected month" title="Month-by-month enquiries & quotes" detail="Current month is marked MTD and is incomplete. Quote sends include revisions and can relate to earlier leads." aside={<div className="flex gap-3 text-[10px] text-slate-500"><span>● Enquiries</span><span className="text-sky-600">● Quote sends</span></div>} />
+    <div className="overflow-x-auto"><div className="flex h-48 min-w-[640px] items-end gap-2 sm:gap-4">{trend.map((row) => <div key={row.key} className="group relative flex h-full min-w-0 flex-1 flex-col justify-end" tabIndex={0} aria-label={`${row.fullLabel}${row.partial ? ' (month to date)' : ''}: ${row.leads} enquiries, ${available ? row.estimatesSent : 'unavailable'} quote sends`}><div className="pointer-events-none absolute bottom-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 p-2 text-[10px] text-white group-hover:block group-focus:block">{row.leads} enquiries · {available ? row.estimatesSent : '—'} sends</div><div className="flex h-36 items-end justify-center gap-1"><div className="w-5 max-w-[40%] rounded-t bg-slate-800" style={{ height: `${row.leads / max * 100}%` }} /><div className="w-5 max-w-[40%] rounded-t bg-sky-400" style={{ height: `${available ? row.estimatesSent / max * 100 : 0}%` }} /></div><p className="mt-3 truncate text-center text-[9px] text-slate-500 sm:text-[10px]">{row.label}{row.partial ? ' MTD' : ''}</p></div>)}</div></div>
+    <details className="mt-4 text-xs text-slate-600"><summary className="cursor-pointer font-semibold">View monthly figures</summary><div className="mt-3 overflow-x-auto"><table className="w-full text-left"><thead><tr><th className="py-2">Month</th><th>Enquiries</th><th>Quote sends</th></tr></thead><tbody>{trend.map((row) => <tr key={row.key} className="border-t border-slate-100"><td className="py-2">{row.fullLabel}{row.partial ? ' (MTD)' : ''}</td><td>{row.leads}</td><td>{available ? row.estimatesSent : '—'}</td></tr>)}</tbody></table></div></details>
     {!available && <p className="mt-3 text-xs text-amber-700">Quote activity is unavailable.</p>}
   </section>
 }
@@ -134,7 +136,7 @@ function MarketingSourceCard({ connection, metrics, type, schemaReady, syncingSo
 
 
 function exportPerformance(data) {
-  const rows = [['Period', data.period.label], ['Basis', 'Leads created in period; current outcomes; won value excl. VAT'], ['Type', 'Name', 'Leads', 'Quoted', 'Won', 'Win rate (%)', 'Won value (ZAR)']]
+  const rows = [['Period', data.period.label], ['Comparison', data.period.comparisonLabel], ['Comparison details', data.period.comparisonDetail], ['Basis', 'Leads created in period; current outcomes; won value excl. VAT'], ['Type', 'Name', 'Leads', 'Quoted', 'Won', 'Win rate (%)', 'Won value (ZAR)']]
   for (const [type, records] of [['Product', data.insights.products], ['Source', data.insights.sources]]) {
     records.forEach((row) => rows.push([type, row.label, row.leads, row.quoted, row.won, row.winRate, row.wonValue]))
   }
@@ -146,13 +148,13 @@ function exportPerformance(data) {
   const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' }))
   const anchor = document.createElement('a')
   anchor.href = url
-  anchor.download = `smart-steel-performance-${data.period.days}-days.csv`
+  anchor.download = `smart-steel-performance-${data.period.month}.csv`
   anchor.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 export default function AnalyticsWorkspace() {
-  const [days, setDays] = useState(30)
+  const [month, setMonth] = useState(() => currentAnalyticsMonth())
   const [tab, setTab] = useState('overview')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -166,7 +168,7 @@ export default function AnalyticsWorkspace() {
       setLoading(true)
       setError('')
       try {
-        const response = await fetch(`/api/os/analytics?days=${days}`, { cache: 'no-store', headers: await getOsAuthHeaders(), signal: controller.signal })
+        const response = await fetch(`/api/os/analytics?month=${month}`, { cache: 'no-store', headers: await getOsAuthHeaders(), signal: controller.signal })
         const payload = await response.json()
         if (!response.ok) throw new Error(payload.error || 'Could not load analytics.')
         if (!controller.signal.aborted) setData(payload)
@@ -178,7 +180,7 @@ export default function AnalyticsWorkspace() {
     }
     load()
     return () => controller.abort()
-  }, [days, refreshKey])
+  }, [month, refreshKey])
   async function syncMarketingSource(source) {
     setSyncingSource(source)
     setSyncMessage('')
@@ -194,18 +196,19 @@ export default function AnalyticsWorkspace() {
   const insights = data?.insights
   const metrics = data?.metrics
   const connections = Object.fromEntries((data?.marketing?.connections || []).map((item) => [item.source, item]))
-  const comparison = (value) => value == null ? 'No prior-period baseline' : `${value > 0 ? '+' : ''}${value}% vs previous period`
+  const comparison = (value) => value == null ? 'No prior-period baseline' : `${value > 0 ? '+' : ''}${value}% vs ${data.period.comparisonLabel}`
 
   return <div className="min-h-screen min-w-0 bg-[#f5f7fa] px-4 py-6 text-slate-900 sm:px-7 lg:px-9">
     <div className="mx-auto max-w-[1500px] space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-5">
         <div><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-sky-500" />Smart Steel / Commercial intelligence</div><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Business performance<span className="text-sky-500">.</span></h1><p className="mt-2 text-sm text-slate-500">Track growth, conversion, and commercial performance.</p></div>
-        <div className="flex flex-wrap items-center gap-2"><button type="button" className={button} disabled={loading} onClick={() => setRefreshKey((value) => value + 1)} aria-label="Refresh analytics"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />Refresh</button><button type="button" className={button} disabled={loading || Boolean(error) || !insights} onClick={() => exportPerformance(data)}><ArrowDownToLine size={14} />Export performance</button><div className="flex rounded-lg border border-slate-200 bg-white p-1">{PERIODS.map((period) => <button key={period.days} type="button" aria-pressed={days === period.days} onClick={() => setDays(period.days)} className={`rounded-md px-3 py-2 text-xs font-semibold transition ${days === period.days ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>{period.label}</button>)}</div></div>
+        <div className="flex flex-wrap items-center gap-2"><button type="button" className={button} disabled={loading} onClick={() => setRefreshKey((value) => value + 1)} aria-label="Refresh analytics"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />Refresh</button><button type="button" className={button} disabled={loading || Boolean(error) || !insights} onClick={() => exportPerformance(data)}><ArrowDownToLine size={14} />Export performance</button><label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600">Month<input aria-label="Reporting month" type="month" min="2000-01" max={currentAnalyticsMonth()} value={month} onChange={(event) => { if (event.target.value && event.target.value <= currentAnalyticsMonth()) setMonth(event.target.value) }} className="min-w-0 rounded border-0 bg-white p-1 text-slate-900" /></label></div>
       </header>
       <nav aria-label="Analytics sections" className="flex gap-1 overflow-x-auto border-b border-slate-200">{TABS.map(({ key, label, icon: Icon }) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)} className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-3.5 text-xs font-semibold transition ${tab === key ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500 hover:text-slate-900'}`}><Icon size={15} />{label}</button>)}</nav>
       {loading ? <div role="status" className="space-y-5"><p className="text-sm text-slate-500">Loading business performance…</p><div className="grid animate-pulse gap-4 sm:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map((key) => <div key={key} className="h-36 rounded-2xl bg-slate-200" />)}</div><div className="h-64 animate-pulse rounded-2xl bg-slate-200" /></div> : error ? <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800"><p>{error}</p><button className={`${button} mt-4`} onClick={() => setRefreshKey((value) => value + 1)}>Try again</button></div> : insights && metrics ? <>
         {!!data.warnings?.length && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">{data.warnings.join(' ')}</p>}
-        <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-500"><p><strong className="font-semibold text-slate-700">{data.period.label}</strong> · Acquisition cohorts use lead creation date; live pipeline includes all open leads.</p><p>As of {new Date(data.period.end).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}</p></div>
+        <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-500"><p><strong className="font-semibold text-slate-700">{data.period.label}</strong> · Acquisition cohorts use lead creation date; live pipeline includes all open leads.</p><p>As of {new Date(data.period.asOf).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}</p></div>
+        <p className="rounded-lg bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-900"><strong>Comparison: {data.period.comparisonLabel}.</strong> {data.period.comparisonDetail}</p>
         {tab === 'overview' && <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Stat label="Live pipeline value" value={money(insights.pipeline.value)} note={`${insights.pipeline.count} open opportunities · CRM quote values, excl. VAT`} dark /><Stat label="New enquiries" value={metrics.leadCount} note={comparison(metrics.changes.leads)} /><Stat label="Cohort won value" value={money(metrics.wonValue)} note={`${metrics.wonCount} wins from leads created in this period; not revenue booked in the period.`} /><Stat label="Quote-to-win conversion" value={insights.estimatesAvailable ? percent(insights.quotes.winRate) : '—'} note={`${insights.quotes.wonCount} won / ${insights.quotes.quotedCount} quoted leads in this acquisition cohort`} /></div>
           <div className="grid items-start gap-5 xl:grid-cols-[1.3fr_1fr]"><ActivityChart trend={data.trend} available={insights.estimatesAvailable} /><section className="rounded-2xl bg-slate-900 p-6 text-white"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-300">Selected-period indicators</p><h2 className="mt-3 text-2xl font-semibold tracking-tight">Conversion & response</h2><div className="mt-6 divide-y divide-white/10">{[
