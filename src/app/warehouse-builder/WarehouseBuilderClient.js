@@ -188,6 +188,7 @@ const ENCLOSURE_IMAGE_MAP = {
   structure_only: "/warehouse-builder/enclosure-structure-only.png",
   roof_only: "/warehouse-builder/enclosure-roof-only.png",
   open_sides: "/warehouse-builder/enclosure-open-sides.png",
+  side_walls: "/warehouse-builder/enclosure-open-sides.png",
   fully_enclosed: "/warehouse-builder/enclosure-fully-enclosed.png",
   fully_enclosed_with_gables: "/warehouse-builder/enclosure-fully-enclosed.png",
 }
@@ -294,7 +295,7 @@ function PrimaryFinishControls({
                 brand="atlas"
                 thumbnail={
                   <RoofEnclosureThumbnail
-                    variant={option.value === "fully_enclosed" ? "open_sides" : option.value}
+                    variant={option.value === "fully_enclosed" ? "side_walls" : option.value}
                     active={gableMode === option.value}
                   />
                 }
