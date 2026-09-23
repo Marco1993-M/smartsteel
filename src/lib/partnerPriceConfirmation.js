@@ -40,6 +40,7 @@ function addDays(value, days) {
 
 function scopeLabel(mode) {
   if (mode === "roof_only" || mode === "open_gable") return "Roof sheeting"
+  if (mode === "fully_enclosed_with_gables") return "Fully enclosed"
   if (mode === "fully_enclosed" || mode === "sheeted_gable") return "Roof and side walls sheeted"
   return "Structure only"
 }

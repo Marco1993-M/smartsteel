@@ -6,4 +6,5 @@ export const ATLAS_WAREHOUSE_SHEETING_OPTIONS = [
   { value: "structure_only", label: "Structure only" },
   { value: "roof_only", label: "Roof sheeting" },
   { value: "fully_enclosed", label: "Roof and side walls sheeted" },
+  { value: "fully_enclosed_with_gables", label: "Fully enclosed" },
 ]

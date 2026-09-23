@@ -22,7 +22,11 @@ export function buildPartnerSafeAtlasRelease(input = {}) {
   const summary = getAtlasConfigurationSummary(configuration)
   const sheetingDescription = configuration.gableMode === "structure_only"
     ? "structure only"
-    : `${configuration.gableMode === "roof_only" ? "roof sheeted" : "roof and side walls sheeted"} in ${configuration.sheetingFinish === "chromadek" ? "colour-coated" : "galvanised"} ${configuration.sheetingProfile}`
+    : `${configuration.gableMode === "roof_only"
+      ? "roof sheeted"
+      : configuration.gableMode === "fully_enclosed_with_gables"
+        ? "fully enclosed with all four walls sheeted"
+        : "roof and side walls sheeted"} in ${configuration.sheetingFinish === "chromadek" ? "colour-coated" : "galvanised"} ${configuration.sheetingProfile}`
   const lineItemDescription = `Atlas ${estimate.meta.productCode} warehouse, ${configuration.width}m x ${configuration.length}m x ${configuration.wallHeight}m, ${configuration.steelFinish} steel, ${sheetingDescription}, supply only`
 
   return {

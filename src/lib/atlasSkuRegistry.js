@@ -5,7 +5,8 @@ export const ATLAS_W08_STANDARD_LENGTHS = [4, 8, 12, 16, 20]
 export const ATLAS_SKU_SCOPE_OPTIONS = [
   { value: "structure_only", code: "SO", label: "Structure only" },
   { value: "roof_only", code: "RO", label: "Roof sheeted" },
-  { value: "fully_enclosed", code: "FE", label: "Fully enclosed" },
+  { value: "fully_enclosed", code: "FE", label: "Roof and side walls sheeted" },
+  { value: "fully_enclosed_with_gables", code: "FC", label: "Fully enclosed" },
 ]
 export const ATLAS_SKU_STEEL_OPTIONS = ["Mild", "ZAM", "Galv"]
 export const ATLAS_SKU_SHEETING_PROFILES = ["Corrugated", "IBR", "Concealed Fix"]
@@ -18,6 +19,7 @@ const SHEETING_FINISH_CODES = { galvanised: "GV", chromadek: "CH" }
 function normalizeScope(value) {
   if (["roof_only", "open_gable"].includes(value)) return "roof_only"
   if (["fully_enclosed", "sheeted_gable"].includes(value)) return "fully_enclosed"
+  if (value === "fully_enclosed_with_gables") return "fully_enclosed_with_gables"
   return "structure_only"
 }
 
@@ -85,7 +87,7 @@ export function getAtlasW08SkuRegistry() {
   for (const length of ATLAS_W08_STANDARD_LENGTHS) {
     for (const steelFinish of ATLAS_SKU_STEEL_OPTIONS) {
       records.push(createAtlasSkuRecord({ width: 8, length, wallHeight: 3, scope: "structure_only", steelFinish }))
-      for (const scope of ["roof_only", "fully_enclosed"]) {
+      for (const scope of ["roof_only", "fully_enclosed", "fully_enclosed_with_gables"]) {
         for (const sheetingProfile of ATLAS_SKU_SHEETING_PROFILES) {
           for (const sheetingFinish of ATLAS_SKU_SHEETING_FINISHES) {
             records.push(createAtlasSkuRecord({ width: 8, length, wallHeight: 3, scope, steelFinish, sheetingProfile, sheetingFinish }))
