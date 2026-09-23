@@ -43,7 +43,7 @@ async function ensureInternalProject(opportunity) {
   const id = `project-${crypto.randomUUID()}`
   const product = `Atlas W${String(config.width || "").padStart(2, "0")} Warehouse`
   const name = `${opportunity.customer_name} · ${product}`
-  const scope = `${config.width}m × ${config.length}m × ${config.wallHeight}m · ${config.steelFinish || "Steel finish pending"} · ${config.gableMode === "structure_only" ? "Structure only" : config.gableMode === "roof_only" ? "Roof sheeted" : "Roof and walls sheeted"}`
+  const scope = `${config.width}m × ${config.length}m × ${config.wallHeight}m · ${config.steelFinish || "Steel finish pending"} · ${config.gableMode === "structure_only" ? "Structure only" : config.gableMode === "roof_only" ? "Roof sheeted" : config.gableMode === "fully_enclosed_with_gables" ? "Fully enclosed" : "Roof and side walls sheeted"}`
   const record = {
     id, projectNumber, companyKey: "atlas", name,
     clientName: opportunity.customer_name,

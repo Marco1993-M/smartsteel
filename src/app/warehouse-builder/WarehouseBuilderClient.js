@@ -189,6 +189,7 @@ const ENCLOSURE_IMAGE_MAP = {
   roof_only: "/warehouse-builder/enclosure-roof-only.png",
   open_sides: "/warehouse-builder/enclosure-open-sides.png",
   fully_enclosed: "/warehouse-builder/enclosure-fully-enclosed.png",
+  fully_enclosed_with_gables: "/warehouse-builder/enclosure-fully-enclosed.png",
 }
 
 function RoofEnclosureThumbnail({ variant = "roof_only", active = false }) {
@@ -283,7 +284,7 @@ function PrimaryFinishControls({
         </div>
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Sheeting add-ons</label>
-          <div className="mt-1.5 grid gap-2 sm:grid-cols-3">
+          <div className="mt-1.5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
             {ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => (
               <VisualChoiceCard
                 key={option.value}
@@ -293,7 +294,7 @@ function PrimaryFinishControls({
                 brand="atlas"
                 thumbnail={
                   <RoofEnclosureThumbnail
-                    variant={option.value}
+                    variant={option.value === "fully_enclosed" ? "open_sides" : option.value}
                     active={gableMode === option.value}
                   />
                 }
@@ -715,7 +716,13 @@ export default function WarehouseBuilderClient() {
         wallHeight: config.wallHeight,
         roofPitch: 15,
         cladding: config.gableMode === "structure_only" ? "None" : config.sheetingProfile,
-        enclosureType: config.gableMode === "structure_only" ? "open_sides" : config.gableMode === "roof_only" ? "roof_only" : "side_walls",
+        enclosureType: config.gableMode === "structure_only"
+          ? "open_sides"
+          : config.gableMode === "roof_only"
+            ? "roof_only"
+            : config.gableMode === "fully_enclosed_with_gables"
+              ? "fully_enclosed"
+              : "side_walls",
         rollerDoorCount: 0,
         garageDoorOpeningType: "single",
         pedestrianDoorCount: 0,

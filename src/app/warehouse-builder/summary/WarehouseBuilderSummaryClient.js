@@ -81,7 +81,7 @@ export default function WarehouseBuilderSummaryClient() {
   })
   const systemName = isAtlas ? "Atlas W-Series Warehouse" : "Engineered LSF Warehouse"
   const finishName = isAtlas
-    ? `${configuration.steelFinish} · ${configuration.gableMode === "structure_only" ? "Structure only" : configuration.gableMode === "roof_only" ? "Roof sheeting" : "Roof and side walls sheeted"}`
+    ? `${configuration.steelFinish} · ${configuration.gableMode === "structure_only" ? "Structure only" : configuration.gableMode === "roof_only" ? "Roof sheeting" : configuration.gableMode === "fully_enclosed_with_gables" ? "Fully enclosed" : "Roof and side walls sheeted"}`
     : `${configuration.cladding} · ${configuration.enclosureType.replaceAll("_", " ")}`
   const sheetingFinishLabel = configuration.gableMode === "structure_only"
     ? "Not selected"
@@ -97,7 +97,7 @@ export default function WarehouseBuilderSummaryClient() {
     roofPitch: 15,
     cladding: configuration.gableMode === "structure_only" ? "None" : configuration.sheetingProfile,
     enclosureType: isAtlas
-      ? configuration.gableMode === "structure_only" ? "open_sides" : configuration.gableMode === "roof_only" ? "roof_only" : "side_walls"
+      ? configuration.gableMode === "structure_only" ? "open_sides" : configuration.gableMode === "roof_only" ? "roof_only" : configuration.gableMode === "fully_enclosed_with_gables" ? "fully_enclosed" : "side_walls"
       : configuration.enclosureType,
     rollerDoorCount: isAtlas ? 0 : configuration.rollerDoorCount,
     garageDoorOpeningType: configuration.garageDoorOpeningType,
