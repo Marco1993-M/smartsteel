@@ -408,16 +408,28 @@ function WarehouseMesh({
   const atlasEaveClosureHeight = isAtlas
     ? (((atlasProfiles.rafter.webMm / 2) + atlasProfiles.purlin.webMm) / 1000) * scale + 0.0015
     : 0
-  const roofEndExtension = 0.12
+  const alignedSideWallOffset = isAtlas
+    ? ((atlasProfiles.column.webMm / 1000) * scale) / 2 + 0.0015 + 0.0032 / 2
+    : 0
+  const alignedEndWallOffset = isAtlas
+    ? ((Math.max(atlasProfiles.column.flangeMm, atlasProfiles.rafter.webMm) / 1000) * scale) / 2
+      + (atlasProfiles.sideGirt.flangeMm / 1000) * scale
+      + 0.0015
+      + 0.0032 / 2
+    : 0
+  const roofEndExtension = alignedEndWallOffset * 2
+  const enclosedGableWidth = w + alignedSideWallOffset * 2
 
   const gableShape = useMemo(() => {
     const shape = new Shape()
-    shape.moveTo(-w / 2, 0)
-    shape.lineTo(0, ridgeRise)
-    shape.lineTo(w / 2, 0)
+    shape.moveTo(-enclosedGableWidth / 2, 0)
+    shape.lineTo(-enclosedGableWidth / 2, atlasEaveClosureHeight)
+    shape.lineTo(0, ridgeRise + atlasEaveClosureHeight)
+    shape.lineTo(enclosedGableWidth / 2, atlasEaveClosureHeight)
+    shape.lineTo(enclosedGableWidth / 2, 0)
     shape.closePath()
     return shape
-  }, [ridgeRise, w])
+  }, [atlasEaveClosureHeight, enclosedGableWidth, ridgeRise])
   const wallShapes = useMemo(() => {
     const build = (face, span, openingSpan = span) => createWallShape({
       span,
@@ -430,12 +442,12 @@ function WarehouseMesh({
       garageHeight: hasAtlasGableOpening && face === "rear" ? atlasGableOpeningHeight : undefined,
     })
     return {
-      front: build("front", w),
-      rear: build("rear", w),
+      front: build("front", enclosedGableWidth, w),
+      rear: build("rear", enclosedGableWidth, w),
       left: build("left", l + roofEndExtension, l),
       right: build("right", l + roofEndExtension, l),
     }
-  }, [atlasEaveClosureHeight, atlasGableOpeningHeight, atlasGableOpeningWidth, garageDoorOpeningWidth, h, hasAtlasGableOpening, l, pedestrianDoorCount, pedestrianDoorFace, rollerDoorCount, rollerDoorFace, roofEndExtension, w])
+  }, [atlasEaveClosureHeight, atlasGableOpeningHeight, atlasGableOpeningWidth, enclosedGableWidth, garageDoorOpeningWidth, h, hasAtlasGableOpening, l, pedestrianDoorCount, pedestrianDoorFace, rollerDoorCount, rollerDoorFace, roofEndExtension, w])
   const selectedSheetingColor = WAREHOUSE_SHEETING_COLORS.find((option) => option.value === sheetingColor)
   const roofColor = selectedSheetingColor?.hex || (isAtlas ? "#6689a3" : "#b91c1c")
   const wallColor = roofColor
@@ -467,8 +479,11 @@ function WarehouseMesh({
     ? atlasColumnWallDepth / 2 + atlasGirtDepth + 0.0015 + wallSheetThickness / 2
     : columnThickness / 2 + sheetingClearance + wallSheetThickness / 2
   const endWallSheetOffset = isAtlas
-    ? atlasColumnEndDepth / 2 + 0.0015 + wallSheetThickness / 2
+    ? Math.max(atlasColumnEndDepth, atlasRafterDepth) / 2 + atlasGirtDepth + 0.0015 + wallSheetThickness / 2
     : sideWallSheetOffset
+  const flashingLeg = 0.2 * scale
+  const flashingThickness = Math.max(wallSheetThickness * 0.75, 0.003)
+  const cornerFlashingHeight = h + roofSheetOffset
   const steelSurfaceMap = useMemo(() => createSteelSurfaceMap(), [])
   const sheetingSurfaceMaps = useMemo(() => createSheetingProfileMaps(cladding), [cladding])
 
@@ -771,6 +786,34 @@ function WarehouseMesh({
             <shapeGeometry args={[gableShape]} />
             <meshPhysicalMaterial {...wallMaterialProps} side={DoubleSide} />
           </mesh>
+          {[-1, 1].flatMap((end) => [-1, 1].map((side) => (
+            <group key={`corner-flashing-${end}-${side}`}>
+              <mesh position={[side * (w / 2 + sideWallSheetOffset - flashingLeg / 2), cornerFlashingHeight / 2, end * (l / 2 + endWallSheetOffset + flashingThickness / 2)]}>
+                <boxGeometry args={[flashingLeg, cornerFlashingHeight, flashingThickness]} />
+                <meshPhysicalMaterial {...wallMaterialProps} />
+              </mesh>
+              <mesh position={[side * (w / 2 + sideWallSheetOffset + flashingThickness / 2), cornerFlashingHeight / 2, end * (l / 2 + endWallSheetOffset - flashingLeg / 2)]}>
+                <boxGeometry args={[flashingThickness, cornerFlashingHeight, flashingLeg]} />
+                <meshPhysicalMaterial {...wallMaterialProps} />
+              </mesh>
+            </group>
+          )))}
+          {[-1, 1].flatMap((end) => [-1, 1].map((side) => (
+            <group
+              key={`barge-flashing-${end}-${side}`}
+              position={[side * w / 4, h + ridgeRise / 2 + roofSheetOffset + flashingThickness, end * (l / 2 + endWallSheetOffset)]}
+              rotation={[0, 0, side < 0 ? roofAngle : -roofAngle]}
+            >
+              <mesh position={[0, 0, -end * flashingLeg / 2]}>
+                <boxGeometry args={[roofHalfSpan, flashingThickness, flashingLeg]} />
+                <meshPhysicalMaterial {...roofMaterialProps} />
+              </mesh>
+              <mesh position={[0, -flashingLeg / 2, end * flashingThickness / 2]}>
+                <boxGeometry args={[roofHalfSpan, flashingLeg, flashingThickness]} />
+                <meshPhysicalMaterial {...wallMaterialProps} />
+              </mesh>
+            </group>
+          )))}
         </>
       ) : null}
 
