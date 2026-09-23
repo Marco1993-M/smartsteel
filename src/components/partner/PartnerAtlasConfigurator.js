@@ -15,7 +15,8 @@ const FINISHES = ["Mild", "ZAM", "Galv"]
 const SHEETING = [
   ["structure_only", "Structure only"],
   ["roof_only", "Roof sheeted"],
-  ["fully_enclosed", "Roof and walls"],
+  ["fully_enclosed", "Roof and side walls"],
+  ["fully_enclosed_with_gables", "Fully enclosed"],
 ]
 const money = new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 })
 
@@ -83,7 +84,13 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
     wallHeight: configuration.wallHeight,
     roofPitch: 15,
     cladding: configuration.gableMode === "structure_only" ? "None" : configuration.sheetingProfile,
-    enclosureType: configuration.gableMode === "structure_only" ? "open_sides" : configuration.gableMode === "roof_only" ? "roof_only" : "side_walls",
+    enclosureType: configuration.gableMode === "structure_only"
+      ? "open_sides"
+      : configuration.gableMode === "roof_only"
+        ? "roof_only"
+        : configuration.gableMode === "fully_enclosed_with_gables"
+          ? "fully_enclosed"
+          : "side_walls",
     rollerDoorCount: 0,
     garageDoorOpeningType: "single",
     pedestrianDoorCount: 0,

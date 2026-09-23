@@ -5,7 +5,7 @@ import { FileText, Layers3, Link2, Printer, ShieldAlert } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { createAtlasWarehouseControl } from "../../lib/atlasWarehouseControl"
 
-const SCOPE_OPTIONS = [["structure_only", "Structure only"], ["roof_only", "Roof sheeted"], ["fully_enclosed", "Roof and side walls sheeted"]]
+const SCOPE_OPTIONS = [["structure_only", "Structure only"], ["roof_only", "Roof sheeted"], ["fully_enclosed", "Roof and side walls sheeted"], ["fully_enclosed_with_gables", "Fully enclosed"]]
 const tone = (ready) => ready ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"
 
 function ProductSpecification({ control, scopeLabel }) {

@@ -60,7 +60,7 @@ export default function AtlasSkuRegistry({ familyCode = "W08" }) {
       </div>
       <div className="grid gap-3 border-b border-slate-200 bg-slate-50 p-4 sm:grid-cols-3 sm:p-5">
         <Filter label="Length" value={filters.length} onChange={(value) => setFilters((current) => ({ ...current, length: value }))} options={[["4", "4m"], ["8", "8m"], ["12", "12m"], ["16", "16m"], ["20", "20m"]]} />
-        <Filter label="Supply scope" value={filters.scope} onChange={(value) => setFilters((current) => ({ ...current, scope: value }))} options={[["all", "All scopes"], ["structure_only", "Structure only"], ["roof_only", "Roof sheeted"], ["fully_enclosed", "Fully enclosed"]]} />
+        <Filter label="Supply scope" value={filters.scope} onChange={(value) => setFilters((current) => ({ ...current, scope: value }))} options={[["all", "All scopes"], ["structure_only", "Structure only"], ["roof_only", "Roof sheeted"], ["fully_enclosed", "Roof and side walls"], ["fully_enclosed_with_gables", "Fully enclosed"]]} />
         <Filter label="Steel finish" value={filters.steel} onChange={(value) => setFilters((current) => ({ ...current, steel: value }))} options={[["all", "All finishes"], ["Mild", "Mild steel"], ["ZAM", "ZAM"], ["Galv", "Galvanised"]]} />
       </div>
       {error ? <p className="m-5 rounded-xl bg-rose-50 p-4 text-sm text-rose-700">{error}</p> : null}

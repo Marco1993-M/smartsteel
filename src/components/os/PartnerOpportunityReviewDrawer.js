@@ -69,6 +69,8 @@ export default function PartnerOpportunityReviewDrawer({
   ].filter(Boolean)
   const scopeLabel = config.gableMode === "roof_only"
     ? "Roof sheeting"
+    : config.gableMode === "fully_enclosed_with_gables"
+      ? "Fully enclosed"
     : config.gableMode === "fully_enclosed"
       ? "Roof and side walls sheeted"
       : "Structure only"

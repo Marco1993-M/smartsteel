@@ -261,7 +261,7 @@ function ManufacturingPack({ record, onClose }) {
   const checklist = record.manufacturingChecklist?.length ? record.manufacturingChecklist : DEFAULT_CHECKLIST
   const released = record.productionReleaseStatus === "released"
   const bom = record.manufacturingBomSnapshot
-  const scope = config.gableMode === "structure_only" ? "Structure only" : config.gableMode === "roof_only" ? "Roof sheeted" : "Roof and side walls sheeted"
+  const scope = config.gableMode === "structure_only" ? "Structure only" : config.gableMode === "roof_only" ? "Roof sheeted" : config.gableMode === "fully_enclosed_with_gables" ? "Fully enclosed" : "Roof and side walls sheeted"
   return <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/75 p-3 backdrop-blur-sm print:static print:bg-white print:p-0">
     <div className="mx-auto mb-3 flex max-w-[210mm] items-center justify-between gap-3 print:hidden"><p className="text-sm font-bold text-white">Internal manufacturing pack</p><div className="flex gap-2"><button type="button" onClick={() => window.print()} className="inline-flex min-h-11 items-center gap-2 bg-white px-4 text-sm font-black text-slate-950"><Printer className="h-4 w-4" />Print / save PDF</button><button type="button" onClick={onClose} className="grid h-11 w-11 place-items-center border border-white/30 text-white"><X className="h-5 w-5" /></button></div></div>
     <article className="mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-7 text-slate-950 shadow-2xl print:min-h-0 print:max-w-none print:p-[14mm] print:shadow-none sm:p-10">
