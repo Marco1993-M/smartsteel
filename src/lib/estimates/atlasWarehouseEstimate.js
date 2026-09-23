@@ -148,9 +148,13 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
 
   const roofSheetingArea = gableMode === "structure_only" ? 0 : geometry.rafterCutLengthM * 2 * length * quantity
   const longWallSheetingArea = includesLongWalls ? wallHeight * length * 2 * quantity : 0
-  const gableSheetingArea = includesGableEnds
+  const grossGableSheetingArea = includesGableEnds
     ? (width * wallHeight + (width * geometry.roofRiseM) / 2) * 2 * quantity
     : 0
+  const gableOpeningWidth = includesGableEnds ? Math.min(6, width) : 0
+  const gableOpeningHeight = includesGableEnds ? Math.min(3, wallHeight) : 0
+  const gableOpeningArea = gableOpeningWidth * gableOpeningHeight * quantity
+  const gableSheetingArea = grossGableSheetingArea - gableOpeningArea
   const wallSheetingArea = longWallSheetingArea + gableSheetingArea
   const totalSheetingArea = roofSheetingArea + wallSheetingArea
   const sheetingRate = sheetingFinish === "chromadek" ? CHROMADEK_RATE : SHEETING_RATES[sheetingProfile]
@@ -184,9 +188,9 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     dimensions: { width, length, wallHeight, quantity, portals: geometry.portalFrames, bays: geometry.bays, lengthRule: "atlas_4m_bay_rule", trussLength: geometry.rafterCutLengthM, trussHeight: geometry.roofRiseM, roofPurlins: geometry.totalPurlinRows },
     materials: { totalSteelKg: roundMoney(activeStructuralMembers.reduce((total, member) => total + member.totalMassKg, 0) * quantity + gableGirtMassKg), geometry, gableGirtRowsPerEnd, gableGirtLengthM: roundMoney(gableGirtLengthM), provisionalConnections: true },
     pricing: { steelCost: roundMoney([...structuralLines, ...gableFramingLines].reduce((sum, item) => sum + item.total, 0)), connectionCost: roundMoney(connectionLines.reduce((sum, item) => sum + item.total, 0)), subTotalBeforeMarkup: roundMoney(subTotalBeforeMarkup), markupRate: COMMERCIAL_UPLIFT_RATE, markupValue: roundMoney(markupValue), commercialUpliftIncludedInRates: 0, vatRate: VAT_RATE, vatValue: roundMoney(vatValue), baseTotal: roundMoney(totalExclVat), markupMultiplier: 1 + COMMERCIAL_UPLIFT_RATE, estimatedTotal: roundMoney(totalExclVat), totalInclVat: roundMoney(totalInclVat), claddingCost: roundMoney(sheetingCost), installationCost: 0 },
-    sheeting: { roofSheetingArea: roundMoney(roofSheetingArea), longWallSheetingArea: roundMoney(longWallSheetingArea), gableSheetingArea: roundMoney(gableSheetingArea), wallSheetingArea: roundMoney(wallSheetingArea), totalSheetingArea: roundMoney(totalSheetingArea), openingsDeducted: false },
+    sheeting: { roofSheetingArea: roundMoney(roofSheetingArea), longWallSheetingArea: roundMoney(longWallSheetingArea), grossGableSheetingArea: roundMoney(grossGableSheetingArea), gableOpeningArea: roundMoney(gableOpeningArea), gableOpeningWidth, gableOpeningHeight, gableOpeningFace: includesGableEnds ? "one gable end" : null, gableSheetingArea: roundMoney(gableSheetingArea), wallSheetingArea: roundMoney(wallSheetingArea), totalSheetingArea: roundMoney(totalSheetingArea), openingsDeducted: includesGableEnds },
     lineItems,
-    summary: { title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m ${systemName}`, shortDescription: `${systemName}, ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}, supply only`, estimateRequest: `${systemName}: ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}, supply only. Installation and delivery quoted separately.`, layoutNote: "" },
+    summary: { title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m ${systemName}`, shortDescription: `${systemName}, ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}${includesGableEnds ? `, centred ${gableOpeningWidth}m x ${gableOpeningHeight}m opening on one gable end` : ""}, supply only`, estimateRequest: `${systemName}: ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}${includesGableEnds ? `, centred ${gableOpeningWidth}m x ${gableOpeningHeight}m opening on one gable end with the opposite gable enclosed` : ""}, supply only. Installation and delivery quoted separately.`, layoutNote: includesGableEnds ? `Standard fully enclosed scope includes one centred ${gableOpeningWidth}m wide x ${gableOpeningHeight}m high opening; the opposite gable remains enclosed.` : "" },
     labels: { steelFinish, cladding: sheetingModeLabel(gableMode), sheetingProfile, sheetingFinish: sheetingFinish === "chromadek" ? "Chromadek" : "Galvanised", installation: "Quoted separately", delivery: "Quoted separately", gableMode: sheetingModeLabel(gableMode) },
     meta: { productType: "Atlas Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, sku, provisionalItems: ["Gable-end framing specifications", "Bracket fabrication specifications", "M12 anchor-bolt price"] },
   }
