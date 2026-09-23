@@ -286,7 +286,7 @@ function getOpeningPositions(total, span, kind) {
   return Array.from({ length: total }, (_, index) => -usableSpan / 2 + (index * usableSpan) / (total - 1))
 }
 
-function createWallShape({ span, height, garagePositions, pedestrianPositions, garageWidth }) {
+function createWallShape({ span, height, garagePositions, pedestrianPositions, garageWidth, garageHeight }) {
   const shape = new Shape()
   shape.moveTo(-span / 2, 0)
   shape.lineTo(span / 2, 0)
@@ -297,7 +297,7 @@ function createWallShape({ span, height, garagePositions, pedestrianPositions, g
   garagePositions.forEach((position) => {
     const hole = new Path()
     const halfWidth = Math.min(garageWidth, span * 0.72) / 2
-    const openingHeight = height * 0.72
+    const openingHeight = Math.min(garageHeight || height * 0.72, height)
     hole.moveTo(position - halfWidth, 0)
     hole.lineTo(position + halfWidth, 0)
     hole.lineTo(position + halfWidth, openingHeight)
@@ -402,6 +402,9 @@ function WarehouseMesh({
 
   const garageDoorOpeningWidth =
     garageDoorOpeningType === "double" ? 5 * scale : garageDoorOpeningType === "custom" ? 4 * scale : 2.5 * scale
+  const hasAtlasGableOpening = isAtlas && enclosureType === "fully_enclosed"
+  const atlasGableOpeningWidth = Math.min(6, width) * scale
+  const atlasGableOpeningHeight = Math.min(3, wallHeight) * scale
   const atlasEaveClosureHeight = isAtlas
     ? (((atlasProfiles.rafter.webMm / 2) + atlasProfiles.purlin.webMm) / 1000) * scale + 0.0015
     : 0
@@ -419,9 +422,12 @@ function WarehouseMesh({
     const build = (face, span, openingSpan = span) => createWallShape({
       span,
       height: h + (["left", "right"].includes(face) ? atlasEaveClosureHeight : 0),
-      garagePositions: rollerDoorFace === face ? getOpeningPositions(rollerDoorCount, openingSpan, "garage") : [],
+      garagePositions: hasAtlasGableOpening && face === "rear"
+        ? [0]
+        : rollerDoorFace === face ? getOpeningPositions(rollerDoorCount, openingSpan, "garage") : [],
       pedestrianPositions: pedestrianDoorFace === face ? getOpeningPositions(pedestrianDoorCount, openingSpan, "personnel") : [],
-      garageWidth: garageDoorOpeningWidth,
+      garageWidth: hasAtlasGableOpening && face === "rear" ? atlasGableOpeningWidth : garageDoorOpeningWidth,
+      garageHeight: hasAtlasGableOpening && face === "rear" ? atlasGableOpeningHeight : undefined,
     })
     return {
       front: build("front", w),
@@ -429,7 +435,7 @@ function WarehouseMesh({
       left: build("left", l + roofEndExtension, l),
       right: build("right", l + roofEndExtension, l),
     }
-  }, [atlasEaveClosureHeight, garageDoorOpeningWidth, h, l, pedestrianDoorCount, pedestrianDoorFace, rollerDoorCount, rollerDoorFace, roofEndExtension, w])
+  }, [atlasEaveClosureHeight, atlasGableOpeningHeight, atlasGableOpeningWidth, garageDoorOpeningWidth, h, hasAtlasGableOpening, l, pedestrianDoorCount, pedestrianDoorFace, rollerDoorCount, rollerDoorFace, roofEndExtension, w])
   const selectedSheetingColor = WAREHOUSE_SHEETING_COLORS.find((option) => option.value === sheetingColor)
   const roofColor = selectedSheetingColor?.hex || (isAtlas ? "#6689a3" : "#b91c1c")
   const wallColor = roofColor
@@ -698,6 +704,21 @@ function WarehouseMesh({
           </group>
         )
       })}
+
+      {hasAtlasGableOpening ? (
+        <group position={[0, 0, l / 2]}>
+          {[-1, 1].map((side) => (
+            <mesh key={`gable-opening-jamb-${side}`} position={[side * atlasGableOpeningWidth / 2, atlasGableOpeningHeight / 2, 0]} castShadow>
+              <boxGeometry args={[secondaryMemberThickness, atlasGableOpeningHeight, secondaryMemberDepth]} />
+              <meshPhysicalMaterial {...frameMaterialProps} />
+            </mesh>
+          ))}
+          <mesh position={[0, atlasGableOpeningHeight, 0]} castShadow>
+            <boxGeometry args={[atlasGableOpeningWidth + secondaryMemberThickness, secondaryMemberThickness, secondaryMemberDepth]} />
+            <meshPhysicalMaterial {...frameMaterialProps} />
+          </mesh>
+        </group>
+      ) : null}
 
       {hasCladding ? (
         <>

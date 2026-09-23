@@ -30,7 +30,7 @@ const W08_SPEC_SCOPES = [
   { value: "structure_only", name: "Structure only", detail: "Primary frame, purlins, wall and roof bracing, brackets, and connection hardware. No girts or sheeting." },
   { value: "roof_only", name: "Roof sheeted", detail: "Structure-only scope plus selected roof sheeting and roof fixings. No wall girts or wall sheeting." },
   { value: "fully_enclosed", name: "Roof and side walls sheeted", detail: "Roof-sheeted scope plus side girts and long-wall sheeting. Gable ends remain open." },
-  { value: "fully_enclosed_with_gables", name: "Fully enclosed", detail: "Roof, both long walls, and both complete gable ends sheeted, with the required gable framing allowance." },
+  { value: "fully_enclosed_with_gables", name: "Fully enclosed", detail: "Roof and all four walls sheeted, with one centred 6m wide x 3m high opening on one gable end. The opposite gable remains enclosed." },
 ]
 const W08_ROOF_SHEETING_STANDARD = [
   ["Standard profile", "IBR", "Mid-range Atlas roof and wall sheeting option"],
