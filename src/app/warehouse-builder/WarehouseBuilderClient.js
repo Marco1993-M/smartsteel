@@ -193,10 +193,10 @@ const ENCLOSURE_IMAGE_MAP = {
   fully_enclosed_with_gables: "/warehouse-builder/enclosure-fully-enclosed.png",
 }
 
-function RoofEnclosureThumbnail({ variant = "roof_only", active = false }) {
+function RoofEnclosureThumbnail({ variant = "roof_only", active = false, prominent = false }) {
   return (
     <div
-      className={`relative h-28 overflow-hidden rounded-[1.2rem] border ${
+      className={`relative overflow-hidden border ${prominent ? "h-full min-h-0 rounded-xl" : "h-28 rounded-[1.2rem]"} ${
         active ? "border-white/10 bg-white/5" : "border-slate-200 bg-white"
       }`}
     >
@@ -205,7 +205,7 @@ function RoofEnclosureThumbnail({ variant = "roof_only", active = false }) {
         alt=""
         fill
         sizes="(min-width: 640px) 180px, 100vw"
-        className={`object-contain object-center p-2 transition ${
+        className={`object-contain object-center transition ${prominent ? "p-1 sm:p-2" : "p-2"} ${
           active ? "opacity-92" : "opacity-100"
         }`}
       />
@@ -218,14 +218,14 @@ function RoofEnclosureThumbnail({ variant = "roof_only", active = false }) {
   )
 }
 
-function VisualChoiceCard({ icon: Icon, image, title, active, onClick, thumbnail, brand = "lsf", compact = false }) {
+function VisualChoiceCard({ icon: Icon, image, title, active, onClick, thumbnail, brand = "lsf", compact = false, square = false }) {
   const isAtlas = brand === "atlas"
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`${compact ? "min-h-[88px] rounded-[1.15rem] px-3 py-3 sm:min-h-[108px] sm:rounded-[1.4rem] sm:px-4 sm:py-3.5" : "min-h-[108px] rounded-[1.4rem] px-4 py-3.5"} border text-left transition ${
+      className={`${square ? "aspect-square min-h-0 rounded-[1.4rem] p-3 text-center sm:p-4" : compact ? "min-h-[88px] rounded-[1.15rem] px-3 py-3 text-left sm:min-h-[108px] sm:rounded-[1.4rem] sm:px-4 sm:py-3.5" : "min-h-[108px] rounded-[1.4rem] px-4 py-3.5 text-left"} border transition ${square ? "flex flex-col" : ""} ${
         active
           ? isAtlas
             ? "border-[#0043f3] bg-[linear-gradient(145deg,#001d2e,#0043f3)] text-white shadow-[0_20px_50px_-30px_rgba(0,67,243,0.9)]"
@@ -234,7 +234,7 @@ function VisualChoiceCard({ icon: Icon, image, title, active, onClick, thumbnail
       }`}
     >
       {thumbnail ? (
-        <div className="mb-3">{thumbnail}</div>
+        <div className={square ? "mb-2 min-h-0 w-full flex-1" : "mb-3"}>{thumbnail}</div>
       ) : (
         <div
           className={`${compact ? "mb-2 h-9 w-9 rounded-xl sm:mb-3 sm:h-11 sm:w-11 sm:rounded-2xl" : "mb-3 h-11 w-11 rounded-2xl"} inline-flex items-center justify-center border ${
@@ -248,7 +248,7 @@ function VisualChoiceCard({ icon: Icon, image, title, active, onClick, thumbnail
           )}
         </div>
       )}
-      <p className={`${compact ? "text-xs leading-4 sm:text-sm" : "text-sm"} font-semibold`}>{title}</p>
+      <p className={`${square ? "text-xs leading-tight sm:text-sm" : compact ? "text-xs leading-4 sm:text-sm" : "text-sm"} font-semibold`}>{title}</p>
     </button>
   )
 }
@@ -285,7 +285,7 @@ function PrimaryFinishControls({
         </div>
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Sheeting add-ons</label>
-          <div className="mt-1.5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-2 grid grid-cols-2 gap-3">
             {ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => (
               <VisualChoiceCard
                 key={option.value}
@@ -293,10 +293,12 @@ function PrimaryFinishControls({
                 title={option.label}
                 active={gableMode === option.value}
                 brand="atlas"
+                square
                 thumbnail={
                   <RoofEnclosureThumbnail
                     variant={option.value === "fully_enclosed" ? "side_walls" : option.value}
                     active={gableMode === option.value}
+                    prominent
                   />
                 }
                 onClick={() => {
