@@ -414,6 +414,7 @@ export default function WarehouseBuilderClient() {
   const [undoSnapshot, setUndoSnapshot] = useState(null)
   const [isSceneVisible, setIsSceneVisible] = useState(true)
   const [sceneSectionHeight, setSceneSectionHeight] = useState(820)
+  const [showPlanScrollCue, setShowPlanScrollCue] = useState(false)
   const [leadForm, setLeadForm] = useState({
     name: "",
     lastName: "",
@@ -424,6 +425,7 @@ export default function WarehouseBuilderClient() {
   const changeNoticeTimeoutRef = useRef(null)
   const hasInitialisedBuilderRef = useRef(false)
   const sceneSectionRef = useRef(null)
+  const planPanelRef = useRef(null)
 
   const isAtlasWarehouse = true
   const builderTheme = isAtlasWarehouse
@@ -541,6 +543,28 @@ export default function WarehouseBuilderClient() {
       sizeObserver?.disconnect()
     }
   }, [])
+
+  useEffect(() => {
+    const element = planPanelRef.current
+    if (!element) return undefined
+
+    const updateScrollCue = () => {
+      const remaining = element.scrollHeight - element.clientHeight - element.scrollTop
+      setShowPlanScrollCue(element.scrollHeight > element.clientHeight + 16 && remaining > 24)
+    }
+    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateScrollCue)
+
+    updateScrollCue()
+    element.addEventListener("scroll", updateScrollCue, { passive: true })
+    window.addEventListener("resize", updateScrollCue)
+    resizeObserver?.observe(element)
+
+    return () => {
+      element.removeEventListener("scroll", updateScrollCue)
+      window.removeEventListener("resize", updateScrollCue)
+      resizeObserver?.disconnect()
+    }
+  }, [config.gableMode, config.sheetingFinish, sceneSectionHeight, submitted])
 
   useEffect(() => {
     if (!showLeadForm) return undefined
@@ -1183,8 +1207,10 @@ export default function WarehouseBuilderClient() {
         </div>
 
         <div className="mt-8 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[440px_minmax(0,1.4fr)] xl:items-start">
+          <div className="relative order-2 min-w-0 xl:order-1">
           <section
-            className="order-2 min-w-0 space-y-4 xl:order-1 xl:h-[var(--builder-workspace-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"
+            ref={planPanelRef}
+            className="min-w-0 space-y-4 xl:h-[var(--builder-workspace-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"
             style={{ "--builder-workspace-height": `${sceneSectionHeight}px` }}
           >
             <section className="min-w-0 overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -1685,6 +1711,19 @@ export default function WarehouseBuilderClient() {
               </section>
             ) : null}
           </section>
+          <div className={`pointer-events-none absolute inset-x-0 bottom-0 z-20 hidden h-24 items-end justify-center bg-gradient-to-t from-white via-white/95 to-transparent pb-3 transition-opacity xl:flex ${showPlanScrollCue ? "opacity-100" : "opacity-0"}`}>
+            <button
+              type="button"
+              tabIndex={showPlanScrollCue ? 0 : -1}
+              aria-hidden={!showPlanScrollCue}
+              onClick={() => planPanelRef.current?.scrollBy({ top: Math.max(280, planPanelRef.current.clientHeight * 0.55), behavior: "smooth" })}
+              className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-[0_12px_30px_-12px_rgba(15,23,42,0.45)] transition hover:border-slate-300 hover:text-slate-950"
+            >
+              More options below
+              <ChevronDownIcon className="h-4 w-4" />
+            </button>
+          </div>
+          </div>
 
           <aside className="order-1 min-w-0 space-y-5 xl:order-2 xl:sticky xl:top-24">
             <div ref={sceneSectionRef} className="min-w-0 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-5">
