@@ -66,7 +66,7 @@ const primaryPaths = [
   {
     eyebrow: 'Standard Kit Option',
     title: 'Lip Channel Kits',
-    backgroundImage: '/CFLC_carport.webp',
+    backgroundImage: '/cflc_truss.webp',
     description:
       'For standard cold-formed lip channel kit structures, including DIY carports, solar carports, ground mounts, and practical warehouse kits.',
     bullets: [
