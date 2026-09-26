@@ -15,6 +15,7 @@ const fixtures = [
   { width: 8, length: 20, wallHeight: 3, steelFinish: "Galv", gableMode: "structure_only" },
   { width: 8, length: 20, wallHeight: 3, steelFinish: "ZAM", gableMode: "roof_only", sheetingProfile: "IBR", sheetingFinish: "galvanised" },
   { width: 8, length: 20, wallHeight: 3, steelFinish: "ZAM", gableMode: "fully_enclosed", sheetingProfile: "IBR", sheetingFinish: "chromadek", sheetingColor: "charcoal-grey" },
+  { width: 8, length: 20, wallHeight: 3, steelFinish: "ZAM", gableMode: "fully_enclosed_with_gables", sheetingProfile: "IBR", sheetingFinish: "galvanised" },
   { width: 10, length: 20, wallHeight: 4.5, steelFinish: "ZAM", gableMode: "structure_only" },
   { width: 12, length: 20, wallHeight: 4.5, steelFinish: "ZAM", gableMode: "structure_only" },
 ]
@@ -57,6 +58,27 @@ assert.equal(
     + corrugatedEstimate.pricing.claddingCost
   ) * 100) / 100
 )
+
+const fullyEnclosedEstimate = calculateAtlasWarehouseEstimate({
+  width: 8,
+  length: 20,
+  wallHeight: 3,
+  steelFinish: "ZAM",
+  gableMode: "fully_enclosed_with_gables",
+  sheetingProfile: "IBR",
+  sheetingFinish: "galvanised",
+})
+const crmSellTotal = Math.round(fullyEnclosedEstimate.lineItems.reduce(
+  (total, item) => total + item.total * (item.priceIncludesMarkup ? 1 : fullyEnclosedEstimate.pricing.markupMultiplier),
+  0
+) * 100) / 100
+assert.equal(fullyEnclosedEstimate.input.gableMode, "fully_enclosed_with_gables")
+assert.equal(fullyEnclosedEstimate.sheeting.gableOpeningWidth, 6)
+assert.equal(fullyEnclosedEstimate.sheeting.gableOpeningHeight, 3)
+assert.equal(fullyEnclosedEstimate.sheeting.gableOpeningArea, 18)
+assert.equal(fullyEnclosedEstimate.sheeting.openingsDeducted, true)
+assert.equal(fullyEnclosedEstimate.meta.sku.includes("-FC-"), true)
+assert.equal(crmSellTotal, fullyEnclosedEstimate.pricing.estimatedTotal)
 
 const legacyConfiguration = normalizeAtlasConfiguration({
   productType: "CFLC Warehouse",

@@ -16,9 +16,9 @@ from reportlab.platypus import Paragraph, Table, TableStyle
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "output" / "pdf" / "atlas-overberg-agri-commercial-offering-v1.pdf"
+OUTPUT = ROOT / "output" / "pdf" / "atlas-afgri-standard-dealer-price-schedule.pdf"
 ATLAS_DARK = ROOT / "public" / "atlas" / "atlas-logo-horizontal-dark.png"
-PARTNER_DARK = ROOT / "public" / "overberg-agri-logo.png"
+PARTNER_DARK = ROOT / "public" / "afgri-logo-colour-cropped.png"
 
 PAGE_W, PAGE_H = landscape(A4)
 MARGIN = 38
@@ -94,19 +94,21 @@ def draw_image_contain(c: canvas.Canvas, path: Path, x: float, y: float, w: floa
     c.drawImage(image, x, y + (h - dh) / 2, dw, dh, mask="auto")
 
 
-def footer(c: canvas.Canvas, page: int, label: str = "ATLAS × OVERBERG AGRI · COMMERCIAL OFFERING V1.0") -> None:
+def footer(c: canvas.Canvas, page: int, label: str = "ATLAS x AFGRI - STANDARD DEALER PRICE SCHEDULE V1.0") -> None:
     c.setStrokeColor(LINE)
     c.line(MARGIN, 26, PAGE_W - MARGIN, 26)
     c.setFont("Atlas-Bold", 6.5)
     c.setFillColor(SLATE)
     c.drawString(MARGIN, 13, label)
-    c.drawRightString(PAGE_W - MARGIN, 13, f"DRAFT FOR DISCUSSION · SEPTEMBER 2026 · {page:02d}")
+    c.drawRightString(PAGE_W - MARGIN, 13, f"CONFIDENTIAL - 22 SEPTEMBER 2026 - {page:02d}")
 
 
 def section_header(c: canvas.Canvas, eyebrow: str, title: str, subtitle: str, page: int) -> float:
     draw_image_contain(c, ATLAS_DARK, MARGIN, PAGE_H - 49, 126, 23)
     draw_image_contain(c, PARTNER_DARK, PAGE_W - MARGIN - 88, PAGE_H - 49, 88, 23)
-    if "·" in eyebrow:
+    if " - " in eyebrow:
+        section_no, section_label = [part.strip() for part in eyebrow.split(" - ", 1)]
+    elif "·" in eyebrow:
         section_no, section_label = [part.strip() for part in eyebrow.split("·", 1)]
     else:
         section_no, section_label = f"{page:02d}", eyebrow
@@ -181,9 +183,9 @@ def draw_label_box(
 
 
 def page_overview(c: canvas.Canvas) -> None:
-    y = section_header(c, "01 · Commercial offering snapshot", "What Overberg Agri can sell.", "A focused pilot range with a simple customer-to-quote workflow.", 1)
+    y = section_header(c, "01 · Commercial offering snapshot", "What Afgri can sell.", "A focused pilot range with a simple customer-to-quote workflow.", 1)
     data = [
-        [para("PRODUCT", 7, WHITE, True), para("WHAT OVERBERG AGRI CAN SELL", 7, WHITE, True), para("COMMERCIAL POSITION", 7, WHITE, True), para("STATUS", 7, WHITE, True)],
+        [para("PRODUCT", 7, WHITE, True), para("WHAT AFGRI CAN SELL", 7, WHITE, True), para("COMMERCIAL POSITION", 7, WHITE, True), para("STATUS", 7, WHITE, True)],
         [para("Atlas Warehouses", 9, INK, True), para("W06, W08, W10 and W12 structures in modular 4m bays, with supply-only and installed paths."), para("Primary launch category. Standard commercial matrix available."), para("PILOT READY", 7, GREEN, True)],
         [para("Solar Ground Mounts", 9, INK, True), para("ZAM modular structures configured by panel count for farms, commercial sites and open-field arrays."), para("Standard configurations supported; final project review applies."), para("PILOT READY", 7, GREEN, True)],
         [para("Solar Carports", 9, INK, True), para("Atlas parking structures for single to multi-bay solar parking applications."), para("Estimator-led enquiry with technical review before dealer quotation."), para("CONTROLLED", 7, BLUE, True)],
@@ -197,7 +199,7 @@ def page_overview(c: canvas.Canvas) -> None:
     steps_y = y - 78
     step_w = (PAGE_W - MARGIN * 2 - 54) / 4
     steps = [
-        ("01", "Interest", "Overberg Agri identifies need", "Lead captured"),
+        ("01", "Interest", "Afgri identifies need", "Lead captured"),
         ("02", "Enquiry", "Size, location, product, install path", "Brief complete"),
         ("03", "Quote", "Smart Steel reviews and quotes", "Dealer offer issued"),
         ("04", "Fulfil", "Manufacture, deliver, install or supply-only", "Project delivered"),
@@ -235,7 +237,7 @@ def page_overview(c: canvas.Canvas) -> None:
 
 
 def page_matrix(c: canvas.Canvas) -> None:
-    y = section_header(c, "02 · Atlas warehouse matrix", "Protected price and partner return.", "Controlled commercial schedule · supply only · excl. VAT · prices and proposed 5% return rounded to nearest R100", 2)
+    y = section_header(c, "01 - Standard warehouse schedule", "Atlas dealer pricing and AFGRI return.", "Supply only | excl. VAT | prices and proposed 5% return rounded to nearest R100", 1)
     lengths = [8, 12, 16, 20]
     widths = [6, 8, 10, 12]
     rows = [[
@@ -274,7 +276,7 @@ def page_matrix(c: canvas.Canvas) -> None:
     c.drawString(MARGIN + 14, 75, "PROTECTED DEALER MODEL")
     c.setFont("Atlas", 7.5)
     c.setFillColor(WHITE)
-    c.drawString(MARGIN + 170, 75, "Smart Steel controls the quotation; the shown 5% is the proposed qualifying Overberg Agri return, not a customer discount.")
+    c.drawString(MARGIN + 170, 75, "Smart Steel controls the quotation; the shown 5% is the proposed qualifying AFGRI return, not a customer discount.")
     c.setFillColor(AMBER)
     c.rect(MARGIN, 34, PAGE_W - MARGIN * 2, 30, stroke=0, fill=1)
     c.setFillColor(INK)
@@ -285,12 +287,70 @@ def page_matrix(c: canvas.Canvas) -> None:
     c.showPage()
 
 
+def page_schedule_terms(c: canvas.Canvas) -> None:
+    y = section_header(
+        c,
+        "02 - Pricing basis and controls",
+        "How to use this schedule.",
+        "Standard products are scheduled; controlled and custom work is confirmed through the AFGRI Atlas workflow.",
+        2,
+    )
+    route_data = [
+        [para("PRODUCT CATEGORY", 7, WHITE, True), para("PRICING ROUTE", 7, WHITE, True), para("TARGET RESPONSE", 7, WHITE, True)],
+        [para("Atlas Warehouses", 8, INK, True), para("Use the standard matrix on page 1 as the indicative dealer schedule."), para("Final dealer quotation within 1 business day after complete standard inputs.", 7.4, NAVY, True)],
+        [para("Solar Ground Mounts", 8, INK, True), para("Configured by panel count and project inputs through Atlas, followed by Smart Steel review."), para("1 business day for complete standard inputs; otherwise technically reviewed.", 7.4, NAVY, True)],
+        [para("Solar Carports", 8, INK, True), para("Controlled enquiry through Atlas with technical review before dealer quotation."), para("3-5 business days after complete technical information.", 7.4, NAVY, True)],
+        [para("Custom Agricultural Structures", 8, INK, True), para("Request-only route through Atlas. Scope, engineering and price are project-specific."), para("Response confirmed after Smart Steel technical review.", 7.4, BROWN, True)],
+    ]
+    y2 = draw_table(c, route_data, MARGIN, y, [172, 400, 190], row_heights=[28, 38, 38, 38, 38], style=[
+        ("BACKGROUND", (0, 1), (-1, -1), WHITE),
+        ("BACKGROUND", (0, 2), (-1, 2), ICE),
+        ("BACKGROUND", (0, 4), (-1, 4), ICE),
+    ])
+
+    box_y = y2 - 20
+    box_w = (PAGE_W - MARGIN * 2 - 16) / 2
+    draw_label_box(
+        c,
+        MARGIN,
+        box_y - 126,
+        box_w,
+        126,
+        "PRICE BASIS",
+        "What the schedule covers",
+        "- Indicative Smart Steel structural supply pricing.<br/>- Standard Atlas warehouse sizes and listed finishes.<br/>- Prices exclude VAT.<br/>- Values are rounded to the nearest R100.<br/>- The confirmed Smart Steel quotation always takes precedence.",
+        ICE,
+        NAVY,
+    )
+    draw_label_box(
+        c,
+        MARGIN + box_w + 16,
+        box_y - 126,
+        box_w,
+        126,
+        "COMMERCIAL CONTROL",
+        "Exclusions and conditions",
+        "- Delivery, offloading, foundations, cladding, installation, professional fees and third-party equipment are excluded unless quoted.<br/>- Proposed AFGRI return: 5% of qualifying structural supply value.<br/>- Not for direct customer distribution.<br/>- Payment terms: 7 days after delivery, as agreed.",
+        PALE_BLUE,
+        NAVY,
+    )
+
+    c.setFillColor(AMBER)
+    c.rect(MARGIN, 35, PAGE_W - MARGIN * 2, 28, stroke=0, fill=1)
+    c.setFillColor(INK)
+    c.setFont("Atlas-Bold", 7.5)
+    c.drawString(MARGIN + 14, 46, "CUSTOM PRICING")
+    c.setFont("Atlas", 7.5)
+    c.drawString(MARGIN + 120, 46, "Submit project-specific requirements through the AFGRI Atlas workflow for technical review and confirmed quotation.")
+    c.showPage()
+
+
 def page_partner_economics(c: canvas.Canvas) -> None:
     y = section_header(
         c,
         "03 · Partner economics and fulfilment",
-        "How Overberg Agri earns without carrying the technical load.",
-        "Overberg Agri opens the market. Smart Steel confirms, quotes, manufactures and supports the agreed fulfilment path.",
+        "How Afgri earns without carrying the technical load.",
+        "Afgri opens the market. Smart Steel confirms, quotes, manufactures and supports the agreed fulfilment path.",
         3,
     )
     c.setFillColor(PALE_BLUE)
@@ -303,7 +363,7 @@ def page_partner_economics(c: canvas.Canvas) -> None:
     c.drawString(MARGIN + 18, y - 100, "5%")
     c.setFont("Atlas-Bold", 11)
     c.drawString(MARGIN + 135, y - 79, "qualifying")
-    c.drawString(MARGIN + 135, y - 96, "Overberg Agri return")
+    c.drawString(MARGIN + 135, y - 96, "Afgri return")
 
     dark_x = MARGIN + 292
     dark_y = y - 128
@@ -317,9 +377,9 @@ def page_partner_economics(c: canvas.Canvas) -> None:
     node_w = 105
     gap = 25
     nodes = [
-        ("OVERBERG AGRI", "opens market"),
+        ("AFGRI", "opens market"),
         ("SMART STEEL", "quotes + fulfils"),
-        ("OVERBERG AGRI", "earns return"),
+        ("AFGRI", "earns return"),
     ]
     for idx, (title, body) in enumerate(nodes):
         x = dark_x + 20 + idx * (node_w + gap)
@@ -341,7 +401,7 @@ def page_partner_economics(c: canvas.Canvas) -> None:
     y2 = y - 150
     data = [
         [para("COMMERCIAL ITEM", 7, WHITE, True), para("WORKING POSITION", 7, WHITE, True)],
-        [para("Return trigger", 8, INK, True), para("Overberg Agri-channel opportunity converted through the agreed pilot process.")],
+        [para("Return trigger", 8, INK, True), para("Afgri-channel opportunity converted through the agreed pilot process.")],
         [para("Calculation base", 8, INK, True), para("Recommended: confirmed Smart Steel supply scope, excluding VAT and pass-through costs unless agreed otherwise.")],
         [para("Installation", 8, INK, True), para("Supply-only for customer-managed installation, or Smart Steel-installed after site access and responsibilities are reviewed.")],
         [para("Quote targets", 8, INK, True), para("Standard dealer quotation: 1 business day after complete information. Custom quotation: 3-5 business days after complete technical information.")],
@@ -365,14 +425,14 @@ def page_partner_economics(c: canvas.Canvas) -> None:
 def page_configurations(c: canvas.Canvas) -> None:
     y = section_header(c, "04 · Product configuration guide", "What we need to quote.", "A practical branch checklist for standard, controlled and custom enquiries.", 4)
     data = [
-        [para("INPUT", 7, WHITE, True), para("WHAT OVERBERG AGRI SHOULD CAPTURE", 7, WHITE, True), para("WHY IT MATTERS", 7, WHITE, True)],
+        [para("INPUT", 7, WHITE, True), para("WHAT AFGRI SHOULD CAPTURE", 7, WHITE, True), para("WHY IT MATTERS", 7, WHITE, True)],
         [para("Product type", 8, INK, True), para("Warehouse · Ground mount · Carport · Agricultural/custom"), para("Confirms whether the enquiry is standard, controlled or custom.")],
         [para("Size", 8, INK, True), para("Width, length, height, panel count or approximate covered area"), para("Drives the product code, member schedule and quotation route.")],
         [para("Finish", 8, INK, True), para("Mild steel · ZAM · Galvanised · Chromadek where required"), para("Sets the material basis and corrosion-performance expectation.")],
         [para("Sheeting", 8, INK, True), para("Structure only · Roof sheeted · Roof and walls sheeted · profile preference"), para("Sheeting is calculated from actual roof and wall coverage.")],
         [para("Openings", 8, INK, True), para("Open gable standard, or note any doors, openings and access requirements"), para("Project openings are reviewed before external commitment.")],
         [para("Location", 8, INK, True), para("Project site, nearest branch, access notes and timing expectation"), para("Confirms delivery planning, installation feasibility and lead time.")],
-        [para("Fulfilment", 8, INK, True), para("Supply-only or Smart Steel-installed"), para("Keeps Overberg Agri's role simple while giving the client a clear path.")],
+        [para("Fulfilment", 8, INK, True), para("Supply-only or Smart Steel-installed"), para("Keeps Afgri's role simple while giving the client a clear path.")],
     ]
     y2 = draw_table(c, data, MARGIN, y, [130, 272, 360], row_heights=[26] + [32] * 7, style=[
         ("BACKGROUND", (0, 1), (-1, -1), WHITE),
@@ -402,7 +462,7 @@ def page_non_warehouse_pricing(c: canvas.Canvas) -> None:
         5,
     )
     data = [
-        [para("OFFER", 7, WHITE, True), para("WHAT OVERBERG AGRI CAN SAY", 7, WHITE, True), para("PRICING ROUTE", 7, WHITE, True), para("TARGET RESPONSE", 7, WHITE, True)],
+        [para("OFFER", 7, WHITE, True), para("WHAT AFGRI CAN SAY", 7, WHITE, True), para("PRICING ROUTE", 7, WHITE, True), para("TARGET RESPONSE", 7, WHITE, True)],
         [
             para("Solar Ground Mounts", 9, INK, True),
             para("Standard ZAM modular ground-mount systems for farms, commercial sites and open-field arrays."),
@@ -432,7 +492,7 @@ def page_non_warehouse_pricing(c: canvas.Canvas) -> None:
     c.setFont("Atlas-Bold", 8)
     c.drawString(MARGIN + 14, y2 - 42, "CUSTOM ENQUIRY RULE")
     p = para(
-        "Overberg Agri can bring the opportunity in. Smart Steel confirms whether it is standard, controlled or custom before Overberg Agri commits externally.",
+        "Afgri can bring the opportunity in. Smart Steel confirms whether it is standard, controlled or custom before Afgri commits externally.",
         8,
         INK,
         leading=10.5,
@@ -445,7 +505,7 @@ def page_non_warehouse_pricing(c: canvas.Canvas) -> None:
 def page_capability(c: canvas.Canvas) -> None:
     y = section_header(c, "06 · Fulfilment", "From branch opportunity to site.", "Keep commitments clear: what is standard, what is reviewed and what still needs agreement.", 6)
     cards = [
-        ("GEOGRAPHIC CAPABILITY", "South African projects", "Structures can be supplied nationally. Delivery cost and route planning follow the confirmed project or Overberg Agri branch location."),
+        ("GEOGRAPHIC CAPABILITY", "South African projects", "Structures can be supplied nationally. Delivery cost and route planning follow the confirmed project or Afgri branch location."),
         ("INSTALLATION", "Two fulfilment paths", "Supply-only for customer-managed installation, or Smart Steel-installed after site access, ground conditions and responsibilities are reviewed."),
         ("LEAD TIME", "Publish with care", "Standard quotation targets can be shared now; manufacturing lead times should be published after product scope and capacity windows are agreed."),
     ]
@@ -466,7 +526,7 @@ def page_capability(c: canvas.Canvas) -> None:
     y2 = y - 160
     data = [
         [para("ACTIVITY", 7, WHITE, True), para("PROPOSED PILOT TARGET", 7, WHITE, True), para("OWNER", 7, WHITE, True), para("V1 STATUS", 7, WHITE, True)],
-        [para("Lead acknowledgement", 8, INK, True), para("1 business day"), para("OVERBERG AGRI"), para("PROPOSED", 7, BLUE, True)],
+        [para("Lead acknowledgement", 8, INK, True), para("1 business day"), para("AFGRI"), para("PROPOSED", 7, BLUE, True)],
         [para("Completeness review", 8, INK, True), para("1 business day after submission"), para("Smart Steel"), para("PROPOSED", 7, BLUE, True)],
         [para("Standard dealer quotation", 8, INK, True), para("1 business day after complete information"), para("Smart Steel"), para("PROPOSED", 7, BLUE, True)],
         [para("Custom dealer quotation", 8, INK, True), para("3-5 business days after complete technical information"), para("Smart Steel"), para("PROPOSED", 7, BLUE, True)],
@@ -485,11 +545,11 @@ def page_workflow(c: canvas.Canvas) -> None:
         c,
         "07 · Selling workflow",
         "Four steps only.",
-        "Overberg Agri owns the customer. Smart Steel owns technical review and quotation control.",
+        "Afgri owns the customer. Smart Steel owns technical review and quotation control.",
         7,
     )
     steps = [
-        ("01", "Interest", "Overberg Agri identifies need", "Lead captured"),
+        ("01", "Interest", "Afgri identifies need", "Lead captured"),
         ("02", "Enquiry", "Size, location, product, install path", "Brief complete"),
         ("03", "Quote", "Smart Steel reviews and quotes", "Dealer offer issued"),
         ("04", "Fulfil", "Manufacture, deliver, install or supply-only", "Project delivered"),
@@ -521,7 +581,7 @@ def page_workflow(c: canvas.Canvas) -> None:
     role_y = card_y - 90
     role_w = (PAGE_W - MARGIN * 2 - 14) / 2
     role_boxes = [
-        ("OVERBERG AGRI OWNS", "Customer channel", "Branch activation, customer conversation, finance interest and campaign reach."),
+        ("AFGRI OWNS", "Customer channel", "Branch activation, customer conversation, finance interest and campaign reach."),
         ("SMART STEEL OWNS", "Technical control", "Completeness review, dealer quotation, manufacturing and agreed fulfilment path."),
     ]
     for idx, (label, title, body) in enumerate(role_boxes):
@@ -565,8 +625,8 @@ def page_meeting_alignment(c: canvas.Canvas) -> None:
     data = [
         [para("DECISION AREA", 7, WHITE, True), para("RECOMMENDED POSITION", 7, WHITE, True), para("WHY IT MATTERS", 7, WHITE, True)],
         [para("Pilot lane", 8, INK, True), para("Warehouses first. Ground mounts selected. Carports controlled. Agricultural custom request-only."), para("Keeps the pilot sellable and manageable.")],
-        [para("Overberg Agri return", 8, INK, True), para("Use 5% qualifying pilot return as discussion basis."), para("Makes the upside visible.")],
-        [para("Marketing", 8, INK, True), para("Overberg Agri leads campaigns. Smart Steel supplies product data and creatives on request."), para("Uses Overberg Agri's reach while keeping execution simple.")],
+        [para("Afgri return", 8, INK, True), para("Use 5% qualifying pilot return as discussion basis."), para("Makes the upside visible.")],
+        [para("Marketing", 8, INK, True), para("Afgri leads campaigns. Smart Steel supplies product data and creatives on request."), para("Uses Afgri's reach while keeping execution simple.")],
         [para("Workflow", 8, INK, True), para("Agree lead fields, handoffs and quote targets."), para("Prevents branch confusion.")],
         [para("Pilot evidence", 8, INK, True), para("Track leads, quotes, conversion, return, product mix and turnaround."), para("Supports rollout and tiered incentives.")],
     ]
@@ -593,14 +653,12 @@ def build() -> Path:
     register_fonts()
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     c = canvas.Canvas(str(OUTPUT), pagesize=landscape(A4), pageCompression=1)
-    c.setTitle("Atlas x Overberg Agri Commercial Offering V1.0")
+    c.setTitle("Atlas x AFGRI Standard Dealer Price Schedule V1.0")
     c.setAuthor("Smart Steel")
-    c.setSubject("Draft Atlas commercial offering and Overberg Agri partner economics")
-    c.setKeywords("Atlas, Overberg Agri, commercial offering, warehouses, partner pricing")
-    page_overview(c)
+    c.setSubject("Confidential Atlas standard dealer pricing schedule for AFGRI")
+    c.setKeywords("Atlas, AFGRI, dealer pricing, warehouses, partner return")
     page_matrix(c)
-    page_partner_economics(c)
-    page_configurations(c)
+    page_schedule_terms(c)
     c.save()
     return OUTPUT
 

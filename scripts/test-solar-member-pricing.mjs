@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import { calculateSolarCarportGeometry } from '../src/lib/atlasSolarCarportGeometry.js'
 import { calculateAtlasSolarCarportEstimate, SOLAR_COST_DEFAULTS } from '../src/lib/estimates/atlasSolarCarportEstimate.js'
+import { getAtlasSolarCarportPanelCount, ATLAS_SOLAR_CARPORT_PARKING_COUNTS, getAtlasSolarCarportWidth } from '../src/lib/atlasSolarCarportLayouts.js'
 
 const release = { costs: SOLAR_COST_DEFAULTS, revision: 1 }
-for (const width of [2.75, 5.5, 11, 16.5, 22]) {
+for (const width of ATLAS_SOLAR_CARPORT_PARKING_COUNTS.map(getAtlasSolarCarportWidth)) {
   const single = calculateSolarCarportGeometry({ width, length: 6 })
   const double = calculateSolarCarportGeometry({ width, length: 12 })
   assert.equal(double.totalSteelKg, single.totalSteelKg * 2)
@@ -22,9 +23,14 @@ for (const width of [2.75, 5.5, 11, 16.5, 22]) {
   const roofY = z => single.frontHeight - Math.tan(single.pitch) * (z + single.depth / 2)
   for (const z of [single.frontArmZ, single.rearArmZ]) assert.ok(Math.abs(Math.atan2(roofY(z) - 0.07 - 0.08, Math.abs(z - single.baseZ)) - Math.PI / 3) < 1e-10)
 }
-const input = { width: 5.5, length: 6, quantity: 1, moduleCount: 10, scope: 'supply_only' }
+assert.equal(getAtlasSolarCarportPanelCount(2.75, 6), 6)
+assert.equal(getAtlasSolarCarportPanelCount(5.5, 6), 12)
+assert.equal(getAtlasSolarCarportPanelCount(5.5, 12), 24)
+assert.equal(getAtlasSolarCarportPanelCount(55, 6), 120)
+const input = { width: 5.5, length: 6, quantity: 1, moduleCount: 12, scope: 'supply_only' }
 const priced = calculateAtlasSolarCarportEstimate(input, release)
 assert.equal(priced.pricing.estimatedTotal, Math.round(priced.pricing.baseTotal * 1.4 * 100) / 100)
+assert.equal(priced.meta.pricingRevision, release.revision)
 assert.equal(priced.lineItems.find(item => item.code === 'SC-BRK-BASE').quantity, 2)
 assert.equal(priced.lineItems.find(item => item.code === 'SC-BRK-BASE').unitRate, 350)
 assert.equal(priced.lineItems.find(item => item.code === 'SC-BRK-ARM').quantity, 2)
@@ -32,6 +38,8 @@ assert.equal(priced.lineItems.find(item => item.code === 'SC-BRK-ARM').unitRate,
 assert.equal(priced.lineItems.find(item => item.code === 'SC-BRK-PUR').quantity, 12)
 assert.equal(priced.lineItems.find(item => item.code === 'SC-ANC').quantity, 8)
 assert.equal(priced.lineItems.find(item => item.code === 'SC-BLT-BASE').quantity, 4)
+assert.match(priced.lineItems.find(item => item.code === 'SC-BLT-BASE').label, /M10 x 30mm/)
+assert.equal(priced.lineItems.find(item => item.code === 'SC-BLT-BASE').unitRate, 12)
 assert.equal(priced.lineItems.find(item => item.code === 'SC-BLT-ARM-BASE').quantity, 8)
 assert.equal(priced.lineItems.find(item => item.code === 'SC-BLT-ARM-TOP').quantity, 8)
 const higher = calculateAtlasSolarCarportEstimate(input, { ...release, costs: { ...release.costs, zamRatePerTon: 35000 } })
@@ -40,3 +48,14 @@ assert.equal(calculateAtlasSolarCarportEstimate(input).pricing.estimatedTotal, n
 assert.throws(() => calculateAtlasSolarCarportEstimate({ ...input, width: 5 }, release))
 console.log('Solar geometry, mirrored quantities, 60-degree arms, cost updates, and single 40% uplift verified.')
 console.log(JSON.stringify({ steelKg: priced.totals.steelKg, cost: priced.pricing.baseTotal, priceExclVat: priced.pricing.estimatedTotal }))
+
+for (const length of [6, 12]) {
+  const wide = calculateAtlasSolarCarportEstimate({ width: 55, length, quantity: 1, moduleCount: 0, scope: 'supply_only' }, release)
+  const rows = length / 6
+  assert.equal(wide.members.find(item => item.code === 'SC-COL').quantity, 11 * rows)
+  assert.equal(wide.members.find(item => item.code === 'SC-PUR').quantity, 40 * rows)
+  assert.equal(wide.connections.find(item => item.code === 'SC-BRK-PUR').quantity, 120 * rows)
+  assert.equal(wide.lineItems.find(item => item.code === 'SC-BRK-PUR').quantity, 120 * rows)
+  assert.ok(Number.isFinite(wide.pricing.estimatedTotal) && wide.pricing.estimatedTotal > 0)
+}
+console.log('55m material, connection and pricing schedules verified for single and double rows.')
