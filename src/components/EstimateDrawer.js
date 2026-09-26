@@ -77,12 +77,14 @@ function getLeadSteelFinish(lead) {
 function normalizeAtlasSheetingMode(value) {
   if (["open_gable", "roof_only"].includes(value)) return "roof_only"
   if (["sheeted_gable", "fully_enclosed"].includes(value)) return "fully_enclosed"
+  if (value === "fully_enclosed_with_gables") return "fully_enclosed_with_gables"
   return "structure_only"
 }
 
 function getLeadSheetingMode(lead) {
   const source = `${lead?.estimate_request || ""}\n${lead?.notes || ""}`.toLowerCase()
-  if (/roof and (?:side )?walls|fully enclosed|sheeted gable/.test(source)) return "fully_enclosed"
+  if (/fully enclosed|all four walls|complete enclosure|opposite gable remains enclosed/.test(source)) return "fully_enclosed_with_gables"
+  if (/roof and (?:side )?walls|sheeted gable/.test(source)) return "fully_enclosed"
   if (/roof sheeting|roof only|open gable/.test(source)) return "roof_only"
   return "structure_only"
 }
