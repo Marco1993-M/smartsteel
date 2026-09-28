@@ -191,6 +191,8 @@ function buildConfigurationReceivedEmailHtml(body) {
                   ${detailRow(isAtlas ? "Sheeting" : "Enclosure", sheeting)}
                   ${isAtlas ? detailRow("Steel finish", body.steelFinish || body.summary?.steelFinish || "To be confirmed") : ""}
                   ${detailRow("Project location", location)}
+                  ${detailRow("Installation support", body.installationInterest ? "Requested for quotation" : "Not requested")}
+                  ${detailRow("Delivery support", body.deliveryRequired ? "Requested for quotation" : "Not requested")}
                   ${detailRow("Budget guide excl. VAT", body.priceLabel || "To be reviewed")}
                 </table>
 
@@ -390,7 +392,7 @@ export async function POST(request) {
           lead_source: "Warehouse Builder",
           product_type: normalizeAtlasProductType(body.productType) || "LSF Warehouse",
           next_action:
-            "Review builder project, confirm scope and site details, then decide the right next step.",
+            `Review builder project${body.installationInterest || body.deliveryRequired ? `; client requested ${[body.installationInterest && "installation", body.deliveryRequired && "delivery"].filter(Boolean).join(" and ")}` : ""}. Confirm scope and site details, then prepare the reviewed quote.`,
           follow_up_at: getNextBusinessMorningIso(),
           quote_value: body.estimatedTotal || null,
           created_at: new Date().toISOString(),
