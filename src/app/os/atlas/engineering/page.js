@@ -4,6 +4,7 @@ import {
   ATLAS_ENGINEERING_STREAMS,
 } from "../../../../lib/osProductData"
 import AtlasModuleHero from "../../../../components/os/AtlasModuleHero"
+import AtlasFoundationGuideCard from "../../../../components/os/AtlasFoundationGuideCard"
 
 export default async function AtlasEngineeringPage({ searchParams }) {
   const params = await searchParams
@@ -18,6 +19,8 @@ export default async function AtlasEngineeringPage({ searchParams }) {
         actionHref={withAtlasProduct("/os/atlas/materials", product?.code)}
         actionLabel="Review product schedule"
       />
+
+      {product?.family === "Warehouses" ? <AtlasFoundationGuideCard initialProductCode={product.code} /> : null}
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
