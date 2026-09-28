@@ -925,6 +925,8 @@ export default function WarehouseBuilderClient() {
             familyCode: isAtlasWarehouse ? estimate.meta.productCode : null,
             scopeLabel: "Supply only",
             installationInterest: config.installationInterest,
+            deliveryRequired: config.deliveryRequired,
+            deliveryDistance: config.deliveryRequired ? config.deliveryDistance : 0,
             enclosureLabel: isAtlasWarehouse ? null : enclosureLabel,
             roofTypeLabel,
             priceLabel: formatCurrency(budgetValue),
