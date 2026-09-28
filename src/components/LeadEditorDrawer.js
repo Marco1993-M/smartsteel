@@ -2064,6 +2064,12 @@ export default function LeadEditorDrawer({
                   <p className="mt-2 text-xs text-slate-500">
                     Submitted {builderSubmission?.created_at ? new Date(builderSubmission.created_at).toLocaleString() : "from the warehouse builder"}
                   </p>
+                  {(builderConfiguration.installationInterest || builderConfiguration.deliveryRequired || builderSummary.installationInterest || builderSummary.deliveryRequired) ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(builderConfiguration.installationInterest || builderSummary.installationInterest) ? <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800">Installation requested</span> : null}
+                      {(builderConfiguration.deliveryRequired || builderSummary.deliveryRequired) ? <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800">Delivery requested{Number(builderConfiguration.deliveryDistance || builderSummary.deliveryDistance) > 0 ? ` · ${Number(builderConfiguration.deliveryDistance || builderSummary.deliveryDistance)} km` : ""}</span> : null}
+                    </div>
+                  ) : null}
                 </div>
                 {/^https?:\/\//i.test(builderConfigurationUrl) ? (
                   <a

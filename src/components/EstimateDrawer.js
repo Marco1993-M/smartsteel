@@ -317,7 +317,19 @@ function buildInitialState(lead, estimate) {
       typeof latestInput.claddingInstalled === "boolean"
         ? latestInput.claddingInstalled
         : String(lead?.installation || "").toLowerCase() === "installed",
-    deliveryDistance: Number(latestInput.deliveryDistance || lead?.delivery_distance || 0),
+    installationRequested:
+      typeof latestInput.installationRequested === "boolean"
+        ? latestInput.installationRequested
+        : typeof builderConfiguration.installationInterest === "boolean"
+          ? builderConfiguration.installationInterest
+          : /Installation support requested:\s*Yes/i.test(String(lead?.notes || "")),
+    deliveryRequested:
+      typeof latestInput.deliveryRequested === "boolean"
+        ? latestInput.deliveryRequested
+        : typeof builderConfiguration.deliveryRequired === "boolean"
+          ? builderConfiguration.deliveryRequired
+          : /Delivery support requested:\s*Yes/i.test(String(lead?.notes || "")),
+    deliveryDistance: Number(latestInput.deliveryDistance || builderConfiguration.deliveryDistance || lead?.delivery_distance || 0),
     transportTrips: Math.max(0, Number(latestInput.transportTrips || 0)),
     includeStructureLabour:
       typeof latestInput.includeStructureLabour === "boolean"
@@ -817,15 +829,15 @@ export default function EstimateDrawer({
     )
   }
 
-  const addManualItem = () => {
+  const addManualItem = ({ code, label, overrideReason } = {}) => {
     setHasUnsavedChanges(true)
-    const id = `manual-${Date.now()}`
+    const id = code || `manual-${Date.now()}`
     setEditableLineItems((current) => [
       ...current,
       {
         id,
-        code: id,
-        label: "Manual line item",
+        code: code || id,
+        label: label || "Manual line item",
         quantity: 1,
         unit: "item",
         unitRate: 0,
@@ -837,9 +849,18 @@ export default function EstimateDrawer({
         manual: true,
         priceIncludesMarkup: true,
         userEdited: true,
-        overrideReason: "Added manually",
+        overrideReason: overrideReason || "Added manually",
       },
     ])
+  }
+
+  const addRequestedServiceItem = (code, label) => {
+    if (editableLineItems.some((item) => item.code === code)) {
+      scrollToEstimateSection("estimate-pricing")
+      return
+    }
+    addManualItem({ code, label, overrideReason: "Requested in Warehouse Builder submission" })
+    window.setTimeout(() => scrollToEstimateSection("estimate-pricing"), 0)
   }
 
   const removeLineItem = (id) => {
@@ -1545,8 +1566,25 @@ export default function EstimateDrawer({
                   ) : null}
 
                   {isAtlasWarehouseEstimateProduct(formState.productType) ? (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                      Installation and delivery are reviewed and quoted separately.
+                    <div className={`rounded-xl border px-4 py-3 text-sm ${formState.installationRequested || formState.deliveryRequested ? "border-amber-300 bg-amber-50 text-amber-950" : "border-slate-200 bg-slate-50 text-slate-700"}`}>
+                      {formState.installationRequested || formState.deliveryRequested ? (
+                        <>
+                          <p className="font-semibold">Client requested additional services in the Warehouse Builder</p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {formState.installationRequested ? (
+                              <button type="button" onClick={() => addRequestedServiceItem("atlas-installation", "Warehouse installation")} className="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:border-amber-500">
+                                {editableLineItems.some((item) => item.code === "atlas-installation") ? "Installation added" : "+ Add installation line item"}
+                              </button>
+                            ) : null}
+                            {formState.deliveryRequested ? (
+                              <button type="button" onClick={() => addRequestedServiceItem("atlas-delivery", "Warehouse delivery")} className="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:border-amber-500">
+                                {editableLineItems.some((item) => item.code === "atlas-delivery") ? "Delivery added" : "+ Add delivery line item"}
+                              </button>
+                            ) : null}
+                          </div>
+                          <p className="mt-2 text-xs leading-5 text-amber-800">Add the applicable sell prices to the new line items before sending the quote.{formState.deliveryRequested && formState.deliveryDistance > 0 ? ` Submitted distance: ${formState.deliveryDistance} km.` : ""}</p>
+                        </>
+                      ) : "Installation and delivery are reviewed and quoted separately."}
                     </div>
                   ) : !isGroundMountEstimate ? (
                     <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
@@ -1633,7 +1671,7 @@ export default function EstimateDrawer({
                       <p className="text-sm font-medium text-slate-900">Line items</p>
                       <button
                         type="button"
-                        onClick={addManualItem}
+                        onClick={() => addManualItem()}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
                       >
                         <Plus size={16} />
