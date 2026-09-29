@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react"
 import { Download, FileWarning, Ruler, ShieldCheck } from "lucide-react"
+import { ATLAS_LENGTH_OPTIONS } from "../../lib/atlasConfiguration"
 import { getAtlasFoundationGuide } from "../../lib/atlasFoundationGuide"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
-const LENGTHS = Array.from({ length: 15 }, (_, index) => (index + 1) * 4)
+const LENGTHS = ATLAS_LENGTH_OPTIONS
 const HEIGHTS = [3, 4, 4.5, 5]
 
 export default function AtlasFoundationGuideCard({ initialProductCode = "W08" }) {

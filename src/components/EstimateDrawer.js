@@ -26,6 +26,7 @@ import {
   ATLAS_WAREHOUSE_PRODUCT_TYPE,
   normalizeAtlasProductType,
 } from "../lib/atlasProductIdentity"
+import { ATLAS_LENGTH_OPTIONS } from "../lib/atlasConfiguration"
 import { CUSTOM_ENGINEERED_PROJECT_TYPE } from "../lib/estimates/customProjectEstimate"
 import {
   ATLAS_SOLAR_CARPORT_PARKING_COUNTS,
@@ -52,7 +53,7 @@ const INTERNAL_PRODUCT_LABELS = [
   "CFLC trusses",
 ]
 const ATLAS_ALLOWED_WIDTHS = [6, 8, 10, 12]
-const ATLAS_ALLOWED_LENGTHS = Array.from({ length: 15 }, (_, index) => (index + 1) * 4)
+const ATLAS_ALLOWED_LENGTHS = ATLAS_LENGTH_OPTIONS
 const ATLAS_ALLOWED_STEEL_FINISHES = ["ZAM", "Galv", "Mild"]
 const ATLAS_ALLOWED_GABLE_MODES = ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => option.value)
 const ATLAS_ALLOWED_SHEETING_PROFILES = ["Corrugated", "IBR", "Concealed Fix"]
@@ -107,7 +108,7 @@ function isValidAtlasLength(width, length) {
   const normalizedLength = Number(length)
 
   if (normalizedWidth === 3 && normalizedLength === 6) return true
-  return Math.abs(normalizedLength / 4 - Math.round(normalizedLength / 4)) <= 0.0001
+  return ATLAS_ALLOWED_LENGTHS.includes(normalizedLength)
 }
 
 function applyGroundMountDefaults(previousState) {
