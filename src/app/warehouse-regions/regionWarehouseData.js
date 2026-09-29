@@ -6,7 +6,7 @@ import {
 const SITE_URL = "https://www.smartsteel.co.za";
 
 export const REGION_WAREHOUSE_WIDTHS = [8, 10, 12];
-export const REGION_WAREHOUSE_LENGTHS = [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60];
+export const REGION_WAREHOUSE_LENGTHS = Array.from({ length: 24 }, (_, index) => 8 + index * 4);
 
 const regionWarehousePages = {
   pretoria: {

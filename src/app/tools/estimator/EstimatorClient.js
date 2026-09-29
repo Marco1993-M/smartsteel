@@ -131,7 +131,7 @@ export default function EstimatorPage() {
           <div className="mt-8 border-t border-white/20 pt-6 text-sm leading-6 text-[#c1d9e5]">
             <div className="grid grid-cols-3 gap-3 text-center">
               <div><strong className="block text-xl text-white">4m</strong><span className="text-xs">modular bays</span></div>
-              <div><strong className="block text-xl text-white">60m</strong><span className="text-xs">length options</span></div>
+              <div><strong className="block text-xl text-white">100m</strong><span className="text-xs">length options</span></div>
               <div><strong className="block text-xl text-white">3</strong><span className="text-xs">steel finishes</span></div>
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function EstimatorPage() {
             {[
               ["Is this a final quotation?", "No. It is an indicative supply-only budget excluding VAT. We review your configuration before issuing a formal proposal."],
               ["Why are delivery and installation separate?", "Distance, access, ground conditions and the selected installation scope differ by project. Reviewing them separately produces a fairer figure."],
-              ["Can I price a warehouse longer than 20 metres?", "Yes. Atlas warehouses use 4 metre modular bays, with estimator options extending to 60 metres."],
+              ["Can I price a warehouse longer than 20 metres?", "Yes. Atlas warehouses use 4 metre modular bays, with estimator options extending to 100 metres."],
               ["Can I request a custom configuration?", "Yes. Use the 3D warehouse builder or send the closest standard estimate and explain the custom requirement in the notes."],
             ].map(([question, answer]) => (
               <details key={question} className="group py-4">

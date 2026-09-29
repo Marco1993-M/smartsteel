@@ -42,7 +42,7 @@ export default function Page() {
       {
         "@type": "Question",
         name: "How long can an Atlas warehouse be?",
-        acceptedAnswer: { "@type": "Answer", text: "Atlas warehouses use 4 metre modular bays, with online estimator options extending to 60 metres." },
+        acceptedAnswer: { "@type": "Answer", text: "Atlas warehouses use 4 metre modular bays, with online estimator options extending to 100 metres." },
       },
     ],
   };
