@@ -859,6 +859,7 @@ export default function WarehouseBuilderScene(props) {
   const l = length * scale
   const h = wallHeight * scale
   const ground = useMemo(() => getGroundDimensions(width, length), [length, width])
+  const shadowExtent = Math.max(8, ground.width, ground.length) * 0.72
   const cameraPositions = useMemo(() => {
     const diagonal = Math.sqrt(w ** 2 + l ** 2)
     const distance = Math.max(4.4, diagonal * 1.18)
@@ -930,8 +931,14 @@ export default function WarehouseBuilderScene(props) {
           position={[5.5, 7.5, 4.8]}
           intensity={1.5}
           castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-camera-left={-shadowExtent}
+          shadow-camera-right={shadowExtent}
+          shadow-camera-top={shadowExtent}
+          shadow-camera-bottom={-shadowExtent}
+          shadow-camera-near={0.1}
+          shadow-camera-far={Math.max(40, shadowExtent * 4)}
         />
         <directionalLight position={[-4.5, 4.5, -3.2]} intensity={0.48} />
         <spotLight position={[0, 6.4, 2.6]} angle={0.42} penumbra={0.6} intensity={0.46} />
