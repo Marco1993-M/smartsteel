@@ -9,9 +9,10 @@ import {
   ATLAS_WAREHOUSE_WIDTH_OPTIONS,
   calculateAtlasWarehouseEstimate,
 } from "../../../lib/estimates/atlasWarehouseEstimate"
+import { ATLAS_LENGTH_OPTIONS } from "../../../lib/atlasConfiguration"
 import { formatCurrency } from "../../../lib/estimates/warehouseEstimate"
 
-const LENGTH_OPTIONS = Array.from({ length: 15 }, (_, index) => (index + 1) * 4)
+const LENGTH_OPTIONS = ATLAS_LENGTH_OPTIONS
 const SHEETING_PROFILES = ["Corrugated", "IBR", "Concealed Fix"]
 const SHEETING_FINISHES = [
   { value: "galvanised", label: "Galvanised" },
