@@ -25,7 +25,7 @@ export function getAtlasFoundationGuide(input = {}) {
   const spanM = Number(productCode.slice(1))
   const requestedLength = Number(input.lengthM)
   const lengthM = Number.isFinite(requestedLength) && requestedLength >= 4
-    ? Math.min(60, Math.round(requestedLength / 4) * 4)
+    ? Math.min(100, Math.round(requestedLength / 4) * 4)
     : 24
   const requestedHeight = Number(input.eaveHeightM)
   const eaveHeightM = Number.isFinite(requestedHeight) && requestedHeight > 0
@@ -67,4 +67,3 @@ export function getAtlasFoundationGuide(input = {}) {
     status: "Preliminary guidance - not for construction",
   }
 }
-

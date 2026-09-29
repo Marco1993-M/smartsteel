@@ -7,7 +7,7 @@ import { ATLAS_WAREHOUSE_PRODUCT_TYPE } from "./atlasProductIdentity.js"
 
 export const ATLAS_CONFIGURATION_VERSION = 1
 export const ATLAS_PRODUCT_KEY = "atlas-warehouse"
-export const ATLAS_LENGTH_OPTIONS = Array.from({ length: 15 }, (_, index) => (index + 1) * 4)
+export const ATLAS_LENGTH_OPTIONS = Array.from({ length: 25 }, (_, index) => (index + 1) * 4)
 export const ATLAS_HEIGHT_OPTIONS = [3, 4, 4.5, 5]
 export const ATLAS_SHEETING_PROFILE_OPTIONS = ["Corrugated", "IBR", "Concealed Fix"]
 export const ATLAS_SHEETING_FINISH_OPTIONS = ["galvanised", "chromadek"]
