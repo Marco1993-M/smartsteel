@@ -18,6 +18,18 @@ const ATLAS_PROFILES_BY_SPAN = {
   12: ATLAS_W12_PROFILES,
 }
 
+const SCENE_SCALE = 0.18
+const MIN_GROUND_SIZE = 9
+const GROUND_MARGIN_M = 10
+
+function getGroundDimensions(width, length) {
+  const margin = GROUND_MARGIN_M * SCENE_SCALE * 2
+  return {
+    width: Math.max(MIN_GROUND_SIZE, Number(width) * SCENE_SCALE + margin),
+    length: Math.max(MIN_GROUND_SIZE, Number(length) * SCENE_SCALE + margin),
+  }
+}
+
 function createLippedChannelGeometry(profile, length, scale) {
   const web = (profile.webMm / 1000) * scale
   const flange = (profile.flangeMm / 1000) * scale
@@ -364,10 +376,11 @@ function WarehouseMesh({
   steelFinish,
   structureView = false,
 }) {
-  const scale = 0.18
+  const scale = SCENE_SCALE
   const w = width * scale
   const l = length * scale
   const h = wallHeight * scale
+  const ground = getGroundDimensions(width, length)
   const ridgeRise = Math.tan((roofPitch * Math.PI) / 180) * (w / 2)
   const isAtlas = systemVariant === "atlas"
   const atlasProfiles = ATLAS_PROFILES_BY_SPAN[Number(width)] || ATLAS_W08_PROFILES
@@ -572,7 +585,7 @@ function WarehouseMesh({
   return (
     <group position={[0, -0.55, 0]}>
       <mesh position={[0, -0.035, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[9, 9]} />
+        <planeGeometry args={[ground.width, ground.length]} />
         <meshPhysicalMaterial {...concreteMaterialProps} />
       </mesh>
 
@@ -841,10 +854,11 @@ export default function WarehouseBuilderScene(props) {
   const [sceneVisible, setSceneVisible] = useState(true)
   const controlsRef = useRef(null)
   const previousSystemRef = useRef(props.systemVariant)
-  const scale = 0.18
+  const scale = SCENE_SCALE
   const w = width * scale
   const l = length * scale
   const h = wallHeight * scale
+  const ground = useMemo(() => getGroundDimensions(width, length), [length, width])
   const cameraPositions = useMemo(() => {
     const diagonal = Math.sqrt(w ** 2 + l ** 2)
     const distance = Math.max(4.4, diagonal * 1.18)
@@ -926,7 +940,7 @@ export default function WarehouseBuilderScene(props) {
         <ContactShadows
           position={[0, -0.53, 0]}
           opacity={0.3}
-          scale={7.4}
+          scale={Math.max(7.4, ground.width, ground.length)}
           blur={2.2}
           far={3.2}
           resolution={printReady ? 1024 : 512}
