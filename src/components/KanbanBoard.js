@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
-import { ArrowRight, FileText, GripVertical } from "lucide-react"
+import { ArrowRight, FileText, GripVertical, HardHat, Truck } from "lucide-react"
 import { formatCrmStatusLabel, getLeadNextBestAction } from "../lib/crmSop"
 import { getOpportunitySummary } from "../lib/crmReferenceData"
 import { getOsAuthHeaders } from "../lib/osClientAuth"
@@ -174,6 +174,14 @@ function isOlderQuotedLead(lead) {
   const shelfDate = new Date(endOfToday)
   shelfDate.setDate(shelfDate.getDate() - 30)
   return latestWorkingDate < shelfDate
+}
+
+function getLeadServiceRequests(lead) {
+  const notes = String(lead?.notes || "")
+  return {
+    delivery: /Delivery support requested:\s*Yes/i.test(notes),
+    installation: /Installation support requested:\s*Yes/i.test(notes),
+  }
 }
 
 export default function KanbanBoard({
@@ -430,6 +438,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
   const attention = getCardAttention(lead, sequence)
   const contextualAction = getContextualAction(lead, sequence)
   const showCreatedAt = shouldShowCreatedAt(lead)
+  const serviceRequests = getLeadServiceRequests(lead)
 
   const handleContextualAction = (event) => {
     event.stopPropagation()
@@ -472,6 +481,21 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
         <span>·</span>
         <span className="truncate">{opportunitySummary.family}</span>
       </div>
+
+      {serviceRequests.delivery || serviceRequests.installation ? (
+        <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Client-requested quote services">
+          {serviceRequests.delivery ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-amber-900">
+              <Truck size={12} /> Delivery requested
+            </span>
+          ) : null}
+          {serviceRequests.installation ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-300 bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-blue-900">
+              <HardHat size={12} /> Installation requested
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-600">
         {isQuoted && hasQuoteValue ? <span className="font-black text-slate-900">{formatZar(lead.quote_value)}</span> : null}

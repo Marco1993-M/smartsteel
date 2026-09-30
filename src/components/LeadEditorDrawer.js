@@ -18,6 +18,8 @@ import {
   Shapes,
   Sun,
   Trash2,
+  Truck,
+  HardHat,
 } from "lucide-react"
 import { supabase } from "../lib/supabase" 
 import { getOsAuthHeaders } from "../lib/osClientAuth"
@@ -388,6 +390,7 @@ function normalizePersonName(value) {
 
 const FOLLOW_UP_TEMPLATE_OPTIONS = [
   { key: "estimate_request_acknowledgement", label: "Acknowledge estimate request" },
+  { key: "delivery_address", label: "Request delivery address" },
   { key: "enquiry_follow_up", label: "General follow-up" },
   { key: "estimate_follow_up", label: "Estimate follow-up" },
   { key: "missing_info", label: "Request missing info" },
@@ -479,6 +482,21 @@ I’m just following up on the estimate we prepared for ${projectReference}${quo
 If you have any questions, need an adjustment, or would like us to talk through the next step, I’d be happy to help.
 
 If you'd like, I can revise the estimate, answer any questions, or help you with the next step. If easier, just reply with "call me" and I’ll give you a ring.`,
+      }
+    case "delivery_address":
+      return {
+        subject: "Delivery address needed for your Smart Steel quote",
+        body: `Hi ${firstName},
+
+Thank you for requesting delivery with your ${projectReference}.
+
+Please reply with the full delivery address or a Google Maps pin. If there are any access restrictions for a long delivery vehicle, please include those as well.
+
+As soon as we have the location, we can confirm the transport requirements and update your quote with the delivery price.
+
+Kind regards,
+${ownerName}
+Smart Steel`,
       }
     case "missing_info":
       return {
@@ -609,6 +627,8 @@ function getWaitingSummaryForTemplate(templateKey, lead) {
       return `Prepare the estimate for ${projectReference}.`
     case "missing_info":
       return `Awaiting the client's missing project details for ${projectReference}.`
+    case "delivery_address":
+      return `Awaiting the client's delivery address and site-access details for ${projectReference}.`
     case "quote_check_in":
       return `Awaiting the client's reply on whether they want to proceed or need revisions for ${projectReference}.`
     case "reactivation":
@@ -908,6 +928,19 @@ export default function LeadEditorDrawer({
   const builderSummary = builderSubmission?.summary || {}
   const builderDesignReference = builderConfiguration.designReference || builderSummary.designReference || ""
   const builderConfigurationUrl = builderConfiguration.configurationUrl || builderSummary.configurationUrl || ""
+  const deliveryRequested = Boolean(
+    builderConfiguration.deliveryRequired ||
+    builderSummary.deliveryRequired ||
+    /Delivery support requested:\s*Yes/i.test(String(formData.notes || ""))
+  )
+  const installationRequested = Boolean(
+    builderConfiguration.installationInterest ||
+    builderSummary.installationInterest ||
+    /Installation support requested:\s*Yes/i.test(String(formData.notes || ""))
+  )
+  const submittedProjectLocation = String(
+    builderConfiguration.location || builderSummary.location || ""
+  ).trim()
   const builderDimensions = builderConfiguration.width && builderConfiguration.length
     ? `${builderConfiguration.width}m x ${builderConfiguration.length}m${builderConfiguration.wallHeight ? ` x ${builderConfiguration.wallHeight}m` : ""}`
     : ""
@@ -1472,7 +1505,7 @@ export default function LeadEditorDrawer({
       ? "estimate"
       : emailTemplateKey === "estimate_request_acknowledgement"
         ? "estimate_request_acknowledgement"
-      : emailTemplateKey === "missing_info"
+      : ["missing_info", "delivery_address"].includes(emailTemplateKey)
         ? "information_request"
         : emailTemplateKey === "reactivation"
           ? "reactivation"
@@ -1877,6 +1910,43 @@ export default function LeadEditorDrawer({
 
               {/* Scrollable Body */}
 <div className={`${isNew ? "hidden" : "min-h-0 flex-1"} w-full max-w-full overflow-y-auto overscroll-contain bg-slate-50`}>
+  {!isNew && (deliveryRequested || installationRequested) ? (
+    <section className="border-b border-amber-200 bg-amber-50 px-4 py-4 sm:px-6" aria-label="Client-requested quote services">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-800">Client requested additional quote services</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {deliveryRequested ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs font-black text-amber-950">
+                <Truck size={14} /> Delivery requested
+              </span>
+            ) : null}
+            {installationRequested ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-950">
+                <HardHat size={14} /> Installation requested
+              </span>
+            ) : null}
+          </div>
+          {deliveryRequested ? (
+            <p className="mt-2 text-xs leading-5 text-amber-900">
+              {submittedProjectLocation
+                ? `Submitted project location: ${submittedProjectLocation}. Confirm the full delivery address or Maps pin before pricing transport.`
+                : "Confirm the full delivery address or Google Maps pin before pricing transport."}
+            </p>
+          ) : null}
+        </div>
+        {deliveryRequested ? (
+          <button
+            type="button"
+            onClick={() => openEmailComposer("delivery_address")}
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-900 px-4 text-sm font-bold text-white transition hover:bg-amber-800"
+          >
+            <Mail size={16} /> Request delivery address
+          </button>
+        ) : null}
+      </div>
+    </section>
+  ) : null}
   {!isNew ? (
     <details className="group border-b border-slate-200 bg-white sm:hidden">
       <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2.5 text-sm font-semibold text-slate-700">
