@@ -27,6 +27,7 @@ import {
   normalizeAtlasProductType,
 } from "../lib/atlasProductIdentity"
 import { ATLAS_LENGTH_OPTIONS } from "../lib/atlasConfiguration"
+import { WAREHOUSE_SHEETING_COLORS } from "../lib/warehouseBuilderStore"
 import { CUSTOM_ENGINEERED_PROJECT_TYPE } from "../lib/estimates/customProjectEstimate"
 import {
   ATLAS_SOLAR_CARPORT_PARKING_COUNTS,
@@ -310,6 +311,12 @@ function buildInitialState(lead, estimate) {
     structuralSystems: Array.isArray(latestInput.structuralSystems) ? latestInput.structuralSystems : [],
     projectScope: latestInput.projectScope || "",
     internalSiteNotes: latestInput.internalSiteNotes || "",
+    projectLocation: latestInput.projectLocation || builderConfiguration.location || "",
+    province: latestInput.province || builderConfiguration.province || "",
+    intendedUse: latestInput.intendedUse || builderConfiguration.intendedUse || "",
+    projectStage: latestInput.projectStage || builderConfiguration.projectStage || "",
+    targetTimeline: latestInput.targetTimeline || builderConfiguration.targetTimeline || "",
+    clientNotes: latestInput.clientNotes || builderConfiguration.notes || "",
     cladding:
       isAtlasWarehouseEstimateProduct(productType)
         ? latestInput.cladding || builderConfiguration.cladding || builderConfiguration.sheetingProfile || lead?.cladding || "IBR"
@@ -361,6 +368,10 @@ function buildInitialState(lead, estimate) {
         : ATLAS_ALLOWED_SHEETING_FINISHES.includes(builderConfiguration.sheetingFinish)
           ? builderConfiguration.sheetingFinish
           : getLeadSheetingFinish(lead),
+    sheetingColor:
+      latestInput.sheetingColor ||
+      builderConfiguration.sheetingColor ||
+      "",
     gableMode:
       latestInput.gableMode
         ? normalizeAtlasSheetingMode(latestInput.gableMode)
@@ -603,6 +614,13 @@ function buildEstimateDraft({
       structuralSystems: formState.structuralSystems || [],
       projectScope: formState.projectScope || "",
       internalSiteNotes: formState.internalSiteNotes || "",
+      projectLocation: formState.projectLocation || "",
+      province: formState.province || "",
+      intendedUse: formState.intendedUse || "",
+      projectStage: formState.projectStage || "",
+      targetTimeline: formState.targetTimeline || "",
+      clientNotes: formState.clientNotes || "",
+      sheetingColor: formState.sheetingColor || "",
     },
     original_line_items: preview.lineItems,
     line_items: editableLineItems,
@@ -1470,6 +1488,21 @@ export default function EstimateDrawer({
                             </select>
                           </div>
                         ) : null}
+                        {formState.gableMode !== "structure_only" && formState.sheetingFinish === "chromadek" ? (
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700">Chromadek colour</label>
+                            <select
+                              value={formState.sheetingColor}
+                              onChange={(event) => handleChange("sheetingColor", event.target.value)}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                            >
+                              <option value="">Colour to confirm</option>
+                              {WAREHOUSE_SHEETING_COLORS.filter((option) => option.value !== "galvanised").map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : null}
                       </>
                     ) : !isSolarEstimate ? (
                       <div>
@@ -1563,6 +1596,28 @@ export default function EstimateDrawer({
                   {!isSolarEstimate && preview.summary.layoutNote ? (
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                       {preview.summary.layoutNote}
+                    </div>
+                  ) : null}
+
+                  {isAtlasWarehouseEstimateProduct(formState.productType) ? (
+                    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-slate-800">
+                      <p className="font-semibold text-blue-950">Original client brief</p>
+                      <div className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+                        <p><span className="font-medium">Site:</span> {[formState.projectLocation, formState.province].filter(Boolean).join(", ") || "Not supplied"}</p>
+                        <p><span className="font-medium">Intended use:</span> {formState.intendedUse || "Not supplied"}</p>
+                        <p><span className="font-medium">Project stage:</span> {formState.projectStage || "Not supplied"}</p>
+                        <p><span className="font-medium">Target timeline:</span> {formState.targetTimeline || "Not supplied"}</p>
+                        {formState.sheetingFinish === "chromadek" ? (
+                          <p><span className="font-medium">Selected colour:</span> {WAREHOUSE_SHEETING_COLORS.find((option) => option.value === formState.sheetingColor)?.label || "To confirm"}</p>
+                        ) : null}
+                      </div>
+                      {formState.clientNotes ? (
+                        <div className="mt-3 rounded-xl border border-blue-200 bg-white px-3 py-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">Client notes</p>
+                          <p className="mt-1 whitespace-pre-wrap leading-5">{formState.clientNotes}</p>
+                        </div>
+                      ) : null}
+                      <p className="mt-2 text-xs text-blue-700">For estimate preparation only. This brief is not printed on the customer quote.</p>
                     </div>
                   ) : null}
 
