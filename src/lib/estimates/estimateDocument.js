@@ -92,6 +92,22 @@ function addDays(value, days) {
 export function buildEstimateDisplayModel(estimate, lead) {
   const input = estimate?.input_data || {}
   const lineItems = Array.isArray(estimate?.line_items) ? estimate.line_items : []
+  const hasDeliveryLine = lineItems.some((item) => /delivery|transport/i.test(`${item?.code || ""} ${item?.label || ""}`))
+  const hasInstallationLine = lineItems.some((item) => /install|erection|assembly/i.test(`${item?.code || ""} ${item?.label || ""}`))
+  const deliveryLabel = hasDeliveryLine
+    ? Number(input.deliveryDistance) > 0
+      ? `Included as quoted · ${Number(input.deliveryDistance)} km`
+      : "Included as quoted"
+    : input.deliveryRequested
+      ? "Requested · price pending"
+      : Number(input.deliveryDistance) > 0
+        ? `${Number(input.deliveryDistance)} km`
+        : "Collection / not specified"
+  const installationLabel = hasInstallationLine || input.claddingInstalled
+    ? "Included as quoted"
+    : input.installationRequested
+      ? "Requested · price pending"
+      : "Structure supply only"
   const subtotal = Number(estimate?.subtotal || 0)
   const total = Number(estimate?.total || 0)
   const discountPercent = Math.min(100, Math.max(0, Number(input.discountPercent || 0)))
@@ -146,9 +162,9 @@ export function buildEstimateDisplayModel(estimate, lead) {
         { label: "Panels / modules", value: moduleCount > 0 ? `${totalModuleCount}` : "Not applicable" },
         {
           label: "Delivery",
-          value: Number(input.deliveryDistance) > 0 ? `${Number(input.deliveryDistance)} km` : "Collection / not specified",
+          value: deliveryLabel,
         },
-        { label: "Installation", value: input.claddingInstalled ? "Included" : "Reviewed separately" },
+        { label: "Installation", value: installationLabel },
       ]
     : trussProduct
     ? [
@@ -160,14 +176,11 @@ export function buildEstimateDisplayModel(estimate, lead) {
         { label: "Quantity", value: `${quantity}` },
         {
           label: "Delivery",
-          value:
-            Number.isFinite(Number(input.deliveryDistance)) && Number(input.deliveryDistance) > 0
-              ? `${Number(input.deliveryDistance)} km`
-              : "Collection / not specified",
+          value: deliveryLabel,
         },
         {
           label: "Installation",
-          value: input.claddingInstalled ? "Included" : "Supply only",
+          value: installationLabel,
         },
       ]
     : solarProduct
@@ -191,20 +204,11 @@ export function buildEstimateDisplayModel(estimate, lead) {
         },
         {
           label: "Delivery",
-          value:
-            Number.isFinite(Number(input.deliveryDistance)) && Number(input.deliveryDistance) > 0
-              ? `${Number(input.deliveryDistance)} km`
-              : "Collection / not specified",
+          value: deliveryLabel,
         },
         {
           label: "Installation",
-          value: groundMountProduct
-            ? input.claddingInstalled
-              ? "Included"
-              : "Reviewed after enquiry"
-            : input.claddingInstalled
-              ? "Included"
-              : "Structure supply only",
+          value: installationLabel,
         },
       ]
     : [
@@ -237,14 +241,11 @@ export function buildEstimateDisplayModel(estimate, lead) {
         { label: "Cladding", value: input.cladding || "Not specified" },
         {
           label: "Delivery",
-          value:
-            Number.isFinite(Number(input.deliveryDistance)) && Number(input.deliveryDistance) > 0
-              ? `${Number(input.deliveryDistance)} km`
-              : "Collection / not specified",
+          value: deliveryLabel,
         },
         {
           label: "Installation",
-          value: input.claddingInstalled ? "Included" : "Structure supply only",
+          value: installationLabel,
         },
       ]
 
@@ -275,11 +276,8 @@ export function buildEstimateDisplayModel(estimate, lead) {
           : formatArea(area)
         : "Not specified",
     claddingLabel: input.cladding || "Not specified",
-    deliveryLabel:
-      Number.isFinite(Number(input.deliveryDistance)) && Number(input.deliveryDistance) > 0
-        ? `${Number(input.deliveryDistance)} km`
-        : "Collection / not specified",
-    installationLabel: input.claddingInstalled ? "Included" : "Structure supply only",
+    deliveryLabel,
+    installationLabel,
     summaryFields,
     notes: [layoutNote, customProject ? input.projectScope : "", estimate?.notes].filter(Boolean).join("\n\n"),
     lineItems,
