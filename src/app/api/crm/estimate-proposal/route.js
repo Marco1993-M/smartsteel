@@ -33,6 +33,13 @@ function buildFilename(estimate) {
   return `${base || "smart-steel-estimate"}.pdf`
 }
 
+function hasPricedServiceLine(lineItems, pattern) {
+  return (Array.isArray(lineItems) ? lineItems : []).some((item) => {
+    const identity = `${item?.code || ""} ${item?.label || ""}`
+    return pattern.test(identity) && Number(item?.total || 0) > 0
+  })
+}
+
 function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }) {
   const brandIdentity = getEstimateBrandIdentity(lead, estimate)
   const isAtlas = brandIdentity === "atlas"
@@ -117,7 +124,7 @@ export async function POST(request) {
       supabaseServer.from("leads").select("id, name, last_name, email, product_type").eq("id", leadId).single(),
       // Keep the send lookup limited to columns guaranteed by the estimate schema.
       // Optional display fields are deliberately tolerated by the estimate save flow.
-      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token, product_type, status").eq("id", estimateId).single(),
+      supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token, product_type, status, input_data, line_items").eq("id", estimateId).single(),
     ])
 
     if (leadError) {
@@ -143,6 +150,27 @@ export async function POST(request) {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
+
+    const configuration = builderSubmission?.configuration || {}
+    const estimateInput = estimate.input_data || {}
+    const deliveryRequested = typeof estimateInput.deliveryRequested === "boolean"
+      ? estimateInput.deliveryRequested
+      : Boolean(configuration.deliveryRequired)
+    const installationRequested = typeof estimateInput.installationRequested === "boolean"
+      ? estimateInput.installationRequested
+      : Boolean(configuration.installationInterest)
+    const unresolvedServices = [
+      deliveryRequested && !hasPricedServiceLine(estimate.line_items, /delivery|transport/i) ? "delivery" : null,
+      installationRequested && !hasPricedServiceLine(estimate.line_items, /install|erection|assembly/i) ? "installation" : null,
+    ].filter(Boolean)
+
+    if (unresolvedServices.length) {
+      return NextResponse.json({
+        error: `The client requested ${unresolvedServices.join(" and ")}, but the estimate does not contain a priced ${unresolvedServices.join(" and ")} line item. Add the applicable price before sending the proposal.`,
+        code: "requested_services_unpriced",
+        unresolvedServices,
+      }, { status: 409 })
+    }
 
     const pdfResponse = await fetch(new URL(`/api/estimates/${estimate.id}/pdf`, request.url), { cache: "no-store" })
     if (!pdfResponse.ok) {
