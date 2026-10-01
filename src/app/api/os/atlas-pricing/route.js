@@ -10,10 +10,19 @@ const STATUSES = ["draft", "needs_review", "confirmed", "superseded"]
 const UNITS = ["ton", "kg", "m", "each", "set"]
 
 const COMPONENT_CODE_ALIASES = {
+  "W15-PUR": "W15-SEC",
+  "W15-APH": "W15-CON",
+  "W15-RDG": "W15-CON",
+  "W15-EAV": "W15-CON",
+  "W15-SPL": "W15-CON",
+  "W15-BLT": "W15-CON",
+  "W15-NUT": "W15-CON",
+  "W15-WSH": "W15-CON",
   "W12-PUR": "W12-SEC",
   "W12-APH": "W12-CON",
   "W12-RDG": "W12-CON",
   "W12-EAV": "W12-CON",
+  "W12-SPL": "W12-CON",
   "W12-BLT": "W12-CON",
   "W12-NUT": "W12-CON",
   "W12-WSH": "W12-CON",
