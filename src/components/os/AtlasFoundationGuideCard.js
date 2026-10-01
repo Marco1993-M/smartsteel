@@ -11,7 +11,7 @@ const HEIGHTS = [3, 4, 4.5, 5]
 
 export default function AtlasFoundationGuideCard({ initialProductCode = "W08" }) {
   const [lengthM, setLengthM] = useState(24)
-  const [eaveHeightM, setEaveHeightM] = useState(initialProductCode === "W10" || initialProductCode === "W12" ? 4.5 : 3)
+  const [eaveHeightM, setEaveHeightM] = useState(["W10", "W12", "W15"].includes(initialProductCode) ? 4.5 : 3)
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState("")
   const guide = useMemo(() => getAtlasFoundationGuide({ productCode: initialProductCode, lengthM, eaveHeightM }), [initialProductCode, lengthM, eaveHeightM])

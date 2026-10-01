@@ -25,7 +25,7 @@ const FAMILY_META = [
     name: "Warehouses",
     eyebrow: "Primary product family",
     detail: "Modular bolted warehouse structures built around controlled spans and repeatable 4m bays.",
-    codes: ["W06", "W08", "W10", "W12"],
+    codes: ["W06", "W08", "W10", "W12", "W15"],
     icon: Warehouse,
     accent: "blue",
   },

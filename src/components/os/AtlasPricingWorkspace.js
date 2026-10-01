@@ -21,6 +21,7 @@ import { getAtlasW10PrimaryBenchmark } from "../../lib/atlasW10PricingBenchmarks
 import { ATLAS_W10_EAVE_HEIGHTS_M, ATLAS_W10_LENGTHS_M, applyAtlasW10GeometryToPricing, calculateAtlasW10Geometry } from "../../lib/atlasW10Geometry"
 import { getAtlasW12PrimaryBenchmark } from "../../lib/atlasW12PricingBenchmarks"
 import { ATLAS_W12_EAVE_HEIGHTS_M, ATLAS_W12_LENGTHS_M, applyAtlasW12GeometryToPricing, calculateAtlasW12Geometry } from "../../lib/atlasW12Geometry"
+import { ATLAS_W15_EAVE_HEIGHTS_M, ATLAS_W15_LENGTHS_M, applyAtlasW15GeometryToPricing, calculateAtlasW15Geometry } from "../../lib/atlasW15Geometry"
 import {
   ATLAS_WAREHOUSE_SHEETING_OPTIONS,
   calculateAtlasWarehouseEstimate,
@@ -140,7 +141,7 @@ export default function AtlasPricingWorkspace() {
 
   useEffect(() => {
     setConfigurationLengthM(20)
-    setConfigurationEaveHeightM(["W06", "W10", "W12"].includes(productCode) ? 4.5 : 3)
+    setConfigurationEaveHeightM(["W06", "W10", "W12", "W15"].includes(productCode) ? 4.5 : 3)
     setConfigurationMaterial("zam")
     setConfigurationSheetingMode("structure_only")
     setConfigurationSheetingProfile("IBR")
@@ -155,9 +156,11 @@ export default function AtlasPricingWorkspace() {
         ? calculateAtlasW10Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
         : productCode === "W12"
           ? calculateAtlasW12Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
+        : productCode === "W15"
+          ? calculateAtlasW15Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
       : null, [productCode, configurationLengthM, configurationEaveHeightM])
   const geometryRecords = useMemo(() => geometry
-    ? productCode === "W06" ? applyAtlasW06GeometryToPricing(records, geometry) : productCode === "W10" ? applyAtlasW10GeometryToPricing(records, geometry) : productCode === "W12" ? applyAtlasW12GeometryToPricing(records, geometry) : applyAtlasW08GeometryToPricing(records, geometry)
+    ? productCode === "W06" ? applyAtlasW06GeometryToPricing(records, geometry) : productCode === "W10" ? applyAtlasW10GeometryToPricing(records, geometry) : productCode === "W12" ? applyAtlasW12GeometryToPricing(records, geometry) : productCode === "W15" ? applyAtlasW15GeometryToPricing(records, geometry) : applyAtlasW08GeometryToPricing(records, geometry)
     : records, [records, geometry, productCode])
   const configuredRecords = useMemo(() => geometryRecords.map((record) => {
     const materialPriced = ["ton", "kg", "m"].includes(record.pricingUnit)
@@ -196,8 +199,8 @@ export default function AtlasPricingWorkspace() {
     sheetingFinish: configurationSheetingFinish,
   }), [productCode, configurationLengthM, configurationEaveHeightM, configurationMaterial, configurationSheetingMode, configurationSheetingProfile, configurationSheetingFinish])
   const pricingBenchmark = productCode === "W08" ? getAtlasW08PrimaryBenchmark() : productCode === "W06" ? getAtlasW06PrimaryBenchmark() : productCode === "W10" ? getAtlasW10PrimaryBenchmark() : productCode === "W12" ? getAtlasW12PrimaryBenchmark() : null
-  const controlledLengths = productCode === "W06" ? ATLAS_W06_LENGTHS_M : productCode === "W10" ? ATLAS_W10_LENGTHS_M : productCode === "W12" ? ATLAS_W12_LENGTHS_M : ATLAS_W08_LENGTHS_M
-  const controlledHeights = productCode === "W06" ? ATLAS_W06_EAVE_HEIGHTS_M : productCode === "W10" ? ATLAS_W10_EAVE_HEIGHTS_M : productCode === "W12" ? ATLAS_W12_EAVE_HEIGHTS_M : ATLAS_W08_EAVE_HEIGHTS_M
+  const controlledLengths = productCode === "W06" ? ATLAS_W06_LENGTHS_M : productCode === "W10" ? ATLAS_W10_LENGTHS_M : productCode === "W12" ? ATLAS_W12_LENGTHS_M : productCode === "W15" ? ATLAS_W15_LENGTHS_M : ATLAS_W08_LENGTHS_M
+  const controlledHeights = productCode === "W06" ? ATLAS_W06_EAVE_HEIGHTS_M : productCode === "W10" ? ATLAS_W10_EAVE_HEIGHTS_M : productCode === "W12" ? ATLAS_W12_EAVE_HEIGHTS_M : productCode === "W15" ? ATLAS_W15_EAVE_HEIGHTS_M : ATLAS_W08_EAVE_HEIGHTS_M
   const benchmarkVariance = pricingBenchmark
     ? assembledSummary.totalCost - pricingBenchmark.sellingPriceExclVat
     : 0
@@ -331,7 +334,7 @@ export default function AtlasPricingWorkspace() {
         eyebrow={`${productCode} pricing control`}
         title={`Control every ${product?.name || "Atlas product"} input.`}
         description="Maintain material rates, component prices, quantity rules and effective dates in one traceable register. Unconfirmed technical inputs remain visible instead of silently entering estimates."
-        status={["W06", "W08", "W10", "W12"].includes(productCode) ? "Component pricing" : "Product record pending"}
+        status={["W06", "W08", "W10", "W12", "W15"].includes(productCode) ? "Component pricing" : "Product record pending"}
         actionHref={withAtlasProduct("/os/atlas/bom", productCode)}
         actionLabel="Review product BOM"
       />
