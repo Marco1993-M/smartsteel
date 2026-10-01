@@ -98,7 +98,7 @@ export function calculateAtlasW12Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
     apexMemberLengthM, haunchMemberLengthM, members,
     confirmedStructuralMassKg: round(Object.values(members).reduce((total, member) => total + member.totalMassKg, 0), 2),
     assumptions: { structuralWastePercent: 0, fabricationAllowance: 0, packagingAllowance: 0, punchingIncludedInSteelRate: true, deliveryIncluded: false, installationIncluded: false },
-    holds: ["Four primary-frame splice locations per portal and eight M10 sets per splice pending final engineer confirmation", "Final bolted connection quantities and specifications", "Gable-girt member schedule"],
+    holds: ["Purlin splice bracket specification pending final engineer confirmation", "Final bolted connection quantities and specifications", "Gable-girt member schedule"],
   }
 }
 

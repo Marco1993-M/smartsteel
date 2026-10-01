@@ -101,7 +101,7 @@ export function calculateAtlasW15Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
     apexMemberLengthM, haunchMemberLengthM, members,
     confirmedStructuralMassKg: round(Object.values(members).reduce((total, member) => total + member.totalMassKg, 0), 2),
     assumptions: { structuralWastePercent: 0, fabricationAllowance: 0, packagingAllowance: 0, punchingIncludedInSteelRate: true, deliveryIncluded: false, installationIncluded: false },
-    holds: ["Four primary-frame splice locations per portal and eight M10 sets per splice pending final engineer confirmation", "W15 connection and bracket schedule follows W12 pending engineer confirmation", "W15 wall and roof bracing layout follows W12 pending engineer confirmation", "W15 2.5m raking haunch length pending final engineer confirmation", "Six purlin rows per slope at approximately 1.493m centres pending final engineer confirmation"],
+    holds: ["Purlin splice bracket specification pending final engineer confirmation", "W15 connection and bracket schedule follows W12 pending engineer confirmation", "W15 wall and roof bracing layout follows W12 pending engineer confirmation", "W15 2.5m raking haunch length pending final engineer confirmation", "Six purlin rows per slope at approximately 1.493m centres pending final engineer confirmation"],
   }
 }
 

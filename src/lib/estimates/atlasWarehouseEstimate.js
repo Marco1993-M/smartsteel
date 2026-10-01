@@ -136,9 +136,11 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
   const baseBracketCount = geometry.portalFrames * 2 * quantity
   const ridgeBracketCount = geometry.portalFrames * quantity
   const eaveBracketCount = geometry.portalFrames * 2 * quantity
-  // W12 and W15 use separate haunch, rafter and apex members. Allow for the
-  // two haunch-to-rafter and two rafter-to-apex splices in every portal.
-  const spliceBracketCount = [12, 15].includes(width) ? geometry.portalFrames * 4 * quantity : 0
+  // Every purlin run is made from one bay-length member per bay. W12 and W15
+  // therefore need one splice bracket at each internal joint along every row.
+  const spliceBracketCount = [12, 15].includes(width)
+    ? geometry.totalPurlinRows * Math.max(0, geometry.bays - 1) * quantity
+    : 0
   const braceMemberCount = (geometry.members.wallBracing.quantity + geometry.members.roofBracing.quantity) * quantity
   const bracingBracketCount = braceMemberCount * 2
   const purlinMemberCount = geometry.members.purlins.quantity * quantity
@@ -147,7 +149,6 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
   const m10CompleteSetCount =
     ridgeBracketCount * ATLAS_M10_COMPLETE_SET.setsPerRidgeBracket
     + eaveBracketCount * ATLAS_M10_COMPLETE_SET.setsPerEaveBracket
-    + spliceBracketCount * ATLAS_M10_COMPLETE_SET.setsPerSpliceBracket
     + bracingBracketCount * ATLAS_M10_COMPLETE_SET.setsPerBracingBracket
     + purlinMemberCount * 2 * ATLAS_M10_COMPLETE_SET.setsPerPurlinEnd
     + girtMemberCount * 2 * ATLAS_M10_COMPLETE_SET.setsPerGirtEnd
@@ -157,7 +158,7 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     buildLineItem({ code: `${geometry.productCode}-BAS`, label: "Column base brackets", quantity: baseBracketCount, unit: "each", unitRate: CONNECTION_RATES.baseBracket, total: baseBracketCount * CONNECTION_RATES.baseBracket, provisional: true }),
     buildLineItem({ code: `${geometry.productCode}-RDG`, label: "Ridge brackets", quantity: ridgeBracketCount, unit: "each", unitRate: CONNECTION_RATES.ridgeBracket, total: ridgeBracketCount * CONNECTION_RATES.ridgeBracket, provisional: true }),
     buildLineItem({ code: `${geometry.productCode}-EAV`, label: "Eave brackets", quantity: eaveBracketCount, unit: "each", unitRate: CONNECTION_RATES.eaveBracket, total: eaveBracketCount * CONNECTION_RATES.eaveBracket, provisional: true }),
-    ...(spliceBracketCount > 0 ? [buildLineItem({ code: `${geometry.productCode}-SPL`, label: "Primary-frame splice bracket assemblies", quantity: spliceBracketCount, unit: "each", unitRate: CONNECTION_RATES.spliceBracket, total: spliceBracketCount * CONNECTION_RATES.spliceBracket, provisional: true })] : []),
+    ...(spliceBracketCount > 0 ? [buildLineItem({ code: `${geometry.productCode}-SPL`, label: "Purlin splice brackets", quantity: spliceBracketCount, unit: "each", unitRate: CONNECTION_RATES.spliceBracket, total: spliceBracketCount * CONNECTION_RATES.spliceBracket, provisional: true })] : []),
     buildLineItem({ code: `${geometry.productCode}-XBR-BRK`, label: "Bracing connection brackets", quantity: bracingBracketCount, unit: "each", unitRate: CONNECTION_RATES.bracingBracket, total: bracingBracketCount * CONNECTION_RATES.bracingBracket, provisional: true }),
     buildLineItem({ code: `${geometry.productCode}-M10-SET`, label: `Complete M10 connection sets · ${ATLAS_M10_COMPLETE_SET.specification}`, quantity: m10CompleteSetCount, unit: "set", unitRate: CONNECTION_RATES.m10CompleteSet, total: m10CompleteSetCount * CONNECTION_RATES.m10CompleteSet }),
     buildLineItem({ code: `${geometry.productCode}-ANC`, label: "M12 anchor bolts (price to confirm)", quantity: anchorBoltCount, unit: "each", unitRate: CONNECTION_RATES.m12AnchorBolt, total: anchorBoltCount * CONNECTION_RATES.m12AnchorBolt, provisional: true }),
@@ -209,6 +210,6 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     lineItems,
     summary: { title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m ${systemName}`, shortDescription: `${systemName}, ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}${includesGableEnds ? `, centred ${gableOpeningWidth}m x ${gableOpeningHeight}m opening on one gable end` : ""}, supply only`, estimateRequest: `${systemName}: ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}${includesGableEnds ? `, centred ${gableOpeningWidth}m x ${gableOpeningHeight}m opening on one gable end with the opposite gable enclosed` : ""}, supply only. Installation and delivery quoted separately.`, layoutNote: includesGableEnds ? `Standard fully enclosed scope includes one centred ${gableOpeningWidth}m wide x ${gableOpeningHeight}m high opening; the opposite gable remains enclosed.` : "" },
     labels: { steelFinish, cladding: sheetingModeLabel(gableMode), sheetingProfile, sheetingFinish: sheetingFinish === "chromadek" ? "Chromadek" : "Galvanised", installation: "Quoted separately", delivery: "Quoted separately", gableMode: sheetingModeLabel(gableMode) },
-    meta: { productType: "Atlas Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, sku, provisionalItems: ["Gable-end framing specifications", "Bracket fabrication specifications", "W12/W15 splice-bracket and bolt schedule", "M12 anchor-bolt price"] },
+    meta: { productType: "Atlas Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, sku, provisionalItems: ["Gable-end framing specifications", "Bracket fabrication specifications", "W12/W15 purlin splice-bracket specification", "M12 anchor-bolt price"] },
   }
 }
