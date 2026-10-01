@@ -409,6 +409,7 @@ function WarehouseMesh({
   const isAtlas = systemVariant === "atlas"
   const atlasProfiles = ATLAS_PROFILES_BY_SPAN[Number(width)] || ATLAS_W08_PROFILES
   const atlasRaftersBackToBack = Number(width) === 15
+  const hasAtlasRidgeBrace = [12, 15].includes(Number(width))
   const w15RafterLengthM = (Number(width) / 2) / Math.cos((Number(roofPitch) * Math.PI) / 180)
   const w15PurlinInsetFraction = 0.15 / w15RafterLengthM
   const atlasPurlinFractions = Number(width) === 15
@@ -672,15 +673,17 @@ function WarehouseMesh({
                     materialProps={frameMaterialProps}
                     backToBack
                   />
-                  <LippedChannelBetween
-                    start={[-1.5 * scale, h + ridgeRise - 1.5 * w15RoofTangent * scale, 0.006]}
-                    end={[1.5 * scale, h + ridgeRise - 1.5 * w15RoofTangent * scale, 0.006]}
-                    profile={atlasProfiles.apexHaunch}
-                    scale={scale}
-                    materialProps={frameMaterialProps}
-                    backToBack
-                  />
                 </>
+              ) : null}
+              {hasAtlasRidgeBrace ? (
+                <LippedChannelBetween
+                  start={[-1.5 * scale, h + ridgeRise - 1.5 * w15RoofTangent * scale, 0.006]}
+                  end={[1.5 * scale, h + ridgeRise - 1.5 * w15RoofTangent * scale, 0.006]}
+                  profile={atlasProfiles.apexHaunch}
+                  scale={scale}
+                  materialProps={frameMaterialProps}
+                  backToBack={Number(width) === 15}
+                />
               ) : null}
               <group position={[-w / 2, h, 0.001]}>
                 <AtlasEaveConnection side={-1} scale={scale} materialProps={frameMaterialProps} boltMaterialProps={boltMaterialProps} />
