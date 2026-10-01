@@ -387,8 +387,10 @@ function WarehouseMesh({
   const isAtlas = systemVariant === "atlas"
   const atlasProfiles = ATLAS_PROFILES_BY_SPAN[Number(width)] || ATLAS_W08_PROFILES
   const atlasRaftersBackToBack = Number(width) === 15
+  const w15RafterLengthM = (Number(width) / 2) / Math.cos((Number(roofPitch) * Math.PI) / 180)
+  const w15PurlinInsetFraction = 0.15 / w15RafterLengthM
   const atlasPurlinFractions = Number(width) === 15
-    ? Array.from({ length: 5 }, (_, index) => (index + 1) / 6)
+    ? Array.from({ length: 6 }, (_, index) => w15PurlinInsetFraction + index * ((1 - 2 * w15PurlinInsetFraction) / 5))
     : [0.08, 0.5, 0.92]
   const atlasGirtRowCount = Math.ceil(Number(wallHeight) / 1.8)
   const atlasGirtFractions = Number(width) === 15
