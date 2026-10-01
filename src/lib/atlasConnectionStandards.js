@@ -4,6 +4,7 @@ export const ATLAS_M10_COMPLETE_SET = Object.freeze({
   costRate: 12,
   setsPerEaveBracket: 8,
   setsPerRidgeBracket: 8,
+  setsPerSpliceBracket: 8,
   setsPerBracingBracket: 2,
   setsPerPurlinEnd: 1,
   setsPerGirtEnd: 1,
