@@ -33,8 +33,10 @@ export function calculateAtlasW15Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
   const roofRiseM = (spanM / 2) * Math.tan(roofPitchRadians)
   const bays = length / baySpacingM
   const portalFrames = bays + 1
-  const purlinRowsPerSlope = 5
-  const totalPurlinRows = 10
+  const purlinEdgeInsetM = 0.15
+  const purlinRowsPerSlope = 6
+  const totalPurlinRows = 12
+  const purlinSpacingM = (rafterCutLengthM - purlinEdgeInsetM * 2) / (purlinRowsPerSlope - 1)
   const bracedBayPositions = Array.from({ length: bays }, (_, index) => index + 1).filter((bay) => (bay - 1) % 4 === 0)
   const wallBraceCutLengthM = Math.hypot(baySpacingM, eaveHeight)
   const roofBraceCutLengthM = Math.hypot(baySpacingM, rafterCutLengthM)
@@ -76,7 +78,7 @@ export function calculateAtlasW15Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
   const members = {
     columns: { code: "W15-COL", label: "Column channels", quantity: portalFrames * 2 * 2, cutLengthM: eaveHeight, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.column), rule: `${portalFrames} frames × 2 columns × 2 back-to-back channels` },
     rafters: { code: "W15-RAF", label: "Rafter channels", quantity: portalFrames * 2 * 2, cutLengthM: rafterCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.rafter), rule: `${portalFrames} frames × 2 rafters × 2 back-to-back channels` },
-    purlins: { code: "W15-PUR", label: "Roof purlins", quantity: bays * totalPurlinRows, cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.purlin), rule: `${totalPurlinRows} source-schedule rows × ${bays} bay lengths` },
+    purlins: { code: "W15-PUR", label: "Roof purlins", quantity: bays * totalPurlinRows, cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.purlin), rule: `${purlinRowsPerSlope} rows per slope at ${round(purlinSpacingM, 3)}m centres with 0.15m edge offsets × 2 slopes × ${bays} bay lengths` },
     wallBracing: { code: "W15-XBW", label: "Wall X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: wallBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 walls × 2 diagonals` },
     roofBracing: { code: "W15-XBR", label: "Roof X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: roofBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 roof slopes × 2 diagonals` },
     sideGirts: { code: "W15-GRT", label: "Side girts", quantity: bays * 2 * Math.ceil(eaveHeight / 1.8), cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.sideGirt), rule: `${bays} bays × 2 walls × ${Math.ceil(eaveHeight / 1.8)} rows at no more than 1.8m` },
@@ -93,12 +95,13 @@ export function calculateAtlasW15Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
   return {
     productCode: "W15", spanM, lengthM: length, eaveHeightM: eaveHeight, baySpacingM, bays, portalFrames,
     roofPitchDegrees, roofRiseM: round(roofRiseM), rafterCutLengthM: round(rafterCutLengthM), purlinRowsPerSlope,
+    purlinEdgeInsetM, purlinSpacingM: round(purlinSpacingM),
     totalPurlinRows, bracedBayPositions,
     gableFraming: { defaultArrangement: "open", frontSpacingM: [4.5, 6, 4.5], rearSpacingM: [5, 5, 5], frontColumnLengthM: round(frontGableColumnLengthM), rearColumnLengthM: round(rearGableColumnLengthM), opening6m: gableOpening6m },
     apexMemberLengthM, haunchMemberLengthM, members,
     confirmedStructuralMassKg: round(Object.values(members).reduce((total, member) => total + member.totalMassKg, 0), 2),
     assumptions: { structuralWastePercent: 0, fabricationAllowance: 0, packagingAllowance: 0, punchingIncludedInSteelRate: true, deliveryIncluded: false, installationIncluded: false },
-    holds: ["W15 connection and bracket schedule follows W12 pending engineer confirmation", "W15 wall and roof bracing layout follows W12 pending engineer confirmation", "Five intermediate purlin rows per slope pending final engineer confirmation"],
+    holds: ["W15 connection and bracket schedule follows W12 pending engineer confirmation", "W15 wall and roof bracing layout follows W12 pending engineer confirmation", "Six purlin rows per slope at approximately 1.493m centres pending final engineer confirmation"],
   }
 }
 
