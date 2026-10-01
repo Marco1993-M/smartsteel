@@ -27,6 +27,15 @@ export const ATLAS_W_SERIES = [
     configuration: "Configurable length in practical bays",
     href: "/warehouse-builder?productType=Atlas%20Warehouse&width=12&length=20",
   },
+  {
+    code: "W15",
+    width: 15,
+    spanLabel: "15m span",
+    title: "Wide-span operational space",
+    bestFor: "Larger agricultural, production, storage, workshop, and commercial requirements.",
+    configuration: "Configurable length in practical bays",
+    href: "/warehouse-builder?productType=Atlas%20Warehouse&width=15&length=20",
+  },
 ]
 
 export const ATLAS_W_SERIES_APPLICATIONS = [
@@ -51,8 +60,8 @@ export const ATLAS_W_SERIES_FAQS = [
     answer: "Atlas W-Series is Smart Steel's modular warehouse range. It uses standard warehouse widths and configurable building lengths to create a practical starting point for storage, workshop, agricultural, and commercial projects.",
   },
   {
-    question: "What do W08, W10, and W12 mean?",
-    answer: "They identify the standard warehouse width: W08 is an 8m span, W10 is a 10m span, and W12 is a 12m span. The length can then be configured in practical bays for your required footprint.",
+    question: "What do W08, W10, W12, and W15 mean?",
+    answer: "They identify the standard warehouse width: W08 is an 8m span, W10 is a 10m span, W12 is a 12m span, and W15 is a 15m span. The length can then be configured in practical bays for your required footprint.",
   },
   {
     question: "Is Atlas the same as a lip channel warehouse?",

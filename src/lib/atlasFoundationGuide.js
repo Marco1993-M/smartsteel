@@ -1,4 +1,4 @@
-const WAREHOUSE_CODES = new Set(["W06", "W08", "W10", "W12"])
+const WAREHOUSE_CODES = new Set(["W06", "W08", "W10", "W12", "W15"])
 
 export const ATLAS_FOUNDATION_BASELINE = Object.freeze({
   footingWidthMm: 1250,

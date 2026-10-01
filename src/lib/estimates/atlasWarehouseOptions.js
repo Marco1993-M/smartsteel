@@ -1,4 +1,4 @@
-export const ATLAS_WAREHOUSE_WIDTH_OPTIONS = [6, 8, 10, 12]
+export const ATLAS_WAREHOUSE_WIDTH_OPTIONS = [6, 8, 10, 12, 15]
 
 export const ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS = ["ZAM", "Galv", "Mild"]
 

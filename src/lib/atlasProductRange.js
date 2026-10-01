@@ -32,6 +32,14 @@ export const ATLAS_PRODUCT_RANGE = [
     available: true,
   },
   {
+    code: "W15",
+    name: "W15 Warehouse",
+    family: "Warehouses",
+    status: "Controlled development",
+    summary: "15m-span modular warehouse system with back-to-back 300mm primary members and 4m bays.",
+    available: true,
+  },
+  {
     code: "CARPORT",
     name: "Atlas Carport",
     family: "Carports",

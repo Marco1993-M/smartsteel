@@ -3,12 +3,14 @@ import { ATLAS_W06_LENGTHS_M, ATLAS_W06_EAVE_HEIGHTS_M } from "./atlasW06Geometr
 import { ATLAS_W08_LENGTHS_M, ATLAS_W08_EAVE_HEIGHTS_M } from "./atlasW08Geometry.js"
 import { ATLAS_W10_LENGTHS_M, ATLAS_W10_EAVE_HEIGHTS_M } from "./atlasW10Geometry.js"
 import { ATLAS_W12_LENGTHS_M, ATLAS_W12_EAVE_HEIGHTS_M } from "./atlasW12Geometry.js"
+import { ATLAS_W15_LENGTHS_M, ATLAS_W15_EAVE_HEIGHTS_M } from "./atlasW15Geometry.js"
 
 export const ATLAS_WAREHOUSE_CONTROL = {
   W06: { width: 6, lengths: ATLAS_W06_LENGTHS_M, heights: ATLAS_W06_EAVE_HEIGHTS_M, defaultHeight: 4.5 },
   W08: { width: 8, lengths: ATLAS_W08_LENGTHS_M, heights: ATLAS_W08_EAVE_HEIGHTS_M, defaultHeight: 3 },
   W10: { width: 10, lengths: ATLAS_W10_LENGTHS_M, heights: ATLAS_W10_EAVE_HEIGHTS_M, defaultHeight: 4.5 },
   W12: { width: 12, lengths: ATLAS_W12_LENGTHS_M, heights: ATLAS_W12_EAVE_HEIGHTS_M, defaultHeight: 4.5 },
+  W15: { width: 15, lengths: ATLAS_W15_LENGTHS_M, heights: ATLAS_W15_EAVE_HEIGHTS_M, defaultHeight: 4.5 },
 }
 
 export const CONTROLLED_COMPONENT_SUFFIXES = ["COL", "RAF", "XBR", "SEC", "CON", "RCL", "WCL"]

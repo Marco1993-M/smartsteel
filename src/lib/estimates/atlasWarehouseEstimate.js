@@ -2,6 +2,7 @@ import { calculateAtlasW06Geometry } from "../atlasW06Geometry.js"
 import { calculateAtlasW08Geometry } from "../atlasW08Geometry.js"
 import { calculateAtlasW10Geometry } from "../atlasW10Geometry.js"
 import { calculateAtlasW12Geometry } from "../atlasW12Geometry.js"
+import { calculateAtlasW15Geometry } from "../atlasW15Geometry.js"
 import { ATLAS_WAREHOUSE_PRICING_RELEASE } from "../atlasPricingRelease.js"
 import { buildAtlasWarehouseSku } from "../atlasSkuRegistry.js"
 import { ATLAS_M10_COMPLETE_SET } from "../atlasConnectionStandards.js"
@@ -25,6 +26,7 @@ const GEOMETRY_BY_WIDTH = {
   8: calculateAtlasW08Geometry,
   10: calculateAtlasW10Geometry,
   12: calculateAtlasW12Geometry,
+  15: calculateAtlasW15Geometry,
 }
 
 // This version identifies the controlled pricing release used by every Atlas
@@ -81,7 +83,7 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
   const wallHeight = Number(input.wallHeight || (width >= 10 ? 4.5 : 3))
   const quantity = Math.max(1, Math.round(Number(input.quantity) || 1))
   const calculateGeometry = GEOMETRY_BY_WIDTH[width]
-  if (!calculateGeometry) throw new Error("Atlas Warehouses support W06, W08, W10, and W12 spans.")
+  if (!calculateGeometry) throw new Error("Atlas Warehouses support W06, W08, W10, W12, and W15 spans.")
 
   const geometry = calculateGeometry({ lengthM: length, eaveHeightM: wallHeight })
   const steelFinish = normalizeFinish(input.steelFinish)

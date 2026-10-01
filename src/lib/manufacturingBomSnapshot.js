@@ -2,7 +2,7 @@ import { calculateAtlasWarehouseEstimate } from "./estimates/atlasWarehouseEstim
 
 function bomCodeForConfiguration(configuration = {}) {
   const width = Number(configuration.width)
-  if (![6, 8, 10, 12].includes(width)) return ""
+  if (![6, 8, 10, 12, 15].includes(width)) return ""
   return `ATL-WH-${width}M-SHELL`
 }
 
