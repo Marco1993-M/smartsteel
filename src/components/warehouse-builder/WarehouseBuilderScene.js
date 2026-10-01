@@ -4,7 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { ContactShadows, OrbitControls } from "@react-three/drei"
 import { RotateCw } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { DataTexture, DoubleSide, ExtrudeGeometry, LinearFilter, Path, Quaternion, RepeatWrapping, Shape, Vector3 } from "three"
+import { DataTexture, DoubleSide, ExtrudeGeometry, LinearFilter, Matrix4, Path, Quaternion, RepeatWrapping, Shape, Vector3 } from "three"
 import { ATLAS_W06_PROFILES } from "../../lib/atlasW06Geometry"
 import { ATLAS_W08_PROFILES } from "../../lib/atlasW08Geometry"
 import { ATLAS_W10_PROFILES } from "../../lib/atlasW10Geometry"
@@ -114,6 +114,28 @@ function BraceBetween({ start, end, thickness, materialProps }) {
       <boxGeometry args={[thickness, thickness, geometry.length]} />
       <meshPhysicalMaterial {...materialProps} />
     </mesh>
+  )
+}
+
+function LippedChannelBetween({ start, end, profile, scale, materialProps, backToBack = false }) {
+  const placement = useMemo(() => {
+    const startPoint = new Vector3(...start)
+    const endPoint = new Vector3(...end)
+    const direction = endPoint.clone().sub(startPoint)
+    const length = direction.length()
+    const midpoint = startPoint.clone().add(endPoint).multiplyScalar(0.5)
+    const memberAxis = direction.normalize()
+    const sectionDepthAxis = new Vector3(0, 0, 1)
+    const sectionWebAxis = memberAxis.clone().cross(sectionDepthAxis).normalize()
+    const orientation = new Matrix4().makeBasis(sectionDepthAxis, sectionWebAxis, memberAxis)
+    const quaternion = new Quaternion().setFromRotationMatrix(orientation)
+    return { length, midpoint, quaternion }
+  }, [end, start])
+
+  return (
+    <group position={placement.midpoint} quaternion={placement.quaternion}>
+      <LippedChannelMember profile={profile} length={placement.length} scale={scale} materialProps={materialProps} backToBack={backToBack} />
+    </group>
   )
 }
 
@@ -480,6 +502,16 @@ function WarehouseMesh({
   const roofHalfSpan = Math.sqrt((w / 2) ** 2 + ridgeRise ** 2)
   const atlasRafterLength = roofHalfSpan + 0.04
   const roofAngle = Math.atan2(ridgeRise, w / 2)
+  const w15RoofTangent = Math.tan((Number(roofPitch) * Math.PI) / 180)
+  const w15HaunchLengthM = 2.5
+  const w15HaunchColumnDropM = 0.6
+  const w15HaunchRunM = (
+    -2 * w15HaunchColumnDropM * w15RoofTangent
+    + Math.sqrt(
+      (2 * w15HaunchColumnDropM * w15RoofTangent) ** 2
+      - 4 * (1 + w15RoofTangent ** 2) * (w15HaunchColumnDropM ** 2 - w15HaunchLengthM ** 2)
+    )
+  ) / (2 * (1 + w15RoofTangent ** 2))
   const hasCladding = cladding !== "None" && !structureView
   const columnThickness = 0.042
   const rafterThickness = 0.028
@@ -622,6 +654,34 @@ function WarehouseMesh({
               <group position={[w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, -roofAngle]}>
                 <LippedChannelMember profile={atlasProfiles.rafter} length={atlasRafterLength} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} backToBack={atlasRaftersBackToBack} />
               </group>
+              {Number(width) === 15 ? (
+                <>
+                  <LippedChannelBetween
+                    start={[-w / 2, h - w15HaunchColumnDropM * scale, 0.006]}
+                    end={[-w / 2 + w15HaunchRunM * scale, h + w15HaunchRunM * w15RoofTangent * scale, 0.006]}
+                    profile={atlasProfiles.apexHaunch}
+                    scale={scale}
+                    materialProps={frameMaterialProps}
+                    backToBack
+                  />
+                  <LippedChannelBetween
+                    start={[w / 2, h - w15HaunchColumnDropM * scale, 0.006]}
+                    end={[w / 2 - w15HaunchRunM * scale, h + w15HaunchRunM * w15RoofTangent * scale, 0.006]}
+                    profile={atlasProfiles.apexHaunch}
+                    scale={scale}
+                    materialProps={frameMaterialProps}
+                    backToBack
+                  />
+                  <LippedChannelBetween
+                    start={[-1.5 * scale, h + ridgeRise - 1.5 * w15RoofTangent * scale, 0.006]}
+                    end={[1.5 * scale, h + ridgeRise - 1.5 * w15RoofTangent * scale, 0.006]}
+                    profile={atlasProfiles.apexHaunch}
+                    scale={scale}
+                    materialProps={frameMaterialProps}
+                    backToBack
+                  />
+                </>
+              ) : null}
               <group position={[-w / 2, h, 0.001]}>
                 <AtlasEaveConnection side={-1} scale={scale} materialProps={frameMaterialProps} boltMaterialProps={boltMaterialProps} />
               </group>
