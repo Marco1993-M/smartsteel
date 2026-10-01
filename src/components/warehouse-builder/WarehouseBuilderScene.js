@@ -9,6 +9,7 @@ import { ATLAS_W06_PROFILES } from "../../lib/atlasW06Geometry"
 import { ATLAS_W08_PROFILES } from "../../lib/atlasW08Geometry"
 import { ATLAS_W10_PROFILES } from "../../lib/atlasW10Geometry"
 import { ATLAS_W12_PROFILES } from "../../lib/atlasW12Geometry"
+import { ATLAS_W15_PROFILES } from "../../lib/atlasW15Geometry"
 import { WAREHOUSE_SHEETING_COLORS } from "../../lib/warehouseBuilderStore"
 
 const ATLAS_PROFILES_BY_SPAN = {
@@ -16,6 +17,7 @@ const ATLAS_PROFILES_BY_SPAN = {
   8: ATLAS_W08_PROFILES,
   10: ATLAS_W10_PROFILES,
   12: ATLAS_W12_PROFILES,
+  15: ATLAS_W15_PROFILES,
 }
 
 const SCENE_SCALE = 0.18
@@ -384,6 +386,14 @@ function WarehouseMesh({
   const ridgeRise = Math.tan((roofPitch * Math.PI) / 180) * (w / 2)
   const isAtlas = systemVariant === "atlas"
   const atlasProfiles = ATLAS_PROFILES_BY_SPAN[Number(width)] || ATLAS_W08_PROFILES
+  const atlasRaftersBackToBack = Number(width) === 15
+  const atlasPurlinFractions = Number(width) === 15
+    ? Array.from({ length: 5 }, (_, index) => (index + 1) / 6)
+    : [0.08, 0.5, 0.92]
+  const atlasGirtRowCount = Math.ceil(Number(wallHeight) / 1.8)
+  const atlasGirtFractions = Number(width) === 15
+    ? Array.from({ length: atlasGirtRowCount }, (_, index) => (index + 1) / (atlasGirtRowCount + 1))
+    : [0.08, 0.5, 0.92]
   const selectedSteelFinish = steelFinish || (isAtlas ? "ZAM" : "Mild")
   const isMildSteel = selectedSteelFinish === "Mild"
   const isGalvanisedSteel = selectedSteelFinish === "Galv"
@@ -605,10 +615,10 @@ function WarehouseMesh({
                 <LippedChannelMember profile={atlasProfiles.column} length={h} scale={scale} materialProps={frameMaterialProps} rotation={[-Math.PI / 2, 0, Math.PI / 2]} backToBack />
               </group>
               <group position={[-w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, roofAngle]}>
-                <LippedChannelMember profile={atlasProfiles.rafter} length={atlasRafterLength} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} />
+                <LippedChannelMember profile={atlasProfiles.rafter} length={atlasRafterLength} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} backToBack={atlasRaftersBackToBack} />
               </group>
               <group position={[w / 4, h + ridgeRise / 2, 0]} rotation={[0, 0, -roofAngle]}>
-                <LippedChannelMember profile={atlasProfiles.rafter} length={atlasRafterLength} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} />
+                <LippedChannelMember profile={atlasProfiles.rafter} length={atlasRafterLength} scale={scale} materialProps={frameMaterialProps} rotation={[0, Math.PI / 2, 0]} backToBack={atlasRaftersBackToBack} />
               </group>
               <group position={[-w / 2, h, 0.001]}>
                 <AtlasEaveConnection side={-1} scale={scale} materialProps={frameMaterialProps} boltMaterialProps={boltMaterialProps} />
@@ -651,7 +661,7 @@ function WarehouseMesh({
 
         return (
           <group key={`secondary-members-${bayIndex}`}>
-            {[0.08, 0.5, 0.92].flatMap((fraction) => {
+            {atlasPurlinFractions.flatMap((fraction) => {
               const xDistanceFromRidge = (w / 2) * fraction
               const roofY = h + ridgeRise * (1 - fraction)
 
@@ -665,7 +675,7 @@ function WarehouseMesh({
               ))
             })}
 
-            {(enclosureType === "fully_enclosed" || enclosureType === "side_walls") ? [0.08, 0.5, 0.92].flatMap((fraction) => [-1, 1].map((side) => (
+            {(enclosureType === "fully_enclosed" || enclosureType === "side_walls") ? atlasGirtFractions.flatMap((fraction) => [-1, 1].map((side) => (
               <group
                 key={`girt-${bayIndex}-${fraction}-${side}`}
                 position={[side * (w / 2 + wallSecondaryOffset), h * fraction, bayCenterZ]}
