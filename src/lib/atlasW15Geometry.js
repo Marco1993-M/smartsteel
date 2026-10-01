@@ -44,7 +44,7 @@ export function calculateAtlasW15Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
   const frontGableColumnLengthM = 4.5 + 4.5 * Math.tan(roofPitchRadians) + gableHeightAdjustmentM
   const rearGableColumnLengthM = 4.5 + 5 * Math.tan(roofPitchRadians) + gableHeightAdjustmentM
   const apexMemberLengthM = 3
-  const haunchMemberLengthM = 1.3
+  const haunchMemberLengthM = 2.5
   const openingWidthM = 6
   const openingHeightM = eaveHeight
   const openingSideWidthM = (spanM - openingWidthM) / 2
@@ -101,7 +101,7 @@ export function calculateAtlasW15Geometry({ lengthM = 20, eaveHeightM = 4.5 } = 
     apexMemberLengthM, haunchMemberLengthM, members,
     confirmedStructuralMassKg: round(Object.values(members).reduce((total, member) => total + member.totalMassKg, 0), 2),
     assumptions: { structuralWastePercent: 0, fabricationAllowance: 0, packagingAllowance: 0, punchingIncludedInSteelRate: true, deliveryIncluded: false, installationIncluded: false },
-    holds: ["W15 connection and bracket schedule follows W12 pending engineer confirmation", "W15 wall and roof bracing layout follows W12 pending engineer confirmation", "Six purlin rows per slope at approximately 1.493m centres pending final engineer confirmation"],
+    holds: ["W15 connection and bracket schedule follows W12 pending engineer confirmation", "W15 wall and roof bracing layout follows W12 pending engineer confirmation", "W15 2.5m raking haunch length pending final engineer confirmation", "Six purlin rows per slope at approximately 1.493m centres pending final engineer confirmation"],
   }
 }
 
