@@ -84,6 +84,10 @@ function normalizeAtlasSheetingMode(value) {
 }
 
 function getLeadSheetingMode(lead) {
+  const controlledValue = String(lead?.notes || "").match(/^Sheeting coverage:\s*(.+)$/im)?.[1]?.trim()
+  if (controlledValue && ATLAS_ALLOWED_GABLE_MODES.includes(controlledValue)) {
+    return normalizeAtlasSheetingMode(controlledValue)
+  }
   const source = `${lead?.estimate_request || ""}\n${lead?.notes || ""}`.toLowerCase()
   if (/fully enclosed|all four walls|complete enclosure|opposite gable remains enclosed/.test(source)) return "fully_enclosed_with_gables"
   if (/roof and (?:side )?walls|sheeted gable/.test(source)) return "fully_enclosed"
@@ -94,6 +98,20 @@ function getLeadSheetingMode(lead) {
 function getLeadSheetingFinish(lead) {
   const source = `${lead?.estimate_request || ""}\n${lead?.notes || ""}`.toLowerCase()
   return source.includes("chromadek") ? "chromadek" : "galvanised"
+}
+
+function getLeadSheetingProfile(lead) {
+  const match = String(lead?.notes || "").match(/^Sheeting profile:\s*(.+)$/im)
+  return ATLAS_ALLOWED_SHEETING_PROFILES.includes(match?.[1]?.trim()) ? match[1].trim() : ""
+}
+
+function getLeadSheetingColor(lead) {
+  return String(lead?.notes || "").match(/^Sheeting colour:\s*(.+)$/im)?.[1]?.trim() || ""
+}
+
+function getLeadDeliveryDistance(lead) {
+  const value = String(lead?.notes || "").match(/^Delivery distance:\s*([0-9.]+)/im)?.[1]
+  return Math.max(0, Number(value) || 0)
 }
 
 function roundMoney(value) {
@@ -337,7 +355,7 @@ function buildInitialState(lead, estimate) {
         : typeof builderConfiguration.deliveryRequired === "boolean"
           ? builderConfiguration.deliveryRequired
           : /Delivery support requested:\s*Yes/i.test(String(lead?.notes || "")),
-    deliveryDistance: Number(latestInput.deliveryDistance || builderConfiguration.deliveryDistance || lead?.delivery_distance || 0),
+    deliveryDistance: Number(latestInput.deliveryDistance || builderConfiguration.deliveryDistance || lead?.delivery_distance || getLeadDeliveryDistance(lead) || 0),
     transportTrips: Math.max(0, Number(latestInput.transportTrips || 0)),
     includeStructureLabour:
       typeof latestInput.includeStructureLabour === "boolean"
@@ -359,6 +377,7 @@ function buildInitialState(lead, estimate) {
     sheetingProfile:
       latestInput.sheetingProfile ||
       builderConfiguration.sheetingProfile ||
+      getLeadSheetingProfile(lead) ||
       (ATLAS_ALLOWED_SHEETING_PROFILES.includes(latestInput.cladding || builderConfiguration.cladding || lead?.cladding)
         ? latestInput.cladding || builderConfiguration.cladding || lead?.cladding
         : "IBR"),
@@ -371,6 +390,7 @@ function buildInitialState(lead, estimate) {
     sheetingColor:
       latestInput.sheetingColor ||
       builderConfiguration.sheetingColor ||
+      getLeadSheetingColor(lead) ||
       "",
     gableMode:
       latestInput.gableMode

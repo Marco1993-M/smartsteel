@@ -39,7 +39,7 @@ import {
 import {
   ATLAS_LENGTH_OPTIONS,
 } from "../lib/atlasConfiguration"
-import { ATLAS_WAREHOUSE_WIDTH_OPTIONS } from "../lib/estimates/atlasWarehouseOptions"
+import { ATLAS_WAREHOUSE_SHEETING_OPTIONS, ATLAS_WAREHOUSE_WIDTH_OPTIONS } from "../lib/estimates/atlasWarehouseOptions"
 import {
   ATLAS_WAREHOUSE_PRODUCT_TYPE,
   getAtlasWarehouseIdentityTerms,
@@ -50,6 +50,7 @@ import {
   WAREHOUSE_LENGTH_OPTIONS,
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../lib/estimates/warehouseEstimate"
+import { WAREHOUSE_SHEETING_COLORS } from "../lib/warehouseBuilderStore"
 import { addBusinessDays, format, isToday, isYesterday } from "date-fns";
 
 const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
@@ -241,6 +242,11 @@ function normalizeSteelFinish(value) {
 function getSteelFinishFromNotes(notes) {
   const match = String(notes || "").match(/^Steel finish:\s*(.+)$/im)
   return normalizeSteelFinish(match?.[1])
+}
+
+function getControlledNoteValue(notes, label) {
+  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return String(notes || "").match(new RegExp(`^${escapedLabel}:\\s*(.+)$`, "im"))?.[1]?.trim() || ""
 }
 
 function setControlledNoteValue(notes, label, value) {
@@ -925,6 +931,13 @@ export default function LeadEditorDrawer({
   const selectedSteelFinish = normalizeSteelFinish(
     getSteelFinishFromNotes(formData.notes) || builderConfiguration.steelFinish
   ) || "ZAM"
+  const selectedAtlasGableMode = getControlledNoteValue(formData.notes, "Sheeting coverage") || "structure_only"
+  const selectedAtlasSheetingProfile = getControlledNoteValue(formData.notes, "Sheeting profile") || "IBR"
+  const selectedAtlasSheetingFinish = getControlledNoteValue(formData.notes, "Sheeting finish").toLowerCase() || "galvanised"
+  const selectedAtlasSheetingColor = getControlledNoteValue(formData.notes, "Sheeting colour") || ""
+  const selectedAtlasInstallation = /^yes$/i.test(getControlledNoteValue(formData.notes, "Installation support requested"))
+  const selectedAtlasDelivery = /^yes$/i.test(getControlledNoteValue(formData.notes, "Delivery support requested"))
+  const selectedAtlasDeliveryDistance = Number(getControlledNoteValue(formData.notes, "Delivery distance").replace(/[^0-9.]/g, "")) || 0
   const builderSummary = builderSubmission?.summary || {}
   const builderDesignReference = builderConfiguration.designReference || builderSummary.designReference || ""
   const builderConfigurationUrl = builderConfiguration.configurationUrl || builderSummary.configurationUrl || ""
@@ -2202,45 +2215,69 @@ export default function LeadEditorDrawer({
           {scopeConfig.showWarehouseOptions ? (
             <>
               {isAtlasWarehouseProductType(formData.product_type) ? (
-                <div className="mb-4">
-                  <label className={`${fieldLabelClass} mb-2`}>Structural steel</label>
-                  <select
-                    value={selectedSteelFinish}
-                    onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Steel finish", event.target.value))}
-                    className={inputClass}
-                  >
-                    {ATLAS_STEEL_FINISH_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                  </select>
-                  <p className="mt-1.5 text-xs text-slate-500">This selection controls the Atlas material rate used when the estimate is prepared.</p>
+                <div className="mb-4 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={`${fieldLabelClass} mb-2`}>Wall height</label>
+                    <select value={formData.wall_height || ""} onChange={(event) => handleChange("wall_height", event.target.value)} className={inputClass}>
+                      <option value="">Select wall height</option>
+                      {[3, 4, 4.5, 5].map((height) => <option key={height} value={height}>{height}m</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`${fieldLabelClass} mb-2`}>Structural steel</label>
+                    <select value={selectedSteelFinish} onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Steel finish", event.target.value))} className={inputClass}>
+                      {ATLAS_STEEL_FINISH_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={`${fieldLabelClass} mb-2`}>Sheeting coverage</label>
+                    <select value={selectedAtlasGableMode} onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Sheeting coverage", event.target.value))} className={inputClass}>
+                      {ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                  </div>
+                  {selectedAtlasGableMode !== "structure_only" ? <>
+                    <div>
+                      <label className={`${fieldLabelClass} mb-2`}>Sheeting profile</label>
+                      <select value={selectedAtlasSheetingProfile} onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Sheeting profile", event.target.value))} className={inputClass}>
+                        {["Corrugated", "IBR", "Concealed Fix"].map((profile) => <option key={profile} value={profile}>{profile}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`${fieldLabelClass} mb-2`}>Sheeting finish</label>
+                      <select value={selectedAtlasSheetingFinish} onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Sheeting finish", event.target.value))} className={inputClass}>
+                        <option value="galvanised">Galvanised</option>
+                        <option value="chromadek">Chromadek colour</option>
+                      </select>
+                    </div>
+                    {selectedAtlasSheetingFinish === "chromadek" ? <div className="sm:col-span-2">
+                      <label className={`${fieldLabelClass} mb-2`}>Chromadek colour</label>
+                      <select value={selectedAtlasSheetingColor} onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Sheeting colour", event.target.value))} className={inputClass}>
+                        <option value="">Colour to confirm</option>
+                        {WAREHOUSE_SHEETING_COLORS.filter((option) => option.value !== "galvanised").map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                      </select>
+                    </div> : null}
+                  </> : null}
+                  <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-3 text-sm font-medium text-slate-800">
+                    <input type="checkbox" checked={selectedAtlasInstallation} onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Installation support requested", event.target.checked ? "Yes" : "No"))} />
+                    Installation requested
+                  </label>
+                  <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-3 text-sm font-medium text-slate-800">
+                    <input type="checkbox" checked={selectedAtlasDelivery} onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Delivery support requested", event.target.checked ? "Yes" : "No"))} />
+                    Delivery requested
+                  </label>
+                  {selectedAtlasDelivery ? <div className="sm:col-span-2">
+                    <label className={`${fieldLabelClass} mb-2`}>Delivery distance (km)</label>
+                    <input type="number" min="0" value={selectedAtlasDeliveryDistance || ""} onChange={(event) => handleChange("notes", setControlledNoteValue(formData.notes, "Delivery distance", `${Math.max(0, Number(event.target.value) || 0)} km`))} className={inputClass} placeholder="Distance from manufacturing location" />
+                  </div> : null}
+                  <p className="sm:col-span-2 text-xs leading-5 text-slate-500">These selections carry into the estimate automatically. Installation and delivery remain separately priced line items.</p>
                 </div>
-              ) : null}
-              <label className={`${fieldLabelClass} mb-2`}>Cladding & Installation</label>
-              <div className="mb-3 flex gap-2 flex-wrap">
-                {["IBR", "Chromadek"].map((clad) => (
-                  <button
-                    key={clad}
-                    type="button"
-                    className={`rounded-full border px-3 py-2 text-sm font-medium ${
-                      formData.cladding === clad ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"
-                    }`}
-                    onClick={() => handleChange("cladding", formData.cladding === clad ? "" : clad)}
-                  >
-                    {clad}
-                  </button>
-                ))}
-                {["Supply Only", "Installed"].map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className={`rounded-full border px-3 py-2 text-sm font-medium ${
-                      formData.installation === option ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"
-                    }`}
-                    onClick={() => handleChange("installation", formData.installation === option ? "" : option)}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
+              ) : <>
+                <label className={`${fieldLabelClass} mb-2`}>Cladding & Installation</label>
+                <div className="mb-3 flex gap-2 flex-wrap">
+                  {["IBR", "Chromadek"].map((clad) => <button key={clad} type="button" className={`rounded-full border px-3 py-2 text-sm font-medium ${formData.cladding === clad ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"}`} onClick={() => handleChange("cladding", formData.cladding === clad ? "" : clad)}>{clad}</button>)}
+                  {["Supply Only", "Installed"].map((option) => <button key={option} type="button" className={`rounded-full border px-3 py-2 text-sm font-medium ${formData.installation === option ? "border-red-300 bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"}`} onClick={() => handleChange("installation", formData.installation === option ? "" : option)}>{option}</button>)}
+                </div>
+              </>}
             </>
           ) : null}
 
