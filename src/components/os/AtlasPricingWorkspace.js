@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { AlertTriangle, Check, ChevronDown, ChevronUp, Save, Scale } from "lucide-react"
+import { AlertTriangle, Check, ChevronDown, ChevronUp, Download, FileText, Save, Scale } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { getAtlasProduct, withAtlasProduct } from "../../lib/atlasProductRange"
 import { matchLippedChannelProfile } from "../../lib/atlasLippedChannelProfiles"
@@ -87,6 +87,8 @@ export default function AtlasPricingWorkspace() {
   const [configurationSheetingMode, setConfigurationSheetingMode] = useState("structure_only")
   const [configurationSheetingProfile, setConfigurationSheetingProfile] = useState("IBR")
   const [configurationSheetingFinish, setConfigurationSheetingFinish] = useState("galvanised")
+  const [downloadingDataSheet, setDownloadingDataSheet] = useState(false)
+  const [dataSheetError, setDataSheetError] = useState("")
 
   useEffect(() => {
     let active = true
@@ -328,16 +330,62 @@ export default function AtlasPricingWorkspace() {
     }
   }
 
+  async function downloadDataSheet() {
+    setDownloadingDataSheet(true)
+    setDataSheetError("")
+    try {
+      const params = new URLSearchParams({
+        product: productCode,
+        length: String(configurationLengthM),
+        height: String(configurationEaveHeightM),
+        material: configurationMaterial === "mild" ? "Mild" : configurationMaterial === "galvanised" ? "Galv" : "ZAM",
+        sheeting: configurationSheetingMode,
+        profile: configurationSheetingProfile,
+        finish: configurationSheetingFinish,
+      })
+      const response = await fetch(`/api/os/atlas-pricing/datasheet?${params}`, { headers: await getOsAuthHeaders() })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        throw new Error(payload.error || "Could not generate the Atlas data sheet.")
+      }
+      const blob = await response.blob()
+      const disposition = response.headers.get("content-disposition") || ""
+      const filename = disposition.match(/filename="([^"]+)"/)?.[1] || `atlas-${productCode.toLowerCase()}-transport-data-sheet.pdf`
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = url
+      anchor.download = filename
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(url)
+    } catch (downloadError) {
+      setDataSheetError(downloadError.message)
+    } finally {
+      setDownloadingDataSheet(false)
+    }
+  }
+
   return (
     <div className="space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
       <AtlasModuleHero
         eyebrow={`${productCode} pricing control`}
-        title={`Control every ${product?.name || "Atlas product"} input.`}
-        description="Maintain material rates, component prices, quantity rules and effective dates in one traceable register. Unconfirmed technical inputs remain visible instead of silently entering estimates."
+        title={`Review and control ${product?.name || "Atlas product"} pricing.`}
+        description="Choose a structure, compare the released client guide with the verified benchmark, then open only the component group you need to edit."
         status={["W06", "W08", "W10", "W12", "W15"].includes(productCode) ? "Component pricing" : "Product record pending"}
         actionHref={withAtlasProduct("/os/atlas/bom", productCode)}
         actionLabel="Review product BOM"
       />
+
+      <nav aria-label="Pricing workspace sections" className="sticky top-3 z-20 flex flex-wrap items-center gap-2 border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">
+        <span className="hidden px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:inline">Page guide</span>
+        {[
+          ['configuration', '1. Configure'],
+          ['client-price', '2. Client guide'],
+          ...(pricingBenchmark ? [['benchmark', '3. Benchmark']] : []),
+          ['pricing-register', `${pricingBenchmark ? '4' : '3'}. Pricing lines`],
+        ].map(([id, label]) => <a key={id} href={`#${id}`} className="rounded-full px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-blue-50 hover:text-blue-700">{label}</a>)}
+      </nav>
 
       {!schemaReady ? (
         <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
@@ -356,6 +404,7 @@ export default function AtlasPricingWorkspace() {
       ) : null}
       {error ? <div className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div> : null}
       {message ? <div className="border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{message}</div> : null}
+      {dataSheetError ? <div className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{dataSheetError}</div> : null}
 
       <section className="grid gap-px overflow-hidden border border-slate-200 bg-slate-200 sm:grid-cols-3">
         <div className="bg-white p-4 sm:p-5">
@@ -376,9 +425,10 @@ export default function AtlasPricingWorkspace() {
       </section>
 
       {geometry ? (
-        <section className="border border-[#0043f3]/20 bg-[#f5f9ff] p-4 sm:p-5">
+        <section id="configuration" className="scroll-mt-24 border border-[#0043f3]/20 bg-[#f5f9ff] p-4 sm:p-5">
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-4 border-b border-sky-200 pb-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Step 1 · Live {productCode} configuration</p><h2 className="mt-1 text-xl font-bold text-slate-950">Choose the structure you want to review.</h2><p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">The selected geometry drives every quantity, weight, price and downloadable transport schedule below.</p></div><button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="inline-flex min-h-11 items-center gap-2 bg-[#0043f3] px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"><Download className="h-4 w-4" />{downloadingDataSheet ? "Preparing PDF..." : "Download transport sheet"}</button></div>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_150px_170px] lg:items-end">
-            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Live {productCode} configuration</p><h2 className="mt-1 text-xl font-bold text-slate-950">Price the geometry, not a manually typed baseline.</h2><p className="mt-1 text-xs leading-5 text-slate-600">Columns, rafters and purlins use exact quantities, 90-degree cut lengths and controlled kg/m. Structural waste, fabrication and packaging are R0; delivery and installation remain separate.</p></div>
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Geometry controls</p><h3 className="mt-1 text-base font-bold text-slate-950">Dimensions and material</h3><p className="mt-1 text-xs leading-5 text-slate-600">Delivery and installation remain separate from this supply-only calculation.</p></div>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Building length</span><select value={configurationLengthM} onChange={(event) => setConfigurationLengthM(Number(event.target.value))} className={inputClass}>{controlledLengths.map((length) => <option key={length} value={length}>{length}m · {length / 4} bays</option>)}</select></label>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Eave height</span><select value={configurationEaveHeightM} onChange={(event) => setConfigurationEaveHeightM(Number(event.target.value))} className={inputClass}>{controlledHeights.map((height) => <option key={height} value={height}>{height}m</option>)}</select></label>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Structure material</span><select value={configurationMaterial} onChange={(event) => setConfigurationMaterial(event.target.value)} className={inputClass}><option value="zam">ZAM</option><option value="galvanised">Galvanised</option><option value="mild">Mild steel</option></select></label>
@@ -392,7 +442,7 @@ export default function AtlasPricingWorkspace() {
         </section>
       ) : null}
 
-      <section className="overflow-hidden border border-[#0043f3] bg-[#0043f3] text-white shadow-xl">
+      <section id="client-price" className="scroll-mt-24 overflow-hidden border border-[#0043f3] bg-[#0043f3] text-white shadow-xl">
         <div className="grid gap-px bg-white/15 lg:grid-cols-[minmax(0,1.25fr)_repeat(4,minmax(135px,0.55fr))]">
           <div className="bg-gradient-to-br from-[#001d2e] to-[#0043f3] p-5 sm:p-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Released client guide · same engine as 3D builder</p>
@@ -413,8 +463,9 @@ export default function AtlasPricingWorkspace() {
         </div>
       </section>
 
-      <section className="overflow-hidden border border-slate-900 bg-slate-950 text-white shadow-xl">
-        <div className="grid gap-px bg-white/10 lg:grid-cols-[minmax(0,1.35fr)_repeat(3,minmax(150px,0.55fr))]">
+      <details className="group overflow-hidden border border-slate-300 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 sm:p-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Internal diagnostic</p><h2 className="mt-1 text-base font-bold text-slate-950">Component-register total · {formatMoney(assembledSummary.totalCost)}</h2><p className="mt-1 text-xs text-slate-500">Open this only when reconciling editable OS pricing against the released client guide.</p></div><ChevronDown className="h-5 w-5 text-slate-400 transition group-open:rotate-180" /></summary>
+        <div className="grid gap-px border-t border-slate-800 bg-white/10 text-white lg:grid-cols-[minmax(0,1.35fr)_repeat(3,minmax(150px,0.55fr))]">
           <div className="bg-slate-950 p-5 sm:p-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-300">Internal component-register total · not the client guide</p>
             <div className="mt-3 flex flex-wrap items-end gap-4">
@@ -436,10 +487,10 @@ export default function AtlasPricingWorkspace() {
             </div>
           ))}
         </div>
-      </section>
+      </details>
 
       {pricingBenchmark ? (
-        <section className="overflow-hidden border border-[#0043f3]/20 bg-white shadow-sm">
+        <section id="benchmark" className="scroll-mt-24 overflow-hidden border border-[#0043f3]/20 bg-white shadow-sm">
           <div className="grid gap-px bg-slate-200 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
             <div className="bg-white p-5 sm:p-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">Verified pricing benchmark</p>
@@ -453,6 +504,7 @@ export default function AtlasPricingWorkspace() {
                 <div className="text-left lg:text-right">
                   <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Selling price excl. VAT</p>
                   <p className="mt-1 text-2xl font-bold text-slate-950">{formatMoney(pricingBenchmark.sellingPriceExclVat)}</p>
+                  <button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="mt-3 inline-flex items-center gap-2 border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition hover:border-blue-400 disabled:cursor-wait disabled:opacity-60"><FileText className="h-4 w-4" />{downloadingDataSheet ? "Preparing..." : "Download branded data sheet"}</button>
                 </div>
               </div>
               <div className="mt-5 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-4">
@@ -499,7 +551,7 @@ export default function AtlasPricingWorkspace() {
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Current baseline variance</p>
               <p className="mt-3 text-3xl font-bold">{formatMoney(benchmarkVariance)}</p>
               <p className="mt-2 text-xs leading-5 text-white/65">
-                Current assembled pricing minus the verified benchmark selling price. A zero variance is only meaningful once the component quantities match this exact 20m × 8m × 4.5m configuration.
+                Current assembled pricing minus the verified benchmark selling price. A zero variance is only meaningful once the component quantities match this exact {pricingBenchmark.lengthM}m × {pricingBenchmark.widthM}m × {pricingBenchmark.eaveHeightM}m configuration.
               </p>
               <div className="mt-5 border-t border-white/15 pt-4">
                 <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">Source</p>
@@ -517,16 +569,18 @@ export default function AtlasPricingWorkspace() {
         </section>
       ) : null}
 
-      {groupedRecords.map(([category, items]) => (
-        <section key={category} className="overflow-hidden border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-5">
+      <section id="pricing-register" className="scroll-mt-24 space-y-3">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-300 pb-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Step {pricingBenchmark ? "4" : "3"} · Editable pricing register</p><h2 className="mt-1 text-2xl font-bold text-slate-950">Open one component group at a time.</h2><p className="mt-1 text-sm text-slate-600">Each row shows its baseline cost and approval state. Expand a row only when you need to edit it.</p></div><span className="text-xs font-semibold text-slate-500">{configuredRecords.length} controlled lines · {confirmedCount} confirmed</span></div>
+      {groupedRecords.map(([category, items], categoryIndex) => (
+        <details key={category} open={categoryIndex === 0} className="group overflow-hidden border border-slate-200 bg-white shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-slate-50 px-4 py-3 sm:px-5">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-700">{category}</p>
               <p className="mt-0.5 text-xs text-slate-500">{items.length} pricing line{items.length === 1 ? "" : "s"}</p>
             </div>
-            <Scale className="h-5 w-5 text-slate-400" />
-          </div>
-          <div className="divide-y divide-slate-200">
+            <div className="flex items-center gap-3"><Scale className="h-5 w-5 text-slate-400" /><ChevronDown className="h-4 w-4 text-slate-400 transition group-open:rotate-180" /></div>
+          </summary>
+          <div className="divide-y divide-slate-200 border-t border-slate-200">
             {items.map((record) => {
               const expanded = expandedId === record.id
               const usesLippedChannelProfile = record.pricingUnit === "ton"
@@ -753,8 +807,9 @@ export default function AtlasPricingWorkspace() {
               )
             })}
           </div>
-        </section>
+        </details>
       ))}
+      </section>
     </div>
   )
 }
