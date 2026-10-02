@@ -32,6 +32,7 @@ function buildBuilderNotes(payload) {
   const isAtlasWarehouse = isAtlasWarehouseProductType(payload.productType)
   const lines = [
     "Warehouse Builder submission",
+    payload.submissionChannel ? `Submission channel: ${payload.submissionChannel}` : null,
     payload.productType ? `System: ${isAtlasWarehouse ? "Atlas W-Series Warehouse" : payload.productType}` : null,
     "Budget basis: Supply only",
     payload.intendedUse ? `Intended use: ${payload.intendedUse}` : null,
@@ -392,7 +393,7 @@ export async function POST(request) {
           lead_source: "Warehouse Builder",
           product_type: normalizeAtlasProductType(body.productType) || "LSF Warehouse",
           next_action:
-            `Review builder project${body.installationInterest || body.deliveryRequired ? `; client requested ${[body.installationInterest && "installation", body.deliveryRequired && "delivery"].filter(Boolean).join(" and ")}` : ""}. Confirm scope and site details, then prepare the reviewed quote.`,
+            `${body.submissionChannel === "WhatsApp" ? "Client continued via WhatsApp. Match the incoming message using the design reference, then review the builder project" : "Review builder project"}${body.installationInterest || body.deliveryRequired ? `; client requested ${[body.installationInterest && "installation", body.deliveryRequired && "delivery"].filter(Boolean).join(" and ")}` : ""}. Confirm scope and site details, then prepare the reviewed quote.`,
           follow_up_at: getNextBusinessMorningIso(),
           quote_value: body.estimatedTotal || null,
           created_at: new Date().toISOString(),
