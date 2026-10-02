@@ -201,6 +201,7 @@ export default function AtlasPricingWorkspace() {
     sheetingFinish: configurationSheetingFinish,
   }), [productCode, configurationLengthM, configurationEaveHeightM, configurationMaterial, configurationSheetingMode, configurationSheetingProfile, configurationSheetingFinish])
   const pricingBenchmark = productCode === "W08" ? getAtlasW08PrimaryBenchmark() : productCode === "W06" ? getAtlasW06PrimaryBenchmark() : productCode === "W10" ? getAtlasW10PrimaryBenchmark() : productCode === "W12" ? getAtlasW12PrimaryBenchmark() : null
+  const hasReferenceSection = Boolean(pricingBenchmark) || productCode === "W15"
   const controlledLengths = productCode === "W06" ? ATLAS_W06_LENGTHS_M : productCode === "W10" ? ATLAS_W10_LENGTHS_M : productCode === "W12" ? ATLAS_W12_LENGTHS_M : productCode === "W15" ? ATLAS_W15_LENGTHS_M : ATLAS_W08_LENGTHS_M
   const controlledHeights = productCode === "W06" ? ATLAS_W06_EAVE_HEIGHTS_M : productCode === "W10" ? ATLAS_W10_EAVE_HEIGHTS_M : productCode === "W12" ? ATLAS_W12_EAVE_HEIGHTS_M : productCode === "W15" ? ATLAS_W15_EAVE_HEIGHTS_M : ATLAS_W08_EAVE_HEIGHTS_M
   const benchmarkVariance = pricingBenchmark
@@ -382,8 +383,8 @@ export default function AtlasPricingWorkspace() {
         {[
           ['configuration', '1. Configure'],
           ['client-price', '2. Client guide'],
-          ...(pricingBenchmark ? [['benchmark', '3. Benchmark']] : []),
-          ['pricing-register', `${pricingBenchmark ? '4' : '3'}. Pricing lines`],
+          ...(hasReferenceSection ? [['benchmark', '3. Benchmark']] : []),
+          ['pricing-register', `${hasReferenceSection ? '4' : '3'}. Pricing lines`],
         ].map(([id, label]) => <a key={id} href={`#${id}`} className="rounded-full px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-blue-50 hover:text-blue-700">{label}</a>)}
       </nav>
 
@@ -391,6 +392,30 @@ export default function AtlasPricingWorkspace() {
         <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           Run <strong>supabase/smart_steel_os_atlas_pricing.sql</strong> to activate editable Atlas pricing records.
         </div>
+      ) : productCode === "W15" ? (
+        <section id="benchmark" className="scroll-mt-24 overflow-hidden border border-amber-300 bg-white shadow-sm">
+          <div className="grid gap-px bg-amber-200 lg:grid-cols-[minmax(0,1.25fr)_minmax(290px,0.75fr)]">
+            <div className="bg-white p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Calculated W15 reference · verification pending</p>
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">The engineering schedule is loaded; the historical benchmark is still outstanding.</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">The selected W15 geometry, quantities, member masses and released client guide are calculated by the shared Atlas engine. They have not yet been reconciled against an independently priced W15 cost sheet, so this section is deliberately not labelled as a verified benchmark.</p>
+              <div className="mt-5 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-4">
+                {[
+                  ["Configuration", `${releasedEstimate.input.width}m × ${releasedEstimate.input.length}m × ${releasedEstimate.input.wallHeight}m`],
+                  ["Structural steel", `${releasedEstimate.materials.totalSteelKg.toLocaleString("en-ZA")}kg`],
+                  ["Sheeting estimate", `${releasedEstimate.sheeting.estimatedMassKg.toLocaleString("en-ZA")}kg`],
+                  ["Longest member", `${Math.max(...Object.values(geometry.members).map((member) => member.cutLengthM)).toLocaleString("en-ZA")}m`],
+                ].map(([label, value]) => <div key={label} className="bg-slate-50 p-3.5"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-sm font-bold text-slate-900">{value}</p></div>)}
+              </div>
+            </div>
+            <aside className="bg-amber-50 p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-800">Required to verify</p>
+              <p className="mt-3 text-sm font-bold leading-6 text-slate-950">One completed W15 costing or supplier schedule with component weights, connection cost and final selling price.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-600">Once supplied, it can be added as the permanent W15 benchmark and the variance check will work exactly like W06–W12.</p>
+              <button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="mt-5 inline-flex items-center gap-2 bg-[#0043f3] px-4 py-3 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"><FileText className="h-4 w-4" />{downloadingDataSheet ? "Preparing..." : "Download W15 transport sheet"}</button>
+            </aside>
+          </div>
+        </section>
       ) : null}
       {!profileSchemaReady ? (
         <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
@@ -570,7 +595,7 @@ export default function AtlasPricingWorkspace() {
       ) : null}
 
       <section id="pricing-register" className="scroll-mt-24 space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-300 pb-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Step {pricingBenchmark ? "4" : "3"} · Editable pricing register</p><h2 className="mt-1 text-2xl font-bold text-slate-950">Open one component group at a time.</h2><p className="mt-1 text-sm text-slate-600">Each row shows its baseline cost and approval state. Expand a row only when you need to edit it.</p></div><span className="text-xs font-semibold text-slate-500">{configuredRecords.length} controlled lines · {confirmedCount} confirmed</span></div>
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-300 pb-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Step {hasReferenceSection ? "4" : "3"} · Editable pricing register</p><h2 className="mt-1 text-2xl font-bold text-slate-950">Open one component group at a time.</h2><p className="mt-1 text-sm text-slate-600">Each row shows its baseline cost and approval state. Expand a row only when you need to edit it.</p></div><span className="text-xs font-semibold text-slate-500">{configuredRecords.length} controlled lines · {confirmedCount} confirmed</span></div>
       {groupedRecords.map(([category, items], categoryIndex) => (
         <details key={category} open={categoryIndex === 0} className="group overflow-hidden border border-slate-200 bg-white shadow-sm">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-slate-50 px-4 py-3 sm:px-5">
