@@ -401,6 +401,7 @@ export default function WarehouseBuilderClient() {
   const patchFields = useWarehouseBuilderStore((state) => state.patchFields)
   const reset = useWarehouseBuilderStore((state) => state.reset)
   const [showLeadForm, setShowLeadForm] = useState(false)
+  const [submissionIntent, setSubmissionIntent] = useState("review")
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submissionResult, setSubmissionResult] = useState(null)
@@ -805,7 +806,7 @@ export default function WarehouseBuilderClient() {
     window.setTimeout(() => setSaveStatus(""), 2400)
   }
 
-  const handleWhatsAppDesign = () => {
+  const getWhatsAppDesignUrl = () => {
     const shareUrl = buildShareableBuilderUrl(shareableConfiguration)
     const message = [
       "Hi Smart Steel, I would like help with this warehouse design:",
@@ -816,8 +817,29 @@ export default function WarehouseBuilderClient() {
       shareUrl,
     ].join("\n")
 
-    window.open(`https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
+    return `https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+  }
+
+  const openWhatsAppDesign = (pendingWindow = null) => {
+    const whatsappUrl = getWhatsAppDesignUrl()
+    if (pendingWindow && !pendingWindow.closed) pendingWindow.location.href = whatsappUrl
+    else {
+      const whatsappWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer")
+      if (!whatsappWindow) window.location.assign(whatsappUrl)
+    }
     trackBuilderEvent("warehouse_builder_whatsapp_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
+  }
+
+  const handleWhatsAppDesign = () => {
+    if (submitted) {
+      openWhatsAppDesign()
+      return
+    }
+
+    setSubmissionIntent("whatsapp")
+    setSubmitError("")
+    setShowLeadForm(true)
+    trackBuilderEvent("warehouse_builder_whatsapp_contact_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
   }
 
   const handleOpenDesignSummary = () => {
@@ -839,6 +861,10 @@ export default function WarehouseBuilderClient() {
 
     setSubmitting(true)
     setSubmitError("")
+    const pendingWhatsAppWindow = submissionIntent === "whatsapp"
+      ? window.open("about:blank", "_blank")
+      : null
+    if (pendingWhatsAppWindow) pendingWhatsAppWindow.opener = null
 
     try {
       const response = await fetch("/api/leads", {
@@ -847,6 +873,7 @@ export default function WarehouseBuilderClient() {
         body: JSON.stringify({
           ...leadForm,
           lead_source: "Warehouse Builder",
+          submissionChannel: submissionIntent === "whatsapp" ? "WhatsApp" : "Review request",
           productType: config.productType,
           systemLabel,
           userNotes: config.notes,
@@ -958,12 +985,15 @@ export default function WarehouseBuilderClient() {
       setSubmissionResult(payload)
       setSubmitted(true)
       setLeadForm({ name: "", lastName: "", email: "", phone: "" })
+      if (submissionIntent === "whatsapp") openWhatsAppDesign(pendingWhatsAppWindow)
       trackBuilderEvent("warehouse_builder_enquiry_submitted", {
         system: isAtlasWarehouse ? "atlas" : "lsf",
         value: budgetValue,
         currency: "ZAR",
+        channel: submissionIntent,
       })
     } catch (error) {
+      if (pendingWhatsAppWindow && !pendingWhatsAppWindow.closed) pendingWhatsAppWindow.close()
       setSubmitError(error?.message || "Could not send your design.")
     } finally {
       setSubmitting(false)
@@ -1975,6 +2005,7 @@ export default function WarehouseBuilderClient() {
                 <button
                   type="button"
                   onClick={() => {
+                    setSubmissionIntent("review")
                     setShowLeadForm((open) => !open)
                     if (!showLeadForm) trackBuilderEvent("warehouse_builder_review_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
                   }}
@@ -2115,7 +2146,7 @@ export default function WarehouseBuilderClient() {
                 {isAtlasWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
               </p>
               <h2 id="warehouse-review-title" className="mt-2 pr-12 text-2xl font-semibold sm:text-3xl">
-                {submitted ? "Your project is with Smart Steel" : "Request a reviewed quote"}
+                {submitted ? "Your project is with Smart Steel" : submissionIntent === "whatsapp" ? "Continue on WhatsApp" : "Request a reviewed quote"}
               </h2>
               <div className="mt-5 grid grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur sm:grid-cols-3">
                 <div>
@@ -2140,6 +2171,7 @@ export default function WarehouseBuilderClient() {
                 </div>
                 <h3 className="mt-5 text-xl font-semibold text-slate-950">Request received</h3>
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">We have your complete warehouse design and project context. The Smart Steel team can now review it and follow up with the right next step.</p>
+                {submissionIntent === "whatsapp" ? <p className="mx-auto mt-3 max-w-md text-sm font-semibold text-emerald-700">Your WhatsApp conversation has opened with the design details ready to send.</p> : null}
                 {submissionResult?.confirmationEmailSent ? (
                   <p className="mx-auto mt-3 max-w-md text-sm font-semibold text-emerald-700">Your configuration summary is on its way to your inbox.</p>
                 ) : null}
@@ -2156,9 +2188,9 @@ export default function WarehouseBuilderClient() {
                 <ContactField label="Phone" type="tel" value={leadForm.phone} onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Phone number" required />
                 <div className="sm:col-span-2">
                   <button type="submit" disabled={submitting} className={`w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isAtlasWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>
-                    {submitting ? "Sending your project..." : "Send for review"}
+                    {submitting ? "Saving your project..." : submissionIntent === "whatsapp" ? "Save and continue to WhatsApp" : "Send for review"}
                   </button>
-                  <p className="mt-3 text-center text-xs leading-5 text-slate-500">Your saved configuration and project details will be sent together. No payment is required.</p>
+                  <p className="mt-3 text-center text-xs leading-5 text-slate-500">{submissionIntent === "whatsapp" ? "We save your configuration first so the Smart Steel team can connect your WhatsApp message to the correct project." : "Your saved configuration and project details will be sent together. No payment is required."}</p>
                   {submitError ? <p className="mt-3 text-center text-sm text-red-600">{submitError}</p> : null}
                 </div>
               </form>
