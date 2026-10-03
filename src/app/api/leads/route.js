@@ -131,10 +131,15 @@ function escapeHtml(value) {
 function getSafeBuilderUrl(value) {
   try {
     const url = new URL(String(value || ""), "https://www.smartsteel.co.za")
-    if (url.pathname !== "/warehouse-builder") return "https://www.smartsteel.co.za/warehouse-builder"
+    const allowedPaths = new Set([
+      "/warehouse-builder",
+      "/warehouse-builder/summary",
+      "/tools/solar-carport-estimator/summary",
+    ])
+    if (!allowedPaths.has(url.pathname)) return "https://www.smartsteel.co.za/warehouse-builder/summary"
     return `https://www.smartsteel.co.za${url.pathname}${url.search}`
   } catch {
-    return "https://www.smartsteel.co.za/warehouse-builder"
+    return "https://www.smartsteel.co.za/warehouse-builder/summary"
   }
 }
 
@@ -331,12 +336,15 @@ export async function POST(request) {
   let body = null
   try {
     body = await request.json()
-    const isBuilderSubmission =
+    const isSolarSubmission = body?.lead_source === "Solar Carport Estimator"
+    const isWarehouseBuilderSubmission = !isSolarSubmission && (
       Boolean(body?.configuration) ||
       Boolean(body?.summary) ||
       Boolean(body?.estimatedTotal) ||
       body?.lead_source === "Warehouse Builder" ||
       body?.leadSource === "Warehouse Builder"
+    )
+    const hasStructuredConfiguration = isWarehouseBuilderSubmission || isSolarSubmission
 
     if (!body?.name || !body?.email) {
       return NextResponse.json(
@@ -345,21 +353,21 @@ export async function POST(request) {
       )
     }
 
-    if (isBuilderSubmission && !body?.phone) {
+    if (isWarehouseBuilderSubmission && !body?.phone) {
       return NextResponse.json(
         { error: "Phone is required for warehouse builder submissions." },
         { status: 400 }
       )
     }
 
-    if (isBuilderSubmission && !body?.projectStage) {
+    if (isWarehouseBuilderSubmission && !body?.projectStage) {
       return NextResponse.json(
         { error: "Project stage is required for warehouse builder submissions." },
         { status: 400 }
       )
     }
 
-    if (isBuilderSubmission && !String(body?.location || "").trim()) {
+    if (isWarehouseBuilderSubmission && !String(body?.location || "").trim()) {
       return NextResponse.json(
         { error: "Project location is required for warehouse builder submissions." },
         { status: 400 }
@@ -380,7 +388,7 @@ export async function POST(request) {
       body.estimate_request = current.summary.estimateRequest
       body.notes = `${body.notes || ''}\nOS solar pricing revision: ${release.revision}`
     }
-    const insertPayload = isBuilderSubmission
+    const insertPayload = isWarehouseBuilderSubmission
       ? {
           name: body.name,
           last_name: body.lastName || "Warehouse Builder",
@@ -411,10 +419,10 @@ export async function POST(request) {
       })
 
       if (fallbackResult.success) {
-        const confirmationResult = isBuilderSubmission
+        const confirmationResult = isWarehouseBuilderSubmission
           ? await sendBuilderConfirmation(body)
           : { success: false, reason: "Not a builder submission." }
-        if (isBuilderSubmission && !confirmationResult.success) {
+        if (isWarehouseBuilderSubmission && !confirmationResult.success) {
           console.error("Builder confirmation email failed:", confirmationResult.reason)
         }
         return NextResponse.json(
@@ -445,7 +453,7 @@ export async function POST(request) {
     let builderSubmission = null
     let submissionWarning = ""
 
-    if (isBuilderSubmission && lead?.id) {
+    if (hasStructuredConfiguration && lead?.id) {
       const submissionPayload = buildBuilderSubmission(body, lead.id)
       const { data: submissionData, error: submissionError } = await supabaseServer
         .from("warehouse_builder_submissions")
@@ -467,10 +475,10 @@ export async function POST(request) {
       }
     }
 
-    const confirmationResult = isBuilderSubmission
+    const confirmationResult = isWarehouseBuilderSubmission
       ? await sendBuilderConfirmation(body)
       : { success: false, reason: "Not a builder submission." }
-    if (isBuilderSubmission && !confirmationResult.success) {
+    if (isWarehouseBuilderSubmission && !confirmationResult.success) {
       console.error("Builder confirmation email failed:", confirmationResult.reason)
     }
 
@@ -495,11 +503,12 @@ export async function POST(request) {
       })
 
       if (fallbackResult.success) {
-        const isBuilderSubmission =
+        const isBuilderSubmission = body?.lead_source !== "Solar Carport Estimator" && (
           Boolean(body?.configuration) ||
           Boolean(body?.summary) ||
           body?.lead_source === "Warehouse Builder" ||
           body?.leadSource === "Warehouse Builder"
+        )
         const confirmationResult = isBuilderSubmission
           ? await sendBuilderConfirmation(body)
           : { success: false, reason: "Not a builder submission." }
