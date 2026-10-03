@@ -329,6 +329,30 @@ function formatLeadCreatedAt(createdAt) {
   })
 }
 
+function getReadOnlyConfigurationUrl(value) {
+  try {
+    const url = new URL(String(value || ""))
+    if (url.pathname === "/warehouse-builder") url.pathname = "/warehouse-builder/summary"
+    if (!["/warehouse-builder/summary", "/tools/solar-carport-estimator/summary"].includes(url.pathname)) return ""
+    return url.toString()
+  } catch {
+    return ""
+  }
+}
+
+function getLegacySolarConfigurationUrl(lead) {
+  if (!/solar\s*carport/i.test(String(lead?.product_type || ""))) return ""
+  const runs = [...String(lead?.notes || "").matchAll(/Run\s+[A-Z]:\s*(\d+)\s+spaces\s+·\s+(double-sided butterfly|single-sided)/gi)]
+    .map((match) => {
+      const spaces = Number(match[1])
+      const doubleSided = /double/i.test(match[2])
+      const parkingCount = doubleSided ? spaces / 2 : spaces
+      return `${parkingCount * 2.75}x${doubleSided ? 12 : 6}`
+    })
+  if (!runs.length) return ""
+  return `https://www.smartsteel.co.za/tools/solar-carport-estimator/summary?runs=${encodeURIComponent(runs.join(","))}&scope=supply_only`
+}
+
 function formatZar(value) {
   const parsed = Number(String(value || 0).replace(/[^0-9.-]/g, ""))
   return new Intl.NumberFormat("en-ZA", {
@@ -941,6 +965,9 @@ export default function LeadEditorDrawer({
   const builderSummary = builderSubmission?.summary || {}
   const builderDesignReference = builderConfiguration.designReference || builderSummary.designReference || ""
   const builderConfigurationUrl = builderConfiguration.configurationUrl || builderSummary.configurationUrl || ""
+  const readOnlyConfigurationUrl = getReadOnlyConfigurationUrl(builderConfigurationUrl)
+  const legacySolarConfigurationUrl = !builderSubmission ? getLegacySolarConfigurationUrl(formData) : ""
+  const isSolarConfiguration = builderConfiguration.productType === "Solar carport" || builderSummary.productType === "Atlas Solar Carport"
   const deliveryRequested = Boolean(
     builderConfiguration.deliveryRequired ||
     builderSummary.deliveryRequired ||
@@ -2126,7 +2153,7 @@ export default function LeadEditorDrawer({
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4">
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">Builder handoff</p>
-                <p className="mt-1 truncate text-sm font-bold text-[#001d2e]">{builderDimensions || builderDesignReference || "Original warehouse configuration"}</p>
+                <p className="mt-1 truncate text-sm font-bold text-[#001d2e]">{builderSummary.layout || builderDimensions || builderDesignReference || "Original submitted configuration"}</p>
               </div>
               <span className="text-xs font-semibold text-[#527083] group-open:hidden">View</span>
               <span className="hidden text-xs font-semibold text-[#527083] group-open:inline">Close</span>
@@ -2137,10 +2164,10 @@ export default function LeadEditorDrawer({
               <div className="grid gap-3 border-t border-[#bdd5e1] p-4 sm:grid-cols-[1fr_auto] sm:items-center">
                 <div>
                   <p className="font-semibold text-slate-950">
-                    {builderDesignReference || builderSummary.productType || "Warehouse builder submission"}
+                    {builderDesignReference || builderSummary.productType || (isSolarConfiguration ? "Atlas Solar Carport" : "Warehouse builder submission")}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
-                    {[builderDimensions, builderSummary.enclosure, builderSummary.sheetingProfile || builderConfiguration.sheetingProfile]
+                    {[builderSummary.layout || builderDimensions, builderSummary.modules, builderSummary.enclosure, builderSummary.sheetingProfile || builderConfiguration.sheetingProfile]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
@@ -2154,19 +2181,28 @@ export default function LeadEditorDrawer({
                     </div>
                   ) : null}
                 </div>
-                {/^https?:\/\//i.test(builderConfigurationUrl) ? (
+                {readOnlyConfigurationUrl ? (
                   <a
-                    href={builderConfigurationUrl}
+                    href={readOnlyConfigurationUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#78a9c1] bg-white px-4 py-2.5 text-sm font-semibold text-[#001d2e] transition hover:border-[#0043f3] hover:text-[#0043f3]"
                   >
-                    <Link2 size={15} /> Open configuration
+                    <Link2 size={15} /> View read-only configuration
                   </a>
                 ) : null}
               </div>
             )}
           </details>
+        ) : null}
+
+        {!loadingBuilderSubmission && !builderSubmission && legacySolarConfigurationUrl ? (
+          <section className="rounded-2xl border border-[#9fc3d5] bg-[#eef6fa] p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">Solar configuration</p><p className="mt-1 text-sm font-bold text-[#001d2e]">Submitted estimator layout</p><p className="mt-1 text-xs text-slate-500">Reconstructed from the parking-run details saved with this lead.</p></div>
+              <a href={legacySolarConfigurationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#78a9c1] bg-white px-4 py-2.5 text-sm font-semibold text-[#001d2e] transition hover:border-[#0043f3] hover:text-[#0043f3]"><Link2 size={15} /> View read-only configuration</a>
+            </div>
+          </section>
         ) : null}
 
         <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
