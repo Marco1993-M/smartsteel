@@ -69,6 +69,17 @@ function calculateEstimatedPanelCount(width, length) {
   return getAtlasSolarCarportPanelCount(width, length)
 }
 
+function buildSolarConfigurationUrl(parkingRuns, scope = "supply_only") {
+  const url = new URL(window.location.href)
+  url.pathname = "/tools/solar-carport-estimator/summary"
+  url.search = new URLSearchParams({
+    runs: parkingRuns.map((run) => `${run.width}x${run.length}`).join(","),
+    scope,
+  }).toString()
+  url.hash = ""
+  return url.toString()
+}
+
 function buildEstimatorNotes({ estimate, formState, enquiryNotes, priceLabel, parkingRuns }) {
   const lines = [
     "Solar carport estimator enquiry",
@@ -316,6 +327,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     setSubmitSuccess("")
 
     try {
+      const configurationUrl = buildSolarConfigurationUrl(parkingRuns, formState.scope)
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: {
@@ -332,6 +344,23 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
           quote_value: estimate.pricing.estimatedTotal,
           solarInput: estimate.input,
           solarPricingRevision: estimate.meta.pricingRevision,
+          configurationUrl,
+          configuration: {
+            productType: "Solar carport",
+            parkingRuns,
+            width: siteWidth,
+            length: siteDepth,
+            totalParkingSpaces,
+            totalPanelCapacity,
+            estimatedPowerKwp: Number(estimatedPowerKwp.toFixed(1)),
+            scope: formState.scope,
+          },
+          summary: {
+            productType: "Atlas Solar Carport",
+            configurationUrl,
+            layout: `${parkingRuns.length} run${parkingRuns.length === 1 ? "" : "s"} · ${totalParkingSpaces} spaces`,
+            modules: `${totalPanelCapacity} panels · ${estimatedPowerKwp.toFixed(1)} kWp`,
+          },
           next_action:
             "Review solar carport estimator enquiry, confirm parking layout, and contact the client with the next step.",
           notes: buildEstimatorNotes({
