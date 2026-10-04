@@ -1173,6 +1173,7 @@ export default function LeadEditorDrawer({
 
     const fetchBuilderSubmission = async () => {
       setLoadingBuilderSubmission(true)
+      setBuilderSubmission(null)
       const { data, error } = await supabase
         .from("warehouse_builder_submissions")
         .select("id, configuration, summary, created_at")
