@@ -106,6 +106,8 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   const defaultLength = SOLAR_CARPORT_LENGTH_OPTIONS.some((option) => option.value === initialLength)
     ? initialLength
     : 6
+  const hasSharedConfiguration = ["width", "length", "quantity", "wallHeight", "moduleCount", "deliveryDistance", "scope"]
+    .some((field) => initialInput[field] !== undefined && initialInput[field] !== null && initialInput[field] !== "")
   const [formState, setFormState] = useState({
     width: defaultWidth,
     length: defaultLength,
@@ -166,6 +168,11 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     + Math.max(0, parkingRuns.length - 1) * PARKING_RUN_CLEARANCE_METRES
 
   useEffect(() => {
+    if (hasSharedConfiguration) {
+      setPlanLoaded(true)
+      setSaveStatus("Shared configuration loaded")
+      return
+    }
     try {
       const saved = JSON.parse(window.localStorage.getItem(SOLAR_CARPORT_PLAN_STORAGE_KEY) || "null")
       if (Array.isArray(saved?.parkingRuns) && saved.parkingRuns.length > 0) {
@@ -191,7 +198,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       setPlanLoaded(true)
       setSaveStatus("Saved on this device")
     }
-  }, [])
+  }, [hasSharedConfiguration])
 
   useEffect(() => {
     if (!planLoaded) return undefined
