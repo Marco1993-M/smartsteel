@@ -21,3 +21,18 @@ export function getAtlasSolarCarportPanelCount(width, length) {
 
   return Math.round(parkingBaysPerSide * ATLAS_SOLAR_CARPORT_PANELS_PER_BAY_SIDE * cantileverSides)
 }
+
+export const ATLAS_SOLAR_CARPORT_AISLE_METRES = 7.5
+
+// Nominal parking envelopes, distinct from roof projection and slab extents.
+export function getAtlasSolarCarportSiteLayout(runs) {
+  const width = Math.max(0, ...runs.map((run) => Number(run.width)))
+  let depth = 0
+  const positionedRuns = runs.map((run, index) => {
+    const length = Number(run.length)
+    const top = depth
+    depth += length + (index < runs.length - 1 ? ATLAS_SOLAR_CARPORT_AISLE_METRES : 0)
+    return { ...run, left: (width - Number(run.width)) / 2, top, centre: top + length / 2 }
+  })
+  return { width, depth, aisle: ATLAS_SOLAR_CARPORT_AISLE_METRES, runs: positionedRuns }
+}
