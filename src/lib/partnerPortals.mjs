@@ -1,7 +1,7 @@
 // Both wrappers use the same Atlas product, pricing and sales workflow.
 const PORTALS = [
   { key: 'afgri', name: 'AFGRI', host: 'afgri.smartsteel.co.za', logo: '/afgri-logo-colour-cropped.png', lightLogo: '/afgri-logo-white-cropped.png' },
-  { key: 'agrimark', name: 'Agrimark', host: 'agrimark.smartsteel.co.za', logo: '/agrimark-logo.jpg', lightLogo: '/agrimark-logo.jpg' },
+  { key: 'agrimark', name: 'Agrimark', host: 'agrimark.smartsteel.co.za', logo: '/agrimark-logo.png', lightLogo: '/agrimark-logo.png' },
 ]
 export function getPartnerPortals() {
   return PORTALS.map(portal => ({ ...portal, host: portal.key === 'afgri' ? process.env.AFGRI_PORTAL_HOST || portal.host : portal.host }))
