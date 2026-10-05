@@ -103,6 +103,7 @@ export default function PartnerDashboard() {
     .filter((item) => ["submitted", "in_review", "quoted", "closed"].includes(item.status))
     .sort((left, right) => (quotePriority[left.partner_order_status] ?? 1) - (quotePriority[right.partner_order_status] ?? 1))
   const primaryProduct = products[0]
+  const canStartOpportunity = Boolean(primaryProduct?.price)
 
   if (loading) return <main className="grid min-h-screen place-items-center bg-[#eef4f8] text-sm font-bold text-slate-500">Opening {portal.name} Sales Portal...</main>
 
@@ -127,22 +128,22 @@ export default function PartnerDashboard() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#c1d9e5]">{portal.name} Sales Portal</p>
           <div className="mt-3 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div><h1 className="max-w-3xl text-4xl font-black tracking-[-0.05em] sm:text-5xl">Sell Atlas with confidence.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-white/70 sm:text-base">Start with the customer. Smart Steel will review the final project detail.</p></div>
-            <button type="button" onClick={() => setFormOpen(true)} disabled={!primaryProduct?.price} className="inline-flex min-h-13 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-black text-[#0043f3] transition hover:bg-[#c1d9e5] disabled:opacity-50"><Plus className="h-5 w-5" /> Start opportunity</button>
+            <button type="button" onClick={() => setFormOpen(true)} disabled={!canStartOpportunity} className="inline-flex min-h-13 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-black text-[#0043f3] transition hover:bg-[#c1d9e5] disabled:cursor-not-allowed disabled:opacity-50"><Plus className="h-5 w-5" /> Start opportunity</button>
           </div>
         </section>
 
         {error ? <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
 
         <section className="mt-5 grid gap-3 sm:grid-cols-3">
-          <button type="button" onClick={() => setFormOpen(true)} className="flex items-center justify-between rounded-2xl border border-[#0043f3] bg-[#c1d9e5] p-5 text-left"><span><span className="block text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">New</span><span className="mt-1 block text-lg font-black">Start opportunity</span></span><Plus className="h-5 w-5" /></button>
+          <button type="button" onClick={() => setFormOpen(true)} disabled={!canStartOpportunity} className="flex items-center justify-between rounded-2xl border border-[#0043f3] bg-[#c1d9e5] p-5 text-left disabled:cursor-not-allowed disabled:opacity-50"><span><span className="block text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">New</span><span className="mt-1 block text-lg font-black">Start opportunity</span></span><Plus className="h-5 w-5" /></button>
           <a href="#drafts" className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5"><span><span className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Drafts</span><span className="mt-1 block text-lg font-black">Continue {drafts.length || "draft"}</span></span><ArrowRight className="h-5 w-5" /></a>
           <Link href="/partner/opportunities" className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5"><span><span className="block text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Opportunities</span><span className="mt-1 block text-lg font-black">View all {opportunities.length || "records"}</span></span><FileText className="h-5 w-5" /></Link>
         </section>
 
         <section className="mt-7 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 sm:p-7">
-            <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0043f3]">Ready to sell</p><h2 className="mt-2 text-2xl font-black">Approved Atlas product</h2></div><span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">Live</span></div>
-            {primaryProduct ? <div className="mt-6 rounded-2xl bg-[#eef4f8] p-5"><p className="text-xs font-black uppercase tracking-[0.16em] text-[#0043f3]">Atlas W08 configurable range</p><h3 className="mt-1 text-2xl font-black">Choose the customer’s structure</h3><p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Select the size, steel and sheeting. The portal assigns the exact Atlas SKU and shows the current indicative price automatically.</p><div className="mt-5 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4"><div><p className="text-slate-500">Lengths</p><p className="mt-1 font-black">4m to 20m</p></div><div><p className="text-slate-500">Steel</p><p className="mt-1 font-black">Mild · ZAM · Galv</p></div><div><p className="text-slate-500">Cover</p><p className="mt-1 font-black">Optional</p></div><div><p className="text-slate-500">Pricing</p><p className="mt-1 font-black text-[#0043f3]">Indicative by SKU</p></div></div><button type="button" onClick={() => setFormOpen(true)} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0043f3] px-5 text-sm font-black text-white">Configure W08 product <ArrowRight className="h-4 w-4" /></button></div> : <p className="mt-6 rounded-2xl bg-amber-50 p-5 text-sm text-amber-800">No approved product release is available.</p>}
+            <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0043f3]">Ready to sell</p><h2 className="mt-2 text-2xl font-black">Approved Atlas product</h2></div><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${canStartOpportunity ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>{canStartOpportunity ? "Live" : "Unavailable"}</span></div>
+            {canStartOpportunity ? <div className="mt-6 rounded-2xl bg-[#eef4f8] p-5"><p className="text-xs font-black uppercase tracking-[0.16em] text-[#0043f3]">Atlas W08 configurable range</p><h3 className="mt-1 text-2xl font-black">Choose the customer’s structure</h3><p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Select the size, steel and sheeting. The portal assigns the exact Atlas SKU and shows the current indicative price automatically.</p><div className="mt-5 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4"><div><p className="text-slate-500">Lengths</p><p className="mt-1 font-black">4m to 20m</p></div><div><p className="text-slate-500">Steel</p><p className="mt-1 font-black">Mild · ZAM · Galv</p></div><div><p className="text-slate-500">Cover</p><p className="mt-1 font-black">Optional</p></div><div><p className="text-slate-500">Pricing</p><p className="mt-1 font-black text-[#0043f3]">Indicative by SKU</p></div></div><button type="button" onClick={() => setFormOpen(true)} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0043f3] px-5 text-sm font-black text-white">Configure W08 product <ArrowRight className="h-4 w-4" /></button></div> : <p className="mt-6 rounded-2xl bg-amber-50 p-5 text-sm text-amber-800">No current approved Atlas product and price release is available. Ask Smart Steel to renew the release before creating opportunities.</p>}
           </div>
 
           <div className="space-y-5">
@@ -152,7 +153,7 @@ export default function PartnerDashboard() {
         </section>
       </div>
 
-      {formOpen && primaryProduct?.price ? <PartnerAtlasConfigurator product={primaryProduct} initialOpportunity={editingOpportunity} onClose={() => { setFormOpen(false); setEditingOpportunity(null) }} onCreated={async () => { setFormOpen(false); setEditingOpportunity(null); await loadPortal() }} /> : null}
+      {formOpen && canStartOpportunity ? <PartnerAtlasConfigurator product={primaryProduct} initialOpportunity={editingOpportunity} onClose={() => { setFormOpen(false); setEditingOpportunity(null) }} onCreated={async () => { setFormOpen(false); setEditingOpportunity(null); await loadPortal() }} /> : null}
     </main>
   )
 }
