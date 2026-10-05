@@ -6,14 +6,13 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useSolarCarportEstimate } from 'lib/useSolarCarportEstimate'
 import { ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES } from "lib/atlasSolarCarportProfiles"
-import { getAtlasSolarCarportPanelCount } from "lib/atlasSolarCarportLayouts"
+import { getAtlasSolarCarportPanelCount, getAtlasSolarCarportSiteLayout } from "lib/atlasSolarCarportLayouts"
 import { calculateSolarEstimate, formatCurrency } from "../../../lib/estimates/solarEstimate"
 
 const DEFAULT_CLEARANCE_HEIGHT = 2.4
 const DEFAULT_SOLAR_PANEL_WATTAGE = 550
 const SMART_STEEL_WHATSAPP_NUMBER = "27828464555"
 const SOLAR_CARPORT_PLAN_STORAGE_KEY = "atlas-solar-carport-plan-v1"
-const PARKING_RUN_CLEARANCE_METRES = 7.5
 const SolarCarportPreview = dynamic(
   () => import("../../../components/solar-carport/SolarCarportPreview"),
   {
@@ -87,7 +86,9 @@ function buildEstimatorNotes({ estimate, formState, enquiryNotes, priceLabel, pa
     `Estimated budget (excl. VAT): ${priceLabel}`,
     `Indicative area: ${estimate.labels.area}`,
     `Modules: ${estimate.labels.modules}`,
-    `Delivery: ${estimate.labels.delivery}`,
+    `Delivery: ${formState.deliveryRequired ? "Requested, quote separately" : "Not requested"}`,
+    `Installation: ${formState.installationInterest ? "Requested, quote separately" : "Not requested"}`,
+    `Site: ${formState.location.trim() || "To be confirmed"}`,
     formState.proceedTiming ? `Looking to proceed: ${PROCEED_TIMING_OPTIONS.find((option) => option.value === formState.proceedTiming)?.label || formState.proceedTiming}` : null,
     enquiryNotes?.trim() ? `Client notes: ${enquiryNotes.trim()}` : null,
     ...parkingRuns.map((run, index) => `Run ${String.fromCharCode(65 + index)}: ${run.parkingCount * (run.length === 12 ? 2 : 1)} spaces · ${run.length === 12 ? "double-sided butterfly" : "single-sided"}`),
@@ -117,6 +118,9 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     deliveryDistance: 0,
     scope: "supply_only",
     proceedTiming: "",
+    deliveryRequired: false,
+    installationInterest: false,
+    location: "",
   })
   const [showEnquiryForm, setShowEnquiryForm] = useState(false)
   const [activeStage, setActiveStage] = useState("configure")
@@ -163,9 +167,9 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   const totalParkingSpaces = parkingRuns.reduce((sum, run) => sum + run.parkingCount * (run.length === 12 ? 2 : 1), 0)
   const totalPanelCapacity = parkingRuns.reduce((sum, run) => sum + run.moduleCount, 0)
   const estimatedPowerKwp = totalPanelCapacity * DEFAULT_SOLAR_PANEL_WATTAGE / 1000
-  const siteWidth = Math.max(...parkingRuns.map((run) => run.width))
-  const siteDepth = parkingRuns.reduce((sum, run) => sum + run.length, 0)
-    + Math.max(0, parkingRuns.length - 1) * PARKING_RUN_CLEARANCE_METRES
+  const siteLayout = getAtlasSolarCarportSiteLayout(parkingRuns)
+  const siteWidth = siteLayout.width
+  const siteDepth = siteLayout.depth
 
   useEffect(() => {
     if (hasSharedConfiguration) {
@@ -175,6 +179,11 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     }
     try {
       const saved = JSON.parse(window.localStorage.getItem(SOLAR_CARPORT_PLAN_STORAGE_KEY) || "null")
+      if (saved?.services) setFormState((current) => ({ ...current,
+        deliveryRequired: saved.services.deliveryRequired === true,
+        installationInterest: saved.services.installationInterest === true,
+        location: typeof saved.services.location === "string" ? saved.services.location.slice(0, 500) : "",
+      }))
       if (Array.isArray(saved?.parkingRuns) && saved.parkingRuns.length > 0) {
         const validRuns = saved.parkingRuns
           .filter((run) =>
@@ -204,11 +213,11 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     if (!planLoaded) return undefined
     setSaveStatus("Saving...")
     const timer = window.setTimeout(() => {
-      window.localStorage.setItem(SOLAR_CARPORT_PLAN_STORAGE_KEY, JSON.stringify({ parkingRuns, selectedRunId }))
+      window.localStorage.setItem(SOLAR_CARPORT_PLAN_STORAGE_KEY, JSON.stringify({ parkingRuns, selectedRunId, services: { deliveryRequired: formState.deliveryRequired, installationInterest: formState.installationInterest, location: formState.location } }))
       setSaveStatus("Saved on this device")
     }, 350)
     return () => window.clearTimeout(timer)
-  }, [parkingRuns, planLoaded, selectedRunId])
+  }, [parkingRuns, planLoaded, selectedRunId, formState.deliveryRequired, formState.installationInterest, formState.location])
 
   const whatsappMessage = [
     "Hi Smart Steel, I'd like to discuss an Atlas solar carport.",
@@ -217,6 +226,9 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     ...parkingRuns.map((run, index) => `Run ${String.fromCharCode(65 + index)}: ${run.parkingCount * (run.length === 12 ? 2 : 1)} spaces, ${run.length === 12 ? "double-sided butterfly" : "single-sided"}`),
     `Estimated panel capacity: ${totalPanelCapacity} panels total`,
     `Structure-only starting budget: ${priceLabel} excl. VAT`,
+    `Delivery requested: ${formState.deliveryRequired ? "Yes" : "No"}`,
+    `Installation requested: ${formState.installationInterest ? "Yes" : "No"}`,
+    `Site: ${formState.location.trim() || "To be confirmed"}`,
     "",
     "Please get in touch with me about the next step.",
   ].join("\n")
@@ -305,6 +317,9 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       deliveryDistance: 0,
       scope: "supply_only",
       proceedTiming: "",
+    deliveryRequired: false,
+    installationInterest: false,
+    location: "",
     })
     setActiveStage("configure")
     setParkingRuns([{
@@ -350,6 +365,9 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
           estimate_request: estimate.summary.estimateRequest,
           quote_value: estimate.pricing.estimatedTotal,
           solarInput: estimate.input,
+          deliveryRequired: formState.deliveryRequired,
+          installationInterest: formState.installationInterest,
+          location: formState.location.trim(),
           solarPricingRevision: estimate.meta.pricingRevision,
           configurationUrl,
           configuration: {
@@ -361,6 +379,9 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             totalPanelCapacity,
             estimatedPowerKwp: Number(estimatedPowerKwp.toFixed(1)),
             scope: formState.scope,
+            deliveryRequired: formState.deliveryRequired,
+            installationInterest: formState.installationInterest,
+            location: formState.location.trim(),
           },
           summary: {
             productType: "Atlas Solar Carport",
@@ -369,7 +390,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             modules: `${totalPanelCapacity} panels · ${estimatedPowerKwp.toFixed(1)} kWp`,
           },
           next_action:
-            "Review solar carport estimator enquiry, confirm parking layout, and contact the client with the next step.",
+            `Review solar carport layout${formState.deliveryRequired ? "; quote delivery" : ""}${formState.installationInterest ? "; quote installation" : ""}${formState.location.trim() ? ` at ${formState.location.trim()}` : "; confirm site location"}.`,
           notes: buildEstimatorNotes({
             estimate,
             formState,
@@ -389,7 +410,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       reportAtlasSolarCarportConversion()
 
       setSubmitSuccess(
-        "Your solar carport enquiry has been saved. The Smart Steel team can now pick it up in the CRM and follow up properly."
+        "Thank you. We’ll review your layout and requested services, confirm any site details with you, and prepare your quote."
       )
       setEnquiryState({
         name: "",
@@ -621,9 +642,10 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   const spaces = run.parkingCount * (run.length === 12 ? 2 : 1)
                   return (
                     <div key={run.id} className={`flex items-center gap-2 rounded-xl border p-2 transition ${isSelected ? "border-[#0043f3] bg-[#edf4ff]" : "border-slate-200 bg-white"}`}>
-                      <button type="button" onClick={() => selectParkingRun(run)} className="min-w-0 flex-1 px-2 py-1 text-left">
-                        <span className="text-xs font-bold text-[#0043f3]">Run {String.fromCharCode(65 + index)}</span>
+                      <button type="button" onClick={() => selectParkingRun(run)} aria-pressed={isSelected} className="min-w-0 flex-1 px-2 py-1 text-left">
+                        <span className="text-xs font-bold text-[#0043f3]">Run {String.fromCharCode(65 + index)}{isSelected ? " · Editing" : ""}</span>
                         <span className="ml-2 text-sm font-semibold text-[#001d2e]">{spaces} spaces · {run.length === 12 ? "Butterfly" : "Single-sided"}</span>
+                        <span className="mt-1 block text-xs text-slate-500">{run.width}m wide × {run.length}m deep</span>
                       </button>
                       <button type="button" onClick={() => removeParkingRun(run.id)} disabled={parkingRuns.length === 1} className="rounded-lg px-2 py-1 text-xs font-semibold text-slate-400 hover:bg-white hover:text-red-600 disabled:opacity-30">Remove</button>
                     </div>
@@ -641,7 +663,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               <div className="rounded-xl border border-[#c1d9e5] bg-[#edf4f8] p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0043f3]">Footprint</p>
                 <p className="mt-1 text-lg font-semibold text-[#121a20]">{formatDimension(siteWidth)} × {formatDimension(siteDepth)}</p>
-                <p className="text-xs text-[#121a20]/60">Includes 7.5m clear aisles</p>
+                <p className="text-xs text-[#121a20]/60">{parkingRuns.length > 1 ? "Includes 7.5m planning aisles" : "Nominal parking envelope"}</p>
               </div>
               <div className="rounded-xl border border-[#c1d9e5] bg-[#edf4f8] p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0043f3]">Panels</p>
@@ -740,6 +762,16 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                   <p className="shrink-0 text-sm font-bold text-[#0043f3]">{priceLabel}</p>
                 </div>
 
+                <fieldset className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+                  <legend className="px-1 text-sm font-bold">Additional services</legend>
+                  <p className="mb-3 text-xs text-slate-500">Delivery and installation are quoted separately from the structure price.</p>
+                  <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={formState.deliveryRequired} onChange={(event) => handleFieldChange("deliveryRequired", event.target.checked)} /> Please quote delivery</label>
+                  <label className="mt-3 flex items-center gap-3 text-sm"><input type="checkbox" checked={formState.installationInterest} onChange={(event) => handleFieldChange("installationInterest", event.target.checked)} /> Please quote installation</label>
+                  <label className="mt-4 block text-sm font-semibold">Site town or delivery address <span className="font-normal text-slate-500">(optional)</span>
+                    <input type="text" maxLength={500} value={formState.location} onChange={(event) => handleFieldChange("location", event.target.value)} placeholder="e.g. Midrand, Gauteng" className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-3 font-normal" />
+                  </label>
+                  {(formState.deliveryRequired || formState.installationInterest) && !formState.location.trim() && <p className="mt-2 text-xs text-slate-500">We’ll contact you for the location before pricing these services.</p>}
+                </fieldset>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <label className="text-sm font-semibold text-slate-700">
                     Name
