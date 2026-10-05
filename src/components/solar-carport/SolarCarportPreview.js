@@ -164,7 +164,7 @@ function CantileverRow({ parkingCount, direction = 1, offsetZ = 0, structureView
   )
 }
 
-function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale = 1, positionZ = 0, label, selected, onSelect }) {
+function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale = 1, positionX = 0, positionZ = 0, rotationDeg = 0, label, selected, onSelect }) {
   const isDoubleRow = rowLength === 12
   const structureLength = parkingCount * MODULE_WIDTH
   const slabDepth = isDoubleRow ? ROOF_DEPTH * 2 + 1.3 : ROOF_DEPTH + 1.2
@@ -173,7 +173,8 @@ function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale 
 
   return (
     <group
-      position={[0, -1.18, positionZ]}
+      position={[positionX, -1.18, positionZ]}
+      rotation={[0, -rotationDeg * Math.PI / 180, 0]}
       scale={modelScale}
       onClick={(event) => {
         event.stopPropagation()
@@ -210,7 +211,7 @@ function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale 
   )
 }
 
-export default function SolarCarportPreview({ parkingCount, rowLength, parkingRuns, selectedRunId, onSelectRun }) {
+export default function SolarCarportPreview({ parkingCount, rowLength, parkingRuns, selectedRunId, onSelectRun, onPlaceRun }) {
   const controlsRef = useRef(null)
   const [cameraView, setCameraView] = useState("overview")
   const [planResetSignal, setPlanResetSignal] = useState(0)
@@ -219,8 +220,7 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
   const modelScale = Math.min(1, 8.8 / maxStructureLength)
   const siteLayout = getAtlasSolarCarportSiteLayout(runs.map((run) => ({ ...run, width: run.parkingCount * MODULE_WIDTH })))
   const totalDepth = siteLayout.depth
-  const runOffsets = siteLayout.runs.map((run) => run.centre - totalDepth / 2)
-  const displayWidth = maxStructureLength * modelScale
+  const displayWidth = siteLayout.width * modelScale
   const displayDepth = totalDepth * modelScale
   const cameraDistance = Math.max(7.4, Math.sqrt(displayWidth ** 2 + displayDepth ** 2) * 1.02)
   const cameraPositions = useMemo(() => ({
@@ -264,26 +264,28 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
       onViewChange={setCameraView}
       onReset={resetView}
     >
-      {cameraView === "plan" ? <SolarCarportPlan runs={siteLayout.runs} selectedRunId={selectedRunId} onSelectRun={onSelectRun} resetSignal={planResetSignal} /> : <Canvas camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
+      {cameraView === "plan" ? <SolarCarportPlan runs={siteLayout.runs} selectedRunId={selectedRunId} onSelectRun={onSelectRun} onPlaceRun={onPlaceRun} resetSignal={planResetSignal} /> : <Canvas camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
         <color attach="background" args={["#edf3f7"]} />
         <ambientLight intensity={1.35} />
         <directionalLight position={[5, 8, 6]} intensity={1.8} castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} />
         <directionalLight position={[-5, 3, -4]} intensity={0.45} />
         <CameraRig position={cameraPositions[cameraView]} target={orbitTarget} controlsRef={controlsRef} />
-        {runs.map((run, index) => (
+        {siteLayout.runs.map((run, index) => (
           <SolarCarportModel
             key={run.id || index}
             parkingCount={run.parkingCount}
             rowLength={run.length}
             structureView={cameraView === "structure"}
             modelScale={modelScale}
-            positionZ={runOffsets[index] * modelScale}
+            positionX={(run.x - (siteLayout.minX + siteLayout.maxX) / 2) * modelScale}
+            positionZ={(run.z - (siteLayout.minZ + siteLayout.maxZ) / 2) * modelScale}
+            rotationDeg={run.rotationDeg || 0}
             label={`Run ${String.fromCharCode(65 + index)}`}
             selected={run.id === selectedRunId}
             onSelect={() => onSelectRun?.(run.id)}
           />
         ))}
-        <ContactShadows position={[0, -1.2, 0]} opacity={0.28} scale={Math.max(14, displayDepth * 1.3)} blur={2.4} far={4} resolution={256} color="#8293a0" />
+        <ContactShadows position={[0, -1.2, 0]} opacity={0.28} scale={Math.max(14, displayWidth * 1.3, displayDepth * 1.3)} blur={2.4} far={4} resolution={256} color="#8293a0" />
         <OrbitControls ref={controlsRef} makeDefault enablePan={false} target={orbitTarget} minDistance={5.5} maxDistance={cameraDistance * 1.7} minPolarAngle={Math.PI / 5} maxPolarAngle={Math.PI / 2.05} />
       </Canvas>}
     </Atlas3DViewerShell>
