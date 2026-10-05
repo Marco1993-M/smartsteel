@@ -13,15 +13,16 @@ export default function Atlas3DViewerShell({
   description,
   children,
   expanded = false,
+  planView = false,
 }) {
   return (
     <div
-      className={`relative ${expanded ? "h-[480px] sm:h-[520px]" : "h-[290px] sm:h-[360px]"} overflow-hidden rounded-[1.6rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)] shadow-inner`}
+      className={`relative ${expanded ? "h-[480px] sm:h-[520px]" : "h-[290px] sm:h-[360px]"} overflow-hidden rounded-[1.6rem] border border-slate-200 ${planView ? "bg-[#edf3f7]" : "bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)]"} shadow-inner`}
       role="group"
       aria-label="Interactive Atlas 3D viewer"
     >
       <p className="sr-only">{description}</p>
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(255,255,255,0))]" />
+      {!planView && <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(255,255,255,0))]" />}
 
       <div className="absolute left-3 top-3 z-20 flex max-w-[calc(100%-4.5rem)] overflow-x-auto rounded-full border border-white/80 bg-white/88 p-1 shadow-sm backdrop-blur sm:left-4 sm:top-4">
         {views.map((view) => (

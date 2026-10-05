@@ -213,6 +213,7 @@ function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale 
 export default function SolarCarportPreview({ parkingCount, rowLength, parkingRuns, selectedRunId, onSelectRun }) {
   const controlsRef = useRef(null)
   const [cameraView, setCameraView] = useState("overview")
+  const [planResetSignal, setPlanResetSignal] = useState(0)
   const runs = parkingRuns?.length ? parkingRuns : [{ parkingCount, length: rowLength }]
   const maxStructureLength = Math.max(...runs.map((run) => run.parkingCount * MODULE_WIDTH))
   const modelScale = Math.min(1, 8.8 / maxStructureLength)
@@ -236,6 +237,10 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
   const description = `Interactive 3D model of an Atlas ${configurationLabel.toLowerCase()} solar carport in ZAM steel. Use the view controls or drag to rotate.`
 
   const resetView = () => {
+    if (cameraView === "plan") {
+      setPlanResetSignal((value) => value + 1)
+      return
+    }
     setCameraView("overview")
     controlsRef.current?.reset()
   }
@@ -243,6 +248,7 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
   return (
     <Atlas3DViewerShell
       expanded={cameraView === "plan"}
+      planView={cameraView === "plan"}
       title={cameraView === "plan" ? "Nominal parking plan" : "Live Atlas configuration"}
       subtitle={configurationLabel}
       badge="ZAM steel"
@@ -258,7 +264,7 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
       onViewChange={setCameraView}
       onReset={resetView}
     >
-      {cameraView === "plan" ? <SolarCarportPlan runs={siteLayout.runs} selectedRunId={selectedRunId} onSelectRun={onSelectRun} /> : <Canvas camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
+      {cameraView === "plan" ? <SolarCarportPlan runs={siteLayout.runs} selectedRunId={selectedRunId} onSelectRun={onSelectRun} resetSignal={planResetSignal} /> : <Canvas camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
         <color attach="background" args={["#edf3f7"]} />
         <ambientLight intensity={1.35} />
         <directionalLight position={[5, 8, 6]} intensity={1.8} castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} />
