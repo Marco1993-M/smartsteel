@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useSolarCarportEstimate } from 'lib/useSolarCarportEstimate'
 import { ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES } from "lib/atlasSolarCarportProfiles"
-import { getAtlasSolarCarportPanelCount, getAtlasSolarCarportSiteLayout } from "lib/atlasSolarCarportLayouts"
+import { getAtlasSolarCarportPanelCount, getAtlasSolarCarportSiteLayout, isAtlasSolarCarportLayoutValid, normalizeAtlasSolarCarportRuns, placeAtlasSolarCarportRun } from "lib/atlasSolarCarportLayouts"
 import { calculateSolarEstimate, formatCurrency } from "../../../lib/estimates/solarEstimate"
 
 const DEFAULT_CLEARANCE_HEIGHT = 2.4
@@ -73,6 +73,7 @@ function buildSolarConfigurationUrl(parkingRuns, scope = "supply_only") {
   url.pathname = "/tools/solar-carport-estimator/summary"
   url.search = new URLSearchParams({
     runs: parkingRuns.map((run) => `${run.width}x${run.length}`).join(","),
+    layout: parkingRuns.map((run) => `${run.x}:${run.z}:${run.rotationDeg || 0}`).join(","),
     scope,
   }).toString()
   url.hash = ""
@@ -130,8 +131,10 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     length: defaultLength,
     parkingCount: defaultWidth / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES,
     moduleCount: calculateEstimatedPanelCount(defaultWidth, defaultLength),
+    x: 0, z: 0, rotationDeg: 0,
   }])
   const [selectedRunId, setSelectedRunId] = useState("run-1")
+  const [placementNotice, setPlacementNotice] = useState("")
   const [planLoaded, setPlanLoaded] = useState(false)
   const [saveStatus, setSaveStatus] = useState("Loading saved plan...")
   const [enquiryState, setEnquiryState] = useState({
@@ -155,7 +158,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
         moduleCount: formState.moduleCount,
         deliveryDistance: formState.deliveryDistance,
         scope: formState.scope,
-        parkingRuns,
+        parkingRuns: parkingRuns.map(({ width, length, parkingCount, moduleCount }) => ({ width, length, parkingCount, moduleCount })),
       }),
     [formState, parkingRuns]
   )
@@ -185,7 +188,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
         location: typeof saved.services.location === "string" ? saved.services.location.slice(0, 500) : "",
       }))
       if (Array.isArray(saved?.parkingRuns) && saved.parkingRuns.length > 0) {
-        const validRuns = saved.parkingRuns
+        const validRuns = normalizeAtlasSolarCarportRuns(saved.parkingRuns
           .filter((run) =>
             SOLAR_CARPORT_WIDTH_OPTIONS.some((option) => option.width === Number(run.width))
             && SOLAR_CARPORT_LENGTH_OPTIONS.some((option) => option.value === Number(run.length))
@@ -193,7 +196,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
           .map((run) => ({
             ...run,
             moduleCount: calculateEstimatedPanelCount(Number(run.width), Number(run.length)),
-          }))
+          })))
         if (validRuns.length > 0) {
           setParkingRuns(validRuns)
           const run = validRuns.find((item) => item.id === saved.selectedRunId) || validRuns[0]
@@ -253,7 +256,8 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
         const next = { ...run, [field]: value }
         next.parkingCount = next.width / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES
         next.moduleCount = calculateEstimatedPanelCount(next.width, next.length)
-        return next
+        return isAtlasSolarCarportLayoutValid([...runs.filter((item) => item.id !== run.id), next])
+          ? next : placeAtlasSolarCarportRun(runs.filter((item) => item.id !== run.id), next)
       }))
     }
     setSubmitError("")
@@ -280,14 +284,15 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       parkingCount: 2,
       moduleCount: calculateEstimatedPanelCount(width, length),
     }
-    setParkingRuns((runs) => [...runs, nextRun])
-    selectParkingRun(nextRun)
+    const placed = placeAtlasSolarCarportRun(parkingRuns, nextRun)
+    setParkingRuns([...parkingRuns, placed])
+    selectParkingRun(placed)
   }
 
   const duplicateParkingRun = () => {
     if (!selectedRun) return
-    const nextRun = { ...selectedRun, id: `run-${Date.now()}` }
-    setParkingRuns((runs) => [...runs, nextRun])
+    const nextRun = placeAtlasSolarCarportRun(parkingRuns, { ...selectedRun, id: `run-${Date.now()}` })
+    setParkingRuns([...parkingRuns, nextRun])
     selectParkingRun(nextRun)
   }
 
@@ -296,6 +301,17 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     const nextRuns = parkingRuns.filter((run) => run.id !== runId)
     setParkingRuns(nextRuns)
     if (selectedRunId === runId) selectParkingRun(nextRuns[0])
+  }
+
+  const placeParkingRun = (runId, placement) => {
+    const nextRuns = parkingRuns.map((run) => run.id === runId ? { ...run, ...placement } : run)
+    if (!isAtlasSolarCarportLayoutValid(nextRuns)) {
+      setPlacementNotice("Keep at least 7.5m clear between parking runs.")
+      return false
+    }
+    setParkingRuns(nextRuns)
+    setPlacementNotice("")
+    return true
   }
 
   const handleEnquiryChange = (field, value) => {
@@ -328,6 +344,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       length: defaultLength,
       parkingCount: defaultWidth / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES,
       moduleCount: calculateEstimatedPanelCount(defaultWidth, defaultLength),
+      x: 0, z: 0, rotationDeg: 0,
     }])
     setSelectedRunId("run-1")
     setShowEnquiryForm(false)
@@ -495,7 +512,9 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                 const run = parkingRuns.find((item) => item.id === runId)
                 if (run) selectParkingRun(run)
               }}
+              onPlaceRun={placeParkingRun}
             />
+            {placementNotice && <p role="status" className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">{placementNotice}</p>}
           </div>
 
           <div id="solar-carport-workspace" className="min-w-0 scroll-mt-24 lg:col-span-5">
@@ -663,7 +682,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               <div className="rounded-xl border border-[#c1d9e5] bg-[#edf4f8] p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0043f3]">Footprint</p>
                 <p className="mt-1 text-lg font-semibold text-[#121a20]">{formatDimension(siteWidth)} × {formatDimension(siteDepth)}</p>
-                <p className="text-xs text-[#121a20]/60">{parkingRuns.length > 1 ? "Includes 7.5m planning aisles" : "Nominal parking envelope"}</p>
+                <p className="text-xs text-[#121a20]/60">{parkingRuns.length > 1 ? "7.5m minimum run clearance" : "Nominal parking envelope"}</p>
               </div>
               <div className="rounded-xl border border-[#c1d9e5] bg-[#edf4f8] p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0043f3]">Panels</p>
