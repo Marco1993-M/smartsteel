@@ -44,7 +44,9 @@ export default function PartnerLoginPage() {
         <div className="flex items-center gap-5">
           <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={230} height={70} className="h-14 w-auto object-contain" priority />
           <span className="h-10 w-px bg-white/20" />
-          <Image src={portal.lightLogo} alt={`${portal.name}`} width={150} height={58} className="h-11 w-auto object-contain" priority />
+          <span className={portal.key === "agrimark" ? "rounded-lg bg-white px-2 py-1" : ""}>
+            <Image src={portal.lightLogo} alt={`${portal.name}`} width={150} height={58} className="h-11 w-auto object-contain" priority />
+          </span>
         </div>
         <div className="max-w-2xl">
           <p className="text-sm font-bold uppercase tracking-[0.24em] text-[#c1d9e5]">{portal.name} Sales Portal</p>
