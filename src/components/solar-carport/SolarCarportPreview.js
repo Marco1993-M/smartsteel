@@ -6,6 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import Atlas3DViewerShell from "../atlas/Atlas3DViewerShell"
 import ChannelGeometry from "./ChannelGeometry"
+import SolarCarportPlan from "./SolarCarportPlan"
+import { getAtlasSolarCarportSiteLayout } from "lib/atlasSolarCarportLayouts"
 import { calculateSolarCarportGeometry } from 'lib/atlasSolarCarportGeometry'
 import {
   ATLAS_SOLAR_CARPORT_PROFILES,
@@ -214,14 +216,9 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
   const runs = parkingRuns?.length ? parkingRuns : [{ parkingCount, length: rowLength }]
   const maxStructureLength = Math.max(...runs.map((run) => run.parkingCount * MODULE_WIDTH))
   const modelScale = Math.min(1, 8.8 / maxStructureLength)
-  // Planning clearance between parallel parking runs; site layouts remain subject to review.
-  const runGap = 7.5
-  const runDepths = runs.map((run) => Number(run.length) === 12 ? ROOF_DEPTH * 2 + 0.4 : ROOF_DEPTH)
-  const totalDepth = runDepths.reduce((sum, depth) => sum + depth, 0) + Math.max(0, runs.length - 1) * runGap
-  const runOffsets = runDepths.map((depth, index) => {
-    const before = runDepths.slice(0, index).reduce((sum, item) => sum + item, 0) + index * runGap
-    return -totalDepth / 2 + before + depth / 2
-  })
+  const siteLayout = getAtlasSolarCarportSiteLayout(runs.map((run) => ({ ...run, width: run.parkingCount * MODULE_WIDTH })))
+  const totalDepth = siteLayout.depth
+  const runOffsets = siteLayout.runs.map((run) => run.centre - totalDepth / 2)
   const displayWidth = maxStructureLength * modelScale
   const displayDepth = totalDepth * modelScale
   const cameraDistance = Math.max(7.4, Math.sqrt(displayWidth ** 2 + displayDepth ** 2) * 1.02)
@@ -245,12 +242,14 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
 
   return (
     <Atlas3DViewerShell
-      title="Live Atlas configuration"
+      expanded={cameraView === "plan"}
+      title={cameraView === "plan" ? "Nominal parking plan" : "Live Atlas configuration"}
       subtitle={configurationLabel}
       badge="ZAM steel"
       description={description}
       views={[
         { value: "overview", label: "Overview" },
+        { value: "plan", label: "Top / dimensions" },
         { value: "structure", label: "Structure" },
         { value: "front", label: "Front" },
         { value: "side", label: "Side" },
@@ -259,7 +258,7 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
       onViewChange={setCameraView}
       onReset={resetView}
     >
-      <Canvas camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
+      {cameraView === "plan" ? <SolarCarportPlan runs={siteLayout.runs} selectedRunId={selectedRunId} onSelectRun={onSelectRun} /> : <Canvas camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
         <color attach="background" args={["#edf3f7"]} />
         <ambientLight intensity={1.35} />
         <directionalLight position={[5, 8, 6]} intensity={1.8} castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} />
@@ -280,7 +279,7 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
         ))}
         <ContactShadows position={[0, -1.2, 0]} opacity={0.28} scale={Math.max(14, displayDepth * 1.3)} blur={2.4} far={4} resolution={256} color="#8293a0" />
         <OrbitControls ref={controlsRef} makeDefault enablePan={false} target={orbitTarget} minDistance={5.5} maxDistance={cameraDistance * 1.7} minPolarAngle={Math.PI / 5} maxPolarAngle={Math.PI / 2.05} />
-      </Canvas>
+      </Canvas>}
     </Atlas3DViewerShell>
   )
 }

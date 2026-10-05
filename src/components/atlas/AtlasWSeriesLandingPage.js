@@ -8,7 +8,7 @@ import {
 } from "../../lib/atlasProductData"
 
 const SYSTEM_STEPS = [
-  ["01", "Choose your width", "Start with W08, W10, or W12 according to the working space your operation needs."],
+  ["01", "Choose your width", "Start with W08, W10, W12, or W15 according to the working space your operation needs."],
   ["02", "Configure the building", "Set the length, eave height, finish, and sheeting direction around your project."],
   ["03", "Move into review", "Use the live budget guide as a practical starting point, then request a project-specific review."],
 ]
@@ -100,7 +100,7 @@ export default function AtlasWSeriesLandingPage() {
         <div className="mx-auto grid max-w-7xl gap-5 sm:grid-cols-3">
           {[
             ["One platform", "A common engineering approach across Atlas products."],
-            ["Defined warehouse series", "W08, W10, and W12 widths give you a clear starting point."],
+            ["Defined warehouse series", "W08, W10, W12, and W15 widths give you a clear starting point."],
             ["Built around the project", "Configure length, finish, and sheeting before requesting a review."],
           ].map(([title, description], index) => (
             <div key={title} className="flex gap-4 border-[#121a20]/10 sm:border-l sm:pl-5 first:border-l-0 first:pl-0">
@@ -276,7 +276,7 @@ export default function AtlasWSeriesLandingPage() {
           </div>
           <div className="mt-10 grid gap-4 lg:grid-cols-3">
             {[
-              ["Model reference", "W08, W10, and W12 give each standard span a short, stable product code."],
+              ["Model reference", "W08, W10, W12, and W15 give each standard span a short, stable product code."],
               ["Configuration guidance", "Your builder design records the footprint, sheeting choice, and opening direction for review."],
               ["Project review pack", "Detailed project information is prepared once the final scope, site conditions, and delivery requirements are known."],
             ].map(([title, description], index) => (

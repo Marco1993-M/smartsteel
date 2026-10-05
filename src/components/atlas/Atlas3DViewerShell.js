@@ -12,10 +12,11 @@ export default function Atlas3DViewerShell({
   badge,
   description,
   children,
+  expanded = false,
 }) {
   return (
     <div
-      className="relative h-[290px] overflow-hidden rounded-[1.6rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)] shadow-inner sm:h-[360px]"
+      className={`relative ${expanded ? "h-[480px] sm:h-[520px]" : "h-[290px] sm:h-[360px]"} overflow-hidden rounded-[1.6rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)] shadow-inner`}
       role="group"
       aria-label="Interactive Atlas 3D viewer"
     >
