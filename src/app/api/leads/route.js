@@ -82,7 +82,7 @@ function buildBuilderSubmission(payload, leadId) {
       designReference: payload.designReference || null,
       configurationUrl: getSafeBuilderUrl(payload.configurationUrl),
     },
-    notes: buildBuilderNotes(payload),
+    notes: payload.lead_source === "Solar Carport Estimator" ? buildGenericNotes(payload) : buildBuilderNotes(payload),
   }
 }
 
@@ -91,6 +91,11 @@ function buildGenericNotes(payload) {
     payload.lead_source ? `${payload.lead_source} enquiry` : "Website enquiry",
     payload.product_type ? `Product: ${payload.product_type}` : null,
     payload.estimate_request ? `Request: ${payload.estimate_request}` : null,
+    ...(payload.lead_source === "Solar Carport Estimator" ? [
+      `Delivery support requested: ${payload.deliveryRequired === true ? "Yes" : "No"}`,
+      `Installation support requested: ${payload.installationInterest === true ? "Yes" : "No"}`,
+      `Location: ${String(payload.location || "").trim() || "To be confirmed"}`,
+    ] : []),
     payload.notes ? `Client notes: ${payload.notes}` : null,
   ].filter(Boolean)
 
