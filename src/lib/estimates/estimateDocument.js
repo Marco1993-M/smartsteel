@@ -4,6 +4,7 @@ import {
   isAtlasWarehouseProductType,
 } from "../atlasProductIdentity"
 import { CUSTOM_ENGINEERED_PROJECT_TYPE } from "./customProjectEstimate"
+import { getAtlasWarehouseEstimatePlan } from "../atlasWarehousePlan"
 
 export const ESTIMATE_TERMS = [
   "This estimate is based on the scope, dimensions, and site assumptions captured at the time of pricing.",
@@ -320,6 +321,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
         },
     isAtlas: atlasEstimate,
     isLsf: lsfEstimate,
+    layoutPlan: getAtlasWarehouseEstimatePlan(estimate),
     shareToken: estimate?.share_token || "",
   }
 }
