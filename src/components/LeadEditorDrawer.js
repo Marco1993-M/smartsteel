@@ -51,6 +51,13 @@ import {
   WAREHOUSE_WIDTH_OPTIONS,
 } from "../lib/estimates/warehouseEstimate"
 import { WAREHOUSE_SHEETING_COLORS } from "../lib/warehouseBuilderStore"
+import { ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES } from "../lib/atlasSolarCarportProfiles"
+import {
+  ATLAS_SOLAR_CARPORT_PARKING_COUNTS,
+  ATLAS_SOLAR_CARPORT_ROW_LENGTHS,
+  getAtlasSolarCarportPanelCount,
+  getAtlasSolarCarportWidth,
+} from "../lib/atlasSolarCarportLayouts"
 import { addBusinessDays, format, isToday, isYesterday } from "date-fns";
 
 const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
@@ -88,8 +95,8 @@ const SCOPE_PRESET_OPTIONS = {
     "Other",
   ],
   "Solar carport": [
-    "Single bay",
-    "Double bay",
+    "Single-sided run",
+    "Double-sided butterfly run",
     "Structure only",
     "Solar-ready structure",
     "Supply only",
@@ -140,6 +147,19 @@ const SCOPE_PRESET_OPTIONS = {
 }
 
 function getScopeSectionConfig(productType) {
+  if (productType === "Solar carport") {
+    return {
+      title: "Capture the solar carport layout",
+      sizeLabel: "Parking run",
+      widthLabel: "Spaces per side",
+      lengthLabel: "Run type",
+      note: "Select one parking run using the Atlas 3D builder sizes. For multiple runs, record each run below and review the combined layout before quoting.",
+      showWarehouseOptions: false,
+      showSizeSelectors: true,
+      customPlaceholder: "Site details, multiple runs, or alternative structure request...",
+    }
+  }
+
   if (WAREHOUSE_PRODUCT_TYPES.includes(normalizeAtlasProductType(productType))) {
     return {
       title: "Capture the warehouse scope up front",
@@ -211,6 +231,13 @@ function includeStoredOption(options, storedValue) {
 }
 
 function getScopeSizeOptions(productType, storedWidth, storedLength) {
+  if (productType === "Solar carport") {
+    return {
+      widths: includeStoredOption(ATLAS_SOLAR_CARPORT_PARKING_COUNTS.map(getAtlasSolarCarportWidth), storedWidth),
+      lengths: includeStoredOption(ATLAS_SOLAR_CARPORT_ROW_LENGTHS, storedLength),
+    }
+  }
+
   if (isAtlasWarehouseProductType(productType)) {
     return {
       widths: includeStoredOption(ATLAS_WAREHOUSE_WIDTH_OPTIONS, storedWidth),
@@ -2232,7 +2259,7 @@ export default function LeadEditorDrawer({
                 >
                   <option value="">{scopeConfig.widthLabel}</option>
                   {scopeSizeOptions.widths.map((width) => (
-                    <option key={width} value={width}>{width}m</option>
+                    <option key={width} value={width}>{formData.product_type === "Solar carport" ? `${Number(width) / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES} spaces per side · ${width}m${ATLAS_SOLAR_CARPORT_PARKING_COUNTS.includes(Number(width) / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES) ? "" : " (legacy size—review)"}` : `${width}m`}</option>
                   ))}
                 </select>
                 <select
@@ -2242,10 +2269,17 @@ export default function LeadEditorDrawer({
                 >
                   <option value="">{scopeConfig.lengthLabel}</option>
                   {scopeSizeOptions.lengths.map((length) => (
-                    <option key={length} value={length}>{length}m</option>
+                    <option key={length} value={length}>{formData.product_type === "Solar carport" ? `${Number(length) === 6 ? "Single-sided" : Number(length) === 12 ? "Double-sided butterfly" : "Legacy run—review"} · ${length}m` : `${length}m`}</option>
                   ))}
                 </select>
               </div>
+              {formData.product_type === "Solar carport" && formData.width && formData.length ? (
+                <p className="mb-4 text-xs font-semibold leading-5 text-[#001d2e]">
+                  {ATLAS_SOLAR_CARPORT_PARKING_COUNTS.includes(Number(formData.width) / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES) && ATLAS_SOLAR_CARPORT_ROW_LENGTHS.includes(Number(formData.length))
+                    ? `${Number(formData.width) / ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES * (Number(formData.length) === 12 ? 2 : 1)} parking spaces · ${getAtlasSolarCarportPanelCount(Number(formData.width), Number(formData.length))} indicative panels`
+                    : "This saved size is outside the current Atlas carport options. Select a current parking run before estimating."}
+                </p>
+              ) : null}
             </>
           ) : null}
 
