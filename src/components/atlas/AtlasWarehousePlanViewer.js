@@ -17,9 +17,9 @@ export default function AtlasWarehousePlanViewer({ plan }) {
 
   if (!plan) return null
   return <div className="relative h-full w-full overflow-hidden bg-[#edf3f7]">
-    <div className="absolute right-3 top-16 z-10 flex gap-2 text-[11px] font-bold sm:right-4">
-      <button type="button" onClick={() => setShowFootings((value) => !value)} aria-pressed={showFootings} className="rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-[#001d2e] shadow-sm">{showFootings ? "Hide footings" : "Show footings"}</button>
-      <button type="button" onClick={reset} className="rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-[#001d2e] shadow-sm">Reset</button>
+    <div className="absolute right-3 top-14 z-10 flex rounded-full border border-white/70 bg-white/88 p-1 shadow-sm backdrop-blur sm:right-4 sm:top-4">
+      <button type="button" onClick={() => setShowFootings((value) => !value)} aria-pressed={showFootings} className={`rounded-full px-2.5 py-1.5 text-[10px] font-semibold transition sm:px-3 sm:text-[11px] ${showFootings ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"}`}>{showFootings ? "Footings on" : "Footings off"}</button>
+      <button type="button" onClick={reset} className="rounded-full px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:bg-white sm:px-3 sm:text-[11px]">Reset</button>
     </div>
     <div className="h-full w-full cursor-grab touch-none overflow-hidden active:cursor-grabbing"
       onPointerDown={(event) => { drag.current = { x: event.clientX, y: event.clientY, offset }; event.currentTarget.setPointerCapture(event.pointerId) }}
@@ -33,6 +33,5 @@ export default function AtlasWarehousePlanViewer({ plan }) {
         <AtlasWarehousePlan plan={plan} showFootings={showFootings} className="max-h-full w-full max-w-[1100px]" />
       </div>
     </div>
-    <p className="pointer-events-none absolute bottom-3 left-3 right-3 z-10 rounded-lg bg-white/90 px-3 py-2 text-[10px] leading-4 text-slate-600 shadow-sm sm:left-4 sm:right-auto">Column centres and 1,250 × 1,250mm footing footprints · preliminary planning only</p>
   </div>
 }

@@ -993,8 +993,8 @@ export default function WarehouseBuilderScene(props) {
           </button>
         ))}
       </div> : null}
-      {!printReady ? <div className="pointer-events-none absolute bottom-4 left-4 z-10 hidden rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur xl:block">
-        {planView ? "Indicative top plan" : "Live 3D build view"}
+      {!printReady && !planView ? <div className="pointer-events-none absolute bottom-4 left-4 z-10 hidden rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur xl:block">
+        Live 3D build view
       </div> : null}
       {planView ? <AtlasWarehousePlanViewer key={`${plan.familyCode}-${plan.lengthM}-${props.gableMode}`} plan={plan} /> : <Canvas
         camera={{ position: cameraPosition, fov: 40 }}
