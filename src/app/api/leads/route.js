@@ -92,6 +92,7 @@ function buildGenericNotes(payload) {
     payload.product_type ? `Product: ${payload.product_type}` : null,
     payload.estimate_request ? `Request: ${payload.estimate_request}` : null,
     ...(payload.lead_source === "Solar Carport Estimator" ? [
+      payload.submissionChannel ? `Submission channel: ${payload.submissionChannel}` : null,
       `Delivery support requested: ${payload.deliveryRequired === true ? "Yes" : "No"}`,
       `Installation support requested: ${payload.installationInterest === true ? "Yes" : "No"}`,
       `Location: ${String(payload.location || "").trim() || "To be confirmed"}`,
