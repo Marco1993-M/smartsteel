@@ -82,6 +82,7 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
     width: configuration.width,
     length: configuration.length,
     wallHeight: configuration.wallHeight,
+    gableMode: configuration.gableMode,
     roofPitch: 15,
     cladding: configuration.gableMode === "structure_only" ? "None" : configuration.sheetingProfile,
     enclosureType: configuration.gableMode === "structure_only"

@@ -4,7 +4,9 @@ import { useMemo, useState } from "react"
 import { Download, FileWarning, Ruler, ShieldCheck } from "lucide-react"
 import { ATLAS_LENGTH_OPTIONS } from "../../lib/atlasConfiguration"
 import { getAtlasFoundationGuide } from "../../lib/atlasFoundationGuide"
+import { getAtlasWarehousePlan } from "../../lib/atlasWarehousePlan"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
+import AtlasWarehousePlan from "../atlas/AtlasWarehousePlan"
 
 const LENGTHS = ATLAS_LENGTH_OPTIONS
 const HEIGHTS = [3, 4, 4.5, 5]
@@ -15,6 +17,7 @@ export default function AtlasFoundationGuideCard({ initialProductCode = "W08" })
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState("")
   const guide = useMemo(() => getAtlasFoundationGuide({ productCode: initialProductCode, lengthM, eaveHeightM }), [initialProductCode, lengthM, eaveHeightM])
+  const layoutPlan = useMemo(() => getAtlasWarehousePlan({ width: guide.spanM, length: guide.lengthM, wallHeight: guide.eaveHeightM }), [guide.spanM, guide.lengthM, guide.eaveHeightM])
   const downloadHref = `/api/os/atlas-foundation-guide?product=${guide.productCode}&length=${guide.lengthM}&height=${guide.eaveHeightM}`
 
   async function downloadGuide() {
@@ -79,6 +82,11 @@ export default function AtlasFoundationGuideCard({ initialProductCode = "W08" })
             <Metric label="Baseline pad" value="1,250 × 1,250" helper="350mm thick" />
             <Metric label="Indicative concrete" value={`${guide.totalConcreteM3.toFixed(2)}m³`} helper="Before waste or blinding" />
           </div>
+          {layoutPlan ? <details className="mt-5 border border-slate-200 bg-[#edf3f7] p-4">
+            <summary className="cursor-pointer text-sm font-black text-[#001d2e]">View indicative column and footing layout</summary>
+            <AtlasWarehousePlan plan={layoutPlan} className="mt-4 max-h-[300px] w-full" />
+            <p className="mt-3 text-xs leading-5 text-slate-600">Planning footprints only. Confirm final footing locations and design with the appointed engineer.</p>
+          </details> : null}
         </div>
 
         <div className="border-t border-slate-200 bg-[#001d2e] p-5 text-white sm:p-6 xl:border-l xl:border-t-0">

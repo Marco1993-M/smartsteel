@@ -11,6 +11,8 @@ import { ATLAS_W10_PROFILES } from "../../lib/atlasW10Geometry"
 import { ATLAS_W12_PROFILES } from "../../lib/atlasW12Geometry"
 import { ATLAS_W15_PROFILES } from "../../lib/atlasW15Geometry"
 import { WAREHOUSE_SHEETING_COLORS } from "../../lib/warehouseBuilderStore"
+import { getAtlasWarehousePlan } from "../../lib/atlasWarehousePlan"
+import AtlasWarehousePlanViewer from "../atlas/AtlasWarehousePlanViewer"
 
 const ATLAS_PROFILES_BY_SPAN = {
   6: ATLAS_W06_PROFILES,
@@ -927,6 +929,8 @@ export default function WarehouseBuilderScene(props) {
   const [hasInteracted, setHasInteracted] = useState(false)
   const [cameraView, setCameraView] = useState("exterior")
   const [sceneVisible, setSceneVisible] = useState(true)
+  const plan = props.systemVariant === "atlas" ? getAtlasWarehousePlan(props) : null
+  const planView = cameraView === "plan" && Boolean(plan)
   const controlsRef = useRef(null)
   const previousSystemRef = useRef(props.systemVariant)
   const scale = SCENE_SCALE
@@ -959,9 +963,9 @@ export default function WarehouseBuilderScene(props) {
   }, [props.systemVariant])
 
   return (
-    <div className={`relative h-[min(46vh,320px)] w-full touch-none overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)] shadow-inner sm:h-[460px] lg:h-[640px] ${className}`}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0))]" />
-      {!printReady ? <div
+    <div className={`relative h-[min(46vh,320px)] w-full touch-none overflow-hidden rounded-[2rem] border border-slate-200 ${planView ? "bg-[#edf3f7]" : "bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#edf3f8_58%,_#d8e2eb_100%)]"} shadow-inner sm:h-[460px] lg:h-[640px] ${className}`}>
+      {!planView ? <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0))]" /> : null}
+      {!printReady && !planView ? <div
         className={`pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur transition-all duration-500 ${
           hasInteracted ? "translate-y-[-0.5rem] opacity-0" : "translate-y-0 opacity-100"
         }`}
@@ -972,6 +976,7 @@ export default function WarehouseBuilderScene(props) {
       {!printReady ? <div className="absolute left-3 top-3 z-20 flex overflow-hidden rounded-full border border-white/70 bg-white/88 p-1 shadow-sm backdrop-blur sm:left-4 sm:top-4">
         {[
           ["exterior", "Exterior"],
+          ...(plan ? [["plan", "Top / dimensions"]] : []),
           ["structure", "Structure"],
           ["front", "Front"],
         ].map(([value, label]) => (
@@ -989,9 +994,9 @@ export default function WarehouseBuilderScene(props) {
         ))}
       </div> : null}
       {!printReady ? <div className="pointer-events-none absolute bottom-4 left-4 z-10 hidden rounded-full border border-white/70 bg-white/85 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm backdrop-blur xl:block">
-        Live 3D build view
+        {planView ? "Indicative top plan" : "Live 3D build view"}
       </div> : null}
-      <Canvas
+      {planView ? <AtlasWarehousePlanViewer key={`${plan.familyCode}-${plan.lengthM}-${props.gableMode}`} plan={plan} /> : <Canvas
         camera={{ position: cameraPosition, fov: 40 }}
         gl={printReady ? { preserveDrawingBuffer: true } : undefined}
         dpr={printReady ? 1.5 : [1, 1.5]}
@@ -1037,7 +1042,7 @@ export default function WarehouseBuilderScene(props) {
           minPolarAngle={Math.PI / 5}
           maxPolarAngle={Math.PI / 2.1}
         />
-      </Canvas>
+      </Canvas>}
     </div>
   )
 }

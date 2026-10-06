@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { ESTIMATE_DELIVERY_TERMS, ESTIMATE_EXCLUSIONS, ESTIMATE_TERMS } from "../lib/estimates/estimateDocument"
 import { formatCurrency } from "../lib/estimates/warehouseEstimate"
+import AtlasWarehousePlan from "./atlas/AtlasWarehousePlan"
 
 export default function EstimateDocumentLayout({
   documentModel,
@@ -275,6 +276,29 @@ export default function EstimateDocumentLayout({
         </div>
       </div>
       </section>
+
+      {documentModel.layoutPlan ? <section className="estimate-page estimate-layout-page print:break-after-page">
+        <div className="estimate-block px-[12mm] py-[11mm] print:px-[12mm] print:py-[8mm]">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0043f3]">Atlas · Indicative layout</p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight text-[#001d2e]">{documentModel.layoutPlan.familyCode} warehouse plan</h2>
+              <p className="mt-1 text-xs text-slate-500">{documentModel.designReference || documentModel.estimateNumber} · Prepared for {documentModel.clientName}</p>
+            </div>
+            <p className="shrink-0 rounded bg-[#eef4f8] px-3 py-2 text-xs font-bold text-[#001d2e]">{documentModel.layoutPlan.widthM}m × {documentModel.layoutPlan.lengthM}m</p>
+          </div>
+          <div className="mt-5 flex h-[135mm] items-center justify-center overflow-hidden rounded border border-slate-200 bg-[#edf3f7] p-3 print:h-[130mm]">
+            <AtlasWarehousePlan plan={documentModel.layoutPlan} className="max-h-full w-full" />
+          </div>
+          <div className="mt-5 grid grid-cols-3 gap-3 text-xs">
+            <div className="rounded border border-slate-200 p-3"><p className="font-bold text-slate-500">Portal frames</p><p className="mt-1 font-black text-[#001d2e]">{documentModel.layoutPlan.portalFrames}</p></div>
+            <div className="rounded border border-slate-200 p-3"><p className="font-bold text-slate-500">Bay spacing</p><p className="mt-1 font-black text-[#001d2e]">4m nominal</p></div>
+            <div className="rounded border border-slate-200 p-3"><p className="font-bold text-slate-500">Main columns</p><p className="mt-1 font-black text-[#001d2e]">{documentModel.layoutPlan.columnCount}</p></div>
+          </div>
+          <p className="mt-4 text-[11px] leading-5 text-slate-600">The orange squares show indicative 1,250 × 1,250mm footing footprints centred on the main columns. The plan is for layout discussion only; footing size, founding levels, anchors and final setting-out require site-specific engineering approval. It is not a construction drawing or a surveyed site plan.</p>
+          {documentModel.layoutPlan.frontOpeningWidthM ? <p className="mt-2 text-[11px] font-semibold text-slate-700">One gable has a centred 6m-wide × 3m-high opening. The opposite gable remains enclosed. Gable orientation on site must be confirmed.</p> : null}
+        </div>
+      </section> : null}
 
       <section className="estimate-page">
       <div className="estimate-block px-[12mm] pt-0 pb-[10mm] print:px-[12mm] print:pt-0 print:pb-[8mm]">
