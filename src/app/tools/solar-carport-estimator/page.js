@@ -5,16 +5,16 @@ const PAGE_PATH = "/tools/solar-carport-estimator"
 const SHARE_IMAGE = `${SITE_URL}/atlas-solar-carports-share.png`
 
 export const metadata = {
-  title: "Atlas Solar Carport Estimator | Smart Steel",
+  title: "Solar Carport 3D Builder & Price Estimator | Smart Steel",
   description:
-    "Price an Atlas solar carport online with Smart Steel. Choose your parking layout and get a practical structure-only starting budget before you enquire.",
+    "Build an Atlas solar carport in 3D. Choose parking bays and row layouts, preview the steel structure and see a supply-only guide price excluding VAT in South Africa.",
   alternates: {
     canonical: PAGE_PATH,
   },
   openGraph: {
-    title: "Atlas Solar Carport Estimator | Smart Steel",
+    title: "Solar Carport 3D Builder & Price Estimator | Smart Steel",
     description:
-      "Choose an Atlas solar carport parking layout and get a structure-only starting budget before you enquire.",
+      "Explore parking layouts in 3D and see a steel structure guide price before requesting a reviewed quote.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -30,7 +30,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Atlas Solar Carport Estimator | Smart Steel",
+    title: "Solar Carport 3D Builder & Price Estimator | Smart Steel",
     description:
       "Get an Atlas solar carport structure-only starting budget before you enquire.",
     images: [SHARE_IMAGE],
