@@ -377,7 +377,8 @@ body {
   }
 
   .estimate-cover-page,
-  .estimate-pricing-page {
+  .estimate-pricing-page,
+  .estimate-layout-page {
     break-after: page;
     page-break-after: always;
   }

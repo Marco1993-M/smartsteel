@@ -94,6 +94,7 @@ export default function WarehouseBuilderSummaryClient() {
     width: configuration.width,
     length: configuration.length,
     wallHeight: configuration.wallHeight,
+    gableMode: configuration.gableMode,
     roofPitch: 15,
     cladding: configuration.gableMode === "structure_only" ? "None" : configuration.sheetingProfile,
     enclosureType: isAtlas

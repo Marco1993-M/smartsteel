@@ -742,6 +742,7 @@ export default function WarehouseBuilderClient() {
         width: config.width,
         length: config.length,
         wallHeight: config.wallHeight,
+        gableMode: config.gableMode,
         roofPitch: 15,
         cladding: config.gableMode === "structure_only" ? "None" : config.sheetingProfile,
         enclosureType: config.gableMode === "structure_only"
