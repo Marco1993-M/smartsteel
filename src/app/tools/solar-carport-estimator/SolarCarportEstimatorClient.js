@@ -124,6 +124,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     location: "",
   })
   const [showEnquiryForm, setShowEnquiryForm] = useState(false)
+  const [contactChannel, setContactChannel] = useState("quote")
   const [activeStage, setActiveStage] = useState("configure")
   const [parkingRuns, setParkingRuns] = useState(() => [{
     id: "run-1",
@@ -235,7 +236,12 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     "",
     "Please get in touch with me about the next step.",
   ].join("\n")
-  const whatsappHref = `https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`
+  const continueOnWhatsApp = () => {
+    setContactChannel("whatsapp")
+    setShowEnquiryForm(true)
+    setActiveStage("enquire")
+    window.setTimeout(() => document.querySelector("#solar-carport-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0)
+  }
 
   const handleFieldChange = (field, value) => {
     setFormState((current) => {
@@ -348,6 +354,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
     }])
     setSelectedRunId("run-1")
     setShowEnquiryForm(false)
+    setContactChannel("quote")
     setSubmitError("")
     setSubmitSuccess("")
   }
@@ -378,6 +385,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
           email: enquiryState.email.trim(),
           phone: enquiryState.phone.trim(),
           lead_source: "Solar Carport Estimator",
+          submissionChannel: contactChannel === "whatsapp" ? "WhatsApp" : "Quote form",
           product_type: "Solar carport",
           estimate_request: estimate.summary.estimateRequest,
           quote_value: estimate.pricing.estimatedTotal,
@@ -407,7 +415,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             modules: `${totalPanelCapacity} panels · ${estimatedPowerKwp.toFixed(1)} kWp`,
           },
           next_action:
-            `Review solar carport layout${formState.deliveryRequired ? "; quote delivery" : ""}${formState.installationInterest ? "; quote installation" : ""}${formState.location.trim() ? ` at ${formState.location.trim()}` : "; confirm site location"}.`,
+            `${contactChannel === "whatsapp" ? "Match the incoming WhatsApp message by CRM reference; review solar carport layout" : "Review solar carport layout"}${formState.deliveryRequired ? "; quote delivery" : ""}${formState.installationInterest ? "; quote installation" : ""}${formState.location.trim() ? ` at ${formState.location.trim()}` : "; confirm site location"}.`,
           notes: buildEstimatorNotes({
             estimate,
             formState,
@@ -424,7 +432,17 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
         throw new Error(payload?.error || "Could not save the solar carport enquiry.")
       }
 
+      if (!payload?.lead?.id) {
+        throw new Error("Your enquiry reached our backup channel, but we could not confirm it in the CRM. Please try again before continuing to WhatsApp.")
+      }
+
       reportAtlasSolarCarportConversion()
+
+      if (contactChannel === "whatsapp") {
+        const message = `${whatsappMessage}\n\nCRM reference: ${payload.lead.id}\nView configuration: ${configurationUrl}`
+        window.location.assign(`https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`)
+        return
+      }
 
       setSubmitSuccess(
         "Thank you. We’ll review your layout and requested services, confirm any site details with you, and prepare your quote."
@@ -491,6 +509,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
           <button
             type="button"
             onClick={() => {
+              setContactChannel("quote")
               setShowEnquiryForm(true)
               setActiveStage("enquire")
               window.setTimeout(() => document.querySelector("#solar-carport-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0)
@@ -543,6 +562,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                 key={stage.id}
                 type="button"
                 onClick={() => {
+                  setContactChannel("quote")
                   setActiveStage(stage.id)
                   setShowEnquiryForm(stage.id === "enquire")
                 }}
@@ -756,6 +776,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               <button
                 type="button"
                 onClick={() => {
+                  setContactChannel("quote")
                   setShowEnquiryForm(true)
                   setActiveStage("enquire")
                 }}
@@ -770,8 +791,8 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
             {activeStage === "enquire" && showEnquiryForm ? (
               <form id="solar-carport-enquiry" onSubmit={handleSubmit} className="text-[#001d2e]">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#0043f3]">Step 3</p>
-                <h2 className="mt-2 text-xl font-bold tracking-[-0.025em] text-[#001d2e]">Request a reviewed quote</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">Send the plan to Smart Steel and we’ll confirm the site-specific scope with you.</p>
+                <h2 className="mt-2 text-xl font-bold tracking-[-0.025em] text-[#001d2e]">{contactChannel === "whatsapp" ? "Continue on WhatsApp" : "Request a reviewed quote"}</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{contactChannel === "whatsapp" ? "Add your contact details so we can save your plan in our CRM before opening WhatsApp." : "Send the plan to Smart Steel and we’ll confirm the site-specific scope with you."}</p>
 
                 <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-[#0043f3]/15 bg-white px-4 py-3">
                   <div>
@@ -865,7 +886,7 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
                     disabled={isSubmitting || !estimate.meta.pricingReady}
                     className="rounded-xl bg-[#0043f3] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#073c8d] disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isSubmitting ? "Sending..." : "Send to Smart Steel"}
+                    {isSubmitting ? "Saving..." : contactChannel === "whatsapp" ? "Save plan and open WhatsApp" : "Send to Smart Steel"}
                   </button>
                 </div>
               </form>
@@ -912,18 +933,16 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
               <span className="ml-1 text-xs font-medium tracking-normal text-[#121a20]/55">excl. VAT</span>
             </p>
           </div>
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noreferrer"
-            onClick={reportAtlasSolarCarportConversion}
+          <button
+            type="button"
+            onClick={continueOnWhatsApp}
             className="inline-flex shrink-0 items-center gap-2 bg-[#25D366] px-4 py-3 text-sm font-semibold text-[#0b2715] shadow-sm transition hover:bg-[#1fbd58]"
           >
             <svg viewBox="0 0 32 32" aria-hidden="true" className="h-5 w-5 fill-current">
               <path d="M16 3.2a12.7 12.7 0 0 0-10.9 19.2L3.5 28.8l6.6-1.7A12.8 12.8 0 1 0 16 3.2Zm0 23.2a10.4 10.4 0 0 1-5.3-1.5l-.4-.2-3.9 1 1-3.8-.3-.4A10.4 10.4 0 1 1 16 26.4Zm5.7-7.8c-.3-.1-1.7-.9-2-.9s-.5-.1-.7.2-.8.9-.9 1.1-.4.3-.7.1a8.5 8.5 0 0 1-2.5-1.5 9.4 9.4 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5s0-.4 0-.5l-.9-2.1c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.4 1 2.8 1.2 3 .2.3.3.5a12 12 0 0 0 4.6 4c.6.3 1 .5 1.4.6.6.2 1.2.2 1.6.1.5-.1 1.7-.7 1.9-1.4s.2-1.2.1-1.4-.3-.2-.6-.4Z" />
             </svg>
             WhatsApp
-          </a>
+          </button>
         </div>
       </div>
     </main>
