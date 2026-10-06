@@ -109,7 +109,7 @@ export const cflcLaunchRanges = LAUNCH_SPANS.map((span) => {
 export const cflcCatalogueMetadata = {
   title: "Atlas Lip Channel Warehouse Kits South Africa | Smart Steel",
   description:
-    "Browse Atlas W-Series modular warehouse kits in South Africa from Smart Steel, including practical W08, W10, and W12 options for storage, workshops, agriculture, and commercial projects.",
+    "Browse Atlas W-Series modular warehouse kits in South Africa from Smart Steel, including practical W08, W10, W12, and W15 options for storage, workshops, agriculture, and commercial projects.",
   keywords: [
     "steel warehouse kits south africa",
     "self-build warehouse",

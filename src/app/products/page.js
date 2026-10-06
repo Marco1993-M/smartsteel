@@ -61,7 +61,7 @@ const warehouseOptions = [
     cta: "Choose an Atlas model",
     image: "/CFLC.webp",
     imageAlt: "Atlas cold-formed lip channel steel profile",
-    detail: "W08, W10, and W12 models",
+    detail: "W08, W10, W12, and W15 models",
     tone: "atlas",
   },
 ]

@@ -27,7 +27,7 @@ export default function CflcDiyWarehouseKitsPage() {
                 Pick the warehouse model. Build the footprint around it.
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-7 text-[#121a20]/70 sm:text-lg">
-                The Atlas W-Series range gives you a clear starting point for storage, workshops, agriculture, poultry, and commercial operations. Choose W08, W10, or W12, then continue with a live configuration built around your selected model.
+                The Atlas W-Series range gives you a clear starting point for storage, workshops, agriculture, poultry, and commercial operations. Choose W08, W10, W12, or W15, then continue with a live configuration built around your selected model.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="#choose-model" className="bg-[#d9a441] px-6 py-3.5 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f]">
@@ -59,7 +59,7 @@ export default function CflcDiyWarehouseKitsPage() {
 
         <section className="grid border-b border-[#121a20]/10 bg-[#f3f0e9] sm:grid-cols-3">
           {[
-            ["01", "Choose the span", "W08, W10, and W12 give you a defined width before you begin configuring."],
+            ["01", "Choose the span", "W08, W10, W12, and W15 give you a defined width before you begin configuring."],
             ["02", "Choose a starting length", "Compare practical starting footprints and the relevant supply-only budget guide."],
             ["03", "Continue into the builder", "Refine the configuration with your selected model already loaded."],
           ].map(([number, title, description]) => (

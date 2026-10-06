@@ -1,14 +1,14 @@
 import Image from "next/image"
-import Link from "next/link"
+import Link from "../../../components/BuilderEntryLink"
 
 const SITE_URL = "https://www.smartsteel.co.za"
 const PAGE_PATH = "/products/cflc-solar-carports"
 const SHARE_IMAGE = `${SITE_URL}/atlas-solar-carports-share.png`
 
 export const metadata = {
-  title: "Atlas Solar Carports South Africa | Smart Steel",
+  title: "Solar Carports South Africa | 3D Layout & Prices | Smart Steel",
   description:
-    "Price an Atlas solar carport online with Smart Steel. Create covered parking and solar-ready infrastructure for commercial sites, estates, schools, farms, and operational vehicle areas.",
+    "Explore Atlas solar carport structures in South Africa. Configure parking layouts in 3D, check panel capacity and see a supply-only steel structure guide price.",
   keywords: [
     "Atlas solar carports",
     "solar carports south africa",
@@ -84,12 +84,12 @@ const faqs = [
   {
     question: "Can I get an estimate before I enquire?",
     answer:
-      "Yes. Use the online Atlas solar carport estimator to choose a starting parking layout and receive a practical budget guide before you send an enquiry.",
+      "Yes. Use the Atlas solar carport 3D builder to choose parking bays and row layouts, preview the structure and see a supply-only guide price excluding VAT before requesting a reviewed quote.",
   },
   {
     question: "Are the solar panels included?",
     answer:
-      "The estimator focuses on the steel structure and solar-ready support layout. Solar panels, electrical design, foundations, delivery, and installation can be reviewed around your project requirements.",
+      "The online guide covers the steel structure and solar support layout, excluding VAT. Solar panels and electrical work are not included in that structure-only price. Foundations, delivery and installation are reviewed separately for your site.",
   },
   {
     question: "Who are Atlas solar carports for?",
@@ -130,10 +130,10 @@ export default function AtlasSolarCarportsPage() {
               <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={280} height={44} className="h-8 w-auto max-w-full object-contain object-left sm:h-9" priority />
               <p className="mt-8 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas Solar Carports</p>
               <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl lg:text-[3.5rem]">
-                Plan your solar parking layout in 3D.
+                Build and price your solar carport in 3D.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-[#121a20]/70 sm:text-lg">
-                Build single or multi-row parking layouts, see the solar capacity, and receive a live structure-only price before you enquire.
+                Plan covered parking for your South African site. Build single or multi-row layouts, check panel capacity and see a live steel structure guide price excluding VAT.
               </p>
               <div className="mt-7 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
                 <Link href="/tools/solar-carport-estimator" className="group inline-flex min-h-16 w-full items-center justify-between gap-6 rounded-xl bg-[#ffcf1a] px-5 py-3.5 text-left text-[#001d2e] shadow-[0_18px_36px_-22px_rgba(0,0,0,0.75)] transition hover:-translate-y-0.5 hover:bg-[#ffda4d] sm:w-auto sm:min-w-[340px]">
@@ -241,6 +241,21 @@ export default function AtlasSolarCarportsPage() {
                 <p className="max-w-2xl pt-3 text-sm leading-6 text-[#121a20]/65">{item.answer}</p>
               </details>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-10">
+        <div className="grid overflow-hidden border border-[#cad9e2] bg-white md:grid-cols-2">
+          <div className="relative min-h-72">
+            <Image src="/projects/Solar Carports_Centurion Golf Club/7.webp" alt="Completed solar carport parking at Centurion Golf Club in Gauteng" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+          </div>
+          <div className="p-7 sm:p-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#0043f3]">Completed Smart Steel project · Gauteng</p>
+            <h2 className="mt-4 text-3xl font-semibold">Solar carport parking at Centurion Golf Club</h2>
+            <p className="mt-4 leading-7 text-[#4d6170]">See a completed steel parking structure supporting a solar array. Use the Atlas 3D builder to explore a layout for your own site, then request a review of the structure and installation requirements.</p>
+            <Link href="/tools/solar-carport-estimator" className="mt-6 inline-flex min-h-12 items-center bg-[#0043f3] px-6 py-3 font-semibold text-white">Plan my solar carport in 3D →</Link>
+            <Link href="/recent" className="mt-5 block font-semibold text-[#0043f3]">View more completed projects →</Link>
           </div>
         </div>
       </section>
