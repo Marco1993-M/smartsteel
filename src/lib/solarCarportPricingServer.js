@@ -11,6 +11,7 @@ export async function readSolarPricing() {
   return {
     ...data.metadata.solarPricing,
     costs: { ...SOLAR_COST_DEFAULTS, ...data.metadata.solarPricing.costs },
+    history: Array.isArray(data.metadata.solarPricingHistory) ? data.metadata.solarPricingHistory : [],
     id: data.id,
   }
 }
