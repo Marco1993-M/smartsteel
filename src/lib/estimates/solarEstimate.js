@@ -1,5 +1,6 @@
-import { formatCurrency } from "./warehouseEstimate"
+import { formatCurrency } from "./warehouseEstimate.js"
 import { calculateAtlasSolarCarportEstimate } from './atlasSolarCarportEstimate.js'
+import { calculateLippedChannelMassKgPerM } from '../atlasLippedChannelProfiles.js'
 
 const DEFAULT_MARKUP = 1.32
 const DEFAULT_DELIVERY_MINIMUM = 1350
@@ -8,6 +9,9 @@ export const GROUND_MOUNT_STANDARD_PANEL_COUNT = 36
 export const GROUND_MOUNT_BAY_WIDTH_METERS = 3.43
 export const GROUND_MOUNT_ROW_LENGTH_METERS = 6
 export const GROUND_MOUNT_MAX_BAYS_PER_ROW = 10
+export const GROUND_MOUNT_POST_EMBEDMENT_METERS = 0.6
+export const GROUND_MOUNT_POST_PROFILE = Object.freeze({ webMm: 75, flangeMm: 50, lipMm: 20, thicknessMm: 2 })
+const GROUND_MOUNT_POST_MASS_KG_PER_M = calculateLippedChannelMassKgPerM(GROUND_MOUNT_POST_PROFILE)
 const CFLC_GROUND_MOUNT_STRUCTURE_STEEL_KG_PER_PANEL = 24
 const CFLC_GROUND_MOUNT_BOLTS_PER_PANEL = 6
 const CFLC_GROUND_MOUNT_STRUCTURE_LABOUR_PER_PANEL = 1
@@ -351,6 +355,9 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   const structureSteelWeightKg = structureTemplate.structureSteelWeightKg
   const structureSteelCost =
     structureSteelWeightKg * (steelRatePerTon / 1000)
+  const postCount = 2 * (layout.bayCount + layout.rows)
+  const postEmbedmentSteelWeightKg = postCount * GROUND_MOUNT_POST_EMBEDMENT_METERS * GROUND_MOUNT_POST_MASS_KG_PER_M
+  const postEmbedmentSteelCost = postEmbedmentSteelWeightKg * (steelRatePerTon / 1000)
 
   const boltsQuantity = structureTemplate.boltsQuantity
   const boltsCost = boltsQuantity * CFLC_GROUND_MOUNT_BOLT_RATE
@@ -388,6 +395,7 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
 
   const baseTotal =
     structureSteelCost +
+    postEmbedmentSteelCost +
     boltsCost +
     bracketAssemblyCost +
     structureLabourCost +
@@ -408,6 +416,14 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
       unit: "tons",
       unitRate: steelRatePerTon,
       total: structureSteelCost,
+    }),
+    buildLineItem({
+      code: "ground-mount-post-embedment-steel",
+      label: `${postCount} posts · 600mm below-ground steel allowance`,
+      quantity: Math.round(postEmbedmentSteelWeightKg * 10000) / 10000,
+      unit: "kg",
+      unitRate: steelRatePerTon / 1000,
+      total: postEmbedmentSteelCost,
     }),
     buildLineItem({
       code: "ground-mount-bolts",
@@ -512,6 +528,7 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
         : `${structureTemplate.modularBayCount} modular bay${structureTemplate.modularBayCount === 1 ? "" : "s"} from the 6-panel expansion system`,
     `${layout.width}m x ${layout.length}m layout`,
     `${steelFinish} corrosion-resistant steel`,
+    `${postCount} posts with 600mm below-ground steel allowance`,
     "Structure-only starting budget",
   ]
 
@@ -554,6 +571,10 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
       structureUnits,
       bayCount: layout.bayCount,
       pricedPanels: layout.pricedPanelCount,
+      postCount,
+      postEmbedmentMeters: GROUND_MOUNT_POST_EMBEDMENT_METERS,
+      postEmbedmentSteelKg: Math.round(postEmbedmentSteelWeightKg * 10000) / 10000,
+      structureSteelKg: Math.round((structureSteelWeightKg + postEmbedmentSteelWeightKg) * 10000) / 10000,
       templateType: structureTemplate.templateType,
       standardStructureCount: structureTemplate.standardStructureCount,
       modularBayCount: structureTemplate.modularBayCount,
