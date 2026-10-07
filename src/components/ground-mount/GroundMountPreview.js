@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import Atlas3DViewerShell from "../atlas/Atlas3DViewerShell"
 import ChannelGeometry from "../solar-carport/ChannelGeometry"
-import { GROUND_MOUNT_BAY_WIDTH_METERS, GROUND_MOUNT_POST_EMBEDMENT_METERS, GROUND_MOUNT_POST_PROFILE } from "../../lib/estimates/solarEstimate"
+import { GROUND_MOUNT_BAY_WIDTH_METERS, GROUND_MOUNT_POST_PROFILE } from "../../lib/estimates/solarEstimate"
 
 const PANEL_WIDTH = 1.13
 const PANEL_DEPTH = 2.28
@@ -95,8 +95,8 @@ function GroundMountArray({ layouts, selectedRunId, onSelectRun, structureView }
               const x = -width / 2 + frameIndex * BAY_WIDTH
               return (
                 <group key={frameIndex} position={[x, 0, 0]}>
-                  <BeamBetween start={[0, -GROUND_MOUNT_POST_EMBEDMENT_METERS, frontZ]} end={[0, FRONT_POST_HEIGHT, frontZ]} profile={PROFILES.post} roll={frameIndex === row.bays ? Math.PI : 0} />
-                  <BeamBetween start={[0, -GROUND_MOUNT_POST_EMBEDMENT_METERS, rearZ]} end={[0, REAR_POST_HEIGHT, rearZ]} profile={PROFILES.post} roll={frameIndex === row.bays ? Math.PI : 0} />
+                  <BeamBetween start={[0, 0, frontZ]} end={[0, FRONT_POST_HEIGHT, frontZ]} profile={PROFILES.post} roll={frameIndex === row.bays ? Math.PI : 0} />
+                  <BeamBetween start={[0, 0, rearZ]} end={[0, REAR_POST_HEIGHT, rearZ]} profile={PROFILES.post} roll={frameIndex === row.bays ? Math.PI : 0} />
                   <BeamBetween start={[0, FRONT_POST_HEIGHT, frontZ]} end={[0, REAR_POST_HEIGHT, rearZ]} profile={PROFILES.rafter} roll={frameIndex === row.bays ? Math.PI : 0} />
                 </group>
               )
@@ -158,7 +158,7 @@ export default function GroundMountPreview({ layouts, selectedRunId, onSelectRun
       title="Live Atlas configuration"
       subtitle={subtitle}
       badge="Indicative 3D"
-      description="Representative Atlas ground-mount layout generated from the selected panel count. Post lengths include 600mm below the indicated ground level; footing and connection details remain subject to project review."
+      description="Representative above-ground Atlas layout. Pricing includes 600mm of post steel below ground, which is not shown in this view. Footing and connection details remain subject to project review."
       views={[{ value: "overview", label: "Overview" }, { value: "structure", label: "Structure" }, { value: "front", label: "Front" }, { value: "side", label: "Side" }]}
       activeView={view}
       onViewChange={setView}
