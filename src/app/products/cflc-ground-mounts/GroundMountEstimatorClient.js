@@ -418,8 +418,9 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-900">Supply only structure budget</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Each run expands in six-panel bays. Installation is reviewed after enquiry because site conditions, access, and location
-                  affect the final install price too much for a clean instant estimate.
+                  Each run expands in six-panel bays. The steel budget includes 600mm of below-ground post length per post;
+                  excavation, concrete foundations and installation are reviewed after enquiry because site conditions, access,
+                  and location affect those prices.
                 </p>
               </div>
             </div>
