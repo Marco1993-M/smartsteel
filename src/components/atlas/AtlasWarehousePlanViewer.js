@@ -16,7 +16,7 @@ export default function AtlasWarehousePlanViewer({ plan }) {
   }
 
   if (!plan) return null
-  return <div className="relative h-full w-full overflow-hidden bg-[#edf3f7]">
+  return <div className="relative h-full w-full overflow-hidden bg-white">
     <div className="absolute right-3 top-14 z-10 flex rounded-full border border-white/70 bg-white/88 p-1 shadow-sm backdrop-blur sm:right-4 sm:top-4">
       <button type="button" onClick={() => setShowFootings((value) => !value)} aria-pressed={showFootings} className={`rounded-full px-2.5 py-1.5 text-[10px] font-semibold transition sm:px-3 sm:text-[11px] ${showFootings ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"}`}>{showFootings ? "Footings on" : "Footings off"}</button>
       <button type="button" onClick={reset} className="rounded-full px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:bg-white sm:px-3 sm:text-[11px]">Reset</button>
