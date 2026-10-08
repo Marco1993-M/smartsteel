@@ -40,7 +40,9 @@ export function getAtlasWarehousePlan(input = {}) {
 export function getAtlasWarehouseEstimatePlan(estimate) {
   if (!isAtlasWarehouseProductType(estimate?.product_type)) return null
   const input = estimate?.input_data
-  if (!input || input.useCustomSize || Number(input.quantity || 1) !== 1) return null
+  // Atlas estimates historically saved useCustomSize=true even for catalog sizes.
+  // Eligibility is determined by the actual configuration below, not that legacy flag.
+  if (!input || Number(input.quantity || 1) !== 1) return null
   if (input.productType && !isAtlasWarehouseProductType(input.productType)) return null
   return getAtlasWarehousePlan(input)
 }
