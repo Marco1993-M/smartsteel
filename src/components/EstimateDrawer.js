@@ -190,7 +190,7 @@ function buildProductTypeAdjustedState(previousState, nextProductType) {
       Number.isFinite(Number(previousState.wallHeight)) && Number(previousState.wallHeight) > 0
         ? Number(previousState.wallHeight)
         : 3
-    nextState.useCustomSize = true
+    nextState.useCustomSize = false
     nextState.steelFinish = ATLAS_ALLOWED_STEEL_FINISHES.includes(previousState.steelFinish)
       ? previousState.steelFinish
       : "ZAM"
@@ -1166,7 +1166,7 @@ export default function EstimateDrawer({
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    {!isSolarEstimate && !isTrussEstimate && !isCustomProject ? (
+                    {!isSolarEstimate && !isTrussEstimate && !isCustomProject && !isAtlasWarehouseEstimateProduct(formState.productType) ? (
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
