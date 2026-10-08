@@ -335,6 +335,7 @@ export default function KanbanBoard({
           onToggleShelf={() => setShowOlderQuoted((current) => !current)}
           draggable={false}
           sequencesByLead={sequencesByLead}
+          estimatesByLead={estimatesByLead}
         />
       </div>
 
@@ -359,6 +360,7 @@ export default function KanbanBoard({
                 onToggleShelf={() => setShowOlderQuoted((current) => !current)}
                 draggable
                 sequencesByLead={sequencesByLead}
+                estimatesByLead={estimatesByLead}
               />
             </div>
           ))}
@@ -379,6 +381,7 @@ function KanbanColumn({
   onToggleShelf,
   draggable = true,
   sequencesByLead = {},
+  estimatesByLead = {},
 }) {
   const { setNodeRef } = useDroppable({ id })
 
