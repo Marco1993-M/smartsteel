@@ -2959,6 +2959,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         ) : (
         <KanbanBoard
           leads={filteredLeads}
+          estimatesByLead={leadEstimates}
           onEditLead={setEditingLead}
           onLeadStatusChange={handleLeadStatusChange}
           onCreateEstimate={handleOpenEstimate}
@@ -2977,6 +2978,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
           onCreateEstimate={handleOpenEstimate}
           onCreateInvoice={handleOpenInvoice}
           onEstimateStatusChange={handleEstimateStatusChange}
+          onEstimateSent={fetchLeads}
         />
       )}
 

@@ -903,6 +903,7 @@ export default function LeadEditorDrawer({
   onCreateInvoice,
   onCreateProject,
   onEstimateStatusChange,
+  onEstimateSent,
 }) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
@@ -1565,6 +1566,7 @@ export default function LeadEditorDrawer({
           .eq("lead_id", lead.id)
           .neq("id", selectedEstimateEmail.id)
           .in("status", ["draft", "prepared", "sent"])
+        await onEstimateSent?.()
       }
     }
 
@@ -1691,6 +1693,8 @@ export default function LeadEditorDrawer({
       setFollowUpSequence(result.followUpSequence || null)
       setShowEmailComposer(false)
       setEmailDraftOpened(false)
+
+      if (result.lifecycleRecorded) await onEstimateSent?.()
 
       if (result.lifecycleRecorded) {
         alert(`Proposal sent to ${formData.email}. The estimate is recorded as Sent and the lead moved to Quoted.`)

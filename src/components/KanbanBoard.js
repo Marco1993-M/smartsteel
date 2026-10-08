@@ -176,16 +176,29 @@ function isOlderQuotedLead(lead) {
   return latestWorkingDate < shelfDate
 }
 
-function getLeadServiceRequests(lead) {
+function getLeadServiceRequests(lead, estimates = []) {
   const notes = String(lead?.notes || "")
+  const latestEstimate = [...estimates].sort((a, b) =>
+    Number(b.version_no || 0) - Number(a.version_no || 0) ||
+    new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+  )[0]
+  const sent = ["sent", "accepted"].includes(String(latestEstimate?.status || "").toLowerCase())
+  const lineItems = Array.isArray(latestEstimate?.line_items) ? latestEstimate.line_items : []
+  const hasPricedLine = (pattern) => sent && lineItems.some((item) =>
+    pattern.test(`${item?.code || ""} ${item?.label || ""}`) && Number(item?.total || 0) > 0
+  )
   return {
     delivery: /Delivery support requested:\s*Yes/i.test(notes),
     installation: /Installation support requested:\s*Yes/i.test(notes),
+    deliveryQuoted: hasPricedLine(/delivery|transport/i),
+    installationQuoted: hasPricedLine(/install|erection|assembly/i),
+    quotedVersion: latestEstimate?.version_no || 1,
   }
 }
 
 export default function KanbanBoard({
   leads,
+  estimatesByLead = {},
   onEditLead,
   onLeadStatusChange,
   onCreateEstimate,
@@ -404,6 +417,7 @@ function KanbanColumn({
             <KanbanCard
               key={lead.id}
               lead={lead}
+              estimates={estimatesByLead[String(lead.id)] || []}
               onEditLead={onEditLead}
               onCreateEstimate={onCreateEstimate}
               draggable={draggable}
@@ -416,7 +430,7 @@ function KanbanColumn({
   )
 }
 
-function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequence = null }) {
+function KanbanCard({ lead, estimates = [], onEditLead, onCreateEstimate, draggable = true, sequence = null }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id })
   const style = transform
     ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
@@ -438,7 +452,7 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
   const attention = getCardAttention(lead, sequence)
   const contextualAction = getContextualAction(lead, sequence)
   const showCreatedAt = shouldShowCreatedAt(lead)
-  const serviceRequests = getLeadServiceRequests(lead)
+  const serviceRequests = getLeadServiceRequests(lead, estimates)
 
   const handleContextualAction = (event) => {
     event.stopPropagation()
@@ -485,13 +499,13 @@ function KanbanCard({ lead, onEditLead, onCreateEstimate, draggable = true, sequ
       {serviceRequests.delivery || serviceRequests.installation ? (
         <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Client-requested quote services">
           {serviceRequests.delivery ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-amber-900">
-              <Truck size={12} /> Delivery requested
+            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${serviceRequests.deliveryQuoted ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-amber-300 bg-amber-50 text-amber-900"}`}>
+              <Truck size={12} /> {serviceRequests.deliveryQuoted ? `Delivery quoted · V${serviceRequests.quotedVersion}` : "Delivery requested"}
             </span>
           ) : null}
           {serviceRequests.installation ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-300 bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-blue-900">
-              <HardHat size={12} /> Installation requested
+            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${serviceRequests.installationQuoted ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-blue-300 bg-blue-50 text-blue-900"}`}>
+              <HardHat size={12} /> {serviceRequests.installationQuoted ? `Installation quoted · V${serviceRequests.quotedVersion}` : "Installation requested"}
             </span>
           ) : null}
         </div>
