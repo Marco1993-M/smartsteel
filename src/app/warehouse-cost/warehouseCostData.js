@@ -12,6 +12,22 @@ const SCOPES = [
   { key: "roof_only", label: "Roof sheeted", description: "Atlas structure with galvanised IBR roof sheeting." },
   { key: "fully_enclosed", label: "Roof and side walls sheeted", description: "Atlas structure with galvanised IBR roof and side-wall sheeting. Gable ends remain open." },
 ]
+const PAGE_ENHANCEMENTS = {
+  "25x8": {
+    eyebrow: "25m x 8m planning guide",
+    heading: "Which Atlas size is closest to 25m x 8m?",
+    intro: "A 25m x 8m target footprint gives you 200 m² of planned floor area. Atlas uses 4m building bays, so the practical choice is between a 24m building that stays close to the target and a 28m building that creates additional operating space.",
+    optionGuidance: {
+      24: "Closest to the target footprint. Choose this option when reducing the planned length by 1m still works for your layout.",
+      28: "Adds 3m to the planned length. Choose this option when extra storage, circulation or equipment space is more useful than staying below 200 m².",
+    },
+    closingNote: "Both options retain the 8m Atlas width and can be configured as a structure only, roof-sheeted structure, or with roof and side-wall sheeting.",
+    metadata: {
+      title: "25m x 8m Warehouse Cost South Africa | Smart Steel",
+      description: "Compare 24m x 8m and 28m x 8m Atlas warehouse options for a 25m x 8m target footprint. See current supply-only prices and continue in 3D.",
+    },
+  },
+}
 
 const formatDimension = (value) => `${Number.isInteger(value) ? value : value.toFixed(1)}m`
 const formatArea = (value) => `${Number.isInteger(value) ? value : value.toFixed(1)} m²`
@@ -103,6 +119,7 @@ export function getWarehouseCostPageConfig(slug) {
     scopes: SCOPES,
     finishes: FINISHES,
     bestFor: getUseCase(searchedArea),
+    pageEnhancement: PAGE_ENHANCEMENTS[slug] ?? null,
     faqs: [
       {
         q: `How much does a ${displaySize} Atlas warehouse cost?`,
@@ -120,8 +137,8 @@ export function getWarehouseCostPageConfig(slug) {
 export function buildWarehouseCostMetadata(slug) {
   const config = getWarehouseCostPageConfig(slug)
   if (!config) return {}
-  const title = `${config.displaySize} Atlas Warehouse Cost South Africa | Smart Steel`
-  const description = `Plan a ${config.displaySize} warehouse with current Atlas modular pricing. Compare structure-only, roof-sheeted and enclosed options in ZAM, galvanised or mild steel.`
+  const title = config.pageEnhancement?.metadata.title ?? `${config.displaySize} Atlas Warehouse Cost South Africa | Smart Steel`
+  const description = config.pageEnhancement?.metadata.description ?? `Plan a ${config.displaySize} warehouse with current Atlas modular pricing. Compare structure-only, roof-sheeted and enclosed options in ZAM, galvanised or mild steel.`
   return {
     title,
     description,

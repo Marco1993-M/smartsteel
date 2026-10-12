@@ -94,6 +94,39 @@ export default function WarehouseCostPageClient({ slug }) {
       </div>
     </section>
 
+    {config.pageEnhancement && <section className="border-y border-[#c9d9e5] bg-white py-16">
+      <div className="mx-auto max-w-7xl px-5 md:px-8">
+        <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">{config.pageEnhancement.eyebrow}</p>
+            <h2 className="mt-4 text-3xl font-bold leading-tight md:text-4xl">{config.pageEnhancement.heading}</h2>
+            <p className="mt-5 text-lg leading-8 text-[#4c607a]">{config.pageEnhancement.intro}</p>
+            <p className="mt-5 border-l-2 border-[#0043f3] pl-4 text-sm leading-6 text-[#62748c]">{config.pageEnhancement.closingNote}</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {config.atlasOptions.map((option, index) => {
+              const areaDifference = option.area - config.searchedArea
+              const lengthDifference = option.length - config.length
+              const isSelected = selectedOptionIndex === index
+              return <article key={option.length} className={`flex min-h-[300px] flex-col border p-6 transition ${isSelected ? "border-[#0043f3] bg-[#eef4ff]" : "border-[#d9e3eb] bg-[#f8fafc]"}`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0043f3]">Atlas {option.productCode}</p><h3 className="mt-2 text-2xl font-bold">{option.length}m x {option.width}m</h3></div>
+                  {index === config.recommendedIndex && <span className="bg-[#0043f3] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Closest fit</span>}
+                </div>
+                <dl className="mt-6 grid grid-cols-2 gap-3 border-y border-[#cad8e2] py-4 text-sm">
+                  <div><dt className="text-[#718399]">Floor area</dt><dd className="mt-1 font-bold text-[#001d2e]">{option.areaLabel}</dd></div>
+                  <div><dt className="text-[#718399]">Against target</dt><dd className="mt-1 font-bold text-[#001d2e]">{areaDifference > 0 ? "+" : ""}{areaDifference} m²</dd></div>
+                </dl>
+                <p className="mt-5 flex-1 leading-7 text-[#4c607a]">{config.pageEnhancement.optionGuidance[option.length]}</p>
+                <p className="mt-3 text-sm font-semibold text-[#62748c]">{Math.abs(lengthDifference)}m {lengthDifference < 0 ? "shorter than" : "longer than"} the target length</p>
+                <button type="button" onClick={() => setSelectedOptionIndex(index)} className={`mt-5 min-h-12 px-5 py-3 text-sm font-bold transition ${isSelected ? "bg-[#001d2e] text-white" : "border border-[#001d2e] bg-white text-[#001d2e] hover:bg-[#001d2e] hover:text-white"}`}>{isSelected ? "Selected for pricing" : `Select ${option.length}m option`}</button>
+              </article>
+            })}
+          </div>
+        </div>
+      </div>
+    </section>}
+
     <section className="bg-white py-16"><div className="mx-auto grid max-w-7xl gap-10 px-5 md:px-8 lg:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">What you are comparing</p><h2 className="mt-4 text-3xl font-bold">A modular warehouse, priced from its actual configuration</h2><p className="mt-5 text-lg leading-8 text-[#4c607a]">Atlas is a bolted lip channel warehouse system built in 4m bays. The guide changes with the selected span, production length, eave height, steel finish and sheeting scope rather than relying on a generic rate per square metre.</p></div><div className="grid gap-px bg-[#d9e3eb] sm:grid-cols-2">{[["System", `Atlas ${selectedOption.productCode}`], ["Module", "4m bays"], ["Standard eave", `${selectedOption.wallHeight}m`], ["Roof pitch", "15° dual pitch"], ["Delivery", "Quoted separately"], ["Installation", "Reviewed after enquiry"]].map(([label, value]) => <div key={label} className="bg-[#f4f8fb] p-5"><p className="text-xs font-bold uppercase tracking-wider text-[#879bb2]">{label}</p><p className="mt-2 font-bold">{value}</p></div>)}</div></div></section>
 
     <section className="mx-auto max-w-7xl px-5 py-16 md:px-8"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Buyer guidance</p><h2 className="mt-4 text-3xl font-bold">What changes the final project cost?</h2><p className="mt-4 leading-7 text-[#62748c]">The structure guide stays transparent. These project-specific items are reviewed before the final quote.</p></div><div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{[["Site and delivery", "Distance, unloading access and site conditions are assessed before transport is priced."], ["Installation scope", "Erection requirements depend on access, ground conditions, height and the final building scope."], ["Openings and finishes", "Doors, openings, flashing details, sheeting profile and colour are confirmed during project review."], ["Foundations and slab", "Concrete, foundations and ground preparation are not assumed in this supply-only structure guide."]].map(([title, body]) => <div key={title} className="border-t-2 border-[#0043f3] bg-white p-6"><h3 className="text-lg font-bold">{title}</h3><p className="mt-3 leading-7 text-[#62748c]">{body}</p></div>)}</div></section>
