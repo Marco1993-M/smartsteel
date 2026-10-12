@@ -74,6 +74,21 @@ function getRoofStyleLabel(value) {
   return value === "mono_pitch" ? "Mono pitch" : "Dual pitch"
 }
 
+function getAtlasSheetingLabel(input, lineItems) {
+  const sheetingLine = lineItems.find((item) => /\bsheeting\b/i.test(item?.label || ""))
+  if (sheetingLine) {
+    const label = String(sheetingLine.label).trim()
+    const profile = label.match(/\b(Corrugated|IBR|Concealed Fix)\b/i)?.[0]
+    const finish = label.match(/\b(Chromadek|Galvanised)\b/i)?.[0]
+    if (profile) return [profile, finish].filter(Boolean).join(" ")
+  }
+
+  if (input.gableMode === "structure_only") return "Not included"
+  const profile = input.sheetingProfile || input.cladding
+  const finish = input.sheetingFinish === "chromadek" ? "Chromadek" : input.sheetingFinish === "galvanised" ? "Galvanised" : ""
+  return [profile, finish].filter(Boolean).join(" ") || "Not specified"
+}
+
 export function formatEstimateDate(value) {
   if (!value) return "Not saved"
 
@@ -128,6 +143,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
     estimate?.product_type_display ||
     productType
   const atlasEstimate = isAtlasEstimate(productType, productTypeLabel)
+  const claddingLabel = atlasEstimate ? getAtlasSheetingLabel(input, lineItems) : input.cladding || "Not specified"
   const lsfEstimate = !atlasEstimate && isLsfEstimate(productType, productTypeLabel)
   const solarProduct = isSolarProduct(productType)
   const groundMountProduct = productType === "Solar ground mount"
@@ -239,7 +255,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
                 : formatArea(area)
               : "Not specified",
         },
-        { label: "Cladding", value: input.cladding || "Not specified" },
+        { label: atlasEstimate ? "Sheeting" : "Cladding", value: claddingLabel },
         {
           label: "Delivery",
           value: deliveryLabel,
@@ -276,7 +292,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
           ? `${formatArea(area)} each (${formatArea(totalArea)} total)`
           : formatArea(area)
         : "Not specified",
-    claddingLabel: input.cladding || "Not specified",
+    claddingLabel,
     deliveryLabel,
     installationLabel,
     summaryFields,
