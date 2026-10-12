@@ -1,13 +1,20 @@
 import SolarClient from "./SolarClient";
 
 export const metadata = {
-  title: "Solar Steel Solutions South Africa | Smart Steel",
+  title: "Solar Carports & Ground Mounts South Africa",
   description:
-    "Explore Smart Steel solar infrastructure systems for carports, ground mounts, roof support, and custom commercial steel projects in South Africa.",
+    "Explore Atlas solar carports and solar ground mount structures in South Africa. Compare applications, plan your layout and request a project estimate.",
+  keywords: [
+    "solar carports South Africa",
+    "solar ground mounts South Africa",
+    "solar panel carport structures",
+    "ground mount solar structures",
+    "Atlas solar structures",
+  ],
   openGraph: {
-    title: "Solar Steel Solutions South Africa | Smart Steel",
+    title: "Solar Carports & Ground Mounts South Africa",
     description:
-      "Find the right steel system for solar parking, ground-mounted arrays, roof support, and custom commercial applications.",
+      "Atlas steel structures for solar carports and ground-mounted solar arrays across South Africa.",
     url: "https://www.smartsteel.co.za/solar",
     siteName: "Smart Steel",
     images: [
@@ -21,9 +28,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Solar Steel Solutions South Africa | Smart Steel",
+    title: "Solar Carports & Ground Mounts South Africa",
     description:
-      "Solar infrastructure systems for parking, roofs, ground arrays, and commercial sites.",
+      "Atlas steel structures for solar carports and ground-mounted solar arrays across South Africa.",
     images: ["/solar-hero.jpg"],
   },
   alternates: {
