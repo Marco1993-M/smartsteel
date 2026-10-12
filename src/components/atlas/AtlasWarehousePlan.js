@@ -11,6 +11,10 @@ export default function AtlasWarehousePlan({ plan, showFootings = true, classNam
   const right = left + length
   const bottom = top + width
   const footingSide = (plan.footingSizeMm / 1000) * scale
+  const gableColumns = [
+    ...(plan.frontGableColumnOffsetsM || []).map((offsetM) => ({ x: left, y: top + offsetM * scale, end: "front" })),
+    ...(plan.rearGableColumnOffsetsM || []).map((offsetM) => ({ x: right, y: top + offsetM * scale, end: "rear" })),
+  ]
   const frames = Array.from({ length: plan.portalFrames }, (_, index) => ({ x: left + index * plan.baySpacingM * scale, label: String(index + 1) }))
   const openingHeight = (plan.frontOpeningWidthM || 0) * scale
   const openingTop = top + (width - openingHeight) / 2
@@ -19,7 +23,7 @@ export default function AtlasWarehousePlan({ plan, showFootings = true, classNam
   const secondary = "#607489"
   const grid = "#aabac7"
 
-  return <svg className={className} viewBox={`0 0 ${viewWidth} ${viewHeight}`} role="img" aria-label={`Indicative plan of Atlas ${plan.familyCode}, ${plan.widthM} by ${plan.lengthM} metres, ${plan.bays} four-metre bays and ${plan.columnCount} main columns`} xmlns="http://www.w3.org/2000/svg">
+  return <svg className={className} viewBox={`0 0 ${viewWidth} ${viewHeight}`} role="img" aria-label={`Indicative plan of Atlas ${plan.familyCode}, ${plan.widthM} by ${plan.lengthM} metres, ${plan.bays} four-metre bays, ${plan.columnCount} main columns and ${plan.gableColumnCount || 0} gable columns`} xmlns="http://www.w3.org/2000/svg">
     <rect width={viewWidth} height={viewHeight} fill="#fff" />
 
     {frames.map(({ x, label }) => <g key={`grid-${label}`}>
@@ -46,6 +50,10 @@ export default function AtlasWarehousePlan({ plan, showFootings = true, classNam
       {showFootings ? <rect x={x - footingSide / 2} y={y - footingSide / 2} width={footingSide} height={footingSide} fill="#fff" fillOpacity="0.75" stroke="#b87c36" strokeWidth="1" /> : null}
       <circle cx={x} cy={y} r="2.8" fill={ink} />
     </g>))}
+    {gableColumns.map(({ x, y, end }, index) => <g key={`gable-column-${end}-${index}`}>
+      {showFootings ? <rect x={x - footingSide / 2} y={y - footingSide / 2} width={footingSide} height={footingSide} fill="#fff" fillOpacity="0.75" stroke="#b87c36" strokeWidth="1" /> : null}
+      <circle cx={x} cy={y} r="2.8" fill={ink} />
+    </g>)}
 
     {frames.slice(0, -1).map(({ x, label }) => <g key={`bay-dimension-${label}`}>
       <line x1={x} y1={top - 73} x2={x + plan.baySpacingM * scale} y2={top - 73} stroke={secondary} strokeWidth="0.8" />
