@@ -2,6 +2,7 @@ import Image from "next/image"
 import { ESTIMATE_DELIVERY_TERMS, ESTIMATE_EXCLUSIONS, ESTIMATE_TERMS } from "../lib/estimates/estimateDocument"
 import { formatCurrency } from "../lib/estimates/warehouseEstimate"
 import AtlasWarehousePlan from "./atlas/AtlasWarehousePlan"
+import AtlasWarehouseGableElevations from "./atlas/AtlasWarehouseGableElevations"
 
 export default function EstimateDocumentLayout({
   documentModel,
@@ -287,9 +288,10 @@ export default function EstimateDocumentLayout({
             </div>
             <p className="shrink-0 rounded bg-[#eef4f8] px-3 py-2 text-xs font-bold text-[#001d2e]">{documentModel.layoutPlan.widthM}m × {documentModel.layoutPlan.lengthM}m</p>
           </div>
-          <div className="mt-5 flex h-[135mm] items-center justify-center overflow-hidden border border-slate-200 bg-white p-3 print:h-[130mm]">
+          <div className={`mt-5 flex items-center justify-center overflow-hidden border border-slate-200 bg-white p-3 ${documentModel.layoutPlan.gableMode === "fully_enclosed_with_gables" ? "h-[100mm] print:h-[95mm]" : "h-[135mm] print:h-[130mm]"}`}>
             <AtlasWarehousePlan plan={documentModel.layoutPlan} className="max-h-full w-full" />
           </div>
+          {documentModel.layoutPlan.gableMode === "fully_enclosed_with_gables" ? <div className="mt-3"><AtlasWarehouseGableElevations plan={documentModel.layoutPlan} /></div> : null}
           <div className="mt-5 grid grid-cols-3 gap-3 text-xs">
             <div className="rounded border border-slate-200 p-3"><p className="font-bold text-slate-500">Portal frames</p><p className="mt-1 font-black text-[#001d2e]">{documentModel.layoutPlan.portalFrames}</p></div>
             <div className="rounded border border-slate-200 p-3"><p className="font-bold text-slate-500">Bay spacing</p><p className="mt-1 font-black text-[#001d2e]">4m nominal</p></div>
@@ -297,6 +299,7 @@ export default function EstimateDocumentLayout({
           </div>
           <p className="mt-4 text-[11px] leading-5 text-slate-600">Grid intersections mark indicative column centres; fine ochre outlines show 1,250 × 1,250mm footing footprints. The plan is for layout discussion only; footing size, founding levels, anchors and final setting-out require site-specific engineering approval. It is not a construction drawing or a surveyed site plan.</p>
           {documentModel.layoutPlan.frontOpeningWidthM ? <p className="mt-2 text-[11px] font-semibold text-slate-700">One gable has a centred 6m-wide × 3m-high opening. The opposite gable remains enclosed. Gable orientation on site must be confirmed.</p> : null}
+          {documentModel.layoutPlan.gableMode === "fully_enclosed" ? <p className="mt-2 text-[11px] font-semibold text-slate-700">Roof and long side walls are sheeted; gable ends remain open in this configuration.</p> : null}
         </div>
       </section> : null}
 
