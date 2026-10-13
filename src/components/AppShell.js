@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import Navbar from "./Navbar"
 import Footer from "./Footer"
 
-const CHROMELESS_PATHS = ["/partner-demo/", "/kanban/estimates/", "/kanban/invoices/", "/quotes/", "/invoices/", "/estimate-response/", "/os", "/partner"]
+const CHROMELESS_PATHS = ["/partner-demo/", "/kanban/estimates/", "/kanban/invoices/", "/quotes/", "/invoices/", "/estimate-response/", "/os", "/partner", "/warehouse-builder/summary", "/tools/solar-carport-estimator/summary"]
 
 export default function AppShell({ children }) {
   const pathname = usePathname()
