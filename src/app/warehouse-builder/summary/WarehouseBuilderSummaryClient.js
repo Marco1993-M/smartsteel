@@ -4,8 +4,6 @@ import Image from "next/image"
 import { useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import WarehouseBuilderScene from "../../../components/warehouse-builder/WarehouseBuilderScene"
-import { calculateAtlasWarehouseEstimate } from "../../../lib/estimates/atlasWarehouseEstimate"
-import { formatCurrency } from "../../../lib/estimates/warehouseEstimate"
 import { WAREHOUSE_SHEETING_COLORS } from "../../../lib/warehouseBuilderStore"
 
 function numberParam(searchParams, key, fallback) {
@@ -50,16 +48,6 @@ export default function WarehouseBuilderSummaryClient() {
   }, [searchParams])
 
   const isAtlas = configuration.productType === "Atlas Warehouse"
-  const estimate = useMemo(() => {
-    const structureOnly = configuration.gableMode === "structure_only"
-    return calculateAtlasWarehouseEstimate({
-      ...configuration,
-      pricingModel: "atlas_os_v1",
-      cladding: structureOnly ? "None" : configuration.sheetingFinish === "chromadek" ? "Chromadek" : "IBR",
-    })
-  }, [configuration])
-  const budget = estimate.pricing.estimatedTotal ?? estimate.pricing.baseTotal ?? estimate.pricing.totalInclVat
-  const guideRate = Math.round(budget / (configuration.width * configuration.length))
   const createdDate = new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "long", year: "numeric" }).format(new Date())
   const reference = createDesignReference({
     productType: configuration.productType,
@@ -111,7 +99,8 @@ export default function WarehouseBuilderSummaryClient() {
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950 print:bg-white print:p-0">
-      <div className="no-print mx-auto mb-4 flex max-w-[900px] justify-end gap-2">
+      <div className="no-print mx-auto mb-4 flex max-w-[900px] items-center justify-between gap-4">
+        <p className="text-sm font-semibold text-slate-500">Read-only submitted configuration</p>
         <button type="button" onClick={() => window.print()} className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white">Print / Save PDF</button>
       </div>
       <article className="summary-sheet mx-auto max-w-[900px] overflow-hidden bg-white shadow-xl print:shadow-none">
@@ -134,10 +123,11 @@ export default function WarehouseBuilderSummaryClient() {
           </div>
           <div className="flex flex-col justify-between rounded-2xl bg-slate-950 p-6 text-white">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Supply-only budget guide excl. VAT</p>
-              <p className="mt-3 text-4xl font-semibold">{formatCurrency(budget)}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Configuration overview</p>
+              <p className="mt-3 text-3xl font-semibold">{configuration.width}m × {configuration.length}m</p>
+              <p className="mt-2 text-sm text-slate-300">{configuration.wallHeight}m eave height · 15° roof pitch</p>
             </div>
-            <p className="mt-6 text-xs leading-5 text-slate-300">Indicative online guide. Final pricing remains subject to confirmed scope, engineering, site access, delivery, and installation requirements.</p>
+            <p className="mt-6 text-xs leading-5 text-slate-300">Indicative project view for scope discussion. Final setting-out and construction details follow approved drawings.</p>
           </div>
         </div>
 
@@ -152,7 +142,6 @@ export default function WarehouseBuilderSummaryClient() {
                 ["Sheeting profile", configuration.gableMode === "structure_only" ? "Not selected" : configuration.sheetingProfile],
                 ["Sheeting finish", sheetingFinishLabel],
                 ["Roof pitch", "15 degrees"],
-                ["Guide rate", `${formatCurrency(guideRate)}/sqm excl. VAT`],
                 ...(!isAtlas ? [["Openings", `${configuration.rollerDoorCount} main (${configuration.rollerDoorFace}) · ${configuration.pedestrianDoorCount} personnel (${configuration.pedestrianDoorFace})`]] : []),
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 py-3 text-sm"><dt className="text-slate-500">{label}</dt><dd className="text-right font-semibold">{value}</dd></div>
@@ -160,11 +149,10 @@ export default function WarehouseBuilderSummaryClient() {
             </dl>
           </section>
           <section>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Next review</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Installer review</p>
             <div className="mt-3 rounded-2xl border border-slate-200 p-5 text-sm leading-6 text-slate-600">
-              <p className="font-semibold text-slate-950">Send this design to Smart Steel for review.</p>
-              <p className="mt-2">We will confirm the selected configuration, project location, foundations, access, delivery, installation, and any project-specific engineering requirements.</p>
-              <p className="mt-4 font-semibold text-slate-950">info@smartsteel.co.za</p>
+              <p className="font-semibold text-slate-950">Use this view to discuss the selected scope.</p>
+              <p className="mt-2">Confirm site dimensions, foundations, access, delivery and installation requirements against the approved project drawings before construction.</p>
             </div>
           </section>
         </div>
