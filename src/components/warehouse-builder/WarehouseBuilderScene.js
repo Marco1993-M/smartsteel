@@ -416,6 +416,8 @@ function WarehouseMesh({
   const w15PurlinInsetFraction = 0.15 / w15RafterLengthM
   const atlasPurlinFractions = Number(width) === 15
     ? Array.from({ length: 6 }, (_, index) => w15PurlinInsetFraction + index * ((1 - 2 * w15PurlinInsetFraction) / 5))
+    : Number(width) === 8
+      ? Array.from({ length: 4 }, (_, index) => 0.08 + index * (0.84 / 3))
     : [0.08, 0.5, 0.92]
   const atlasGirtRowCount = Math.ceil(Number(wallHeight) / 1.8)
   const atlasGirtFractions = Number(width) === 15
