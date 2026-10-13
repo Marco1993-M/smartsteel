@@ -33,8 +33,8 @@ export function calculateAtlasW08Geometry({ lengthM = 20, eaveHeightM = 3 } = {}
   const roofRiseM = halfSpanM * Math.tan(roofPitchRadians)
   const bays = length / baySpacingM
   const portalFrames = bays + 1
-  const purlinRowsPerSlope = 3
-  const totalPurlinRows = 6
+  const purlinRowsPerSlope = 4
+  const totalPurlinRows = purlinRowsPerSlope * 2
   const bracedBayPositions = Array.from({ length: bays }, (_, index) => index + 1).filter((bay) => (bay - 1) % 4 === 0)
   const wallBraceCutLengthM = Math.hypot(baySpacingM, eaveHeight)
   const roofBraceCutLengthM = Math.hypot(baySpacingM, rafterCutLengthM)
