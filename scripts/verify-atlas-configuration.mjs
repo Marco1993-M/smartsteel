@@ -7,6 +7,7 @@ import {
 } from "../src/lib/atlasConfiguration.js"
 import { calculateAtlasWarehouseEstimate } from "../src/lib/estimates/atlasWarehouseEstimate.js"
 import { buildPartnerSafeAtlasRelease } from "../src/lib/partnerAtlasRelease.js"
+import { getAtlasWarehouseEstimatePlan, getAtlasWarehousePlan } from "../src/lib/atlasWarehousePlan.js"
 
 const fixtures = [
   { width: 6, length: 8, wallHeight: 3, steelFinish: "ZAM", gableMode: "structure_only" },
@@ -77,6 +78,26 @@ assert.equal(fullyEnclosedEstimate.sheeting.gableOpeningWidth, 6)
 assert.equal(fullyEnclosedEstimate.sheeting.gableOpeningHeight, 3)
 assert.equal(fullyEnclosedEstimate.sheeting.gableOpeningArea, 18)
 assert.equal(fullyEnclosedEstimate.sheeting.openingsDeducted, true)
+const enclosedPlan = getAtlasWarehousePlan(fullyEnclosedEstimate.input)
+assert.equal(enclosedPlan.gableMode, "fully_enclosed_with_gables")
+assert.equal(enclosedPlan.frontOpeningWidthM, 6)
+assert.equal(enclosedPlan.frontOpeningHeightM, 3)
+assert.deepEqual(enclosedPlan.frontGableColumnOffsetsM, [])
+assert.equal(enclosedPlan.gableColumnCount, 0)
+assert.equal(enclosedPlan.footingCount, enclosedPlan.columnCount)
+assert.equal(getAtlasWarehousePlan({ ...fullyEnclosedEstimate.input, gableMode: "fully_enclosed" }).frontOpeningWidthM, null)
+
+const w10EnclosedPlan = getAtlasWarehousePlan({ width: 10, length: 24, wallHeight: 4.5, gableMode: "fully_enclosed_with_gables" })
+assert.deepEqual(w10EnclosedPlan.frontGableColumnOffsetsM, [2, 8])
+assert.deepEqual(w10EnclosedPlan.rearGableColumnOffsetsM, [3, 7])
+
+const w15EnclosedPlan = getAtlasWarehousePlan({ width: 15, length: 48, wallHeight: 4, gableMode: "fully_enclosed_with_gables" })
+assert.deepEqual(w15EnclosedPlan.frontGableColumnOffsetsM, [4.5, 10.5])
+assert.deepEqual(w15EnclosedPlan.rearGableColumnOffsetsM, [5, 10])
+assert.equal(w15EnclosedPlan.columnCount, 26)
+assert.equal(w15EnclosedPlan.gableColumnCount, 4)
+assert.equal(w15EnclosedPlan.footingCount, 30)
+assert.equal(getAtlasWarehouseEstimatePlan({ product_type: "Atlas Warehouse", input_data: { width: 15, length: 48, wallHeight: 4, gableMode: "fully_enclosed_with_gables" }, line_items: [{ label: "6x12x4 Structure Extension" }] }).separatelyQuotedExtension, true)
 assert.equal(fullyEnclosedEstimate.meta.sku.includes("-FC-"), true)
 assert.equal(crmSellTotal, fullyEnclosedEstimate.pricing.estimatedTotal)
 

@@ -46,6 +46,27 @@ const higher = calculateAtlasSolarCarportEstimate(input, { ...release, costs: { 
 assert.ok(higher.pricing.estimatedTotal > priced.pricing.estimatedTotal)
 assert.equal(calculateAtlasSolarCarportEstimate(input).pricing.estimatedTotal, null)
 assert.throws(() => calculateAtlasSolarCarportEstimate({ ...input, width: 5 }, release))
+const installed = calculateAtlasSolarCarportEstimate({ ...input, scope: 'supply_install' }, release)
+const installation = installed.lineItems.find(item => item.code === 'SC-INSTALL')
+const footing = installed.lineItems.find(item => item.code === 'SC-FOOTING')
+assert.equal(installation.quantity, 33)
+assert.equal(footing.quantity, 2)
+assert.equal(installation.total, 9240)
+assert.equal(footing.total, 11000)
+assert.equal(installation.priceIncludesMarkup, true)
+assert.equal(footing.priceIncludesMarkup, true)
+assert.equal(Math.round((installed.pricing.estimatedTotal - priced.pricing.estimatedTotal) * 100), 2024000)
+assert.equal(priced.lineItems.some(item => item.code === 'SC-FOOTING'), false)
+const fourCar = calculateAtlasSolarCarportEstimate({ ...input, width: 11, moduleCount: 24, scope: 'supply_install' }, release)
+assert.equal(fourCar.totals.stripFootings, 3)
+const doubleSided = calculateAtlasSolarCarportEstimate({ ...input, length: 12, moduleCount: 24, scope: 'supply_install' }, release)
+assert.equal(doubleSided.totals.stripFootings, 4)
+const multipleRuns = calculateAtlasSolarCarportEstimate({ parkingRuns: [
+  { width: 5.5, length: 6, parkingCount: 2, moduleCount: 12 },
+  { width: 11, length: 12, parkingCount: 4, moduleCount: 48 },
+], scope: 'supply_install' }, release)
+assert.equal(multipleRuns.totals.stripFootings, 8)
+assert.equal(multipleRuns.lineItems.find(item => item.code === 'SC-FOOTING').quantity, 8)
 console.log('Solar geometry, mirrored quantities, 60-degree arms, cost updates, and single 40% uplift verified.')
 console.log(JSON.stringify({ steelKg: priced.totals.steelKg, cost: priced.pricing.baseTotal, priceExclVat: priced.pricing.estimatedTotal }))
 
