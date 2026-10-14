@@ -27,6 +27,8 @@ export function buildAnalyticsInsights({ leads, estimates = [], responses = [], 
   const cohort = leads.filter((lead) => inPeriod(lead.created_at, start, end))
   const quotedCohort = cohort.filter(quoted)
   const turnaround = quotedCohort.map((lead) => (firstSent(lead) - date(lead.created_at)) / DAY).filter((value) => Number.isFinite(value) && value >= 0)
+  const quotedWithoutSentTimestamp = leads.filter((lead) => status(lead) === 'quoted' && !Number.isFinite(firstSent(lead))).length
+  const quotedWithoutEstimate = leads.filter((lead) => status(lead) === 'quoted' && !(byLead.get(String(lead.id)) || []).length).length
   const awaiting = estimatesAvailable ? active.filter((lead) => !quoted(lead)) : []
   const openQuoted = estimatesAvailable ? active.filter(quoted) : []
   const ageBuckets = [
@@ -76,7 +78,7 @@ export function buildAnalyticsInsights({ leads, estimates = [], responses = [], 
   return {
     estimatesAvailable,
     pipeline: { count: active.length, value: active.reduce((sum, lead) => sum + number(lead.quote_value), 0), quotedCount: openQuoted.length, quotedValue: openQuoted.reduce((sum, lead) => sum + number(lead.quote_value), 0), awaitingQuote: awaiting.length, oldestAwaitingDays: awaiting.length ? Math.max(0, ...awaiting.map((lead) => (now - date(lead.created_at)) / DAY).filter(Number.isFinite).map(Math.floor)) : null, ageBuckets },
-    quotes: { quotedCount: quotedCohort.length, wonCount: quotedCohort.filter((lead) => status(lead) === 'won').length, winRate: rate(quotedCohort.filter((lead) => status(lead) === 'won').length, quotedCohort.length), medianDays: median(turnaround), medianHours: median(turnaround.map((days) => days * 24)), timingSample: turnaround.length },
+    quotes: { quotedCount: quotedCohort.length, wonCount: quotedCohort.filter((lead) => status(lead) === 'won').length, winRate: rate(quotedCohort.filter((lead) => status(lead) === 'won').length, quotedCohort.length), medianDays: median(turnaround), medianHours: median(turnaround.map((days) => days * 24)), timingSample: turnaround.length, quotedWithoutSentTimestamp, quotedWithoutEstimate },
     attention: { total: attention.length, overdue: active.filter((lead) => date(lead.follow_up_at) < now).length, noNextAction: active.filter((lead) => !String(lead.next_action || '').trim()).length, leads: attention },
     products: performance('product_type'), sources: performance('lead_source'),
     feedback: { available: responsesAvailable, rateAvailable: responsesAvailable && emailsAvailable, sentCount: sentEstimates.size, respondedCount: responded.size, responseRate: responsesAvailable && emailsAvailable ? rate(responded.size, sentEstimates.size) : null, total: latest.size, choices: [
