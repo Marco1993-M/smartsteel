@@ -16,7 +16,7 @@ export async function GET(request) {
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
 
   const [followUps, reminders, orderConfirmations] = await Promise.all([
-    processDueEstimateFollowUps({ requestUrl: request.url }),
+    processDueEstimateFollowUps(),
     processOverdueReminderNotifications({ requestUrl: request.url }),
     retryPendingOrderConfirmations(),
   ])

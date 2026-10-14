@@ -8,6 +8,7 @@ import {
   isAtlasEstimate,
 } from "lib/crmEstimateFollowUps"
 import { processDueEstimateFollowUps } from "lib/processEstimateFollowUps"
+import { SMART_STEEL_SITE_URL } from "lib/brandEntity"
 
 export const dynamic = "force-dynamic"
 
@@ -61,8 +62,8 @@ export async function GET(request) {
     }
 
     const copy = buildFollowUpCopy({ stepNumber: 1, lead, estimate })
-    const shareUrl = new URL(`/quotes/${estimate.share_token}`, request.url).toString()
-    const responseBaseUrl = new URL(`/estimate-response/${data.response_token}`, request.url).toString()
+    const shareUrl = new URL(`/quotes/${estimate.share_token}`, SMART_STEEL_SITE_URL).toString()
+    const responseBaseUrl = new URL(`/estimate-response/${data.response_token}`, SMART_STEEL_SITE_URL).toString()
     return NextResponse.json({
       subject: copy.subject,
       html: buildFollowUpHtml({
@@ -133,7 +134,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "A valid action is required." }, { status: 400 })
   }
 
-  const result = await processDueEstimateFollowUps({ requestUrl: request.url })
+  const result = await processDueEstimateFollowUps()
   if (result.error) return NextResponse.json({ error: result.error }, { status: result.status || 500 })
   return NextResponse.json(result)
 }

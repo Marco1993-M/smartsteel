@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireOsAuth } from "lib/osRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
 import { getEstimateBrandIdentity, getNextFollowUpAt } from "lib/crmEstimateFollowUps"
+import { SMART_STEEL_SITE_URL } from "lib/brandEntity"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -178,7 +179,7 @@ export async function POST(request) {
       return NextResponse.json({ error: pdfError?.error || "Could not prepare the estimate PDF." }, { status: 500 })
     }
     const pdfBase64 = Buffer.from(await pdfResponse.arrayBuffer()).toString("base64")
-    const shareUrl = new URL(`/quotes/${estimate.share_token}`, request.url).toString()
+    const shareUrl = new URL(`/quotes/${estimate.share_token}`, SMART_STEEL_SITE_URL).toString()
     const resendApiKey = process.env.RESEND_API_KEY
     if (!resendApiKey) return NextResponse.json({ error: "Email service is not configured." }, { status: 503 })
 
