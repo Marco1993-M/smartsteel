@@ -3,11 +3,12 @@ const number = (value) => Number.isFinite(Number(value)) ? Number(value) : 0
 const status = (lead) => String(lead.status || '').toLowerCase()
 const date = (value) => value ? Date.parse(value) : NaN
 const rate = (part, total) => total ? Math.round(part / total * 1000) / 10 : null
-const median = (values) => {
+const median = (values, decimals = 1) => {
   if (!values.length) return null
   const sorted = [...values].sort((a, b) => a - b)
   const middle = Math.floor(sorted.length / 2)
-  return Math.round((sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2) * 10) / 10
+  const factor = 10 ** decimals
+  return Math.round((sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2) * factor) / factor
 }
 const inPeriod = (value, start, end) => date(value) >= date(start) && date(value) < date(end)
 const sent = (estimate) => Boolean(estimate.sent_at) || ['sent', 'accepted', 'declined', 'superseded'].includes(estimate.status)
@@ -75,7 +76,7 @@ export function buildAnalyticsInsights({ leads, estimates = [], responses = [], 
   return {
     estimatesAvailable,
     pipeline: { count: active.length, value: active.reduce((sum, lead) => sum + number(lead.quote_value), 0), quotedCount: openQuoted.length, quotedValue: openQuoted.reduce((sum, lead) => sum + number(lead.quote_value), 0), awaitingQuote: awaiting.length, oldestAwaitingDays: awaiting.length ? Math.max(0, ...awaiting.map((lead) => (now - date(lead.created_at)) / DAY).filter(Number.isFinite).map(Math.floor)) : null, ageBuckets },
-    quotes: { quotedCount: quotedCohort.length, wonCount: quotedCohort.filter((lead) => status(lead) === 'won').length, winRate: rate(quotedCohort.filter((lead) => status(lead) === 'won').length, quotedCohort.length), medianDays: median(turnaround), timingSample: turnaround.length },
+    quotes: { quotedCount: quotedCohort.length, wonCount: quotedCohort.filter((lead) => status(lead) === 'won').length, winRate: rate(quotedCohort.filter((lead) => status(lead) === 'won').length, quotedCohort.length), medianDays: median(turnaround), medianHours: median(turnaround.map((days) => days * 24)), timingSample: turnaround.length },
     attention: { total: attention.length, overdue: active.filter((lead) => date(lead.follow_up_at) < now).length, noNextAction: active.filter((lead) => !String(lead.next_action || '').trim()).length, leads: attention },
     products: performance('product_type'), sources: performance('lead_source'),
     feedback: { available: responsesAvailable, rateAvailable: responsesAvailable && emailsAvailable, sentCount: sentEstimates.size, respondedCount: responded.size, responseRate: responsesAvailable && emailsAvailable ? rate(responded.size, sentEstimates.size) : null, total: latest.size, choices: [
