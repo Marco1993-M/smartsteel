@@ -1,4 +1,5 @@
 import { supabaseServer } from "lib/supabase-server"
+import { SMART_STEEL_SITE_URL } from "lib/brandEntity"
 import {
   buildFollowUpCopy,
   buildFollowUpHtml,
@@ -17,7 +18,7 @@ async function stopSequence(sequence, reason) {
   }).eq("id", sequence.id)
 }
 
-export async function processDueEstimateFollowUps({ requestUrl, limit = 25 } = {}) {
+export async function processDueEstimateFollowUps({ limit = 25 } = {}) {
   if (!process.env.RESEND_API_KEY) return { error: "Email service is not configured.", status: 503 }
 
   const now = new Date().toISOString()
@@ -57,9 +58,8 @@ export async function processDueEstimateFollowUps({ requestUrl, limit = 25 } = {
       continue
     }
 
-    const baseUrl = requestUrl || "https://www.smartsteel.co.za"
-    const shareUrl = new URL(`/quotes/${estimate.share_token}`, baseUrl).toString()
-    const responseBaseUrl = new URL(`/estimate-response/${sequence.response_token}`, baseUrl).toString()
+    const shareUrl = new URL(`/quotes/${estimate.share_token}`, SMART_STEEL_SITE_URL).toString()
+    const responseBaseUrl = new URL(`/estimate-response/${sequence.response_token}`, SMART_STEEL_SITE_URL).toString()
     const brandIdentity = getEstimateBrandIdentity(lead, estimate)
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
