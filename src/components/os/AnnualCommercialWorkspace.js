@@ -21,7 +21,7 @@ function Headline({ title, value, sub }) {
   return <div className={card}><p className="text-xs font-bold text-slate-500">{title}</p><p className="mt-2 text-2xl font-black">{value}</p><p className="mt-1 text-xs text-slate-500">{sub}</p></div>
 }
 
-export default function AnnualCommercialWorkspace({ plan, onChange, selectedMonth, onMonthChange }) {
+export default function AnnualCommercialWorkspace({ plan, onChange, onDraftForecast, selectedMonth, onMonthChange }) {
   const [scenario, setScenario] = useState("management")
   const [detail, setDetail] = useState("products")
   const model = plan.commercialModel
@@ -35,6 +35,25 @@ export default function AnnualCommercialWorkspace({ plan, onChange, selectedMont
   const forecast = report.forecastRevenue
   const gap = report.objectiveGap
   const scenarioReport = report.scenarios[scenario]
+
+  function draftAfgriSupplySchedule() {
+    const target = report.channels.find((channel) => channel.id === "channel-1")?.targets.management
+    const atlasIds = new Set(model.products.filter((product) => /^Atlas\b/i.test(product.name)).map((product) => product.id))
+    const monthlyWeights = Array.from({ length: 12 }, (_, month) => model.productPlans.filter((row) => row.scenario === "management" && Number(row.month) === month && atlasIds.has(row.productId) && row.units != null && row.price != null).reduce((sum, row) => sum + Number(row.units) * Number(row.price), 0))
+    const current = model.funding?.afgriMonthlySupply || Array(12).fill(null)
+    const missing = current.map((value, index) => value == null ? index : -1).filter((index) => index >= 0)
+    const remaining = Number(target || 0) - current.reduce((sum, value) => sum + Number(value || 0), 0)
+    const weight = missing.reduce((sum, index) => sum + monthlyWeights[index], 0)
+    if (!target || !missing.length || remaining < 0 || weight <= 0) return
+    let allocated = 0
+    const schedule = current.map((value, index) => {
+      if (value != null) return value
+      const amount = index === missing.at(-1) ? Math.round(remaining - allocated) : Math.round(remaining * monthlyWeights[index] / weight)
+      allocated += amount
+      return amount
+    })
+    setModel({ funding: { ...model.funding, afgriMonthlySupply: schedule } })
+  }
 
   if (!model) return <p className={card}>Commercial model is loading.</p>
   return <div className="space-y-5">
@@ -54,14 +73,78 @@ export default function AnnualCommercialWorkspace({ plan, onChange, selectedMont
         <Headline title="Product plan still unallocated" value={money(report.unassignedProductTarget)} sub="Management objective less product-built revenue" />
         <Headline title="Channel target still unallocated" value={money(report.unassignedChannelTarget)} sub="Management objective less growth-driver targets" />
       </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-sky-200 bg-sky-50 p-4">
+        <p className="max-w-3xl text-xs leading-5 text-sky-950">The current forecast is separate from the target. Start with monthly base-case revenue, then adjust each month as actual orders, capacity and Afgri funding become clearer. Existing forecast entries and completed-month actuals are preserved.</p>
+        <button type="button" onClick={onDraftForecast} className="rounded-lg bg-[#001d2e] px-4 py-2.5 text-xs font-bold text-white">Draft missing forecast months from base case</button>
+      </div>
+    </section>
+
+    <section className={card}>
+      <p className="text-[10px] font-black uppercase tracking-[.18em] text-blue-700">Earnings & valuation</p>
+      <h2 className="mt-1 text-lg font-black">EBITDA and indicative enterprise value</h2>
+      <p className="mt-1 text-xs leading-5 text-slate-600">Planning EBITDA proxy = modelled gross profit less the 12-month salary, insurance and other operating-expense budget. Keep depreciation, amortisation, interest and tax out of those expense inputs. Reconcile with signed-off accounts before external use.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Headline title="Actual EBITDA proxy · YTD" value={money(report.actualEbitda)} sub={report.actualEbitda == null ? `${report.actualEbitdaRequiredMonths} elapsed month(s) require accounting GP and full expense entries` : `${report.actualEbitdaMonths} measured month(s) · verify against accounts`} />
+        {SCENARIOS.map((item) => <Headline key={item.key} title={`${item.label} · EBITDA proxy`} value={money(report.scenarios[item.key].ebitda)} sub={report.scenarios[item.key].ebitda == null ? "Complete all 12 months of expenses and product costs" : `Margin ${pct(report.scenarios[item.key].ebitdaMargin)}`} />)}
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[180px_180px_1fr]">
+        <label className={label}>EV / EBITDA · low ×{input(model.valuation?.lowMultiple, (value) => setModel({ valuation: { ...model.valuation, lowMultiple: value } }), { step: "0.1" })}</label>
+        <label className={label}>EV / EBITDA · high ×{input(model.valuation?.highMultiple, (value) => setModel({ valuation: { ...model.valuation, highMultiple: value } }), { step: "0.1" })}</label>
+        <label className={label}>Multiple rationale / comparable evidence<input className={box} maxLength={500} value={model.valuation?.rationale || ""} onChange={(event) => setModel({ valuation: { ...model.valuation, rationale: event.target.value } })} placeholder="Source and date for the selected range" /></label>
+      </div>
+      {model.valuation?.lowMultiple != null && model.valuation?.highMultiple != null && Number(model.valuation.highMultiple) < Number(model.valuation.lowMultiple) ? <p className="mt-2 text-xs font-bold text-rose-700">The high multiple must be at least the low multiple.</p> : null}
+      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[650px] text-left text-xs"><thead className="bg-slate-100"><tr>{["Scenario", "EBITDA proxy", "Low enterprise value", "High enterprise value"].map((name) => <th key={name} className="px-3 py-2">{name}</th>)}</tr></thead><tbody>{SCENARIOS.map((item) => <tr className="border-b" key={item.key}><th className="px-3 py-3">{item.label}</th><td className="px-3 py-3">{money(report.scenarios[item.key].ebitda)}</td><td className="px-3 py-3">{money(report.scenarios[item.key].enterpriseValueLow)}</td><td className="px-3 py-3">{money(report.scenarios[item.key].enterpriseValueHigh)}</td></tr>)}</tbody></table></div>
+      <p className="mt-3 text-xs leading-5 text-slate-500">Enterprise value is an illustrative value of the operating business, not the value of the shares or an offer price. It appears only when a positive EBITDA proxy and your chosen multiple range are available. Debt, cash, working-capital adjustments and due diligence would affect any transaction value.</p>
+    </section>
+
+    <section className={card}>
+      <p className="text-[10px] font-black uppercase tracking-[.18em] text-blue-700">Working capital · Afgri</p>
+      <h2 className="mt-1 text-lg font-black">21–28 day supply-cost bridge</h2>
+      <p className="mt-1 text-xs leading-5 text-slate-600">Planning exposure only: {(report.funding.costRatio * 100).toFixed(0)}% of Afgri supply revenue is assumed to be paid before customer collection. No jobs are confirmed, and the monthly schedule spreads costs evenly by day. Edit the schedule as orders and actual payment dates become known.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Headline title="Scheduled Afgri supply" value={money(report.funding.scheduledSupply)} sub="Annual monthly schedule · excl. VAT and installation" />
+        <Headline title={`${report.funding.daysLow}-day peak · even pace`} value={money(report.funding.bridgeLow)} sub="Indicative concurrent material-cost exposure" />
+        <Headline title={`${report.funding.daysHigh}-day peak · even pace`} value={money(report.funding.bridgeHigh)} sub="Longer collection period" />
+        <Headline title="Largest single-job floor" value={money(report.funding.singleOrderFloor)} sub="Cost of the largest entered supply order" />
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className={label}>Supply cost share · %{input((model.funding?.costRatio ?? 0.6) * 100, (value) => setModel({ funding: { ...model.funding, costRatio: value == null ? 0.6 : value / 100 } }), { step: "0.1" })}</label>
+        <label className={label}>Short bridge · days{input(model.funding?.daysLow ?? 21, (value) => setModel({ funding: { ...model.funding, daysLow: value } }), { step: "1" })}</label>
+        <label className={label}>Long bridge · days{input(model.funding?.daysHigh ?? 28, (value) => setModel({ funding: { ...model.funding, daysHigh: value } }), { step: "1" })}</label>
+        <label className={label}>Largest expected supply order · R{input(model.funding?.largestSupplyOrder, (value) => setModel({ funding: { ...model.funding, largestSupplyOrder: value } }))}</label>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-slate-600">Draft empty months against the R{Math.round(report.channels.find((channel) => channel.id === "channel-1")?.targets.management || 0).toLocaleString("en-ZA")} Afgri management channel target, weighted by the Atlas supply plan.</p><button type="button" onClick={draftAfgriSupplySchedule} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold">Draft Afgri monthly supply</button></div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-6">{MONTH_LABELS.map((name, index) => <label key={name} className={label}>{name} · supply R{input(model.funding?.afgriMonthlySupply?.[index], (value) => setModel({ funding: { ...model.funding, afgriMonthlySupply: Array.from({ length: 12 }, (_, month) => month === index ? value : model.funding?.afgriMonthlySupply?.[month] ?? null) } }))}</label>)}</div>
+      {report.funding.scheduledSupply != null && report.channels.find((channel) => channel.id === "channel-1")?.targets.management != null ? <p className="mt-3 text-xs text-slate-600">Difference from Afgri management channel target: {money(report.funding.scheduledSupply - report.channels.find((channel) => channel.id === "channel-1").targets.management)}.</p> : null}
+      <p className="mt-3 text-xs leading-5 text-amber-900">The even-pace peak may understate clustered orders. Compare it with the single-job floor and add a contingency only after production dates, deposits, supplier terms and customer-payment dates are known. This is not a financing approval or cash-flow statement.</p>
+    </section>
+
+    <section className={card}>
+      <p className="text-[10px] font-black uppercase tracking-[.18em] text-blue-700">Cash flow & working capital</p>
+      <h2 className="mt-1 text-lg font-black">When the supply plan needs cash</h2>
+      <p className="mt-1 text-xs leading-5 text-slate-600">Each modelled supply order pays its direct cost according to the supplier terms below. Customer receipts follow the deposit and balance terms. Fixed expenses are paid at month-end. Compare an even order pace with a month-end order cluster. VAT, delivery, installation and taxes are outside this forecast.</p>
+      <div className="mt-3 flex flex-wrap gap-2">{SCENARIOS.map((item) => <button key={item.key} type="button" onClick={() => setScenario(item.key)} className={`rounded-lg px-3 py-2 text-xs font-bold ${scenario === item.key ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600"}`}>{item.label}</button>)}</div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <label className={label}>Opening cash · R{input(model.cashFlow?.openingCash, (value) => setModel({ cashFlow: { ...model.cashFlow, openingCash: value } }), { min: "-1000000000000" })}</label>
+        <label className={label}>Customer deposit · %{input((model.cashFlow?.customerDepositRate ?? 0) * 100, (value) => setModel({ cashFlow: { ...model.cashFlow, customerDepositRate: value == null ? 0 : value / 100 } }), { step: "1" })}</label>
+        <label className={label}>Balance received after · days{input(model.cashFlow?.customerBalanceDays ?? 28, (value) => setModel({ cashFlow: { ...model.cashFlow, customerBalanceDays: value } }), { step: "1" })}</label>
+        <label className={label}>Supply cost paid upfront · %{input((model.cashFlow?.supplierUpfrontRate ?? 1) * 100, (value) => setModel({ cashFlow: { ...model.cashFlow, supplierUpfrontRate: value == null ? 1 : value / 100 } }), { step: "1" })}</label>
+        <label className={label}>Remaining supply cost due · days{input(model.cashFlow?.supplierBalanceDays ?? 0, (value) => setModel({ cashFlow: { ...model.cashFlow, supplierBalanceDays: value } }), { step: "1" })}</label>
+      </div>
+      <p className="mt-3 text-xs text-amber-900">Defaults assume no customer deposit, full supply cost at order, and customer balance after 28 days. Replace these with agreed terms before using the funding estimate. Opening cash is optional; leaving it blank keeps additional funding unknown.</p>
+      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[760px] text-left text-xs"><thead className="bg-slate-100"><tr>{["Scenario", "Supply sales", "Even-pace peak need", "Month-end cluster peak", "Peak date · clustered", "Additional funding after opening cash", "Year-end cash"].map((name) => <th key={name} className="px-3 py-2">{name}</th>)}</tr></thead><tbody>{SCENARIOS.map((item) => { const even = report.cashFlow[item.key].even; const clustered = report.cashFlow[item.key].clustered; return <tr key={item.key} className="border-b"><th className="px-3 py-3">{item.label}</th><td className="px-3 py-3">{money(even?.supplyRevenue)}</td><td className="px-3 py-3">{even?.incompleteExpenses ? "Enter 12 months of expenses" : money(even?.peakFundingBeforeOpeningCash)}</td><td className="px-3 py-3 font-bold">{clustered?.incompleteExpenses ? "Enter 12 months of expenses" : money(clustered?.peakFundingBeforeOpeningCash)}</td><td className="px-3 py-3">{clustered?.peakDate || "—"}</td><td className="px-3 py-3">{money(clustered?.additionalFundingAfterOpeningCash)}</td><td className="px-3 py-3">{money(clustered?.yearEndCash)}</td></tr> })}</tbody></table></div>
+      {report.cashFlow[scenario].even?.monthly ? <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[820px] text-left text-xs"><thead className="bg-slate-100"><tr>{["Month · even pace", "Customer receipts", "Supply payments", "Fixed expenses", "Net cash movement", "Closing cash / cumulative"].map((name) => <th key={name} className="px-3 py-2">{name}</th>)}</tr></thead><tbody>{report.cashFlow[scenario].even.monthly.map((month, index) => <tr key={index} className="border-b"><th className="px-3 py-2">{MONTH_LABELS[index]}</th><td className="px-3 py-2">{money(month.receipts)}</td><td className="px-3 py-2">{money(month.supplyCosts)}</td><td className="px-3 py-2">{money(month.fixedCosts)}</td><td className="px-3 py-2">{money(month.net)}</td><td className="px-3 py-2">{money(month.closing)}{model.cashFlow?.openingCash == null ? " · before opening cash" : ""}</td></tr>)}</tbody></table></div> : null}
+      <p className="mt-3 text-xs leading-5 text-slate-500">Daily peak need can exceed the month-end deficit. Month-end clustering is a timing comparison, not a guaranteed worst case. Only entered product supply rows are included; the unallocated revenue target is not forecast as cash. This planning model does not replace a project-level cash schedule or the separate Afgri bridge calculation.</p>
     </section>
 
     <nav aria-label="Commercial model sections" className="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-2">{[["products", "Products & scenarios"], ["channels", "Growth drivers"], ["pipeline", "Funnel & pipeline"], ["backlog", "Committed backlog"]].map(([key, name]) => <button key={key} onClick={() => setDetail(key)} className={`rounded-lg px-4 py-2 text-xs font-bold ${detail === key ? "bg-[#001d2e] text-white" : "text-slate-600 hover:bg-slate-100"}`}>{name}</button>)}</nav>
 
     <section className={card} hidden={detail !== "products"}>
       <div className="flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-lg font-black">Scenario & product plan</h2><p className="mt-1 text-xs text-slate-500">Enter monthly units, average selling price and average direct cost. Revenue and GP calculate from those inputs; neither is accounting actual.</p></div><div className="flex gap-2">{SCENARIOS.map((item) => <button key={item.key} onClick={() => setScenario(item.key)} className={`rounded-lg px-3 py-2 text-xs font-bold ${scenario === item.key ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600"}`}>{item.label}</button>)}</div></div>
+      <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">Structure prices are supply-only, excluding VAT, delivery and installation. Product revenue, gross profit, EBITDA and the R10m / R15m / R20m objectives exclude third-party installation.</p>
+      <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 p-4"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold text-sky-950">Third-party installation take-up · all structure orders</p><p className="mt-1 text-xs text-sky-900">This estimates installer workload only. Installation is excluded from Smart Steel revenue and gross profit.</p></div><label className={`${label} w-32`}>Take-up %{input((model.installationAttachRate ?? 0.7) * 100, (value) => setModel({ installationAttachRate: value == null ? 0.7 : value / 100 }), { step: "1" })}</label></div><div className="mt-3 grid gap-2 sm:grid-cols-3">{SCENARIOS.map((item) => { const coverage = report.installationCoverage[item.key]; return <p key={item.key} className="rounded-lg bg-white p-3 text-xs leading-5 text-slate-700"><strong>{item.label}</strong><br />{coverage.structureUnits} structure orders · {coverage.desiredUnits} expected third-party installs</p> })}</div></div>
       <div className="mt-4 max-w-[220px]"><label className={label}>Company-level target GP %{input(model.grossMarginTarget * 100, (value) => setModel({ grossMarginTarget: value == null ? 0.4 : Math.min(100, value) / 100 }), { step: "0.1" })}</label><p className="mt-1 text-[11px] text-slate-500">Used for the legacy monthly target proxy; product GP uses each category’s price and direct cost.</p></div><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Headline title="Revenue · plan" value={scenarioReport.modelled ? money(scenarioReport.revenue) : "Not entered"} sub={`${scenarioReport.units} planned units`} /><Headline title="Gross profit · plan" value={scenarioReport.modelled ? money(scenarioReport.gp) : "—"} sub={`Weighted GP: ${pct(scenarioReport.margin)}`} /><Headline title="Operating profit · proxy" value={scenarioReport.modelled ? money(scenarioReport.operatingProfit) : "—"} sub={scenarioReport.operatingExpenses == null ? "Complete 12 months of fixed expenses" : "GP less annual fixed expenses"} /><Headline title="Average order value" value={money(scenarioReport.averageOrderValue)} sub="Product mix weighted" /></div>
-      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[1280px] text-left text-xs"><thead className="bg-slate-100"><tr>{["Product category", `${selectedLabel} units`, "Avg sell · R", "Avg direct cost · R", "Annual plan revenue", "Annual GP", "GP %", "Min GP %", "Lead time · days", "Sales cycle · days"].map((name) => <th key={name} className="px-2 py-2">{name}</th>)}</tr></thead><tbody>{report.products.map((product) => {
+      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[1280px] text-left text-xs"><thead className="bg-slate-100"><tr>{["Product category", `${selectedLabel} units`, "Avg sell · R", "Avg direct cost · R", "Annual plan revenue", "Annual GP", "GP %", "Min GP %", "Lead time · days", "Sales cycle · days"].map((name) => <th key={name} className="px-2 py-2">{name}</th>)}</tr></thead><tbody>{report.products.filter((product) => product.includeInPlanRevenue !== false).map((product) => {
         const row = model.productPlans.find((item) => item.productId === product.id && item.scenario === scenario && item.month === selectedMonth) || {}
         const set = (field, value) => setRow("productPlans", (item) => item.productId === product.id && item.scenario === scenario && item.month === selectedMonth, { productId: product.id, scenario, month: selectedMonth, [field]: value })
         const annual = product.scenarios[scenario]
