@@ -1274,7 +1274,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     setInvoicingLead(lead)
   }
 
-  const handleEstimateStatusChange = async (lead, estimate, status) => {
+  const handleEstimateStatusChange = async (lead, estimate, status, options = {}) => {
     if (!estimate?.id || String(estimate.id).startsWith("local-")) {
       alert("This estimate must be saved online before its status can be confirmed.")
       return false
@@ -1283,8 +1283,11 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     const now = new Date().toISOString()
     const statusPayload = { status }
     if (status === "prepared") statusPayload.prepared_at = estimate.prepared_at || now
-    if (status === "sent") statusPayload.sent_at = estimate.sent_at || now
-    if (status === "accepted") statusPayload.accepted_at = estimate.accepted_at || now
+    if (status === "sent" || options.manual) {
+      statusPayload.sent_at = estimate.sent_at || options.sentAt || now
+      statusPayload.sent_by_name = user?.email || "Smart Steel CRM"
+    }
+    if (status === "accepted" && !options.manual) statusPayload.accepted_at = estimate.accepted_at || now
 
     const { data: updatedRows, error } = await supabase
       .from("estimates")
@@ -1362,7 +1365,9 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       lead_id: lead.id,
       type: "estimate_status",
       user_name: user?.email || "Smart Steel CRM",
-      description: `Estimate V${estimate.version_no || 1} confirmed as ${status}.`,
+      description: options.manual
+        ? `Manual quote send recorded for estimate V${estimate.version_no || 1}; actual send time ${statusPayload.sent_at}. No email sent by CRM.`
+        : `Estimate V${estimate.version_no || 1} confirmed as ${status}.`,
       timestamp: now,
     })
     return updatedEstimate
