@@ -1876,7 +1876,7 @@ export default function EstimateDrawer({
                   <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">
                     {canUpdateLoadedEstimate
                       ? "You can update the loaded estimate in place, or save these changes as a new version. The CRM will still refresh the lead quote value and activity log."
-                      : "This estimate will save against the lead, mark the lead as quoted, update the quote value, and log the activity in the CRM."}
+                      : "This estimate will save as Prepared, update the lead quote value, and log the activity in the CRM. The lead moves to Quoted only after the send is recorded."}
                     {hasOverrides && (
                       <span className="mt-2 block text-amber-700">
                         This revision includes manual line-item adjustments.

@@ -930,6 +930,9 @@ export default function LeadEditorDrawer({
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectHandoffError, setProjectHandoffError] = useState("");
   const [updatingEstimateStatus, setUpdatingEstimateStatus] = useState(false)
+  const [showManualSend, setShowManualSend] = useState(false)
+  const [manualSentAt, setManualSentAt] = useState("")
+  const [manualSendError, setManualSendError] = useState("")
   const [followUpSequence, setFollowUpSequence] = useState(null)
   const [followUpPlan, setFollowUpPlan] = useState([])
   const [loadingFollowUpSequence, setLoadingFollowUpSequence] = useState(false)
@@ -1082,12 +1085,42 @@ export default function LeadEditorDrawer({
 
   const confirmLatestEstimateStatus = async (event) => {
     if (!latestEstimate || !onEstimateStatusChange) return
+    if (event.target.value === "sent" && !latestEstimate.sent_at) {
+      openManualSend()
+      return
+    }
     setUpdatingEstimateStatus(true)
     const updatedEstimate = await onEstimateStatusChange(formData, latestEstimate, event.target.value)
     if (updatedEstimate) {
       setSavedEstimates((current) => current.map((estimate) =>
         estimate.id === updatedEstimate.id ? updatedEstimate : estimate
       ))
+    }
+    setUpdatingEstimateStatus(false)
+  }
+
+  const openManualSend = () => {
+    const now = new Date()
+    setManualSentAt(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16))
+    setManualSendError("")
+    setShowManualSend(true)
+  }
+
+  const confirmManualSend = async () => {
+    if (!latestEstimate || !onEstimateStatusChange) return
+    const sentTime = new Date(manualSentAt)
+    const leadCreatedAt = new Date(formData.created_at)
+    if (!Number.isFinite(sentTime.getTime()) || sentTime.getTime() > Date.now() || (Number.isFinite(leadCreatedAt.getTime()) && sentTime < leadCreatedAt)) {
+      setManualSendError("Enter the actual send time, after the enquiry was created and no later than now.")
+      return
+    }
+    setUpdatingEstimateStatus(true)
+    const currentStatus = normalizeEstimateStatus(latestEstimate.status)
+    const updatedEstimate = await onEstimateStatusChange(formData, latestEstimate, ["accepted", "declined", "superseded"].includes(currentStatus) ? currentStatus : "sent", { sentAt: sentTime.toISOString(), manual: true })
+    if (updatedEstimate) {
+      setSavedEstimates((current) => current.map((estimate) => estimate.id === updatedEstimate.id ? updatedEstimate : estimate))
+      setShowManualSend(false)
+      setManualSendError("")
     }
     setUpdatingEstimateStatus(false)
   }
@@ -2918,6 +2951,8 @@ export default function LeadEditorDrawer({
               </div>
             </div>
           </div>
+          {normalizeStatus(formData.status) === "quoted" && !latestEstimate && <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">This lead is in Quoted, but has no saved estimate. First-quote timing cannot be measured until an estimate and its actual send time are recorded.</p>}
+          {latestEstimate && !latestEstimate.sent_at && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold text-amber-950">No quote send time recorded</p><p className="mt-1 text-xs leading-5 text-amber-900">If you sent this estimate outside the branded email, record when it actually went out. Moving the lead to Quoted alone does not confirm a send.</p></div><button type="button" onClick={openManualSend} className="rounded-lg bg-amber-900 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-800">Record manual send</button></div>{showManualSend && <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-amber-200 pt-4"><label className="text-xs font-semibold text-amber-950">Actual date and time sent<input type="datetime-local" value={manualSentAt} onChange={(event) => setManualSentAt(event.target.value)} className="mt-1 block rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900" /></label><button type="button" disabled={updatingEstimateStatus} onClick={confirmManualSend} className="rounded-lg bg-[#001d2e] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{updatingEstimateStatus ? "Saving..." : "Confirm quote was sent"}</button><button type="button" onClick={() => setShowManualSend(false)} className="px-2 py-2.5 text-xs font-semibold text-amber-900">Cancel</button>{manualSendError && <p role="alert" className="w-full text-xs text-red-700">{manualSendError}</p>}<p className="w-full text-[11px] leading-4 text-amber-900">Records the send in CRM; it does not email the client.</p></div>}</div>}
         </section>
 
         <section className={sectionClass}>
