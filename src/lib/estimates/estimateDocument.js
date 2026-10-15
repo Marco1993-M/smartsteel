@@ -122,7 +122,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
   const installationLabel = hasInstallationLine || input.claddingInstalled
     ? "Included as quoted"
     : input.installationRequested
-      ? "Requested · price pending"
+      ? input.installationDeferred ? "Excluded · priced separately later" : "Requested · price pending"
       : "Structure supply only"
   const subtotal = Number(estimate?.subtotal || 0)
   const total = Number(estimate?.total || 0)
@@ -296,7 +296,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
     deliveryLabel,
     installationLabel,
     summaryFields,
-    notes: [layoutNote, customProject ? input.projectScope : "", estimate?.notes].filter(Boolean).join("\n\n"),
+    notes: [layoutNote, customProject ? input.projectScope : "", input.installationDeferred ? "Installation was requested but is excluded from this quotation and its total. Installation will be priced separately closer to the project date, subject to the confirmed scope and site conditions." : "", estimate?.notes].filter(Boolean).join("\n\n"),
     lineItems,
     hasDiscount: discountPercent > 0 && discountAmount > 0,
     discountPercentLabel: `${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 2 }).format(discountPercent)}%`,
