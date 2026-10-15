@@ -72,6 +72,10 @@ function validate(payload, year) {
   if (!payload.commercialModel || typeof payload.commercialModel !== "object" || Array.isArray(payload.commercialModel) || JSON.stringify(payload.commercialModel).length > 200000) return "Check the commercial model."
   if (["products", "channels", "productPlans", "productActuals", "channelTargets", "channelActuals", "opportunities", "backlog", "funnel"].some((key) => !Array.isArray(payload.commercialModel[key])) || payload.commercialModel.funnel.length !== 12) return "Check the commercial model structure."
   const model = payload.commercialModel
+  if (model.execution && ["owners", "initiatives", "markets", "assumptionEvidence", "customerActuals", "milestones", "constraints", "risks", "capital", "reviews", "forecastSnapshots"].some((key) => !Array.isArray(model.execution[key]))) return "Check the execution plan structure."
+  if (model.execution && ["owners", "initiatives", "markets", "assumptionEvidence", "customerActuals", "milestones", "constraints", "risks", "capital"].some((key) => model.execution[key].some((item) => !String(item?.id || "").trim()))) return "Each execution item needs an identifier."
+  const thresholds = model.execution?.thresholds
+  if (thresholds && (!Number.isFinite(Number(thresholds.revenueOnTrack)) || !Number.isFinite(Number(thresholds.revenueWatch)) || Number(thresholds.revenueWatch) < 0 || Number(thresholds.revenueOnTrack) <= Number(thresholds.revenueWatch) || Number(thresholds.revenueOnTrack) > 3 || !Number.isInteger(Number(thresholds.highRiskScore)) || Number(thresholds.highRiskScore) < 1 || Number(thresholds.highRiskScore) > 25)) return "Check the revenue and risk status thresholds."
   if (model.products.some((item) => !String(item?.id || "").trim() || !String(item?.name || "").trim()) ||
       model.channels.some((item) => !String(item?.id || "").trim() || !String(item?.name || "").trim()) ||
       model.opportunities.some((item) => !String(item?.id || "").trim() || !String(item?.name || "").trim()) ||
@@ -82,6 +86,7 @@ function validate(payload, year) {
   if (model.productPlans.some((row) => row?.units != null && row.units !== "" && !Number.isInteger(Number(row.units))) ||
       model.productActuals.some((row) => row?.units != null && row.units !== "" && !Number.isInteger(Number(row.units))) ||
       model.funnel.some((row) => ["leads", "qualified", "quotes", "negotiations", "won"].some((field) => row?.[field] != null && row[field] !== "" && !Number.isInteger(Number(row[field]))))) return "Product units and funnel counts must be whole numbers."
+  if (model.productPlans.some((row) => Number(row?.units || 0) > 10000)) return "A product row cannot exceed 10,000 planned units; split unusually large plans before forecasting cash flow."
   const invalidAmount = (value) => value != null && value !== "" && (!Number.isFinite(Number(value)) || Number(value) < 0 || Number(value) > 1e12)
   if (model.productPlans.some((row) => ["units", "price", "directCost"].some((field) => invalidAmount(row?.[field]))) ||
       model.productActuals.some((row) => ["units", "revenue", "directCost"].some((field) => invalidAmount(row?.[field]))) ||
@@ -110,6 +115,7 @@ function validate(payload, year) {
   if (cash && (cash.openingCash != null && cash.openingCash !== "" && (!Number.isFinite(Number(cash.openingCash)) || Math.abs(Number(cash.openingCash)) > 1e12) ||
       [cash.customerDepositRate, cash.supplierUpfrontRate].some((value) => !Number.isFinite(Number(value)) || Number(value) < 0 || Number(value) > 1) ||
       [cash.customerBalanceDays, cash.supplierBalanceDays].some((value) => !Number.isInteger(Number(value)) || Number(value) < 0 || Number(value) > 180))) return "Check customer and supplier cash-flow terms."
+  if (cash && (!Array.isArray(cash.productTerms) || cash.productTerms.some((item) => !model.products.some((product) => product.id === item.productId) || [item.customerDepositRate, item.supplierUpfrontRate].some((value) => !Number.isFinite(Number(value)) || Number(value) < 0 || Number(value) > 1) || [item.customerBalanceDays, item.supplierBalanceDays].some((value) => !Number.isInteger(Number(value)) || Number(value) < 0 || Number(value) > 180)))) return "Check product-specific customer and supplier terms."
   if (payload.turnoverGoal != null && payload.turnoverGoal !== "" && (!Number.isFinite(Number(payload.turnoverGoal)) || Number(payload.turnoverGoal) < 0 || Number(payload.turnoverGoal) > 1e12)) return "Enter a non-negative turnover goal below R1 trillion."
   if (payload.months.some((month) => ANNUAL_PLAN_FIELDS.some((field) => {
     const value = month?.[field]
@@ -117,6 +123,10 @@ function validate(payload, year) {
   }))) return "Check the monthly values. Gross profit and working capital may be negative."
   if (payload.months.some((month) => ["additionalJobs", "targetJobs"].some((field) => month?.[field] != null && month[field] !== "" && !Number.isInteger(Number(month[field]))))) return "Job counts must be whole numbers."
   const now = sastYearMonth()
+  if (year > now.year && model.execution?.customerActuals?.some((item) => item.revenue != null && item.revenue !== "")) return "Future years cannot contain customer revenue actuals."
+  if (year > now.year && model.execution?.initiatives?.some((item) => item.actualSpend != null || item.kpiActual != null || ["branchesActive", "leads", "quotes", "quotedValue", "orders", "orderValue", "recognisedRevenue", "grossProfit", "workingCapital"].some((field) => item.partnership?.[field] != null))) return "Future-year initiatives cannot contain actual spending or results."
+  if (year > now.year && model.execution?.reviews?.some((item) => ["performance", "variance", "cause", "action", "forecastImpact"].some((field) => String(item[field] || "").trim()))) return "Monthly management reviews unlock when the year begins."
+  if (model.execution?.risks?.some((item) => [item.probability, item.impact].some((value) => value != null && (!Number.isInteger(Number(value)) || Number(value) < 1 || Number(value) > 5)))) return "Risk probability and impact must be whole numbers from 1 to 5."
   if (payload.months.some((month, index) => (year > now.year || year === now.year && index > now.month) && ["actualRevenue", "actualGrossProfit", "workingCapital", "additionalJobs"].some((field) => month?.[field] != null && month[field] !== ""))) return "Future months cannot contain actual results or current working capital."
   const future = (index) => year > now.year || year === now.year && Number(index) > now.month
   if ((payload.commercialModel.productActuals || []).some((row) => future(row.month) && ["units", "revenue", "directCost"].some((field) => row[field] != null && row[field] !== "")) ||
@@ -137,7 +147,21 @@ export async function PUT(request) {
   const problem = validate(body, year)
   if (problem) return NextResponse.json({ error: problem }, { status: 400 })
   const plan = normalizeAnnualPlan(body, year)
-  const row = { year, turnover_goal: plan.turnoverGoal, notes: "", assumptions: plan.assumptions, commercial_model: normalizeCommercialModel(body.commercialModel), months: plan.months, updated_by: context.user.id }
+  const model = normalizeCommercialModel(body.commercialModel)
+  const existing = await supabaseServer.from("os_annual_plans").select("revision,commercial_model,months").eq("year", year).maybeSingle()
+  if (existing.error) return NextResponse.json({ error: "Could not verify the saved annual plan before updating it." }, { status: 500 })
+  if (Number(existing.data?.revision || 0) !== plan.revision) return NextResponse.json({ error: "This plan changed elsewhere. Reload before saving." }, { status: 409 })
+  const savedSnapshots = normalizeCommercialModel(existing.data?.commercial_model).execution.forecastSnapshots
+  const monthlyForecast = plan.months.map((month) => month.managementForecast ?? null)
+  const savedMonthly = Array.isArray(existing.data?.months) ? existing.data.months.map((month) => month.managementForecast ?? null) : Array(12).fill(null)
+  const hasForecast = monthlyForecast.some((value) => value != null)
+  const changedForecast = hasForecast && (!savedMonthly || monthlyForecast.some((value, index) => value !== savedMonthly[index]))
+  model.execution.forecastSnapshots = changedForecast ? [...savedSnapshots, {
+    savedAt: new Date().toISOString(), revision: plan.revision + 1,
+    annualForecast: monthlyForecast.every((value) => value != null) ? monthlyForecast.reduce((sum, value) => sum + value, 0) : null,
+    monthly: monthlyForecast,
+  }].slice(-60) : savedSnapshots
+  const row = { year, turnover_goal: plan.turnoverGoal, notes: "", assumptions: plan.assumptions, commercial_model: model, months: plan.months, updated_by: context.user.id }
   let result
   if (plan.revision === 0) {
     result = await supabaseServer.from("os_annual_plans").insert({ ...row, revision: 1 }).select("revision,updated_at").single()
