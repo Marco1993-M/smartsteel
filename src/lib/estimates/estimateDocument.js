@@ -115,7 +115,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
       ? `Included as quoted · ${Number(input.deliveryDistance)} km`
       : "Included as quoted"
     : input.deliveryRequested
-      ? "Requested · price pending"
+      ? input.deliveryDeferred ? "Excluded · priced separately later" : "Requested · price pending"
       : Number(input.deliveryDistance) > 0
         ? `${Number(input.deliveryDistance)} km`
         : "Collection / not specified"
@@ -296,7 +296,7 @@ export function buildEstimateDisplayModel(estimate, lead) {
     deliveryLabel,
     installationLabel,
     summaryFields,
-    notes: [layoutNote, customProject ? input.projectScope : "", input.installationDeferred ? "Installation was requested but is excluded from this quotation and its total. Installation will be priced separately closer to the project date, subject to the confirmed scope and site conditions." : "", estimate?.notes].filter(Boolean).join("\n\n"),
+    notes: [layoutNote, customProject ? input.projectScope : "", input.installationDeferred ? "Installation was requested but is excluded from this quotation and its total. Installation will be priced separately closer to the project date, subject to the confirmed scope and site conditions." : "", input.deliveryDeferred ? "Delivery was requested but is excluded from this quotation and its total. Delivery will be priced separately once the destination and transport requirements are confirmed." : "", estimate?.notes].filter(Boolean).join("\n\n"),
     lineItems,
     hasDiscount: discountPercent > 0 && discountAmount > 0,
     discountPercentLabel: `${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 2 }).format(discountPercent)}%`,
