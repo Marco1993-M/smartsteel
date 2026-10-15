@@ -204,7 +204,7 @@ export default function AtlasPricingWorkspace() {
   const hasReferenceSection = Boolean(pricingBenchmark) || productCode === "W15"
   const controlledLengths = productCode === "W06" ? ATLAS_W06_LENGTHS_M : productCode === "W10" ? ATLAS_W10_LENGTHS_M : productCode === "W12" ? ATLAS_W12_LENGTHS_M : productCode === "W15" ? ATLAS_W15_LENGTHS_M : ATLAS_W08_LENGTHS_M
   const controlledHeights = productCode === "W06" ? ATLAS_W06_EAVE_HEIGHTS_M : productCode === "W10" ? ATLAS_W10_EAVE_HEIGHTS_M : productCode === "W12" ? ATLAS_W12_EAVE_HEIGHTS_M : productCode === "W15" ? ATLAS_W15_EAVE_HEIGHTS_M : ATLAS_W08_EAVE_HEIGHTS_M
-  const benchmarkVariance = pricingBenchmark
+  const benchmarkVariance = pricingBenchmark && !pricingBenchmark.supplierCostOnly
     ? assembledSummary.totalCost - pricingBenchmark.sellingPriceExclVat
     : 0
 
@@ -463,7 +463,7 @@ export default function AtlasPricingWorkspace() {
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting profile</span><select value={configurationSheetingProfile} onChange={(event) => setConfigurationSheetingProfile(event.target.value)} disabled={configurationSheetingMode === "structure_only"} className={`${inputClass} disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}><option>Corrugated</option><option>IBR</option><option>Concealed Fix</option></select></label>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting finish</span><select value={configurationSheetingFinish} onChange={(event) => setConfigurationSheetingFinish(event.target.value)} disabled={configurationSheetingMode === "structure_only"} className={`${inputClass} disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}><option value="galvanised">Galvanised</option><option value="chromadek">Chromadek</option></select></label>
           </div>
-          <div className="mt-4 grid gap-px border border-sky-200 bg-sky-200 sm:grid-cols-2 lg:grid-cols-6">{[["Portal frames", geometry.portalFrames], ["Rafter cut", `${geometry.rafterCutLengthM}m`], ["Purlin rows", geometry.totalPurlinRows], ["Structural steel", `${releasedEstimate.materials.totalSteelKg.toLocaleString("en-ZA")}kg`], ["0.5mm BMT sheeting", `${releasedEstimate.sheeting.estimatedMassKg.toLocaleString("en-ZA")}kg`], ["Combined transport mass", `${(releasedEstimate.materials.totalSteelKg + releasedEstimate.sheeting.estimatedMassKg).toLocaleString("en-ZA")}kg`]].map(([label, value]) => <div key={label} className="bg-white p-3"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-base font-bold text-slate-950">{value}</p></div>)}</div>
+          <div className="mt-4 grid gap-px border border-sky-200 bg-sky-200 sm:grid-cols-2 lg:grid-cols-6">{[["Portal frames", geometry.portalFrames], ["Rafter cut", `${geometry.members.rafters.cutLengthM}m`], ["Purlin rows", geometry.totalPurlinRows], ["Structural steel", `${releasedEstimate.materials.totalSteelKg.toLocaleString("en-ZA")}kg`], ["0.5mm BMT sheeting", `${releasedEstimate.sheeting.estimatedMassKg.toLocaleString("en-ZA")}kg`], ["Combined transport mass", `${(releasedEstimate.materials.totalSteelKg + releasedEstimate.sheeting.estimatedMassKg).toLocaleString("en-ZA")}kg`]].map(([label, value]) => <div key={label} className="bg-white p-3"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-base font-bold text-slate-950">{value}</p></div>)}</div>
         </section>
       ) : null}
 
@@ -518,7 +518,7 @@ export default function AtlasPricingWorkspace() {
         <section id="benchmark" className="scroll-mt-24 overflow-hidden border border-[#0043f3]/20 bg-white shadow-sm">
           <div className="grid gap-px bg-slate-200 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
             <div className="bg-white p-5 sm:p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">Verified pricing benchmark</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">{pricingBenchmark.supplierCostOnly ? "Supplier-quoted cost reference" : "Verified pricing benchmark"}</p>
               <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight text-slate-950">{pricingBenchmark.label}</h2>
@@ -527,17 +527,17 @@ export default function AtlasPricingWorkspace() {
                   </p>
                 </div>
                 <div className="text-left lg:text-right">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Selling price excl. VAT</p>
-                  <p className="mt-1 text-2xl font-bold text-slate-950">{formatMoney(pricingBenchmark.sellingPriceExclVat)}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{pricingBenchmark.supplierCostOnly ? "Steel + brackets · cost excl. VAT" : "Selling price excl. VAT"}</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">{formatMoney(pricingBenchmark.supplierCostOnly ? pricingBenchmark.totalCostExclVat : pricingBenchmark.sellingPriceExclVat)}</p>
                   <button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="mt-3 inline-flex items-center gap-2 border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition hover:border-blue-400 disabled:cursor-wait disabled:opacity-60"><FileText className="h-4 w-4" />{downloadingDataSheet ? "Preparing..." : "Download branded data sheet"}</button>
                 </div>
               </div>
               <div className="mt-5 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-4">
                 {[
-                  ["Structure steel", `${pricingBenchmark.totalSteelKg.toLocaleString("en-ZA")}kg`],
-                  [`${pricingBenchmark.material} rate`, formatRate(pricingBenchmark.materialRatePerTon, "ton")],
-                  ["Cost excl. VAT", formatMoney(pricingBenchmark.totalCostExclVat)],
-                  ["Uplift already included", `${pricingBenchmark.markupPercent}%`],
+                  [pricingBenchmark.supplierCostOnly ? "Calculated member mass" : "Structure steel", `${pricingBenchmark.totalSteelKg.toLocaleString("en-ZA")}kg`],
+                  pricingBenchmark.supplierCostOnly ? ["Formed steel", formatMoney(pricingBenchmark.materialCostExclVat)] : [`${pricingBenchmark.material} rate`, formatRate(pricingBenchmark.materialRatePerTon, "ton")],
+                  [pricingBenchmark.supplierCostOnly ? "Brackets" : "Cost excl. VAT", formatMoney(pricingBenchmark.supplierCostOnly ? pricingBenchmark.connectionCostExclVat : pricingBenchmark.totalCostExclVat)],
+                  [pricingBenchmark.supplierCostOnly ? "Pricing basis" : "Uplift already included", pricingBenchmark.supplierCostOnly ? "Cost to Smart Steel" : `${pricingBenchmark.markupPercent}%`],
                 ].map(([label, value]) => (
                   <div key={label} className="bg-slate-50 p-3.5">
                     <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
@@ -549,7 +549,7 @@ export default function AtlasPricingWorkspace() {
                 <table className="min-w-[760px] w-full border-collapse text-left text-xs">
                   <thead className="bg-slate-950 text-white">
                     <tr>
-                      {["Component", "Controlled profile", "Assembly", "Calculated kg/m", "Sheet weight", "Effective metres"].map((heading) => (
+                      {["Component", "Controlled profile", "Assembly", "Calculated kg/m", pricingBenchmark.supplierCostOnly ? "Calculated mass" : "Sheet weight", "Effective metres"].map((heading) => (
                         <th key={heading} className="px-3 py-2.5 text-[9px] font-bold uppercase tracking-[0.1em]">{heading}</th>
                       ))}
                     </tr>
@@ -569,14 +569,14 @@ export default function AtlasPricingWorkspace() {
                 </table>
               </div>
               <p className="mt-4 text-xs leading-5 text-slate-500">
-                Profile mass uses developed section width × thickness × 7,850kg/m³. Effective metres reconcile the sheet weight against that calculated mass; they are a validation aid until the approved member-length schedule is entered. Benchmark excludes {pricingBenchmark.exclusions.join(", ").toLowerCase()} and does not change public builder pricing.
+                {pricingBenchmark.supplierCostOnly ? "Member mass is calculated from the quoted cut lengths and nominal profile geometry; the supplier did not state a dispatch mass. The quoted costs exclude " : "Profile mass uses developed section width × thickness × 7,850kg/m³. Effective metres reconcile the sheet weight against that calculated mass; they are a validation aid until the approved member-length schedule is entered. Benchmark excludes "}{pricingBenchmark.exclusions.join(", ").toLowerCase()}.{pricingBenchmark.supplierCostOnly ? " Other sizes use provisional bracket scaling." : " Benchmark does not change public builder pricing."}
               </p>
             </div>
             <aside className="bg-[#001d2e] p-5 text-white sm:p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Current baseline variance</p>
-              <p className="mt-3 text-3xl font-bold">{formatMoney(benchmarkVariance)}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">{pricingBenchmark.supplierCostOnly ? "Scope boundary" : "Current baseline variance"}</p>
+              {pricingBenchmark.supplierCostOnly ? <p className="mt-3 text-xl font-bold">8m × 16m × 3m · ZAM</p> : <p className="mt-3 text-3xl font-bold">{formatMoney(benchmarkVariance)}</p>}
               <p className="mt-2 text-xs leading-5 text-white/65">
-                Current assembled pricing minus the verified benchmark selling price. A zero variance is only meaningful once the component quantities match this exact {pricingBenchmark.lengthM}m × {pricingBenchmark.widthM}m × {pricingBenchmark.eaveHeightM}m configuration.
+                {pricingBenchmark.supplierCostOnly ? "Roof-only framing cost. Sheeting, fixings and anchors are not in these two supplier quotes. The current assembled pricing includes additional scope and cannot be compared directly with this cost." : `Current assembled pricing minus the verified benchmark selling price. A zero variance is only meaningful once the component quantities match this exact ${pricingBenchmark.lengthM}m × ${pricingBenchmark.widthM}m × ${pricingBenchmark.eaveHeightM}m configuration.`}
               </p>
               <div className="mt-5 border-t border-white/15 pt-4">
                 <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">Source</p>

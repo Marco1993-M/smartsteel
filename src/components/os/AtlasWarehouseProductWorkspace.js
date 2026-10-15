@@ -24,6 +24,7 @@ import {
   ATLAS_W08_LENGTHS_M,
   calculateAtlasW08Geometry,
 } from "../../lib/atlasW08Geometry"
+import { getAtlasStandardQuotedBracketCosts } from "../../lib/atlasW08SupplierCosts"
 import AtlasSkuRegistry from "./AtlasSkuRegistry"
 
 const W08_SPEC_SCOPES = [
@@ -213,11 +214,11 @@ function W08SpecificationSheet({
     code: member.code,
     component: member.label,
     specification: profileSpecification(member, {
-      "W08-COL": "200 x 75 x 20 x 2.0mm BMT lipped channel · paired back-to-back",
-      "W08-RAF": "200 x 75 x 20 x 2.5mm BMT lipped channel",
-      "W08-PUR": "175 x 65 x 20 x 2.0mm BMT lipped channel",
-      "W08-XBW": "100 x 50 x 20 x 2.0mm BMT lipped channel",
-      "W08-XBR": "100 x 50 x 20 x 2.0mm BMT lipped channel",
+      "W08-COL": "200 x 50 x 20 x 2.0mm BMT lipped channel · paired back-to-back",
+      "W08-RAF": "200 x 50 x 20 x 2.0mm BMT lipped channel",
+      "W08-PUR": "150 x 75 x 20 x 2.0mm BMT lipped channel",
+      "W08-XBW": "75 x 50 x 20 x 2.0mm BMT lipped channel",
+      "W08-XBR": "75 x 50 x 20 x 2.0mm BMT lipped channel",
       "W08-GRT": "150 x 50 x 20 x 2.0mm BMT lipped channel",
     }[member.code]),
     function: member.rule,
@@ -232,6 +233,8 @@ function W08SpecificationSheet({
   const eaveBracketCount = portalCount * 2
   const bracingMemberCount = members.wallBracing.quantity + members.roofBracing.quantity
   const bracingBracketCount = bracingMemberCount * 2
+  const quotedBrackets = new Map(getAtlasStandardQuotedBracketCosts(geometry).map((item) => [item.code, item]))
+  const bracketQuantity = (code) => quotedBrackets.get(code)?.quantity || 0
   const m10SetCount =
     ridgeBracketCount * 8 +
     eaveBracketCount * 8 +
@@ -240,20 +243,28 @@ function W08SpecificationSheet({
     (includesWallGirts ? members.sideGirts.quantity * 2 : 0)
   const connectionSchedule = [
     {
-      code: "W08-BAS", component: "Column base brackets", quantity: baseBracketCount, unit: "each",
-      specification: "Atlas W08 column base bracket · provisional geometry", basis: `2 column positions × ${portalCount} portals`, status: "Geometry pending",
+      code: "PC34-35", component: "End haunch brackets", quantity: bracketQuantity("HCH1") + bracketQuantity("HCH2"), unit: "each",
+      specification: "ZAM310 · 2mm · PC34 and PC35", basis: "Two of each for the end portals", status: "Supplier quoted",
     },
     {
-      code: "W08-EAV", component: "Eave brackets", quantity: eaveBracketCount, unit: "each",
-      specification: "Atlas W08 bolted eave connection", basis: `2 per portal × ${portalCount} portals`, status: "Geometry pending",
+      code: "PC36-37", component: "Interior haunch brackets", quantity: bracketQuantity("HCH3") + bracketQuantity("HCH4"), unit: "each",
+      specification: "ZAM310 · 2mm · PC36 and PC37", basis: `${Math.max(0, portalCount - 2)} of each · provisional beyond 16m`, status: "Supplier quoted",
     },
     {
-      code: "W08-RDG", component: "Ridge brackets", quantity: ridgeBracketCount, unit: "each",
-      specification: "Atlas W08 bolted ridge connection", basis: `1 per portal × ${portalCount} portals`, status: "Geometry pending",
+      code: "PC38-39", component: "Apex brackets", quantity: bracketQuantity("APX1") + bracketQuantity("APX2"), unit: "each",
+      specification: "ZAM310 · 2mm · PC38 end / PC39 interior", basis: `One per ${portalCount} portal lines`, status: "Supplier quoted",
     },
     {
-      code: "W08-XBR-BRK", component: "Bracing brackets", quantity: bracingBracketCount, unit: "each",
-      specification: "Atlas bracing connection bracket · provisional geometry", basis: `${bracingMemberCount} brace members × 2 ends`, status: "Geometry pending",
+      code: "PC40-43", component: "Brace brackets", quantity: ["BRC1", "BRC2", "BRC3", "BRC4"].reduce((sum, code) => sum + bracketQuantity(code), 0), unit: "each",
+      specification: "ZAM310 · 2mm · PC40 to PC43", basis: "Four of each per braced bay · provisional scaling", status: "Supplier quoted",
+    },
+    {
+      code: "PC44", component: "Girt splice brackets", quantity: bracketQuantity("GSP"), unit: "each",
+      specification: "ZAM310 · 2mm · PC44", basis: "Eight per four-bay group · provisional scaling", status: "Supplier quoted",
+    },
+    {
+      code: "PC45", component: "Post-base brackets", quantity: bracketQuantity("BAS"), unit: "each",
+      specification: "S355 · 6mm · PC45", basis: `Four per ${portalCount} portal lines`, status: "Supplier quoted",
     },
     {
       code: "W08-M10-SET", component: "M10 connection sets", quantity: m10SetCount, unit: "sets",
@@ -261,7 +272,7 @@ function W08SpecificationSheet({
     },
     {
       code: "W08-ANC", component: "M12 anchor bolts", quantity: baseBracketCount * 4, unit: "each",
-      specification: "M12 anchor bolt · final type and price to confirm", basis: `${baseBracketCount} base brackets × 4 anchors`, status: "Foundation review",
+      specification: "M12 anchor bolt · final type and price to confirm", basis: `Existing allowance: ${baseBracketCount} column positions × 4 anchors; verify against PC45`, status: "Foundation review",
     },
   ]
   const selectedSize = `8m x ${selectedLength}m x ${selectedHeight}m`
@@ -435,7 +446,7 @@ function W08SpecificationSheet({
             <span>Item ID</span><span>Item</span><span>Specification and quantity basis</span><span className="text-right">Qty</span>
           </div>
           {connectionSchedule.map((item) => (
-            <div key={item.code} className="grid break-inside-avoid grid-cols-[22mm_34mm_1fr_16mm] border-b border-slate-200 py-3">
+            <div key={item.code} className="grid break-inside-avoid grid-cols-[22mm_34mm_1fr_16mm] border-b border-slate-200 py-2">
               <span className="font-mono text-[8px] font-bold text-sky-700">{item.code}</span>
               <p className="pr-3 text-[10px] font-bold text-slate-900">{item.component}</p>
               <div className="pr-4">
