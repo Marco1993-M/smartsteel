@@ -1,14 +1,15 @@
 import { calculateLippedChannelMassKgPerM } from "./atlasLippedChannelProfiles.js"
+import { getAtlasStandardQuotedBracketCosts } from "./atlasW08SupplierCosts.js"
 
 export const ATLAS_W08_LENGTHS_M = Array.from({ length: 25 }, (_, index) => (index + 1) * 4)
 export const ATLAS_W08_EAVE_HEIGHTS_M = [3, 4, 4.5, 5]
 export const ATLAS_W08_EXACT_MEMBER_CODES = new Set(["W08-COL", "W08-RAF", "W08-PUR"])
 
 export const ATLAS_W08_PROFILES = {
-  column: { webMm: 200, flangeMm: 75, lipMm: 20, thicknessMm: 2 },
-  rafter: { webMm: 200, flangeMm: 75, lipMm: 20, thicknessMm: 2.5 },
-  purlin: { webMm: 175, flangeMm: 65, lipMm: 20, thicknessMm: 2 },
-  bracing: { webMm: 100, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
+  column: { webMm: 200, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
+  rafter: { webMm: 200, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
+  purlin: { webMm: 150, flangeMm: 75, lipMm: 20, thicknessMm: 2 },
+  bracing: { webMm: 75, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
   sideGirt: { webMm: 150, flangeMm: 50, lipMm: 20, thicknessMm: 2 },
 }
 
@@ -36,15 +37,18 @@ export function calculateAtlasW08Geometry({ lengthM = 20, eaveHeightM = 3 } = {}
   const purlinRowsPerSlope = 4
   const totalPurlinRows = purlinRowsPerSlope * 2
   const bracedBayPositions = Array.from({ length: bays }, (_, index) => index + 1).filter((bay) => (bay - 1) % 4 === 0)
-  const wallBraceCutLengthM = Math.hypot(baySpacingM, eaveHeight)
-  const roofBraceCutLengthM = Math.hypot(baySpacingM, rafterCutLengthM)
+  const supplierColumnCutLengthM = eaveHeight - 0.225
+  const supplierRafterCutLengthM = 4.186
+  const supplierPurlinAverageCutLengthM = bays === 1 ? 4.095
+    : (4.1 + 4.09 + Math.max(0, bays - 2) * 3.99) / bays
+  const supplierWallBraceCutLengthM = 4.428 * Math.hypot(baySpacingM, eaveHeight) / Math.hypot(baySpacingM, 3)
 
   const members = {
     columns: {
       code: "W08-COL",
       label: "Column channels",
       quantity: portalFrames * 2 * 2,
-      cutLengthM: eaveHeight,
+      cutLengthM: supplierColumnCutLengthM,
       massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.column),
       rule: `${portalFrames} frames × 2 columns × 2 back-to-back channels`,
     },
@@ -52,7 +56,7 @@ export function calculateAtlasW08Geometry({ lengthM = 20, eaveHeightM = 3 } = {}
       code: "W08-RAF",
       label: "Rafter channels",
       quantity: portalFrames * 2,
-      cutLengthM: rafterCutLengthM,
+      cutLengthM: supplierRafterCutLengthM,
       massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.rafter),
       rule: `${portalFrames} frames × 2 single rafters`,
     },
@@ -60,12 +64,12 @@ export function calculateAtlasW08Geometry({ lengthM = 20, eaveHeightM = 3 } = {}
       code: "W08-PUR",
       label: "Roof purlins",
       quantity: bays * totalPurlinRows,
-      cutLengthM: baySpacingM,
+      cutLengthM: supplierPurlinAverageCutLengthM,
       massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.purlin),
       rule: `${totalPurlinRows} rows × ${bays} bay lengths`,
     },
-    wallBracing: { code: "W08-XBW", label: "Wall X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: wallBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 walls × 2 diagonals` },
-    roofBracing: { code: "W08-XBR", label: "Roof X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: roofBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 roof slopes × 2 diagonals` },
+    wallBracing: { code: "W08-XBW", label: "Wall X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: supplierWallBraceCutLengthM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 walls × 2 diagonals` },
+    roofBracing: { code: "W08-XBR", label: "Roof X-bracing", quantity: bracedBayPositions.length * 4, cutLengthM: 5.208, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.bracing), rule: `${bracedBayPositions.length} braced bays × 2 roof slopes × 2 diagonals` },
     sideGirts: { code: "W08-GRT", label: "Side girts", quantity: bays * 2 * 3, cutLengthM: baySpacingM, massKgPerM: calculateLippedChannelMassKgPerM(PROFILE.sideGirt), rule: `${bays} bays × 2 walls × 3 rows` },
   }
 
@@ -101,7 +105,8 @@ export function calculateAtlasW08Geometry({ lengthM = 20, eaveHeightM = 3 } = {}
       installationIncluded: false,
     },
     holds: [
-      "Final bolted connection quantities and specifications",
+      "Supplier-quoted W08 member cuts verified for 8 x 16 x 3 m only; taller columns and other bay counts are provisional",
+      "Final bolt, washer, nut and anchor schedule",
       "Gable-girt member schedule",
     ],
   }
@@ -109,13 +114,21 @@ export function calculateAtlasW08Geometry({ lengthM = 20, eaveHeightM = 3 } = {}
 
 export function applyAtlasW08GeometryToPricing(records, geometry) {
   const byCode = new Map(Object.values(geometry.members).map((member) => [member.code, member]))
+  const brackets = new Map(getAtlasStandardQuotedBracketCosts(geometry).map((item) => [`W08-${item.code}`, item]))
   return records.map((record) => {
+    const bracket = brackets.get(record.componentCode)
+    if (bracket) return { ...record, baselineQuantity: bracket.quantity, quantityRule: bracket.provisionalQuantity ? "Provisional scaling from Tubecon Laser Q42690" : "Tubecon Laser Q42690 · 8 x 16 x 3 m", geometryControlled: true }
     const member = byCode.get(record.componentCode)
     if (!member) return record
+    const quotedCutLength = record.componentCode === "W08-COL" ? geometry.eaveHeightM - 0.225
+      : record.componentCode === "W08-RAF" ? 4.186
+        : record.componentCode === "W08-PUR" ? geometry.bays === 1 ? 4.095 : (4.1 + 4.09 + Math.max(0, geometry.bays - 2) * 3.99) / geometry.bays
+          : record.componentCode === "W08-XBW" ? geometry.members.wallBracing.cutLengthM
+            : record.componentCode === "W08-XBR" ? 5.208 : member.cutLengthM
     return {
       ...record,
       baselineQuantity: member.quantity,
-      baselineLengthM: member.cutLengthM,
+      baselineLengthM: quotedCutLength,
       massKgPerM: member.massKgPerM,
       quantityRule: member.rule,
       wastePercent: 0,

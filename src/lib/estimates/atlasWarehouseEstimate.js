@@ -6,6 +6,7 @@ import { calculateAtlasW15Geometry } from "../atlasW15Geometry.js"
 import { ATLAS_WAREHOUSE_PRICING_RELEASE } from "../atlasPricingRelease.js"
 import { buildAtlasWarehouseSku } from "../atlasSkuRegistry.js"
 import { ATLAS_M10_COMPLETE_SET } from "../atlasConnectionStandards.js"
+import { getAtlasStandardQuotedBracketCosts } from "../atlasW08SupplierCosts.js"
 const VAT_RATE = 0.15
 // Controlled Atlas material and component rates are cost rates. Apply the
 // approved commercial uplift exactly once after all priced inputs are added.
@@ -157,7 +158,7 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     + girtMemberCount * 2 * ATLAS_M10_COMPLETE_SET.setsPerGirtEnd
     + gableGirtMemberCount * 2 * ATLAS_M10_COMPLETE_SET.setsPerGirtEnd
   const anchorBoltCount = baseBracketCount * 4
-  const connectionLines = [
+  const standardConnectionLines = [
     buildLineItem({ code: `${geometry.productCode}-BAS`, label: "Column base brackets", quantity: baseBracketCount, unit: "each", unitRate: CONNECTION_RATES.baseBracket, total: baseBracketCount * CONNECTION_RATES.baseBracket, provisional: true }),
     buildLineItem({ code: `${geometry.productCode}-RDG`, label: "Ridge brackets", quantity: ridgeBracketCount, unit: "each", unitRate: CONNECTION_RATES.ridgeBracket, total: ridgeBracketCount * CONNECTION_RATES.ridgeBracket, provisional: true }),
     buildLineItem({ code: `${geometry.productCode}-EAV`, label: "Eave brackets", quantity: eaveBracketCount, unit: "each", unitRate: CONNECTION_RATES.eaveBracket, total: eaveBracketCount * CONNECTION_RATES.eaveBracket, provisional: true }),
@@ -166,6 +167,16 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     buildLineItem({ code: `${geometry.productCode}-M10-SET`, label: `Complete M10 connection sets · ${ATLAS_M10_COMPLETE_SET.specification}`, quantity: m10CompleteSetCount, unit: "set", unitRate: CONNECTION_RATES.m10CompleteSet, total: m10CompleteSetCount * CONNECTION_RATES.m10CompleteSet }),
     buildLineItem({ code: `${geometry.productCode}-ANC`, label: "M12 anchor bolts (price to confirm)", quantity: anchorBoltCount, unit: "each", unitRate: CONNECTION_RATES.m12AnchorBolt, total: anchorBoltCount * CONNECTION_RATES.m12AnchorBolt, provisional: true }),
   ]
+  const connectionLines = width <= 12 ? [
+    ...getAtlasStandardQuotedBracketCosts(geometry).map((item) => buildLineItem({
+      code: `${geometry.productCode}-${item.code}`, label: item.label, quantity: item.quantity * quantity,
+      unit: "each", unitRate: item.unitCost, total: item.total * quantity,
+      provisional: item.provisionalQuantity || width !== 8 || wallHeight !== 3 || steelFinish !== "ZAM",
+    })),
+    // Retain the existing fixing and anchor quantities and costs until the
+    // bracket hole schedule and footing anchors have been verified.
+    ...standardConnectionLines.filter((item) => [`${geometry.productCode}-M10-SET`, `${geometry.productCode}-ANC`].includes(item.code)),
+  ] : standardConnectionLines
 
   const roofSheetingArea = gableMode === "structure_only" ? 0 : geometry.rafterCutLengthM * 2 * length * quantity
   const longWallSheetingArea = includesLongWalls ? wallHeight * length * 2 * quantity : 0
