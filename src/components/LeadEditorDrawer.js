@@ -921,6 +921,7 @@ export default function LeadEditorDrawer({
   const [emailBody, setEmailBody] = useState("");
   const [emailComposerMode, setEmailComposerMode] = useState("follow_up");
   const [selectedEstimateEmail, setSelectedEstimateEmail] = useState(null);
+  const [deferInstallationForProposal, setDeferInstallationForProposal] = useState(false);
   const [emailDraftOpened, setEmailDraftOpened] = useState(false);
   const [confirmingEmailSent, setConfirmingEmailSent] = useState(false);
   const [sendingBrandedProposal, setSendingBrandedProposal] = useState(false)
@@ -1511,6 +1512,7 @@ export default function LeadEditorDrawer({
     const template = buildEstimateEmailTemplate(formData, estimate, builderSubmission)
     setEmailComposerMode("estimate")
     setSelectedEstimateEmail(estimate || null)
+    setDeferInstallationForProposal(false)
     setEmailSubject(template.subject)
     setEmailBody(template.body)
     setEmailDraftOpened(false)
@@ -1681,7 +1683,7 @@ export default function LeadEditorDrawer({
     }
 
     const approved = window.confirm(
-      `Send ${selectedEstimateEmail.title || "this estimate"} to ${formData.email}?\n\nThis will email the reviewed PDF and move the lead to Quoted.`
+      `Send ${selectedEstimateEmail.title || "this estimate"} to ${formData.email}?\n\n${deferInstallationForProposal ? "Installation was requested but will be excluded from this quote and priced separately closer to the project date.\n\n" : ""}This will email the reviewed PDF and move the lead to Quoted.`
     )
     if (!approved) return
 
@@ -1695,6 +1697,7 @@ export default function LeadEditorDrawer({
           estimateId: selectedEstimateEmail.id,
           subject: emailSubject,
           body: emailBody,
+          deferInstallation: deferInstallationForProposal,
         }),
       })
       const result = await response.json().catch(() => ({}))
@@ -1709,7 +1712,7 @@ export default function LeadEditorDrawer({
       }
       setFormData(updatedLead)
       setSavedEstimates((current) => current.map((estimate) => estimate.id === selectedEstimateEmail.id
-        ? { ...estimate, status: "sent", sent_at: sentAt, sent_by_name: "Smart Steel" }
+        ? { ...estimate, status: "sent", sent_at: sentAt, sent_by_name: "Smart Steel", input_data: { ...estimate.input_data, installationDeferred: deferInstallationForProposal && Boolean(estimate.input_data?.installationRequested ?? builderSubmission?.configuration?.installationInterest) } }
         : estimate))
       setEmailEvents((current) => [{
         id: result.emailId || `sent-${sentAt}`,
@@ -3349,6 +3352,12 @@ export default function LeadEditorDrawer({
                               </p>
                             ) : null}
                           </div>
+                          {emailComposerMode === "estimate" && (typeof selectedEstimateEmail?.input_data?.installationRequested === "boolean" ? selectedEstimateEmail.input_data.installationRequested : Boolean(builderSubmission?.configuration?.installationInterest)) && !(selectedEstimateEmail?.line_items || []).some((item) => /install|erection|assembly/i.test(`${item?.code || ""} ${item?.label || ""}`) && Number(item?.total || 0) > 0) ? (
+                            <label className="flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                              <input type="checkbox" checked={deferInstallationForProposal} onChange={(event) => setDeferInstallationForProposal(event.target.checked)} className="mt-1 h-4 w-4 shrink-0" />
+                              <span><strong>Quote the structure now; price installation later.</strong><span className="mt-1 block text-xs leading-5">The client’s installation request stays on the lead. This quote and its PDF will clearly exclude installation, and a separate installation price can follow when the project is ready.</span></span>
+                            </label>
+                          ) : null}
                         </div>
 
                         <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-slate-200 bg-white px-3 py-3 sm:flex sm:justify-end sm:px-5 sm:py-4">
