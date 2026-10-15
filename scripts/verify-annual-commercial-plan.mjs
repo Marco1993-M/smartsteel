@@ -63,7 +63,10 @@ assert.equal(clusteredCash.additionalFundingAfterOpeningCash, 100)
 assert.equal(clusteredCash.monthly[0].receipts, 0)
 assert.equal(clusteredCash.monthly[0].supplyCosts, 120)
 assert.equal(clusteredCash.monthly[0].net, -120)
+assert.equal(summarizeCommercialModel(cashModel, cashPlan, new Date("2026-10-07T12:00:00+02:00")).scenarios.management.workingCapitalRequirement, 120)
 assert.equal(forecastAnnualCashFlow({ ...cashModel, cashFlow: { ...cashModel.cashFlow, customerDepositRate: 0.5 } }, cashPlan, "management", "clustered").peakFundingBeforeOpeningCash, 20)
+const productOverride = normalizeCommercialModel({ ...cashModel, cashFlow: { ...cashModel.cashFlow, productTerms: [{ productId: "product-1", customerDepositRate: 0.5, customerBalanceDays: 28, supplierUpfrontRate: 1, supplierBalanceDays: 0 }] } })
+assert.equal(forecastAnnualCashFlow(productOverride, cashPlan, "management", "clustered").peakFundingBeforeOpeningCash, 20)
 
 const valuationPlan = { ...plan, months: Array.from({ length: 12 }, () => ({ salaries: 10000, insurance: 1000, otherFixedExpenses: 2000 })) }
 const valuationModel = { ...model, valuation: { lowMultiple: 3, highMultiple: 5, rationale: "Illustrative test range" } }
@@ -71,6 +74,8 @@ const valuation = summarizeCommercialModel(valuationModel, valuationPlan, new Da
 assert.equal(valuation.scenarios.management.ebitda, 244000)
 assert.equal(valuation.scenarios.management.enterpriseValueLow, 732000)
 assert.equal(valuation.scenarios.management.enterpriseValueHigh, 1220000)
+assert.equal(valuation.breakEven.annualRevenue, 390000)
+assert.equal(valuation.breakEven.monthlyRevenue, 32500)
 assert.equal(normalizeCommercialModel(valuationModel).valuation.rationale, "Illustrative test range")
 const actualPlan = { ...valuationPlan, months: valuationPlan.months.map((month, index) => index < 3 ? { ...month, actualGrossProfit: 20000 } : month) }
 const actualReport = summarizeCommercialModel(valuationModel, actualPlan, new Date("2027-03-15T12:00:00+02:00"))
@@ -104,4 +109,20 @@ assert.match(valuationHtml, /EBITDA and indicative enterprise value/)
 assert.match(valuationHtml, /Illustrative test range/)
 const bridgeHtml = buildAnnualPlanHtml({ plan: { ...valuationPlan, commercialModel: bridgeModel }, previousPlan: emptyAnnualPlan(2026), asOf: new Date("2026-10-07T12:00:00+02:00") })
 assert.match(bridgeHtml, /Indicative supply-cost bridge/)
+const executionModel = normalizeCommercialModel({ ...valuationModel, execution: {
+  ...model.execution,
+  owners: [{ id: "owner-1", name: "Management" }],
+  initiatives: [{ id: "initiative-1", name: "Afgri launch", objective: "Pilot", ownerId: "owner-1", status: "on_track" }],
+  milestones: [{ id: "milestone-1", quarter: 1, result: "First branch", deadline: "2026-01-01", status: "watch" }],
+  risks: [{ id: "risk-1", name: "Bridge funding delay", probability: 4, impact: 5, status: "watch" }],
+  capital: [{ id: "capital-1", purpose: "Bridge", required: 1000000, revenueEnabled: 4000000, gpEnabled: 1600000 }],
+  forecastSnapshots: [{ savedAt: "2026-10-07T10:00:00Z", revision: 2, annualForecast: 12000000, monthly: Array(12).fill(1000000) }],
+} })
+const executionReport = summarizeCommercialModel(executionModel, valuationPlan, new Date("2026-10-07T12:00:00+02:00"))
+assert.equal(executionReport.execution.overdueMilestones.length, 1)
+assert.equal(executionReport.execution.highRisks.length, 1)
+assert.equal(executionReport.execution.revenuePerCapital, 4)
+const executionHtml = buildAnnualPlanHtml({ plan: { ...valuationPlan, commercialModel: executionModel }, previousPlan: emptyAnnualPlan(2026), asOf: new Date("2026-10-07T12:00:00+02:00") })
+assert.match(executionHtml, /Capital required and what it enables/)
+assert.match(executionHtml, /How the outlook changed/)
 console.log("Annual commercial model checks passed.")

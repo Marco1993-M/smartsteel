@@ -47,6 +47,9 @@ const corrugatedEstimate = calculateAtlasWarehouseEstimate({
   sheetingProfile: "Corrugated",
   sheetingFinish: "galvanised",
 })
+assert.equal(corrugatedEstimate.materials.geometry.purlinRowsPerSlope, 4)
+assert.equal(corrugatedEstimate.dimensions.roofPurlins, 8)
+assert.equal(corrugatedEstimate.lineItems.find((item) => item.code === "W08-PUR")?.quantity, 40)
 const corrugatedSheetingLine = corrugatedEstimate.lineItems.find((item) => item.code === "W08-SHT")
 assert.equal(corrugatedSheetingLine.unitRate, 160)
 assert.equal(corrugatedSheetingLine.priceIncludesMarkup, true)

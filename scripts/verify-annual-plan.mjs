@@ -52,7 +52,7 @@ assert.match(structuredHtml, /Milestones &amp; evidence/)
 assert.match(structuredHtml, /2 \/ 2/)
 assert.equal((structuredHtml.match(/class="page context-page"/g) || []).length, 1)
 const futureHtml = buildAnnualPlanHtml({ plan: structured, previousPlan: emptyAnnualPlan(2026), asOf: new Date("2026-10-09T12:00:00+02:00") })
-assert.match(futureHtml, /<th>Planned orders<\/th>/)
+assert.match(futureHtml, /<th>Product-plan orders<\/th>/)
 assert.doesNotMatch(futureHtml, /<th>Jobs sold<\/th>/)
 assert.doesNotMatch(structuredHtml, /legacy/)
 
