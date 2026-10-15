@@ -7,6 +7,7 @@ export const DEFAULT_CASH_FLOW = {
   customerBalanceDays: 28,
   supplierUpfrontRate: 1,
   supplierBalanceDays: 0,
+  productTerms: [],
 }
 
 export function normalizeCashFlow(value) {
@@ -20,6 +21,13 @@ export function normalizeCashFlow(value) {
     customerBalanceDays: days("customerBalanceDays"),
     supplierUpfrontRate: rate("supplierUpfrontRate"),
     supplierBalanceDays: days("supplierBalanceDays"),
+    productTerms: Array.isArray(source.productTerms) ? source.productTerms.slice(0, 40).map((item) => ({
+      productId: String(item.productId || "").slice(0, 64),
+      customerDepositRate: item.customerDepositRate != null && item.customerDepositRate !== "" && Number.isFinite(Number(item.customerDepositRate)) && Number(item.customerDepositRate) >= 0 && Number(item.customerDepositRate) <= 1 ? Number(item.customerDepositRate) : rate("customerDepositRate"),
+      customerBalanceDays: item.customerBalanceDays != null && item.customerBalanceDays !== "" && Number.isInteger(Number(item.customerBalanceDays)) && Number(item.customerBalanceDays) >= 0 && Number(item.customerBalanceDays) <= 180 ? Number(item.customerBalanceDays) : days("customerBalanceDays"),
+      supplierUpfrontRate: item.supplierUpfrontRate != null && item.supplierUpfrontRate !== "" && Number.isFinite(Number(item.supplierUpfrontRate)) && Number(item.supplierUpfrontRate) >= 0 && Number(item.supplierUpfrontRate) <= 1 ? Number(item.supplierUpfrontRate) : rate("supplierUpfrontRate"),
+      supplierBalanceDays: item.supplierBalanceDays != null && item.supplierBalanceDays !== "" && Number.isInteger(Number(item.supplierBalanceDays)) && Number(item.supplierBalanceDays) >= 0 && Number(item.supplierBalanceDays) <= 180 ? Number(item.supplierBalanceDays) : days("supplierBalanceDays"),
+    })).filter((item) => item.productId) : [],
   }
 }
 
@@ -38,15 +46,16 @@ export function forecastAnnualCashFlow(model, plan, scenario, timing = "even") {
     events.get(day)[field] += amount
   }
   for (const row of rows) {
+    const rowTerms = terms.productTerms.find((item) => item.productId === row.productId) || terms
     const first = Date.UTC(plan.year, row.month, 1)
     const daysInMonth = new Date(Date.UTC(plan.year, row.month + 1, 0)).getUTCDate()
     for (let unit = 0; unit < row.units; unit++) {
       const dayOffset = timing === "clustered" ? daysInMonth - 1 : Math.floor((unit + 0.5) * daysInMonth / row.units)
       const date = first + dayOffset * 86400000
-      add(date, "receipts", row.price * terms.customerDepositRate)
-      add(date + terms.customerBalanceDays * 86400000, "receipts", row.price * (1 - terms.customerDepositRate))
-      add(date, "supplyCosts", row.directCost * terms.supplierUpfrontRate)
-      add(date + terms.supplierBalanceDays * 86400000, "supplyCosts", row.directCost * (1 - terms.supplierUpfrontRate))
+      add(date, "receipts", row.price * rowTerms.customerDepositRate)
+      add(date + rowTerms.customerBalanceDays * 86400000, "receipts", row.price * (1 - rowTerms.customerDepositRate))
+      add(date, "supplyCosts", row.directCost * rowTerms.supplierUpfrontRate)
+      add(date + rowTerms.supplierBalanceDays * 86400000, "supplyCosts", row.directCost * (1 - rowTerms.supplierUpfrontRate))
     }
   }
   for (let month = 0; month < 12; month++) {
