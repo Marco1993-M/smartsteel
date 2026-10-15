@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import {
   DOCUMENT_STATUS_OPTIONS,
@@ -30,7 +30,15 @@ function isPastDue(value) {
   return date.getTime() < Date.now()
 }
 
-export default function DocumentsWorkspace({ platformKey, rules = [] }) {
+function matchesSelectedProduct(record, productCode) {
+  if (!productCode) return true
+  if (record.productCode) return record.productCode === productCode
+  if (record.productFamilyKey !== "warehouses") return false
+  const legacyCode = String(record.title || "").match(/\bW(?:06|08|10|12|15)\b/i)?.[0]?.toUpperCase()
+  return !legacyCode || legacyCode === productCode
+}
+
+export default function DocumentsWorkspace({ platformKey, rules = [], productCode = "" }) {
   const platform = PLATFORM_META[platformKey]
   const [records, setRecords] = useState([])
   const [families, setFamilies] = useState([])
@@ -48,9 +56,11 @@ export default function DocumentsWorkspace({ platformKey, rules = [] }) {
     clientVisible: false,
     reviewDueAt: "",
     notes: "",
+    productCode,
+    fileUrl: "",
   })
 
-  async function loadWorkspace() {
+  const loadWorkspace = useCallback(async () => {
     setLoading(true)
     setError("")
 
@@ -67,7 +77,7 @@ export default function DocumentsWorkspace({ platformKey, rules = [] }) {
       if (!docsResponse.ok) throw new Error(docsPayload.error || "Could not load documents.")
       if (!familiesResponse.ok) throw new Error(familiesPayload.error || "Could not load product families.")
 
-      setRecords(docsPayload.records || [])
+      setRecords((docsPayload.records || []).filter((record) => matchesSelectedProduct(record, productCode)))
       setFamilies(familiesPayload.records || [])
       setSchemaReady(docsPayload.schemaReady !== false && familiesPayload.schemaReady !== false)
     } catch (loadError) {
@@ -75,11 +85,11 @@ export default function DocumentsWorkspace({ platformKey, rules = [] }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [platformKey, productCode])
 
   useEffect(() => {
     loadWorkspace()
-  }, [platformKey])
+  }, [loadWorkspace])
 
   async function handleCreate(event) {
     event.preventDefault()
@@ -112,6 +122,8 @@ export default function DocumentsWorkspace({ platformKey, rules = [] }) {
         clientVisible: false,
         reviewDueAt: "",
         notes: "",
+        productCode,
+        fileUrl: "",
       })
     } catch (saveError) {
       setError(saveError.message)
@@ -212,6 +224,7 @@ export default function DocumentsWorkspace({ platformKey, rules = [] }) {
                     {record.notes ? (
                       <p className="mt-2 text-sm leading-6 text-slate-600">{record.notes}</p>
                     ) : null}
+                    {record.fileUrl ? <a href={record.fileUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex rounded-full bg-blue-700 px-4 py-2 text-xs font-bold text-white">Open document ↗</a> : <p className="mt-2 text-xs text-slate-400">Metadata only · no file linked</p>}
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                     <p className="font-semibold text-slate-900">{record.owner || "Unassigned"}</p>
@@ -286,7 +299,7 @@ export default function DocumentsWorkspace({ platformKey, rules = [] }) {
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Register document</p>
           <h4 className="mt-2 text-xl font-semibold text-slate-900">Add a working document</h4>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Capture the file once so the team can see its owner, revision, review state, and client issue status.
+            Register an HTTPS file link with its owner, revision, review state, and client issue status.
           </p>
 
           <form onSubmit={handleCreate} className="mt-5 space-y-4">
@@ -330,6 +343,7 @@ export default function DocumentsWorkspace({ platformKey, rules = [] }) {
                 </select>
               </div>
             </div>
+            {platformKey === "atlas" ? <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-medium text-slate-700">Warehouse size<select value={form.productCode} onChange={(event) => setForm((current) => ({ ...current, productCode: event.target.value }))} className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm"><option value="">All Atlas warehouses</option>{(productCode ? [productCode] : ["W06", "W08", "W10", "W12", "W15"]).map((code) => <option key={code} value={code}>{code}</option>)}</select></label><label className="text-sm font-medium text-slate-700">File link (HTTPS)<input type="url" value={form.fileUrl} onChange={(event) => setForm((current) => ({ ...current, fileUrl: event.target.value }))} placeholder="https://…/document.pdf" className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm" /></label></div> : null}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Revision</label>
