@@ -14,6 +14,7 @@ import {
   summarizeAtlasPricing,
 } from "../../lib/atlasCosting"
 import { getAtlasW08PrimaryBenchmark } from "../../lib/atlasW08PricingBenchmarks"
+import { getAtlasStandardQuotedBracketCosts } from "../../lib/atlasW08SupplierCosts"
 import { ATLAS_W08_EAVE_HEIGHTS_M, ATLAS_W08_LENGTHS_M, applyAtlasW08GeometryToPricing, calculateAtlasW08Geometry } from "../../lib/atlasW08Geometry"
 import { getAtlasW06PrimaryBenchmark } from "../../lib/atlasW06PricingBenchmarks"
 import { ATLAS_W06_EAVE_HEIGHTS_M, ATLAS_W06_LENGTHS_M, applyAtlasW06GeometryToPricing, calculateAtlasW06Geometry } from "../../lib/atlasW06Geometry"
@@ -161,9 +162,16 @@ export default function AtlasPricingWorkspace() {
         : productCode === "W15"
           ? calculateAtlasW15Geometry({ lengthM: configurationLengthM, eaveHeightM: configurationEaveHeightM })
       : null, [productCode, configurationLengthM, configurationEaveHeightM])
-  const geometryRecords = useMemo(() => geometry
-    ? productCode === "W06" ? applyAtlasW06GeometryToPricing(records, geometry) : productCode === "W10" ? applyAtlasW10GeometryToPricing(records, geometry) : productCode === "W12" ? applyAtlasW12GeometryToPricing(records, geometry) : productCode === "W15" ? applyAtlasW15GeometryToPricing(records, geometry) : applyAtlasW08GeometryToPricing(records, geometry)
-    : records, [records, geometry, productCode])
+  const geometryRecords = useMemo(() => {
+    if (!geometry) return records
+    const shaped = productCode === "W06" ? applyAtlasW06GeometryToPricing(records, geometry) : productCode === "W10" ? applyAtlasW10GeometryToPricing(records, geometry) : productCode === "W12" ? applyAtlasW12GeometryToPricing(records, geometry) : productCode === "W15" ? applyAtlasW15GeometryToPricing(records, geometry) : applyAtlasW08GeometryToPricing(records, geometry)
+    if (productCode === "W15") return shaped
+    const brackets = new Map(getAtlasStandardQuotedBracketCosts(geometry).map((item) => [`${productCode}-${item.code}`, item]))
+    return shaped.map((record) => {
+      const bracket = brackets.get(record.componentCode)
+      return bracket ? { ...record, baselineQuantity: bracket.quantity, zamRate: bracket.unitCost, galvanisedRate: bracket.unitCost, geometryControlled: true, sharedBracketSchedule: true } : record
+    })
+  }, [records, geometry, productCode])
   const configuredRecords = useMemo(() => geometryRecords.map((record) => {
     const materialPriced = ["ton", "kg", "m"].includes(record.pricingUnit)
     return {
@@ -751,10 +759,10 @@ export default function AtlasPricingWorkspace() {
                           <input type="number" min="0" step="0.001" value={record.baselineLengthM} onChange={(event) => updateRecord(record.id, "baselineLengthM", event.target.value)} className={inputClass} disabled={!["ton", "m"].includes(record.pricingUnit)} />
                         </Field>
                         <Field label="Galvanised / primary rate">
-                          <input type="number" min="0" step="0.01" value={record.galvanisedRate} onChange={(event) => updateRecord(record.id, "galvanisedRate", event.target.value)} className={inputClass} />
+                          <input type="number" min="0" step="0.01" value={record.galvanisedRate} onChange={(event) => updateRecord(record.id, "galvanisedRate", event.target.value)} className={inputClass} disabled={record.sharedBracketSchedule} />
                         </Field>
                         <Field label="ZAM rate">
-                          <input type="number" min="0" step="0.01" value={record.zamRate} onChange={(event) => updateRecord(record.id, "zamRate", event.target.value)} className={inputClass} />
+                          <input type="number" min="0" step="0.01" value={record.zamRate} onChange={(event) => updateRecord(record.id, "zamRate", event.target.value)} className={inputClass} disabled={record.sharedBracketSchedule} />
                         </Field>
                         <Field label="Mild-steel / alternate rate">
                           <input type="number" min="0" step="0.01" value={record.mildSteelRate} onChange={(event) => updateRecord(record.id, "mildSteelRate", event.target.value)} className={inputClass} />
