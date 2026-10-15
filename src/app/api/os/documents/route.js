@@ -26,6 +26,8 @@ function normalizeDocument(row) {
     productFamilyId: row.product_family_id || null,
     productFamilyKey: row.product_families?.key || null,
     productFamilyName: row.product_families?.name || "Unlinked",
+    productCode: row.product_code || "",
+    fileUrl: row.file_url || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -85,6 +87,14 @@ export async function POST(request) {
     ? body.documentType
     : "scope_reference"
   const status = DOCUMENT_STATUS_OPTIONS.includes(body?.status) ? body.status : "draft"
+  const productCode = String(body?.productCode || "").trim().toUpperCase()
+  const fileUrl = String(body?.fileUrl || "").trim()
+  if (productCode && !["W06", "W08", "W10", "W12", "W15"].includes(productCode)) {
+    return NextResponse.json({ error: "Unsupported Atlas product code." }, { status: 400 })
+  }
+  if (fileUrl && !/^https:\/\//i.test(fileUrl)) {
+    return NextResponse.json({ error: "Document links must use HTTPS." }, { status: 400 })
+  }
 
   const payload = {
     platform_key: platformKey,
@@ -97,6 +107,8 @@ export async function POST(request) {
     client_visible: Boolean(body?.clientVisible),
     review_due_at: body?.reviewDueAt || null,
     notes: String(body?.notes || "").trim() || null,
+    product_code: productCode || null,
+    file_url: fileUrl || null,
   }
 
   const { data, error } = await supabaseServer
