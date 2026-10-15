@@ -922,6 +922,7 @@ export default function LeadEditorDrawer({
   const [emailComposerMode, setEmailComposerMode] = useState("follow_up");
   const [selectedEstimateEmail, setSelectedEstimateEmail] = useState(null);
   const [deferInstallationForProposal, setDeferInstallationForProposal] = useState(false);
+  const [deferDeliveryForProposal, setDeferDeliveryForProposal] = useState(false);
   const [emailDraftOpened, setEmailDraftOpened] = useState(false);
   const [confirmingEmailSent, setConfirmingEmailSent] = useState(false);
   const [sendingBrandedProposal, setSendingBrandedProposal] = useState(false)
@@ -1513,6 +1514,7 @@ export default function LeadEditorDrawer({
     setEmailComposerMode("estimate")
     setSelectedEstimateEmail(estimate || null)
     setDeferInstallationForProposal(false)
+    setDeferDeliveryForProposal(false)
     setEmailSubject(template.subject)
     setEmailBody(template.body)
     setEmailDraftOpened(false)
@@ -1683,7 +1685,7 @@ export default function LeadEditorDrawer({
     }
 
     const approved = window.confirm(
-      `Send ${selectedEstimateEmail.title || "this estimate"} to ${formData.email}?\n\n${deferInstallationForProposal ? "Installation was requested but will be excluded from this quote and priced separately closer to the project date.\n\n" : ""}This will email the reviewed PDF and move the lead to Quoted.`
+      `Send ${selectedEstimateEmail.title || "this estimate"} to ${formData.email}?\n\n${deferInstallationForProposal ? "Installation was requested but will be excluded from this quote and priced separately closer to the project date.\n\n" : ""}${deferDeliveryForProposal ? "Delivery was requested but will be excluded from this quote and priced separately once the destination is confirmed.\n\n" : ""}This will email the reviewed PDF and move the lead to Quoted.`
     )
     if (!approved) return
 
@@ -1698,6 +1700,7 @@ export default function LeadEditorDrawer({
           subject: emailSubject,
           body: emailBody,
           deferInstallation: deferInstallationForProposal,
+          deferDelivery: deferDeliveryForProposal,
         }),
       })
       const result = await response.json().catch(() => ({}))
@@ -1712,7 +1715,7 @@ export default function LeadEditorDrawer({
       }
       setFormData(updatedLead)
       setSavedEstimates((current) => current.map((estimate) => estimate.id === selectedEstimateEmail.id
-        ? { ...estimate, status: "sent", sent_at: sentAt, sent_by_name: "Smart Steel", input_data: { ...estimate.input_data, installationDeferred: deferInstallationForProposal && Boolean(estimate.input_data?.installationRequested ?? builderSubmission?.configuration?.installationInterest) } }
+        ? { ...estimate, status: "sent", sent_at: sentAt, sent_by_name: "Smart Steel", input_data: { ...estimate.input_data, installationDeferred: deferInstallationForProposal && Boolean(estimate.input_data?.installationRequested ?? builderSubmission?.configuration?.installationInterest), deliveryDeferred: deferDeliveryForProposal && Boolean(estimate.input_data?.deliveryRequested ?? builderSubmission?.configuration?.deliveryRequired) } }
         : estimate))
       setEmailEvents((current) => [{
         id: result.emailId || `sent-${sentAt}`,
@@ -3356,6 +3359,12 @@ export default function LeadEditorDrawer({
                             <label className="flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
                               <input type="checkbox" checked={deferInstallationForProposal} onChange={(event) => setDeferInstallationForProposal(event.target.checked)} className="mt-1 h-4 w-4 shrink-0" />
                               <span><strong>Quote the structure now; price installation later.</strong><span className="mt-1 block text-xs leading-5">The client’s installation request stays on the lead. This quote and its PDF will clearly exclude installation, and a separate installation price can follow when the project is ready.</span></span>
+                            </label>
+                          ) : null}
+                          {emailComposerMode === "estimate" && (typeof selectedEstimateEmail?.input_data?.deliveryRequested === "boolean" ? selectedEstimateEmail.input_data.deliveryRequested : Boolean(builderSubmission?.configuration?.deliveryRequired)) && !(selectedEstimateEmail?.line_items || []).some((item) => /delivery|transport/i.test(`${item?.code || ""} ${item?.label || ""}`) && Number(item?.total || 0) > 0) ? (
+                            <label className="flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                              <input type="checkbox" checked={deferDeliveryForProposal} onChange={(event) => setDeferDeliveryForProposal(event.target.checked)} className="mt-1 h-4 w-4 shrink-0" />
+                              <span><strong>Quote the structure now; price delivery later.</strong><span className="mt-1 block text-xs leading-5">The client’s delivery request stays on the lead. This quote and its PDF will clearly exclude delivery until the destination and transport requirements are confirmed.</span></span>
                             </label>
                           ) : null}
                         </div>
