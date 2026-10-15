@@ -254,6 +254,10 @@ export async function GET(request) {
     period,
     metrics: {
       ...current,
+      previous: {
+        leadCount: previous.leadCount,
+        sentCount: previous.sentCount,
+      },
       changes: {
         leads: change(current.leadCount, previous.leadCount),
         sent: change(current.sentCount, previous.sentCount),
