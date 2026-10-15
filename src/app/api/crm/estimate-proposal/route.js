@@ -116,6 +116,7 @@ export async function POST(request) {
     const estimateId = String(payload?.estimateId || "").trim()
     const subject = String(payload?.subject || "").trim()
     const body = String(payload?.body || "").trim()
+    const deferInstallation = payload?.deferInstallation === true
 
     if (!leadId || !estimateId || !subject || !body) {
       return NextResponse.json({ error: "Lead, estimate, subject and email copy are required." }, { status: 400 })
@@ -160,9 +161,10 @@ export async function POST(request) {
     const installationRequested = typeof estimateInput.installationRequested === "boolean"
       ? estimateInput.installationRequested
       : Boolean(configuration.installationInterest)
+    const installationPriced = hasPricedServiceLine(estimate.line_items, /install|erection|assembly/i)
     const unresolvedServices = [
       deliveryRequested && !hasPricedServiceLine(estimate.line_items, /delivery|transport/i) ? "delivery" : null,
-      installationRequested && !hasPricedServiceLine(estimate.line_items, /install|erection|assembly/i) ? "installation" : null,
+      installationRequested && !installationPriced && !deferInstallation ? "installation" : null,
     ].filter(Boolean)
 
     if (unresolvedServices.length) {
@@ -171,6 +173,17 @@ export async function POST(request) {
         code: "requested_services_unpriced",
         unresolvedServices,
       }, { status: 409 })
+    }
+
+    // The explicit exception is recorded on this estimate version, so its PDF and
+    // online quote show the same scope. The lead's original request is preserved.
+    const installationDeferred = installationRequested && !installationPriced && deferInstallation
+    const nextInput = { ...estimateInput, installationRequested, installationDeferred }
+    if (Boolean(estimateInput.installationDeferred) !== installationDeferred || estimateInput.installationRequested !== installationRequested) {
+      const { error: scopeError } = await supabaseServer.from("estimates")
+        .update({ input_data: nextInput }).eq("id", estimate.id)
+      if (scopeError) return NextResponse.json({ error: `Could not save the installation scope: ${scopeError.message}` }, { status: 500 })
+      estimate.input_data = nextInput
     }
 
     const pdfResponse = await fetch(new URL(`/api/estimates/${estimate.id}/pdf`, request.url), { cache: "no-store" })
@@ -191,7 +204,7 @@ export async function POST(request) {
         to: [lead.email],
         reply_to: "info@smartsteel.co.za",
         subject,
-        html: buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }),
+        html: buildProposalHtml({ lead, estimate, builderSubmission, body: installationDeferred ? `${body}\n\nInstallation is excluded from this quote and will be priced separately closer to the project date.` : body, shareUrl }),
         attachments: [{ filename: buildFilename(estimate), content: pdfBase64 }],
       }),
     })
@@ -252,7 +265,7 @@ export async function POST(request) {
       lead_id: lead.id,
       type: "email",
       user_name: "System",
-      description: `${estimate.title || `Estimate V${estimate.version_no || 1}`} sent to ${lead.email}. Resend delivery ID: ${emailId || "not returned"}. Subject: ${subject}`,
+      description: `${estimate.title || `Estimate V${estimate.version_no || 1}`} sent to ${lead.email}. ${installationDeferred ? "Installation requested; deferred for separate pricing. " : ""}Resend delivery ID: ${emailId || "not returned"}. Subject: ${subject}`,
       timestamp: sentAt,
     }])
     if (activity.error) lifecycleWarnings.push(`Activity record: ${activity.error.message}`)
