@@ -1,0 +1,62 @@
+import assert from "node:assert/strict"
+import fs from "node:fs/promises"
+import { randomUUID } from "node:crypto"
+import { emptyMemo, canEditMemo, validateMemoContent } from "../src/lib/osMemos.mjs"
+const draft = emptyMemo()
+assert.equal(Object.keys(draft.content).length, 6)
+assert.equal(validateMemoContent(draft.content), true)
+assert.equal(validateMemoContent({ invented: "oops" }), false)
+assert.equal(validateMemoContent({ proposal: 99 }), false)
+assert.equal(canEditMemo({ status: "decided", author_email: "a", editor_emails: [] }, "a"), false)
+assert.equal(canEditMemo({ status: "draft", author_email: "a", editor_emails: ["b"] }, "b"), true)
+console.log("Memo template and editing rules passed.")
+if (!process.env.MEMO_TEST_DB_MODULE) { console.log("Set MEMO_TEST_DB_MODULE to a disposable @electric-sql/pglite module to test SQL permissions and workflow."); process.exit(0) }
+const { PGlite } = await import(process.env.MEMO_TEST_DB_MODULE)
+const db = new PGlite()
+try {
+ await db.exec("create role anon; create role authenticated; create role service_role;")
+ const sql = await fs.readFile(new URL("../supabase/os_memos.sql", import.meta.url), "utf8")
+ await db.exec(sql); await db.exec(sql)
+ const marco = "info@smartsteel.co.za", niel = "niel@smartsteel.co.za", stefan = "stefan@smartsteel.co.za"
+ const ids = Object.fromEntries([marco,niel,stefan].map((email) => [email,randomUUID()]))
+ const call = async (email,action,memo,data = {}) => (await db.query("select os_mutate_memo($1,$2,$3,$4,$5,$6) as record", [ids[email] || randomUUID(),email,action,memo?.id || null,memo?.revision || null,data])).rows[0].record
+ const content = { ...draft.content, proposal: "Create a display structure", context: "Test dealer demand before expanding" }
+ let memo = await call(marco,"create",null,{title:"AFGRI branch pilot",content})
+ await assert.rejects(call("outsider@smartsteel.co.za","create",null,{title:"Unauthorized",content}), /access/)
+ await assert.rejects(call(niel,"save",memo,{title:memo.title,content,editor_emails:[],decision_owner_email:marco}), /cannot be edited/)
+ memo = await call(marco,"save",memo,{title:memo.title,content,editor_emails:[niel],decision_owner_email:stefan})
+ await assert.rejects(call(marco,"save",{...memo, revision:1},{title:memo.title,content,editor_emails:[],decision_owner_email:marco}), /changed/)
+ memo = await call(niel,"save",memo,{title:memo.title,content:{...content,evidence:"Actual material cost is available"},editor_emails:[niel],decision_owner_email:stefan})
+ await assert.rejects(call(niel,"save",memo,{title:memo.title,content,editor_emails:[niel,stefan],decision_owner_email:stefan}), /Only the author/)
+ memo = await call(niel,"transition",memo,{status:"discussion"})
+ const comment = await call(stefan,"comment",memo,{body:"Check the footing scope"})
+ const reply = await call(niel,"comment",memo,{body:"Footings remain a separate allowance",parent_id:comment.id})
+ assert.equal(reply.parent_id,comment.id)
+ const other = await call(niel,"create",null,{title:"Different memo",content})
+ await assert.rejects(call(niel,"comment",other,{body:"Wrong thread",parent_id:comment.id}), /top-level/)
+ const resolved = await call(stefan,"resolve",memo,{comment_id:comment.id,resolved:true})
+ assert.equal(resolved.resolved_by,stefan)
+ await assert.rejects(call(marco,"decide",memo,{decision:"approved",reason:"Proceed with the branch pilot",implementation_owner_email:marco,review_date:"2027-01-01"}), /named decision owner/)
+ await assert.rejects(call(stefan,"decide",memo,{decision:"approved",reason:"Proceed with the branch pilot"}), /implementation owner/)
+ memo = await call(stefan,"decide",memo,{decision:"approved",reason:"Proceed with one pilot before scaling",implementation_owner_email:niel,review_date:"2027-01-01"})
+ assert.equal(memo.status,"decided")
+ await assert.rejects(call(marco,"save",memo,{title:memo.title,content,editor_emails:[],decision_owner_email:marco}), /cannot be edited/)
+ await assert.rejects(call(marco,"transition",memo,{status:"implementing"}), /not allowed/)
+ memo = await call(niel,"transition",memo,{status:"implementing"})
+ await assert.rejects(call(niel,"transition",memo,{status:"closed",result:""}), /result/)
+ memo = await call(niel,"transition",memo,{status:"closed",result:"Pilot delivered; review enquiries next quarter"})
+ assert.equal(memo.status,"closed")
+ const copy = await call(stefan,"create",null,{title:"Follow-on pilot",content:memo.content,source_memo_id:memo.id})
+ assert.equal(copy.status,"draft"); assert.equal(copy.decision,null); assert.equal(copy.source_memo_id,memo.id); assert.deepEqual(copy.editor_emails,[])
+ assert.equal((await db.query("select count(*)::int n from os_memo_comments where memo_id=$1",[copy.id])).rows[0].n,0)
+ assert.equal((await db.query("select count(*)::int n from os_memo_revisions where memo_id=$1",[memo.id])).rows[0].n,memo.revision)
+ const frozen = (await db.query("select snapshot from os_memo_revisions where memo_id=$1 and revision=5",[memo.id])).rows[0].snapshot
+ assert.equal(frozen.status,"decided"); assert.equal(frozen.decided_by,stefan)
+ const deferred = await call(niel,"transition",other,{status:"discussion"})
+ await assert.rejects(call(niel,"decide",deferred,{decision:"deferred",reason:"Wait for supplier confirmation"}), /review date/)
+ await db.exec("set role authenticated")
+ await assert.rejects(db.query("select * from os_memos"),/permission denied/)
+ await assert.rejects(db.query("select os_mutate_memo($1,$2,'create',null,null,'{}')",[ids[marco],marco]),/permission denied/)
+ await db.exec("reset role")
+ console.log("SQL migration/reapply, member checks, editor/owner permissions, conflicts, comments/replies, immutable decision snapshots, lifecycle, linked copies and direct access restrictions passed.")
+} finally { await db.close() }
