@@ -1,5 +1,6 @@
 import { summarizeAnnualPlan } from "./annualPlan.mjs"
 import { DEFAULT_CASH_FLOW, forecastAnnualCashFlow, normalizeCashFlow } from "./annualCashFlow.mjs"
+import { emptyExecutionModel, normalizeExecutionModel, summarizeExecution } from "./annualExecution.mjs"
 
 export const SCENARIOS = [
   { key: "base", label: "Base case" },
@@ -17,7 +18,7 @@ export const DEFAULT_CHANNELS = [
   ["channel-1", "Afgri"], ["channel-2", "Direct Smart Steel sales (incl. 3D Builder)"],
   ["channel-4", "Solar industry"], ["channel-5", "Referral"],
   ["channel-6", "Dealer / reseller"], ["channel-7", "Existing customer"], ["channel-8", "Other"],
-].map(([id, name]) => ({ id, name }))
+].map(([id, name]) => ({ id, name, ownerId: "" }))
 
 export const PIPELINE_STAGES = [
   { key: "early", label: "Early opportunity", probability: 0.1 },
@@ -51,6 +52,7 @@ export function emptyCommercialModel() {
     valuation: { lowMultiple: null, highMultiple: null, rationale: "" },
     funding: { costRatio: 0.6, daysLow: 21, daysHigh: 28, largestSupplyOrder: null, afgriMonthlySupply: Array(12).fill(null) },
     cashFlow: { ...DEFAULT_CASH_FLOW },
+    execution: emptyExecutionModel(),
   }
 }
 
@@ -62,7 +64,7 @@ export function normalizeCommercialModel(value) {
     leadTimeDays: n(item.leadTimeDays), salesCycleDays: n(item.salesCycleDays),
   })).filter((item) => item.id && item.name) : defaults.products
   const channels = Array.isArray(source.channels) ? source.channels.slice(0, 40).map((item) => ({
-    id: safeText(item.id, 64), name: safeText(item.name),
+    id: safeText(item.id, 64), name: safeText(item.name), ownerId: safeText(item.ownerId, 64),
   })).filter((item) => item.id && item.name) : defaults.channels
   const productIds = new Set(products.map((item) => item.id))
   const channelIds = new Set(channels.map((item) => item.id))
@@ -119,6 +121,7 @@ export function normalizeCommercialModel(value) {
       afgriMonthlySupply: Array.from({ length: 12 }, (_, index) => n(funding.afgriMonthlySupply?.[index])),
     },
     cashFlow: normalizeCashFlow(source.cashFlow),
+    execution: normalizeExecutionModel(source.execution),
   }
 }
 
@@ -138,6 +141,19 @@ export function estimateBridgeExposure(monthlySupply, year, costRatio, days) {
     peak = Math.max(peak, outstanding)
   }
   return Math.round(peak)
+}
+
+export function summarizeProductMonth(model, monthIndex, scenarioKey = "management") {
+  const revenueIds = new Set(model.products.filter((product) => product.includeInPlanRevenue !== false).map((product) => product.id))
+  const rows = model.productPlans.filter((row) => row.scenario === scenarioKey && row.month === monthIndex && revenueIds.has(row.productId))
+  const complete = rows.filter((row) => row.units != null && row.price != null && row.directCost != null)
+  return {
+    entered: rows.length > 0,
+    incomplete: complete.length !== rows.length,
+    units: sum(complete.map((row) => row.units)),
+    revenue: sum(complete.map((row) => row.units * row.price)),
+    gp: sum(complete.map((row) => row.units * (row.price - row.directCost))),
+  }
 }
 
 export function summarizeCommercialModel(model, plan, asOf = new Date()) {
@@ -225,6 +241,8 @@ export function summarizeCommercialModel(model, plan, asOf = new Date()) {
   )) : null
   const productActualRevenue = sum(products.map((product) => product.actual.revenue))
   const channelActualRevenue = sum(channels.map((channel) => channel.actual))
+  const productShare = (pattern) => productActualRevenue > 0 ? sum(products.filter((product) => pattern.test(product.name)).map((product) => product.actual.revenue)) / productActualRevenue : null
+  const channelShare = (id) => channelActualRevenue > 0 ? (channels.find((channel) => channel.id === id)?.actual || 0) / channelActualRevenue : null
   const channelAssigned = sum(channels.map((channel) => channel.targets.management))
   const productAssigned = scenarios.management.modelled ? scenarios.management.revenue : 0
   const pipeline = model.opportunities.filter((item) => item.stage !== "committed").map((item) => {
@@ -256,13 +274,30 @@ export function summarizeCommercialModel(model, plan, asOf = new Date()) {
   const forecastRevenue = forecastMonths.every((value) => value != null) ? sum(forecastMonths) : null
   const gapBasis = forecastRevenue != null ? "management forecast" : planningProjection != null ? "target-based planning projection" : null
   const gapBase = forecastRevenue ?? planningProjection
+  const revenueAchievement = managementTarget > 0 && forecastRevenue != null ? forecastRevenue / managementTarget : null
+  const statusThresholds = model.execution?.thresholds || emptyExecutionModel().thresholds
+  const revenueStatus = revenueAchievement == null ? "Insufficient data" : revenueAchievement >= statusThresholds.revenueOnTrack ? "On track" : revenueAchievement >= statusThresholds.revenueWatch ? "Watch" : "Off track"
+  const cashFlow = Object.fromEntries(SCENARIOS.map(({ key }) => [key, {
+    even: forecastAnnualCashFlow(model, plan, key, "even"),
+    clustered: forecastAnnualCashFlow(model, plan, key, "clustered"),
+  }]))
+  for (const { key } of SCENARIOS) scenarios[key].workingCapitalRequirement = cashFlow[key].clustered?.peakFundingBeforeOpeningCash ?? null
+  const managementMargin = scenarios.management.margin
+  const annualFixedExpenses = scenarios.management.operatingExpenses
+  const breakEvenRevenue = managementMargin > 0 && annualFixedExpenses != null ? annualFixedExpenses / managementMargin : null
   return {
     products, scenarios, channels, funnel, pipeline, backlog,
+    execution: summarizeExecution(model.execution || emptyExecutionModel(), asOf),
     installationCoverage,
-    cashFlow: Object.fromEntries(SCENARIOS.map(({ key }) => [key, {
-      even: forecastAnnualCashFlow(model, plan, key, "even"),
-      clustered: forecastAnnualCashFlow(model, plan, key, "clustered"),
-    }])),
+    cashFlow,
+    breakEven: {
+      weightedGrossMargin: managementMargin,
+      monthlyFixedExpenses: annualFixedExpenses == null ? null : annualFixedExpenses / 12,
+      monthlyRevenue: breakEvenRevenue == null ? null : breakEvenRevenue / 12,
+      annualRevenue: breakEvenRevenue,
+      annualOrders: breakEvenRevenue != null && scenarios.management.averageOrderValue > 0 ? Math.ceil(breakEvenRevenue / scenarios.management.averageOrderValue) : null,
+      marginOfSafety: breakEvenRevenue == null || !scenarios.management.modelled ? null : scenarios.management.revenue - breakEvenRevenue,
+    },
     funding: {
       scheduledSupply: funding.afgriMonthlySupply?.every((value) => value != null) ? sum(funding.afgriMonthlySupply) : null,
       costRatio: funding.costRatio ?? 0.6,
@@ -281,6 +316,7 @@ export function summarizeCommercialModel(model, plan, asOf = new Date()) {
     gapBasis,
     objectiveGap: managementTarget != null && gapBase != null ? managementTarget - gapBase : null,
     objectiveAchievement: managementTarget > 0 && gapBase != null ? gapBase / managementTarget : null,
+    revenueStatus,
     pipelineValue: model.opportunities.length ? sum(pipeline.map((item) => item.value)) : null,
     weightedPipeline: model.opportunities.length ? sum(pipeline.map((item) => item.weightedValue)) : null,
     qualifiedPipeline: model.opportunities.length ? sum(qualifiedPipeline.map((item) => item.value)) : null,
@@ -293,6 +329,10 @@ export function summarizeCommercialModel(model, plan, asOf = new Date()) {
     actualEbitdaRequiredMonths: elapsedMonths.length,
     productActualRevenue,
     channelActualRevenue,
+    concentration: {
+      afgriOfAllocatedChannels: channelShare("channel-1"), directOfAllocatedChannels: channelShare("channel-2"),
+      solarOfAllocatedProducts: productShare(/^Solar\b/i), atlasOfAllocatedProducts: productShare(/^Atlas\b/i),
+    },
     productRevenueReconciliation: accountingActualMonths.length ? accountingActualRevenue - productActualRevenue : null,
     channelRevenueReconciliation: accountingActualMonths.length ? accountingActualRevenue - channelActualRevenue : null,
     next90Target, pipelineCoverage, pipelineStatus,
