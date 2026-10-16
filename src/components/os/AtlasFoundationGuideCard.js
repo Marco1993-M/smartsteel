@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import { Download, FileWarning, Ruler, ShieldCheck } from "lucide-react"
 import { ATLAS_LENGTH_OPTIONS } from "../../lib/atlasConfiguration"
 import { getAtlasFoundationGuide } from "../../lib/atlasFoundationGuide"
-import { getAtlasWarehousePlan } from "../../lib/atlasWarehousePlan"
+import { ATLAS_WAREHOUSE_SHEETING_OPTIONS } from "../../lib/estimates/atlasWarehouseOptions"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import AtlasWarehousePlan from "../atlas/AtlasWarehousePlan"
 
@@ -14,11 +14,12 @@ const HEIGHTS = [3, 4, 4.5, 5]
 export default function AtlasFoundationGuideCard({ initialProductCode = "W08" }) {
   const [lengthM, setLengthM] = useState(24)
   const [eaveHeightM, setEaveHeightM] = useState(["W10", "W12", "W15"].includes(initialProductCode) ? 4.5 : 3)
+  const [gableMode, setGableMode] = useState("structure_only")
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState("")
-  const guide = useMemo(() => getAtlasFoundationGuide({ productCode: initialProductCode, lengthM, eaveHeightM }), [initialProductCode, lengthM, eaveHeightM])
-  const layoutPlan = useMemo(() => getAtlasWarehousePlan({ width: guide.spanM, length: guide.lengthM, wallHeight: guide.eaveHeightM }), [guide.spanM, guide.lengthM, guide.eaveHeightM])
-  const downloadHref = `/api/os/atlas-foundation-guide?product=${guide.productCode}&length=${guide.lengthM}&height=${guide.eaveHeightM}`
+  const guide = useMemo(() => getAtlasFoundationGuide({ productCode: initialProductCode, lengthM, eaveHeightM, gableMode }), [initialProductCode, lengthM, eaveHeightM, gableMode])
+  const layoutPlan = guide.layoutPlan
+  const downloadHref = `/api/os/atlas-foundation-guide?${new URLSearchParams({ product: guide.productCode, length: String(guide.lengthM), height: String(guide.eaveHeightM), sheeting: gableMode })}`
 
   async function downloadGuide() {
     setDownloading(true)
@@ -77,8 +78,14 @@ export default function AtlasFoundationGuideCard({ initialProductCode = "W08" })
             </label>
           </div>
 
+          <label className="mt-3 block border border-slate-200 bg-slate-50 p-3 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting scope
+            <select value={gableMode} onChange={(event) => setGableMode(event.target.value)} className="mt-2 w-full bg-transparent text-base font-black normal-case tracking-normal text-slate-950 outline-none">
+              {ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <Metric label="Column footings" value={guide.footingCount} helper={`${guide.portalFrames} frames × 2 columns`} />
+            <Metric label="Column footings" value={guide.footingCount} helper={`${guide.mainColumnCount} main + ${guide.gableColumnCount} gable columns`} />
             <Metric label="Baseline pad" value="1,250 × 1,250" helper="350mm thick" />
             <Metric label="Indicative concrete" value={`${guide.totalConcreteM3.toFixed(2)}m³`} helper="Before waste or blinding" />
           </div>
