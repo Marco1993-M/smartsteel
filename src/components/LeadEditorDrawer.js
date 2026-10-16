@@ -538,7 +538,11 @@ I’m just following up on the estimate we prepared for ${projectReference}${quo
 
 If you have any questions, need an adjustment, or would like us to talk through the next step, I’d be happy to help.
 
-If you'd like, I can revise the estimate, answer any questions, or help you with the next step. If easier, just reply with "call me" and I’ll give you a ring.`,
+If easier, just reply with "call me" and I’ll give you a ring.
+
+Kind regards,
+${ownerName}
+Smart Steel`,
       }
     case "delivery_address":
       return {
