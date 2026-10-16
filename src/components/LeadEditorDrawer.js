@@ -23,6 +23,8 @@ import {
 } from "lucide-react"
 import { supabase } from "../lib/supabase" 
 import { getOsAuthHeaders } from "../lib/osClientAuth"
+import QuoteReviewPanel from "./os/QuoteReviewPanel"
+import { quoteReviewUrl } from "../lib/quoteReview.mjs"
 import {
   formatCrmStatusLabel,
   getFollowUpIsoDate,
@@ -1505,8 +1507,12 @@ export default function LeadEditorDrawer({
     setShowEmailComposer(true)
   }
 
+  const externalEstimateEmailBody = () => emailComposerMode === "estimate" && selectedEstimateEmail?.share_token
+    ? `${emailBody}\n\nPrefer to talk it through? Book a 15-minute phone call with Marco:\n${quoteReviewUrl(selectedEstimateEmail.share_token)}`
+    : emailBody
+
   const handleCopyFollowUpEmail = async () => {
-    const combined = `Subject: ${emailSubject}\n\n${emailBody}`
+    const combined = `Subject: ${emailSubject}\n\n${externalEstimateEmailBody()}`
     try {
       await navigator.clipboard.writeText(combined)
       if (lead?.id) {
@@ -1525,7 +1531,7 @@ export default function LeadEditorDrawer({
   }
 
   const handleOpenEmailDraft = () => {
-    const mailtoUrl = `mailto:${encodeURIComponent(formData.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+    const mailtoUrl = `mailto:${encodeURIComponent(formData.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(externalEstimateEmailBody())}`
     setEmailDraftOpened(true)
     window.location.href = mailtoUrl
   }
@@ -1695,7 +1701,7 @@ export default function LeadEditorDrawer({
         ...formData,
         status: "quoted",
         quote_value: selectedEstimateEmail?.total || formData.quote_value,
-        next_action: `Awaiting the client's review of ${selectedEstimateEmail.title || "the estimate"}. Follow up if no reply.`,
+        next_action: result.reviewFollowUpPaused ? formData.next_action : `Awaiting the client's review of ${selectedEstimateEmail.title || "the estimate"}. Follow up if no reply.`,
       }
       setFormData(updatedLead)
       setSavedEstimates((current) => current.map((estimate) => estimate.id === selectedEstimateEmail.id
@@ -2683,6 +2689,8 @@ export default function LeadEditorDrawer({
           </p>
         </section>
 
+        {!isNew ? <QuoteReviewPanel leadId={lead.id} compact /> : null}
+
         <section className={sectionClass}>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
             Client response state
@@ -2732,6 +2740,8 @@ export default function LeadEditorDrawer({
                     <p className="mt-2 text-sm text-slate-700">
                       {followUpSequence.status === "active"
                         ? `Follow-up ${Number(followUpSequence.current_step || 0) + 1} of 3 is scheduled for ${new Date(followUpSequence.next_send_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}.`
+                        : followUpSequence.status === "paused"
+                          ? "Generic follow-ups are paused for the quote-review workflow. Follow the booked call or agreed personal next action."
                         : followUpSequence.status === "completed"
                           ? "All three scheduled follow-ups have been sent."
                           : `The sequence stopped after ${followUpSequence.current_step || 0} of 3 follow-ups.`}

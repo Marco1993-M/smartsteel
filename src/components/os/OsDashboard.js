@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import WeeklySchedule from "./WeeklySchedule"
+import QuoteReviewPanel from "./QuoteReviewPanel"
 
 function priorityTone(tone) {
   if (tone === "urgent") return "border-rose-200 bg-rose-50 text-rose-800"
@@ -45,6 +46,7 @@ export default function OsDashboard() {
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
       <WeeklySchedule />
+      <QuoteReviewPanel />
 
       {error ? (
         <section className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700 shadow-sm">

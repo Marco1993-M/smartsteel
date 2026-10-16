@@ -60,10 +60,10 @@ export default function WeeklySchedule() {
   const todayKey = toDateKey(new Date())
 
   useEffect(() => {
+    setLoading(true)
+    setRecords([])
     async function loadSchedule() {
-      setLoading(true)
       setError("")
-      setRecords([])
       try {
         const response = await fetch(`/api/os/schedule?start=${startKey}&end=${endKey}`, {
           cache: "no-store",
@@ -80,6 +80,11 @@ export default function WeeklySchedule() {
     }
 
     loadSchedule()
+    const refresh = () => loadSchedule()
+    const timer = setInterval(refresh, 60000)
+    window.addEventListener("focus", refresh)
+    window.addEventListener("os:schedule-updated", refresh)
+    return () => { clearInterval(timer); window.removeEventListener("focus", refresh); window.removeEventListener("os:schedule-updated", refresh) }
   }, [endKey, startKey])
 
   useEffect(() => {
@@ -298,11 +303,12 @@ export default function WeeklySchedule() {
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm leading-6 text-slate-800">{item.title}</p>
+                      {item.dueAt ? <p className="mt-1 text-xs font-semibold text-blue-700">{new Intl.DateTimeFormat("en-ZA", { timeZone: "Africa/Johannesburg", hour: "2-digit", minute: "2-digit" }).format(new Date(item.dueAt))} SAST{item.reviewId ? " · 15-minute call" : ""}</p> : null}
                       {item.assignee ? <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{item.assignee}{item.notifyWholeTeam ? " · Team notified" : ""}</p> : null}
                     </div>
-                    <button type="button" onClick={() => updateNote(item.id, { completed: true })} disabled={saving} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 disabled:opacity-40" aria-label={`Complete ${item.title}`}>✓</button>
+                    {item.reviewId ? <a href="#quote-reviews" className="shrink-0 text-xs font-semibold text-blue-700">Manage call</a> : <><button type="button" onClick={() => updateNote(item.id, { completed: true })} disabled={saving} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 disabled:opacity-40" aria-label={`Complete ${item.title}`}>✓</button>
                     <button type="button" onClick={() => { setEditingId(item.id); setEditingTitle(item.title) }} disabled={saving} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sky-50 text-sky-700 disabled:opacity-40" aria-label={`Edit ${item.title}`}>✎</button>
-                    <button type="button" onClick={() => deleteNote(item.id)} disabled={saving} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-rose-50 text-rose-600 disabled:opacity-40" aria-label={`Delete ${item.title}`}>×</button>
+                    <button type="button" onClick={() => deleteNote(item.id)} disabled={saving} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-rose-50 text-rose-600 disabled:opacity-40" aria-label={`Delete ${item.title}`}>×</button></>}
                   </div>
                 )}
               </div>
@@ -368,11 +374,12 @@ export default function WeeklySchedule() {
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm leading-5 text-slate-800">{item.title}</p>
+                      {item.dueAt ? <p className="mt-1 text-xs font-semibold text-blue-700">{new Intl.DateTimeFormat("en-ZA", { timeZone: "Africa/Johannesburg", hour: "2-digit", minute: "2-digit" }).format(new Date(item.dueAt))} SAST{item.reviewId ? " · 15-minute call" : ""}</p> : null}
                       {item.assignee ? <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{item.assignee}{item.notifyWholeTeam ? " · Team notified" : ""}</p> : null}
                     </div>
-                    <button type="button" onClick={() => updateNote(item.id, { completed: true })} disabled={saving} className="text-slate-400 transition hover:text-emerald-600 disabled:opacity-40" aria-label={`Complete ${item.title}`}>✓</button>
+                    {item.reviewId ? <a href="#quote-reviews" className="shrink-0 text-xs font-semibold text-blue-700">Manage call</a> : <><button type="button" onClick={() => updateNote(item.id, { completed: true })} disabled={saving} className="text-slate-400 transition hover:text-emerald-600 disabled:opacity-40" aria-label={`Complete ${item.title}`}>✓</button>
                     <button type="button" onClick={() => { setEditingId(item.id); setEditingTitle(item.title) }} disabled={saving} className="text-slate-400 transition hover:text-sky-600 disabled:opacity-40" aria-label={`Edit ${item.title}`}>✎</button>
-                    <button type="button" onClick={() => deleteNote(item.id)} disabled={saving} className="-mr-1 text-slate-300 transition hover:text-rose-600 disabled:opacity-40" aria-label={`Delete ${item.title}`}>×</button>
+                    <button type="button" onClick={() => deleteNote(item.id)} disabled={saving} className="-mr-1 text-slate-300 transition hover:text-rose-600 disabled:opacity-40" aria-label={`Delete ${item.title}`}>×</button></>}
                     </div>
                     )}
                   </div>
