@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { AlertTriangle, Check, ChevronDown, ChevronUp, Download, FileText, Save, Scale } from "lucide-react"
+import { AlertTriangle, ArrowUpRight, Check, ChevronDown, ChevronUp, Download, FileText, Package, Ruler, Save, Scale, Search, SlidersHorizontal, Truck } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { getAtlasProduct, withAtlasProduct } from "../../lib/atlasProductRange"
 import { matchLippedChannelProfile } from "../../lib/atlasLippedChannelProfiles"
@@ -27,7 +27,6 @@ import {
   ATLAS_WAREHOUSE_SHEETING_OPTIONS,
   calculateAtlasWarehouseEstimate,
 } from "../../lib/estimates/atlasWarehouseEstimate"
-import AtlasModuleHero from "./AtlasModuleHero"
 
 const STATUS_LABELS = {
   draft: "Draft",
@@ -64,7 +63,7 @@ function Field({ label, children, wide = false }) {
   )
 }
 
-const inputClass = "mt-1.5 w-full border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+const inputClass = "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
 
 export default function AtlasPricingWorkspace() {
   const searchParams = useSearchParams()
@@ -90,6 +89,9 @@ export default function AtlasPricingWorkspace() {
   const [configurationSheetingFinish, setConfigurationSheetingFinish] = useState("galvanised")
   const [downloadingDataSheet, setDownloadingDataSheet] = useState(false)
   const [dataSheetError, setDataSheetError] = useState("")
+  const [activeView, setActiveView] = useState("overview")
+  const [registerSearch, setRegisterSearch] = useState("")
+  const [showReviewOnly, setShowReviewOnly] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -193,11 +195,15 @@ export default function AtlasPricingWorkspace() {
     }
   }), [geometryRecords, configurationMaterial])
   const confirmedCount = configuredRecords.filter((record) => record.status === "confirmed").length
-  const missingMassCount = configuredRecords.filter((record) => record.pricingUnit === "ton" && record.massKgPerM === "").length
-  const groupedRecords = useMemo(() => Object.entries(configuredRecords.reduce((groups, record) => {
+  const filteredRecords = useMemo(() => configuredRecords.filter((record) => {
+    const matchesSearch = `${record.componentCode} ${record.componentName} ${record.category} ${record.profileSpec}`.toLowerCase().includes(registerSearch.trim().toLowerCase())
+    const needsReview = record.status !== "confirmed" || !getAtlasPricingCompleteness(record).ready
+    return matchesSearch && (!showReviewOnly || needsReview)
+  }), [configuredRecords, registerSearch, showReviewOnly])
+  const groupedRecords = useMemo(() => Object.entries(filteredRecords.reduce((groups, record) => {
     groups[record.category] = [...(groups[record.category] || []), record]
     return groups
-  }, {})), [configuredRecords])
+  }, {})), [filteredRecords])
   const assembledSummary = useMemo(() => summarizeAtlasPricing(configuredRecords), [configuredRecords])
   const releasedEstimate = useMemo(() => calculateAtlasWarehouseEstimate({
     width: Number(productCode.slice(1)),
@@ -209,12 +215,18 @@ export default function AtlasPricingWorkspace() {
     sheetingFinish: configurationSheetingFinish,
   }), [productCode, configurationLengthM, configurationEaveHeightM, configurationMaterial, configurationSheetingMode, configurationSheetingProfile, configurationSheetingFinish])
   const pricingBenchmark = productCode === "W08" ? getAtlasW08PrimaryBenchmark() : productCode === "W06" ? getAtlasW06PrimaryBenchmark() : productCode === "W10" ? getAtlasW10PrimaryBenchmark() : productCode === "W12" ? getAtlasW12PrimaryBenchmark() : null
-  const hasReferenceSection = Boolean(pricingBenchmark) || productCode === "W15"
   const controlledLengths = productCode === "W06" ? ATLAS_W06_LENGTHS_M : productCode === "W10" ? ATLAS_W10_LENGTHS_M : productCode === "W12" ? ATLAS_W12_LENGTHS_M : productCode === "W15" ? ATLAS_W15_LENGTHS_M : ATLAS_W08_LENGTHS_M
   const controlledHeights = productCode === "W06" ? ATLAS_W06_EAVE_HEIGHTS_M : productCode === "W10" ? ATLAS_W10_EAVE_HEIGHTS_M : productCode === "W12" ? ATLAS_W12_EAVE_HEIGHTS_M : productCode === "W15" ? ATLAS_W15_EAVE_HEIGHTS_M : ATLAS_W08_EAVE_HEIGHTS_M
-  const benchmarkVariance = pricingBenchmark && !pricingBenchmark.supplierCostOnly
-    ? assembledSummary.totalCost - pricingBenchmark.sellingPriceExclVat
-    : 0
+  const combinedTransportMassKg = releasedEstimate.materials.totalSteelKg + releasedEstimate.sheeting.estimatedMassKg
+  const longestMemberM = Math.max(
+    ...Object.values(geometry?.members || {})
+      .filter((member) => releasedEstimate.lineItems.some((line) => line.code === member.code))
+      .map((member) => member.cutLengthM),
+    releasedEstimate.materials.gableGirtLengthM > 0 ? releasedEstimate.input.width : 0,
+    0,
+  )
+  const selectedSpecification = `${Number(productCode.slice(1))}m × ${configurationLengthM}m × ${configurationEaveHeightM}m`
+  const upliftLabel = `${Math.round(releasedEstimate.pricing.markupRate * 100)}% commercial uplift`
 
   function updateRecord(id, field, value) {
     setRecords((current) => current.map((record) => record.id === id ? { ...record, [field]: value } : record))
@@ -377,60 +389,25 @@ export default function AtlasPricingWorkspace() {
 
   return (
     <div className="space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
-      <AtlasModuleHero
-        eyebrow={`${productCode} pricing control`}
-        title={`Review and control ${product?.name || "Atlas product"} pricing.`}
-        description="Choose a structure, compare the released client guide with the verified benchmark, then open only the component group you need to edit."
-        status={["W06", "W08", "W10", "W12", "W15"].includes(productCode) ? "Component pricing" : "Product record pending"}
-        actionHref={withAtlasProduct("/os/atlas/bom", productCode)}
-        actionLabel="Review product BOM"
-      />
-
-      <nav aria-label="Pricing workspace sections" className="sticky top-3 z-20 flex flex-wrap items-center gap-2 border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">
-        <span className="hidden px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:inline">Page guide</span>
-        {[
-          ['configuration', '1. Configure'],
-          ['client-price', '2. Client guide'],
-          ...(hasReferenceSection ? [['benchmark', '3. Benchmark']] : []),
-          ['pricing-register', `${hasReferenceSection ? '4' : '3'}. Pricing lines`],
-        ].map(([id, label]) => <a key={id} href={`#${id}`} className="rounded-full px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-blue-50 hover:text-blue-700">{label}</a>)}
-      </nav>
-
-      {!schemaReady ? (
-        <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-          Run <strong>supabase/smart_steel_os_atlas_pricing.sql</strong> to activate editable Atlas pricing records.
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">Atlas · {productCode}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Configuration & pricing</h1>
+          <p className="mt-2 text-sm text-slate-500">Review the selling price, plan transport and maintain the pricing inputs.</p>
         </div>
-      ) : productCode === "W15" ? (
-        <section id="benchmark" className="scroll-mt-24 overflow-hidden border border-amber-300 bg-white shadow-sm">
-          <div className="grid gap-px bg-amber-200 lg:grid-cols-[minmax(0,1.25fr)_minmax(290px,0.75fr)]">
-            <div className="bg-white p-5 sm:p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Calculated W15 reference · verification pending</p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">The engineering schedule is loaded; the historical benchmark is still outstanding.</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">The selected W15 geometry, quantities, member masses and released client guide are calculated by the shared Atlas engine. They have not yet been reconciled against an independently priced W15 cost sheet, so this section is deliberately not labelled as a verified benchmark.</p>
-              <div className="mt-5 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-4">
-                {[
-                  ["Configuration", `${releasedEstimate.input.width}m × ${releasedEstimate.input.length}m × ${releasedEstimate.input.wallHeight}m`],
-                  ["Structural steel", `${releasedEstimate.materials.totalSteelKg.toLocaleString("en-ZA")}kg`],
-                  ["Sheeting estimate", `${releasedEstimate.sheeting.estimatedMassKg.toLocaleString("en-ZA")}kg`],
-                  ["Longest member", `${Math.max(...Object.values(geometry.members).map((member) => member.cutLengthM)).toLocaleString("en-ZA")}m`],
-                ].map(([label, value]) => <div key={label} className="bg-slate-50 p-3.5"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-sm font-bold text-slate-900">{value}</p></div>)}
-              </div>
-            </div>
-            <aside className="bg-amber-50 p-5 sm:p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-800">Required to verify</p>
-              <p className="mt-3 text-sm font-bold leading-6 text-slate-950">One completed W15 costing or supplier schedule with component weights, connection cost and final selling price.</p>
-              <p className="mt-2 text-xs leading-5 text-slate-600">Once supplied, it can be added as the permanent W15 benchmark and the variance check will work exactly like W06–W12.</p>
-              <button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="mt-5 inline-flex items-center gap-2 bg-[#0043f3] px-4 py-3 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"><FileText className="h-4 w-4" />{downloadingDataSheet ? "Preparing..." : "Download W15 transport sheet"}</button>
-            </aside>
-          </div>
-        </section>
-      ) : null}
-      {!profileSchemaReady ? (
+        <div className="flex flex-wrap gap-2">
+          <Link href={withAtlasProduct("/os/atlas/documents", productCode)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"><FileText className="h-4 w-4" />Documents</Link>
+          <Link href={withAtlasProduct("/os/atlas/bom", productCode)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700">Product BOM<ArrowUpRight className="h-4 w-4" /></Link>
+        </div>
+      </header>
+
+      {!schemaReady ? <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">The editable pricing register is not available. The released price and transport calculations below are still available.</div> : null}
+      {activeView === "rates" && !profileSchemaReady ? (
         <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           The profile selector is using the local Atlas library. Run <strong>supabase/smart_steel_os_atlas_lipped_channel_profiles.sql</strong> before saving profile-linked pricing.
         </div>
       ) : null}
-      {!fastenerSchemaReady ? (
+      {activeView === "rates" && !fastenerSchemaReady ? (
         <div className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           The bolt selector is using the local Atlas library. Run <strong>supabase/smart_steel_os_atlas_fasteners.sql</strong> before saving controlled bolt pricing.
         </div>
@@ -439,94 +416,76 @@ export default function AtlasPricingWorkspace() {
       {message ? <div className="border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{message}</div> : null}
       {dataSheetError ? <div className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{dataSheetError}</div> : null}
 
-      <section className="grid gap-px overflow-hidden border border-slate-200 bg-slate-200 sm:grid-cols-3">
-        <div className="bg-white p-4 sm:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Pricing lines</p>
-          <p className="mt-2 text-3xl font-bold text-slate-950">{loading ? "--" : records.length}</p>
-          <p className="mt-1 text-xs text-slate-500">Components and fixings</p>
-        </div>
-        <div className="bg-white p-4 sm:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Confirmed</p>
-          <p className="mt-2 text-3xl font-bold text-slate-950">{loading ? "--" : `${confirmedCount}/${records.length}`}</p>
-          <p className="mt-1 text-xs text-slate-500">Approved pricing inputs</p>
-        </div>
-        <div className="bg-amber-50 p-4 sm:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-800">Technical holds</p>
-          <p className="mt-2 text-3xl font-bold text-slate-950">{loading ? "--" : missingMassCount}</p>
-          <p className="mt-1 text-xs text-slate-600">Steel profiles missing kg/m</p>
-        </div>
-      </section>
-
       {geometry ? (
-        <section id="configuration" className="scroll-mt-24 border border-[#0043f3]/20 bg-[#f5f9ff] p-4 sm:p-5">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-4 border-b border-sky-200 pb-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Step 1 · Live {productCode} configuration</p><h2 className="mt-1 text-xl font-bold text-slate-950">Choose the structure you want to review.</h2><p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">The selected geometry drives every quantity, weight, price and downloadable transport schedule below.</p></div><button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="inline-flex min-h-11 items-center gap-2 bg-[#0043f3] px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"><Download className="h-4 w-4" />{downloadingDataSheet ? "Preparing PDF..." : "Download transport sheet"}</button></div>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_150px_170px] lg:items-end">
-            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Geometry controls</p><h3 className="mt-1 text-base font-bold text-slate-950">Dimensions and material</h3><p className="mt-1 text-xs leading-5 text-slate-600">Delivery and installation remain separate from this supply-only calculation.</p></div>
-            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Building length</span><select value={configurationLengthM} onChange={(event) => setConfigurationLengthM(Number(event.target.value))} className={inputClass}>{controlledLengths.map((length) => <option key={length} value={length}>{length}m · {length / 4} bays</option>)}</select></label>
-            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Eave height</span><select value={configurationEaveHeightM} onChange={(event) => setConfigurationEaveHeightM(Number(event.target.value))} className={inputClass}>{controlledHeights.map((height) => <option key={height} value={height}>{height}m</option>)}</select></label>
-            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Structure material</span><select value={configurationMaterial} onChange={(event) => setConfigurationMaterial(event.target.value)} className={inputClass}><option value="zam">ZAM</option><option value="galvanised">Galvanised</option><option value="mild">Mild steel</option></select></label>
+        <section id="configuration" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+            <div><p className="text-xs font-bold text-[#0043f3]">Selected specification</p><h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950">{selectedSpecification}</h2><p className="mt-1 text-xs leading-5 text-slate-500">4m bays · supply only · delivery and installation quoted separately</p></div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-800"><Ruler className="h-4 w-4" />{geometry.portalFrames} portal frames · {geometry.totalPurlinRows} purlin rows</span>
           </div>
-          <div className="mt-4 grid gap-4 border-t border-sky-200 pt-4 sm:grid-cols-3">
-            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting scope</span><select value={configurationSheetingMode} onChange={(event) => setConfigurationSheetingMode(event.target.value)} className={inputClass}>{ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-[minmax(0,1fr)_180px_150px_170px] lg:items-end">
+            <div className="col-span-2 lg:col-span-1"><h3 className="text-sm font-bold text-slate-900">Configure the warehouse</h3><p className="mt-1 text-xs leading-5 text-slate-500">Prices, quantities and the transport PDF update together.</p></div>
+            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Building length</span><select value={configurationLengthM} onChange={(event) => setConfigurationLengthM(Number(event.target.value))} className={inputClass}>{controlledLengths.map((length) => <option key={length} value={length}>{length}m · {length / 4} {length === 4 ? "bay" : "bays"}</option>)}</select></label>
+            <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Eave height</span><select value={configurationEaveHeightM} onChange={(event) => setConfigurationEaveHeightM(Number(event.target.value))} className={inputClass}>{controlledHeights.map((height) => <option key={height} value={height}>{height}m</option>)}</select></label>
+            <label className="col-span-2 lg:col-span-1"><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Structure material</span><select value={configurationMaterial} onChange={(event) => setConfigurationMaterial(event.target.value)} className={inputClass}><option value="zam">ZAM</option><option value="galvanised">Galvanised</option><option value="mild">Mild steel</option></select></label>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-3">
+            <label className="col-span-2 sm:col-span-1"><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting scope</span><select value={configurationSheetingMode} onChange={(event) => setConfigurationSheetingMode(event.target.value)} className={inputClass}>{ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting profile</span><select value={configurationSheetingProfile} onChange={(event) => setConfigurationSheetingProfile(event.target.value)} disabled={configurationSheetingMode === "structure_only"} className={`${inputClass} disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}><option>Corrugated</option><option>IBR</option><option>Concealed Fix</option></select></label>
             <label><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Sheeting finish</span><select value={configurationSheetingFinish} onChange={(event) => setConfigurationSheetingFinish(event.target.value)} disabled={configurationSheetingMode === "structure_only"} className={`${inputClass} disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}><option value="galvanised">Galvanised</option><option value="chromadek">Chromadek</option></select></label>
           </div>
-          <div className="mt-4 grid gap-px border border-sky-200 bg-sky-200 sm:grid-cols-2 lg:grid-cols-6">{[["Portal frames", geometry.portalFrames], ["Rafter cut", `${geometry.members.rafters.cutLengthM}m`], ["Purlin rows", geometry.totalPurlinRows], ["Structural steel", `${releasedEstimate.materials.totalSteelKg.toLocaleString("en-ZA")}kg`], ["0.5mm BMT sheeting", `${releasedEstimate.sheeting.estimatedMassKg.toLocaleString("en-ZA")}kg`], ["Combined transport mass", `${(releasedEstimate.materials.totalSteelKg + releasedEstimate.sheeting.estimatedMassKg).toLocaleString("en-ZA")}kg`]].map(([label, value]) => <div key={label} className="bg-white p-3"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-base font-bold text-slate-950">{value}</p></div>)}</div>
         </section>
       ) : null}
 
-      <section id="client-price" className="scroll-mt-24 overflow-hidden border border-[#0043f3] bg-[#0043f3] text-white shadow-xl">
-        <div className="grid gap-px bg-white/15 lg:grid-cols-[minmax(0,1.25fr)_repeat(4,minmax(135px,0.55fr))]">
-          <div className="bg-gradient-to-br from-[#001d2e] to-[#0043f3] p-5 sm:p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">Released client guide · same engine as 3D builder</p>
-            <p className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{formatMoney(releasedEstimate.pricing.estimatedTotal)}</p>
-            <p className="mt-2 text-xs leading-5 text-white/70">Excluding VAT · {releasedEstimate.summary.shortDescription}. This is the comparable public guide price for the selected scope above.</p>
-          </div>
-          {[
-            ["Structure steel", releasedEstimate.pricing.steelCost],
-            ["Connections", releasedEstimate.pricing.connectionCost],
-            ["Sheeting", releasedEstimate.pricing.claddingCost],
-            ["40% uplift", releasedEstimate.pricing.markupValue],
-          ].map(([label, value]) => (
-            <div key={label} className="bg-[#001d2e] p-5 sm:p-6">
-              <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-white/45">{label}</p>
-              <p className="mt-2 text-lg font-bold">{formatMoney(value)}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <div role="tablist" aria-label="Pricing views" className="flex flex-wrap gap-1 rounded-2xl border border-slate-200 bg-slate-100/80 p-1.5">
+        {[
+          ["overview", "Price & transport", Scale],
+          ["reference", "Cost references", FileText],
+          ["rates", "Manage rates", SlidersHorizontal],
+        ].map(([value, label, Icon], index) => <button key={value} tabIndex={activeView === value ? 0 : -1} onKeyDown={(event) => {
+          const keys = ["ArrowLeft", "ArrowRight", "Home", "End"]
+          if (!keys.includes(event.key)) return
+          event.preventDefault()
+          const tabs = ["overview", "reference", "rates"]
+          const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? 2 : (index + (event.key === "ArrowRight" ? 1 : 2)) % 3
+          setActiveView(tabs[nextIndex])
+          document.getElementById(`pricing-tab-${tabs[nextIndex]}`)?.focus()
+        }} type="button" id={`pricing-tab-${value}`} role="tab" aria-selected={activeView === value} aria-controls={`pricing-panel-${value}`} onClick={() => setActiveView(value)} className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition sm:flex-none sm:px-5 ${activeView === value ? "bg-white text-[#001d2e] shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:bg-white/60 hover:text-slate-900"}`}><Icon className="h-4 w-4 shrink-0" />{label}</button>)}
+      </div>
 
-      <details className="group overflow-hidden border border-slate-300 bg-white shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 sm:p-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Internal diagnostic</p><h2 className="mt-1 text-base font-bold text-slate-950">Component-register total · {formatMoney(assembledSummary.totalCost)}</h2><p className="mt-1 text-xs text-slate-500">Open this only when reconciling editable OS pricing against the released client guide.</p></div><ChevronDown className="h-5 w-5 text-slate-400 transition group-open:rotate-180" /></summary>
-        <div className="grid gap-px border-t border-slate-800 bg-white/10 text-white lg:grid-cols-[minmax(0,1.35fr)_repeat(3,minmax(150px,0.55fr))]">
-          <div className="bg-slate-950 p-5 sm:p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-300">Internal component-register total · not the client guide</p>
-            <div className="mt-3 flex flex-wrap items-end gap-4">
-              <p className="text-3xl font-bold tracking-tight sm:text-4xl">{formatMoney(assembledSummary.totalCost)}</p>
-              <span className={`mb-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${assembledSummary.holdCount ? "bg-amber-300 text-slate-950" : "bg-emerald-300 text-emerald-950"}`}>
-                {assembledSummary.holdCount ? `${assembledSummary.holdCount} holds` : "Quote ready"}
-              </span>
+      {activeView === "overview" ? (
+        <section id="pricing-panel-overview" role="tabpanel" aria-labelledby="pricing-tab-overview" className="space-y-5">
+          <div id="client-price" className="overflow-hidden rounded-2xl border border-[#001d2e] bg-[#001d2e] text-white shadow-sm">
+            <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.65fr)]">
+              <div><span className="inline-flex rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-sky-200">Released selling price · shared with the 3D builder</span><p className="mt-5 text-[clamp(1.75rem,4vw,3rem)] font-bold tracking-tight">{formatMoney(releasedEstimate.pricing.estimatedTotal)}</p><p className="mt-2 text-sm text-slate-300">Excluding VAT · {selectedSpecification} · {releasedEstimate.labels.steelFinish}</p><p className="mt-1 text-sm text-slate-300">{releasedEstimate.labels.cladding}{configurationSheetingMode !== "structure_only" ? ` · ${releasedEstimate.labels.sheetingProfile} ${releasedEstimate.labels.sheetingFinish}` : ""}</p></div>
+              <div className="flex flex-col justify-center rounded-xl border border-white/15 bg-white/5 p-5"><div className="flex justify-between gap-4 text-sm text-slate-300"><span>VAT (15%)</span><span>{formatMoney(releasedEstimate.pricing.vatValue)}</span></div><div className="mt-3 flex flex-wrap items-baseline justify-between gap-2"><span className="text-sm font-semibold text-white">Including VAT</span><span className="text-2xl font-bold">{formatMoney(releasedEstimate.pricing.totalInclVat)}</span></div><p className="mt-4 border-t border-white/15 pt-3 text-xs leading-5 text-slate-400">Supply only. Delivery, installation and foundations require separate pricing.</p></div>
             </div>
-            <p className="mt-2 max-w-xl text-xs leading-5 text-slate-400">This diagnostic total only includes pricing rows currently present in the editable OS register. It may omit sheeting, gable members, or ungenerated connection quantities and must not be compared with a completed builder scope.</p>
+            <div className="grid grid-cols-2 gap-px border-t border-white/15 bg-white/10 lg:grid-cols-4">
+              {[["Steel pricing basis", releasedEstimate.pricing.steelCost], ["Connections basis", releasedEstimate.pricing.connectionCost], [upliftLabel, releasedEstimate.pricing.markupValue], ["Sheeting selling price", releasedEstimate.pricing.claddingCost]].map(([label, value]) => <div key={label} className="bg-[#062638] p-4 sm:px-6"><p className="text-[11px] text-slate-300">{label}</p><p className="mt-2 text-lg font-bold">{formatMoney(value)}</p></div>)}
+            </div>
           </div>
-          {[
-            ["Calculated cost", assembledSummary.rawCost],
-            ["Other allowances", assembledSummary.wasteCost + assembledSummary.fabricationCost + assembledSummary.coatingCost],
-            ["40% commercial uplift", assembledSummary.marginCost],
-          ].map(([label, value]) => (
-            <div key={label} className="bg-slate-950 p-5 sm:p-6">
-              <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-slate-500">{label}</p>
-              <p className="mt-2 text-lg font-bold">{formatMoney(value)}</p>
-            </div>
-          ))}
-        </div>
-      </details>
+          <p className="px-1 text-xs leading-5 text-slate-500">The commercial uplift applies to steel and connections. Sheeting is added at its selling rate. The pricing basis includes the steel-rate buffer; it is not a supplier invoice total.</p>
 
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="flex items-center gap-2 text-lg font-bold text-slate-950"><Truck className="h-5 w-5 text-blue-700" />Transport planning</h2><p className="mt-1 text-xs leading-5 text-slate-500">Calculated member and sheeting masses for the selected structure.</p></div><button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0043f3] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"><Download className="h-4 w-4" />{downloadingDataSheet ? "Preparing PDF…" : "Download transport sheet"}</button></div>
+            <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {[["Steel members", `${releasedEstimate.materials.totalSteelKg.toLocaleString("en-ZA")} kg`], ["Sheeting · 0.5mm BMT", `${releasedEstimate.sheeting.estimatedMassKg.toLocaleString("en-ZA")} kg`], ["Combined calculated mass", `${combinedTransportMassKg.toLocaleString("en-ZA")} kg`], ["Longest steel member", `${longestMemberM.toLocaleString("en-ZA")} m`]].map(([label, value]) => <div key={label} className={`rounded-xl p-4 ${label === "Combined calculated mass" ? "bg-sky-50 ring-1 ring-sky-100" : "bg-slate-50"}`}><p className="text-xs leading-5 text-slate-500">{label}</p><p className="mt-2 text-xl font-bold tracking-tight text-slate-950">{value}</p></div>)}
+            </div>
+            <p className="mt-4 text-xs leading-5 text-slate-500">Allow separately for brackets, fixings, flashings and packaging; confirm final dispatch mass and bundle lengths before booking transport.</p>
+          </section>
+
+          <details className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5"><div><h2 className="flex items-center gap-2 text-base font-bold text-slate-950"><Package className="h-5 w-5 text-blue-700" />Selected scope & quantities</h2><p className="mt-1 text-xs leading-5 text-slate-500">{releasedEstimate.lineItems.length} calculated lines · same configuration as the price above</p></div><ChevronDown className="h-5 w-5 text-slate-400 transition group-open:rotate-180" /></summary>
+            <div className="overflow-x-auto border-t border-slate-200"><table className="w-full min-w-[640px] text-left text-sm"><caption className="sr-only">Selected warehouse pricing inputs before the separate commercial uplift</caption><thead className="bg-slate-50 text-xs text-slate-500"><tr>{["Component", "Quantity", "Unit", "Rate", "Pricing basis"].map((label) => <th key={label} className="px-5 py-3 font-semibold">{label}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{releasedEstimate.lineItems.map((item) => <tr key={item.code}><td className="px-5 py-3"><p className="font-semibold text-slate-800">{item.label}</p><p className="mt-1 text-[11px] text-slate-400">{item.code}{item.provisional ? " · provisional" : ""}{item.priceIncludesMarkup ? " · selling rate" : ""}</p></td><td className="px-5 py-3 tabular-nums">{item.quantity.toLocaleString("en-ZA")}</td><td className="px-5 py-3 text-slate-500">{item.unit}</td><td className="whitespace-nowrap px-5 py-3 tabular-nums">{formatMoney(item.unitRate)}</td><td className="whitespace-nowrap px-5 py-3 font-semibold tabular-nums">{formatMoney(item.total)}</td></tr>)}</tbody></table></div>
+          </details>
+        </section>
+      ) : null}
+
+      {activeView === "reference" ? <section id="pricing-panel-reference" role="tabpanel" aria-labelledby="pricing-tab-reference" className="space-y-5"><div className="rounded-xl border border-sky-100 bg-sky-50 p-4 text-sm leading-6 text-sky-900"><strong>Reference figures have their own scope.</strong> {productCode === "W15" ? "An independent supplier reference is still pending for W15; the calculated schedule below follows your selected configuration." : "Supplier and historical records retain their original dimensions. Use Price & transport for your live selected configuration."}</div>
       {pricingBenchmark ? (
-        <section id="benchmark" className="scroll-mt-24 overflow-hidden border border-[#0043f3]/20 bg-white shadow-sm">
+        <section id="benchmark" className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="grid gap-px bg-slate-200 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
             <div className="bg-white p-5 sm:p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">{pricingBenchmark.supplierCostOnly ? "Supplier-quoted cost reference" : "Verified pricing benchmark"}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#0043f3]">{pricingBenchmark.supplierCostOnly ? "Supplier-quoted cost reference" : "Historical costing reference"}</p>
               <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight text-slate-950">{pricingBenchmark.label}</h2>
@@ -535,9 +494,9 @@ export default function AtlasPricingWorkspace() {
                   </p>
                 </div>
                 <div className="text-left lg:text-right">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{pricingBenchmark.supplierCostOnly ? "Steel + brackets · cost excl. VAT" : "Selling price excl. VAT"}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{pricingBenchmark.supplierCostOnly ? "Steel + brackets · cost excl. VAT" : "Original selling price excl. VAT"}</p>
                   <p className="mt-1 text-2xl font-bold text-slate-950">{formatMoney(pricingBenchmark.supplierCostOnly ? pricingBenchmark.totalCostExclVat : pricingBenchmark.sellingPriceExclVat)}</p>
-                  <button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="mt-3 inline-flex items-center gap-2 border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition hover:border-blue-400 disabled:cursor-wait disabled:opacity-60"><FileText className="h-4 w-4" />{downloadingDataSheet ? "Preparing..." : "Download branded data sheet"}</button>
+
                 </div>
               </div>
               <div className="mt-5 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-4">
@@ -581,11 +540,10 @@ export default function AtlasPricingWorkspace() {
               </p>
             </div>
             <aside className="bg-[#001d2e] p-5 text-white sm:p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c1d9e5]">{pricingBenchmark.supplierCostOnly ? "Scope boundary" : "Current baseline variance"}</p>
-              {pricingBenchmark.supplierCostOnly ? <p className="mt-3 text-xl font-bold">8m × 16m × 3m · ZAM</p> : <p className="mt-3 text-3xl font-bold">{formatMoney(benchmarkVariance)}</p>}
-              <p className="mt-2 text-xs leading-5 text-white/65">
-                {pricingBenchmark.supplierCostOnly ? "Roof-only framing cost. Sheeting, fixings and anchors are not in these two supplier quotes. The current assembled pricing includes additional scope and cannot be compared directly with this cost." : `Current assembled pricing minus the verified benchmark selling price. A zero variance is only meaningful once the component quantities match this exact ${pricingBenchmark.lengthM}m × ${pricingBenchmark.widthM}m × ${pricingBenchmark.eaveHeightM}m configuration.`}
-              </p>
+              <p className="text-xs font-bold text-[#c1d9e5]">Fixed reference configuration</p>
+              <p className="mt-3 text-2xl font-bold">{pricingBenchmark.widthM}m × {pricingBenchmark.lengthM}m × {pricingBenchmark.eaveHeightM}m</p>
+              <p className="mt-2 text-sm leading-6 text-white/75">This reference retains the dimensions and scope of its original costing. Changing the configuration above does not change these figures.</p>
+              <div className="mt-5 rounded-xl bg-white/10 p-4"><p className="text-xs font-bold text-white">{pricingBenchmark.supplierCostOnly ? "Actual supplier CTC" : "Historical pricing reference"}</p><p className="mt-2 text-xs leading-5 text-white/70">{pricingBenchmark.supplierCostOnly ? "Steel and brackets only, excluding VAT. Sheeting, fixings, anchors, delivery and installation are excluded. Other sizes use provisional bracket scaling." : "A historical validation aid. Its scope and rates may differ from the current release; it is not a live quote or a current procurement total."}</p></div>
               <div className="mt-5 border-t border-white/15 pt-4">
                 <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">Source</p>
                 <p className="mt-1 break-words text-xs font-semibold leading-5 text-white/80">{pricingBenchmark.source}</p>
@@ -595,17 +553,46 @@ export default function AtlasPricingWorkspace() {
         </section>
       ) : null}
 
-      {!loading && records.length === 0 ? (
-        <section className="border border-slate-200 bg-white p-6">
-          <p className="font-bold text-slate-950">No controlled pricing register exists for {product?.name} yet.</p>
-          <p className="mt-2 text-sm text-slate-600">Build the product definition and component schedule before adding commercial rates.</p>
+      {productCode === "W15" ? (
+        <section id="benchmark" className="overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm">
+          <div className="grid gap-px bg-amber-200 lg:grid-cols-[minmax(0,1.25fr)_minmax(290px,0.75fr)]">
+            <div className="bg-white p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Calculated W15 reference · verification pending</p>
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">The engineering schedule is loaded; the historical benchmark is still outstanding.</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">The selected W15 geometry, quantities, member masses and released client guide are calculated by the shared Atlas engine. They have not yet been reconciled against an independently priced W15 cost sheet, so this section is deliberately not labelled as a verified benchmark.</p>
+              <div className="mt-5 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-4">
+                {[
+                  ["Configuration", `${releasedEstimate.input.width}m × ${releasedEstimate.input.length}m × ${releasedEstimate.input.wallHeight}m`],
+                  ["Structural steel", `${releasedEstimate.materials.totalSteelKg.toLocaleString("en-ZA")}kg`],
+                  ["Sheeting estimate", `${releasedEstimate.sheeting.estimatedMassKg.toLocaleString("en-ZA")}kg`],
+                  ["Longest member", `${longestMemberM.toLocaleString("en-ZA")}m`],
+                ].map(([label, value]) => <div key={label} className="bg-slate-50 p-3.5"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-1 text-sm font-bold text-slate-900">{value}</p></div>)}
+              </div>
+            </div>
+            <aside className="bg-amber-50 p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-800">Required to verify</p>
+              <p className="mt-3 text-sm font-bold leading-6 text-slate-950">One completed W15 costing or supplier schedule with component weights, connection cost and final selling price.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-600">Once supplied, it can be added here with its verified scope and original configuration for future cost reviews.</p>
+              <button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="mt-5 inline-flex items-center gap-2 bg-[#0043f3] px-4 py-3 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"><FileText className="h-4 w-4" />{downloadingDataSheet ? "Preparing..." : "Download W15 transport sheet"}</button>
+            </aside>
+          </div>
         </section>
       ) : null}
 
-      <section id="pricing-register" className="scroll-mt-24 space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-300 pb-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0043f3]">Step {hasReferenceSection ? "4" : "3"} · Editable pricing register</p><h2 className="mt-1 text-2xl font-bold text-slate-950">Open one component group at a time.</h2><p className="mt-1 text-sm text-slate-600">Each row shows its baseline cost and approval state. Expand a row only when you need to edit it.</p></div><span className="text-xs font-semibold text-slate-500">{configuredRecords.length} controlled lines · {confirmedCount} confirmed</span></div>
+      </section> : null}
+
+      {activeView === "rates" ? (
+      <section id="pricing-panel-rates" role="tabpanel" aria-labelledby="pricing-tab-rates" className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="text-xl font-bold tracking-tight text-slate-950">Manage pricing inputs</h2><p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">Review register rates and approvals here. Saved register edits require a pricing release before they change the builder or CRM selling price.</p></div><span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">{loading ? "Loading register…" : `${confirmedCount}/${records.length} confirmed · ${assembledSummary.holdCount} to review`}</span></div>
+        <details className="group overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5"><div><p className="text-sm font-semibold text-slate-900">Register reconciliation</p><p className="mt-1 text-xs leading-5 text-slate-500">{loading ? "Loading…" : formatMoney(assembledSummary.totalCost)} · includes per-line uplift · may cover a different scope</p></div><ChevronDown className="h-5 w-5 text-slate-400 transition group-open:rotate-180" /></summary>
+          <div className="border-t border-slate-200 p-5"><p className="max-w-3xl text-sm leading-6 text-slate-600">This sums the editable register rows using their quantities, member lengths, masses and rates, plus any waste, fabrication and coating allowances and each row’s commercial uplift. It is a rate-maintenance check, not verified supplier CTC or a customer quotation. Sheeting and some framing or connection lines may be absent.</p><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[["Register base amount", assembledSummary.rawCost], ["Other allowances", assembledSummary.wasteCost + assembledSummary.fabricationCost + assembledSummary.coatingCost], ["Per-line uplift", assembledSummary.marginCost], ["Register total incl. uplift", assembledSummary.totalCost]].map(([label, value]) => <div key={label} className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">{label}</p><p className="mt-2 text-lg font-bold text-slate-950">{loading ? "—" : formatMoney(value)}</p></div>)}</div></div>
+        </details>
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3"><label className="relative min-w-48 flex-1"><span className="sr-only">Search pricing lines</span><Search aria-hidden="true" className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" /><input type="search" value={registerSearch} onChange={(event) => setRegisterSearch(event.target.value)} placeholder="Search components, codes or profiles…" className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label><label className="flex cursor-pointer items-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-600"><input type="checkbox" checked={showReviewOnly} onChange={(event) => setShowReviewOnly(event.target.checked)} className="h-4 w-4 accent-blue-600" />Needs review only</label><span className="px-2 text-xs text-slate-500">{loading ? "Loading…" : `${filteredRecords.length} line${filteredRecords.length === 1 ? "" : "s"}`}</span></div>
+        {!loading && records.length === 0 ? <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">No editable pricing register exists for {product?.name} yet.</p> : null}
+        {!loading && records.length > 0 && filteredRecords.length === 0 ? <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">No pricing lines match these filters.</p> : null}
       {groupedRecords.map(([category, items], categoryIndex) => (
-        <details key={category} open={categoryIndex === 0} className="group overflow-hidden border border-slate-200 bg-white shadow-sm">
+        <details key={category} open={categoryIndex === 0} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-slate-50 px-4 py-3 sm:px-5">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-700">{category}</p>
@@ -636,10 +623,10 @@ export default function AtlasPricingWorkspace() {
                     <span>
                       <span className="block font-bold text-slate-950">{record.componentName}</span>
                       <span className="mt-1 block text-xs text-slate-500">{record.quantityRule}</span>
-                      <span className="mt-1 block text-xs font-bold text-sky-700">{formatMoney(lineCost.totalCost)} baseline</span>
+                      <span className="mt-1 block text-xs font-bold text-sky-700">{formatMoney(lineCost.totalCost)} incl. uplift</span>
                     </span>
                     <span>
-                      <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Galv / primary</span>
+                      <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Selected rate</span>
                       <span className="mt-1 block text-sm font-semibold text-slate-800">{formatRate(record.pricingRateOverride ?? record.galvanisedRate, record.pricingUnit)}</span>
                       {record.pricingBasisLabel ? <span className="mt-1 block text-[10px] font-bold text-sky-700">{record.pricingBasisLabel} basis</span> : null}
                     </span>
@@ -780,7 +767,7 @@ export default function AtlasPricingWorkspace() {
                         <Field label="Coating allowance">
                           <input type="number" min="0" step="0.01" value={record.coatingAllowance} onChange={(event) => updateRecord(record.id, "coatingAllowance", event.target.value)} className={inputClass} />
                         </Field>
-                        <Field label="Margin %">
+                        <Field label="Commercial uplift %">
                           <input type="number" min="0" step="0.1" value={record.marginPercent} onChange={(event) => updateRecord(record.id, "marginPercent", event.target.value)} className={inputClass} />
                         </Field>
                         <Field label="Supplier">
@@ -805,7 +792,7 @@ export default function AtlasPricingWorkspace() {
                           ["Waste", lineCost.wasteCost],
                           ["Fabrication", lineCost.fabricationCost],
                           ["Coating", lineCost.coatingCost],
-                          ["Margin", lineCost.marginCost],
+                          ["Uplift", lineCost.marginCost],
                           ["Line total", lineCost.totalCost],
                         ].map(([label, value]) => <div key={label} className={label === "Line total" ? "bg-slate-950 p-3 text-white" : "bg-white p-3"}><p className="text-[9px] font-bold uppercase tracking-[0.12em] opacity-55">{label}</p><p className="mt-1 text-sm font-bold">{formatMoney(value)}</p></div>)}
                       </div>
@@ -843,6 +830,7 @@ export default function AtlasPricingWorkspace() {
         </details>
       ))}
       </section>
+      ) : null}
     </div>
   )
 }
