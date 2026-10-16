@@ -2,14 +2,14 @@ const FOLLOW_UP_STEPS = [
   {
     number: 1,
     businessDays: 2,
-    subject: (estimate) => `How is your ${estimate.title || "Smart Steel"} proposal looking?`,
+    subject: (estimate) => `How is your ${getSubjectProjectName(estimate)} proposal looking?`,
     heading: "How is your proposal looking?",
     message: (clientName) => `Hi ${clientName},\n\nJust checking in to see if you've had a chance to look through the estimate we sent for your project.\n\nWe'd love to hear how the pricing and proposed scope align with what you have in mind.\n\nIf there are any questions, or adjustments we can make to better suit your requirements or budget, we'd be happy to explore the options with you.\n\nLooking forward to hearing your thoughts!\n\nKind regards,\nThe Smart Steel Team`,
   },
   {
     number: 2,
     businessDays: 5,
-    subject: (estimate) => `A few things worth considering for your ${estimate.title || "Smart Steel estimate"}`,
+    subject: (estimate) => `A few things worth considering for your ${getSubjectProjectName(estimate)}`,
     heading: "A few things worth considering",
     message: (clientName) => `Hi ${clientName},\n\nWe know there's quite a bit to consider when planning a steel structure, and finding the right solution involves more than just comparing prices.\n\nAt Smart Steel, we focus on providing practical, cost-effective structures backed by sound engineering and a system designed for efficient manufacturing and installation.\n\nWhen comparing quotations, it's worth looking at the complete scope, including the structural specifications, foundations, delivery, installation and any exclusions.\n\nIf you're weighing up a few options, we'd be happy to help you work through the details and make sure you're comparing like for like.\n\nYou can also take a look at some of our completed projects below to get a better idea of our work.\n\nKind regards,\nThe Smart Steel Team`,
     showProof: true,
@@ -17,11 +17,18 @@ const FOLLOW_UP_STEPS = [
   {
     number: 3,
     businessDays: 7,
-    subject: (estimate) => `Where are things standing with your ${estimate.title || "Smart Steel estimate"}?`,
+    subject: (estimate) => `Where are things standing with your ${getSubjectProjectName(estimate)}?`,
     heading: "Where are things standing?",
     message: (clientName) => `Hi ${clientName},\n\nJust one last check-in from our side regarding your project estimate.\n\nWe understand that projects don't always move forward immediately, and timelines and priorities can change along the way.\n\nWhether you're ready to take the next step, still considering your options, or planning for a later date, we'd be happy to hear where things stand.\n\nIf there's anything we can assist with in the meantime, feel free to reach out.\n\nWe'd love the opportunity to work with you when the time is right!\n\nKind regards,\nThe Smart Steel Team`,
   },
 ]
+
+function getSubjectProjectName(estimate) {
+  return String(estimate?.title || "Smart Steel")
+    .replace(/^your\s+/i, "")
+    .replace(/\s+(?:proposal|estimate|quotation)(?:\s+v\d+)?$/i, "")
+    .trim() || "Smart Steel"
+}
 
 export const ESTIMATE_RESPONSE_OPTIONS = [
   {
@@ -90,11 +97,10 @@ export function buildFollowUpCopy({ stepNumber, lead, estimate }) {
   const step = getFollowUpStep(stepNumber)
   if (!step) return null
 
-  const clientName = [lead?.name, lead?.last_name]
-    .filter(Boolean)
-    .join(" ")
+  const clientName = String(lead?.name || "")
     .replace(/\s+(?:website enquiry|solar carport enquiry|warehouse builder)\s*$/i, "")
-    .trim() || "there"
+    .trim()
+    .split(/\s+/)[0] || "there"
   return {
     subject: step.subject(estimate || {}),
     heading: step.heading,
