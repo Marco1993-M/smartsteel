@@ -3,6 +3,8 @@ import { requireOsAuth } from "lib/osRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
 import { getEstimateBrandIdentity, getNextFollowUpAt } from "lib/crmEstimateFollowUps"
 import { SMART_STEEL_SITE_URL } from "lib/brandEntity"
+import { quoteReviewUrl, reviewInvitationHtml } from "lib/quoteReview.mjs"
+import { getQuoteReviewHold, quoteReviewsReady } from "lib/quoteReviewServer"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -41,7 +43,7 @@ function hasPricedServiceLine(lineItems, pattern) {
   })
 }
 
-function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }) {
+function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl, bookingUrl }) {
   const brandIdentity = getEstimateBrandIdentity(lead, estimate)
   const isAtlas = brandIdentity === "atlas"
   const isLsf = brandIdentity === "lsf"
@@ -93,6 +95,7 @@ function buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl }
                 <a href="${escapeHtml(shareUrl)}" style="display:inline-block;padding:14px 20px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;">Review &amp; accept quote</a>
               </td></tr></table>
 
+              ${reviewInvitationHtml(bookingUrl)}
               <p style="margin:26px 0 0;color:#64748b;font-size:12px;line-height:1.6;">Prepared for ${escapeHtml(clientName)}. Please refer to the attached estimate for the confirmed scope, exclusions, validity and commercial terms.</p>
             </td></tr>
             <tr><td style="padding:20px 30px;background:${dark};color:#ffffff;">
@@ -196,6 +199,7 @@ export async function POST(request) {
     }
     const pdfBase64 = Buffer.from(await pdfResponse.arrayBuffer()).toString("base64")
     const shareUrl = new URL(`/quotes/${estimate.share_token}`, SMART_STEEL_SITE_URL).toString()
+    const bookingUrl = await quoteReviewsReady() ? quoteReviewUrl(estimate.share_token, SMART_STEEL_SITE_URL) : ""
     const resendApiKey = process.env.RESEND_API_KEY
     if (!resendApiKey) return NextResponse.json({ error: "Email service is not configured." }, { status: 503 })
 
@@ -207,7 +211,7 @@ export async function POST(request) {
         to: [lead.email],
         reply_to: "info@smartsteel.co.za",
         subject,
-        html: buildProposalHtml({ lead, estimate, builderSubmission, body: [body, installationDeferred ? "Installation is excluded from this quote and will be priced separately closer to the project date." : "", deliveryDeferred ? "Delivery is excluded from this quote and will be priced separately once the destination and transport requirements are confirmed." : ""].filter(Boolean).join("\n\n"), shareUrl }),
+        html: buildProposalHtml({ lead, estimate, builderSubmission, body: [body, installationDeferred ? "Installation is excluded from this quote and will be priced separately closer to the project date." : "", deliveryDeferred ? "Delivery is excluded from this quote and will be priced separately once the destination and transport requirements are confirmed." : ""].filter(Boolean).join("\n\n"), shareUrl, bookingUrl }),
         attachments: [{ filename: buildFilename(estimate), content: pdfBase64 }],
       }),
     })
@@ -221,6 +225,7 @@ export async function POST(request) {
     const emailId = resendPayload?.id || null
     const sentAt = new Date().toISOString()
     const firstFollowUpAt = getNextFollowUpAt(sentAt, 1)
+    const reviewHold = await getQuoteReviewHold(lead.id)
     const lifecycleWarnings = []
 
     let estimateLifecycle = await supabaseServer
@@ -241,8 +246,10 @@ export async function POST(request) {
       .update({
         status: "quoted",
         quote_value: Number(estimate.total || 0),
-        follow_up_at: firstFollowUpAt,
-        next_action: `Awaiting the client's review of ${estimate.title || `estimate V${estimate.version_no || 1}`}. Automatic follow-up 1 is scheduled.`,
+        ...(reviewHold ? {} : {
+          follow_up_at: firstFollowUpAt,
+          next_action: `Awaiting the client's review of ${estimate.title || `estimate V${estimate.version_no || 1}`}. Automatic follow-up 1 is scheduled.`,
+        }),
       })
       .eq("id", lead.id)
     if (leadLifecycle.error) lifecycleWarnings.push(`Lead status: ${leadLifecycle.error.message}`)
@@ -292,9 +299,9 @@ export async function POST(request) {
         lead_id: lead.id,
         estimate_id: estimate.id,
         recipient: lead.email,
-        status: "active",
+        status: reviewHold ? "paused" : "active",
         current_step: 0,
-        next_send_at: firstFollowUpAt,
+        next_send_at: reviewHold ? null : firstFollowUpAt,
         started_at: sentAt,
         last_sent_at: null,
         completed_at: null,
@@ -312,7 +319,7 @@ export async function POST(request) {
 
     if (followUpError) {
       lifecycleWarnings.push(`Automatic follow-ups: ${followUpError.message}`)
-      await supabaseServer.from("leads").update({
+      if (!reviewHold) await supabaseServer.from("leads").update({
         follow_up_at: null,
         next_action: "Estimate sent. Schedule the first follow-up manually because the automatic sequence could not be started.",
       }).eq("id", lead.id)
@@ -321,7 +328,7 @@ export async function POST(request) {
         lead_id: lead.id,
         type: "follow_up",
         user_name: "System",
-        description: `Three automatic estimate follow-ups scheduled. The first is due ${new Date(firstFollowUpAt).toLocaleDateString("en-ZA")}. Cancel the sequence manually if the client replies.`,
+        description: reviewHold ? "Generic estimate follow-ups remain paused for the quote-review workflow." : `Three automatic estimate follow-ups scheduled. The first is due ${new Date(firstFollowUpAt).toLocaleDateString("en-ZA")}. Cancel the sequence manually if the client replies.`,
         timestamp: sentAt,
       }])
     }
@@ -333,6 +340,7 @@ export async function POST(request) {
       lifecycleRecorded: lifecycleWarnings.length === 0,
       lifecycleWarnings,
       followUpSequence: followUpSequence || null,
+      reviewFollowUpPaused: Boolean(reviewHold),
     })
   } catch (error) {
     console.error("Estimate proposal email error:", error)

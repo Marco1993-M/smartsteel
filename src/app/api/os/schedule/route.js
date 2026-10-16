@@ -14,6 +14,8 @@ function normalizeTask(row) {
     date: row.due_date,
     assignee: row.assignee || "",
     notifyWholeTeam: Boolean(row.notify_whole_team),
+    reviewId: row.quote_review_id || null,
+    dueAt: row.due_at || null,
   }
 }
 
@@ -36,15 +38,19 @@ export async function GET(request) {
     return NextResponse.json({ error: "A valid week range is required." }, { status: 400 })
   }
 
-  const { data, error } = await supabaseServer
+  let { data, error } = await supabaseServer
     .from("tasks")
-    .select("id, title, due_date, assignee, notify_whole_team")
+    .select("id, title, due_date, due_at, quote_review_id, assignee, notify_whole_team")
     .eq("completed", false)
     .gte("due_date", start)
     .lte("due_date", end)
     .order("due_date", { ascending: true })
     .order("created_at", { ascending: true })
 
+  if (error && /due_at|quote_review_id/i.test(error.message || "")) {
+    const fallback = await supabaseServer.from("tasks").select("id, title, due_date, assignee, notify_whole_team").eq("completed", false).gte("due_date", start).lte("due_date", end).order("due_date").order("created_at")
+    data = fallback.data; error = fallback.error
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ records: (data || []).map(normalizeTask) })
 }
@@ -103,6 +109,10 @@ export async function DELETE(request) {
   const id = String(searchParams.get("id") || "").trim()
   if (!id) return NextResponse.json({ error: "A schedule item is required." }, { status: 400 })
 
+  const { data: task, error: taskError } = await supabaseServer.from("tasks").select("quote_review_id").eq("id", id).maybeSingle()
+  if (taskError && !/quote_review_id/i.test(taskError.message || "")) return NextResponse.json({ error: "The reminder could not be checked. Please retry." }, { status: 500 })
+  if (task?.quote_review_id) return NextResponse.json({ error: "Manage this appointment in Quote review calls." }, { status: 409 })
+
   const { error } = await supabaseServer.from("tasks").delete().eq("id", id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
@@ -116,6 +126,9 @@ export async function PATCH(request) {
   const id = String(body?.id || "").trim()
   if (!id) return NextResponse.json({ error: "A schedule item is required." }, { status: 400 })
 
+  const { data: task, error: taskError } = await supabaseServer.from("tasks").select("quote_review_id").eq("id", id).maybeSingle()
+  if (taskError && !/quote_review_id/i.test(taskError.message || "")) return NextResponse.json({ error: "The reminder could not be checked. Please retry." }, { status: 500 })
+  if (task?.quote_review_id) return NextResponse.json({ error: "Manage this appointment in Quote review calls." }, { status: 409 })
   const updatePayload = {}
   if (typeof body?.title === "string" && body.title.trim()) updatePayload.title = body.title.trim()
   if (typeof body?.completed === "boolean") updatePayload.completed = body.completed
