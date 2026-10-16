@@ -616,7 +616,7 @@ Smart Steel`,
 }
 
 function buildEstimateEmailTemplate(lead, estimate, builderSubmission) {
-  const clientName = getLeadFullName(lead)
+  const clientName = getLeadFirstName(lead)
   const projectReference =
     toClientFacingSystemName(stripEstimateVersionSuffix(estimate?.title)) ||
     getProjectReference(lead)
@@ -628,47 +628,27 @@ function buildEstimateEmailTemplate(lead, estimate, builderSubmission) {
   const configuration = builderSubmission?.configuration || {}
   const summary = builderSubmission?.summary || {}
   const designReference = configuration.designReference || summary.designReference || ""
-  const dimensions = configuration.width && configuration.length
-    ? `${configuration.width}m x ${configuration.length}m${configuration.wallHeight ? ` x ${configuration.wallHeight}m` : ""}`
-    : ""
-
-  if (isAtlas) {
-    return {
-      subject: `Your Atlas project proposal${designReference ? ` | ${designReference}` : ""}`,
-      body: `Good day ${clientName},
-
-Your reviewed Atlas project proposal is ready${dimensions ? ` for the ${dimensions} configuration` : ""}.
-
-The attached estimate outlines the proposed scope and budget based on the project information currently available. Please review the included items, exclusions, validity, and commercial terms.
-
-If you would like to adjust the configuration, compare another option, or discuss the next step, please reply and we will help you refine the proposal.`,
-    }
-  }
-
-  if (isLsf) {
-    return {
-      subject: `Your Smart Steel LSF project proposal | ${projectReference}`,
-      body: `Good day ${clientName},
-
-Your reviewed Smart Steel LSF project proposal is ready${dimensions ? ` for the ${dimensions} configuration` : ""}.
-
-The attached estimate outlines the proposed lightweight steel framing scope and budget based on the project information currently available. Please review the included items, exclusions, validity, and commercial terms.
-
-If you would like to adjust the dimensions, scope, finishes, or delivery requirements, please reply and we will help you refine the proposal before moving forward.`,
-    }
-  }
 
   return {
-    subject: `Your Smart Steel estimate | ${projectReference}`,
-    body: `Good day ${clientName},
+    subject: isAtlas
+      ? `Your Atlas project proposal${designReference ? ` | ${designReference}` : ""}`
+      : isLsf
+        ? `Your Smart Steel LSF project proposal | ${projectReference}`
+        : `Your Smart Steel estimate | ${projectReference}`,
+    body: `Hi ${clientName},
 
-Please find the estimate for ${projectReference} attached.
+Thanks for considering Smart Steel for your project!
 
-The estimate is based on the project information currently available and outlines the proposed scope and budget.
+We've put together an estimate based on the information you've shared with us.
 
-If you would like to adjust the scope, compare an alternative option, or discuss a different approach to suit your budget or project requirements, we would be happy to revise it with you.
+Have a look through the attached proposal and let us know how the pricing and proposed scope align with what you have in mind.
 
-Once you have reviewed the estimate, please reply with any questions or let us know if you would like to discuss the next step.`,
+If you have any questions, or would like to explore a few adjustments, we'd be happy to work through them with you.
+
+Looking forward to hearing your thoughts!
+
+Kind regards,
+The Smart Steel Team`,
   }
 }
 
