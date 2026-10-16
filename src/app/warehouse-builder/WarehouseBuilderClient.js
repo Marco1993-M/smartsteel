@@ -9,13 +9,10 @@ import {
   ArrowUturnLeftIcon,
   CheckIcon,
   ChevronDownIcon,
-  CheckBadgeIcon,
   DocumentTextIcon,
   HomeModernIcon,
   ShareIcon,
   ShieldCheckIcon,
-  SparklesIcon,
-  TruckIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline"
 import WarehouseBuilderScene from "../../components/warehouse-builder/WarehouseBuilderScene"
@@ -1111,34 +1108,8 @@ export default function WarehouseBuilderClient() {
   const priceChangeTone =
     budgetDelta === 0 ? "text-slate-300" : budgetDelta > 0 ? "text-amber-300" : "text-emerald-300"
 
-  const reviewCtaLabel =
-    config.projectStage === "Ready to order soon" || config.projectStage === "Ready to request a formal quote"
-      ? "Request my reviewed quote"
-      : "Request my project review"
+  const reviewCtaLabel = "Get my quote"
 
-  const includedItems = isAtlasWarehouse
-    ? [
-      "The main steel structure sized to your selected warehouse footprint",
-        "Column bases, ridge and eave brackets, bracing brackets, and M10 connection fixings",
-        ...(config.gableMode === "structure_only" ? [] : [`${config.sheetingProfile} sheeting with a ${config.sheetingFinish === "chromadek" ? "Chromadek" : "galvanised"} finish across approximately ${Math.round(atlasSheetingCoverage).toLocaleString()} sqm of coverage`]),
-        config.gableMode === "structure_only"
-          ? "Sheeting remains optional and can be added before requesting a reviewed quote"
-          : gableModeLabel === "Roof sheeting"
-          ? `Roof sheeting priced on approximately ${Math.round(atlasRoofCoverage).toLocaleString()} sqm`
-          : "Roof and wall sheeting allowance based on the selected warehouse footprint",
-        "Project context so the next conversation starts with the right detail",
-      ]
-    : [
-        "The main steel structure sized to your selected footprint",
-        "A practical allowance for roof and wall finishes plus main openings",
-        "Project context so the next conversation starts with the right detail",
-      ]
-
-  const stillToConfirmItems = [
-    "Final engineering, foundations, and site-specific requirements",
-    "Delivery and installation support, if requested",
-    "Any changes to layout, finishes, openings, access, or additional building requirements",
-  ]
   const builderStages = [
     { label: "Configure", target: "size-style", complete: Boolean(config.width && config.length && config.wallHeight) },
     { label: "Project", target: "project-context", complete: Boolean(config.projectStage && config.location.trim()) },
@@ -1234,7 +1205,7 @@ export default function WarehouseBuilderClient() {
               }}
               className="rounded-xl bg-[var(--builder-accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-90"
             >
-              Request reviewed quote
+              Get my quote
             </button>
           </div>
         </div>
@@ -1315,7 +1286,7 @@ export default function WarehouseBuilderClient() {
               <div className="space-y-4">
                 <div id="size-style" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step="Step 1"
+                    step="1 · Configure"
                     title="Set the warehouse size"
                   />
                   <div className="space-y-4">
@@ -1447,7 +1418,7 @@ export default function WarehouseBuilderClient() {
                 {!isAtlasWarehouse ? (
                     <div id="openings" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                       <StepLabel
-                        step="Step 3"
+                        step="Configure · Openings"
                         title="Set doors and openings"
                         hint="Add the main access openings you already know about."
                       />
@@ -1525,7 +1496,7 @@ export default function WarehouseBuilderClient() {
 
                 <div id="project-context" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step={isAtlasWarehouse ? "Step 3" : "Step 4"}
+                    step="2 · Project"
                     title="Tell us about the project"
                     hint="A little project context helps us respond better."
                   />
@@ -1600,7 +1571,7 @@ export default function WarehouseBuilderClient() {
 
                 <div id="delivery" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step={isAtlasWarehouse ? "Step 4" : "Step 5"}
+                    step="Project · Location"
                     title="Add project location"
                     hint="Location helps us keep the follow-up practical."
                   />
@@ -1644,7 +1615,7 @@ export default function WarehouseBuilderClient() {
 
                 <div id="notes" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
                   <StepLabel
-                    step={isAtlasWarehouse ? "Step 5" : "Step 6"}
+                    step="Project · Notes"
                     title="Add anything we should know"
                     hint="Optional notes that could help us review faster."
                   />
@@ -1939,70 +1910,25 @@ export default function WarehouseBuilderClient() {
                 </div>
               </div>
 
-              <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 xl:hidden">
-                <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-semibold text-slate-700">
-                  View budget details
-                </summary>
-                <div className="grid grid-cols-2 gap-2 border-t border-slate-200 p-3">
-                  {budgetBreakdownItems.map((item) => (
-                    <div key={item.label} className="rounded-xl bg-white px-3 py-2">
-                      <p className="text-[10px] text-slate-400">{item.label}</p>
-                      <p className="mt-0.5 text-xs font-semibold text-slate-900">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </details>
+
             </div>
 
-            <section id="review-summary" className={`hidden scroll-mt-28 rounded-[2rem] border p-5 text-white shadow-sm transition-all duration-500 sm:p-6 xl:block ${
-              isAtlasWarehouse
-                ? "border-[#0043f3]/40 bg-[linear-gradient(140deg,#001d2e_0%,#06347e_58%,#0043f3_130%)]"
-                : "border-slate-200 bg-slate-950"
-            }`}>
-              <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-                <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-                      Supply-only budget guide excl. VAT
-                    </p>
-                    <p className={`mt-3 text-4xl font-semibold leading-none transition sm:text-5xl ${budgetPulse ? "scale-[1.015]" : "scale-100"}`}>
-                      {formatCurrency(budgetValue)}
-                    </p>
-                    <p aria-live="polite" className={`mt-2 text-sm font-medium ${priceChangeTone}`}>
-                      {priceChangeLabel}
-                    </p>
-                    <p className="mt-4 max-w-xl text-sm leading-6 text-slate-300">
-                      {isAtlasWarehouse
-                        ? "Based on your selected size, wall height, steel finish, and sheeting choice."
-                        : "Based on your current structure, enclosure, and opening selections."}
-                    </p>
-                    <p className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/65">
-                      {isAtlasWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                      Important to know
-                    </p>
-                    <div className="mt-3 space-y-3">
-                      <div className="flex items-start gap-2 text-sm text-slate-100">
-                        <CheckBadgeIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
-                        <span>Guide price excludes VAT.</span>
-                      </div>
-                      <div className="flex items-start gap-2 text-sm text-slate-100">
-                        <TruckIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
-                        <span>Delivery and installation are reviewed separately.</span>
-                      </div>
-                      <div className="flex items-start gap-2 text-sm text-slate-100">
-                        <SparklesIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
-                        <span>The budget updates live as you edit the build.</span>
-                      </div>
-                    </div>
-                  </div>
+            <section id="review-summary" aria-labelledby="warehouse-budget-title" className="scroll-mt-28 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+              <div className="bg-[#001d2e] p-5 text-white sm:p-7">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">3 · Review your warehouse</p>
+                <h2 id="warehouse-budget-title" className="mt-3 text-2xl font-semibold sm:text-3xl">{config.width}m × {config.length}m warehouse</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-300">{config.wallHeight}m eave height · {config.width * config.length} m² floor area · {isAtlasWarehouse ? gableModeLabel : enclosureLabel}</p>
+                <div className="mt-6 border-t border-white/15 pt-5">
+                  <p className="text-xs font-semibold text-slate-300">Estimated supply-only price · excl. VAT</p>
+                  <p className={`mt-2 text-4xl font-semibold tracking-tight transition sm:text-5xl ${budgetPulse ? "scale-[1.015]" : "scale-100"}`}>{formatCurrency(budgetValue)}</p>
+                  {budgetDelta !== 0 ? <p aria-live="polite" className={`mt-2 text-xs ${priceChangeTone}`}>{priceChangeLabel}</p> : null}
+                  <p className="mt-3 text-sm leading-6 text-slate-300">Indicative price for your selections. We’ll confirm the scope and final price in your quote.</p>
                 </div>
+              <div className="mt-5">
+                <p className="text-sm font-semibold text-white">Not sure about every detail? We’ll help you refine it.</p>
+                <p className="mt-1 text-sm leading-6 text-slate-300">Your design is a starting point. Our team will confirm the scope with you.</p>
               </div>
-
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="mt-5 grid gap-3 sm:grid-cols-[1.4fr_1fr]">
                 <button
                   type="button"
                   onClick={() => {
@@ -2019,14 +1945,16 @@ export default function WarehouseBuilderClient() {
                 <button
                   type="button"
                   onClick={handleWhatsAppDesign}
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#25d366] px-5 py-3.5 text-sm font-semibold text-[#062d17] transition hover:bg-[#20bd5b]"
+                  className="inline-flex items-center justify-center rounded-2xl border border-white/25 bg-transparent px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
                   Send via WhatsApp
                 </button>
+              </div>
+              <div className="mt-3 flex flex-wrap justify-center gap-x-6 gap-y-1">
                 <button
                   type="button"
                   onClick={handleSaveDesign}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 text-xs font-medium text-slate-300 underline-offset-4 transition hover:text-white hover:underline"
                 >
                   {saveStatus ? <CheckIcon className="h-4 w-4" /> : <ShareIcon className="h-4 w-4" />}
                   {saveStatus || "Save design"}
@@ -2034,86 +1962,36 @@ export default function WarehouseBuilderClient() {
                 <button
                   type="button"
                   onClick={handleOpenDesignSummary}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 text-xs font-medium text-slate-300 underline-offset-4 transition hover:text-white hover:underline"
                 >
                   <DocumentTextIcon className="h-4 w-4" />
                   Design summary
                 </button>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {budgetItems.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                      {item.label}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-white">{item.value}</p>
-                  </div>
-                ))}
               </div>
-
-              <div className="mt-5 grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Indicative budget breakdown
-                  </p>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    {budgetBreakdownItems.map((item) => (
-                      <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                        <p className="text-xs text-slate-300">{item.label}</p>
-                        <p className="mt-1 text-sm font-semibold text-white">{item.value}</p>
-                      </div>
-                    ))}
-                  </div>
+              <div className="p-5 sm:p-7">
+                <h3 className="text-sm font-semibold text-slate-900">{isAtlasWarehouse ? "Included in your price" : "Main budget items"}</h3>
+                <ul className="mt-3 space-y-2.5">
+                  {budgetBreakdownItems.map((item) => <li key={item.label} className="flex items-start justify-between gap-4 text-sm"><span className="flex items-start gap-2 text-slate-600"><CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />{item.label}</span>{item.value !== "Included" ? <span className="shrink-0 font-semibold text-slate-900">{item.value}</span> : null}</li>)}
+                </ul>
+                <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">Delivery, installation and foundations are not included. Delivery and installation can be quoted separately on request.</p>
+                <div className="mt-6 border-t border-slate-200 pt-5">
+                  <h3 className="text-base font-semibold text-slate-900">What happens next?</h3>
+                  <ol className="mt-4 space-y-4">
+                    {[
+                      ["Send your design", "Add your contact details and site location. Your selections come through with your enquiry."],
+                      ["We check the details", "Our team reviews your layout, site requirements and any delivery or installation requests."],
+                      ["Receive your reviewed quote", "We confirm the scope and pricing with you before you decide to proceed."],
+                    ].map(([title, description], index) => <li key={title} className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">{index + 1}</span><div><p className="text-sm font-semibold text-slate-900">{title}</p><p className="mt-1 text-sm leading-6 text-slate-500">{description}</p></div></li>)}
+                  </ol>
+                  <p className="mt-4 text-xs font-medium text-slate-500">Requesting a quote doesn’t commit you to an order.</p>
                 </div>
-
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    What this guide means
-                  </p>
-                  <div className="mt-3 rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4">
-                    <p className="text-sm leading-6 text-slate-200">
-                      Supply-only budget guide only. Final pricing still depends on confirmed scope, site access, and final design review by the Smart Steel team.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Included in this estimate
-                  </p>
-                  <div className="mt-3 space-y-2">
-                    {includedItems.map((item) => (
-                      <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Still subject to confirmation
-                  </p>
-                  <div className="mt-3 space-y-2">
-                    {stillToConfirmItems.map((item) => (
-                      <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="hidden rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm xl:block">
-              <h2 className="text-lg font-semibold text-slate-900">What happens next</h2>
-              <p className="mt-1 text-sm text-slate-500">A quick summary of what happens after you send the project through.</p>
-              <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                <p>1. You send your layout, budget guide, and project details to Smart Steel.</p>
-                <p>2. We review the size, layout, project stage, location, and support preferences you&apos;ve shared.</p>
-                <p>3. We follow up with the right next step, whether that&apos;s refining the plan, confirming scope, or preparing a formal quote.</p>
+                <details className="mt-6 border-t border-slate-200 pt-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-slate-700">View full specification & price details</summary>
+                  <dl className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">{budgetItems.map((item) => <div key={item.label}><dt className="text-xs text-slate-500">{item.label}</dt><dd className="mt-1 text-sm font-medium text-slate-900">{item.value}</dd></div>)}</dl>
+                  <p className="mt-4 text-xs leading-5 text-slate-500">{isAtlasWarehouse ? `Reference: ${estimate.meta.sku}. ` : `Design: ${designReference}. `}Final engineering, foundations and site-specific requirements must be confirmed before construction.</p>
+                </details>
               </div>
             </section>
           </aside>
@@ -2214,7 +2092,7 @@ export default function WarehouseBuilderClient() {
               }}
               className="shrink-0 rounded-xl bg-[var(--builder-accent)] px-4 py-3 text-xs font-semibold text-white"
             >
-              Review my warehouse
+              Get my quote
             </button>
           </div>
         </div>
