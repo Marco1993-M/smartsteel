@@ -8,6 +8,7 @@ import {
   BarChart3,
   Boxes,
   Factory,
+  FileText,
   FolderKanban,
   Handshake,
   LayoutDashboard,
@@ -24,6 +25,7 @@ import { OS_SECTIONS, OS_STATUS_META, getOsSection } from "../../lib/osNavigatio
 const SECTION_ICONS = {
   dashboard: LayoutDashboard,
   crm: UsersRound,
+  memos: FileText,
   projects: FolderKanban,
   atlas: Boxes,
   lsf: PanelsTopLeft,
