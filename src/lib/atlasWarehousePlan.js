@@ -1,4 +1,4 @@
-import { ATLAS_FOUNDATION_BASELINE } from "./atlasFoundationGuide.js"
+import { ATLAS_FOUNDATION_BASELINE } from "./atlasFoundationBaseline.js"
 import { ATLAS_WAREHOUSE_WIDTH_OPTIONS } from "./estimates/atlasWarehouseOptions.js"
 import { isAtlasWarehouseProductType } from "./atlasProductIdentity.js"
 import { calculateAtlasW10Geometry } from "./atlasW10Geometry.js"

@@ -1,19 +1,10 @@
-const WAREHOUSE_CODES = new Set(["W06", "W08", "W10", "W12", "W15"])
+import { ATLAS_FOUNDATION_BASELINE } from "./atlasFoundationBaseline.js"
+import { getAtlasWarehousePlan } from "./atlasWarehousePlan.js"
+import { ATLAS_WAREHOUSE_SHEETING_OPTIONS } from "./estimates/atlasWarehouseOptions.js"
 
-export const ATLAS_FOUNDATION_BASELINE = Object.freeze({
-  footingWidthMm: 1250,
-  footingLengthMm: 1250,
-  footingDepthMm: 350,
-  padTopBelowNglMm: 300,
-  pedestalWidthMm: 350,
-  pedestalLengthMm: 350,
-  pedestalProjectionMm: 150,
-  concreteStrengthMpa: 25,
-  allowableBearingKpa: 100,
-  concreteUnitWeightKnM3: 24,
-  footingCoverMm: 75,
-  pedestalCoverMm: 40,
-})
+export { ATLAS_FOUNDATION_BASELINE } from "./atlasFoundationBaseline.js"
+
+const WAREHOUSE_CODES = new Set(["W06", "W08", "W10", "W12", "W15"])
 
 export function normalizeAtlasWarehouseCode(value = "W08") {
   const code = String(value).toUpperCase()
@@ -31,9 +22,11 @@ export function getAtlasFoundationGuide(input = {}) {
   const eaveHeightM = Number.isFinite(requestedHeight) && requestedHeight > 0
     ? requestedHeight
     : spanM >= 10 ? 4.5 : 3
-  const bays = lengthM / 4
-  const portalFrames = bays + 1
-  const footingCount = portalFrames * 2
+  const gableMode = input.gableMode || "structure_only"
+  const sheetingOption = ATLAS_WAREHOUSE_SHEETING_OPTIONS.find((option) => option.value === gableMode)
+  const layoutPlan = getAtlasWarehousePlan({ width: spanM, length: lengthM, wallHeight: eaveHeightM, gableMode })
+  if (!sheetingOption || !layoutPlan) throw new Error("Choose a supported Atlas configuration and sheeting scope for the foundation guide.")
+  const { bays, portalFrames, footingCount } = layoutPlan
   const baseline = ATLAS_FOUNDATION_BASELINE
   const pedestalHeightMm = baseline.padTopBelowNglMm + baseline.pedestalProjectionMm
   const footingAreaM2 = (baseline.footingWidthMm / 1000) * (baseline.footingLengthMm / 1000)
@@ -55,6 +48,11 @@ export function getAtlasFoundationGuide(input = {}) {
     bays,
     portalFrames,
     footingCount,
+    mainColumnCount: layoutPlan.columnCount,
+    gableColumnCount: layoutPlan.gableColumnCount,
+    gableMode,
+    sheetingLabel: sheetingOption.label,
+    layoutPlan,
     ...baseline,
     pedestalHeightMm,
     footingUndersideBelowNglMm,
@@ -63,7 +61,7 @@ export function getAtlasFoundationGuide(input = {}) {
     totalConcreteM3,
     nominalAllowableBearingKn,
     foundationSelfWeightKn,
-    revision: "P01",
+    revision: "P02",
     status: "Preliminary guidance - not for construction",
   }
 }
