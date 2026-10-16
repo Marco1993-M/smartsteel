@@ -2,24 +2,24 @@ const FOLLOW_UP_STEPS = [
   {
     number: 1,
     businessDays: 2,
-    subject: (estimate) => `Does ${estimate.title || "your Smart Steel estimate"} fit your project?`,
-    heading: "Does the proposed scope fit?",
-    message: (clientName) => `Good day ${clientName},\n\nThe estimate was prepared around the project information we received. Please check that the proposed size, scope and included work match what you need.\n\nIf something needs to change or you would like any part explained, reply to this email and we will help refine it.`,
+    subject: (estimate) => `How is your ${estimate.title || "Smart Steel"} proposal looking?`,
+    heading: "How is your proposal looking?",
+    message: (clientName) => `Hi ${clientName},\n\nJust checking in to see if you've had a chance to look through the estimate we sent for your project.\n\nWe'd love to hear how the pricing and proposed scope align with what you have in mind.\n\nIf there are any questions, or adjustments we can make to better suit your requirements or budget, we'd be happy to explore the options with you.\n\nLooking forward to hearing your thoughts!\n\nKind regards,\nThe Smart Steel Team`,
   },
   {
     number: 2,
     businessDays: 5,
-    subject: (estimate) => `A clearer way to compare ${estimate.title || "your steel estimate"}`,
-    heading: "Compare the complete scope",
-    message: (clientName) => `Good day ${clientName},\n\nSteel quotations can look similar while covering different work. A useful comparison should check the dimensions, steel specification, foundations, delivery, installation and exclusions, not only the final amount.\n\nIf you are comparing options, send us the points you are unsure about and we will help you compare the scope clearly. You can also view examples of completed Smart Steel work below.`,
+    subject: (estimate) => `A few things worth considering for your ${estimate.title || "Smart Steel estimate"}`,
+    heading: "A few things worth considering",
+    message: (clientName) => `Hi ${clientName},\n\nWe know there's quite a bit to consider when planning a steel structure, and finding the right solution involves more than just comparing prices.\n\nAt Smart Steel, we focus on providing practical, cost-effective structures backed by sound engineering and a system designed for efficient manufacturing and installation.\n\nWhen comparing quotations, it's worth looking at the complete scope, including the structural specifications, foundations, delivery, installation and any exclusions.\n\nIf you're weighing up a few options, we'd be happy to help you work through the details and make sure you're comparing like for like.\n\nYou can also take a look at some of our completed projects below to get a better idea of our work.\n\nKind regards,\nThe Smart Steel Team`,
     showProof: true,
   },
   {
     number: 3,
     businessDays: 7,
-    subject: (estimate) => `What is the right next step for ${estimate.title || "your project"}?`,
-    heading: "What suits you next?",
-    message: (clientName) => `Good day ${clientName},\n\nThis is our final scheduled follow-up on the estimate. Please choose the option below that best reflects where the project stands.\n\nWe can help you proceed, revise the scope, reconnect at a better time, or close the follow-up for now.`,
+    subject: (estimate) => `Where are things standing with your ${estimate.title || "Smart Steel estimate"}?`,
+    heading: "Where are things standing?",
+    message: (clientName) => `Hi ${clientName},\n\nJust one last check-in from our side regarding your project estimate.\n\nWe understand that projects don't always move forward immediately, and timelines and priorities can change along the way.\n\nWhether you're ready to take the next step, still considering your options, or planning for a later date, we'd be happy to hear where things stand.\n\nIf there's anything we can assist with in the meantime, feel free to reach out.\n\nWe'd love the opportunity to work with you when the time is right!\n\nKind regards,\nThe Smart Steel Team`,
   },
 ]
 
