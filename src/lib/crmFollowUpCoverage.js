@@ -1,6 +1,6 @@
 export function isCoveredByAutomatedFollowUp(lead, sequencesByLead) {
   const sequence = sequencesByLead[String(lead?.id || "")]
-  return sequence?.status === "active" && Boolean(sequence.next_send_at) && !sequence.last_error
+  return sequence?.status === "paused" || (sequence?.status === "active" && Boolean(sequence.next_send_at) && !sequence.last_error)
 }
 
 export function indexLatestFollowUpSequences(sequences = []) {

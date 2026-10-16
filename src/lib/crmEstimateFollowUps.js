@@ -1,3 +1,5 @@
+import { reviewInvitationHtml } from "./quoteReview.mjs"
+
 const FOLLOW_UP_STEPS = [
   {
     number: 1,
@@ -109,7 +111,7 @@ export function buildFollowUpCopy({ stepNumber, lead, estimate }) {
   }
 }
 
-export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, isAtlas }) {
+export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, isAtlas, bookingUrl }) {
   const identity = estimate?.brandIdentity || (isAtlas ? "atlas" : "smart-steel")
   const isLsf = identity === "lsf"
   const accent = identity === "atlas" ? "#0043f3" : "#da1a33"
@@ -173,6 +175,7 @@ export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, i
             </tr>`).join("")}
           </table>
         </div>` : ""}
+        ${reviewInvitationHtml(bookingUrl)}
         <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#64748b;">Reply directly to this email and the Smart Steel team will assist you.</p>
       </td></tr>
       <tr><td style="padding:18px 28px;background:${dark};color:#cbd5e1;font-size:12px;">info@smartsteel.co.za · +27 82 846 4555 · smartsteel.co.za</td></tr>

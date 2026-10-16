@@ -1,5 +1,7 @@
 import { supabaseServer } from "lib/supabase-server"
 import { SMART_STEEL_SITE_URL } from "lib/brandEntity"
+import { getQuoteReviewHold, quoteReviewsReady } from "lib/quoteReviewServer"
+import { quoteReviewUrl } from "lib/quoteReview.mjs"
 import {
   buildFollowUpCopy,
   buildFollowUpHtml,
@@ -33,6 +35,7 @@ export async function processDueEstimateFollowUps({ limit = 25 } = {}) {
   if (error) return { error: error.message, status: 500 }
 
   const results = []
+  const reviewBookingReady = await quoteReviewsReady()
   for (const sequence of sequences || []) {
     const [{ data: lead }, { data: estimate }] = await Promise.all([
       supabaseServer.from("leads").select("id, name, last_name, email, product_type, status").eq("id", sequence.lead_id).maybeSingle(),
@@ -61,6 +64,16 @@ export async function processDueEstimateFollowUps({ limit = 25 } = {}) {
     const shareUrl = new URL(`/quotes/${estimate.share_token}`, SMART_STEEL_SITE_URL).toString()
     const responseBaseUrl = new URL(`/estimate-response/${sequence.response_token}`, SMART_STEEL_SITE_URL).toString()
     const brandIdentity = getEstimateBrandIdentity(lead, estimate)
+    // Recheck just before dispatch: a booking may have paused this queued sequence.
+    const [{ data: currentSequence, error: currentError }, reviewHold] = await Promise.all([
+      supabaseServer.from("crm_estimate_follow_up_sequences").select("status").eq("id", sequence.id).maybeSingle(),
+      getQuoteReviewHold(lead.id),
+    ])
+    if (currentError || currentSequence?.status !== "active" || reviewHold) {
+      if (reviewHold) await supabaseServer.from("crm_estimate_follow_up_sequences").update({ status: "paused", next_send_at: null, updated_at: now }).eq("id", sequence.id)
+      results.push({ id: sequence.id, status: "suppressed" })
+      continue
+    }
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -73,7 +86,7 @@ export async function processDueEstimateFollowUps({ limit = 25 } = {}) {
         to: [lead.email],
         reply_to: "info@smartsteel.co.za",
         subject: copy.subject,
-        html: buildFollowUpHtml({ copy, estimate: { ...estimate, brandIdentity }, shareUrl, responseBaseUrl, isAtlas: brandIdentity === "atlas" }),
+        html: buildFollowUpHtml({ copy, estimate: { ...estimate, brandIdentity }, shareUrl, responseBaseUrl, isAtlas: brandIdentity === "atlas", bookingUrl: reviewBookingReady ? quoteReviewUrl(estimate.share_token, SMART_STEEL_SITE_URL) : "" }),
       }),
     })
 
@@ -120,7 +133,7 @@ export async function processDueEstimateFollowUps({ limit = 25 } = {}) {
       updated_at: now,
     }).eq("id", sequence.id)
 
-    await supabaseServer.from("leads").update({
+    if (!await getQuoteReviewHold(lead.id)) await supabaseServer.from("leads").update({
       follow_up_at: nextSendAt,
       next_action: completed
         ? "Automatic estimate follow-ups completed. Review the lead and decide whether to call, nurture or mark unresponsive."
