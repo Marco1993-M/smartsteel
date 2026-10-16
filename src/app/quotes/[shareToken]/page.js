@@ -4,6 +4,8 @@ import EstimateDocumentLayout from "../../../components/EstimateDocumentLayout"
 import EstimateDocumentViewport from "../../../components/EstimateDocumentViewport"
 import { buildEstimateDisplayModel } from "../../../lib/estimates/estimateDocument"
 import { supabaseServer } from "../../../lib/supabase-server"
+import Link from "next/link"
+import { quoteReviewsReady } from "../../../lib/quoteReviewServer"
 
 export const dynamic = "force-dynamic"
 export const metadata = {
@@ -59,10 +61,12 @@ export default async function PublicQuotePage({ params, searchParams }) {
 
   const { data: latest } = await supabaseServer.from("estimates").select("version_no").eq("lead_id", estimate.lead_id).order("version_no", { ascending: false }).limit(1).maybeSingle()
   const blocker = orderError || !latest ? "Online acceptance is temporarily unavailable. Please contact our team." : acceptanceBlocker(estimate, latest.version_no)
+  const bookingAvailable = await quoteReviewsReady().catch(() => false)
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-100 px-4 py-8 print:bg-white print:px-0 print:py-0">
       <QuoteAcceptance token={shareToken} updatedAt={estimate.updated_at} model={documentModel} version={estimate.version_no} blocker={blocker} existingOrder={order ? { orderNumber: order.order_number, status: order.status, confirmationSent: Boolean(order.confirmation_sent_at) } : null} />
+      {bookingAvailable && estimate.status === "sent" ? <aside className="mx-auto mb-6 flex max-w-4xl flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 print:hidden"><div><p className="font-semibold text-[#001d2e]">Would you like to talk it through?</p><p className="mt-1 text-sm text-slate-500">Book a 15-minute phone call with Marco to review your proposal.</p></div><Link href={`/quote-review/${encodeURIComponent(shareToken)}`} className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-blue-700">Choose a call time</Link></aside> : null}
       <EstimateDocumentViewport documentModel={documentModel} estimate={estimate} />
     </main>
   )
