@@ -18,6 +18,14 @@ export const OS_SECTIONS = [
     items: ["Leads", "Customers", "Opportunities", "Quotes", "Activities"],
   },
   {
+    key: "memos",
+    label: "Memos",
+    href: "/os/memos",
+    description: "Develop proposals, discuss the evidence, and record company decisions.",
+    status: "active_build",
+    items: [],
+  },
+  {
     key: "projects",
     label: "Projects",
     href: "/os/projects",
@@ -75,9 +83,9 @@ export const OS_SECTIONS = [
     key: "settings",
     label: "Settings",
     href: "/os/settings",
-    description: "Configuration, permissions, and system preferences.",
-    status: "scaffolded",
-    phaseLabel: "Later phase",
+    description: "Your signed-in account and access information.",
+    status: "active_build",
+    phaseLabel: "Account settings",
     items: [],
   },
 ]
@@ -100,7 +108,7 @@ export const OS_STATUS_META = {
 export function getOsSection(pathname) {
   if (!pathname || pathname === "/os") return OS_SECTIONS[0]
   return (
-    OS_SECTIONS.find((section) => pathname === section.href || pathname.startsWith(`${section.href}/`)) ||
+    OS_SECTIONS.find((section) => pathname === section.href || (section.href !== "/os" && pathname.startsWith(`${section.href}/`))) ||
     OS_SECTIONS[0]
   )
 }
