@@ -643,18 +643,15 @@ function buildEstimateEmailTemplate(lead, estimate, builderSubmission) {
         : `Your Smart Steel estimate | ${projectReference}`,
     body: `Hi ${clientName},
 
-Thanks for considering Smart Steel for your project!
+Thanks for considering Smart Steel for your project.
 
-We've put together an estimate based on the information you've shared with us.
+I've attached your estimate${estimate?.title ? ` for ${estimate.title}` : ""}, based on the information you've shared with us.
 
-Have a look through the attached proposal and let us know how the pricing and proposed scope align with what you have in mind.
-
-If you have any questions, or would like to explore a few adjustments, we'd be happy to work through them with you.
-
-Looking forward to hearing your thoughts!
+Have a look and let me know how the scope and pricing fit with what you had in mind. If anything needs adjusting, we can work through it together.
 
 Kind regards,
-The Smart Steel Team`,
+Marco
+Smart Steel`,
   }
 }
 
