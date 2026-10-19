@@ -455,6 +455,7 @@ const FOLLOW_UP_TEMPLATE_OPTIONS = [
   { key: "missing_info", label: "Request missing info" },
   { key: "quote_check_in", label: "Quote check-in" },
   { key: "reactivation", label: "Reactivation" },
+  { key: "personal_project_insight", label: "Personal project insight · Warehouse expansion" },
 ]
 
 function stripEstimateVersionSuffix(title) {
@@ -588,6 +589,21 @@ I just wanted to check in regarding the quote we sent for ${projectReference}.
 If you need anything clarified, updated, or broken down further, please let me know and I’ll help you with it.
 
 If you'd like to keep this moving, I can help with the next step. If easier, just reply with "call me" and I’ll give you a ring.`,
+      }
+    case "personal_project_insight":
+      return {
+        subject: "A thought for your future expansion",
+        body: `Hi ${firstName},
+
+One thing that’s easy to overlook when planning a warehouse is how you might expand it later.
+
+Even if you’re only building for today’s needs, allowing space for future extensions and vehicle access now can help avoid costly changes later.
+
+You don’t need to build bigger today—just leave room for what might come next.
+
+All the best,
+Marco
+Smart Steel`,
       }
     case "reactivation":
       return {
