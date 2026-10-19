@@ -465,6 +465,16 @@ export default function AtlasPricingWorkspace() {
           </div>
           <p className="px-1 text-xs leading-5 text-slate-500">The commercial uplift applies to steel and connections. Sheeting is added at its selling rate. The pricing basis includes the steel-rate buffer; it is not a supplier invoice total.</p>
 
+          {releasedEstimate.sheeting.totalSheetingArea > 0 ? <section className="rounded-2xl border border-blue-200 bg-blue-50/50 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-wider text-blue-700">Internal CTC · Sheeting</p>
+            <h2 className="mt-2 text-lg font-bold text-slate-950">Supplier cost and selling allowance</h2>
+            <p className="mt-2 text-sm text-slate-600">{releasedEstimate.sheeting.totalSheetingArea.toLocaleString("en-ZA")} m² · {formatMoney(releasedEstimate.sheeting.costing.supplierLinearRate)}/linear m ÷ 0.7 m cover = {formatMoney(releasedEstimate.sheeting.costing.supplierRatePerSqm)}/m² supplier cost.</p>
+            <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {[["Supplier sheet CTC", releasedEstimate.sheeting.costing.supplierSheetCost], ["Flashings & fixings allowance · 15%", releasedEstimate.sheeting.costing.accessoriesAllowance], ["Cutting waste allowance · 5%", releasedEstimate.sheeting.costing.wasteAllowance], ["Budgeted CTC including allowances", releasedEstimate.sheeting.costing.budgetedCost], ["Customer selling rate / m²", releasedEstimate.sheeting.costing.sellingRate], ["Sheeting selling total", releasedEstimate.sheeting.costing.sellingTotal]].map(([label, value]) => <div key={label} className="rounded-xl border border-blue-100 bg-white p-4"><dt className="text-xs text-slate-600">{label}</dt><dd className="mt-2 text-lg font-bold text-slate-950">{formatMoney(value)}</dd></div>)}
+            </dl>
+            <p className="mt-4 text-xs leading-5 text-slate-600">All amounts exclude VAT. Supplier rates supplied 19 October 2026; CTC is calculated from area, not a reconciled supplier invoice. Accessories and waste remain provisional allowances. Selling rates include these allowances and 40% markup, rounded upward. Concealed Fix uses Afri-lok supplier pricing. Confirm actual cover widths and accessory quantities before ordering. Delivery and installation are separate.</p>
+          </section> : null}
+
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="flex items-center gap-2 text-lg font-bold text-slate-950"><Truck className="h-5 w-5 text-blue-700" />Transport planning</h2><p className="mt-1 text-xs leading-5 text-slate-500">Calculated member and sheeting masses for the selected structure.</p></div><button type="button" onClick={downloadDataSheet} disabled={downloadingDataSheet} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0043f3] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"><Download className="h-4 w-4" />{downloadingDataSheet ? "Preparing PDF…" : "Download transport sheet"}</button></div>
             <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
