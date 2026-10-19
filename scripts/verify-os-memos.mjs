@@ -54,6 +54,21 @@ try {
  assert.equal(frozen.status,"decided"); assert.equal(frozen.decided_by,stefan)
  const deferred = await call(niel,"transition",other,{status:"discussion"})
  await assert.rejects(call(niel,"decide",deferred,{decision:"deferred",reason:"Wait for supplier confirmation"}), /review date/)
+ {
+ // Draft deletion is atomic, ownership-limited and preserves the source memo.
+ const source = await call(marco,"create",null,{title:"Source draft",content})
+ const copy = await call(niel,"create",null,{title:"Accidental copy",content,source_memo_id:source.id})
+ await assert.rejects(call(marco,"delete_draft",source),/linked follow-on/)
+ await assert.rejects(call(stefan,"delete_draft",copy),/Only the author/)
+ await assert.rejects(call(niel,"delete_draft",{...copy,revision:99}),/changed/)
+ await assert.rejects(call(marco,"delete_draft",memo),/Only drafts/)
+ const draftComment = await call(niel,"comment",copy,{body:"Draft comment"})
+ await call(marco,"comment",copy,{body:"Draft reply",parent_id:draftComment.id})
+ assert.equal((await call(niel,"delete_draft",copy)).deleted,true)
+ for (const table of ["os_memo_comments","os_memo_revisions"]) assert.equal((await db.query(`select count(*)::int as n from ${table} where memo_id=$1`,[copy.id])).rows[0].n,0)
+ assert.equal((await db.query("select count(*)::int as n from os_memos where id=$1",[source.id])).rows[0].n,1)
+ await call(marco,"delete_draft",source)
+ }
  await db.exec("set role authenticated")
  await assert.rejects(db.query("select * from os_memos"),/permission denied/)
  await assert.rejects(db.query("select os_mutate_memo($1,$2,'create',null,null,'{}')",[ids[marco],marco]),/permission denied/)
