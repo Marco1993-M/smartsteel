@@ -1,5 +1,5 @@
 "use client"
-import { useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 // Deliberately limited formatting: text is always rendered through React, never HTML.
 function Inline({ text }) {
@@ -10,7 +10,7 @@ function Inline({ text }) {
     return part
   })
 }
-export function MemoText({ value }) {
+function LegacyText({ value }) {
   const lines = String(value || "Not yet documented.").split("\n")
   const blocks = []
   for (let i = 0; i < lines.length;) {
@@ -29,33 +29,96 @@ export function MemoText({ value }) {
   }
   return <div className="break-words">{blocks}</div>
 }
-export function MemoTextEditor({ value, onChange, label, rows = 6, disabled = false }) {
-  const ref = useRef(null)
-  function format(kind) {
-    const area = ref.current
-    const start = area.selectionStart, end = area.selectionEnd
-    let from = start, to = end, replacement
-    if (kind === "bullets" || kind === "numbers") {
-      from = value.lastIndexOf("\n", start - 1) + 1
-      to = value.indexOf("\n", Math.max(start, end - 1)); if (to < 0) to = value.length
-      replacement = value.slice(from, to).split("\n").map((line, i) => `${kind === "bullets" ? "-" : `${i + 1}.`} ${line.replace(/^\s*(?:[-*]|\d+\.)\s+/, "")}`).join("\n")
-    } else {
-      const marker = kind === "bold" ? "**" : kind === "italic" ? "*" : "=="
-      const selected = value.slice(start, end)
-      if (!selected) { area.focus(); return }
-      replacement = selected.split("\n").map(line => line ? (line.startsWith(marker) && line.endsWith(marker) ? line.slice(marker.length, -marker.length) : `${marker}${line}${marker}`) : line).join("\n")
+const PREFIX = "@memo-rich-v1:"
+const TAGS = new Set(["div", "p", "br", "strong", "em", "mark", "ul", "ol", "li"])
+function readRich(value) {
+  if (!String(value || "").startsWith(PREFIX)) return null
+  try {
+    const nodes = JSON.parse(value.slice(PREFIX.length))
+    const valid = (items, depth = 0) => depth < 40 && Array.isArray(items) && items.every(node => typeof node === "string" || (node && TAGS.has(node.tag) && valid(node.children, depth + 1)))
+    return valid(nodes) ? nodes : null
+  } catch { return null }
+}
+function RichNodes({ nodes }) {
+  return nodes.map((node, index) => {
+    if (typeof node === "string") return node
+    const Tag = node.tag
+    if (Tag === "br") return <br key={index} />
+    return <Tag key={index}><RichNodes nodes={node.children} /></Tag>
+  })
+}
+const textStyles = "break-words whitespace-pre-wrap [&_mark]:bg-yellow-100 [&_mark]:text-inherit [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_p]:min-h-[1em] [&_div]:min-h-[1em]"
+export function MemoText({ value }) {
+  const nodes = readRich(value)
+  return nodes ? <div className={textStyles}><RichNodes nodes={nodes} /></div> : <LegacyText value={value} />
+}
+// Store an allowlisted document tree, never executable HTML or pasted attributes.
+export function serializeMemoEditor(root) {
+  function children(element) { return Array.from(element.childNodes).flatMap(visit) }
+  function visit(node) {
+    if (node.nodeType === 3) return [node.textContent]
+    if (node.nodeType !== 1 || ["SCRIPT", "STYLE", "IFRAME", "OBJECT"].includes(node.tagName)) return []
+    let tag = node.tagName.toLowerCase()
+    if (tag === "b") tag = "strong"
+    if (tag === "i") tag = "em"
+    let result = children(node)
+    if (tag === "span") {
+      const style = node.style
+      if (style.fontWeight === "bold" || Number(style.fontWeight) >= 600) result = [{ tag: "strong", children: result }]
+      if (style.fontStyle === "italic") result = [{ tag: "em", children: result }]
     }
-    const next = value.slice(0, from) + replacement + value.slice(to)
-    if (next.length > 12000) return
-    onChange(next)
-    requestAnimationFrame(() => { area.focus(); area.setSelectionRange(from, from + replacement.length) })
+    if (TAGS.has(tag)) result = [{ tag, children: result }]
+    if (node.style.backgroundColor && !["transparent", "rgba(0, 0, 0, 0)"].includes(node.style.backgroundColor)) result = [{ tag: "mark", children: result }]
+    return result
   }
-  return <div className="mt-2 overflow-hidden rounded-xl border border-slate-300 bg-white font-normal">
-    <div role="toolbar" aria-label={`${label} formatting`} className="flex flex-wrap gap-1 border-b border-slate-200 bg-slate-50 p-2">
-      {[["bold", "Bold"], ["italic", "Italic"], ["highlight", "Highlight"], ["bullets", "Bullets"], ["numbers", "Numbered list"]].map(([key, title]) => <button key={key} type="button" disabled={disabled} onMouseDown={event => event.preventDefault()} onClick={() => format(key)} className="rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-100 focus-visible:outline-blue-600 disabled:opacity-50">{title}</button>)}
+  return root.textContent.trim() ? PREFIX + JSON.stringify(children(root)) : ""
+}
+export function MemoTextEditor({ value, onChange, label, rows = 3, disabled = false }) {
+  const ref = useRef(null)
+  const selection = useRef(null)
+  const lastEmitted = useRef(value)
+  const [initialValue, setInitialValue] = useState(value)
+  const [generation, setGeneration] = useState(0)
+  const [error, setError] = useState("")
+  const [active, setActive] = useState({})
+  const initialContent = useMemo(() => initialValue ? <MemoText value={initialValue} /> : null, [initialValue])
+  useEffect(() => {
+    if (value !== lastEmitted.current) {
+      lastEmitted.current = value; setInitialValue(value); setGeneration(n => n + 1)
+    }
+  }, [value])
+  function capture() {
+    const sel = window.getSelection()
+    if (sel?.rangeCount && ref.current?.contains(sel.anchorNode) && ref.current?.contains(sel.focusNode)) {
+      selection.current = sel.getRangeAt(0).cloneRange()
+      setActive({ bold: document.queryCommandState("bold"), italic: document.queryCommandState("italic"), bullets: document.queryCommandState("insertUnorderedList"), numbers: document.queryCommandState("insertOrderedList") })
+    }
+  }
+  function publish() {
+    const next = serializeMemoEditor(ref.current)
+    if (next.length > 12000) {
+      document.execCommand("undo")
+      setError("This section is too long. Shorten it before adding more text or formatting.")
+      return
+    }
+    setError(""); lastEmitted.current = next; onChange(next); capture()
+  }
+  function format(kind) {
+    ref.current.focus()
+    const sel = window.getSelection()
+    if (selection.current && ref.current.contains(selection.current.commonAncestorContainer)) { sel.removeAllRanges(); sel.addRange(selection.current) }
+    const commands = { bold: "bold", italic: "italic", bullets: "insertUnorderedList", numbers: "insertOrderedList", clear: "removeFormat" }
+    document.execCommand(kind === "highlight" ? "hiliteColor" : commands[kind], false, kind === "highlight" ? "#fef9c3" : null)
+    publish()
+  }
+  return <div className="font-normal">
+    <div role="toolbar" aria-label={`${label} formatting`} className="mb-3 flex flex-wrap gap-1">
+      {[["bold", "Bold"], ["italic", "Italic"], ["highlight", "Highlight"], ["bullets", "Bullets"], ["numbers", "Numbered list"], ["clear", "Clear formatting"]].map(([key, title]) => <button key={key} type="button" aria-pressed={active[key] || false} disabled={disabled} onMouseDown={event => event.preventDefault()} onClick={() => format(key)} className={`rounded-md px-2 py-1 text-xs font-semibold focus-visible:outline-blue-600 disabled:opacity-50 ${active[key] ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-50 hover:text-blue-700"}`}>{title}</button>)}
     </div>
-    <textarea ref={ref} aria-label={label} disabled={disabled} rows={rows} maxLength={12000} value={value} onChange={event => onChange(event.target.value)} className="block w-full resize-y bg-white p-3 text-sm leading-6 text-slate-900 focus:outline-blue-500" />
-    <details className="border-t border-slate-100 px-3 py-2 text-sm"><summary className="cursor-pointer text-xs text-slate-500">Formatting preview</summary><div className="py-3 leading-7 text-slate-700"><MemoText value={value} /></div></details>
-    <p className="px-3 pb-2 text-xs text-slate-500">Select text to format. **Bold**, *italic* and ==highlight== are shown in the saved document.</p>
+    <div key={generation} ref={ref} role="textbox" aria-label={label} aria-multiline="true" aria-disabled={disabled} contentEditable={!disabled} suppressContentEditableWarning onInput={publish} onKeyUp={capture} onMouseUp={capture} onBlur={capture}
+      onPaste={event => { event.preventDefault(); document.execCommand("insertText", false, event.clipboardData.getData("text/plain")); publish() }}
+      onDrop={event => event.preventDefault()}
+      style={{ minHeight: `${rows * 2}rem` }} className={`${textStyles} text-base leading-8 text-slate-600 outline-none focus-visible:outline-none`}>{initialContent}</div>
+    {error ? <p role="alert" className="mt-2 text-xs text-red-700">{error}</p> : null}
   </div>
 }
