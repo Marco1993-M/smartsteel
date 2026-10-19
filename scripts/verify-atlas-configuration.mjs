@@ -36,7 +36,7 @@ for (const fixture of fixtures) {
   assert.equal(estimate.dimensions.length, configuration.length)
   assert.equal(estimate.dimensions.wallHeight, configuration.wallHeight)
   assert.equal(estimate.dimensions.lengthRule, "atlas_4m_bay_rule")
-  assert.equal(estimate.meta.pricingRelease, "atlas-warehouse-2026-10-15")
+  assert.equal(estimate.meta.pricingRelease, "atlas-warehouse-2026-10-19")
   assert.ok(estimate.pricing.estimatedTotal > 0)
 }
 
@@ -68,7 +68,7 @@ assert.equal(corrugatedEstimate.materials.geometry.purlinRowsPerSlope, 4)
 assert.equal(corrugatedEstimate.dimensions.roofPurlins, 8)
 assert.equal(corrugatedEstimate.lineItems.find((item) => item.code === "W08-PUR")?.quantity, 40)
 const corrugatedSheetingLine = corrugatedEstimate.lineItems.find((item) => item.code === "W08-SHT")
-assert.equal(corrugatedSheetingLine.unitRate, 160)
+assert.equal(corrugatedSheetingLine.unitRate, 205)
 assert.equal(corrugatedSheetingLine.priceIncludesMarkup, true)
 assert.equal(corrugatedSheetingLine.total, corrugatedEstimate.pricing.claddingCost)
 assert.equal(
@@ -164,3 +164,21 @@ assert.equal(partnerRelease.commercial.amountExVat > 0, true)
 assert.equal(partnerRelease.commercial.vatExcluded, true)
 
 console.log(`Atlas configuration regression passed for ${fixtures.length} released configurations.`)
+
+// Sheeting sell rates include provisional allowances and must not be uplifted twice.
+for (const [finish, profile, linearRate, sellRate] of [
+  ["galvanised", "IBR", 83.99, 205], ["galvanised", "Corrugated", 83.99, 205],
+  ["galvanised", "Concealed Fix", 86.5, 210], ["chromadek", "IBR", 112.9, 275],
+  ["chromadek", "Corrugated", 112.9, 275], ["chromadek", "Concealed Fix", 114.9, 280],
+]) {
+  const base = { width: 8, length: 16, wallHeight: 3, steelFinish: "ZAM", sheetingProfile: profile, sheetingFinish: finish }
+  const bare = calculateAtlasWarehouseEstimate({ ...base, gableMode: "structure_only" })
+  const clad = calculateAtlasWarehouseEstimate({ ...base, gableMode: "roof_only" })
+  const ctc = clad.sheeting.costing
+  assert.equal(ctc.sellingRate, sellRate)
+  assert.ok(Math.abs(ctc.supplierRatePerSqm - linearRate / 0.7) < 0.00001)
+  assert.ok(Math.abs(ctc.budgetedCost - ctc.supplierSheetCost * 1.2) < 0.00001)
+  assert.ok(Math.abs(clad.pricing.estimatedTotal - bare.pricing.estimatedTotal - ctc.sellingTotal) < 0.02)
+  assert.equal(bare.sheeting.costing.supplierSheetCost, 0)
+}
+console.log("Sheeting rates, CTC allowances and single-uplift checks passed.")
