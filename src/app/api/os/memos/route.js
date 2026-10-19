@@ -48,7 +48,7 @@ export async function POST(request) {
     if (!body || typeof body !== "object" || Array.isArray(body) || (body.data != null && (typeof body.data !== "object" || Array.isArray(body.data)))) return json({ error: "Invalid request." }, 400)
     const { action, id, revision } = body
     const data = body.data || {}
-    if (!["create", "save", "comment", "resolve", "decide", "transition"].includes(action) || (action !== "create" && (!uuid.test(id) || !Number.isInteger(revision)))) return json({ error: "Invalid memo action." }, 400)
+    if (!["create", "save", "comment", "resolve", "decide", "transition", "delete_draft"].includes(action) || (action !== "create" && (!uuid.test(id) || !Number.isInteger(revision)))) return json({ error: "Invalid memo action." }, 400)
     if (["create", "save"].includes(action) && (typeof data.title !== "string" || data.title.trim().length < 3 || data.title.length > 180 || !validateMemoContent(data.content))) return json({ error: "Add a title (3–180 characters) and valid memo sections." }, 400)
     if (action === "save" && (!Array.isArray(data.editor_emails) || data.editor_emails.some((value) => typeof value !== "string"))) return json({ error: "Choose valid editors." }, 400)
     if (action === "comment" && (typeof data.body !== "string" || !data.body.trim() || data.body.length > 4000)) return json({ error: "Comments must contain 1–4,000 characters." }, 400)
