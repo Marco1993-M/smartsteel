@@ -979,6 +979,19 @@ export default function LeadEditorDrawer({
   const selectedAtlasDelivery = /^yes$/i.test(getControlledNoteValue(formData.notes, "Delivery support requested"))
   const selectedAtlasDeliveryDistance = Number(getControlledNoteValue(formData.notes, "Delivery distance").replace(/[^0-9.]/g, "")) || 0
   const builderSummary = builderSubmission?.summary || {}
+  // Match the estimate editor's saved-brief precedence without duplicating data.
+  const briefInput = latestEstimate?.input_data || {}
+  const briefSite = [briefInput.projectLocation || builderConfiguration.location, briefInput.province || builderConfiguration.province].filter(Boolean).join(", ")
+  const briefFacts = [
+    ["Site", briefSite],
+    ["Intended use", briefInput.intendedUse || builderConfiguration.intendedUse],
+    ["Project stage", briefInput.projectStage || builderConfiguration.projectStage],
+    ["Target timeline", briefInput.targetTimeline || builderConfiguration.targetTimeline],
+  ].filter(([, value]) => String(value || "").trim())
+  const briefOutline = briefInput.projectScope || formData.estimate_request || ""
+  const briefClientNotes = briefInput.clientNotes || builderConfiguration.notes || ""
+  const hasClientBrief = briefFacts.length > 0 || Boolean(briefOutline.trim() || briefClientNotes.trim())
+
   const builderDesignReference = builderConfiguration.designReference || builderSummary.designReference || ""
   const builderConfigurationUrl = builderConfiguration.configurationUrl || builderSummary.configurationUrl || ""
   const readOnlyConfigurationUrl = getReadOnlyConfigurationUrl(builderConfigurationUrl)
@@ -2128,6 +2141,34 @@ export default function LeadEditorDrawer({
                 </button>
               </div>
             </div>
+        </section>
+
+        <section aria-label="Client brief and timeline" className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-base font-bold text-slate-950">Client brief &amp; timeline</h3>
+            <span className="text-xs text-slate-500">Internal project context</span>
+          </div>
+          {(loadingBuilderSubmission || loadingEstimates) ? (
+            <p className="mt-3 text-sm text-slate-500" role="status">Loading project brief…</p>
+          ) : hasClientBrief ? (
+            <>
+              {briefFacts.length > 0 ? <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                {briefFacts.map(([label, value]) => <div key={label} className="min-w-0">
+                  <dt className="text-xs font-semibold text-blue-800">{label}</dt>
+                  <dd className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-800">{value}</dd>
+                </div>)}
+              </dl> : null}
+              {briefOutline ? <div className="mt-4 rounded-xl border border-blue-100 bg-white p-3">
+                <p className="text-xs font-semibold text-blue-800">Project outline</p>
+                <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-800">{briefOutline}</p>
+              </div> : null}
+              {briefClientNotes ? <div className="mt-3 rounded-xl border border-blue-100 bg-white p-3">
+                <p className="text-xs font-semibold text-blue-800">Client notes</p>
+                <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-800">{briefClientNotes}</p>
+              </div> : null}
+              <p className="mt-3 text-xs leading-5 text-slate-500">Shows the latest saved estimate brief, with submitted configuration and lead scope used where details are missing.</p>
+            </>
+          ) : <p className="mt-3 text-sm text-slate-500">No client brief or timeline recorded yet. Add the project outline in Project scope below.</p>}
         </section>
 
         <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
