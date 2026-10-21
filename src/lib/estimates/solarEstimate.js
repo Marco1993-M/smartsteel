@@ -1,3 +1,4 @@
+import { validateGroundMountRuns } from "../groundMountRuns.mjs"
 import { formatCurrency } from "./warehouseEstimate.js"
 import { calculateAtlasSolarCarportEstimate } from './atlasSolarCarportEstimate.js'
 import { calculateLippedChannelMassKgPerM } from '../atlasLippedChannelProfiles.js'
@@ -606,6 +607,34 @@ function calculateCflcSolarGroundMountEstimate(normalized) {
   }
 }
 
+function calculateGroundMountRuns(normalized, rawRuns) {
+  const runs = validateGroundMountRuns(rawRuns)
+  const estimates = runs.map((run, index) => {
+    const layout = getGroundMountLayout(run.panelCount)
+    return calculateCflcSolarGroundMountEstimate({ ...normalized, quantity: 1, moduleCount: run.panelCount,
+      width: layout.width, length: layout.length, includeTransport: index === 0 && normalized.includeTransport })
+  })
+  const first = estimates[0]
+  const quantity = normalized.quantity
+  const sum = (section, key) => estimates.reduce((total, item) => total + Number(item[section][key] || 0), 0) * quantity
+  const totalPanels = runs.reduce((total, run) => total + run.panelCount, 0)
+  const summary = `${runs.length} ground-mount runs · ${totalPanels} panels per layout · ` + runs.map((run, i) => `Run ${String.fromCharCode(65 + i)}: ${run.panelCount} panels`).join(" · ")
+  const pricing = { ...first.pricing }
+  for (const key of ["baseTotal", "estimatedTotal", "competitorLow", "competitorHigh", "vatAmount", "totalInclVat"]) pricing[key] = roundMoney(sum("pricing", key))
+  const totals = { ...first.totals, templateType: "multiple_runs" }
+  for (const key of ["totalArea", "totalModules", "structureUnits", "bayCount", "pricedPanels", "postCount", "postEmbedmentSteelKg", "structureSteelKg", "standardStructureCount", "modularBayCount"]) totals[key] = sum("totals", key)
+  totals.area = estimates.reduce((total, item) => total + item.totals.area, 0)
+  return { ...first,
+    input: { ...normalized, moduleCount: totalPanels, groundMountRuns: runs },
+    lineItems: estimates.flatMap((estimate, i) => estimate.lineItems.map((item) => ({ ...item,
+      code: `run-${i + 1}-${item.code}`, label: `Run ${String.fromCharCode(65 + i)} · ${item.label}`,
+      quantity: item.quantity * quantity, total: roundMoney(item.total * quantity) }))),
+    pricing, totals,
+    summary: { title: `Solar ground mount · ${runs.length} runs · ${totalPanels} panels`, estimateRequest: summary, layoutNote: "Separate structures; each run is priced independently. Run positions are not a site layout." },
+    labels: { ...first.labels, area: `${roundMoney(totals.totalArea)} m²`, modules: String(totalPanels * quantity), structureType: `${runs.length} separate ground-mount runs` },
+  }
+}
+
 export function calculateSolarEstimate(input) {
   const normalized = validateSolarEstimateInput(input)
   if (normalized.productType === 'Solar carport') return calculateAtlasSolarCarportEstimate({ ...normalized, parkingRuns: input.parkingRuns }, input.solarPricingRelease || null)
@@ -622,7 +651,7 @@ export function calculateSolarEstimate(input) {
   } = normalized
 
   if (productType === "Solar ground mount") {
-    return calculateCflcSolarGroundMountEstimate(normalized)
+    return input.groundMountRuns?.length ? calculateGroundMountRuns(normalized, input.groundMountRuns) : calculateCflcSolarGroundMountEstimate(normalized)
   }
 
   const rates = SOLAR_ESTIMATE_MATERIALS[productType]
