@@ -1428,12 +1428,16 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       lead_id: leadId,
       version_no: initialVersion,
       product_type: estimateDraft.product_type,
-      product_type_display: estimateDraft.product_type_display || estimateDraft.product_type || "",
       title: `${estimateBaseTitle} V${initialVersion}`,
       source_submission_id: estimateDraft.source_submission_id || null,
       design_reference: estimateDraft.design_reference || null,
-      input_data: estimateDraft.input_data,
-      original_line_items: estimateDraft.original_line_items || [],
+      // Keep display and pricing snapshots in the existing JSON column. These
+      // are not columns in the deployed estimates schema.
+      input_data: {
+        ...estimateDraft.input_data,
+        productTypeLabel: estimateDraft.input_data?.productTypeLabel || estimateDraft.product_type_display || estimateDraft.product_type || "",
+        originalLineItems: estimateDraft.original_line_items || [],
+      },
       line_items: estimateDraft.line_items,
       subtotal: estimateDraft.subtotal,
       markup_multiplier: estimateDraft.markup_multiplier,
