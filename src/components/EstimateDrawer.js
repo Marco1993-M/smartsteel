@@ -1,5 +1,7 @@
 "use client"
 
+import GroundMountRunFields from "./ground-mount/GroundMountRunFields"
+import { groundMountRunsFromNotes } from "../lib/groundMountRuns.mjs"
 import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import { useSolarCarportEstimate } from "../lib/useSolarCarportEstimate"
 import { Dialog, Transition } from "@headlessui/react"
@@ -131,7 +133,7 @@ function isValidAtlasLength(width, length) {
 }
 
 function applyGroundMountDefaults(previousState) {
-  const moduleCount = Math.max(1, Number(previousState.moduleCount) || 36)
+  const moduleCount = previousState.groundMountRuns?.length ? previousState.groundMountRuns.reduce((sum, run) => sum + run.panelCount, 0) : Math.max(1, Number(previousState.moduleCount) || 36)
   const layout = getGroundMountLayout(moduleCount)
 
   return {
@@ -325,6 +327,7 @@ function buildInitialState(lead, estimate) {
     roofStyle: latestInput.roofStyle || "dual_pitch",
     roofPitch: Math.max(1, Number(latestInput.roofPitch || 15)),
     trussSpacing: Math.max(0.1, Number(latestInput.trussSpacing || 1.2)),
+    groundMountRuns: latestInput.groundMountRuns ?? (estimate ? [] : groundMountRunsFromNotes(lead?.notes)),
     moduleCount: Math.max(0, Number(latestInput.moduleCount || 0)),
     structuralSystems: Array.isArray(latestInput.structuralSystems) ? latestInput.structuralSystems : [],
     projectScope: latestInput.projectScope || "",
@@ -773,9 +776,16 @@ export default function EstimateDrawer({
         .filter(Boolean)
 
       const manualItems = currentItems.filter((item) => item.manual)
-      return [...mergedBaseItems, ...manualItems]
+      // New runs introduce new codes; retain edits on existing rows and add
+      // newly configured run rows instead of silently leaving them unpriced.
+      const existingCodes = new Set(mergedBaseItems.map((item) => item.code))
+      const newRunItems = formState.productType === "Solar ground mount"
+        ? preview.lineItems.filter((item) => !existingCodes.has(item.code)).map((item) =>
+          buildEditableLineItem(applyMarkupToLineItem(item, preview.pricing.markupMultiplier), { priceIncludesMarkup: true }))
+        : []
+      return [...mergedBaseItems, ...newRunItems, ...manualItems]
     })
-  }, [formState.productType, preview.lineItems, preview.pricing.markupMultiplier])
+  }, [formState.productType, formState.groundMountRuns, preview.lineItems, preview.pricing.markupMultiplier])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -834,7 +844,7 @@ export default function EstimateDrawer({
           ? buildProductTypeAdjustedState(prev, value)
           : { ...prev, [field]: value }
 
-      if ((field === "moduleCount" || field === "productType") && nextState.productType === "Solar ground mount") {
+      if ((field === "moduleCount" || field === "productType" || field === "groundMountRuns") && nextState.productType === "Solar ground mount") {
         return applyGroundMountDefaults(nextState)
       }
 
@@ -1222,7 +1232,7 @@ export default function EstimateDrawer({
                         </label>
                         {isGroundMountEstimate ? (
                           <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
-                            {formState.width}m
+                            {formState.groundMountRuns?.length ? "See individual runs below" : `${formState.width}m`}
                           </div>
                         ) : isAtlasWarehouseEstimateProduct(formState.productType) ? (
                           <select
@@ -1277,7 +1287,7 @@ export default function EstimateDrawer({
                         </label>
                         {isGroundMountEstimate ? (
                           <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">
-                            {formState.length}m
+                            {formState.groundMountRuns?.length ? "6m per run" : `${formState.length}m`}
                           </div>
                         ) : isAtlasWarehouseEstimateProduct(formState.productType) ? (
                           <select
@@ -1569,6 +1579,7 @@ export default function EstimateDrawer({
                           min="0"
                           step="1"
                           value={formState.moduleCount}
+                          disabled={isGroundMountEstimate && Boolean(formState.groundMountRuns?.length)}
                           onChange={(event) =>
                             handleChange("moduleCount", Math.max(0, Number(event.target.value) || 0))
                           }
@@ -1613,6 +1624,7 @@ export default function EstimateDrawer({
 
                   {isGroundMountEstimate ? (
                     <>
+                      <GroundMountRunFields runs={formState.groundMountRuns || []} onChange={(runs) => handleChange("groundMountRuns", runs)} />
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
                         This CRM estimate now follows the same panel-count pricing logic as the public
                         ground mount estimator. Panel count drives the layout automatically, ZAM steel is

@@ -1,5 +1,7 @@
 "use client"
 
+import GroundMountRunFields from "./ground-mount/GroundMountRunFields"
+import { groundMountRunsFromNotes, withGroundMountRunNotes } from "../lib/groundMountRuns.mjs"
 import { supersededRevisionIds } from "../lib/estimateAlternatives.mjs"
 import { useState, useEffect, useMemo, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
@@ -817,6 +819,7 @@ function NewLeadIntake({ formData, handleChange, validationErrors, inputClass, f
                 })}
               </div>
               {validationErrors.product_type ? <p className="mt-2 text-xs text-red-600">{validationErrors.product_type}</p> : null}
+{formData.product_type === "Solar ground mount" ? <GroundMountRunFields runs={groundMountRunsFromNotes(formData.notes)} onChange={(runs) => handleChange("notes", withGroundMountRunNotes(formData.notes, runs))} /> : null}
               <div className="mt-3">
                 <label className={fieldLabelClass}>Project brief</label>
                 <textarea
@@ -2441,6 +2444,7 @@ export default function LeadEditorDrawer({
             </>
           ) : null}
 
+{formData.product_type === "Solar ground mount" ? <GroundMountRunFields runs={groundMountRunsFromNotes(formData.notes)} onChange={(runs) => handleChange("notes", withGroundMountRunNotes(formData.notes, runs))} /> : null}
           <label className={`${fieldLabelClass} mb-2`}>Scope presets</label>
           <div className="mb-3 flex gap-2 flex-wrap">
             {scopePresetOptions.map((preset) => (
