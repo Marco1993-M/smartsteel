@@ -1,5 +1,6 @@
 "use client"
 
+import { supersededRevisionIds } from "../lib/estimateAlternatives.mjs"
 import { useState, useEffect, useMemo, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
 import {
@@ -1613,11 +1614,12 @@ export default function LeadEditorDrawer({
       if (estimateUpdate.error) {
         console.error("Error marking estimate as sent:", estimateUpdate.error)
       } else {
-        await supabase
+        const olderRevisions = supersededRevisionIds(savedEstimates, selectedEstimateEmail)
+        if (olderRevisions.length) await supabase
           .from("estimates")
           .update({ status: "superseded" })
           .eq("lead_id", lead.id)
-          .neq("id", selectedEstimateEmail.id)
+          .in("id", olderRevisions)
           .in("status", ["draft", "prepared", "sent"])
         await onEstimateSent?.()
       }

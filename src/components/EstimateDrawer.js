@@ -604,6 +604,7 @@ function buildEstimateDraft({
   estimatedTotal,
   existingEstimate,
   saveMode = "new",
+  quoteFamilyId = "original",
 }) {
   return {
     id: existingEstimate?.id,
@@ -618,6 +619,7 @@ function buildEstimateDraft({
     design_reference: formState.designReference || null,
     input_data: {
       ...preview.input,
+      quoteFamilyId,
       sku: preview.meta?.sku || null,
       familyCode: preview.meta?.productCode || null,
       pricingRelease:
@@ -671,6 +673,7 @@ export default function EstimateDrawer({
   }, [estimates, latestEstimate, loadedEstimateId])
   const [formState, setFormState] = useState(() => buildInitialState(lead, latestEstimate))
   const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState("")
   const [prefersSameTabPreview, setPrefersSameTabPreview] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [revisionMode, setRevisionMode] = useState("new")
@@ -928,12 +931,27 @@ export default function EstimateDrawer({
     await navigator.clipboard.writeText(shareUrl)
   }
 
+  const persistEstimate = async (draft) => {
+    setSaveError("")
+    try {
+      const result = await onSaveEstimate(draft)
+      if (!result?.id) throw new Error("The estimate was not saved. Your edits are still open; please check the reported error and retry.")
+      return result
+    } catch (error) {
+      setSaveError(error.message || "The estimate could not be saved. Your edits are still open.")
+      return null
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const handleSave = async () => {
     setIsSaving(true)
-    const savedEstimate = await onSaveEstimate(
+    const savedEstimate = await persistEstimate(
       buildEstimateDraft({
         lead,
         versionNo: nextVersion,
+        quoteFamilyId: revisionMode === "alternative" ? crypto.randomUUID() : (loadedEstimate?.input_data?.quoteFamilyId || "original"),
         formState,
         preview,
         editableLineItems,
@@ -951,10 +969,11 @@ export default function EstimateDrawer({
 
   const handleSaveAndOpen = async () => {
     setIsSaving(true)
-    const savedEstimate = await onSaveEstimate(
+    const savedEstimate = await persistEstimate(
       buildEstimateDraft({
         lead,
         versionNo: nextVersion,
+        quoteFamilyId: revisionMode === "alternative" ? crypto.randomUUID() : (loadedEstimate?.input_data?.quoteFamilyId || "original"),
         formState,
         preview,
         editableLineItems,
@@ -981,7 +1000,7 @@ export default function EstimateDrawer({
     if (!loadedEstimate?.id) return
 
     setIsSaving(true)
-    const savedEstimate = await onSaveEstimate(
+    const savedEstimate = await persistEstimate(
       buildEstimateDraft({
         lead,
         versionNo: Number(loadedEstimate.version_no) || nextVersion,
@@ -991,6 +1010,7 @@ export default function EstimateDrawer({
         subtotal: grossSubtotal,
         estimatedTotal,
         existingEstimate: loadedEstimate,
+        quoteFamilyId: loadedEstimate.input_data?.quoteFamilyId || "original",
         saveMode: "update",
       })
     )
@@ -1071,6 +1091,7 @@ export default function EstimateDrawer({
                     {canUpdateLoadedEstimate ? (
                       <div className="flex rounded-xl bg-slate-100 p-1">
                         <button type="button" onClick={() => setRevisionMode("new")} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${revisionMode === "new" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}>New revision</button>
+                        <button type="button" onClick={() => { setRevisionMode("alternative"); if (revisionMode !== "alternative") setFormState((current) => ({ ...current, estimateName: `${resolveEstimateTitle(current, preview)} — Alternative` })); setHasUnsavedChanges(true) }} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${revisionMode === "alternative" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}>Alternative quote</button>
                         <button type="button" onClick={() => setRevisionMode("update")} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${revisionMode === "update" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}>Update V{loadedEstimate?.version_no}</button>
                       </div>
                     ) : null}
@@ -1078,6 +1099,7 @@ export default function EstimateDrawer({
                 </div>
               </div>
 
+              {revisionMode === "alternative" ? <p role="status" className="bg-blue-50 px-6 py-3 text-sm text-blue-900">Creating a separate quote from the loaded scope. Give it a distinct estimate title and adjust its items below. Saving keeps the original quote and creates a new share link. Quote numbers continue across this lead.</p> : null}
               <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex gap-2 overflow-x-auto">
@@ -1966,6 +1988,7 @@ export default function EstimateDrawer({
               </div>
 
               <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
+                {saveError ? <p role="alert" className="mx-auto mb-3 max-w-5xl rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{saveError}</p> : null}
                 <div className="mx-auto flex max-w-5xl flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="hidden text-xs text-slate-500 sm:block">
                   {hasUnsavedChanges ? "Unsaved changes" : revisionMode === "update" ? `Updating version ${loadedEstimate?.version_no}` : `Saving as version ${nextVersion}`}
@@ -1994,7 +2017,7 @@ export default function EstimateDrawer({
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Save size={16} />
-                  {isSaving ? "Saving..." : revisionMode === "update" && canUpdateLoadedEstimate ? `Update V${loadedEstimate?.version_no}` : `Save V${nextVersion}`}
+                  {isSaving ? "Saving..." : revisionMode === "update" && canUpdateLoadedEstimate ? `Update V${loadedEstimate?.version_no}` : revisionMode === "alternative" ? `Save alternative V${nextVersion}` : `Save V${nextVersion}`}
                 </button>
                 </div>
                 </div>
