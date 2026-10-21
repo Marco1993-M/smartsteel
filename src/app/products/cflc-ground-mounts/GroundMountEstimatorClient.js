@@ -1,5 +1,6 @@
 "use client"
 
+import { GROUND_MOUNT_PANEL_OPTIONS, GROUND_MOUNT_MAX_RUNS } from "../../../lib/groundMountRuns.mjs"
 import dynamic from "next/dynamic"
 import { useMemo, useState } from "react"
 import Link from "next/link"
@@ -38,10 +39,9 @@ const PROCEED_TIMING_OPTIONS = [
   { value: "just_pricing", label: "Just pricing for now" },
 ]
 
-const GROUND_MOUNT_QUICK_PANEL_OPTIONS = [6, 12, 18, 24, 30]
-const GROUND_MOUNT_MORE_PANEL_OPTIONS = [36, 42, 48, 54, 60]
+const GROUND_MOUNT_QUICK_PANEL_OPTIONS = GROUND_MOUNT_PANEL_OPTIONS.slice(0, 5)
+const GROUND_MOUNT_MORE_PANEL_OPTIONS = GROUND_MOUNT_PANEL_OPTIONS.slice(5)
 const GROUND_MOUNT_MAX_PANELS_PER_RUN = 60
-const GROUND_MOUNT_MAX_RUNS = 10
 
 const STEP_CONFIG = [
   {
