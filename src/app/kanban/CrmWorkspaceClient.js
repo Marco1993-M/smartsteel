@@ -1523,8 +1523,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
         }
 
         if (!missingColumn || !["share_token", "shared_at", "prepared_at", "sent_at", "accepted_at", "accepted_by_name", "accepted_by_email", "pdf_url", "product_type_display", "original_line_items", "source_submission_id", "design_reference"].includes(missingColumn)) {
-          alert("Error saving estimate: " + insertResult.error.message)
-          return false
+          throw new Error(`Estimate save rejected${insertResult.error.code ? ` (${insertResult.error.code})` : ""}: ${insertResult.error.message}`)
         }
 
         delete estimateInsertPayload[missingColumn]
@@ -1553,6 +1552,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
     if (!savedEstimate && !insertResult.error) {
       savedEstimate = insertResult.data?.[0]
+      if (!savedEstimate?.id) throw new Error("Supabase did not confirm an estimate was saved. Your changes remain open; check your session and retry.")
       if (!savedEstimate?.share_token) {
         savedEstimate = {
           ...savedEstimate,
