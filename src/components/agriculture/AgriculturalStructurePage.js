@@ -19,7 +19,8 @@ function builderHref(configuration) {
 
 export default function AgriculturalStructurePage({ content }) {
   const pageUrl = `${SITE_URL}/agricultural-buildings/${content.slug}`
-  const primaryBuilderUrl = builderHref(content.builderConfigurations[0])
+  const hasBuilderConfigurations = content.builderConfigurations.length > 0
+  const primaryBuilderUrl = hasBuilderConfigurations ? builderHref(content.builderConfigurations[0]) : "/warehouse-builder?productType=Atlas+Warehouse"
   const schema = {
     "@context": "https://schema.org",
     "@graph": [
@@ -82,7 +83,7 @@ export default function AgriculturalStructurePage({ content }) {
           <p className="mt-4 max-w-2xl text-base leading-7 text-[#526c79] sm:mt-6 sm:text-lg">{content.summary}</p>
           <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row">
             <a href="#agricultural-quote" className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#0043f3] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#001d2e]">{content.primaryCta} <ArrowRight className="h-4 w-4" /></a>
-            <Link href={primaryBuilderUrl} className="inline-flex min-h-12 items-center justify-center border border-[#001d2e] bg-white px-6 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-[#edf5f8]">Preview the W10 × 32m shell</Link>
+            <Link href={primaryBuilderUrl} className="inline-flex min-h-12 items-center justify-center border border-[#001d2e] bg-white px-6 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-[#edf5f8]">{content.heroBuilderLabel}</Link>
           </div>
         </div>
         <div className="pointer-events-none absolute right-12 top-[170px] hidden w-[270px] border-l border-[#b8cdd7] pl-8 xl:block">
@@ -122,9 +123,9 @@ export default function AgriculturalStructurePage({ content }) {
 
     <section className="bg-[#001d2e] text-white">
       <div className="mx-auto max-w-[1500px] px-5 py-14 sm:px-8 lg:px-12 lg:py-20">
-        <div className="max-w-4xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#73a8ff]">Atlas starting configurations</p><h2 className="mt-3 text-2xl font-black sm:text-3xl">Three shells for the main 20-sow functions</h2><p className="mt-3 text-sm leading-7 text-[#c1d9e5]">Published guidance separates breeding, farrowing and growing functions. These preliminary Atlas sizes round those outlines to released spans and 4m structural bays. They are starting points for budgeting, not final livestock-layout or engineering approval.</p></div>
+        <div className="max-w-4xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#73a8ff]">Atlas building pathway</p><h2 className="mt-3 text-2xl font-black sm:text-3xl">{content.builderSectionTitle}</h2><p className="mt-3 text-sm leading-7 text-[#c1d9e5]">{content.builderSectionDescription}</p></div>
         <div className="mt-9 border-y border-[#315364]">
-          {content.builderConfigurations.map((configuration, index) => <div key={configuration.code} className="grid gap-5 border-b border-[#315364] py-6 last:border-b-0 md:grid-cols-[80px_1fr_auto] md:items-center md:gap-8"><span className="font-mono text-sm font-bold text-[#ffcf1a]">0{index + 1}</span><div><div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><h3 className="text-lg font-black">{configuration.title}</h3><span className="font-mono text-sm font-bold text-[#73a8ff]">{configuration.width}m × {configuration.length}m × {configuration.height}m</span></div><p className="mt-2 max-w-3xl text-sm leading-6 text-[#9fbbc8]">{configuration.note}</p><p className="mt-2 max-w-3xl text-xs leading-5 text-white/55">Sizing basis: {configuration.basis}</p></div><Link href={builderHref(configuration)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-white/50 px-5 text-sm font-bold text-white transition hover:border-[#ffcf1a] hover:bg-[#ffcf1a] hover:text-[#001d2e]">View in 3D <ArrowRight className="h-4 w-4" /></Link></div>)}
+          {hasBuilderConfigurations ? content.builderConfigurations.map((configuration, index) => <div key={configuration.code} className="grid gap-5 border-b border-[#315364] py-6 last:border-b-0 md:grid-cols-[80px_1fr_auto] md:items-center md:gap-8"><span className="font-mono text-sm font-bold text-[#ffcf1a]">0{index + 1}</span><div><div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><h3 className="text-lg font-black">{configuration.title}</h3><span className="font-mono text-sm font-bold text-[#73a8ff]">{configuration.width}m × {configuration.length}m × {configuration.height}m</span></div><p className="mt-2 max-w-3xl text-sm leading-6 text-[#9fbbc8]">{configuration.note}</p><p className="mt-2 max-w-3xl text-xs leading-5 text-white/55">Sizing basis: {configuration.basis}</p></div><Link href={builderHref(configuration)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-white/50 px-5 text-sm font-bold text-white transition hover:border-[#ffcf1a] hover:bg-[#ffcf1a] hover:text-[#001d2e]">View in 3D <ArrowRight className="h-4 w-4" /></Link></div>) : <div className="grid gap-6 py-7 md:grid-cols-[1fr_auto] md:items-center"><div><h3 className="text-lg font-black">Size the shell from the operating brief</h3><p className="mt-2 max-w-3xl text-sm leading-7 text-[#9fbbc8]">{content.sizingGuidance}</p></div><a href="#agricultural-quote" className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#ffcf1a] px-5 text-sm font-bold text-[#ffcf1a] transition hover:bg-[#ffcf1a] hover:text-[#001d2e]">Send the project brief <ArrowRight className="h-4 w-4" /></a></div>}
         </div>
       </div>
     </section>
@@ -137,8 +138,8 @@ export default function AgriculturalStructurePage({ content }) {
 
     <section id="agricultural-quote" className="scroll-mt-44 border-y border-[#b8cdd7] bg-white">
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[0.7fr_1.3fr] lg:px-12 lg:py-24">
-        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Agricultural project brief</p><h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">Request an Atlas review for your {content.planLabel}</h2><p className="mt-5 text-base leading-8 text-[#526c79]">Share the farm location, production intent and structural package you need. You do not need a finished plan to start the conversation.</p><div className="mt-8 border-t border-[#b8cdd7] pt-6 text-sm leading-7 text-[#264554]"><p className="font-black">Useful before you start</p><p className="mt-2">Think about the proposed site, breeding capacity, functional areas and preferred project timing. Smart Steel can use this to shape the first Atlas building-shell proposal.</p></div></div>
-        <AgriculturalQuoteForm content={{ planLabel: content.planLabel }} />
+        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Agricultural project brief</p><h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">Request an Atlas review for your {content.planLabel}</h2><p className="mt-5 text-base leading-8 text-[#526c79]">Share the farm location, production intent and structural package you need. You do not need a finished plan to start the conversation.</p><div className="mt-8 border-t border-[#b8cdd7] pt-6 text-sm leading-7 text-[#264554]"><p className="font-black">Useful before you start</p><p className="mt-2">{content.formGuidance}</p></div></div>
+        <AgriculturalQuoteForm content={{ planLabel: content.planLabel }} {...content.quoteForm} />
       </div>
     </section>
 
@@ -169,7 +170,7 @@ export default function AgriculturalStructurePage({ content }) {
 
     <section className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
       <div className="flex flex-wrap items-end justify-between gap-6"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Agricultural building system</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">One template, distinct farming applications</h2></div><Link href="/agricultural-buildings" className="inline-flex items-center gap-2 text-sm font-bold text-[#0043f3]">View the category roadmap <ArrowRight className="h-4 w-4" /></Link></div>
-      <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{agriculturalCategories.filter((item) => item.title !== "Piggery structures").map((item) => <article key={item.title} className="border border-[#b8cdd7] p-6"><Sprout className="h-5 w-5 text-[#0043f3]" /><h3 className="mt-5 text-xl font-black">{item.title}</h3><p className="mt-3 text-sm leading-7 text-[#526c79]">{item.description}</p><p className="mt-6 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8295a0]">{item.status}</p></article>)}</div>
+      <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{agriculturalCategories.filter((item) => item.href !== `/agricultural-buildings/${content.slug}`).map((item) => { const body = <><Sprout className="h-5 w-5 text-[#0043f3]" /><h3 className="mt-5 text-xl font-black">{item.title}</h3><p className="mt-3 text-sm leading-7 text-[#526c79]">{item.description}</p><p className="mt-6 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8295a0]">{item.status}</p></>; return item.href ? <Link key={item.title} href={item.href} className="border border-[#b8cdd7] p-6 transition hover:border-[#0043f3] hover:bg-[#f7fafb]">{body}</Link> : <article key={item.title} className="border border-[#b8cdd7] p-6">{body}</article> })}</div>
     </section>
 
     <section id="faqs" className="scroll-mt-20 border-y border-[#b8cdd7] bg-[#f7fafb]">
