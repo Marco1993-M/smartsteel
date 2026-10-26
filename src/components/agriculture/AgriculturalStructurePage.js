@@ -1,9 +1,18 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, Check, ClipboardCheck, FileText, MapPin, ShieldCheck, Sprout } from "lucide-react"
+import { ArrowRight, Check, ClipboardCheck, FileText, MapPin, ShieldCheck, PiggyBank, Bird, Milk, Beef, Fence, Wheat, Warehouse } from "lucide-react"
 import { agriculturalCategories } from "../../app/agricultural-buildings/agriculturalStructureData"
 import AgriculturalQuoteForm from "./AgriculturalQuoteForm"
 import PoultryPlanningSection from "./PoultryPlanningSection"
+
+const CATEGORY_ICONS = {
+  "/agricultural-buildings/20-sow-piggery": PiggyBank,
+  "/agricultural-buildings/poultry-houses": Bird,
+  "/agricultural-buildings/dairy-milking-sheds": Milk,
+  "/agricultural-buildings/cattle-feedlot-sheds": Beef,
+  "/agricultural-buildings/sheep-small-stock-sheds": Fence,
+  "/agricultural-buildings/grain-farm-storage": Wheat,
+}
 
 const SITE_URL = "https://www.smartsteel.co.za"
 
@@ -120,10 +129,13 @@ export default function AgriculturalStructurePage({ content }) {
     {content.poultryPlanning ? <PoultryPlanningSection content={content.poultryPlanning} /> : null}
 
     {!content.poultryPlanning ? <section className="border-b border-[#b8cdd7] bg-white">
-      <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[0.72fr_1.28fr] lg:px-12 lg:py-20">
+      <details className="group mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
+        <summary className="flex min-h-20 cursor-pointer list-none items-center justify-between gap-4 py-6 font-bold [&::-webkit-details-marker]:hidden"><span>Planning guidance and technical references<span className="mt-1 block text-sm font-normal text-[#526c79]">Explore the published background behind this building application.</span></span><span aria-hidden="true" className="shrink-0 text-2xl text-[#0043f3] transition-transform group-open:rotate-45">+</span></summary>
+      <div className="grid gap-8 pt-6 pb-8 lg:grid-cols-[0.72fr_1.28fr]">
         <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Published planning basis</p><h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">{content.planningBasis.title}</h2><p className="mt-5 text-sm leading-7 text-[#526c79]">{content.planningBasis.description}</p><div className="mt-6 flex flex-col items-start gap-3"><a href={content.planningBasis.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-[#0043f3]">{content.planningBasis.sourceLabel} <ArrowRight className="h-4 w-4" /></a><a href={content.planningBasis.supportingSourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-[#0043f3]">{content.planningBasis.supportingSourceLabel} <ArrowRight className="h-4 w-4" /></a></div></div>
         <div className="border-y border-[#b8cdd7]">{content.planningBasis.points.map((item, index) => <div key={item} className="grid grid-cols-[40px_1fr] gap-4 border-b border-[#b8cdd7] py-4 last:border-b-0"><span className="font-mono text-xs font-bold text-[#0043f3]">0{index + 1}</span><p className="text-sm font-semibold leading-6 text-[#264554]">{item}</p></div>)}</div>
       </div>
+      </details>
     </section> : null}
 
     <section className="bg-[#001d2e] text-white">
@@ -143,7 +155,18 @@ export default function AgriculturalStructurePage({ content }) {
 
     <section id="agricultural-quote" className="scroll-mt-44 border-y border-[#b8cdd7] bg-white">
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[0.7fr_1.3fr] lg:px-12 lg:py-24">
-        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Agricultural project brief</p><h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">Let’s plan your {content.planLabel}</h2><p className="mt-5 text-base leading-8 text-[#526c79]">Tell us what you want to achieve, where you want to build and what you know so far. We will help you work through the building options and what to do next.</p><div className="mt-8 border-t border-[#b8cdd7] pt-6 text-sm leading-7 text-[#264554]"><p className="font-black">A few details help us get started</p><p className="mt-2">{content.formGuidance}</p></div></div>
+        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Agricultural project brief</p><h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">Let’s plan your {content.planLabel}</h2><p className="mt-5 text-base leading-8 text-[#526c79]">Tell us what you want to achieve, where you want to build and what you know so far. We will help you work through the building options and what to do next.</p><div className="mt-8 border-t border-[#b8cdd7] pt-6 text-sm leading-7 text-[#264554]"><p className="font-black">A few details help us get started</p><p className="mt-2">{content.formGuidance}</p></div>
+          <div className="mt-8 rounded-xl bg-[#edf5f8] p-6">
+            <h3 className="text-lg font-black">What happens next?</h3>
+            <ol className="mt-5 space-y-5">
+              {[
+                ["Share your plans", "Tell us about your site and what you want to achieve. It’s fine if some details are still undecided."],
+                ["Work through the scope", "We’ll get in touch to clarify the building requirements and discuss the options with you."],
+                ["Receive your proposal", "Once the scope is clear, we’ll prepare a proposal showing the pricing, inclusions and next steps."],
+              ].map(([title, text], index) => <li key={title} className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-[#0043f3]">{index + 1}</span><div><h4 className="text-sm font-bold">{title}</h4><p className="mt-1 text-sm leading-6 text-[#526c79]">{text}</p></div></li>)}
+            </ol>
+          </div>
+        </div>
         <AgriculturalQuoteForm key={content.slug} content={{ planLabel: content.planLabel }} {...content.quoteForm} />
       </div>
     </section>
@@ -151,10 +174,14 @@ export default function AgriculturalStructurePage({ content }) {
     <section id="responsibilities" className="scroll-mt-44 bg-[#001d2e] text-white">
       <div className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
         <div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#ffcf1a]">Planning the project together</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">A shared plan, with everyone’s role clear</h2></div>
-        <div className="mt-10 grid border border-[#315364] lg:grid-cols-2">
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-[#c1d9e5]">We help define the steel building package. Your farm and specialist team coordinate the operational requirements, site preparation and approvals. The agreed quotation confirms the scope.</p>
+        <details className="group mt-6 border-y border-[#315364]">
+          <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 font-bold [&::-webkit-details-marker]:hidden"><span>View detailed roles and responsibilities</span><span aria-hidden="true" className="text-2xl text-[#ffcf1a] transition-transform group-open:rotate-45">+</span></summary>
+        <div className="mb-6 grid border border-[#315364] lg:grid-cols-2">
           <div className="relative p-6 sm:p-8"><span className="absolute right-6 top-5 font-mono text-5xl font-black text-white/5">01</span><div className="flex items-center gap-3"><ShieldCheck className="h-5 w-5 text-[#ffcf1a]" /><h3 className="text-lg font-black">Smart Steel structural scope</h3></div><ul className="mt-6 space-y-4">{content.responsibilities.smartSteel.map((item) => <li key={item} className="flex gap-3 text-sm leading-6 text-[#dbe8ee]"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#ffcf1a]" />{item}</li>)}</ul></div>
           <div className="relative border-t border-[#315364] p-6 sm:p-8 lg:border-l lg:border-t-0"><span className="absolute right-6 top-5 font-mono text-5xl font-black text-white/5">02</span><div className="flex items-center gap-3"><ClipboardCheck className="h-5 w-5 text-[#73a8ff]" /><h3 className="text-lg font-black">Your farm and specialist team</h3></div><ul className="mt-6 space-y-4">{content.responsibilities.client.map((item) => <li key={item} className="flex gap-3 text-sm leading-6 text-[#dbe8ee]"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#73a8ff]" />{item}</li>)}</ul></div>
         </div>
+        </details>
         <p className="mt-5 border-l-2 border-[#ffcf1a] pl-4 text-xs leading-6 text-[#9fbbc8]">{content.disclaimer}</p>
       </div>
     </section>
@@ -173,13 +200,13 @@ export default function AgriculturalStructurePage({ content }) {
       </div>
     </section>
 
-    <section className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
-      <div className="flex flex-wrap items-end justify-between gap-6"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Agricultural building system</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">More ways to build for your farm</h2></div><Link href="/agricultural-buildings" className="inline-flex items-center gap-2 text-sm font-bold text-[#0043f3]">Explore agricultural buildings <ArrowRight className="h-4 w-4" /></Link></div>
-      <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{agriculturalCategories.filter((item) => item.href !== `/agricultural-buildings/${content.slug}`).map((item) => { const body = <><Sprout className="h-5 w-5 text-[#0043f3]" /><h3 className="mt-5 text-xl font-black">{item.title}</h3><p className="mt-3 text-sm leading-7 text-[#526c79]">{item.description}</p><span className="mt-auto flex items-center gap-2 pt-6 text-sm font-bold text-[#0043f3]">Explore this building <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span></>; return item.href ? <Link key={item.title} href={item.href} className="group flex flex-col rounded-xl border border-[#b8cdd7] p-6 transition hover:border-[#0043f3] hover:bg-[#f7fafb] hover:shadow-sm">{body}</Link> : <article key={item.title} className="border border-[#b8cdd7] p-6">{body}</article> })}</div>
-    </section>
-
     <section id="faqs" className="scroll-mt-44 border-y border-[#b8cdd7] bg-[#f7fafb]">
       <div className="mx-auto max-w-[1100px] px-5 py-16 sm:px-8 lg:py-24"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Questions as you plan</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">{content.planLabel} FAQs</h2><div className="mt-8 divide-y divide-[#b8cdd7] border-y border-[#b8cdd7]">{content.faqs.map((item) => <details key={item.question} className="group py-1"><summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 font-bold [&::-webkit-details-marker]:hidden"><span>{item.question}</span><span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-xl text-[#0043f3] transition-transform group-open:rotate-45">+</span></summary><p className="max-w-3xl pb-5 text-sm leading-7 text-[#526c79]">{item.answer}</p></details>)}</div></div>
+    </section>
+
+    <section className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
+      <div className="flex flex-wrap items-end justify-between gap-6"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Agricultural building system</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">More ways to build for your farm</h2></div><Link href="/agricultural-buildings" className="inline-flex items-center gap-2 text-sm font-bold text-[#0043f3]">Explore agricultural buildings <ArrowRight className="h-4 w-4" /></Link></div>
+      <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{agriculturalCategories.filter((item) => item.href !== `/agricultural-buildings/${content.slug}`).map((item) => { const Icon = CATEGORY_ICONS[item.href] || Warehouse; const body = <><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#edf5f8] text-[#0043f3]"><Icon className="h-5 w-5" aria-hidden="true" /></span><h3 className="mt-5 text-xl font-black">{item.title}</h3><p className="mt-3 text-sm leading-7 text-[#526c79]">{item.description}</p><span className="mt-auto flex items-center gap-2 pt-6 text-sm font-bold text-[#0043f3]">Explore this building <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span></>; return item.href ? <Link key={item.title} href={item.href} className="group flex flex-col rounded-xl border border-[#b8cdd7] p-6 transition hover:border-[#0043f3] hover:bg-[#f7fafb] hover:shadow-sm">{body}</Link> : <article key={item.title} className="border border-[#b8cdd7] p-6">{body}</article> })}</div>
     </section>
 
     <section className="bg-[#0043f3] text-white"><div className="mx-auto flex max-w-[1500px] flex-col gap-8 px-5 py-14 sm:px-8 xl:flex-row xl:items-center xl:justify-between lg:px-12"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#cfe0ff]">Your farm. Your next step.</p><h2 className="mt-3 max-w-3xl text-3xl font-black">Tell us where you want to take your farm. We’ll help plan the building.</h2><p className="mt-3 flex items-center gap-2 text-sm text-[#e2ebff]"><MapPin className="h-4 w-4" />Project reviews across South Africa · Reviewed {content.lastReviewed}</p></div><div className="flex flex-col gap-3 sm:flex-row xl:shrink-0 xl:flex-col"><a href="#agricultural-quote" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-[#ffcf1a]">{content.primaryCta} <ArrowRight className="h-4 w-4" /></a><a href={`tel:+27828464555`} className="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/70 px-6 py-3 text-sm font-bold text-white transition hover:bg-white hover:text-[#001d2e]">Call +27 82 846 4555</a></div></div></section>

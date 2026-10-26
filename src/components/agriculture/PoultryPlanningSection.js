@@ -58,7 +58,10 @@ export default function PoultryPlanningSection({ content }) {
         </div>
       </div>
       <div className="mt-10 flex flex-col gap-4 border-y border-[#b8cdd7] py-6 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-black">Still working out the system?</h3><p className="mt-1 text-sm leading-6 text-[#526c79]">Start with your flock type, approximate capacity and location. Mark the rest as “not sure yet”.</p></div><a href="#agricultural-quote" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 bg-[#0043f3] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#001d2e]">Share your poultry brief <ArrowRight className="h-4 w-4" /></a></div>
-      <p className="mt-5 text-xs leading-6 text-[#708893]">Planning references: {content.sources.map((source, index) => <span key={source.url}>{index ? " · " : ""}<a href={source.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-[#0043f3]">{source.label}</a></span>)}. Project requirements are confirmed with the client’s poultry, equipment and professional team.</p>
+      <details className="group mt-5 border-b border-[#b8cdd7]">
+        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 py-3 text-sm font-bold text-[#526c79] [&::-webkit-details-marker]:hidden"><span>Planning references</span><span aria-hidden="true" className="text-xl text-[#0043f3] transition-transform group-open:rotate-45">+</span></summary>
+        <p className="pb-5 text-xs leading-6 text-[#526c79]">Sources: {content.sources.map((source, index) => <span key={source.url}>{index ? " · " : ""}<a href={source.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-[#0043f3]">{source.label}</a></span>)}. Project requirements are confirmed with the client’s poultry, equipment and professional team.</p>
+      </details>
     </div>
   </section>
 }
