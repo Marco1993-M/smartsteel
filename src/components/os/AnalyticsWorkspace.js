@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Users, RefreshCw, ArrowDownToLine, Clock3, MessageSquare, Layers3, BarChart3 } from "lucide-react"
+import { ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Users, RefreshCw, ArrowDownToLine, Clock3, MessageSquare, Layers3, BarChart3, Workflow } from "lucide-react"
 import { currentAnalyticsMonth } from "../../lib/analyticsPeriods.mjs"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 
-const TABS = [{ key: 'overview', label: 'Overview', icon: BarChart3 }, { key: 'pipeline', label: 'Pipeline & quotes', icon: Layers3 }, { key: 'clients', label: 'Clients & feedback', icon: MessageSquare }, { key: 'marketing', label: 'Marketing', icon: Megaphone }]
+const TABS = [{ key: 'overview', label: 'Overview', icon: BarChart3 }, { key: 'pipeline', label: 'Pipeline & quotes', icon: Layers3 }, { key: 'builders', label: 'Builder funnels', icon: Workflow }, { key: 'clients', label: 'Clients & feedback', icon: MessageSquare }, { key: 'marketing', label: 'Marketing', icon: Megaphone }]
 const money = (value) => value == null ? '—' : new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(value)
 const formatCurrency = money
 const formatNumber = (value, maximumFractionDigits = 0) => new Intl.NumberFormat('en-ZA', { maximumFractionDigits }).format(value || 0)
@@ -31,6 +31,42 @@ function PerformanceTable({ rows, label }) {
   return <section className={panel}><Heading eyebrow="Acquisition cohort" title={label} detail="Leads created in the selected period, using their current outcome. Open opportunities may still convert." aside={<label className="text-xs text-slate-500">Sort by <select className="ml-2 rounded-lg border border-slate-200 p-2 text-slate-800" value={sort} onChange={(event) => setSort(event.target.value)}><option value="wonValue">Won value</option><option value="leads">Lead volume</option><option value="winRate">Win rate</option></select></label>} />
     {!rows.length ? <Empty>No leads in this period.</Empty> : <div className="overflow-x-auto"><table className="w-full min-w-[540px] text-left text-sm"><thead className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500"><tr>{['Name', 'Leads', 'Quoted', 'Won', 'Win rate', 'Won value'].map((text) => <th key={text} className="px-2 py-3 first:pl-0">{text}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{sorted.map((row) => <tr key={row.label} className="hover:bg-slate-50"><th scope="row" className="max-w-[220px] py-4 pr-3 font-medium text-slate-800">{row.label}</th><td className="px-2 tabular-nums">{row.leads}</td><td className="px-2 tabular-nums">{row.quoted ?? '—'}</td><td className="px-2 tabular-nums">{row.won}</td><td className="px-2"><span className="rounded-md bg-sky-50 px-2 py-1 text-sky-800">{percent(row.winRate)}</span></td><td className="whitespace-nowrap px-2 font-semibold tabular-nums">{money(row.wonValue)}</td></tr>)}</tbody></table></div>}
   </section>
+}
+
+function BuilderFunnel({ data }) {
+  if (!data?.available) return <section className={panel}><Heading eyebrow="Builder analytics" title="Builder funnel tracking is ready" detail="Apply the builder funnel database migration to begin collecting anonymous journey events." /><Empty>No builder journey data is available yet. Run supabase/smart_steel_builder_funnel_analytics.sql, then publish the site.</Empty></section>
+
+  const hasData = data.journeys > 0
+  return <div className="space-y-5">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Stat label="Builder journeys" value={formatNumber(data.journeys)} note={`${changeLabel(data.changes?.journeys)} against the comparison period`} dark />
+      <Stat label="Journey → lead" value={percent(data.conversionRate)} note={`${data.changes?.conversionRate > 0 ? '+' : ''}${formatNumber(data.changes?.conversionRate, 1)} percentage points`} />
+      <Stat label="WhatsApp handoffs" value={formatNumber(data.whatsappHandoffs)} note="Recorded after a builder journey" />
+      <Stat label="Submission failures" value={formatNumber(data.submissionFailures)} note={data.submissionFailures ? "Review failed lead attempts" : "No failed attempts recorded"} />
+    </div>
+
+    {!hasData ? <section className={panel}><Heading eyebrow="Collection started" title="Waiting for the first complete journeys" detail="Events will appear here as visitors use the three builders." /><Empty>The tracker is connected. Select a later reporting period after production traffic begins flowing.</Empty></section> : <>
+      <section className={panel}>
+        <Heading eyebrow="All builders · unique journeys" title="Where visitors leave the builder journey" detail="Each stage counts a journey once. Rates use builder views as the baseline, so repeated interactions do not inflate progress." />
+        <div className="space-y-4">{data.stages.map((stage, index) => {
+          const previousValue = index === 0 ? stage.value : data.stages[index - 1].value
+          const stepRate = index === 0 ? 100 : previousValue > 0 ? Math.round(stage.value / previousValue * 1000) / 10 : 0
+          return <div key={stage.key}>
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 text-sm"><span className="font-medium text-slate-700">{stage.label}</span><span className="tabular-nums text-slate-500"><strong className="text-slate-950">{formatNumber(stage.value)}</strong> · {percent(stage.rate)} of views{index ? ` · ${percent(stepRate)} from prior stage` : ''}</span></div>
+            <div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-sky-500 transition-[width]" style={{ width: `${Math.min(100, stage.rate)}%` }} /></div>
+          </div>
+        })}</div>
+      </section>
+
+      <section className={panel}>
+        <Heading eyebrow="Builder comparison" title="Compare demand and conversion" detail="Use volume and conversion together. Low-volume builders need a longer observation window before making roadmap decisions." />
+        <div className="overflow-x-auto"><table className="w-full min-w-[780px] text-left text-sm"><thead className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500"><tr>{['Builder', 'Views', 'Started', 'Pricing', 'Form reached', 'Leads', 'Conversion', 'Failures'].map((label) => <th key={label} className="px-3 py-3 first:pl-0">{label}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{data.builders.map((builder) => {
+          const stage = Object.fromEntries(builder.stages.map((item) => [item.key, item.value]))
+          return <tr key={builder.key} className="hover:bg-slate-50"><th scope="row" className="py-4 pr-3 font-semibold text-slate-900">{builder.label}</th><td className="px-3 tabular-nums">{builder.journeys}</td><td className="px-3 tabular-nums">{stage.configuration_started || 0}</td><td className="px-3 tabular-nums">{stage.pricing_displayed || 0}</td><td className="px-3 tabular-nums">{stage.lead_form_viewed || 0}</td><td className="px-3 font-semibold tabular-nums">{stage.lead_submit_succeeded || 0}</td><td className="px-3"><span className="rounded-md bg-sky-50 px-2 py-1 font-semibold text-sky-800">{percent(builder.conversionRate)}</span></td><td className={`px-3 font-semibold tabular-nums ${builder.submissionFailures ? 'text-rose-700' : 'text-slate-500'}`}>{builder.submissionFailures}</td></tr>
+        })}</tbody></table></div>
+      </section>
+    </>}
+  </div>
 }
 function Ageing({ insights }) {
   const buckets = insights.pipeline.ageBuckets
@@ -243,6 +279,7 @@ export default function AnalyticsWorkspace() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Stat label="Open quoted value" value={insights.estimatesAvailable ? money(insights.pipeline.quotedValue) : '—'} note={`${insights.pipeline.quotedCount} open opportunities with a sent quote · all dates`} dark /><Stat label="Enquiry → first quote" value={insights.estimatesAvailable ? quoteHours(insights.quotes.medianHours) : '—'} note={`Median calendar hours · ${insights.quotes.timingSample} valid send timestamps in the lead cohort`} /><Stat label="Awaiting first quote" value={insights.estimatesAvailable ? insights.pipeline.awaitingQuote : '—'} note={insights.pipeline.oldestAwaitingDays == null ? 'No measurable waiting time' : `Oldest open enquiry: ${insights.pipeline.oldestAwaitingDays} days. Includes unqualified leads.`} /><Stat label="Quote sends in period" value={insights.estimatesAvailable ? metrics.sentCount : '—'} note="Send activity, including revisions and older leads" /></div>
           <div className="grid items-start gap-5 lg:grid-cols-2"><Ageing insights={insights} /><section className={panel}><Heading eyebrow="Acquisition cohort" title="From enquiry to outcome" detail="Current outcomes of leads created in the selected period. These counts are not a strict funnel: a win can exist without a recorded quote." /><div className="space-y-5">{[{ label: 'Enquiries received', value: metrics.leadCount }, { label: 'With a sent quote', value: insights.estimatesAvailable ? insights.quotes.quotedCount : null }, { label: 'Currently won', value: metrics.wonCount }].map((row) => <div key={row.label}><div className="mb-2 flex justify-between text-sm"><span className="text-slate-600">{row.label}</span><strong>{row.value ?? '—'}</strong></div><div className="h-3 rounded-full bg-slate-100"><div className="h-3 rounded-full bg-sky-500" style={{ width: `${metrics.leadCount ? (row.value || 0) / metrics.leadCount * 100 : 0}%` }} /></div></div>)}</div><p className="mt-6 text-xs leading-5 text-slate-500">Recent cohorts have had less time to convert. Compare like-for-like periods before drawing conclusions.</p></section></div>
         </>}
+        {tab === 'builders' && <BuilderFunnel data={data.builderFunnels} />}
         {tab === 'clients' && <><Feedback data={data} /><PerformanceTable rows={insights.products} label="Product performance" /><section className={panel}><Heading eyebrow="Data quality" title="Make the next report more useful" /><div className="flex flex-wrap gap-3 text-sm"><span className="rounded-lg bg-amber-50 px-4 py-3 text-amber-800">{data.attention.missingSource} new leads without a source</span><span className="rounded-lg bg-slate-100 px-4 py-3 text-slate-700">{data.attention.missingProduct} new leads without a product</span></div></section></>}
         {tab === 'marketing' && <><PerformanceTable rows={insights.sources} label="Which sources bring customers?" /><Efficiency metric={data.commercialEfficiency} /><section><Heading eyebrow="Connected channels" title="Search demand & paid acquisition" detail="Platform conversions are separate from CRM wins. Source performance above uses recorded CRM attribution." /><div className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white lg:grid-cols-2 lg:divide-x lg:divide-slate-200"><MarketingSourceCard connection={connections.search_console} metrics={data.marketing.searchConsole} type="search" schemaReady={data.marketing.schemaReady} syncingSource={syncingSource} onSync={syncMarketingSource} /><MarketingSourceCard connection={connections.google_ads} metrics={data.marketing.googleAds} type="ads" schemaReady={data.marketing.schemaReady} syncingSource={syncingSource} onSync={syncMarketingSource} /></div>{syncMessage && <p role="status" className="mt-3 rounded-lg bg-slate-100 p-3 text-sm text-slate-700">{syncMessage}</p>}</section></>}
         <footer className="flex flex-wrap justify-between gap-3 border-t border-slate-200 py-5 text-[11px] leading-5 text-slate-500"><p>CRM values exclude VAT. Pipeline values are opportunities, not guaranteed revenue.</p><p>Live pipeline · Acquisition cohorts · Confirmed feedback</p></footer>
