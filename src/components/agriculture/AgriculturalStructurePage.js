@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ArrowRight, Check, ClipboardCheck, FileText, MapPin, ShieldCheck, Sprout } from "lucide-react"
 import { agriculturalCategories } from "../../app/agricultural-buildings/agriculturalStructureData"
 import AgriculturalQuoteForm from "./AgriculturalQuoteForm"
+import PoultryPlanningSection from "./PoultryPlanningSection"
 
 const SITE_URL = "https://www.smartsteel.co.za"
 
@@ -102,7 +103,7 @@ export default function AgriculturalStructurePage({ content }) {
 
     <nav aria-label="Page sections" className="sticky top-20 z-30 border-b border-[#b8cdd7] bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-[1500px] items-center gap-5 overflow-x-auto px-5 sm:px-8 lg:px-12">
-        {[["#overview", "Overview"], ["#scope", "Structural scope"], ["#responsibilities", "Responsibilities"], ["#project-inputs", "Project inputs"], ["#faqs", "FAQs"]].map(([href, label]) => <a key={href} href={href} className="shrink-0 whitespace-nowrap border-b-2 border-transparent px-2 py-4 text-xs font-bold text-[#526c79] transition hover:border-[#0043f3] hover:text-[#0043f3] first:pl-0">{label}</a>)}
+        {[["#overview", "Overview"], ...(content.poultryPlanning ? [["#poultry-planning", "Poultry planning"]] : []), ["#scope", "Structural scope"], ["#responsibilities", "Responsibilities"], ["#project-inputs", "Project inputs"], ["#faqs", "FAQs"]].map(([href, label]) => <a key={href} href={href} className="shrink-0 whitespace-nowrap border-b-2 border-transparent px-2 py-4 text-xs font-bold text-[#526c79] transition hover:border-[#0043f3] hover:text-[#0043f3] first:pl-0">{label}</a>)}
         <a href="#agricultural-quote" className="ml-auto hidden min-h-10 shrink-0 items-center gap-2 bg-[#0043f3] px-4 text-xs font-bold text-white transition hover:bg-[#001d2e] 2xl:inline-flex">Request quote <ArrowRight className="h-3.5 w-3.5" /></a>
       </div>
     </nav>
@@ -114,12 +115,14 @@ export default function AgriculturalStructurePage({ content }) {
       </div>
     </section>
 
-    <section className="border-b border-[#b8cdd7] bg-white">
+    {content.poultryPlanning ? <PoultryPlanningSection content={content.poultryPlanning} /> : null}
+
+    {!content.poultryPlanning ? <section className="border-b border-[#b8cdd7] bg-white">
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[0.72fr_1.28fr] lg:px-12 lg:py-20">
         <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Published planning basis</p><h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">{content.planningBasis.title}</h2><p className="mt-5 text-sm leading-7 text-[#526c79]">{content.planningBasis.description}</p><div className="mt-6 flex flex-col items-start gap-3"><a href={content.planningBasis.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-[#0043f3]">{content.planningBasis.sourceLabel} <ArrowRight className="h-4 w-4" /></a><a href={content.planningBasis.supportingSourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-[#0043f3]">{content.planningBasis.supportingSourceLabel} <ArrowRight className="h-4 w-4" /></a></div></div>
         <div className="border-y border-[#b8cdd7]">{content.planningBasis.points.map((item, index) => <div key={item} className="grid grid-cols-[40px_1fr] gap-4 border-b border-[#b8cdd7] py-4 last:border-b-0"><span className="font-mono text-xs font-bold text-[#0043f3]">0{index + 1}</span><p className="text-sm font-semibold leading-6 text-[#264554]">{item}</p></div>)}</div>
       </div>
-    </section>
+    </section> : null}
 
     <section className="bg-[#001d2e] text-white">
       <div className="mx-auto max-w-[1500px] px-5 py-14 sm:px-8 lg:px-12 lg:py-20">
@@ -139,7 +142,7 @@ export default function AgriculturalStructurePage({ content }) {
     <section id="agricultural-quote" className="scroll-mt-44 border-y border-[#b8cdd7] bg-white">
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[0.7fr_1.3fr] lg:px-12 lg:py-24">
         <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Agricultural project brief</p><h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">Request an Atlas review for your {content.planLabel}</h2><p className="mt-5 text-base leading-8 text-[#526c79]">Share the farm location, production intent and structural package you need. You do not need a finished plan to start the conversation.</p><div className="mt-8 border-t border-[#b8cdd7] pt-6 text-sm leading-7 text-[#264554]"><p className="font-black">Useful before you start</p><p className="mt-2">{content.formGuidance}</p></div></div>
-        <AgriculturalQuoteForm content={{ planLabel: content.planLabel }} {...content.quoteForm} />
+        <AgriculturalQuoteForm key={content.slug} content={{ planLabel: content.planLabel }} {...content.quoteForm} />
       </div>
     </section>
 
@@ -154,12 +157,12 @@ export default function AgriculturalStructurePage({ content }) {
       </div>
     </section>
 
-    <section className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
+    {!content.poultryPlanning ? <section className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
       <div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr]">
         <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Agricultural design inputs</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">The structure has to support the operation</h2><p className="mt-4 text-base leading-7 text-[#526c79]">These considerations shape the brief before a steel package can be responsibly confirmed.</p></div>
         <div className="grid border-t border-[#b8cdd7] sm:grid-cols-2">{content.considerations.map((item, index) => <article key={item.title} className={`border-b border-[#b8cdd7] py-7 sm:px-7 ${index % 2 ? "sm:border-l" : "sm:pl-0"}`}><div className="flex items-baseline justify-between gap-4"><h3 className="text-lg font-black">{item.title}</h3><span className="font-mono text-xs font-bold text-[#0043f3]">0{index + 1}</span></div><p className="mt-3 text-sm leading-7 text-[#526c79]">{item.text}</p></article>)}</div>
       </div>
-    </section>
+    </section> : null}
 
     <section id="project-inputs" className="scroll-mt-20 bg-[#edf5f8]">
       <div className="mx-auto grid max-w-[1500px] gap-12 px-5 py-16 sm:px-8 lg:grid-cols-2 lg:px-12 lg:py-24">
