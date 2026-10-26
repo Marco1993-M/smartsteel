@@ -10,6 +10,18 @@ export const runtime = "nodejs"
 
 const ACTIVE_ESTIMATE_STATUSES = new Set(["sent", "accepted", "declined", "superseded"])
 const MARKETING_SOURCES = ["search_console", "google_ads"]
+const BUILDER_LABELS = {
+  warehouse: "Atlas warehouse",
+  solar_carport: "Solar carport",
+  ground_mount: "Solar ground mount",
+}
+const BUILDER_FUNNEL_STAGES = [
+  ["builder_viewed", "Builder viewed"],
+  ["configuration_started", "Configuration started"],
+  ["pricing_displayed", "Pricing displayed"],
+  ["lead_form_viewed", "Lead form viewed"],
+  ["lead_submit_succeeded", "Lead submitted"],
+]
 
 function parseNumber(value) {
   const number = Number(value)
@@ -172,6 +184,52 @@ function buildMarketingSummary(records, start, end, previousStart, previousEnd) 
   return bySource
 }
 
+function buildBuilderFunnelPeriod(records, start, end) {
+  const inPeriod = records.filter((record) => within(record.occurred_at, start, end))
+  const summarize = (events) => {
+    const viewed = new Set(events.filter((event) => event.event_name === "builder_viewed").map((event) => event.journey_id)).size
+    const stages = BUILDER_FUNNEL_STAGES.map(([key, label]) => {
+      const value = new Set(events.filter((event) => event.event_name === key).map((event) => event.journey_id)).size
+      return { key, label, value, rate: percentage(value, viewed) }
+    })
+    return {
+      journeys: viewed,
+      stages,
+      submitAttempts: events.filter((event) => event.event_name === "lead_submit_started").length,
+      submissionFailures: events.filter((event) => event.event_name === "lead_submit_failed").length,
+      whatsappHandoffs: events.filter((event) => event.event_name === "whatsapp_opened").length,
+      conversionRate: stages.at(-1)?.rate || 0,
+    }
+  }
+
+  const builders = Object.entries(BUILDER_LABELS).map(([key, label]) => ({
+    key,
+    label,
+    ...summarize(inPeriod.filter((event) => event.builder === key)),
+  }))
+  return { ...summarize(inPeriod), builders }
+}
+
+function buildBuilderFunnels(records, start, end, previousStart, previousEnd) {
+  const current = buildBuilderFunnelPeriod(records, start, end)
+  const previous = buildBuilderFunnelPeriod(records, previousStart, previousEnd)
+  const previousByBuilder = Object.fromEntries(previous.builders.map((builder) => [builder.key, builder]))
+  return {
+    ...current,
+    changes: {
+      journeys: change(current.journeys, previous.journeys),
+      conversionRate: current.conversionRate - previous.conversionRate,
+    },
+    builders: current.builders.map((builder) => ({
+      ...builder,
+      changes: {
+        journeys: change(builder.journeys, previousByBuilder[builder.key]?.journeys || 0),
+        conversionRate: builder.conversionRate - (previousByBuilder[builder.key]?.conversionRate || 0),
+      },
+    })),
+  }
+}
+
 export async function GET(request) {
   const authResponse = await requireOsAuth(request)
   if (authResponse) return authResponse
@@ -185,7 +243,7 @@ export async function GET(request) {
   const previousStart = new Date(period.previousStart)
   const previousEnd = new Date(period.previousEnd)
 
-  const [leadsResult, estimatesResult, connectionsResult, marketingResult, responsesResult, emailsResult] = await Promise.all([
+  const [leadsResult, estimatesResult, connectionsResult, marketingResult, responsesResult, emailsResult, builderEventsResult] = await Promise.all([
     fetchAll(() =>
       supabaseServer
         .from("leads")
@@ -226,6 +284,12 @@ export async function GET(request) {
       .gte("sent_at", start.toISOString())
       .lt("sent_at", end.toISOString())
       .order("sent_at", { ascending: true }).order("id", { ascending: true })),
+    fetchAll(() => supabaseServer
+      .from("builder_funnel_events")
+      .select("occurred_at, journey_id, builder, event_name, source_page, entry_page, device_category")
+      .gte("occurred_at", previousStart.toISOString())
+      .lt("occurred_at", end.toISOString())
+      .order("occurred_at", { ascending: true })),
   ])
 
   if (leadsResult.error) {
@@ -237,6 +301,7 @@ export async function GET(request) {
   const analyticsSchemaReady = !connectionsResult.error && !marketingResult.error
   if (connectionsResult.error && !analyticsSchemaMissing(connectionsResult.error)) warnings.push("Marketing connection status is temporarily unavailable.")
   if (marketingResult.error && !analyticsSchemaMissing(marketingResult.error)) warnings.push("Marketing performance is temporarily unavailable.")
+  if (builderEventsResult.error && !analyticsSchemaMissing(builderEventsResult.error)) warnings.push("Builder funnel activity is temporarily unavailable.")
 
   const leads = leadsResult.data || []
   const estimates = estimatesResult.error ? [] : estimatesResult.data || []
@@ -301,6 +366,13 @@ export async function GET(request) {
       estimatesAvailable: !estimatesResult.error, responsesAvailable: !responsesResult.error, emailsAvailable: !emailsResult.error,
     }),
     commercialEfficiency,
+    builderFunnels: {
+      available: !builderEventsResult.error,
+      schemaReady: !builderEventsResult.error,
+      ...(builderEventsResult.error
+        ? { journeys: 0, conversionRate: 0, submitAttempts: 0, submissionFailures: 0, whatsappHandoffs: 0, stages: [], builders: [] }
+        : buildBuilderFunnels(builderEventsResult.data || [], start, end, previousStart, previousEnd)),
+    },
     warnings,
   })
 }
