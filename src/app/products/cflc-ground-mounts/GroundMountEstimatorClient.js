@@ -2,7 +2,7 @@
 
 import { GROUND_MOUNT_PANEL_OPTIONS, GROUND_MOUNT_MAX_RUNS } from "../../../lib/groundMountRuns.mjs"
 import dynamic from "next/dynamic"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import {
   calculateSolarEstimate,
@@ -11,6 +11,7 @@ import {
   GROUND_MOUNT_PANELS_PER_BAY,
   formatCurrency,
 } from "../../../lib/estimates/solarEstimate"
+import { BUILDER_FUNNEL_EVENTS, BUILDER_TYPES, trackBuilderFunnelEvent } from "../../../lib/builderAnalytics"
 
 const GroundMountPreview = dynamic(
   () => import("../../../components/ground-mount/GroundMountPreview"),
@@ -161,6 +162,22 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
     }
   }, [groundMountRuns.length, layout, runLayouts, totalPanelCount])
 
+  useEffect(() => {
+    trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.viewed, {
+      product: "Atlas Solar Ground Mount",
+    })
+  }, [])
+
+  useEffect(() => {
+    if (currentStep !== 3) return
+    trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.configurationStarted, { product: "Atlas Solar Ground Mount", first_field: "accepted_default" })
+    trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.pricingDisplayed, { product: "Atlas Solar Ground Mount" })
+    trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.leadFormViewed, {
+      product: "Atlas Solar Ground Mount",
+      channel: "quote",
+    })
+  }, [currentStep])
+
   const isHeroVariant = variant === "hero"
   const isWorkspaceVariant = variant === "workspace"
   const activeStep = STEP_CONFIG.find((item) => item.step === currentStep) || STEP_CONFIG[0]
@@ -184,6 +201,11 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
   }
 
   const updateSelectedRunPanels = (value) => {
+    trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.configurationStarted, {
+      product: "Atlas Solar Ground Mount",
+      first_field: "panel_count",
+    })
+    trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.pricingDisplayed, { product: "Atlas Solar Ground Mount" })
     const panelCount = Math.max(
       GROUND_MOUNT_PANELS_PER_BAY,
       Math.min(
@@ -197,6 +219,8 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
   }
 
   const addGroundMountRun = () => {
+    trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.configurationStarted, { product: "Atlas Solar Ground Mount", first_field: "ground_mount_runs" })
+    trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.pricingDisplayed, { product: "Atlas Solar Ground Mount" })
     if (groundMountRuns.length >= GROUND_MOUNT_MAX_RUNS) return
     const id = `run-${Date.now()}`
     setGroundMountRuns((runs) => [...runs, { id, panelCount: 36 }])
@@ -243,6 +267,11 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
       return
     }
 
+    trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.submitStarted, {
+      product: "Atlas Solar Ground Mount",
+      channel: "quote",
+    }, { once: false })
+
     setIsSubmitting(true)
     setSubmitError("")
     setSubmitSuccess("")
@@ -280,11 +309,21 @@ export default function GroundMountEstimatorClient({ variant = "section" }) {
       }
 
       reportGroundMountLeadConversion()
+      trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.submitSucceeded, {
+        product: "Atlas Solar Ground Mount",
+        channel: "quote",
+        value_band: estimate.pricing.estimatedTotal < 250000 ? "under_250k" : estimate.pricing.estimatedTotal < 500000 ? "250k_500k" : estimate.pricing.estimatedTotal < 1000000 ? "500k_1m" : "over_1m",
+      }, { once: false, configurationId: payload?.lead?.id })
       setSubmitSuccess(
         "Your solar ground mount enquiry has been saved. The Smart Steel team can now review it in the CRM and follow up with the next step."
       )
     } catch (error) {
       setSubmitError(error?.message || "Could not save the solar ground mount enquiry.")
+      trackBuilderFunnelEvent(BUILDER_TYPES.groundMount, BUILDER_FUNNEL_EVENTS.submitFailed, {
+        product: "Atlas Solar Ground Mount",
+        channel: "quote",
+        failure_stage: "lead_api",
+      }, { once: false })
     } finally {
       setIsSubmitting(false)
     }

@@ -42,6 +42,7 @@ import {
   WAREHOUSE_OPENING_FACE_OPTIONS,
   WAREHOUSE_SHEETING_COLORS,
 } from "../../lib/warehouseBuilderStore"
+import { BUILDER_FUNNEL_EVENTS, BUILDER_TYPES, trackBuilderFunnelEvent } from "../../lib/builderAnalytics"
 
 const ATLAS_WAREHOUSE_LENGTH_OPTIONS = ATLAS_LENGTH_OPTIONS
 
@@ -464,6 +465,13 @@ export default function WarehouseBuilderClient() {
     WAREHOUSE_SHEETING_COLORS.find((option) => option.value === config.sheetingColor) ||
     WAREHOUSE_SHEETING_COLORS[0]
   const updateField = (field, value) => {
+    trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.configurationStarted, {
+      first_field: field,
+      product: "Atlas W-Series Warehouse",
+    })
+    trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.pricingDisplayed, {
+      product: "Atlas W-Series Warehouse",
+    })
     setUndoSnapshot(getShareableConfiguration(config))
     updateStoreField(field, value)
 
@@ -515,6 +523,22 @@ export default function WarehouseBuilderClient() {
     () => createDesignReference(shareableConfiguration),
     [shareableConfiguration]
   )
+
+  useEffect(() => {
+    trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.viewed, {
+      product: "Atlas W-Series Warehouse",
+    }, { configurationId: designReference })
+  }, [designReference])
+
+  useEffect(() => {
+    if (!showLeadForm) return
+    trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.configurationStarted, { product: "Atlas W-Series Warehouse", first_field: "accepted_default" }, { configurationId: designReference })
+    trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.pricingDisplayed, { product: "Atlas W-Series Warehouse" }, { configurationId: designReference })
+    trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.leadFormViewed, {
+      product: "Atlas W-Series Warehouse",
+      channel: submissionIntent,
+    }, { configurationId: designReference })
+  }, [designReference, showLeadForm, submissionIntent])
 
   useEffect(() => {
     const element = sceneSectionRef.current
@@ -826,6 +850,9 @@ export default function WarehouseBuilderClient() {
       if (!whatsappWindow) window.location.assign(whatsappUrl)
     }
     trackBuilderEvent("warehouse_builder_whatsapp_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
+    trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.whatsappOpened, {
+      product: "Atlas W-Series Warehouse",
+    }, { once: false, configurationId: designReference })
   }
 
   const handleWhatsAppDesign = () => {
@@ -856,6 +883,11 @@ export default function WarehouseBuilderClient() {
       setSubmitError("Please add the town, suburb, or site area for this project.")
       return
     }
+
+    trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.submitStarted, {
+      product: "Atlas W-Series Warehouse",
+      channel: submissionIntent,
+    }, { once: false, configurationId: designReference })
 
     setSubmitting(true)
     setSubmitError("")
@@ -990,9 +1022,19 @@ export default function WarehouseBuilderClient() {
         currency: "ZAR",
         channel: submissionIntent,
       })
+      trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.submitSucceeded, {
+        product: "Atlas W-Series Warehouse",
+        channel: submissionIntent,
+        value_band: budgetValue < 250000 ? "under_250k" : budgetValue < 500000 ? "250k_500k" : budgetValue < 1000000 ? "500k_1m" : "over_1m",
+      }, { once: false, configurationId: designReference })
     } catch (error) {
       if (pendingWhatsAppWindow && !pendingWhatsAppWindow.closed) pendingWhatsAppWindow.close()
       setSubmitError(error?.message || "Could not send your design.")
+      trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.submitFailed, {
+        product: "Atlas W-Series Warehouse",
+        channel: submissionIntent,
+        failure_stage: "lead_api",
+      }, { once: false, configurationId: designReference })
     } finally {
       setSubmitting(false)
     }

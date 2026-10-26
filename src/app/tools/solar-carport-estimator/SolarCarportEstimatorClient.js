@@ -8,6 +8,7 @@ import { useSolarCarportEstimate } from 'lib/useSolarCarportEstimate'
 import { ATLAS_SOLAR_CARPORT_PARKING_WIDTH_METRES } from "lib/atlasSolarCarportProfiles"
 import { getAtlasSolarCarportPanelCount, getAtlasSolarCarportSiteLayout, isAtlasSolarCarportLayoutValid, normalizeAtlasSolarCarportRuns, placeAtlasSolarCarportRun } from "lib/atlasSolarCarportLayouts"
 import { calculateSolarEstimate, formatCurrency } from "../../../lib/estimates/solarEstimate"
+import { BUILDER_FUNNEL_EVENTS, BUILDER_TYPES, trackBuilderFunnelEvent } from "../../../lib/builderAnalytics"
 
 const DEFAULT_CLEARANCE_HEIGHT = 2.4
 const DEFAULT_SOLAR_PANEL_WATTAGE = 550
@@ -171,6 +172,22 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   const totalParkingSpaces = parkingRuns.reduce((sum, run) => sum + run.parkingCount * (run.length === 12 ? 2 : 1), 0)
   const totalPanelCapacity = parkingRuns.reduce((sum, run) => sum + run.moduleCount, 0)
   const estimatedPowerKwp = totalPanelCapacity * DEFAULT_SOLAR_PANEL_WATTAGE / 1000
+
+  useEffect(() => {
+    trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.viewed, {
+      product: "Atlas Solar Carport",
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!showEnquiryForm) return
+    trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.configurationStarted, { product: "Atlas Solar Carport", first_field: "accepted_default" })
+    trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.pricingDisplayed, { product: "Atlas Solar Carport" })
+    trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.leadFormViewed, {
+      product: "Atlas Solar Carport",
+      channel: contactChannel,
+    })
+  }, [contactChannel, showEnquiryForm])
   const siteLayout = getAtlasSolarCarportSiteLayout(parkingRuns)
   const siteWidth = siteLayout.width
   const siteDepth = siteLayout.depth
@@ -244,6 +261,11 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   }
 
   const handleFieldChange = (field, value) => {
+    trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.configurationStarted, {
+      product: "Atlas Solar Carport",
+      first_field: field,
+    })
+    trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.pricingDisplayed, { product: "Atlas Solar Carport" })
     setFormState((current) => {
       const nextState = {
         ...current,
@@ -281,6 +303,8 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
   }
 
   const addParkingRun = () => {
+    trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.configurationStarted, { product: "Atlas Solar Carport", first_field: "parking_runs" })
+    trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.pricingDisplayed, { product: "Atlas Solar Carport" })
     const width = SOLAR_CARPORT_WIDTH_OPTIONS[1].width
     const length = 6
     const nextRun = {
@@ -368,6 +392,11 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       return
     }
 
+    trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.submitStarted, {
+      product: "Atlas Solar Carport",
+      channel: contactChannel,
+    }, { once: false })
+
     setIsSubmitting(true)
     setSubmitError("")
     setSubmitSuccess("")
@@ -437,8 +466,16 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       }
 
       reportAtlasSolarCarportConversion()
+      trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.submitSucceeded, {
+        product: "Atlas Solar Carport",
+        channel: contactChannel,
+        value_band: estimate.pricing.estimatedTotal < 250000 ? "under_250k" : estimate.pricing.estimatedTotal < 500000 ? "250k_500k" : estimate.pricing.estimatedTotal < 1000000 ? "500k_1m" : "over_1m",
+      }, { once: false, configurationId: payload.lead.id })
 
       if (contactChannel === "whatsapp") {
+        trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.whatsappOpened, {
+          product: "Atlas Solar Carport",
+        }, { once: false, configurationId: payload.lead.id })
         const message = `${whatsappMessage}\n\nCRM reference: ${payload.lead.id}\nView configuration: ${configurationUrl}`
         window.location.assign(`https://wa.me/${SMART_STEEL_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`)
         return
@@ -455,6 +492,11 @@ export default function SolarCarportEstimatorClient({ initialInput = {} }) {
       })
     } catch (error) {
       setSubmitError(error?.message || "Could not save the solar carport enquiry.")
+      trackBuilderFunnelEvent(BUILDER_TYPES.solarCarport, BUILDER_FUNNEL_EVENTS.submitFailed, {
+        product: "Atlas Solar Carport",
+        channel: contactChannel,
+        failure_stage: "lead_api",
+      }, { once: false })
     } finally {
       setIsSubmitting(false)
     }
