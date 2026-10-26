@@ -1,3 +1,4 @@
+import { agriculturalSocialMetadata } from "../../lib/agriculturalSocialCards.mjs"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Beef, Bird, Boxes, Check, CircleDot, Milk, PiggyBank, Ruler, Warehouse, Wheat } from "lucide-react"
@@ -5,6 +6,7 @@ import AgriculturalQuoteForm from "../../components/agriculture/AgriculturalQuot
 import { agriculturalCategories } from "./agriculturalStructureData"
 
 const SITE_URL = "https://www.smartsteel.co.za"
+const hubSocial = agriculturalSocialMetadata("agricultural-buildings", "Agricultural Steel Buildings South Africa | Atlas Smart Steel", "Atlas structural building packages shaped around livestock housing, poultry, dairy and farm storage operations.")
 
 export const metadata = {
   title: { absolute: "Agricultural Steel Buildings South Africa | Atlas Smart Steel" },
@@ -12,7 +14,8 @@ export const metadata = {
   keywords: ["agricultural steel buildings South Africa", "steel farm buildings", "livestock housing", "poultry house structure", "piggery buildings", "farm storage buildings"],
   robots: { index: true, follow: true },
   alternates: { canonical: `${SITE_URL}/agricultural-buildings` },
-  openGraph: { title: "Agricultural Steel Buildings South Africa | Atlas Smart Steel", description: "Atlas structural building packages shaped around livestock housing, poultry, dairy and farm storage operations.", url: `${SITE_URL}/agricultural-buildings`, type: "website" },
+  openGraph: { title: "Agricultural Steel Buildings South Africa | Atlas Smart Steel", description: "Atlas structural building packages shaped around livestock housing, poultry, dairy and farm storage operations.", url: `${SITE_URL}/agricultural-buildings`, type: "website", images: hubSocial.images },
+  twitter: hubSocial.twitter,
 }
 
 const categoryStyle = [

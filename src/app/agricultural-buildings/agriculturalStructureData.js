@@ -1,3 +1,5 @@
+import { agriculturalSocialMetadata } from "../../lib/agriculturalSocialCards.mjs"
+
 const SITE_URL = "https://www.smartsteel.co.za"
 
 export const agriculturalCategories = [
@@ -276,6 +278,7 @@ export function getAgriculturalStructureSlugs() {
 
 export function buildAgriculturalMetadata(content) {
   const url = `${SITE_URL}/agricultural-buildings/${content.slug}`
+  const social = agriculturalSocialMetadata(content.slug, content.metaTitle, content.metaDescription)
   return {
     title: { absolute: content.metaTitle },
     description: content.metaDescription,
@@ -287,6 +290,8 @@ export function buildAgriculturalMetadata(content) {
       description: content.metaDescription,
       url,
       type: "website",
+      images: social.images,
     },
+    twitter: social.twitter,
   }
 }
