@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "../../components/BuilderEntryLink";
 import Script from "next/script";
 import {
   ArrowRight,
