@@ -82,6 +82,7 @@ export default function Navbar() {
           </DesktopMenu>
 
           <Link href="/solar" className={desktopLinkClass('/solar')}>Solar</Link>
+          <Link href="/agricultural-buildings" className={desktopLinkClass('/agricultural-buildings')}>Agriculture</Link>
 
           <DesktopMenu label="For Professionals" name="professionals" openMenu={openMenu} setOpenMenu={setOpenMenu}>
             <div className="absolute inset-x-0 top-full border-b border-slate-200 bg-white shadow-[0_24px_45px_-32px_rgba(0,29,46,0.55)]">
@@ -107,6 +108,7 @@ export default function Navbar() {
             <div className="mt-3 grid grid-cols-2 gap-2">
               <Link href="/warehouse-builder" className="rounded-2xl bg-[#001d2e] p-4 text-white"><span className="text-sm font-bold">Warehouses</span><span className="mt-1 block text-xs text-white/60">Build in 3D</span></Link>
               <Link href="/solar" className="rounded-2xl bg-[#0043f3] p-4 text-white"><span className="text-sm font-bold">Solar Solutions</span><span className="mt-1 block text-xs text-white/65">Carports & ground mounts</span></Link>
+              <Link href="/agricultural-buildings" className="col-span-2 rounded-2xl bg-[#dff4ef] p-4 text-[#001d2e]"><span className="text-sm font-bold">Agricultural Buildings</span><span className="mt-1 block text-xs text-[#526c79]">Piggeries, livestock, poultry and farm storage</span></Link>
             </div>
 
             <div className="mt-5 divide-y divide-slate-200 border-y border-slate-200">
