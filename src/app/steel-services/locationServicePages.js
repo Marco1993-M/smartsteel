@@ -305,6 +305,11 @@ export const locationServicePages = {
     secondaryCtaLabel: "Explore structural steel fabrication",
     supportLinks: [
       {
+        title: "Agricultural building systems",
+        description: "Explore plan-led Atlas structure pages for pig housing and other agricultural applications.",
+        href: "/agricultural-buildings",
+      },
+      {
         title: "Structural steel fabricators",
         description: "Use this page if your search is more specifically about structural steel fabrication for the building itself.",
         href: "/structural-steel-fabricators",
