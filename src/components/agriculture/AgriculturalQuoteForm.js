@@ -16,6 +16,20 @@ const initialForm = {
   scope: [],
 }
 
+const defaultProjectOptions = [
+  '20-sow piggery starting point',
+  'Different piggery capacity',
+  'Custom piggery layout',
+  'Another agricultural structure',
+]
+
+const defaultBriefOptions = [
+  'I am starting with the 20-sow concept',
+  'I have a farm or production brief',
+  'I have a preliminary layout',
+  'I have professional drawings',
+]
+
 const scopeOptions = [
   'Structural frame',
   'Roof sheeting',
@@ -26,8 +40,9 @@ const scopeOptions = [
 
 const fieldClass = 'mt-2 min-h-12 w-full border border-[#9fb7c3] bg-white px-4 text-base text-[#001d2e] outline-none transition placeholder:text-[#8295a0] focus:border-[#0043f3] focus:ring-2 focus:ring-[#0043f3]/15'
 
-export default function AgriculturalQuoteForm({ content }) {
-  const [form, setForm] = useState(initialForm)
+export default function AgriculturalQuoteForm({ content, projectOptions = defaultProjectOptions, defaultProjectNeed = defaultProjectOptions[0], briefOptions = defaultBriefOptions, leadSource = 'Agricultural Structure Page' }) {
+  const freshForm = () => ({ ...initialForm, projectNeed: defaultProjectNeed })
+  const [form, setForm] = useState(freshForm)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
 
@@ -51,7 +66,7 @@ export default function AgriculturalQuoteForm({ content }) {
     setError('')
 
     const notes = [
-      `Agricultural plan: ${content.planLabel}`,
+      `Agricultural topic: ${content?.planLabel || form.projectNeed}`,
       `Site location: ${form.location}`,
       `Project need: ${form.projectNeed}`,
       `Information available: ${form.briefStatus}`,
@@ -72,7 +87,7 @@ export default function AgriculturalQuoteForm({ content }) {
           estimate_request: `${form.projectNeed} structural quotation`,
           notes,
           status: 'new',
-          lead_source: 'Agricultural Structure Page',
+          lead_source: leadSource,
           product_type: `Agricultural Structure - ${form.projectNeed}`,
           next_action: `Review the agricultural project brief, define the Atlas building-shell scope, and contact the client about the requested ${form.projectNeed}.`,
         }),
@@ -81,7 +96,7 @@ export default function AgriculturalQuoteForm({ content }) {
       const payload = await response.json().catch(() => null)
       if (!response.ok) throw new Error(payload?.error || 'We could not submit the project brief.')
 
-      setForm(initialForm)
+      setForm(freshForm())
       setStatus('sent')
     } catch (submissionError) {
       setStatus('error')
@@ -102,16 +117,16 @@ export default function AgriculturalQuoteForm({ content }) {
     <fieldset className="mb-7 border-b border-[#9fb7c3] pb-7">
       <legend className="text-sm font-black">What are you planning? *</legend>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        {['20-sow piggery starting point', 'Different piggery capacity', 'Custom piggery layout', 'Another agricultural structure'].map((item) => <label key={item} className={`flex min-h-12 cursor-pointer items-center gap-3 border px-4 text-sm font-bold transition ${form.projectNeed === item ? 'border-[#0043f3] bg-white text-[#0043f3]' : 'border-[#b8cdd7] bg-white/60 text-[#264554]'}`}><input required type="radio" name="projectNeed" value={item} checked={form.projectNeed === item} onChange={update} className="h-4 w-4 accent-[#0043f3]" />{item}</label>)}
+        {projectOptions.map((item) => <label key={item} className={`flex min-h-12 cursor-pointer items-center gap-3 border px-4 text-sm font-bold transition ${form.projectNeed === item ? 'border-[#0043f3] bg-white text-[#0043f3]' : 'border-[#b8cdd7] bg-white/60 text-[#264554]'}`}><input required type="radio" name="projectNeed" value={item} checked={form.projectNeed === item} onChange={update} className="h-4 w-4 accent-[#0043f3]" />{item}</label>)}
       </div>
-      {form.projectNeed !== '20-sow piggery starting point' ? <p className="mt-3 border-l-2 border-[#0043f3] pl-3 text-xs leading-5 text-[#526c79]">Use the project notes below to describe the capacity, building type or layout you need. Smart Steel will review it as a custom agricultural enquiry.</p> : null}
+      {form.projectNeed !== defaultProjectNeed ? <p className="mt-3 border-l-2 border-[#0043f3] pl-3 text-xs leading-5 text-[#526c79]">Use the project notes below to describe the capacity, building type or layout you need. Smart Steel will review it as a custom agricultural enquiry.</p> : null}
     </fieldset>
     <div className="grid gap-5 sm:grid-cols-2">
       <label className="text-sm font-bold">Full name *<input required name="name" autoComplete="name" value={form.name} onChange={update} className={fieldClass} /></label>
       <label className="text-sm font-bold">Mobile number *<input required name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={update} className={fieldClass} /></label>
       <label className="text-sm font-bold">Email address *<input required name="email" type="email" autoComplete="email" value={form.email} onChange={update} className={fieldClass} /></label>
       <label className="text-sm font-bold">Farm or project location *<input required name="location" value={form.location} onChange={update} placeholder="Town, province or farm area" className={fieldClass} /></label>
-      <label className="text-sm font-bold">Information available *<select required name="briefStatus" value={form.briefStatus} onChange={update} className={fieldClass}><option value="">Select one</option><option>I am starting with the 20-sow concept</option><option>I have a farm or production brief</option><option>I have a preliminary layout</option><option>I have professional drawings</option></select></label>
+      <label className="text-sm font-bold">Information available *<select required name="briefStatus" value={form.briefStatus} onChange={update} className={fieldClass}><option value="">Select one</option>{briefOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
       <label className="text-sm font-bold">Project stage *<select required name="projectStage" value={form.projectStage} onChange={update} className={fieldClass}><option value="">Select one</option><option>Budget planning</option><option>Professional design underway</option><option>Ready for structural quotation</option><option>Procurement underway</option></select></label>
       <label className="text-sm font-bold sm:col-span-2">Target timing<select name="timeline" value={form.timeline} onChange={update} className={fieldClass}><option value="">To be confirmed</option><option>Within 3 months</option><option>3 to 6 months</option><option>6 to 12 months</option><option>More than 12 months</option></select></label>
     </div>
