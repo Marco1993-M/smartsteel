@@ -114,7 +114,7 @@ export default function AtlasRegionWarehouseExperience({
             <p className="mt-5 max-w-2xl text-base leading-7 text-[#526C79]">{content.heroDescription}</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <AtlasPrimaryAction href="#pricing">Compare sizes and prices</AtlasPrimaryAction>
-              <a href="tel:+27828464555" className="inline-flex min-h-12 items-center justify-center gap-2 border border-[#B8CDD7] px-5 py-3 text-sm font-bold transition hover:bg-[#EDF5F8]"><PhoneIcon className="h-4 w-4" aria-hidden="true" />Talk through your project</a>
+              <Link href={`${selectedBuilderHref}#review-summary`} className="inline-flex min-h-12 items-center justify-center gap-2 border border-[#B8CDD7] px-5 py-3 text-sm font-bold transition hover:bg-[#EDF5F8]">Request a quote <ArrowUpRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
             </div>
             <p className="mt-5 text-sm leading-6 text-[#526C79]">For storage, workshops, agricultural buildings and commercial space.</p>
           </div>
@@ -124,7 +124,7 @@ export default function AtlasRegionWarehouseExperience({
           </div>
         </div>
         <div className="mt-9 grid grid-cols-3 divide-x divide-[#B8CDD7] border-y border-[#B8CDD7] py-4 text-center">
-          {[["6–15m", "standard spans"], ["8–100m", "building lengths"], ["4m", "modular bays"]].map(([value, label]) => <div key={label} className="px-2"><p className="text-xl font-bold sm:text-2xl">{value}</p><p className="mt-1 text-xs text-[#526C79]">{label}</p></div>)}
+          {[[`${REGION_WAREHOUSE_WIDTHS[0]}–${REGION_WAREHOUSE_WIDTHS.at(-1)}m`, "standard spans"], [`${REGION_WAREHOUSE_LENGTHS[0]}–${REGION_WAREHOUSE_LENGTHS.at(-1)}m`, "building lengths"], ["4m", "modular bays"]].map(([value, label]) => <div key={label} className="px-2"><p className="text-xl font-bold sm:text-2xl">{value}</p><p className="mt-1 text-xs text-[#526C79]">{label}</p></div>)}
         </div>
         <nav aria-label="Warehouse page sections" className="flex flex-wrap gap-x-6 gap-y-3 pt-5 text-sm font-semibold text-[#0043F3]">
           <a href="#pricing">Products & prices</a><a href="#local-fit">Your area</a><a href="#scope">What’s included</a><a href="#faqs">FAQs</a>
@@ -151,9 +151,11 @@ export default function AtlasRegionWarehouseExperience({
       </section>
 
       <section id="local-fit" className="mx-auto grid max-w-7xl gap-8 px-5 py-12 sm:px-8 lg:grid-cols-2 lg:gap-16 lg:py-16">
-        <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0043F3]">Your area</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Planning a warehouse in {content.name}?</h2><p className="mt-5 text-base leading-7 text-[#526C79]">{content.intro}</p><p className="mt-4 text-sm leading-7 text-[#526C79]">{content.marketFocus}</p>
-          <p className="mt-5 flex items-center gap-2 text-sm font-bold"><MapPinIcon className="h-5 w-5 text-[#0043F3]" aria-hidden="true" />{content.name} and surrounding areas</p><ul className="mt-3 flex flex-wrap gap-2">{content.localZones.map((zone) => <li key={zone} className="rounded-full border border-[#B8CDD7] px-3 py-1.5 text-xs font-semibold">{zone}</li>)}</ul>
+        <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0043F3]">Your area</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Planning a warehouse in {content.name}?</h2><p className="mt-5 text-base leading-7 text-[#526C79]">{content.intro}</p>{content.localContext ? <p className="mt-4 text-sm leading-7 text-[#526C79]" data-local-context>{content.localContext}</p> : null}
+          {content.localConsiderations?.length ? <ul className="mt-4 space-y-2 text-sm leading-7 text-[#526C79]">{content.localConsiderations.map((item) => <li key={item}>{item}</li>)}</ul> : null}
+          <p className="mt-5 flex items-center gap-2 text-sm font-bold"><MapPinIcon className="h-5 w-5 text-[#0043F3]" aria-hidden="true" />{content.name} and surrounding areas</p><ul className="mt-3 flex flex-wrap gap-2" aria-label="Local planning areas">{content.localZones.map((zone) => <li key={zone} className="rounded-full border border-[#B8CDD7] px-3 py-1.5 text-xs font-semibold">{zone}</li>)}</ul>
           <p className="mt-4 text-sm leading-6 text-[#526C79]">Share your exact delivery address so we can confirm transport costs, access and installation requirements for your site.</p>
+          {content.evidenceSources?.length ? <details className="group mt-5 border-t border-[#B8CDD7] pt-3"><summary className="cursor-pointer text-xs font-semibold text-[#526C79]">Local planning references</summary><ul className="mt-3 space-y-2">{content.evidenceSources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer" className="text-xs leading-5 text-[#0043F3] underline underline-offset-4">{source.label}</a></li>)}</ul></details> : null}
         </div>
         <div className="rounded-xl border border-[#B8CDD7] p-6 sm:p-8"><h3 className="text-xl font-bold">A few details help us quote accurately</h3><ul className="mt-5 space-y-4">{[
           ["Location and access", "The town or site address, vehicle access and any unloading restrictions."],

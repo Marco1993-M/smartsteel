@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   buildRegionWarehouseHubMetadata,
   getRegionWarehouseConfigs,
+  REGION_WAREHOUSE_WIDTHS,
 } from "./regionWarehouseData";
 
 export const metadata = buildRegionWarehouseHubMetadata();
@@ -29,10 +30,10 @@ export default function WarehouseRegionsHubPage() {
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             <div className="rounded-[1.75rem] bg-white p-6 shadow-sm">
               <p className="text-3xl font-bold text-gray-900">{regions.length}</p>
-              <p className="mt-2 text-sm text-gray-600">regional warehouse landing pages live</p>
+              <p className="mt-2 text-sm text-gray-600">regional warehouse guides</p>
             </div>
             <div className="rounded-[1.75rem] bg-white p-6 shadow-sm">
-              <p className="text-3xl font-bold text-gray-900">8m, 10m, 12m</p>
+              <p className="text-3xl font-bold text-gray-900">{REGION_WAREHOUSE_WIDTHS.map((width) => `${width}m`).join(", ")}</p>
               <p className="mt-2 text-sm text-gray-600">modular widths used across our planning system</p>
             </div>
             <div className="rounded-[1.75rem] bg-white p-6 shadow-sm">
@@ -50,11 +51,11 @@ export default function WarehouseRegionsHubPage() {
               Explore Regions
             </p>
             <h2 className="mt-4 text-3xl font-bold md:text-4xl">
-              Regional warehouse pages built for local commercial intent
+              Find the warehouse guide for your area
             </h2>
             <p className="mt-4 text-lg text-gray-700">
-              Each page is tailored around regional delivery, nearby industrial areas, local use
-              cases, cost guidance, and next-step planning.
+              Compare Atlas sizes and supply-only prices, with local planning context and the
+              information needed to quote for your site.
             </p>
           </div>
 
@@ -95,28 +96,28 @@ export default function WarehouseRegionsHubPage() {
         <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#f0a1ab]">
-              Why This Matters
+              Planning your project
             </p>
             <h2 className="mt-4 text-3xl font-bold md:text-4xl">
-              One regional hub makes the whole warehouse cluster stronger
+              Plan your building around its site
             </h2>
             <p className="mt-5 max-w-3xl text-lg leading-8 text-white/80">
-              This hub helps buyers compare regions, discover nearby delivery areas, and move into
-              the right warehouse page faster. It also gives Google a clear parent page for the
-              regional warehouse cluster.
+              Choose your area to compare building sizes and prices. Then share your exact
+              address, intended use and access requirements so we can review delivery,
+              installation and the final scope with you.
             </p>
           </div>
 
           <div className="rounded-[2rem] bg-white/5 p-8">
             <div className="space-y-4">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
-                Stronger crawl paths from one page into every key warehouse region
+                Local planning context for your area
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
-                Better internal linking between the warehouse hub, city pages, and cost guides
+                Live supply-only guides from the Atlas pricing model
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
-                Cleaner topical authority around steel warehouses in South Africa
+                Delivery, installation and site-specific work confirmed separately
               </div>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
