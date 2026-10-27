@@ -87,16 +87,24 @@ export default function AgriculturalStructurePage({ content }) {
           <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas System developed by Smart Steel" width={238} height={44} className="max-w-full" />
           <span className="hidden border border-[#b8cdd7] bg-[#edf5f8] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#264554] sm:block">Agricultural structures</span>
         </div>
-        <div className="grid items-center gap-10 py-10 lg:py-16 xl:grid-cols-[minmax(0,1fr)_270px] xl:gap-16">
+        <div className={`grid items-center gap-10 py-10 lg:py-16 ${content.heroImage ? "lg:grid-cols-2 lg:gap-10" : "xl:grid-cols-[minmax(0,1fr)_270px] xl:gap-16"}`}>
         <div className="min-w-0 max-w-[820px]">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">{content.eyebrow}</p>
           <h1 className="mt-4 max-w-4xl text-4xl font-black leading-[1.06] tracking-tight text-balance sm:mt-5 sm:text-5xl lg:text-6xl 2xl:text-7xl">{content.title}</h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[#526c79] sm:mt-6 sm:text-lg">{content.summary}</p>
-          <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
             <a href="#agricultural-quote" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#0043f3] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#001d2e]">{content.primaryCta} <ArrowRight className="h-4 w-4" /></a>
             <Link href={primaryBuilderUrl} className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#001d2e] bg-white px-6 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-[#edf5f8]">{content.heroBuilderLabel}</Link>
           </div>
         </div>
+        {content.heroImage ? <div className="min-w-0">
+          <div className="relative aspect-video overflow-hidden rounded-xl bg-[#edf5f8]">
+            <Image src={content.heroImage.src} alt={content.heroImage.alt} fill priority sizes="(min-width: 1500px) 652px, (min-width: 1024px) 46vw, 100vw" className="object-cover" />
+          </div>
+          <dl className="mt-5 grid gap-4 border-t border-[#b8cdd7] pt-5 sm:grid-cols-3">
+            {content.heroFacts.map(([label, value]) => <div key={label}><dt className="text-xs text-[#526c79]">{label}</dt><dd className="mt-1 text-sm font-bold">{value}</dd></div>)}
+          </dl>
+        </div> : (
         <div className="hidden min-w-0 border-l border-[#b8cdd7] pl-8 xl:block">
           <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#526c79]">Production basis</p>
           <p className="mt-1 text-[104px] font-black leading-none text-[#0043f3]">{content.heroMetric}</p>
@@ -105,6 +113,7 @@ export default function AgriculturalStructurePage({ content }) {
             {content.heroFacts.map(([label, value]) => <div key={label} className="flex justify-between gap-4 py-3"><dt className="text-[#708893]">{label}</dt><dd className="font-bold">{value}</dd></div>)}
           </dl>
         </div>
+        )}
         </div>
         <div className="grid border-t border-[#b8cdd7] sm:grid-cols-3">
           {[content.planLabel, content.systemLabel, content.locationLabel].map((item, index) => <div key={item} className={`py-3 text-sm font-semibold text-[#264554] sm:px-5 sm:py-4 ${index ? "sm:border-l sm:border-[#b8cdd7]" : "sm:pl-0"}`}>{item}</div>)}
