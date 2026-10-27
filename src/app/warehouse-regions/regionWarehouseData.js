@@ -5,7 +5,7 @@ import {
 
 const SITE_URL = "https://www.smartsteel.co.za";
 
-export const REGION_WAREHOUSE_WIDTHS = [8, 10, 12];
+export const REGION_WAREHOUSE_WIDTHS = [6, 8, 10, 12, 15];
 export const REGION_WAREHOUSE_LENGTHS = Array.from({ length: 24 }, (_, index) => 8 + index * 4);
 
 const regionWarehousePages = {
@@ -110,7 +110,7 @@ const regionWarehousePages = {
       "Scalable depots and operational buildings near Kyalami, Olifantsfontein, and Samrand",
     ],
     decisionFactors: [
-      "You can start from W08, W10, or W12 instead of an open-ended warehouse brief",
+      "You can start from W08, W10, W12, or W15 instead of an open-ended warehouse brief",
       "Smart Steel OS price examples make early budget comparison more useful",
       "Atlas gives Johannesburg buyers a modular lip channel warehouse system with clear sizes and online guide pricing",
     ],
@@ -436,7 +436,7 @@ export function buildRegionWarehouseMetadata(citySlug) {
   const title = config.metadataTitle || `Warehouse Builders ${config.name} | Steel Warehouse Prices | Smart Steel`;
   const description =
     config.metadataDescription ||
-    `Steel warehouse builders and suppliers in ${config.name}. Compare lightweight warehouse sizes, price guidance, delivery areas, and fast-build steel construction options.`;
+    `Compare Atlas steel warehouse sizes and live supply-only prices in ${config.name}. Explore 6–15m spans, sheeting options, delivery and installation requirements.`;
 
   return {
     title,
@@ -470,16 +470,24 @@ export function buildRegionWarehouseContent(citySlug) {
   if (!config) return null;
 
   const titlePrefix = titleCaseWords(["steel warehouses", config.name]);
-  const isAtlasLead = config.warehouseSystem === "atlas";
+  const isAtlasLead = true;
   const pricePath = isAtlasLead ? "/warehouse-builder?productType=Atlas%20Warehouse" : "/warehouse-builder";
   const systemName = isAtlasLead ? "Atlas lip channel warehouse" : "lightweight steel warehouse";
   const systemPluralName = isAtlasLead ? "Atlas lip channel warehouses" : "lightweight steel warehouses";
   const atlasPriceExamples = isAtlasLead ? buildAtlasPriceExamples() : [];
   const faqItems = [
     {
+      question: `Which warehouse sizes can I order for ${config.name}?`,
+      answer: "Atlas standard spans are 6m, 8m, 10m, 12m and 15m, with building lengths from 8m to 100m in 4m bays. The price guide shows the selected eave height. Other available heights and sheeting options can be explored in the 3D builder before project review.",
+    },
+    {
+      question: `How is delivery to ${config.name} priced?`,
+      answer: `Delivery is quoted separately for the confirmed building package and your exact site address in ${config.name} or the surrounding area. Share vehicle access, unloading arrangements and any restrictions so these can be reviewed before the quotation is finalised.`,
+    },
+    {
       question: `How much does a steel warehouse cost in ${config.name}?`,
       answer: isAtlasLead
-        ? `Atlas warehouse pricing depends on the selected width, length, steel finish, and sheeting scope. This page provides live supply-only guide prices for structure-only, roof-sheeted, and enclosed configurations. Delivery, installation, foundations, openings, and site-specific requirements are reviewed separately before a final quotation is issued.`
+        ? `Atlas warehouse pricing depends on the selected width, length, steel finish, and sheeting scope. This page provides live supply-only guide prices for structure-only, roof-sheeted, roof-and-side-wall, and fully enclosed configurations with gables. Delivery, installation, foundations, openings, and site-specific requirements are reviewed separately before a final quotation is issued.`
         : `As a planning guide, structure-only ${systemName} projects often start around R1,050 to R1,300 per m2, enclosed shells around R1,350 to R1,500 per m2, and turnkey projects around R1,650 to R2,700+ per m2. Final pricing in ${config.name} depends on span, height, cladding, access openings, slab scope, delivery, and installation requirements.`,
     },
     {
@@ -504,10 +512,11 @@ export function buildRegionWarehouseContent(citySlug) {
 
   return {
     ...config,
+    warehouseSystem: "atlas",
     titlePrefix,
     pricePath,
     faqItems,
-    lastUpdated: isAtlasLead ? "Updated August 28, 2026" : "Updated April 20, 2026",
+    lastUpdated: "Updated October 27, 2026",
     breadcrumbSectionName: isAtlasLead ? "Atlas Warehouses" : "Lightweight Steel Warehouses",
     pageHeading: isAtlasLead
       ? `Atlas warehouse builders and suppliers in ${config.name}`
@@ -520,7 +529,7 @@ export function buildRegionWarehouseContent(citySlug) {
     pricingRelease: isAtlasLead ? ATLAS_WAREHOUSE_PRICING_RELEASE : null,
     heroDescription:
       config.heroDescription ||
-      `Lightweight warehouse systems for ${config.name} projects that need clear price guidance, practical spans, faster construction, and dependable long-term commercial value.`,
+      `Planning storage, a workshop or room for your business to grow in ${config.name}? Compare Atlas sizes and live supply-only prices, then refine the building around your site and budget.`,
     benefits: isAtlasLead
       ? [
           "Defined W-Series spans with lengths configured in confirmed 4m bays",
@@ -530,7 +539,7 @@ export function buildRegionWarehouseContent(citySlug) {
         ]
       : [
           "Faster build programmes than many traditional construction routes",
-          "Scalable layouts with practical 8m, 10m, and 12m modular widths",
+          "Scalable layouts with practical 6m, 8m, 10m, 12m, and 15m modular widths",
           "Galvanized steel systems designed for lower maintenance and long-term durability",
           "Suitable for warehouses, workshops, storage, fleet cover, and light industrial use",
         ],
@@ -562,7 +571,7 @@ export function buildRegionWarehouseContent(citySlug) {
       ? [
           { value: "4m", label: "modular bay spacing across the Atlas warehouse range" },
           { value: "3", label: "steel finish choices: Mild Steel, ZAM, or galvanised" },
-          { value: "3", label: "clear scopes to compare before requesting a quote" },
+          { value: "100m", label: "maximum configured length in 4m modular bays" },
         ]
       : [
           { value: "23321+", label: "lightweight steel meters supplied" },
@@ -635,7 +644,7 @@ export function buildRegionWarehouseContent(citySlug) {
       { href: "/warehouse-cost/20x10", label: "20m x 10m warehouse cost" },
     ],
     sizeBlurb: isAtlasLead
-      ? `Popular Atlas warehouse footprints in ${config.name} start with modular widths of 8m, 10m, and 12m, with lengths scaled to suit storage, workshop, and operational requirements.`
-      : `Popular warehouse footprints in ${config.name} start with modular widths of 8m, 10m, and 12m, with lengths scaled to suit storage, workshop, and operational requirements.`,
+      ? `Popular Atlas warehouse footprints in ${config.name} start with modular widths of 6m, 8m, 10m, 12m, and 15m, with lengths scaled to suit storage, workshop, and operational requirements.`
+      : `Popular warehouse footprints in ${config.name} start with modular widths of 6m, 8m, 10m, 12m, and 15m, with lengths scaled to suit storage, workshop, and operational requirements.`,
   };
 }
