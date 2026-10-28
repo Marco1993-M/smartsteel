@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Users, RefreshCw, ArrowDownToLine, Clock3, MessageSquare, Layers3, BarChart3, Workflow } from "lucide-react"
-import AnalyticsMonthPicker from "./AnalyticsMonthPicker"
-import { currentAnalyticsMonth } from "../../lib/analyticsPeriods.mjs"
+import AnalyticsPeriodPicker from "./AnalyticsPeriodPicker"
+import AnalyticsActivityChart from "./AnalyticsActivityChart"
+import { currentAnalyticsMonth, analyticsPeriodQuery } from "../../lib/analyticsPeriods.mjs"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 
@@ -74,28 +75,6 @@ function Ageing({ insights }) {
   const max = Math.max(1, ...buckets.map((bucket) => bucket.value))
   return <section className={panel}><Heading eyebrow="Live pipeline · all open leads" title="How long have quotes been waiting?" detail="Age since the first recorded quote send. Values use the current CRM quote value once per opportunity." aside={<Clock3 className="h-5 w-5 text-sky-600" />} />
     {!insights.estimatesAvailable ? <Empty>Quote data is temporarily unavailable.</Empty> : !insights.pipeline.quotedCount ? <Empty>No open opportunities with a recorded sent quote.</Empty> : <div className="space-y-5">{buckets.map((bucket, index) => <div key={bucket.label}><div className="mb-2 flex justify-between gap-3 text-xs"><span className="font-medium text-slate-700">{bucket.label} <span className="ml-1 text-slate-400">· {bucket.count} quotes</span></span><span className="font-semibold tabular-nums">{money(bucket.value)}</span></div><div className="h-2 rounded-full bg-slate-100"><div className={`h-2 rounded-full ${index >= 3 ? 'bg-amber-400' : 'bg-sky-500'}`} style={{ width: `${bucket.value / max * 100}%` }} /></div></div>)}</div>}
-  </section>
-}
-function ActivityChart({ trend, available, metrics, period }) {
-  const max = Math.max(1, ...trend.flatMap((row) => [row.leads, row.estimatesSent]))
-  const selected = trend.at(-1)
-  const selectedLabel = selected?.fullLabel || period.label
-  const comparisonLabel = period.isCurrent ? 'at this time last month' : 'in the prior month'
-  return <section className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-    <div className="border-b border-slate-100 px-5 py-5 sm:px-7">
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-700">12-month activity · {selectedLabel}{period.isCurrent ? ' MTD' : ''}</p>
-      <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">Enquiries & quote sends</h2>
-      <div className="mt-5 flex flex-wrap items-start gap-x-8 gap-y-4 border-t border-slate-100 pt-4">
-        <div className="min-w-[150px]"><p className="flex items-center gap-2 text-[11px] font-semibold text-slate-600"><span className="h-2.5 w-2.5 rounded-sm bg-slate-800" />New enquiries</p><p className="mt-1 flex items-baseline gap-2"><strong className="text-3xl font-bold tabular-nums text-slate-950">{metrics.leadCount}</strong><span className="text-[11px] font-semibold text-slate-600">{changeLabel(metrics.changes.leads)}</span></p><p className="mt-1 text-[11px] text-slate-500"><strong className="tabular-nums text-slate-700">{metrics.previous?.leadCount ?? '—'}</strong> {comparisonLabel}</p></div>
-        <div className="min-w-[150px]"><p className="flex items-center gap-2 text-[11px] font-semibold text-sky-800"><span className="h-2.5 w-2.5 rounded-sm bg-sky-400" />Quote sends</p><p className="mt-1 flex items-baseline gap-2"><strong className="text-3xl font-bold tabular-nums text-sky-800">{available ? metrics.sentCount : '—'}</strong><span className="text-[11px] font-semibold text-sky-700">{available ? changeLabel(metrics.changes.sent) : 'Unavailable'}</span></p><p className="mt-1 text-[11px] text-slate-500">{available ? <><strong className="tabular-nums text-sky-800">{metrics.previous?.sentCount ?? '—'}</strong> {comparisonLabel}</> : 'Comparison unavailable'}</p></div>
-      </div>
-      <p className="mt-2 text-[11px] text-slate-500">Quote sends include revisions and may relate to older leads. {period.isCurrent ? 'Current month is incomplete; prior counts use the same elapsed period.' : 'Prior counts use the full calendar month.'}</p>
-    </div>
-    <div className="px-4 pt-5 sm:px-7"><div className="flex items-center gap-5 text-[11px] font-medium text-slate-600"><span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-slate-800" />Enquiries</span><span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-sky-400" />Quote sends</span><span className="ml-auto text-slate-400">MTD = incomplete month</span></div>
-      <div className="relative mt-5 min-w-0"><div className="pointer-events-none absolute inset-x-0 top-0 h-44"><span className="absolute inset-x-0 top-1/4 border-t border-slate-100" /><span className="absolute inset-x-0 top-1/2 border-t border-slate-100" /><span className="absolute inset-x-0 top-3/4 border-t border-slate-100" /></div><div className="relative grid h-52 grid-cols-12 items-end gap-0.5 sm:gap-1">{trend.map((row, index) => <div key={row.key} className={`group relative flex h-full min-w-0 flex-col justify-end rounded-t-lg px-0.5 outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${index === trend.length - 1 ? 'bg-sky-50 ring-1 ring-inset ring-sky-100' : ''}`} tabIndex={0} aria-label={`${row.fullLabel}${row.partial ? ' (month to date)' : ''}: ${row.leads} enquiries, ${available ? row.estimatesSent : 'unavailable'} quote sends`}><div className={`pointer-events-none absolute bottom-12 z-10 hidden whitespace-nowrap rounded-lg bg-slate-950 px-3 py-2 text-[11px] text-white shadow-xl group-hover:block group-focus:block ${index < 2 ? 'left-0' : index >= trend.length - 2 ? 'right-0' : 'left-1/2 -translate-x-1/2'}`}>{row.fullLabel}: {row.leads} enquiries · {available ? row.estimatesSent : '—'} sends</div><div className="flex h-44 items-end justify-center gap-0.5"><div className="relative w-5 max-w-[44%] rounded-t-[5px] bg-slate-800 transition-colors group-hover:bg-slate-600" style={{ height: `${row.leads / max * 100}%` }}>{index === trend.length - 1 && row.leads > 0 && <span className="absolute inset-x-0 top-1 text-center text-[9px] font-bold text-white">{row.leads}</span>}</div><div className="relative w-5 max-w-[44%] rounded-t-[5px] bg-sky-400 transition-colors group-hover:bg-sky-500" style={{ height: `${available ? row.estimatesSent / max * 100 : 0}%` }}>{index === trend.length - 1 && available && row.estimatesSent > 0 && <span className="absolute inset-x-0 top-1 text-center text-[9px] font-bold text-sky-950">{row.estimatesSent}</span>}</div></div><p className={`mt-3 truncate text-center text-[9px] font-medium sm:text-[10px] ${index === trend.length - 1 ? 'text-sky-800' : 'text-slate-500'}`}>{row.label}</p></div>)}</div></div>
-    </div>
-    <details className="border-t border-slate-100 px-5 py-3 text-xs text-slate-600 sm:px-7"><summary className="cursor-pointer font-semibold text-slate-700">View monthly figures</summary><div className="mt-3 overflow-x-auto"><table className="w-full text-left"><thead><tr><th className="py-2">Month</th><th>Enquiries</th><th>Quote sends</th></tr></thead><tbody>{trend.map((row) => <tr key={row.key} className="border-t border-slate-100"><td className="py-2">{row.fullLabel}{row.partial ? ' (MTD)' : ''}</td><td>{row.leads}</td><td>{available ? row.estimatesSent : '—'}</td></tr>)}</tbody></table></div></details>
-    {!available && <p className="mt-3 text-xs text-amber-700">Quote activity is unavailable.</p>}
   </section>
 }
 function ConversionResponseCard({ metrics, insights }) {
@@ -210,13 +189,14 @@ function exportPerformance(data) {
   const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' }))
   const anchor = document.createElement('a')
   anchor.href = url
-  anchor.download = `smart-steel-performance-${data.period.month}.csv`
+  anchor.download = `smart-steel-performance-${data.period.kind === 'range' ? `${data.period.from}_${data.period.to}` : data.period.month}.csv`
   anchor.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 export default function AnalyticsWorkspace() {
-  const [month, setMonth] = useState(() => currentAnalyticsMonth())
+  const [selection, setSelection] = useState(() => ({range:'month',month:currentAnalyticsMonth()}))
+  const periodQuery = analyticsPeriodQuery(selection)
   const [tab, setTab] = useState('overview')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -230,9 +210,10 @@ export default function AnalyticsWorkspace() {
       setLoading(true)
       setError('')
       try {
-        const response = await fetch(`/api/os/analytics?month=${month}`, { cache: 'no-store', headers: await getOsAuthHeaders(), signal: controller.signal })
+        const response = await fetch(`/api/os/analytics?${periodQuery}`, { cache: 'no-store', headers: await getOsAuthHeaders(), signal: controller.signal })
         const payload = await response.json()
         if (!response.ok) throw new Error(payload.error || 'Could not load analytics.')
+        if (new URLSearchParams(periodQuery).has('range') && payload.period?.kind !== 'range') throw new Error('Date ranges require the updated Analytics API. Please deploy the API and interface files together.')
         if (!controller.signal.aborted) setData(payload)
       } catch (failure) {
         if (!controller.signal.aborted) setError(failure.message)
@@ -242,7 +223,7 @@ export default function AnalyticsWorkspace() {
     }
     load()
     return () => controller.abort()
-  }, [month, refreshKey])
+  }, [periodQuery, refreshKey])
   async function syncMarketingSource(source) {
     setSyncingSource(source)
     setSyncMessage('')
@@ -263,7 +244,7 @@ export default function AnalyticsWorkspace() {
     <div className="mx-auto max-w-[1500px] space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-5">
         <div><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-sky-500" />Smart Steel / Commercial intelligence</div><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Business performance<span className="text-sky-500">.</span></h1><p className="mt-2 text-sm text-slate-500">Track growth, conversion, and commercial performance.</p></div>
-        <div className="flex flex-wrap items-center gap-2"><Link href="/os/analytics/annual" className={button}>Annual plan & projection</Link><button type="button" className={button} disabled={loading} onClick={() => setRefreshKey((value) => value + 1)} aria-label="Refresh analytics"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />Refresh</button><button type="button" className={button} disabled={loading || Boolean(error) || !insights} onClick={() => exportPerformance(data)}><ArrowDownToLine size={14} />Export performance</button><AnalyticsMonthPicker value={month} onChange={setMonth} /></div>
+        <div className="flex flex-wrap items-center gap-2"><Link href="/os/analytics/annual" className={button}>Annual plan & projection</Link><button type="button" className={button} disabled={loading} onClick={() => setRefreshKey((value) => value + 1)} aria-label="Refresh analytics"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />Refresh</button><button type="button" className={button} disabled={loading || Boolean(error) || !insights} onClick={() => exportPerformance(data)}><ArrowDownToLine size={14} />Export performance</button><AnalyticsPeriodPicker value={selection} onChange={setSelection} /></div>
       </header>
       <nav aria-label="Analytics sections" className="flex gap-1 overflow-x-auto border-b border-slate-200">{TABS.map(({ key, label, icon: Icon }) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)} className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-3.5 text-xs font-semibold transition ${tab === key ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500 hover:text-slate-900'}`}><Icon size={15} />{label}</button>)}</nav>
       {loading ? <div role="status" className="space-y-5"><p className="text-sm text-slate-500">Loading business performance…</p><div className="grid animate-pulse gap-4 sm:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map((key) => <div key={key} className="h-36 rounded-2xl bg-slate-200" />)}</div><div className="h-64 animate-pulse rounded-2xl bg-slate-200" /></div> : error ? <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800"><p>{error}</p><button className={`${button} mt-4`} onClick={() => setRefreshKey((value) => value + 1)}>Try again</button></div> : insights && metrics ? <>
@@ -273,7 +254,7 @@ export default function AnalyticsWorkspace() {
         {tab === 'overview' && <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"><Stat label="Live pipeline value" value={money(insights.pipeline.value)} note={`${insights.pipeline.count} open opportunities · CRM quote values, excl. VAT`} dark /><Stat label="Cohort won value" value={money(metrics.wonValue)} note={`${metrics.wonCount} wins from leads created in this period; not revenue booked in the period.`} /><Stat label="Quote-to-win conversion" value={insights.estimatesAvailable ? percent(insights.quotes.winRate) : '—'} note={`${insights.quotes.wonCount} won / ${insights.quotes.quotedCount} quoted leads in this acquisition cohort`} /></div>
           {insights.estimatesAvailable && insights.quotes.quotedWithoutSentTimestamp > 0 && <p role="status" className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-xs leading-5 text-amber-950"><strong>{insights.quotes.quotedWithoutSentTimestamp} lead{insights.quotes.quotedWithoutSentTimestamp === 1 ? '' : 's'} in Quoted have no recorded estimate send time.</strong> {insights.quotes.quotedWithoutEstimate} have no saved estimate. These leads cannot contribute to first-quote timing; record the actual send date in the lead’s Commercial tab when known.</p>}
-          <div className="grid items-stretch gap-5 xl:grid-cols-[1.3fr_1fr]"><ActivityChart trend={data.trend} available={insights.estimatesAvailable} metrics={metrics} period={data.period} /><ConversionResponseCard metrics={metrics} insights={insights} /></div>
+          <div className="grid items-stretch gap-5 xl:grid-cols-[1.3fr_1fr]"><AnalyticsActivityChart key={`${data.period.start}:${data.period.end}`} trend={data.trend} dailyTrend={data.dailyTrend} available={insights.estimatesAvailable} metrics={metrics} period={data.period} /><ConversionResponseCard metrics={metrics} insights={insights} /></div>
           <div className="grid items-start gap-5 xl:grid-cols-2"><Ageing insights={insights} /><PerformanceTable rows={insights.products} label="Which products turn into business?" /></div>
         </>}
         {tab === 'pipeline' && <>
