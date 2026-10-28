@@ -1,4 +1,5 @@
-import { buildAnalyticsPeriod, shiftMonth, monthLabel, monthStart } from "lib/analyticsPeriods.mjs"
+import { buildAnalyticsSelection, analyticsDateKey, shiftMonth, monthLabel, monthStart } from "lib/analyticsPeriods.mjs"
+import { buildDailyAnalyticsActivity, buildMonthlyRangeActivity } from "lib/analyticsActivity.mjs"
 import { buildAnalyticsInsights } from "lib/analyticsInsights.mjs"
 import { buildDeclineSummary } from "lib/estimateDeclineReasons.mjs"
 import { NextResponse } from "next/server"
@@ -236,7 +237,7 @@ export async function GET(request) {
 
   const now = new Date()
   let period
-  try { period = buildAnalyticsPeriod(new URL(request.url).searchParams.get("month"), now) }
+  try { period = buildAnalyticsSelection(new URL(request.url).searchParams, now) }
   catch (error) { return NextResponse.json({ error: error.message }, { status: 400 }) }
   const start = new Date(period.start)
   const end = new Date(period.end)
@@ -266,7 +267,8 @@ export async function GET(request) {
         .from("os_analytics_daily_metrics")
         .select("metric_date, source, impressions, clicks, cost, conversions, conversion_value, average_position")
         .eq("dimension_key", "summary")
-        .gte("metric_date", `${shiftMonth(period.month, -1)}-01`)
+        .gte("metric_date", analyticsDateKey(previousStart))
+        .lte("metric_date", analyticsDateKey(end))
         .order("metric_date", { ascending: true })
     ),
     fetchAll(() =>
@@ -315,6 +317,7 @@ export async function GET(request) {
   const marketing = buildMarketingSummary(marketingResult.error ? [] : marketingResult.data || [], start, end, previousStart, previousEnd)
   const commercialEfficiency = buildCommercialEfficiency(currentLeads, marketingResult.error ? null : marketing.google_ads.cost)
 
+  const dailyTrend = buildDailyAnalyticsActivity(leads, estimates, period)
   return NextResponse.json({
     period,
     metrics: {
@@ -336,7 +339,8 @@ export async function GET(request) {
       { key: "quoted", label: "Estimate sent", value: current.quotedLeadCount, rate: current.quoteRate },
       { key: "won", label: "Won", value: current.wonCount, rate: current.winRate },
     ],
-    trend: buildTrend(leads, estimates, period.month, now),
+    trend: period.kind === "range" ? buildMonthlyRangeActivity(dailyTrend, period) : buildTrend(leads, estimates, period.month, now),
+    dailyTrend,
     sources: groupBy(currentLeads, (lead) => normalize(lead.lead_source)).slice(0, 6),
     products: groupBy(currentLeads, (lead) => normalize(lead.product_type)).slice(0, 6),
     attention: {
