@@ -135,10 +135,9 @@ export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, i
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
 
-  return `<!doctype html><html lang="en"><head><style>
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>
     @media only screen and (max-width:520px) {
-      .response-cell { display:block !important; width:100% !important; padding-right:0 !important; padding-left:0 !important; }
-      .response-card { min-height:0 !important; }
+      .follow-up-padding { padding-left:20px !important; padding-right:20px !important; }
     }
   </style></head><body style="margin:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:24px 12px;">
@@ -148,7 +147,7 @@ export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, i
         <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#cbd5e1;">${brand}</p>
         <h1 style="margin:0;font-size:25px;line-height:1.2;">${copy.heading}</h1>
       </td></tr>
-      <tr><td style="padding:28px;">
+      <tr><td class="follow-up-padding" style="padding:28px;">
         <div style="font-size:15px;line-height:1.75;color:#334155;">${escapedBody}</div>
         <div style="margin:24px 0;padding:16px 18px;background:#f8fafc;border-left:4px solid ${accent};">
           <p style="margin:0 0 5px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#64748b;">Estimate</p>
@@ -163,16 +162,22 @@ export function buildFollowUpHtml({ copy, estimate, shareUrl, responseBaseUrl, i
         ${responseBaseUrl ? `<div style="margin-top:28px;padding-top:24px;border-top:1px solid #e2e8f0;">
           <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:${accent};">One quick question</p>
           <h2 style="margin:0 0 15px;font-size:19px;line-height:1.3;color:#0f172a;">Where are you with your project?</h2>
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-            ${[0, 2].map((startIndex) => `<tr>
-              ${ESTIMATE_RESPONSE_OPTIONS.slice(startIndex, startIndex + 2).map((option, optionIndex) => `<td class="response-cell" width="50%" valign="top" style="padding:${startIndex === 0 ? "0" : "6px"} ${optionIndex === 0 ? "6px" : "0"} 6px ${optionIndex === 0 ? "0" : "6px"};">
-                <a class="response-card" href="${option.key === "call_me" ? `${shareUrl}#accept-quote` : `${responseBaseUrl}?choice=${option.key}`}" style="display:block;min-height:126px;padding:16px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;text-decoration:none;">
-                  <span style="display:inline-block;margin:0 0 13px;padding:8px 9px;background:${option.key === "call_me" ? accent : "#c1d9e5"};color:${option.key === "call_me" ? "#ffffff" : dark};font-size:11px;font-weight:800;letter-spacing:1px;">${option.marker}</span>
-                  <span style="display:block;font-size:13px;font-weight:800;line-height:1.4;">${option.key === "call_me" ? "Review &amp; accept quote" : option.label}</span>
-                  <span style="display:block;margin-top:7px;color:#64748b;font-size:11px;font-weight:400;line-height:1.55;">${option.key === "call_me" ? "Review your quote and the next steps, then confirm acceptance online." : option.helper}</span>
-                </a>
-              </td>`).join("")}
-            </tr>`).join("")}
+          <p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#64748b;">Choose the option that best fits, or simply reply to this email.</p>
+          <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
+            ${ESTIMATE_RESPONSE_OPTIONS.map(option => {
+              const primary = option.key === "call_me"
+              const label = primary ? "Review &amp; accept quote" : option.label
+              const helper = primary ? "Review the scope and next steps before confirming acceptance online." : option.helper
+              const href = primary ? `${shareUrl}#accept-quote` : `${responseBaseUrl}?choice=${option.key}`
+              return `<tr><td style="padding:0 0 10px;">
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;"><tr>
+                  <td bgcolor="${primary ? dark : "#f8fafc"}" style="border:1px solid ${primary ? dark : "#dbe4ee"};text-align:left;">
+                    <a href="${href}" style="display:block;padding:14px 16px 5px;color:${primary ? "#ffffff" : dark};font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;line-height:1.4;text-decoration:none;">${label} &rarr;</a>
+                    <p style="margin:0;padding:0 16px 14px;color:${primary ? "#c1d9e5" : "#64748b"};font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:400;line-height:1.5;">${helper}</p>
+                  </td>
+                </tr></table>
+              </td></tr>`
+            }).join("")}
           </table>
         </div>` : ""}
         ${reviewInvitationHtml(bookingUrl)}
