@@ -1,6 +1,6 @@
 import { buildProposalHtml } from "lib/estimateProposalEmail"
 import { NextResponse } from "next/server"
-import { requireOsAuth } from "lib/osRouteAuth"
+import { getOsRequestContext } from "lib/osRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
 import { getNextFollowUpAt } from "lib/crmEstimateFollowUps"
 import { SMART_STEEL_SITE_URL } from "lib/brandEntity"
@@ -32,8 +32,11 @@ function hasPricedServiceLine(lineItems, pattern) {
 
 
 export async function POST(request) {
-  const authResponse = await requireOsAuth(request)
-  if (authResponse) return authResponse
+  const context = await getOsRequestContext(request)
+  if (context.response) return context.response
+  const senderName = String(context.user.email || "").toLowerCase() === "info@smartsteel.co.za"
+    ? "Marco"
+    : context.user.user_metadata?.full_name || context.user.user_metadata?.name || "The Smart Steel Team"
 
   try {
     const payload = await request.json()
@@ -133,7 +136,7 @@ export async function POST(request) {
         to: [lead.email],
         reply_to: "info@smartsteel.co.za",
         subject,
-        html: buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl, bookingUrl }),
+        html: buildProposalHtml({ lead, estimate, builderSubmission, body, shareUrl, bookingUrl, senderName }),
         attachments: [{ filename: buildFilename(estimate), content: pdfBase64 }],
       }),
     })
