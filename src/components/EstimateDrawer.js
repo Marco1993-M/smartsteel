@@ -1,5 +1,6 @@
 "use client"
 
+import { reconcileEstimateItems } from "../lib/reconcileEstimateItems.mjs"
 import GroundMountRunFields from "./ground-mount/GroundMountRunFields"
 import { groundMountRunsFromNotes } from "../lib/groundMountRuns.mjs"
 import { Fragment, useEffect, useMemo, useRef, useState } from "react"
@@ -755,35 +756,12 @@ export default function EstimateDrawer({
         )
       }
 
-      const previewByCode = new Map(preview.lineItems.map((item) => [item.code, item]))
-      const mergedBaseItems = currentItems
-        .filter((item) => !item.manual)
-        .map((item) => {
-          const previewItem = previewByCode.get(item.code)
-          if (!previewItem) return null
-
-          const pricedPreviewItem = applyMarkupToLineItem(previewItem, preview.pricing.markupMultiplier)
-
-          if (!hasLineItemOverrides(item, pricedPreviewItem.label)) {
-            return buildEditableLineItem(pricedPreviewItem, {
-              id: item.id || previewItem.code,
-              priceIncludesMarkup: true,
-            })
-          }
-
-          return buildEditableLineItem(pricedPreviewItem, item)
+      return reconcileEstimateItems(currentItems,
+        preview.lineItems.map(item => applyMarkupToLineItem(item, preview.pricing.markupMultiplier)), {
+          buildItem: buildEditableLineItem,
+          hasOverrides: hasLineItemOverrides,
+          addMissing: isAtlasWarehouseEstimateProduct(formState.productType) || formState.productType === "Solar ground mount",
         })
-        .filter(Boolean)
-
-      const manualItems = currentItems.filter((item) => item.manual)
-      // New runs introduce new codes; retain edits on existing rows and add
-      // newly configured run rows instead of silently leaving them unpriced.
-      const existingCodes = new Set(mergedBaseItems.map((item) => item.code))
-      const newRunItems = formState.productType === "Solar ground mount"
-        ? preview.lineItems.filter((item) => !existingCodes.has(item.code)).map((item) =>
-          buildEditableLineItem(applyMarkupToLineItem(item, preview.pricing.markupMultiplier), { priceIncludesMarkup: true }))
-        : []
-      return [...mergedBaseItems, ...newRunItems, ...manualItems]
     })
   }, [formState.productType, formState.groundMountRuns, preview.lineItems, preview.pricing.markupMultiplier])
 
@@ -854,6 +832,16 @@ export default function EstimateDrawer({
 
       return nextState
     })
+  }
+
+  const useCurrentCalculatedPricing = () => {
+    setHasUnsavedChanges(true)
+    setEditableLineItems(current => [
+      ...preview.lineItems.map(item => buildEditableLineItem(
+        applyMarkupToLineItem(item, preview.pricing.markupMultiplier), { priceIncludesMarkup: true }
+      )),
+      ...current.filter(item => item.manual && !preview.lineItems.some(base => base.code === item.code)),
+    ])
   }
 
   const toggleStructuralSystem = (system) => {
@@ -1788,6 +1776,13 @@ export default function EstimateDrawer({
                         Add manual item
                       </button>
                     </div>
+
+                    {isAtlasWarehouseEstimateProduct(formState.productType) ? (
+                      <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs leading-5 text-slate-600">Changing the specification recalculates standard items and adds required framing. Edited rows retain your overrides. To restore the current calculated rates and quantities for all standard items, use the action below. Separate manual items are retained; your discount still applies. Save the estimate to keep these changes.</p>
+                        <button type="button" onClick={useCurrentCalculatedPricing} className="mt-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-[#001d2e] hover:bg-slate-100">Use current calculated pricing</button>
+                      </div>
+                    ) : null}
 
                     <div className="mt-4 space-y-3">
                       {editableLineItems.map((item) => {
