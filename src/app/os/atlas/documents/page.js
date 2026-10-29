@@ -2,11 +2,13 @@ import { getAtlasProduct, withAtlasProduct } from "../../../../lib/atlasProductR
 import DocumentsWorkspace from "../../../../components/os/DocumentsWorkspace"
 import AtlasModuleHero from "../../../../components/os/AtlasModuleHero"
 import { ATLAS_DOCUMENT_RULES } from "../../../../lib/osProductData"
+import AtlasSolarDocumentHub from "../../../../components/os/AtlasSolarDocumentHub"
 import AtlasDocumentHub from "../../../../components/os/AtlasDocumentHub"
 
 export default async function AtlasDocumentsPage({ searchParams }) {
   const params = await searchParams
   const product = getAtlasProduct(params?.product || "W08")
+  if (product?.code === "SOLAR-CARPORT") return <AtlasSolarDocumentHub />
   if (["W06", "W08", "W10", "W12", "W15"].includes(product?.code)) {
     return <AtlasDocumentHub key={product.code} productCode={product.code} />
   }
