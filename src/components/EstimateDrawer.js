@@ -1,6 +1,7 @@
 "use client"
 
 import { reconcileEstimateItems, warehousePricingSpecificationKey } from "../lib/reconcileEstimateItems.mjs"
+import { compactEstimateNumber, cleanSolarCarportLineLabel } from "../lib/estimateLineItemPresentation.mjs"
 import GroundMountRunFields from "./ground-mount/GroundMountRunFields"
 import { groundMountRunsFromNotes } from "../lib/groundMountRuns.mjs"
 import { Fragment, useEffect, useMemo, useRef, useState } from "react"
@@ -452,7 +453,8 @@ function resolveEstimateTitle(formState, preview) {
 function buildEditableLineItem(item, overrides = {}) {
   const quantity = Number(overrides.quantity ?? item.quantity ?? 0)
   const unitRate = Number(overrides.unitRate ?? item.unitRate ?? 0)
-  const label = overrides.label ?? item.label
+  const rawLabel = overrides.label ?? item.label
+  const label = String(item.code || "").startsWith("SC-") ? cleanSolarCarportLineLabel(rawLabel) : rawLabel
   const unit = overrides.unit ?? item.unit
   const priceIncludesMarkup =
     typeof overrides.priceIncludesMarkup === "boolean"
@@ -1810,7 +1812,7 @@ export default function EstimateDrawer({
                                   type="number"
                                   min="0"
                                   step="0.01"
-                                  value={item.quantity}
+                                  value={isSolarCarportEstimate ? compactEstimateNumber(item.quantity) : item.quantity}
                                   onChange={(event) =>
                                     updateLineItem(item.id, { quantity: event.target.value })
                                   }
@@ -1836,7 +1838,7 @@ export default function EstimateDrawer({
                                   type="number"
                                   min="0"
                                   step="0.01"
-                                  value={item.unitRate}
+                                  value={isSolarCarportEstimate ? compactEstimateNumber(item.unitRate) : item.unitRate}
                                   onChange={(event) =>
                                     updateLineItem(item.id, { unitRate: event.target.value })
                                   }

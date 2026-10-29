@@ -1,3 +1,4 @@
+import { compactEstimateNumber, cleanSolarCarportLineLabel, solarCarportQuoteMoney } from "../lib/estimateLineItemPresentation.mjs"
 import Image from "next/image"
 import { ESTIMATE_DELIVERY_TERMS, ESTIMATE_EXCLUSIONS, ESTIMATE_TERMS } from "../lib/estimates/estimateDocument"
 import { formatCurrency } from "../lib/estimates/warehouseEstimate"
@@ -8,6 +9,7 @@ export default function EstimateDocumentLayout({
   documentModel,
   estimate,
 }) {
+  const isSolarCarport = (estimate.product_type || estimate.input_data?.productType) === "Solar carport"
   const isAtlas = documentModel.isAtlas
   const isLsf = documentModel.isLsf
   const cardShape = isAtlas ? "rounded-[4px]" : "rounded-3xl"
@@ -205,14 +207,14 @@ export default function EstimateDocumentLayout({
               {documentModel.lineItems.map((item) => (
                 <tr key={item.id || item.code || item.label} className="estimate-row">
                   <td className="px-6 py-4">
-                    <p className="font-medium text-slate-900">{item.label}</p>
+                    <p className="font-medium text-slate-900">{isSolarCarport ? cleanSolarCarportLineLabel(item.label) : item.label}</p>
                     {item.overrideReason ? (
                       <p className="mt-1 text-xs text-slate-500">Reason: {item.overrideReason}</p>
                     ) : null}
                   </td>
-                  <td className="px-6 py-4">{item.quantity}</td>
+                  <td className="px-6 py-4">{isSolarCarport ? compactEstimateNumber(item.quantity) : item.quantity}</td>
                   <td className="px-6 py-4">{item.unit}</td>
-                  <td className="px-6 py-4">{formatCurrency(item.unitRate || 0)}</td>
+                  <td className="px-6 py-4">{isSolarCarport ? solarCarportQuoteMoney(item.unitRate) : formatCurrency(item.unitRate || 0)}</td>
                   <td className="px-6 py-4 text-right font-semibold text-slate-900">
                     {formatCurrency(item.total || 0)}
                   </td>
