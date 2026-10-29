@@ -4,26 +4,13 @@ import { NextResponse } from "next/server"
 import { requireOsAuth } from "lib/osRouteAuth"
 import { launchEstimatePdfBrowser, renderHtmlPdf } from "lib/estimates/pdf"
 import { calculateAtlasSolarCarportEstimate } from "lib/estimates/atlasSolarCarportEstimate"
-import { ATLAS_SOLAR_CARPORT_PARKING_COUNTS, getAtlasSolarCarportPanelCount, getAtlasSolarCarportSiteLayout, getAtlasSolarCarportWidth, placeAtlasSolarCarportRun } from "lib/atlasSolarCarportLayouts"
+import { getAtlasSolarCarportSiteLayout } from "lib/atlasSolarCarportLayouts"
+import { parseSolarDocumentRuns } from "lib/atlasSolarCarportDocuments"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
-function parseRuns(value) {
-  const entries = String(value || "").split(",")
-  if (!entries.length || entries.length > 8) throw new Error("Choose between one and eight supported parking runs.")
-  return entries.reduce((runs, entry, index) => {
-    const match = entry.match(/^(\d+(?:\.\d+)?)x(6|12)$/)
-    if (!match) throw new Error("Invalid parking run dimensions.")
-    const width = Number(match[1])
-    const length = Number(match[2])
-    const parkingCount = ATLAS_SOLAR_CARPORT_PARKING_COUNTS.find((count) => getAtlasSolarCarportWidth(count) === width)
-    if (!parkingCount) throw new Error("Unsupported Atlas parking width.")
-    const run = { id: `run-${index + 1}`, width, length, parkingCount, moduleCount: getAtlasSolarCarportPanelCount(width, length), x: 0, z: 0, rotationDeg: 0 }
-    return [...runs, placeAtlasSolarCarportRun(runs, run)]
-  }, [])
-}
 
 const n = (value, digits = 1) => digits ? Number(value || 0).toFixed(digits) : Number(value || 0).toLocaleString("en-ZA", { maximumFractionDigits: 0 })
 
@@ -78,7 +65,7 @@ export async function GET(request) {
     if (auth) return auth
   }
   try {
-    const runs = parseRuns(searchParams.get("runs"))
+    const runs = parseSolarDocumentRuns(searchParams.get("runs"))
     const estimate = calculateAtlasSolarCarportEstimate({ parkingRuns: runs, scope: "supply_only", deliveryDistance: 0 })
     const browser = await launchEstimatePdfBrowser()
     const pdf = await renderHtmlPdf({ browser, html: buildHtml(runs, estimate), landscape: true })
