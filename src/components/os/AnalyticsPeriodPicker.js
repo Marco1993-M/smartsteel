@@ -1,11 +1,11 @@
 "use client"
 import { useEffect, useId, useRef, useState } from 'react'
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import AnalyticsMonthPicker from './AnalyticsMonthPicker'
 import { analyticsDateKey, analyticsPeriodQuery, buildAnalyticsSelection, currentAnalyticsMonth, monthLabel, shiftAnalyticsDay, shiftMonth } from '../../lib/analyticsPeriods.mjs'
 
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const control='min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
+const control='min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
 const dateLabel=day=>day ? new Date(`${day}T12:00:00+02:00`).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric',timeZone:'Africa/Johannesburg'}) : 'Choose date'
 
 export default function AnalyticsPeriodPicker({ value, onChange }) {
@@ -42,13 +42,13 @@ export default function AnalyticsPeriodPicker({ value, onChange }) {
   if(event.key==='Escape' && open){event.preventDefault();close()}
   if(event.key==='Tab')requestAnimationFrame(()=>{if(!root.current?.contains(document.activeElement))setOpen(false)})
  }}>
-  <select ref={periodControl} aria-label="Reporting period" value={open?'custom':value.range} onChange={event=>{
+  <div className="relative min-w-0"><select ref={periodControl} aria-label="Reporting period" value={open?'custom':value.range} onChange={event=>{
    const range=event.target.value
    if(range==='custom')begin()
    else {setOpen(false);onChange(range==='month'?{range,month:value.month || currentAnalyticsMonth()}:{range})}
-  }} className={control}>
+  }} className={`${control} h-11 w-full appearance-none pr-9`}>
    <option value="month">Calendar month</option><option value="last7">Last 7 days</option><option value="last30">Last 30 days</option><option value="last3months">Last 3 months</option><option value="custom">Custom range</option>
-  </select>
+  </select><ChevronDown size={14} aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" /></div>
   {value.range==='month' && !open ? <AnalyticsMonthPicker value={value.month} onChange={month=>onChange({range:'month',month})} /> : null}
   {value.range==='custom' || open ? <button ref={trigger} type="button" onClick={()=>open?close():begin()} aria-label="Choose custom reporting dates" aria-haspopup="dialog" aria-expanded={open} aria-controls={open?id:undefined} className={`${control} inline-flex items-center gap-2`}><CalendarDays size={15} className="text-sky-700" aria-hidden="true" />{value.range==='custom'?`${dateLabel(value.from)} – ${dateLabel(value.to)}`:'Choose dates'}</button> : null}
   {open && <div id={id} role="dialog" aria-label="Custom reporting range" className="absolute left-0 top-full z-50 mt-2 w-[min(23rem,calc(100vw-2.5rem))] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:left-auto sm:right-0">
