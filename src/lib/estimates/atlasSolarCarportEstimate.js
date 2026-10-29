@@ -89,7 +89,7 @@ export function calculateAtlasSolarCarportEstimate(input, release = null) {
     geometry.members.forEach(m => add(m.code, `${m.label} · ${m.profile.section} · ${m.cutLengthM.toFixed(3)}m`, m.totalMassKg * quantity, 'kg', c.zamRatePerTon / 1000))
     const kg = geometry.totalSteelKg * quantity
     add('SC-WASTE', 'Steel waste allowance', kg, 'kg', c.zamRatePerTon / 1000 * c.wastePercent / 100)
-    add('SC-FAB', 'Fabrication allowance (provisional)', kg, 'kg', c.fabricationPerKg)
+    add('SC-FAB', 'Fabrication allowance', kg, 'kg', c.fabricationPerKg)
     const connectionRates = {
       'SC-BRK-BASE': c.anchorBracketEach,
       'SC-BRK-ARM': c.armBracketEach,
@@ -100,7 +100,7 @@ export function calculateAtlasSolarCarportEstimate(input, release = null) {
       'SC-BLT-ARM-TOP': c.connectionBoltSetEach,
       'SC-BLT-PUR': c.connectionBoltSetEach,
     }
-    geometry.connections.forEach(item => add(item.code, `${item.label}${item.specification ? ` · ${item.specification}` : ''} (provisional)`, item.quantity * quantity, item.unit, connectionRates[item.code]))
+    geometry.connections.forEach(item => add(item.code, `${item.label}${item.specification ? ` · ${item.specification}` : ''}`, item.quantity * quantity, item.unit, connectionRates[item.code]))
     add('SC-MODULE', 'Module support interfaces', modules, 'each', c.moduleSupportEach)
     if (input.scope === 'supply_install') {
       add('SC-INSTALL', 'Solar carport structure installation', totalArea, 'm²', c.installationSellPerSquareMetre, true)
