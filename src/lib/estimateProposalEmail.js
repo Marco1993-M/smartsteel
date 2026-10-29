@@ -1,3 +1,4 @@
+import { buildAtlasProposalHtml } from "./atlasProposalEmail.mjs"
 import { getEstimateBrandIdentity } from "./crmEstimateFollowUps"
 import { SMART_STEEL_SITE_URL, smartSteelContact } from "./brandEntity"
 import { reviewInvitationHtml } from "./quoteReview.mjs"
@@ -16,9 +17,10 @@ function formatCurrency(value) {
   return `R ${amount.toLocaleString("en-ZA", { maximumFractionDigits: 2 })}`
 }
 
-export function buildProposalHtml({ lead, estimate, body, shareUrl, bookingUrl }) {
+export function buildProposalHtml({ lead, estimate, body, shareUrl, bookingUrl, senderName }) {
   const brandIdentity = getEstimateBrandIdentity(lead, estimate)
   const isAtlas = brandIdentity === "atlas"
+  if (isAtlas) return buildAtlasProposalHtml({ lead, estimate, body, shareUrl, bookingUrl, senderName })
   const isLsf = brandIdentity === "lsf"
   const input = estimate.input_data || {}
   const dimensions = input.width && input.length
