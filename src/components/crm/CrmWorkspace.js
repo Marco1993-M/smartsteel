@@ -1094,7 +1094,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
     if (status === "accepted") {
       try {
-        const response = await fetch("/api/crm/quote-wins", { method:"POST", headers:await getOsAuthHeaders({"Content-Type":"application/json"}), body:JSON.stringify({leadId:lead.id,quotes:[{id:estimate.id,expectedUpdatedAt:estimate.updated_at}],note:"Win recorded from CRM estimate status"}) })
+        const response = await fetch("/api/crm/quote-wins", { method:"POST", headers:await getOsAuthHeaders({"Content-Type":"application/json"}), body:JSON.stringify({leadId:lead.id,changes:[{id:estimate.id,expectedUpdatedAt:estimate.updated_at,action:"add"}],note:"Win recorded from CRM estimate status"}) })
         const payload = await response.json()
         if (!response.ok) throw new Error(payload.error || "Could not record quote win.")
         setLeads(current => current.map(item => String(item.id) === String(lead.id) ? normalizeLead({...item,...payload.lead}) : item))

@@ -1,7 +1,6 @@
 'use client'
 
 import ManufacturingProgress from './ManufacturingProgress'
-import QuoteWinsPanel from '../crm/QuoteWinsPanel'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, CheckCircle2, FileText, Package, Plus, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
@@ -23,14 +22,22 @@ export default function ManufacturingOperations() {
   const [records, setRecords] = useState([])
   const [pendingHandoffs, setPendingHandoffs] = useState([])
   const [historicalProjects, setHistoricalProjects] = useState([])
+  const [handoffWarning, setHandoffWarning] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState('')
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('active')
   async function load() {
-    setLoading(true); setError('')
+    setLoading(true); setError(''); setHandoffWarning('')
     try {
+      try {
+        const sync = await fetch('/api/os/manufacturing', { method: 'POST', headers: await getOsAuthHeaders() })
+        if (!sync.ok) {
+          const result = await sync.json().catch(() => ({}))
+          setHandoffWarning(result.error || 'Automatic handoff is temporarily unavailable.')
+        }
+      } catch { setHandoffWarning('Automatic handoff could not connect. Existing orders are shown below.') }
       const response = await fetch('/api/os/manufacturing', { headers: await getOsAuthHeaders(), cache: 'no-store' })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error)
@@ -43,8 +50,10 @@ export default function ManufacturingOperations() {
   useEffect(() => {
     if (selectedId) return
     const refresh = () => { load() }
+    const visible = () => { if (document.visibilityState === 'visible') load() }
     window.addEventListener('focus', refresh)
-    return () => window.removeEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', visible)
+    return () => { window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', visible) }
   }, [selectedId])
   const selected = records.find((r) => r.id === selectedId)
   if (selected) return <OrderWorkspace key={selected.id} order={selected} records={records} onBack={() => setSelectedId('')} onSaved={(row) => setRecords((current) => current.map((order) => order.id === row.order_id ? { ...order, status: row.data.deliveryDate ? 'delivered' : order.status, operations: row } : order))} />
@@ -54,7 +63,9 @@ export default function ManufacturingOperations() {
   return <section className="space-y-5">
     <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-blue-700">Direct customer orders</p><h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">Know what needs to move next.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Deposit, drawings, supplier progress and delivery — together with the original cost allowance.</p></div><button className={secondary} disabled={loading} onClick={load}><RefreshCw size={16} />Refresh orders</button></div>
     {error && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{error} Existing commercial and AFGRI controls remain below.</p>}
-    {!loading && pendingHandoffs.length > 0 && <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4"><h3 className="font-bold text-amber-950">Won leads awaiting quote handoff · {pendingHandoffs.length}</h3><p className="mt-2 text-sm leading-6 text-amber-900">These leads were marked Won or have an accepted estimate, but the selected quote has not yet become a manufacturing order. Confirm the won quote(s) below.</p><div className="mt-3 space-y-3">{pendingHandoffs.map(lead=><details key={lead.id} className="rounded-xl border border-amber-200 bg-white p-3"><summary className="cursor-pointer text-sm font-semibold">{[lead.name,lead.last_name].filter(Boolean).join(' ')} · Won / handoff needed</summary><div className="mt-3"><QuoteWinsPanel leadId={lead.id} onRecorded={load}/></div></details>)}</div></section>}
+    {handoffWarning && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{handoffWarning}</p>}
+    {!loading && pendingHandoffs.length > 0 && <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4"><h3 className="font-bold text-amber-950">Acceptance needs attention · {pendingHandoffs.length}</h3><p className="mt-2 text-sm leading-6 text-amber-900">Accepted quotes arrive here automatically. These leads need their acceptance checked in CRM; you do not need to select won quotes again in Manufacturing.</p><div className="mt-3 flex flex-wrap gap-2">{pendingHandoffs.map(lead=><Link key={lead.id} href={`/os/crm?leadId=${lead.id}`} className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-semibold text-amber-950">{[lead.name,lead.last_name].filter(Boolean).join(' ')} → CRM</Link>)}</div></section>}
+
     {!loading && !error && filter === 'all' && historicalProjects.length > 0 && <section className={panel}><h3 className="font-bold text-slate-900">Historical projects · Completed</h3><p className="mt-2 text-sm text-slate-500">Confirmed by Marco. Detailed historic payments, costs and milestone dates have not been reconstructed.</p><div className="mt-4 grid gap-3 sm:grid-cols-2">{historicalProjects.filter(project => `${project.lead?.name || ''} ${project.lead?.last_name || ''}`.toLowerCase().includes(query.toLowerCase())).map(project => <Link key={project.lead_id} href={`/os/crm?leadId=${project.lead_id}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-sm"><span className="font-semibold">{[project.lead?.name, project.lead?.last_name].filter(Boolean).join(' ') || 'Historical project'}</span><span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700"><CheckCircle2 size={14} />Completed</span></Link>)}</div></section>}
     <div className="grid gap-3 sm:grid-cols-3"><Stat label="Active orders" value={loading || error ? '—' : active.length} /><Stat label="Awaiting engineering" value={loading || error ? '—' : active.filter(({ summary }) => summary.stage === 'engineering').length} /><Stat label="Ready for dispatch" value={loading || error ? '—' : active.filter(({ summary }) => summary.stage === 'dispatch').length} /></div>
     <div className="flex flex-wrap gap-3"><input className={`${input} mt-0 flex-1 basis-64`} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find client, order number or structure…" aria-label="Search manufacturing orders" /><select className={`${input} mt-0 sm:w-auto`} aria-label="Manufacturing stage" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="active">Active orders</option><option value="all">All orders</option>{Object.entries(JOB_STAGES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>

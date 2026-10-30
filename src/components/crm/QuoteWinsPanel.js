@@ -1,11 +1,23 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { planQuoteAcceptance } from '../../lib/estimateAlternatives.mjs'
 import { getOsAuthHeaders } from '../../lib/osClientAuth'
 const money=value=>`R ${Number(value||0).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2})}`
-export default function QuoteWinsPanel({leadId,onRecorded}) {
+export default function QuoteWinsPanel({leadId,onRecorded,acceptanceRequest}) {
  const [data,setData]=useState(null),[added,setAdded]=useState([]),[replacements,setReplacements]=useState({}),[note,setNote]=useState(''),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState('')
  useEffect(()=>{let active=true;async function load(){setLoading(true);setError('');try{const r=await fetch(`/api/crm/quote-wins?leadId=${leadId}`,{headers:await getOsAuthHeaders(),cache:'no-store'}),p=await r.json();if(!r.ok)throw new Error(p.error);if(active){setData(p);setAdded([]);setReplacements({})}}catch(e){if(active)setError(e.message)}finally{if(active)setLoading(false)}}load();return()=>{active=false}},[leadId])
+ useEffect(()=>{
+  if (!data || !acceptanceRequest?.id) return
+  const quote=data.estimates.find(q=>q.id===acceptanceRequest.id)
+  const plan=planQuoteAcceptance(quote,data.orders||[])
+  setError('');setAdded([]);setReplacements({})
+  if(plan.action==='replace') {setReplacements({[plan.orderId]:quote.id});setSuccess(`V${quote.version_no} selected as the replacement. Confirm with Update won quotes below.`)}
+  else if(plan.action==='add') {setAdded([quote.id]);setSuccess(`V${quote.version_no} selected. Confirm with Update won quotes below.`)}
+  else if(plan.action==='recorded')setSuccess(`V${quote.version_no} is already recorded as Won.`)
+  else if(plan.action==='choose')setSuccess(`Choose which existing order V${quote.version_no} replaces, or select it as additional work below.`)
+  else setError('This version cannot be marked won. Choose a current saved quote with a positive value.')
+ },[data,acceptanceRequest])
  const estimates=data?.estimates||[],orders=data?.orders||[]
  const available=estimates.filter(q=>!q.won_superseded_by&&!orders.some(o=>o.estimate_id===q.id)&&['draft','prepared','sent','accepted'].includes(q.status)&&Number(q.total)>0)
  const used=new Set([...added,...Object.values(replacements).filter(Boolean)])
