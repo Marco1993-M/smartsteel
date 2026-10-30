@@ -1,3 +1,6 @@
+import { createShowcaseApplication, showcaseApplicationNotes } from "../../../lib/atlasShowcaseOffer.mjs"
+import { normalizeAtlasConfiguration } from "../../../lib/atlasConfiguration"
+import { calculateAtlasWarehouseEstimate } from "../../../lib/estimates/atlasWarehouseEstimate"
 import { NextResponse } from "next/server"
 import { supabaseServer } from "../../../lib/supabase-server"
 import { readSolarPricing } from '../../../lib/solarCarportPricingServer'
@@ -35,6 +38,7 @@ function buildBuilderNotes(payload) {
     payload.submissionChannel ? `Submission channel: ${payload.submissionChannel}` : null,
     payload.productType ? `System: ${isAtlasWarehouse ? "Atlas W-Series Warehouse" : payload.productType}` : null,
     "Budget basis: Supply only",
+    ...showcaseApplicationNotes(payload.atlasShowcaseOffer),
     payload.intendedUse ? `Intended use: ${payload.intendedUse}` : null,
     payload.projectStage ? `Project stage: ${payload.projectStage}` : null,
     payload.targetTimeline ? `Target timeline: ${payload.targetTimeline}` : null,
@@ -74,6 +78,7 @@ function buildBuilderSubmission(payload, leadId) {
     status: "new",
     configuration: {
       ...(payload.configuration || {}),
+      ...(payload.atlasShowcaseOffer ? { showcaseOffer: { campaignId: payload.atlasShowcaseOffer.campaignId, termsVersion: payload.atlasShowcaseOffer.termsVersion, status: "pending", potentialSaving: payload.atlasShowcaseOffer.potentialSaving } } : {}),
       designReference: payload.designReference || null,
       configurationUrl: getSafeBuilderUrl(payload.configurationUrl),
     },
@@ -89,6 +94,7 @@ function buildBuilderSubmission(payload, leadId) {
 function buildGenericNotes(payload) {
   const lines = [
     payload.lead_source ? `${payload.lead_source} enquiry` : "Website enquiry",
+    ...showcaseApplicationNotes(payload.atlasShowcaseOffer),
     payload.product_type ? `Product: ${payload.product_type}` : null,
     payload.estimate_request ? `Request: ${payload.estimate_request}` : null,
     ...(payload.lead_source === "Solar Carport Estimator" ? [
@@ -196,6 +202,7 @@ function buildConfigurationReceivedEmailHtml(body) {
                   <p style="margin:0;color:#0f172a;font-size:18px;font-weight:800;">${escapeHtml(reference)}</p>
                 </div>
 
+                ${body.atlasShowcaseOffer ? `<div style="margin:0 0 24px;padding:18px 20px;background:#eef6fa;border-left:4px solid #0043f3;"><p style="margin:0 0 8px;font-size:15px;font-weight:700;">Atlas Showcase Offer — application received</p><p style="margin:0;font-size:14px;line-height:1.7;">We will assess your project and discuss photography participation before confirming eligibility. No discount has been applied and no place has been reserved.</p></div>` : ""}
                 <h2 style="margin:0 0 8px;font-size:18px;">Your starting configuration</h2>
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                   ${detailRow("System", systemName)}
@@ -342,6 +349,9 @@ export async function POST(request) {
   let body = null
   try {
     body = await request.json()
+    delete body.atlasShowcaseOffer
+    if (body.configuration && typeof body.configuration === "object") delete body.configuration.showcaseOffer
+    if (body.summary && typeof body.summary === "object") delete body.summary.showcaseOffer
     const isSolarSubmission = body?.lead_source === "Solar Carport Estimator"
     const isWarehouseBuilderSubmission = !isSolarSubmission && (
       Boolean(body?.configuration) ||
@@ -380,6 +390,26 @@ export async function POST(request) {
       )
     }
 
+    if (body.showcaseOffer) {
+      if (!isWarehouseBuilderSubmission || !isAtlasWarehouseProductType(body.productType)) return NextResponse.json({error: "The Showcase Offer is for Atlas warehouse enquiries."}, {status:400})
+      try {
+        const raw = body.configuration
+        if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("Your warehouse configuration is missing. Please refresh the builder.")
+        const config = normalizeAtlasConfiguration(raw)
+        if (["width","length","wallHeight"].some(key => Number(raw[key]) !== config[key]) || ["steelFinish","gableMode"].some(key => raw[key] !== config[key])) throw new Error("Please review your warehouse dimensions and materials before applying.")
+        if (config.gableMode !== "structure_only" && ["sheetingProfile","sheetingFinish"].some(key => raw[key] !== config[key])) throw new Error("Please review your selected sheeting before applying.")
+        const current = calculateAtlasWarehouseEstimate(config)
+        const supply = current.pricing.estimatedTotal
+        if (!Number.isFinite(Number(body.estimatedTotal)) || Math.abs(Number(body.estimatedTotal) - supply) > .011) return NextResponse.json({error:"Your supply guide has changed. Refresh the builder and review the price before applying."}, {status:409})
+        body.atlasShowcaseOffer = createShowcaseApplication(body.showcaseOffer, supply, config)
+        body.estimatedTotal = supply
+        body.priceLabel = `R ${supply.toLocaleString("en-ZA", {minimumFractionDigits:2,maximumFractionDigits:2})}`
+      } catch (failure) { return NextResponse.json({error:failure.message}, {status:400}) }
+      // Fail before creating a lead if the required offer metadata column is absent.
+      const setup = await supabaseServer.from("leads").select("atlas_showcase_offer").limit(0)
+      if (setup.error) return NextResponse.json({error:"Offer applications are temporarily unavailable. Please request a standard quote or contact Smart Steel."}, {status:503})
+    }
+
     if (body.lead_source === 'Solar Carport Estimator') {
       const release = await readSolarPricing()
       if (!release) return NextResponse.json({ error: 'Solar pricing is currently unavailable.' }, { status: 503 })
@@ -397,6 +427,7 @@ export async function POST(request) {
     const insertPayload = isWarehouseBuilderSubmission
       ? {
           name: body.name,
+          ...(body.atlasShowcaseOffer ? { atlas_showcase_offer: body.atlasShowcaseOffer } : {}),
           last_name: body.lastName || "Warehouse Builder",
           email: body.email,
           phone: body.phone,
@@ -407,7 +438,7 @@ export async function POST(request) {
           lead_source: "Warehouse Builder",
           product_type: normalizeAtlasProductType(body.productType) || "LSF Warehouse",
           next_action:
-            `${body.submissionChannel === "WhatsApp" ? "Client continued via WhatsApp. Match the incoming message using the design reference, then review the builder project" : "Review builder project"}${body.installationInterest || body.deliveryRequired ? `; client requested ${[body.installationInterest && "installation", body.deliveryRequired && "delivery"].filter(Boolean).join(" and ")}` : ""}. Confirm scope and site details, then prepare the reviewed quote.`,
+            `${body.atlasShowcaseOffer ? "Assess Atlas Showcase Offer eligibility, project use and photography participation. No discount applied or place reserved. " : ""}${body.submissionChannel === "WhatsApp" ? "Client continued via WhatsApp. Match the incoming message using the design reference, then review the builder project" : "Review builder project"}${body.installationInterest || body.deliveryRequired ? `; client requested ${[body.installationInterest && "installation", body.deliveryRequired && "delivery"].filter(Boolean).join(" and ")}` : ""}. Confirm scope and site details, then prepare the reviewed quote.`,
           follow_up_at: getNextBusinessMorningIso(),
           quote_value: body.estimatedTotal || null,
           created_at: new Date().toISOString(),
