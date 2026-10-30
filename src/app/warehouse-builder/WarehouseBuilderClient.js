@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import AtlasShowcaseOffer, { AtlasShowcaseOfferTrigger } from "../../components/warehouse-builder/AtlasShowcaseOffer"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import {
@@ -394,6 +395,9 @@ function getClientFacingLineItemLabel(label) {
 
 export default function WarehouseBuilderClient() {
   const searchParams = useSearchParams()
+  const offerPreview = process.env.NODE_ENV === "development" && ["showcase", "january"].includes(searchParams.get("offerPreview"))
+  const [assessingOfferPreview, setAssessingOfferPreview] = useState(false)
+  const [showOfferPreview, setShowOfferPreview] = useState(false)
   const config = useWarehouseBuilderStore()
   const updateStoreField = useWarehouseBuilderStore((state) => state.updateField)
   const patchFields = useWarehouseBuilderStore((state) => state.patchFields)
@@ -874,6 +878,7 @@ export default function WarehouseBuilderClient() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (assessingOfferPreview) { setSubmitError("This is a local design preview. No enquiry has been sent."); return }
     if (!config.projectStage) {
       setSubmitError("Please choose your project stage before sending the project for review.")
       return
@@ -1221,6 +1226,8 @@ export default function WarehouseBuilderClient() {
           </div>
         </section>
 
+        {offerPreview && isAtlasWarehouse && <div className="mt-3 flex justify-end xl:hidden"><AtlasShowcaseOfferTrigger onClick={() => setShowOfferPreview(true)} /></div>}
+
         <div className="sticky top-3 z-30 mt-3 hidden items-center justify-between gap-5 rounded-2xl border border-slate-200 bg-white/95 px-5 py-3 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.55)] backdrop-blur xl:flex">
           <div className="flex min-w-0 items-center gap-5">
             <div className="min-w-0">
@@ -1236,6 +1243,7 @@ export default function WarehouseBuilderClient() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {offerPreview && isAtlasWarehouse && <AtlasShowcaseOfferTrigger onClick={() => setShowOfferPreview(true)} />}
             <button type="button" onClick={handleSaveDesign} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
               {saveStatus || "Save design"}
             </button>
@@ -1355,6 +1363,7 @@ export default function WarehouseBuilderClient() {
                       <div>
                         <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Length</label>
                         <select
+                          aria-label="Warehouse length"
                           value={config.length}
                           onChange={(event) => updateField("length", Number(event.target.value))}
                           className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900"
@@ -1965,6 +1974,7 @@ export default function WarehouseBuilderClient() {
                   <p className={`mt-2 text-4xl font-semibold tracking-tight transition sm:text-5xl ${budgetPulse ? "scale-[1.015]" : "scale-100"}`}>{formatCurrency(budgetValue)}</p>
                   {budgetDelta !== 0 ? <p aria-live="polite" className={`mt-2 text-xs ${priceChangeTone}`}>{priceChangeLabel}</p> : null}
                   <p className="mt-3 text-sm leading-6 text-slate-300">Indicative price for your selections. We’ll confirm the scope and final price in your quote.</p>
+                  {offerPreview && isAtlasWarehouse && <div className="mt-4"><AtlasShowcaseOfferTrigger onClick={() => setShowOfferPreview(true)} /></div>}
                 </div>
               <div className="mt-5">
                 <p className="text-sm font-semibold text-white">Not sure about every detail? We’ll help you refine it.</p>
@@ -2039,12 +2049,13 @@ export default function WarehouseBuilderClient() {
           </aside>
         </div>
       </div>
+      {offerPreview && isAtlasWarehouse && <AtlasShowcaseOffer supplyTotal={estimate.pricing.estimatedTotal ?? estimate.pricing.baseTotal} scopeLabel={`${config.width}m × ${config.length}m × ${config.wallHeight}m · ${gableModeLabel}`} includesSheeting={atlasSheetingCoverage > 0} open={showOfferPreview} onClose={() => setShowOfferPreview(false)} onAssess={() => { setShowOfferPreview(false); setAssessingOfferPreview(true); setSubmissionIntent("review"); setShowLeadForm(true); setSubmitError("") }} />}
       {showLeadForm ? (
         <div className="fixed inset-0 z-[80] flex items-end justify-center p-0 sm:items-center sm:p-6">
           <button
             type="button"
             aria-label="Close project review"
-            onClick={() => !submitting && setShowLeadForm(false)}
+            onClick={() => { if (!submitting) { setShowLeadForm(false); setAssessingOfferPreview(false) } }}
             className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm"
           />
           <section
@@ -2058,7 +2069,7 @@ export default function WarehouseBuilderClient() {
                 type="button"
                 aria-label="Close"
                 disabled={submitting}
-                onClick={() => setShowLeadForm(false)}
+                onClick={() => { setShowLeadForm(false); setAssessingOfferPreview(false) }}
                 className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-50"
               >
                 <XMarkIcon className="h-5 w-5" />
@@ -2067,7 +2078,7 @@ export default function WarehouseBuilderClient() {
                 {isAtlasWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
               </p>
               <h2 id="warehouse-review-title" className="mt-2 pr-12 text-2xl font-semibold sm:text-3xl">
-                {submitted ? "Your project is with Smart Steel" : submissionIntent === "whatsapp" ? "Continue on WhatsApp" : "Request a reviewed quote"}
+                {submitted ? "Your project is with Smart Steel" : assessingOfferPreview ? "Check my project’s eligibility" : submissionIntent === "whatsapp" ? "Continue on WhatsApp" : "Request a reviewed quote"}
               </h2>
               <div className="mt-5 grid grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur sm:grid-cols-3">
                 <div>
@@ -2103,13 +2114,14 @@ export default function WarehouseBuilderClient() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2 sm:p-7">
+                {assessingOfferPreview && <p className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs leading-5 text-blue-900 sm:col-span-2">Atlas Showcase Offer · Local design preview. This would send your configuration for internal assessment. It does not apply a discount or automatically reject any location. Enquiry submission is disabled for this preview.</p>}
                 <ContactField label="First name" value={leadForm.name} onChange={(event) => setLeadForm((current) => ({ ...current, name: event.target.value }))} placeholder="First name" required />
                 <ContactField label="Last name" value={leadForm.lastName} onChange={(event) => setLeadForm((current) => ({ ...current, lastName: event.target.value }))} placeholder="Last name" />
                 <ContactField label="Email" type="email" value={leadForm.email} onChange={(event) => setLeadForm((current) => ({ ...current, email: event.target.value }))} placeholder="Email address" required />
                 <ContactField label="Phone" type="tel" value={leadForm.phone} onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Phone number" required />
                 <div className="sm:col-span-2">
-                  <button type="submit" disabled={submitting} className={`w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isAtlasWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>
-                    {submitting ? "Saving your project..." : submissionIntent === "whatsapp" ? "Save and continue to WhatsApp" : "Send for review"}
+                  <button type="submit" disabled={submitting || assessingOfferPreview} className={`w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isAtlasWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>
+                    {assessingOfferPreview ? "Submit for assessment · preview only" : submitting ? "Saving your project..." : submissionIntent === "whatsapp" ? "Save and continue to WhatsApp" : "Send for review"}
                   </button>
                   <p className="mt-3 text-center text-xs leading-5 text-slate-500">{submissionIntent === "whatsapp" ? "We save your configuration first so the Smart Steel team can connect your WhatsApp message to the correct project." : "Your saved configuration and project details will be sent together. No payment is required."}</p>
                   {submitError ? <p className="mt-3 text-center text-sm text-red-600">{submitError}</p> : null}
