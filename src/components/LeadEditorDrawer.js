@@ -937,6 +937,7 @@ export default function LeadEditorDrawer({
   const [saveError, setSaveError] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectHandoffError, setProjectHandoffError] = useState("");
+  const [acceptanceRequest, setAcceptanceRequest] = useState(null)
   const [updatingEstimateStatus, setUpdatingEstimateStatus] = useState(false)
   const [showManualSend, setShowManualSend] = useState(false)
   const [manualSentAt, setManualSentAt] = useState("")
@@ -1107,6 +1108,7 @@ export default function LeadEditorDrawer({
   const confirmLatestEstimateStatus = async (event) => {
     if (!latestEstimate || !onEstimateStatusChange) return
     if (event.target.value === "accepted") {
+      setAcceptanceRequest({ id: latestEstimate.id, request: Date.now() })
       document.getElementById("crm-quote-wins")?.scrollIntoView({behavior:"smooth",block:"start"})
       return
     }
@@ -1839,6 +1841,7 @@ export default function LeadEditorDrawer({
 
   const handleEstimateOutcome = async (estimate, outcome) => {
     if (outcome === "accepted") {
+      setAcceptanceRequest({ id: estimate.id, request: Date.now() })
       document.getElementById("crm-quote-wins")?.scrollIntoView({behavior:"smooth",block:"start"})
       return
     }
@@ -2708,7 +2711,8 @@ export default function LeadEditorDrawer({
           {latestEstimate && !latestEstimate.sent_at && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold text-amber-950">No quote send time recorded</p><p className="mt-1 text-xs leading-5 text-amber-900">Sent this estimate outside the branded email? Record the send here. Moving the lead to Quoted alone does not confirm it.</p></div><div className="flex flex-wrap gap-2"><button type="button" disabled={updatingEstimateStatus} onClick={() => confirmManualSend()} className="rounded-lg bg-amber-900 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-800 disabled:opacity-50">{updatingEstimateStatus ? "Saving..." : "Record sent now"}</button><button type="button" onClick={openManualSend} className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-950">Use earlier time</button></div></div>{showManualSend && <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-amber-200 pt-4"><label className="text-xs font-semibold text-amber-950">Actual date and time sent<input type="datetime-local" value={manualSentAt} onChange={(event) => setManualSentAt(event.target.value)} className="mt-1 block rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900" /></label><button type="button" disabled={updatingEstimateStatus} onClick={() => confirmManualSend(manualSentAt)} className="rounded-lg bg-[#001d2e] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{updatingEstimateStatus ? "Saving..." : "Record earlier send"}</button><button type="button" onClick={() => setShowManualSend(false)} className="px-2 py-2.5 text-xs font-semibold text-amber-900">Cancel</button>{manualSendError && <p role="alert" className="w-full text-xs text-red-700">{manualSendError}</p>}</div>}<p className="mt-2 text-[11px] leading-4 text-amber-900">Records the send in CRM; it does not email the client.</p>{manualSendError && !showManualSend && <p role="alert" className="mt-2 text-xs text-red-700">{manualSendError}</p>}</div>}
         </section>
 
-        <QuoteWinsPanel key={savedEstimates.map(estimate => `${estimate.id}:${estimate.updated_at}:${estimate.status}`).join("|")} leadId={lead.id} onRecorded={(payload) => {
+        <QuoteWinsPanel key={savedEstimates.map(estimate => `${estimate.id}:${estimate.updated_at}:${estimate.status}`).join("|")} leadId={lead.id} acceptanceRequest={acceptanceRequest} onRecorded={(payload) => {
+          setAcceptanceRequest(null)
           setSavedEstimates(payload.estimates || [])
           setFormData(current => ({...current,status:payload.lead.status,quote_value:payload.lead.quote_value,follow_up_at:null,next_action:payload.lead.next_action}))
           onQuoteWinsRecorded?.(payload)
@@ -2786,24 +2790,8 @@ export default function LeadEditorDrawer({
                           Share view
                         </a>
                       ) : null}
-                      {normalizeEstimateStatus(estimate.status) === "sent" ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleEstimateOutcome(estimate, "accepted")}
-                            className="rounded-xl bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-200"
-                          >
-                            Choose won quotes
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleEstimateOutcome(estimate, "declined")}
-                            className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
-                          >
-                            Mark declined
-                          </button>
-                        </>
-                      ) : null}
+                      {!estimate.won_superseded_by && ["draft", "prepared", "sent"].includes(normalizeEstimateStatus(estimate.status)) && Number(estimate.total) > 0 && <button type="button" onClick={() => handleEstimateOutcome(estimate, "accepted")} className="rounded-xl bg-[#0043f3] px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Mark won</button>}
+                      {normalizeEstimateStatus(estimate.status) === "sent" && <button type="button" onClick={() => handleEstimateOutcome(estimate, "declined")} className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">Mark declined</button>}
                     </div>
                   </div>
                 </div>
