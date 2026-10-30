@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getOsRequestContext } from 'lib/osRouteAuth'
 import { supabaseServer } from 'lib/supabase-server'
+import { pendingManufacturingHandoffs } from 'lib/manufacturingHandoff.mjs'
 import { validateOperations } from 'lib/manufacturingOperations.mjs'
 export const dynamic = 'force-dynamic'
 const json = (body, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } })
@@ -28,22 +29,14 @@ export async function GET(request) {
     const [orders, operations, leads, estimates] = await Promise.all([
       allRows('sales_orders', '*', 'id'), allRows('manufacturing_operations', '*', 'order_id'),
       allRows('leads', 'id,name,last_name,status', 'id'),
-      allRows('estimates', 'id,lead_id,status,title,created_at', 'id'),
+      allRows('estimates', 'id,lead_id,status,title,created_at,won_superseded_by', 'id'),
     ])
     const historicalResult = await supabaseServer.from('historical_project_completions').select('*')
     // The one-off historical backfill is optional; older installations still load.
     if (historicalResult.error && !['42P01', 'PGRST205'].includes(historicalResult.error.code)) throw historicalResult.error
     const historical = historicalResult.data || []
-    const completedLeads = new Set(historical.map(row => row.lead_id))
     const historicalProjects = historical.map(row => ({ ...row, lead: leads.find(lead => lead.id === row.lead_id) }))
-    const handed = new Set(orders.map(order => order.estimate_id))
-    const leadOrders = new Set(orders.map(order => order.lead_id))
-    const pendingHandoffs = leads.filter(lead => {
-      const completed = historical.find(project => project.lead_id === lead.id)
-      return (lead.status === 'won' && !leadOrders.has(lead.id) && !completedLeads.has(lead.id)) || estimates.some(estimate =>
-        estimate.lead_id === lead.id && estimate.status === 'accepted' && !handed.has(estimate.id) &&
-        (!completed || new Date(estimate.created_at) > new Date(completed.confirmed_at)))
-    })
+    const pendingHandoffs = pendingManufacturingHandoffs(leads, estimates, orders, historical)
     const byId = new Map(operations.map((row) => [row.order_id, row]))
     return json({ pendingHandoffs, historicalProjects, records: orders.sort((a,b) => b.accepted_at.localeCompare(a.accepted_at)).map((order) => ({ ...order, operations: byId.get(order.id) || null })) })
   } catch (error) {
@@ -64,4 +57,14 @@ export async function PUT(request) {
   const result = await supabaseServer.rpc('save_manufacturing_operations', { p_id: body.id, p_revision: body.revision, p_data: body.data, p_actor: auth.user.email, p_note: body.note.trim() })
   if (result.error) return json({ error: result.error.code === 'P0001' ? result.error.message : 'The update could not be saved. Reload and check your entries.' }, result.error.code === 'P0001' ? 409 : 500)
   return json({ record: result.data })
+}
+
+// Automatic repair for old acceptance flows, invoked before loading the list.
+// Normal CRM wins already create their orders in the acceptance transaction.
+export async function POST(request) {
+  const auth = await getOsRequestContext(request)
+  if (auth.response) return auth.response
+  const result = await supabaseServer.rpc('sync_accepted_manufacturing_orders', { p_actor: auth.user.email })
+  if (result.error) return json({ error: ['PGRST202', '42883', '42P01', '42703'].includes(result.error.code) ? 'Apply supabase/crm_manufacturing_auto_handoff.sql to enable automatic handoff.' : 'Accepted quote handoff could not be checked. Please retry.' }, 503)
+  return json({ synced: result.data })
 }
