@@ -25,9 +25,27 @@ export async function GET(request) {
       if (error) throw error
       return json({ events: data })
     }
-    const [orders, operations] = await Promise.all([allRows('sales_orders', '*', 'id'), allRows('manufacturing_operations', '*', 'order_id')])
+    const [orders, operations, leads, estimates] = await Promise.all([
+      allRows('sales_orders', '*', 'id'), allRows('manufacturing_operations', '*', 'order_id'),
+      allRows('leads', 'id,name,last_name,status', 'id'),
+      allRows('estimates', 'id,lead_id,status,title,created_at', 'id'),
+    ])
+    const historicalResult = await supabaseServer.from('historical_project_completions').select('*')
+    // The one-off historical backfill is optional; older installations still load.
+    if (historicalResult.error && !['42P01', 'PGRST205'].includes(historicalResult.error.code)) throw historicalResult.error
+    const historical = historicalResult.data || []
+    const completedLeads = new Set(historical.map(row => row.lead_id))
+    const historicalProjects = historical.map(row => ({ ...row, lead: leads.find(lead => lead.id === row.lead_id) }))
+    const handed = new Set(orders.map(order => order.estimate_id))
+    const leadOrders = new Set(orders.map(order => order.lead_id))
+    const pendingHandoffs = leads.filter(lead => {
+      const completed = historical.find(project => project.lead_id === lead.id)
+      return (lead.status === 'won' && !leadOrders.has(lead.id) && !completedLeads.has(lead.id)) || estimates.some(estimate =>
+        estimate.lead_id === lead.id && estimate.status === 'accepted' && !handed.has(estimate.id) &&
+        (!completed || new Date(estimate.created_at) > new Date(completed.confirmed_at)))
+    })
     const byId = new Map(operations.map((row) => [row.order_id, row]))
-    return json({ records: orders.sort((a,b) => b.accepted_at.localeCompare(a.accepted_at)).map((order) => ({ ...order, operations: byId.get(order.id) || null })) })
+    return json({ pendingHandoffs, historicalProjects, records: orders.sort((a,b) => b.accepted_at.localeCompare(a.accepted_at)).map((order) => ({ ...order, operations: byId.get(order.id) || null })) })
   } catch (error) {
     const setup = ['42P01','PGRST205','PGRST202'].includes(error.code)
     return json({ error: setup ? 'Manufacturing needs database setup. Apply supabase/os_manufacturing_operations.sql before using the new workspace.' : 'Manufacturing orders could not be loaded. Please retry.', setupRequired: setup }, 503)

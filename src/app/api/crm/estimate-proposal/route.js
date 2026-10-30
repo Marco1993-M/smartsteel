@@ -52,7 +52,7 @@ export async function POST(request) {
     }
 
     const [{ data: lead, error: leadError }, { data: estimate, error: estimateError }] = await Promise.all([
-      supabaseServer.from("leads").select("id, name, last_name, email, product_type").eq("id", leadId).single(),
+      supabaseServer.from("leads").select("id, name, last_name, email, product_type, status, quote_value").eq("id", leadId).single(),
       // Keep the send lookup limited to columns guaranteed by the estimate schema.
       // Optional display fields are deliberately tolerated by the estimate save flow.
       supabaseServer.from("estimates").select("id, lead_id, title, version_no, total, share_token, product_type, status, input_data, line_items").eq("id", estimateId).single(),
@@ -169,14 +169,15 @@ export async function POST(request) {
     const leadLifecycle = await supabaseServer
       .from("leads")
       .update({
-        status: "quoted",
-        quote_value: Number(estimate.total || 0),
+        status: lead.status === "won" ? "won" : "quoted",
+        quote_value: lead.status === "won" ? lead.quote_value : Number(estimate.total || 0),
         ...(reviewHold ? {} : {
           follow_up_at: firstFollowUpAt,
           next_action: `Awaiting the client's review of ${estimate.title || `estimate V${estimate.version_no || 1}`}. Automatic follow-up 1 is scheduled.`,
         }),
       })
       .eq("id", lead.id)
+      .neq("status", "won")
     if (leadLifecycle.error) lifecycleWarnings.push(`Lead status: ${leadLifecycle.error.message}`)
 
     const emailReceipt = await supabaseServer.from("crm_email_events").insert([{
