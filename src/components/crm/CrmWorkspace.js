@@ -100,6 +100,8 @@ function normalizeLead(lead) {
 function buildLeadPersistencePayload(lead) {
   const optionalNumericFields = ["quote_value", "width", "length", "wall_height"]
   const payload = { ...lead }
+  // Eligibility reviews have their own revision-checked endpoint.
+  delete payload.atlas_showcase_offer
 
   optionalNumericFields.forEach((field) => {
     if (!Object.prototype.hasOwnProperty.call(payload, field)) return
@@ -2999,6 +3001,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
           onCreateEstimate={handleOpenEstimate}
           onCreateInvoice={handleOpenInvoice}
           onEstimateStatusChange={handleEstimateStatusChange}
+          onShowcaseReviewed={updated => setLeads(current => current.map(item => String(item.id) === String(updated.id) ? normalizeLead({...item,...updated}) : item))}
           onQuoteWinsRecorded={(payload) => {
             setLeads(current => current.map(item => String(item.id) === String(payload.lead.id) ? normalizeLead({...item,...payload.lead}) : item))
             setStoredEstimatesForLead(String(payload.lead.id), payload.estimates || [])

@@ -1,0 +1,23 @@
+'use client'
+import {useEffect,useState} from 'react'
+import {getOsAuthHeaders} from '../../lib/osClientAuth'
+import {SHOWCASE_REVIEW_LABELS,SHOWCASE_PHOTOGRAPHY_LABELS} from '../../lib/atlasShowcaseOffer.mjs'
+const money=value=>`R ${Number(value||0).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2})}`
+export default function AtlasShowcaseReview({leadId,offer,onReviewed}){
+ const [status,setStatus]=useState(offer.status),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
+ useEffect(()=>{setStatus(offer.status);setNote('')},[offer.status,offer.revision])
+ async function save(){setBusy(true);setError('');setNotice('');try{
+  const r=await fetch('/api/crm/showcase-offer',{method:'PATCH',headers:await getOsAuthHeaders({'Content-Type':'application/json'}),body:JSON.stringify({leadId,status,note,revision:offer.revision})}),p=await r.json()
+  if(!r.ok)throw Error(p.error||'Could not save the assessment.')
+  onReviewed(p.lead);setNotice('Assessment saved. No quotation was discounted and no place was reserved.')
+ }catch(e){setError(e.message)}finally{setBusy(false)}}
+ return <section className="rounded-2xl border border-[#0043f3]/20 bg-blue-50/50 p-4 sm:p-5" aria-label="Atlas Showcase Offer assessment">
+  <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#0043f3]">Atlas Showcase Offer</p><h3 className="mt-1 text-lg font-semibold text-[#001d2e]">Project eligibility review</h3></div><span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#0043f3]">{SHOWCASE_REVIEW_LABELS[offer.status]}</span></div>
+  <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">{[['Standard supply excl. VAT',money(offer.supplyTotal)],['Potential 10% saving excl. VAT',money(offer.potentialSaving)],['Building use',offer.projectUse],['Photography preference',SHOWCASE_PHOTOGRAPHY_LABELS[offer.photographyPreference]],['Site',offer.configuration?.location||'See submitted site details'],['Terms version',offer.termsVersion]].map(([label,value])=><div key={label}><dt className="text-xs text-slate-500">{label}</dt><dd className="mt-1 break-words font-medium text-slate-800">{value}</dd></div>)}</dl>
+  <p className="mt-4 text-xs leading-5 text-slate-500">Review location, agricultural use, project readiness and photography participation. Approval is for a manually discounted supply quotation; delivery and installation remain excluded from the discount. It does not secure one of the five places. Signed quotation and required deposit are still required.</p>
+  <details className="mt-4 border-t border-blue-100 pt-3"><summary className="cursor-pointer text-sm font-semibold text-[#001d2e]">Update assessment</summary><div className="mt-3 space-y-3"><label className="block text-xs font-semibold text-slate-600">Assessment<select aria-label="Showcase assessment status" value={status} disabled={busy} onChange={e=>setStatus(e.target.value)} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm">{Object.entries(SHOWCASE_REVIEW_LABELS).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><label className="block text-xs font-semibold text-slate-600">Internal assessment note<textarea value={note} disabled={busy} maxLength={2000} onChange={e=>setNote(e.target.value)} rows={3} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"/></label><button type="button" disabled={busy||note.trim().length<5} onClick={save} className="min-h-11 rounded-xl bg-[#0043f3] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40">{busy?'Saving…':'Save assessment'}</button></div></details>
+  {offer.reviewNote&&<p className="mt-4 whitespace-pre-wrap text-xs leading-5 text-slate-600">{offer.reviewNote}<span className="mt-1 block text-slate-400">{offer.reviewedBy} · {new Date(offer.reviewedAt).toLocaleString('en-ZA',{timeZone:'Africa/Johannesburg'})} SAST</span></p>}
+  {offer.reviewHistory?.length>0&&<details className="mt-3 text-xs text-slate-500"><summary className="cursor-pointer font-semibold">Assessment history · {offer.reviewHistory.length}</summary><ul className="mt-2 space-y-2">{offer.reviewHistory.map((entry,index)=><li key={index} className="whitespace-pre-wrap">{SHOWCASE_REVIEW_LABELS[entry.status]} · {entry.reviewedAt}{entry.reviewedBy?` · ${entry.reviewedBy}`:''}{entry.note?` — ${entry.note}`:''}</li>)}</ul></details>}
+  {error&&<p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}{notice&&<p role="status" className="mt-3 text-sm text-emerald-700">{notice}</p>}
+ </section>
+}

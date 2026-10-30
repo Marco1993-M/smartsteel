@@ -1,9 +1,10 @@
 'use client'
 
+import { showcaseSaving } from '../../lib/atlasShowcaseOffer.mjs'
 import { Dialog } from '@headlessui/react'
 import { XMarkIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 
-// Local concept only. Savings are indicative; the standard price is never modified.
+// Savings are indicative; eligibility is assessed internally and standard pricing stays unchanged.
 export function AtlasShowcaseOfferTrigger({ onClick }) {
  return <><button type="button" onClick={onClick} aria-haspopup="dialog" className="atlas-offer-trigger inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#0043f3]/25 bg-blue-50 px-4 py-2 text-xs font-semibold text-[#0043f3] shadow-[0_0_18px_rgba(0,67,243,0.16)] transition hover:bg-blue-100 hover:shadow-[0_0_22px_rgba(0,67,243,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0043f3]"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#0043f3]" />Want to save 10%?<ArrowRightIcon aria-hidden="true" className="h-3.5 w-3.5" /></button>
   <style jsx>{`
@@ -21,7 +22,7 @@ export function AtlasShowcaseOfferTrigger({ onClick }) {
 
 export default function AtlasShowcaseOffer({ open, onClose, onAssess, supplyTotal, scopeLabel, includesSheeting = false }) {
  const validTotal = typeof supplyTotal === 'number' && Number.isFinite(supplyTotal) && supplyTotal > 0
- const saving = validTotal ? Math.round((supplyTotal * .1 + Number.EPSILON) * 100) / 100 : null
+ const saving = showcaseSaving(supplyTotal)
  const money = value => `R ${value.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
  return <Dialog open={open} onClose={onClose} className="relative z-[90]" aria-labelledby="atlas-showcase-title">
   <div className="fixed inset-0 bg-[#001d2e]/65 backdrop-blur-sm" aria-hidden="true" />

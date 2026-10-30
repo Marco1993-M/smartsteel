@@ -1,5 +1,6 @@
 "use client"
 
+import AtlasShowcaseReview from "./crm/AtlasShowcaseReview"
 import QuoteRevisionGroups from "./crm/QuoteRevisionGroups"
 import QuoteWinsPanel from "./crm/QuoteWinsPanel"
 import GroundMountRunFields from "./ground-mount/GroundMountRunFields"
@@ -909,6 +910,7 @@ export default function LeadEditorDrawer({
   onCreateProject,
   onEstimateStatusChange,
   onQuoteWinsRecorded,
+  onShowcaseReviewed,
   onEstimateSent,
 }) {
   const isNew = !lead?.id;
@@ -2144,6 +2146,7 @@ export default function LeadEditorDrawer({
     <Tab.Panels className="mx-auto w-full max-w-5xl space-y-4 p-0">
       {/* Details Panel */}
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
+        {formData.atlas_showcase_offer && <AtlasShowcaseReview leadId={lead.id} offer={formData.atlas_showcase_offer} onReviewed={updated => { setFormData(current => ({...current,atlas_showcase_offer:updated.atlas_showcase_offer})); onShowcaseReviewed?.(updated) }} />}
         <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-sm sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div className="max-w-2xl">

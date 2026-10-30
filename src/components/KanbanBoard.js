@@ -1,5 +1,6 @@
 "use client"
 
+import { SHOWCASE_REVIEW_LABELS } from "../lib/atlasShowcaseOffer.mjs"
 import { useEffect, useMemo, useState } from "react"
 import { DndContext, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core"
 import { ArrowRight, FileText, GripVertical, HardHat, Truck } from "lucide-react"
@@ -499,6 +500,7 @@ function KanbanCard({ lead, estimates = [], onEditLead, onCreateEstimate, dragga
         <span className="truncate">{opportunitySummary.family}</span>
       </div>
 
+      {lead.atlas_showcase_offer && <span className="mt-3 inline-flex max-w-full rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-[#0043f3]">Atlas Showcase · {SHOWCASE_REVIEW_LABELS[lead.atlas_showcase_offer.status] || "Assessment pending"}</span>}
       {serviceRequests.delivery || serviceRequests.installation ? (
         <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Client-requested quote services">
           {serviceRequests.delivery ? (
