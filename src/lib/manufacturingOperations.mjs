@@ -24,6 +24,7 @@ export function summarizeOperations(order, data) {
   else if (data.deliveryDate || order.status === 'delivered') { stage = 'delivered'; next = 'Review final supplier costs and any outstanding obligations.' }
   else if (received + .005 < deposit) { stage = 'deposit'; next = `Confirm the 75% deposit before finalising engineering.` }
   else if (data.engineering.status !== 'approved') { stage = 'engineering'; next = 'Stefan to finalise the drawings or confirm an approved design matches this order.' }
+  else if (data.quoteRevisionReview?.required) { stage = 'procurement'; next = 'Review supplier scope against the updated won quote before production.' }
   else if (ready && data.qualityChecked && data.packed) { stage = received + .005 < total ? 'balance' : 'dispatch'; next = stage === 'balance' ? 'Collect the outstanding client balance before dispatch.' : 'Arrange delivery and record proof once delivered.' }
   else if (suppliers.some((s) => ['manufacturing', 'ready'].includes(s.status))) { stage = 'manufacturing'; next = ready ? 'Complete quality and packing checks.' : 'Confirm supplier progress and readiness dates.' }
   return { total, deposit, received, balance: Math.max(0, roundMoney(total - received)), depositOutstanding: Math.max(0, roundMoney(deposit - received)), baseline, committed, invoiced: roundMoney(invoiced), invoicesComplete, variance: baseline != null && committed != null ? roundMoney(baseline - committed) : null, ready, stage, next }
@@ -64,4 +65,23 @@ export function validateOperations(data, order, previous) {
   if (data.suppliers[0].status !== 'pending' && e.status !== 'approved') fail('Approve the drawing set before sending the structural supplier enquiry.')
   if (data.deliveryDate && (summary.balance > .005 || !summary.ready || !data.qualityChecked || !data.packed || !data.deliveryReference.trim())) fail('Delivery requires full client payment, both required suppliers ready, quality and packing checks, and a delivery reference.')
   return data
+}
+
+// Milestones describe recorded evidence; later activity never fills missing earlier records.
+export function manufacturingMilestones(order, data = order.operations?.data || emptyOperations(order)) {
+  const summary = summarizeOperations(order, data)
+  const suppliers = data.suppliers.filter((supplier) => supplier.required)
+  const hasValue = summary.total > 0
+  const steps = [
+    { key: 'won', label: 'Quote won', done: order.status !== 'cancelled' },
+    { key: 'deposit', label: '75% deposit', done: hasValue && summary.received + .005 >= summary.deposit },
+    { key: 'engineering', label: 'Drawings', done: data.engineering.status === 'approved' },
+    { key: 'procurement', label: 'Suppliers ordered', done: suppliers.length > 0 && suppliers.every((supplier) => ['ordered', 'manufacturing', 'ready'].includes(supplier.status)) },
+    { key: 'manufacturing', label: 'Made & checked', done: summary.ready && data.qualityChecked && data.packed },
+    { key: 'balance', label: 'Fully paid', done: hasValue && summary.balance <= .005 },
+    { key: 'delivered', label: 'Delivered', done: !!data.deliveryDate || order.status === 'delivered' },
+  ]
+  const stopped = ['cancelled', 'complete'].includes(order.status)
+  const next = stopped ? -1 : steps.findIndex((step) => !step.done)
+  return steps.map((step, index) => ({ ...step, state: step.done ? 'done' : index === next ? 'current' : 'pending' }))
 }
