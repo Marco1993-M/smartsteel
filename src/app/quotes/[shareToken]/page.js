@@ -1,3 +1,4 @@
+import { quoteFamily } from "../../../lib/estimateAlternatives.mjs"
 import QuoteAcceptance from "../../../components/quotes/QuoteAcceptance"
 import { acceptanceBlocker } from "../../../lib/quoteAcceptance.mjs"
 import EstimateDocumentLayout from "../../../components/EstimateDocumentLayout"
@@ -46,9 +47,10 @@ export default async function PublicQuotePage({ params, searchParams }) {
 
   const { data: order, error: orderError } = await supabaseServer.from("sales_orders")
     .select("order_number, status, confirmation_sent_at, terms_snapshot, quote_snapshot").eq("estimate_id", estimate.id).maybeSingle()
+  const baseModel = buildEstimateDisplayModel(order?.quote_snapshot || estimate, lead)
   const documentModel = {
-    ...buildEstimateDisplayModel(order?.quote_snapshot || estimate, lead),
-    ...(order ? { terms: order.terms_snapshot.terms, deliveryTerms: order.terms_snapshot.delivery, exclusions: order.terms_snapshot.exclusions } : {}),
+    ...baseModel,
+    ...(order ? { terms: order.terms_snapshot.terms || baseModel.terms, deliveryTerms: order.terms_snapshot.delivery || baseModel.deliveryTerms, exclusions: order.terms_snapshot.exclusions || baseModel.exclusions } : {}),
   }
 
   if (isPdfRender) {
@@ -59,8 +61,9 @@ export default async function PublicQuotePage({ params, searchParams }) {
     )
   }
 
-  const { data: latest } = await supabaseServer.from("estimates").select("version_no").eq("lead_id", estimate.lead_id).order("version_no", { ascending: false }).limit(1).maybeSingle()
-  const blocker = orderError || !latest ? "Online acceptance is temporarily unavailable. Please contact our team." : acceptanceBlocker(estimate, latest.version_no)
+  const { data: revisions, error: revisionError } = await supabaseServer.from("estimates").select("version_no,input_data").eq("lead_id", estimate.lead_id).order("version_no", { ascending: false })
+  const latest = revisionError ? null : revisions?.find(item => quoteFamily(item) === quoteFamily(estimate))
+  const blocker = estimate.won_superseded_by ? "This version has been superseded by an updated accepted quote. Please use the latest proposal from our team." : orderError || !latest ? "Online acceptance is temporarily unavailable. Please contact our team." : acceptanceBlocker(estimate, latest.version_no)
   const bookingAvailable = await quoteReviewsReady().catch(() => false)
 
   return (
