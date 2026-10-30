@@ -1,5 +1,7 @@
 "use client"
 
+import { getOsAuthHeaders } from "../../lib/osClientAuth"
+
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -1090,6 +1092,16 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       return false
     }
 
+    if (status === "accepted") {
+      try {
+        const response = await fetch("/api/crm/quote-wins", { method:"POST", headers:await getOsAuthHeaders({"Content-Type":"application/json"}), body:JSON.stringify({leadId:lead.id,quotes:[{id:estimate.id,expectedUpdatedAt:estimate.updated_at}],note:"Win recorded from CRM estimate status"}) })
+        const payload = await response.json()
+        if (!response.ok) throw new Error(payload.error || "Could not record quote win.")
+        setLeads(current => current.map(item => String(item.id) === String(lead.id) ? normalizeLead({...item,...payload.lead}) : item))
+        setStoredEstimatesForLead(String(lead.id), payload.estimates || [])
+        return payload.estimates.find(item => item.id === estimate.id)
+      } catch (error) { alert(error.message); return false }
+    }
     const now = new Date().toISOString()
     const statusPayload = { status }
     if (status === "prepared") statusPayload.prepared_at = estimate.prepared_at || now
@@ -1388,14 +1400,14 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     const currentLead = leads.find((lead) => lead.id === leadId)
     const updatedLead = normalizeLead({
       ...currentLead,
-      quote_value: estimateDraft.total,
+      quote_value: normalizeStatus(currentLead?.status) === "won" ? currentLead.quote_value : estimateDraft.total,
       product_type: estimateDraft.product_type || currentLead?.product_type,
       next_action: `Review and send Estimate V${estimatePayload.version_no} to the client.`,
       estimate_request: estimateDraft.estimate_request,
     })
 
     const updatePayload = {
-      quote_value: estimateDraft.total,
+      ...(normalizeStatus(currentLead?.status) === "won" ? {} : { quote_value: estimateDraft.total }),
       product_type: updatedLead.product_type,
       next_action: updatedLead.next_action,
       estimate_request: updatedLead.estimate_request,
@@ -2987,6 +2999,10 @@ export default function CrmWorkspace({ mode = "legacy" }) {
           onCreateEstimate={handleOpenEstimate}
           onCreateInvoice={handleOpenInvoice}
           onEstimateStatusChange={handleEstimateStatusChange}
+          onQuoteWinsRecorded={(payload) => {
+            setLeads(current => current.map(item => String(item.id) === String(payload.lead.id) ? normalizeLead({...item,...payload.lead}) : item))
+            setStoredEstimatesForLead(String(payload.lead.id), payload.estimates || [])
+          }}
           onEstimateSent={fetchLeads}
         />
       )}

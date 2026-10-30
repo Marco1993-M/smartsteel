@@ -1,5 +1,6 @@
 "use client"
 
+import { quoteCreationContext, groupEstimateQuotes } from "../lib/estimateAlternatives.mjs"
 import { reconcileEstimateItems, warehousePricingSpecificationKey } from "../lib/reconcileEstimateItems.mjs"
 import { compactEstimateNumber, cleanSolarCarportLineLabel } from "../lib/estimateLineItemPresentation.mjs"
 import GroundMountRunFields from "./ground-mount/GroundMountRunFields"
@@ -611,6 +612,7 @@ function buildEstimateDraft({
   existingEstimate,
   saveMode = "new",
   quoteFamilyId = "original",
+  quoteContext = {},
 }) {
   return {
     id: existingEstimate?.id,
@@ -626,6 +628,7 @@ function buildEstimateDraft({
     input_data: {
       ...preview.input,
       quoteFamilyId,
+      ...quoteContext,
       sku: preview.meta?.sku || null,
       familyCode: preview.meta?.productCode || null,
       pricingRelease:
@@ -797,6 +800,7 @@ export default function EstimateDrawer({
 
   const nextVersion = getNextEstimateVersion(estimates)
   const canUpdateLoadedEstimate = Boolean(loadedEstimate?.id)
+  const canEditLoadedDraft = canUpdateLoadedEstimate && ["draft", "prepared"].includes(loadedEstimate.status) && !loadedEstimate.won_superseded_by
   const sortedEstimates = useMemo(() => [...(estimates || [])].sort((a, b) => {
     const versionDiff = Number(b?.version_no || 0) - Number(a?.version_no || 0)
     if (versionDiff !== 0) return versionDiff
@@ -949,7 +953,7 @@ export default function EstimateDrawer({
       buildEstimateDraft({
         lead,
         versionNo: nextVersion,
-        quoteFamilyId: revisionMode === "alternative" ? crypto.randomUUID() : (loadedEstimate?.input_data?.quoteFamilyId || "original"),
+        quoteContext: quoteCreationContext(revisionMode, loadedEstimate, () => crypto.randomUUID()),
         formState,
         preview,
         editableLineItems,
@@ -971,7 +975,7 @@ export default function EstimateDrawer({
       buildEstimateDraft({
         lead,
         versionNo: nextVersion,
-        quoteFamilyId: revisionMode === "alternative" ? crypto.randomUUID() : (loadedEstimate?.input_data?.quoteFamilyId || "original"),
+        quoteContext: quoteCreationContext(revisionMode, loadedEstimate, () => crypto.randomUUID()),
         formState,
         preview,
         editableLineItems,
@@ -995,7 +999,7 @@ export default function EstimateDrawer({
   }
 
   const handleUpdateLoadedEstimate = async (openAfterSave = false) => {
-    if (!loadedEstimate?.id) return
+    if (!canEditLoadedDraft) return
 
     setIsSaving(true)
     const savedEstimate = await persistEstimate(
@@ -1008,7 +1012,7 @@ export default function EstimateDrawer({
         subtotal: grossSubtotal,
         estimatedTotal,
         existingEstimate: loadedEstimate,
-        quoteFamilyId: loadedEstimate.input_data?.quoteFamilyId || "original",
+        quoteContext: quoteCreationContext("update", loadedEstimate),
         saveMode: "update",
       })
     )
@@ -1034,12 +1038,12 @@ export default function EstimateDrawer({
   }
 
   const handlePrimarySave = () =>
-    revisionMode === "update" && canUpdateLoadedEstimate
+    revisionMode === "update" && canEditLoadedDraft
       ? handleUpdateLoadedEstimate(false)
       : handleSave()
 
   const handlePrimarySaveAndOpen = () =>
-    revisionMode === "update" && canUpdateLoadedEstimate
+    revisionMode === "update" && canEditLoadedDraft
       ? handleUpdateLoadedEstimate(true)
       : handleSaveAndOpen()
 
@@ -1078,26 +1082,24 @@ export default function EstimateDrawer({
                       <select
                         value={loadedEstimate?.id || ""}
                         onChange={(event) => loadEstimateVersion(event.target.value)}
-                        className="min-h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700"
+                        className="min-h-10 min-w-0 max-w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700"
                         aria-label="Loaded estimate version"
                       >
-                        {sortedEstimates.map((estimate) => (
-                          <option key={estimate.id} value={estimate.id}>V{estimate.version_no} · {estimate.title}</option>
-                        ))}
+                        {groupEstimateQuotes(sortedEstimates).map(group => <optgroup key={group.id} label={group.latest.title.replace(/\s+V\d+$/i, "")}>{group.versions.map(estimate => <option key={estimate.id} value={estimate.id}>V{estimate.version_no} · {estimate.title}{estimate.won_superseded_by ? " · Superseded" : estimate.status === "accepted" ? " · Accepted" : ""}</option>)}</optgroup>)}
                       </select>
                     ) : null}
                     {canUpdateLoadedEstimate ? (
-                      <div className="flex rounded-xl bg-slate-100 p-1">
-                        <button type="button" onClick={() => setRevisionMode("new")} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${revisionMode === "new" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}>New revision</button>
-                        <button type="button" onClick={() => { setRevisionMode("alternative"); if (revisionMode !== "alternative") setFormState((current) => ({ ...current, estimateName: `${resolveEstimateTitle(current, preview)} — Alternative` })); setHasUnsavedChanges(true) }} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${revisionMode === "alternative" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}>Alternative quote</button>
-                        <button type="button" onClick={() => setRevisionMode("update")} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${revisionMode === "update" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}>Update V{loadedEstimate?.version_no}</button>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" aria-pressed={revisionMode === "new"} onClick={() => { setRevisionMode("new"); setHasUnsavedChanges(true) }} className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold ${revisionMode === "new" ? "border-[#0043f3] bg-blue-50 text-[#0043f3]" : "border-slate-200 text-slate-600"}`}>Revise this quote</button>
+                        <button type="button" aria-pressed={revisionMode === "alternative"} onClick={() => { setRevisionMode("alternative"); setHasUnsavedChanges(true) }} className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold ${revisionMode === "alternative" ? "border-[#0043f3] bg-blue-50 text-[#0043f3]" : "border-slate-200 text-slate-600"}`}>Create an additional quote</button>
+                        {canEditLoadedDraft && <button type="button" aria-pressed={revisionMode === "update"} onClick={() => setRevisionMode("update")} className={`min-h-11 rounded-xl px-3 py-2 text-xs font-semibold ${revisionMode === "update" ? "bg-slate-100 text-slate-950" : "text-slate-500"}`}>Edit draft V{loadedEstimate.version_no}</button>}
                       </div>
                     ) : null}
                   </div>
                 </div>
               </div>
 
-              {revisionMode === "alternative" ? <p role="status" className="bg-blue-50 px-6 py-3 text-sm text-blue-900">Creating a separate quote from the loaded scope. Give it a distinct estimate title and adjust its items below. Saving keeps the original quote and creates a new share link. Quote numbers continue across this lead.</p> : null}
+              {loadedEstimate && <p role="status" className="border-b border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900 sm:px-6">{revisionMode === "alternative" ? "Additional work: starts a separate quote using the loaded scope as a starting point. Give it a distinct title. Both quotes can be accepted independently." : revisionMode === "update" ? `Editing unsent draft V${loadedEstimate.version_no}. This updates the draft without creating a revision.` : `Revising V${loadedEstimate.version_no}: saves a new version of this quote. The previous version stays in history. An accepted order changes only when you confirm the new won version in Commercial.`}</p>}
               <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex gap-2 overflow-x-auto">
@@ -1901,7 +1903,7 @@ export default function EstimateDrawer({
 
                   <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">
                     {canUpdateLoadedEstimate
-                      ? "You can update the loaded estimate in place, or save these changes as a new version. The CRM will still refresh the lead quote value and activity log."
+                      ? "Choose Revise this quote for a scope change, or Create an additional quote for more work. Accepted versions remain in history."
                       : "This estimate will save as Prepared, update the lead quote value, and log the activity in the CRM. The lead moves to Quoted only after the send is recorded."}
                     {hasOverrides && (
                       <span className="mt-2 block text-amber-700">
@@ -2021,7 +2023,7 @@ export default function EstimateDrawer({
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Save size={16} />
-                  {isSaving ? "Saving..." : revisionMode === "update" && canUpdateLoadedEstimate ? `Update V${loadedEstimate?.version_no}` : revisionMode === "alternative" ? `Save alternative V${nextVersion}` : `Save V${nextVersion}`}
+                  {isSaving ? "Saving..." : revisionMode === "update" && canEditLoadedDraft ? `Update V${loadedEstimate?.version_no}` : revisionMode === "alternative" ? `Save additional quote V${nextVersion}` : loadedEstimate ? `Save revision V${nextVersion}` : `Save quote V${nextVersion}`}
                 </button>
                 </div>
                 </div>

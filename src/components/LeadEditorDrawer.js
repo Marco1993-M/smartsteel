@@ -1,5 +1,7 @@
 "use client"
 
+import QuoteRevisionGroups from "./crm/QuoteRevisionGroups"
+import QuoteWinsPanel from "./crm/QuoteWinsPanel"
 import GroundMountRunFields from "./ground-mount/GroundMountRunFields"
 import { groundMountRunsFromNotes, withGroundMountRunNotes } from "../lib/groundMountRuns.mjs"
 import { supersededRevisionIds } from "../lib/estimateAlternatives.mjs"
@@ -69,7 +71,7 @@ const STATUS_OPTIONS = ["new", "contacted", "quoted", "won", "lost"];
 const ESTIMATE_STATUS_OPTIONS = [
   { value: "prepared", label: "Prepared" },
   { value: "sent", label: "Sent" },
-  { value: "accepted", label: "Accepted" },
+  { value: "accepted", label: "Won" },
   { value: "declined", label: "Declined" },
 ]
 
@@ -906,6 +908,7 @@ export default function LeadEditorDrawer({
   onCreateInvoice,
   onCreateProject,
   onEstimateStatusChange,
+  onQuoteWinsRecorded,
   onEstimateSent,
 }) {
   const isNew = !lead?.id;
@@ -1103,6 +1106,10 @@ export default function LeadEditorDrawer({
 
   const confirmLatestEstimateStatus = async (event) => {
     if (!latestEstimate || !onEstimateStatusChange) return
+    if (event.target.value === "accepted") {
+      document.getElementById("crm-quote-wins")?.scrollIntoView({behavior:"smooth",block:"start"})
+      return
+    }
     if (event.target.value === "sent" && !latestEstimate.sent_at) {
       openManualSend()
       return
@@ -1581,8 +1588,8 @@ export default function LeadEditorDrawer({
       : getWaitingSummaryForTemplate(emailTemplateKey, formData)
     const updatedLead = {
       ...formData,
-      status: isEstimateEmail ? "quoted" : formData.status,
-      quote_value: isEstimateEmail
+      status: isEstimateEmail && normalizeStatus(formData.status) !== "won" ? "quoted" : formData.status,
+      quote_value: isEstimateEmail && normalizeStatus(formData.status) !== "won"
         ? selectedEstimateEmail?.total || formData.quote_value
         : formData.quote_value,
       client_follow_up_state: isEstimateRequestAcknowledgement
@@ -1730,8 +1737,8 @@ export default function LeadEditorDrawer({
       const sentAt = result.sentAt || new Date().toISOString()
       const updatedLead = {
         ...formData,
-        status: "quoted",
-        quote_value: selectedEstimateEmail?.total || formData.quote_value,
+        status: normalizeStatus(formData.status) === "won" ? "won" : "quoted",
+        quote_value: normalizeStatus(formData.status) === "won" ? formData.quote_value : selectedEstimateEmail?.total || formData.quote_value,
         next_action: result.reviewFollowUpPaused ? formData.next_action : `Awaiting the client's review of ${selectedEstimateEmail.title || "the estimate"}. Follow up if no reply.`,
       }
       setFormData(updatedLead)
@@ -1831,6 +1838,10 @@ export default function LeadEditorDrawer({
   }
 
   const handleEstimateOutcome = async (estimate, outcome) => {
+    if (outcome === "accepted") {
+      document.getElementById("crm-quote-wins")?.scrollIntoView({behavior:"smooth",block:"start"})
+      return
+    }
     if (!estimate?.id || String(estimate.id).startsWith("local-")) {
       alert("This estimate must be saved online before its outcome can be recorded.")
       return
@@ -1843,9 +1854,7 @@ export default function LeadEditorDrawer({
 
     if (outcome === "declined" && declineReason === null) return
 
-    const updatePayload = outcome === "accepted"
-      ? { status: "accepted", accepted_at: now }
-      : { status: "declined", declined_at: now, decline_reason: declineReason || null }
+    const updatePayload = { status: "declined", declined_at: now, decline_reason: declineReason || null }
 
     const { error } = await supabase.from("estimates").update(updatePayload).eq("id", estimate.id)
     if (error) {
@@ -1853,19 +1862,10 @@ export default function LeadEditorDrawer({
       return
     }
 
-    const updatedLead = outcome === "accepted"
-      ? {
-          ...formData,
-          status: "won",
-          quote_value: estimate.total || formData.quote_value,
-          client_follow_up_state: "",
-          follow_up_at: null,
-          next_action: "Confirm order administration and prepare the project handoff.",
-        }
-      : {
-          ...formData,
-          next_action: "Review the client's feedback and decide whether to revise the estimate or close the opportunity.",
-        }
+    const updatedLead = {
+      ...formData,
+      next_action: "Review the client's feedback and decide whether to revise the estimate or close the opportunity.",
+    }
 
     await onSave(updatedLead)
     await supabase.from("lead_activities").insert([{
@@ -2630,7 +2630,190 @@ export default function LeadEditorDrawer({
         )}
       </Tab.Panel>
 
-      <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
+      <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">        <div className="border-t border-slate-200 pt-4">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Estimate workspace
+              </p>
+              <h3 className="mt-1 text-base font-semibold text-slate-900">Quotes & orders</h3>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Prepare a quote, send it to the client, then confirm the work they accept.
+              </p>
+            </div>
+            {!isNew && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={openEstimateCreator}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+                >
+                  <FileText size={16} />
+                  Create / edit quote
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onCreateInvoice?.({ ...lead, ...formData })}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  <FileText size={16} />
+                  Create invoice
+                </button>
+                <button
+                  type="button"
+                  disabled={creatingProject}
+                  onClick={createProjectFromLead}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-50"
+                >
+                  <Building2 size={16} />
+                  {creatingProject ? "Creating..." : "Create project"}
+                </button>
+              </div>
+            )}
+          </div>
+          {projectHandoffError ? <p className="mt-3 text-sm text-rose-700">{projectHandoffError}</p> : null}
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Current quote value</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {String(formData.quote_value || "").trim() ? formatZar(formData.quote_value) : "Not captured"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Estimate versions</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{savedEstimates.length}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latest estimate</p>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="min-w-0 truncate text-sm font-semibold text-slate-900">
+                  {latestEstimate ? `V${latestEstimate.version_no || 1}` : "No estimate"}
+                </p>
+                <select
+                  value={latestEstimate ? normalizeEstimateStatus(latestEstimate.status) : ""}
+                  onChange={confirmLatestEstimateStatus}
+                  disabled={!latestEstimate || !onEstimateStatusChange || updatingEstimateStatus || latestEstimate.status === "accepted"}
+                  className="max-w-[130px] rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-slate-400 disabled:cursor-not-allowed disabled:text-slate-400"
+                  aria-label="Latest estimate status"
+                >
+                  {!latestEstimate ? <option value="">Not prepared</option> : null}
+                  {ESTIMATE_STATUS_OPTIONS.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+          {normalizeStatus(formData.status) === "quoted" && !latestEstimate && <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">This lead is in Quoted, but has no saved estimate. First-quote timing cannot be measured until an estimate and its actual send time are recorded.</p>}
+          {latestEstimate && !latestEstimate.sent_at && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold text-amber-950">No quote send time recorded</p><p className="mt-1 text-xs leading-5 text-amber-900">Sent this estimate outside the branded email? Record the send here. Moving the lead to Quoted alone does not confirm it.</p></div><div className="flex flex-wrap gap-2"><button type="button" disabled={updatingEstimateStatus} onClick={() => confirmManualSend()} className="rounded-lg bg-amber-900 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-800 disabled:opacity-50">{updatingEstimateStatus ? "Saving..." : "Record sent now"}</button><button type="button" onClick={openManualSend} className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-950">Use earlier time</button></div></div>{showManualSend && <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-amber-200 pt-4"><label className="text-xs font-semibold text-amber-950">Actual date and time sent<input type="datetime-local" value={manualSentAt} onChange={(event) => setManualSentAt(event.target.value)} className="mt-1 block rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900" /></label><button type="button" disabled={updatingEstimateStatus} onClick={() => confirmManualSend(manualSentAt)} className="rounded-lg bg-[#001d2e] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{updatingEstimateStatus ? "Saving..." : "Record earlier send"}</button><button type="button" onClick={() => setShowManualSend(false)} className="px-2 py-2.5 text-xs font-semibold text-amber-900">Cancel</button>{manualSendError && <p role="alert" className="w-full text-xs text-red-700">{manualSendError}</p>}</div>}<p className="mt-2 text-[11px] leading-4 text-amber-900">Records the send in CRM; it does not email the client.</p>{manualSendError && !showManualSend && <p role="alert" className="mt-2 text-xs text-red-700">{manualSendError}</p>}</div>}
+        </section>
+
+        <QuoteWinsPanel key={savedEstimates.map(estimate => `${estimate.id}:${estimate.updated_at}:${estimate.status}`).join("|")} leadId={lead.id} onRecorded={(payload) => {
+          setSavedEstimates(payload.estimates || [])
+          setFormData(current => ({...current,status:payload.lead.status,quote_value:payload.lead.quote_value,follow_up_at:null,next_action:payload.lead.next_action}))
+          onQuoteWinsRecorded?.(payload)
+        }} />
+
+        <details className={sectionClass}>
+          <summary className="cursor-pointer text-sm font-semibold text-slate-700">Quote documents & history · {savedEstimates.length}</summary>
+          <p className="mt-1 text-sm text-slate-600">
+            Preview the working document, open the PDF, or jump to the share view when you need the client-facing version.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            {loadingEstimates ? (
+              <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                Loading estimate history...
+              </p>
+            ) : savedEstimates.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                No saved estimates yet. Create the first estimate to start a proper quote trail for this lead.
+              </p>
+            ) : (
+              <QuoteRevisionGroups estimates={savedEstimates} renderEstimate={(estimate) => (
+                <div key={estimate.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-slate-900">{estimate.title}</p>
+                        <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${estimate.won_superseded_by ? "bg-slate-100 text-slate-500" : getEstimateStatusClass(estimate.status)}`}>
+                          {estimate.won_superseded_by ? "Superseded" : estimate.status === "accepted" ? "Won" : formatEstimateStatus(estimate.status)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Version {estimate.version_no} · {formatZar(estimate.total || 0)}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {estimate.sent_at
+                          ? `Sent ${new Date(estimate.sent_at).toLocaleString()}${estimate.sent_by_name ? ` by ${estimate.sent_by_name}` : ""}`
+                          : estimate.prepared_at || estimate.created_at
+                            ? `Prepared ${new Date(estimate.prepared_at || estimate.created_at).toLocaleString()}`
+                            : "Saved estimate"}
+                      </p>
+                      {estimate.decline_reason ? <p className="mt-2 text-xs text-rose-700">Reason: {estimate.decline_reason}</p> : null}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEstimateEmailComposer(estimate)}
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        Email draft
+                      </button>
+                      <a
+                        href={buildEstimatePreviewUrl(estimate.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        Preview
+                      </a>
+                      <a
+                        href={buildEstimatePdfUrl(estimate.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        PDF
+                      </a>
+                      {estimate.share_token ? (
+                        <a
+                          href={`/quotes/${estimate.share_token}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        >
+                          Share view
+                        </a>
+                      ) : null}
+                      {normalizeEstimateStatus(estimate.status) === "sent" ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleEstimateOutcome(estimate, "accepted")}
+                            className="rounded-xl bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-200"
+                          >
+                            Choose won quotes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEstimateOutcome(estimate, "declined")}
+                            className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                          >
+                            Mark declined
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )} />
+            )}
+          </div>
+        </details>
+        </div>
+
+        <details className="rounded-2xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer text-sm font-semibold text-slate-700">Follow-ups, next action & communication</summary><div className="mt-4 space-y-4">
         <section className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#eff6ff)] p-4 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -2937,182 +3120,8 @@ export default function LeadEditorDrawer({
             ))}
           </div>
         </section>
-        <div className="border-t border-slate-200 pt-4">
-        <section className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#fff7ed_55%,_#fef2f2)] p-4 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Estimate workspace
-              </p>
-              <h3 className="mt-1 text-base font-semibold text-slate-900">Quote history and pricing actions</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                Keep estimate versions, quote value, and quote actions in one place so pricing work stays organized.
-              </p>
-            </div>
-            {!isNew && (
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={openEstimateCreator}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
-                >
-                  <FileText size={16} />
-                  Open estimate
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onCreateInvoice?.({ ...lead, ...formData })}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-                >
-                  <FileText size={16} />
-                  Create invoice
-                </button>
-                <button
-                  type="button"
-                  disabled={creatingProject}
-                  onClick={createProjectFromLead}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-50"
-                >
-                  <Building2 size={16} />
-                  {creatingProject ? "Creating..." : "Create project"}
-                </button>
-              </div>
-            )}
-          </div>
-          {projectHandoffError ? <p className="mt-3 text-sm text-rose-700">{projectHandoffError}</p> : null}
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Current quote value</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {String(formData.quote_value || "").trim() ? formatZar(formData.quote_value) : "Not captured"}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Estimate versions</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{savedEstimates.length}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latest estimate</p>
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <p className="min-w-0 truncate text-sm font-semibold text-slate-900">
-                  {latestEstimate ? `V${latestEstimate.version_no || 1}` : "No estimate"}
-                </p>
-                <select
-                  value={latestEstimate ? normalizeEstimateStatus(latestEstimate.status) : ""}
-                  onChange={confirmLatestEstimateStatus}
-                  disabled={!latestEstimate || !onEstimateStatusChange || updatingEstimateStatus}
-                  className="max-w-[130px] rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-slate-400 disabled:cursor-not-allowed disabled:text-slate-400"
-                  aria-label="Latest estimate status"
-                >
-                  {!latestEstimate ? <option value="">Not prepared</option> : null}
-                  {ESTIMATE_STATUS_OPTIONS.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
-          {normalizeStatus(formData.status) === "quoted" && !latestEstimate && <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">This lead is in Quoted, but has no saved estimate. First-quote timing cannot be measured until an estimate and its actual send time are recorded.</p>}
-          {latestEstimate && !latestEstimate.sent_at && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold text-amber-950">No quote send time recorded</p><p className="mt-1 text-xs leading-5 text-amber-900">Sent this estimate outside the branded email? Record the send here. Moving the lead to Quoted alone does not confirm it.</p></div><div className="flex flex-wrap gap-2"><button type="button" disabled={updatingEstimateStatus} onClick={() => confirmManualSend()} className="rounded-lg bg-amber-900 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-800 disabled:opacity-50">{updatingEstimateStatus ? "Saving..." : "Record sent now"}</button><button type="button" onClick={openManualSend} className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-950">Use earlier time</button></div></div>{showManualSend && <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-amber-200 pt-4"><label className="text-xs font-semibold text-amber-950">Actual date and time sent<input type="datetime-local" value={manualSentAt} onChange={(event) => setManualSentAt(event.target.value)} className="mt-1 block rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900" /></label><button type="button" disabled={updatingEstimateStatus} onClick={() => confirmManualSend(manualSentAt)} className="rounded-lg bg-[#001d2e] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{updatingEstimateStatus ? "Saving..." : "Record earlier send"}</button><button type="button" onClick={() => setShowManualSend(false)} className="px-2 py-2.5 text-xs font-semibold text-amber-900">Cancel</button>{manualSendError && <p role="alert" className="w-full text-xs text-red-700">{manualSendError}</p>}</div>}<p className="mt-2 text-[11px] leading-4 text-amber-900">Records the send in CRM; it does not email the client.</p>{manualSendError && !showManualSend && <p role="alert" className="mt-2 text-xs text-red-700">{manualSendError}</p>}</div>}
-        </section>
-
-        <section className={sectionClass}>
-          <h4 className="text-base font-semibold text-slate-900">Saved estimate versions</h4>
-          <p className="mt-1 text-sm text-slate-600">
-            Preview the working document, open the PDF, or jump to the share view when you need the client-facing version.
-          </p>
-
-          <div className="mt-4 space-y-3">
-            {loadingEstimates ? (
-              <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                Loading estimate history...
-              </p>
-            ) : savedEstimates.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                No saved estimates yet. Create the first estimate to start a proper quote trail for this lead.
-              </p>
-            ) : (
-              savedEstimates.map((estimate) => (
-                <div key={estimate.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-slate-900">{estimate.title}</p>
-                        <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${getEstimateStatusClass(estimate.status)}`}>
-                          {formatEstimateStatus(estimate.status)}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-sm text-slate-600">
-                        Version {estimate.version_no} · {formatZar(estimate.total || 0)}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {estimate.sent_at
-                          ? `Sent ${new Date(estimate.sent_at).toLocaleString()}${estimate.sent_by_name ? ` by ${estimate.sent_by_name}` : ""}`
-                          : estimate.prepared_at || estimate.created_at
-                            ? `Prepared ${new Date(estimate.prepared_at || estimate.created_at).toLocaleString()}`
-                            : "Saved estimate"}
-                      </p>
-                      {estimate.decline_reason ? <p className="mt-2 text-xs text-rose-700">Reason: {estimate.decline_reason}</p> : null}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEstimateEmailComposer(estimate)}
-                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                      >
-                        Email draft
-                      </button>
-                      <a
-                        href={buildEstimatePreviewUrl(estimate.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                      >
-                        Preview
-                      </a>
-                      <a
-                        href={buildEstimatePdfUrl(estimate.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                      >
-                        PDF
-                      </a>
-                      {estimate.share_token ? (
-                        <a
-                          href={`/quotes/${estimate.share_token}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                        >
-                          Share view
-                        </a>
-                      ) : null}
-                      {normalizeEstimateStatus(estimate.status) === "sent" ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleEstimateOutcome(estimate, "accepted")}
-                            className="rounded-xl bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-200"
-                          >
-                            Mark accepted
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleEstimateOutcome(estimate, "declined")}
-                            className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
-                          >
-                            Mark declined
-                          </button>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-        </div>
+        </div></details>
       </Tab.Panel>
 
 
