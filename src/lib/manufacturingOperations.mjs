@@ -62,7 +62,7 @@ export function validateOperations(data, order, previous) {
   const summary = summarizeOperations(order, data)
   if (e.status !== 'pending' && summary.received + .005 < summary.deposit) fail('Record the 75% client deposit before progressing engineering.')
   if (e.status === 'approved' && (!e.owner.trim() || !e.reference.trim() || !e.revision.trim() || !e.applicability.trim() || !e.matchConfirmed)) fail('Approved drawings need an owner, reference, revision, applicable specification and confirmation that they match this order.')
-  if (data.suppliers[0].status !== 'pending' && e.status !== 'approved') fail('Approve the drawing set before sending the structural supplier enquiry.')
+  if (['ordered','manufacturing','ready'].includes(data.suppliers[0].status) && e.status !== 'approved') fail('Approve the drawing set before placing the structural supplier order.')
   if (data.deliveryDate && (summary.balance > .005 || !summary.ready || !data.qualityChecked || !data.packed || !data.deliveryReference.trim())) fail('Delivery requires full client payment, both required suppliers ready, quality and packing checks, and a delivery reference.')
   return data
 }
@@ -84,4 +84,25 @@ export function manufacturingMilestones(order, data = order.operations?.data || 
   const stopped = ['cancelled', 'complete'].includes(order.status)
   const next = stopped ? -1 : steps.findIndex((step) => !step.done)
   return steps.map((step, index) => ({ ...step, state: step.done ? 'done' : index === next ? 'current' : 'pending' }))
+}
+
+// Routine updates keep an audit trail without requiring a second description of
+// the fields just entered. Changes/removals to existing ledger entries need a reason.
+export function requiresManufacturingCorrectionNote(previous, next) {
+  if (!previous) return false
+  const changedExisting = (before = [], after = []) => before.some((row, index) => JSON.stringify(row) !== JSON.stringify(after[index]))
+  return changedExisting(previous.payments, next.payments) || previous.suppliers.some((supplier, index) =>
+    changedExisting(supplier.invoices, next.suppliers[index]?.invoices) || changedExisting(supplier.payments, next.suppliers[index]?.payments))
+}
+export function manufacturingUpdateNote(previous, next) {
+  const before = previous || emptyOperations()
+  const changes = []
+  if (JSON.stringify(before.payments) !== JSON.stringify(next.payments)) changes.push('Client receipts updated')
+  if (JSON.stringify(before.engineering) !== JSON.stringify(next.engineering)) changes.push('Drawing information updated')
+  next.suppliers.forEach((supplier, index) => {
+    if (JSON.stringify(before.suppliers[index]) !== JSON.stringify(supplier)) changes.push(`${supplier.label || supplier.key}: ${SUPPLIER_STAGES[supplier.status] || supplier.status}; quote ${supplier.quoteReference || 'not recorded'}${supplier.quotedCost == null ? '' : `; R ${supplier.quotedCost.toFixed(2)} excl. VAT`}`)
+  })
+  if (JSON.stringify(before.baseline) !== JSON.stringify(next.baseline)) changes.push('Original cost allowance updated')
+  if (before.deliveryDate !== next.deliveryDate || before.packed !== next.packed || before.qualityChecked !== next.qualityChecked) changes.push('Delivery preparation updated')
+  return changes.join('. ') || 'Project details updated'
 }
