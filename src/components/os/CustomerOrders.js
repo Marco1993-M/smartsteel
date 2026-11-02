@@ -14,7 +14,7 @@ const ACTIONS = {
   delivered: ['complete', 'Complete order', 'Confirm all order obligations have been completed.'],
 }
 const button = 'rounded-lg border border-slate-300 px-4 py-2 text-xs font-bold disabled:opacity-50'
-export default function CustomerOrders() {
+export default function CustomerOrders({ orderId, onUpdated }) {
   const [records, setRecords] = useState([])
   const [invoices, setInvoices] = useState([])
   const [error, setError] = useState('')
@@ -39,13 +39,14 @@ export default function CustomerOrders() {
       const response = await fetch('/api/os/sales-orders', { method: 'PATCH', headers: await getOsAuthHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ id: order.id, expectedStatus: order.status, action, note, invoiceId, confirmed: true }) })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error || 'Could not update order.')
+      if (payload.record) onUpdated?.(payload.record)
       await load()
       return true
     } catch (failure) { setError(failure.message); return false }
     finally { setSaving('') }
   }
-  const shown = records.filter((order) => showClosed || !['cancelled', 'complete'].includes(order.status))
-  return <section className="rounded-2xl border border-sky-200 bg-white p-4 sm:p-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Direct customer orders</p><h2 className="mt-1 text-2xl font-bold text-slate-950">Accepted quotes → manufacturing</h2><p className="mt-2 text-sm text-slate-600">Orders remain on hold until specifications, invoicing, payment clearance and production approval are recorded.</p></div><button className={button} disabled={loading} onClick={load}>Refresh customer orders</button></div><label className="mt-4 flex gap-2 text-sm text-slate-600"><input type="checkbox" checked={showClosed} onChange={(event) => setShowClosed(event.target.checked)} />Include completed and cancelled orders</label>{error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}{loading ? <p className="py-8 text-sm text-slate-500">Loading customer orders…</p> : !shown.length ? <p className="py-8 text-sm text-slate-500">No customer orders in this view.</p> : <div className="mt-5 space-y-4">{shown.map((order) => <OrderCard key={`${order.id}-${order.status}`} order={order} invoices={invoices.filter((invoice) => invoice.lead_id === order.lead_id && Date.parse(invoice.created_at) >= Date.parse(order.specifications_confirmed_at) && invoice.reference_no === order.order_number && Number(invoice.total) > 0)} saving={saving === order.id} onUpdate={update} />)}</div>}</section>
+  const shown = records.filter((order) => (!orderId || order.id === orderId) && (orderId || showClosed || !['cancelled', 'complete'].includes(order.status)))
+  return <section className="rounded-2xl border border-sky-200 bg-white p-4 sm:p-6">{!orderId && <><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Direct customer orders</p><h2 className="mt-1 text-2xl font-bold text-slate-950">Accepted quotes → manufacturing</h2><p className="mt-2 text-sm text-slate-600">Orders remain on hold until specifications, invoicing, payment clearance and production approval are recorded.</p></div><button className={button} disabled={loading} onClick={load}>Refresh customer orders</button></div><label className="mt-4 flex gap-2 text-sm text-slate-600"><input type="checkbox" checked={showClosed} onChange={(event) => setShowClosed(event.target.checked)} />Include completed and cancelled orders</label></>}{error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}{loading ? <p className="py-8 text-sm text-slate-500">Loading customer orders…</p> : !shown.length ? <p className="py-8 text-sm text-slate-500">No customer orders in this view.</p> : <div className="mt-5 space-y-4">{shown.map((order) => <OrderCard key={`${order.id}-${order.status}`} order={order} invoices={invoices.filter((invoice) => invoice.lead_id === order.lead_id && Date.parse(invoice.created_at) >= Date.parse(order.specifications_confirmed_at) && invoice.reference_no === order.order_number && Number(invoice.total) > 0)} saving={saving === order.id} onUpdate={update} />)}</div>}</section>
 }
 function OrderCard({ order, invoices, saving, onUpdate }) {
   const [note, setNote] = useState('')

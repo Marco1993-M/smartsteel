@@ -1,6 +1,5 @@
 "use client"
 
-import CustomerOrders from "./CustomerOrders"
 import ManufacturingOperations from "./ManufacturingOperations"
 import { useEffect, useState } from "react"
 import { ArrowRight, CalendarDays, CheckCircle2, ChevronDown, ClipboardCheck, Factory, FileText, LockKeyhole, MapPin, PackageCheck, PauseCircle, Printer, RefreshCw, ShieldCheck, Truck, UserRound, X } from "lucide-react"
@@ -173,7 +172,7 @@ export default function ManufacturingWorkspace() {
     {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">AFGRI queue: {error}</p> : null}
 
     <ManufacturingOperations />
-    <details className="rounded-2xl border border-slate-200 bg-white p-5"><summary className="cursor-pointer text-sm font-bold text-slate-700">Commercial order controls · specifications, invoices & release</summary><p className="my-3 text-xs leading-5 text-slate-500">Use these existing controls for specification confirmation and invoice linking. The manufacturing workspace records deposit amounts, drawings, suppliers and delivery.</p><CustomerOrders /></details>
+
     <details className="rounded-2xl border border-slate-200 bg-white p-5"><summary className="cursor-pointer text-sm font-bold text-slate-700">AFGRI partner production · existing workflow</summary><div className="mt-4"><button type="button" onClick={loadRecords} className="inline-flex min-h-11 items-center justify-center gap-2 border rounded-xl border-slate-200 bg-slate-50 px-4 text-sm font-bold hover:bg-slate-100"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh AFGRI queue</button></div>
     <div className="my-4 grid grid-cols-3 gap-px overflow-hidden rounded-xl bg-white/15 text-white"><Metric label="Active AFGRI orders" value={active.length} /><Metric label="In production" value={productionCount} /><Metric label="Dispatch ready" value={dispatchCount} /></div>
 
