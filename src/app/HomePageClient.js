@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from '../components/BuilderEntryLink';
+import MobileWarehouseEntry from '../components/atlas/MobileWarehouseEntry';
 import HomepageSections from '../components/atlas/HomepageSections';
 import { useState } from 'react';
 import { smartSteelOrganizationSchema, smartSteelWebsiteSchema } from '../lib/brandEntity';
@@ -95,11 +96,12 @@ export default function HomePageClient() {
           background: 'linear-gradient(180deg, #ffffff 0%, #ffffff 5%, #eef5fc 28%, #dce9f5 68%, #cbddec 100%)',
         }}
       >
-      <section className="relative overflow-hidden px-4 pb-10 pt-20 sm:px-6 md:pb-18 md:pt-28">
+      <section className="relative overflow-hidden px-5 pb-7 pt-24 sm:px-6 sm:pb-10 sm:pt-20 md:pb-18 md:pt-28">
         <div className="relative z-10 mx-auto max-w-7xl">
-          <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-8">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-8">
             <div className="order-2 space-y-3 lg:order-1 lg:space-y-4">
-              <div className="rounded-[1.5rem] border border-black/10 bg-white/92 p-4 shadow-sm backdrop-blur-sm sm:rounded-[2rem] sm:p-8">
+              <MobileWarehouseEntry selectedWidth={selectedWidth} selectedLength={selectedLength} selectedHeight={selectedHeight} setSelectedWidth={setSelectedWidth} setSelectedLength={setSelectedLength} />
+              <div className="hidden sm:block rounded-[1.5rem] border border-black/10 bg-white/92 p-4 shadow-sm backdrop-blur-sm sm:rounded-[2rem] sm:p-8">
                 <div className="flex items-center justify-between gap-3 border-b border-black/8 pb-3 sm:pb-4">
                   <Image
                     src="/atlas/atlas-logo-horizontal-dark.png"
@@ -214,13 +216,19 @@ export default function HomePageClient() {
             </div>
 
             <div className="order-1 lg:order-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0043f3] sm:text-xs">Atlas warehouse systems</p>
-              <h1 className="mt-2 max-w-4xl text-3xl font-bold leading-[1.08] text-black sm:text-4xl md:text-6xl">
-                Build and price your steel warehouse online
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0043f3] sm:text-xs">Atlas steel warehouses</p>
+              <h1 className="mt-2 max-w-4xl text-[30px] font-bold leading-[1.08] tracking-[-0.03em] text-[#001d2e] sm:tracking-normal sm:text-black sm:text-4xl md:text-6xl">
+                <span className="sm:hidden">Your steel warehouse.<br />Sized and priced.</span>
+                <span className="hidden sm:inline">Build and price your steel warehouse online</span>
               </h1>
-              <p className="mt-3 max-w-3xl text-base leading-6 text-black/75 sm:mt-5 sm:text-lg sm:leading-8 md:text-xl">
-                Choose an Atlas warehouse size, see a supply-only price, and refine your structure in 3D before requesting a reviewed quote.
+              <p className="mt-3 max-w-3xl text-[14px] leading-[22px] text-[#526a78] sm:text-black/75 sm:mt-5 sm:text-lg sm:leading-8 md:text-xl">
+                <span className="sm:hidden">Choose a starting size for your farm or business in South Africa. Explore your design in 3D and see a supply-only guide price.</span>
+                <span className="hidden sm:inline">Choose an Atlas warehouse size, see a supply-only price, and refine your structure in 3D before requesting a reviewed quote.</span>
               </p>
+              <figure className="relative mt-4 h-32 overflow-hidden rounded-2xl bg-[#edf4f8] sm:hidden">
+                <Image src="/atlas_warehouse_email.webp" alt="Bolted Atlas warehouse steelwork by Smart Steel" fill priority sizes="(max-width: 639px) 100vw, 1px" className="object-cover" />
+                <figcaption className="absolute bottom-2 left-2 rounded-lg bg-white/95 px-2.5 py-1 text-[10px] font-semibold text-[#001d2e]">Atlas steelwork · Smart Steel</figcaption>
+              </figure>
               <ul className="mt-5 hidden gap-3 sm:grid sm:grid-cols-3 lg:mt-7 lg:grid-cols-1">
                 {heroTrustBullets.map((bullet) => (
                   <li key={bullet} className="flex items-center gap-3 text-base font-semibold leading-6 text-gray-800">
