@@ -39,6 +39,17 @@ function formatDay(date) {
   }
 }
 
+function ReminderContext({ item }) {
+  const context = item.context
+  if (context?.source !== "quote_review") return null
+  return <div className="mt-2 space-y-1 text-[11px] leading-4 text-slate-500">
+    <p>From quote review{context.actor ? ` · ${context.actor}` : ""}</p>
+    {item.createdAt && <p>Added {new Intl.DateTimeFormat("en-ZA", { timeZone: "Africa/Johannesburg", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(item.createdAt))} SAST</p>}
+    {context.quoteTitle && <p className="break-words">{context.quoteTitle}</p>}
+    {item.leadId && <a href={`/os/crm?leadId=${encodeURIComponent(item.leadId)}`} className="inline-flex py-1 font-semibold text-blue-700 hover:underline">Open client →</a>}
+  </div>
+}
+
 export default function WeeklySchedule() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
   const [records, setRecords] = useState([])
@@ -303,6 +314,7 @@ export default function WeeklySchedule() {
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm leading-6 text-slate-800">{item.title}</p>
+                      <ReminderContext item={item} />
                       {item.dueAt ? <p className="mt-1 text-xs font-semibold text-blue-700">{new Intl.DateTimeFormat("en-ZA", { timeZone: "Africa/Johannesburg", hour: "2-digit", minute: "2-digit" }).format(new Date(item.dueAt))} SAST{item.reviewId ? " · 15-minute call" : ""}</p> : null}
                       {item.assignee ? <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{item.assignee}{item.notifyWholeTeam ? " · Team notified" : ""}</p> : null}
                     </div>
@@ -374,6 +386,7 @@ export default function WeeklySchedule() {
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm leading-5 text-slate-800">{item.title}</p>
+                      <ReminderContext item={item} />
                       {item.dueAt ? <p className="mt-1 text-xs font-semibold text-blue-700">{new Intl.DateTimeFormat("en-ZA", { timeZone: "Africa/Johannesburg", hour: "2-digit", minute: "2-digit" }).format(new Date(item.dueAt))} SAST{item.reviewId ? " · 15-minute call" : ""}</p> : null}
                       {item.assignee ? <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{item.assignee}{item.notifyWholeTeam ? " · Team notified" : ""}</p> : null}
                     </div>
