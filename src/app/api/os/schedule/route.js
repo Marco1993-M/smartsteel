@@ -16,6 +16,9 @@ function normalizeTask(row) {
     notifyWholeTeam: Boolean(row.notify_whole_team),
     reviewId: row.quote_review_id || null,
     dueAt: row.due_at || null,
+    leadId: row.lead_id || null,
+    context: row.reminder_context || null,
+    createdAt: row.created_at || null,
   }
 }
 
@@ -40,7 +43,7 @@ export async function GET(request) {
 
   let { data, error } = await supabaseServer
     .from("tasks")
-    .select("id, title, due_date, due_at, quote_review_id, assignee, notify_whole_team")
+    .select("*")
     .eq("completed", false)
     .gte("due_date", start)
     .lte("due_date", end)
@@ -48,7 +51,7 @@ export async function GET(request) {
     .order("created_at", { ascending: true })
 
   if (error && /due_at|quote_review_id/i.test(error.message || "")) {
-    const fallback = await supabaseServer.from("tasks").select("id, title, due_date, assignee, notify_whole_team").eq("completed", false).gte("due_date", start).lte("due_date", end).order("due_date").order("created_at")
+    const fallback = await supabaseServer.from("tasks").select("*").eq("completed", false).gte("due_date", start).lte("due_date", end).order("due_date").order("created_at")
     data = fallback.data; error = fallback.error
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -81,7 +84,7 @@ export async function POST(request) {
         notify_whole_team: notifyWholeTeam,
       },
     ])
-    .select("id, title, due_date, assignee, notify_whole_team")
+    .select("*")
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -138,7 +141,7 @@ export async function PATCH(request) {
     .from("tasks")
     .update(updatePayload)
     .eq("id", id)
-    .select("id, title, due_date, completed, assignee, notify_whole_team")
+    .select("*")
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
