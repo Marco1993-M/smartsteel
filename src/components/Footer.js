@@ -4,14 +4,14 @@ import Image from 'next/image';
 import { FaFacebookF, FaInstagram } from 'react-icons/fa';
 import { SMART_STEEL_FACEBOOK_URL, smartSteelContact } from '../lib/brandEntity';
 
-export default function Footer() {
+export default function Footer({ atlas = false }) {
   return (
-    <footer className="bg-[#000000] text-white py-12 px-6">
-      <div className="max-w-7xl mx-auto grid md:grid-cols-5 gap-12">
+    <footer className={`${atlas ? "border-t border-[#dce6ed] bg-[#f3f7fa] text-[#001d2e] [&_.text-gray-300]:text-[#526a78] [&_.text-gray-400]:text-[#647b89] [&_.text-white]:text-[#001d2e] [&_a:hover]:text-[#0043f3] [&_.border-gray-700]:border-[#dce6ed]" : "bg-black text-white"} py-12 px-6`}>
+      <div className={`max-w-7xl mx-auto grid ${atlas ? "grid-cols-2 gap-8 lg:grid-cols-5" : "md:grid-cols-5 gap-12"}`}>
         {/* Logo and About */}
-        <div className="md:col-span-1">
+        <div className={atlas ? "col-span-2 lg:col-span-1" : "md:col-span-1"}>
           <Link href="/" className="inline-block mb-4">
-            <Image src="/LogoWhite.png" alt="Smart Steel Logo" width={100} height={100} />
+            <Image src={atlas ? "/Logo.png" : "/LogoWhite.png"} alt="Smart Steel Logo" width={100} height={100} />
           </Link>
           <p className="text-sm text-gray-300">
             Smart Steel South Africa supplies lightweight steel warehouses, roof trusses, solar carports, and modular steel building systems.
