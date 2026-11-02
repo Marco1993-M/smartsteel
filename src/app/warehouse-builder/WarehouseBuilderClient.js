@@ -1,6 +1,9 @@
 "use client"
 
 import Image from "next/image"
+import BuilderSelect from "../../components/warehouse-builder/BuilderSelect"
+import { Dialog } from "@headlessui/react"
+import { warehouseReviewErrors } from "../../lib/warehouseReviewForm.mjs"
 import { ATLAS_SHOWCASE_OFFER, SHOWCASE_PHOTOGRAPHY_LABELS, showcaseOfferOpen } from "../../lib/atlasShowcaseOffer.mjs"
 import AtlasShowcaseOffer, { AtlasShowcaseOfferTrigger } from "../../components/warehouse-builder/AtlasShowcaseOffer"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -266,7 +269,7 @@ function PrimaryFinishControls({
       <div className="grid gap-4">
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Steel finish</label>
-          <div className="mt-1.5 grid grid-cols-2 gap-2">
+          <div className="mt-1.5 grid grid-cols-3 gap-2">
             {ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS.map((option) => (
               <button
                 key={option}
@@ -287,25 +290,23 @@ function PrimaryFinishControls({
           <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Sheeting add-ons</label>
           <div className="mt-2 grid grid-cols-2 gap-3">
             {ATLAS_WAREHOUSE_SHEETING_OPTIONS.map((option) => (
-              <VisualChoiceCard
+              <button
                 key={option.value}
-                icon={option.value === "roof_only" ? HomeModernIcon : ShieldCheckIcon}
-                title={option.label}
-                active={gableMode === option.value}
-                brand="atlas"
-                square
-                thumbnail={
-                  <RoofEnclosureThumbnail
-                    variant={option.value === "fully_enclosed" ? "side_walls" : option.value}
-                    active={gableMode === option.value}
-                    prominent
-                  />
-                }
+                type="button"
+                aria-pressed={gableMode === option.value}
                 onClick={() => {
                   updateField("gableMode", option.value)
                   if (option.value !== "structure_only" && cladding === "None") updateField("cladding", "IBR")
                 }}
-              />
+                className={`flex min-h-16 items-center gap-2 rounded-xl border p-2 text-left text-xs font-semibold leading-4 transition ${gableMode === option.value
+                  ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"}`}
+              >
+                <span className="relative h-11 w-14 shrink-0 overflow-hidden rounded-lg bg-white">
+                  <Image src={ENCLOSURE_IMAGE_MAP[option.value === "fully_enclosed" ? "side_walls" : option.value]} alt="" fill sizes="56px" className="object-contain p-1" />
+                </span>
+                <span>{option.label}</span>
+              </button>
             ))}
           </div>
         </div>
@@ -359,23 +360,18 @@ function PrimaryFinishControls({
   )
 }
 
-function ContactField({ label, type = "text", value, onChange, placeholder, required = false, maxLength }) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-        {label}
-      </span>
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        maxLength={maxLength}
-        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-500"
-      />
-    </label>
-  )
+function ContactField({ label, type = "text", value, onChange, placeholder, required = false, maxLength, name, error, inputRef, autoComplete }) {
+  const id = name ? `warehouse-review-${name}` : undefined
+  return <label className="block" htmlFor={id}>
+    <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{label}{required && <span aria-hidden="true" className="ml-1 text-blue-600">*</span>}</span>
+    <input id={id} ref={inputRef} name={name} data-review-field={name} type={type} value={value} onChange={onChange} placeholder={placeholder} required={required} maxLength={maxLength} autoComplete={autoComplete} aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-error` : undefined} className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-2 focus:ring-blue-100 ${error ? "border-red-400 focus:border-red-500" : "border-slate-300 focus:border-[#0043f3]"}`} />
+    {error && <p id={`${id}-error`} className="mt-1.5 text-xs leading-5 text-red-600">{error}</p>}
+  </label>
+}
+
+function ReviewSelect({name,label,value,onChange,options,placeholder,error,required=false}) {
+ const id=`warehouse-review-${name}`
+ return <label className="block" htmlFor={id}><span className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{label}{required&&<span aria-hidden="true" className="ml-1 text-blue-600">*</span>}</span><BuilderSelect id={id} name={name} data-review-field={name} required={required} value={value || ''} onChange={onChange} aria-invalid={Boolean(error)} aria-describedby={error?`${id}-error`:undefined} className={`w-full rounded-xl border bg-white px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-100 ${error?'border-red-400':'border-slate-300 focus:border-[#0043f3]'}`}>{placeholder&&<option value="">{placeholder}</option>}{options.map(option=>{const [key,text]=Array.isArray(option)?option:[option,option];return <option key={key} value={key}>{text}</option>})}</BuilderSelect>{error&&<p id={`${id}-error`} className="mt-1.5 text-xs leading-5 text-red-600">{error}</p>}</label>
 }
 
 function getSystemLabel(productType) {
@@ -413,6 +409,9 @@ export default function WarehouseBuilderClient() {
   const patchFields = useWarehouseBuilderStore((state) => state.patchFields)
   const reset = useWarehouseBuilderStore((state) => state.reset)
   const [showLeadForm, setShowLeadForm] = useState(false)
+  const [reviewErrors, setReviewErrors] = useState({})
+  const reviewFormRef = useRef(null)
+  const reviewFirstFieldRef = useRef(null)
   const [submissionIntent, setSubmissionIntent] = useState("review")
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -427,7 +426,6 @@ export default function WarehouseBuilderClient() {
   const [undoSnapshot, setUndoSnapshot] = useState(null)
   const [isSceneVisible, setIsSceneVisible] = useState(true)
   const [sceneSectionHeight, setSceneSectionHeight] = useState(820)
-  const [showPlanScrollCue, setShowPlanScrollCue] = useState(false)
   const [leadForm, setLeadForm] = useState({
     name: "",
     lastName: "",
@@ -438,7 +436,6 @@ export default function WarehouseBuilderClient() {
   const changeNoticeTimeoutRef = useRef(null)
   const hasInitialisedBuilderRef = useRef(false)
   const sceneSectionRef = useRef(null)
-  const planPanelRef = useRef(null)
 
   const isAtlasWarehouse = true
   const builderTheme = isAtlasWarehouse
@@ -580,27 +577,6 @@ export default function WarehouseBuilderClient() {
     }
   }, [])
 
-  useEffect(() => {
-    const element = planPanelRef.current
-    if (!element) return undefined
-
-    const updateScrollCue = () => {
-      const remaining = element.scrollHeight - element.clientHeight - element.scrollTop
-      setShowPlanScrollCue(element.scrollHeight > element.clientHeight + 16 && remaining > 24)
-    }
-    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateScrollCue)
-
-    updateScrollCue()
-    element.addEventListener("scroll", updateScrollCue, { passive: true })
-    window.addEventListener("resize", updateScrollCue)
-    resizeObserver?.observe(element)
-
-    return () => {
-      element.removeEventListener("scroll", updateScrollCue)
-      window.removeEventListener("resize", updateScrollCue)
-      resizeObserver?.disconnect()
-    }
-  }, [config.gableMode, config.sheetingFinish, sceneSectionHeight, submitted])
 
   useEffect(() => {
     if (!showLeadForm) return undefined
@@ -887,18 +863,19 @@ export default function WarehouseBuilderClient() {
     trackBuilderEvent("warehouse_builder_summary_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
   }
 
+  const clearReviewError = (field) => { setReviewErrors(current=>({...current,[field]:undefined})); setSubmitError("") }
+  useEffect(() => { if (showLeadForm) { setReviewErrors({}); setSubmitError("") } }, [showLeadForm, applyingForShowcase])
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     if (submitting) return
     if (applyingForShowcase && !showcaseOfferOpen()) { setSubmitError("The Showcase Offer has ended. You can still request a standard quotation."); return }
-    if (applyingForShowcase && (!showcaseProjectUse.trim() || !photographyPreference)) { setSubmitError("Add your proposed building use and photography preference."); return }
-    if (!config.projectStage) {
-      setSubmitError("Please choose your project stage before sending the project for review.")
-      return
-    }
-
-    if (!config.location.trim()) {
-      setSubmitError("Please add the town, suburb, or site area for this project.")
+    const errors = warehouseReviewErrors({contact:leadForm,configuration:config,showcase:applyingForShowcase,projectUse:showcaseProjectUse,photographyPreference})
+    setReviewErrors(errors)
+    if (Object.keys(errors).length) {
+      setSubmitError("Please complete the highlighted fields below.")
+      const first = Object.keys(errors)[0]
+      window.requestAnimationFrame(() => reviewFormRef.current?.querySelector(`[data-review-field="${first}"]`)?.focus())
       return
     }
 
@@ -919,7 +896,7 @@ export default function WarehouseBuilderClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...leadForm,
+          ...Object.fromEntries(Object.entries(leadForm).map(([key,value])=>[key,String(value).trim()])),
           lead_source: "Warehouse Builder",
           ...(applyingForShowcase ? { showcaseOffer: { campaignId: ATLAS_SHOWCASE_OFFER.id, termsVersion: ATLAS_SHOWCASE_OFFER.termsVersion, projectUse: showcaseProjectUse, photographyPreference } } : {}),
           submissionChannel: submissionIntent === "whatsapp" ? "WhatsApp" : "Review request",
@@ -1171,15 +1148,6 @@ export default function WarehouseBuilderClient() {
 
   const reviewCtaLabel = "Get my quote"
 
-  const builderStages = [
-    { label: "Configure", target: "size-style", complete: Boolean(config.width && config.length && config.wallHeight) },
-    { label: "Project", target: "project-context", complete: Boolean(config.projectStage && config.location.trim()) },
-    { label: "Review", target: "review-summary", complete: showLeadForm || submitted },
-  ]
-
-  const scrollToBuilderStage = (target) => {
-    document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" })
-  }
 
   return (
     <main
@@ -1265,6 +1233,7 @@ export default function WarehouseBuilderClient() {
               type="button"
               onClick={() => {
                 setApplyingForShowcase(false)
+                setSubmissionIntent("review")
                 setShowLeadForm(true)
                 trackBuilderEvent("warehouse_builder_review_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
               }}
@@ -1278,15 +1247,14 @@ export default function WarehouseBuilderClient() {
         <div className="mt-8 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[440px_minmax(0,1.4fr)] xl:items-start">
           <div className="relative order-2 min-w-0 xl:order-1">
           <section
-            ref={planPanelRef}
-            className="min-w-0 space-y-4 xl:h-[var(--builder-workspace-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"
+            className="min-w-0 space-y-4"
             style={{ "--builder-workspace-height": `${sceneSectionHeight}px` }}
           >
-            <section className="min-w-0 overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <section data-warehouse-controls className="min-w-0 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm xl:min-h-[var(--builder-workspace-height)]">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Plan details</h2>
-                  <p className="mt-1 text-xs text-slate-500">{deviceSaveStatus || "Move from layout to budget in a few clear steps."}</p>
+                  <h2 className="text-lg font-semibold text-slate-900">Configure your warehouse</h2>
+                  <p className="mt-1 text-xs text-slate-500">{deviceSaveStatus || "Set your size and finishes. Add project details when you request a quote."}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -1321,49 +1289,18 @@ export default function WarehouseBuilderClient() {
                 </div>
               </div>
 
-              <nav aria-label="Builder progress" className="mb-4 grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                {builderStages.map((stage, index) => (
-                  <button
-                    key={stage.label}
-                    type="button"
-                    onClick={() => {
-                      if (stage.target === "review-summary") {
-                        setShowLeadForm(true)
-                        trackBuilderEvent("warehouse_builder_review_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
-                        return
-                      }
-                      scrollToBuilderStage(stage.target)
-                    }}
-                    className={`flex min-w-0 items-center justify-center gap-1.5 border-r border-slate-200 px-1.5 py-2.5 text-[10px] font-semibold transition last:border-r-0 sm:text-xs ${
-                      stage.complete ? "bg-white text-slate-900" : "text-slate-400 hover:text-slate-600"
-                    }`}
-                  >
-                    <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] ${
-                      stage.complete ? "bg-[var(--builder-selection)] text-white" : "border border-slate-300 bg-white"
-                    }`}>
-                      {stage.complete ? <CheckIcon className="h-2.5 w-2.5" /> : index + 1}
-                    </span>
-                    <span className="truncate">{stage.label}</span>
-                  </button>
-                ))}
-              </nav>
-
               <div className="space-y-4">
-                <div id="size-style" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
-                  <StepLabel
-                    step="1 · Configure"
-                    title="Set the warehouse size"
-                  />
-                  <div className="space-y-4">
+                <div id="size-style" className="scroll-mt-28">
+                  <div className="space-y-3">
                     <div>
                       <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Width</label>
-                      <div className="mt-1.5 flex gap-2 overflow-x-auto pb-1">
+                      <div className="mt-1.5 flex gap-2 ">
                         {widthOptions.map((option) => (
                           <button
                             key={option}
                             type="button"
                             onClick={() => updateField("width", option)}
-                            className={`min-w-[64px] flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                            className={`min-w-0 flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
                               config.width === option
                                 ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
                                 : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
@@ -1377,7 +1314,7 @@ export default function WarehouseBuilderClient() {
                     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                       <div>
                         <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Length</label>
-                        <select
+                        <BuilderSelect
                           aria-label="Warehouse length"
                           value={config.length}
                           onChange={(event) => updateField("length", Number(event.target.value))}
@@ -1388,7 +1325,7 @@ export default function WarehouseBuilderClient() {
                               {option}m{LENGTH_DESCRIPTORS[option] ? ` · ${LENGTH_DESCRIPTORS[option]}` : ""}
                             </option>
                           ))}
-                        </select>
+                        </BuilderSelect>
                       </div>
                       <div>
                         <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -1412,11 +1349,7 @@ export default function WarehouseBuilderClient() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Current size</p>
-                      <p className="text-sm font-semibold text-slate-900">{config.width}m × {config.length}m × {config.wallHeight}m</p>
-                    </div>
-                    <div className="border-t border-slate-200 pt-4">
+                    <div className="border-t border-slate-200 pt-3">
                       <PrimaryFinishControls
                         isAtlasWarehouse={isAtlasWarehouse}
                         steelFinish={config.steelFinish}
@@ -1427,25 +1360,21 @@ export default function WarehouseBuilderClient() {
                       />
                     </div>
                     {config.gableMode !== "structure_only" ? (
-                      <div className="border-t border-slate-200 pt-4">
-                        <FieldLabel title="Sheeting profile" />
-                        <div className="mb-4 grid grid-cols-3 gap-2">
-                          {[
-                            "Corrugated",
-                            "IBR",
-                            "Concealed Fix",
-                          ].map((option) => (
-                            <button key={option} type="button" onClick={() => updateField("sheetingProfile", option)} className={`rounded-xl border px-2 py-2.5 text-xs font-semibold transition sm:text-sm ${config.sheetingProfile === option ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white" : "border-slate-200 bg-white text-slate-700"}`}>{option}</button>
-                          ))}
-                        </div>
-                        <FieldLabel title="Sheeting finish" />
-                        <div className="mb-4 grid grid-cols-2 gap-2">
-                          {[
-                            { value: "galvanised", label: "Galvanised" },
-                            { value: "chromadek", label: "Chromadek" },
-                          ].map((option) => (
-                            <button key={option.value} type="button" onClick={() => updateField("sheetingFinish", option.value)} className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${config.sheetingFinish === option.value ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white" : "border-slate-200 bg-white text-slate-700"}`}>{option.label}</button>
-                          ))}
+                      <div className="border-t border-slate-200 pt-3">
+                        <div className="mb-3 grid grid-cols-2 gap-3">
+                          <label className="text-xs font-semibold text-slate-700">
+                            Sheeting profile
+                            <BuilderSelect aria-label="Sheeting profile" value={config.sheetingProfile} onChange={(event) => updateField("sheetingProfile", event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-2 py-2.5 text-sm text-slate-900">
+                              {["Corrugated", "IBR", "Concealed Fix"].map((option) => <option key={option} value={option}>{option}</option>)}
+                            </BuilderSelect>
+                          </label>
+                          <label className="text-xs font-semibold text-slate-700">
+                            Sheeting finish
+                            <BuilderSelect aria-label="Sheeting finish" value={config.sheetingFinish} onChange={(event) => updateField("sheetingFinish", event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-2 py-2.5 text-sm text-slate-900">
+                              <option value="galvanised">Galvanised</option>
+                              <option value="chromadek">Chromadek</option>
+                            </BuilderSelect>
+                          </label>
                         </div>
                         {config.sheetingFinish === "chromadek" ? (
                           <>
@@ -1463,7 +1392,7 @@ export default function WarehouseBuilderClient() {
                               aria-label={option.label}
                               title={option.label}
                               onClick={() => updateField("sheetingColor", option.value)}
-                              className={`aspect-square rounded-full border-2 p-0.5 transition hover:scale-105 ${
+                              className={`h-8 w-8 rounded-full border-2 p-0.5 transition hover:scale-105 ${
                                 config.sheetingColor === option.value
                                   ? "border-[var(--builder-accent)] shadow-sm"
                                   : "border-slate-200"
@@ -1560,140 +1489,7 @@ export default function WarehouseBuilderClient() {
                     </div>
                 ) : null}
 
-                <div id="project-context" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
-                  <StepLabel
-                    step="2 · Project"
-                    title="Tell us about the project"
-                    hint="A little project context helps us respond better."
-                  />
-                  <div className="grid gap-3">
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Intended use
-                      </label>
-                      <select
-                        value={config.intendedUse}
-                        onChange={(event) => updateField("intendedUse", event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                      >
-                        <option value="">Select intended use</option>
-                        {INTENDED_USE_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Project stage required
-                      </label>
-                      <select
-                        value={config.projectStage}
-                        onChange={(event) => {
-                          updateField("projectStage", event.target.value)
-                          if (submitError) setSubmitError("")
-                        }}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                      >
-                        <option value="">Select project stage</option>
-                        {PROJECT_STAGE_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Target timeline
-                      </label>
-                      <select
-                        value={config.targetTimeline}
-                        onChange={(event) => updateField("targetTimeline", event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                      >
-                        {TARGET_TIMELINE_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={config.installationInterest}
-                        onChange={(event) => updateField("installationInterest", event.target.checked)}
-                        className="mt-1"
-                      />
-                      <span>
-                        <span className="block font-semibold text-slate-900">I may need installation support</span>
-                        <span className="mt-1 block text-xs leading-5 text-slate-500">Installation is reviewed separately after submission.</span>
-                      </span>
-                    </label>
-                  </div>
-                </div>
 
-                <div id="delivery" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
-                  <StepLabel
-                    step="Project · Location"
-                    title="Add project location"
-                    hint="Location helps us keep the follow-up practical."
-                  />
-                  <FieldLabel title="Project location" hint="Town, suburb, or site area is required before submission." />
-                  <div className="mt-2 grid gap-3">
-                    <select
-                      value={config.province}
-                      onChange={(event) => updateField("province", event.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                    >
-                      {PROVINCES.map((province) => (
-                        <option key={province} value={province}>
-                          {province}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={config.location}
-                      onChange={(event) => {
-                        updateField("location", event.target.value)
-                        if (submitError) setSubmitError("")
-                      }}
-                      placeholder="Town, suburb, or site area"
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                    />
-                    <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={config.deliveryRequired}
-                        onChange={(event) => updateField("deliveryRequired", event.target.checked)}
-                        className="mt-1"
-                      />
-                      <span>
-                        <span className="block font-semibold text-slate-900">I may need delivery support</span>
-                        <span className="mt-1 block text-xs leading-5 text-slate-500">Delivery is reviewed separately after submission.</span>
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                <div id="notes" className="scroll-mt-28 rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-4">
-                  <StepLabel
-                    step="Project · Notes"
-                    title="Add anything we should know"
-                    hint="Optional notes that could help us review faster."
-                  />
-                  <FieldLabel title="Project notes" />
-                  <textarea
-                    rows={4}
-                    value={config.notes}
-                    onChange={(event) => updateField("notes", event.target.value)}
-                    placeholder="Anything unusual about access, use, site conditions, clearance, or the system you need?"
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
-                  />
-                </div>
               </div>
             </section>
  
@@ -1781,18 +1577,7 @@ export default function WarehouseBuilderClient() {
               </section>
             ) : null}
           </section>
-          <div className={`pointer-events-none absolute inset-x-0 bottom-0 z-20 hidden h-24 items-end justify-center bg-gradient-to-t from-white via-white/95 to-transparent pb-3 transition-opacity xl:flex ${showPlanScrollCue ? "opacity-100" : "opacity-0"}`}>
-            <button
-              type="button"
-              tabIndex={showPlanScrollCue ? 0 : -1}
-              aria-hidden={!showPlanScrollCue}
-              onClick={() => planPanelRef.current?.scrollBy({ top: Math.max(280, planPanelRef.current.clientHeight * 0.55), behavior: "smooth" })}
-              className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-[0_12px_30px_-12px_rgba(15,23,42,0.45)] transition hover:border-slate-300 hover:text-slate-950"
-            >
-              More options below
-              <ChevronDownIcon className="h-4 w-4" />
-            </button>
-          </div>
+
           </div>
 
           <aside className="order-1 min-w-0 space-y-5 xl:order-2 xl:sticky xl:top-24">
@@ -1916,7 +1701,7 @@ export default function WarehouseBuilderClient() {
                       ) : null}
 
                       {activeMobileSceneControl === "length" ? (
-                        <select
+                        <BuilderSelect
                           value={config.length}
                           onChange={(event) => {
                             updateField("length", Number(event.target.value))
@@ -1929,11 +1714,11 @@ export default function WarehouseBuilderClient() {
                               {option}m long
                             </option>
                           ))}
-                        </select>
+                        </BuilderSelect>
                       ) : null}
 
                       {activeMobileSceneControl === "enclosure" ? (
-                        <select
+                        <BuilderSelect
                           value={isAtlasWarehouse ? config.gableMode : config.enclosureType}
                           onChange={(event) => {
                             const value = event.target.value
@@ -1948,7 +1733,7 @@ export default function WarehouseBuilderClient() {
                               {option.label}
                             </option>
                           ))}
-                        </select>
+                        </BuilderSelect>
                       ) : null}
                     </div>
                   ) : null}
@@ -1981,7 +1766,7 @@ export default function WarehouseBuilderClient() {
 
             <section id="review-summary" aria-labelledby="warehouse-budget-title" className="scroll-mt-28 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
               <div className="bg-[#001d2e] p-5 text-white sm:p-7">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">3 · Review your warehouse</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">2 · Review your warehouse</p>
                 <h2 id="warehouse-budget-title" className="mt-3 text-2xl font-semibold sm:text-3xl">{config.width}m × {config.length}m warehouse</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-300">{config.wallHeight}m eave height · {config.width * config.length} m² floor area · {isAtlasWarehouse ? gableModeLabel : enclosureLabel}</p>
                 <div className="mt-6 border-t border-white/15 pt-5">
@@ -2067,17 +1852,15 @@ export default function WarehouseBuilderClient() {
       </div>
       {offerAvailable && isAtlasWarehouse && <AtlasShowcaseOffer supplyTotal={estimate.pricing.estimatedTotal ?? estimate.pricing.baseTotal} scopeLabel={`${config.width}m × ${config.length}m × ${config.wallHeight}m · ${gableModeLabel}`} includesSheeting={atlasSheetingCoverage > 0} open={showShowcaseOffer} onClose={() => setShowShowcaseOffer(false)} onAssess={() => { setShowShowcaseOffer(false); setSubmitted(false); setSubmissionResult(null); setApplyingForShowcase(true); setShowcaseProjectUse(current => current || config.intendedUse || ""); setSubmissionIntent("review"); setShowLeadForm(true); setSubmitError("") }} />}
       {showLeadForm ? (
-        <div className="fixed inset-0 z-[80] flex items-end justify-center p-0 sm:items-center sm:p-6">
+       <Dialog open={showLeadForm} initialFocus={reviewFirstFieldRef} onClose={() => { if (!submitting) { setShowLeadForm(false); setApplyingForShowcase(false) } }} className="relative z-[80]" aria-labelledby="warehouse-review-title">
+        <div className="fixed inset-0 flex items-end justify-center p-0 sm:items-center sm:p-6">
           <button
             type="button"
             aria-label="Close project review"
             onClick={() => { if (!submitting) { setShowLeadForm(false); setApplyingForShowcase(false) } }}
             className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm"
           />
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="warehouse-review-title"
+          <Dialog.Panel
             className="relative z-10 max-h-[94dvh] w-full overflow-y-auto rounded-t-[2rem] bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]"
           >
             <div className={`relative p-5 text-white sm:p-7 ${isAtlasWarehouse ? "bg-[linear-gradient(120deg,#001d2e,#0043f3)]" : "bg-[linear-gradient(120deg,#020617,#172033)]"}`}>
@@ -2093,19 +1876,15 @@ export default function WarehouseBuilderClient() {
               <p className="pr-12 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
                 {isAtlasWarehouse ? `Atlas SKU ${estimate.meta.sku}` : `Design ${designReference}`}
               </p>
-              <h2 id="warehouse-review-title" className="mt-2 pr-12 text-2xl font-semibold sm:text-3xl">
+              <Dialog.Title id="warehouse-review-title" className="mt-2 pr-12 text-2xl font-semibold sm:text-3xl">
                 {submitted ? "Your project is with Smart Steel" : applyingForShowcase ? "Check my project’s eligibility" : submissionIntent === "whatsapp" ? "Continue on WhatsApp" : "Request a reviewed quote"}
-              </h2>
-              <div className="mt-5 grid grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur sm:grid-cols-3">
+              </Dialog.Title>
+              <div className="mt-5 grid grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
                 <div>
                   <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-white/55">Warehouse</p>
                   <p className="mt-1 text-sm font-semibold">{config.width}m × {config.length}m × {config.wallHeight}m</p>
                 </div>
                 <div>
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-white/55">System</p>
-                  <p className="mt-1 truncate text-sm font-semibold">{systemLabel}</p>
-                </div>
-                <div className="col-span-2 sm:col-span-1">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-white/55">Guide excl. VAT</p>
                   <p className="mt-1 text-sm font-semibold">{formatCurrency(budgetValue)}</p>
                 </div>
@@ -2129,29 +1908,37 @@ export default function WarehouseBuilderClient() {
                 <button type="button" onClick={() => setShowLeadForm(false)} className="mt-6 w-full rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white">Return to my design</button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2 sm:p-7">
-                {applyingForShowcase && <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs leading-5 text-blue-900 sm:col-span-2"><strong>Atlas Showcase Offer · Project assessment</strong><p>We’ll review your project before confirming eligibility. Applying does not reserve a place or change your supply price. Photography access and marketing usage will be agreed separately.</p></div>}
-                <ContactField label="First name" value={leadForm.name} onChange={(event) => setLeadForm((current) => ({ ...current, name: event.target.value }))} placeholder="First name" required />
-                <ContactField label="Last name" value={leadForm.lastName} onChange={(event) => setLeadForm((current) => ({ ...current, lastName: event.target.value }))} placeholder="Last name" />
-                <ContactField label="Email" type="email" value={leadForm.email} onChange={(event) => setLeadForm((current) => ({ ...current, email: event.target.value }))} placeholder="Email address" required />
-                <ContactField label="Phone" type="tel" value={leadForm.phone} onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Phone number" required />
-                {applyingForShowcase && <>
-                  <ContactField label="Project town or site area" value={config.location} onChange={event => updateField("location", event.target.value)} placeholder="Town, suburb or farm area" required />
-                  <ContactField label="What will the building be used for?" maxLength={1000} value={showcaseProjectUse} onChange={event => setShowcaseProjectUse(event.target.value)} placeholder="For example: grain or farm equipment storage" required />
-                  <label className="text-xs font-semibold text-slate-600">Project stage<select required aria-label="Offer project stage" value={config.projectStage} onChange={event => updateField("projectStage", event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm"><option value="">Select project stage</option>{PROJECT_STAGE_OPTIONS.map(option=><option key={option}>{option}</option>)}</select></label>
-                  <label className="text-xs font-semibold text-slate-600">Open to photography and agreed marketing use?<select required aria-label="Photography preference" value={photographyPreference} onChange={event => setPhotographyPreference(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm"><option value="">Select your preference</option>{Object.entries(SHOWCASE_PHOTOGRAPHY_LABELS).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
-                </>}
-                <div className="sm:col-span-2">
-                  <button type="submit" disabled={submitting} className={`w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isAtlasWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>
-                    {submitting ? "Saving your project..." : applyingForShowcase ? "Submit my project for assessment" : submissionIntent === "whatsapp" ? "Save and continue to WhatsApp" : "Send for review"}
-                  </button>
-                  <p className="mt-3 text-center text-xs leading-5 text-slate-500">{submissionIntent === "whatsapp" ? "We save your configuration first so the Smart Steel team can connect your WhatsApp message to the correct project." : "Your saved configuration and project details will be sent together. No payment is required."}</p>
-                  {submitError ? <p className="mt-3 text-center text-sm text-red-600">{submitError}</p> : null}
+              <form ref={reviewFormRef} noValidate onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-7">
+                {submitError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700">{submitError}</div>}
+                {applyingForShowcase && <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs leading-5 text-blue-900"><strong>Atlas Showcase Offer · Project assessment</strong><p>We’ll review your project before confirming eligibility. Applying does not reserve a place or change your supply price. Photography access and marketing usage will be agreed separately.</p></div>}
+                <section aria-labelledby="review-contact-heading"><div className="mb-3 flex items-center justify-between gap-2"><h3 id="review-contact-heading" className="text-sm font-semibold text-[#001d2e]">Your details</h3><p className="text-xs text-slate-500">* Required</p></div><div className="grid gap-4 sm:grid-cols-2">
+                  <ContactField name="name" inputRef={reviewFirstFieldRef} label="First name" autoComplete="given-name" value={leadForm.name} onChange={event => { setLeadForm(current=>({...current,name:event.target.value})); clearReviewError('name') }} placeholder="First name" required error={reviewErrors.name} />
+                  <ContactField name="lastName" label="Last name" autoComplete="family-name" value={leadForm.lastName} onChange={event=>setLeadForm(current=>({...current,lastName:event.target.value}))} placeholder="Last name" />
+                  <ContactField name="email" label="Email" type="email" autoComplete="email" value={leadForm.email} onChange={event=>{setLeadForm(current=>({...current,email:event.target.value}));clearReviewError('email')}} placeholder="Email address" required error={reviewErrors.email} />
+                  <ContactField name="phone" label="Phone" type="tel" autoComplete="tel" value={leadForm.phone} onChange={event=>{setLeadForm(current=>({...current,phone:event.target.value}));clearReviewError('phone')}} placeholder="Phone number" required error={reviewErrors.phone} />
+                </div></section>
+                <section aria-labelledby="review-project-heading" className="border-t border-slate-200 pt-5"><h3 id="review-project-heading" className="text-sm font-semibold text-[#001d2e]">Your project</h3><p className="mt-1 text-xs leading-5 text-slate-500">Tell us where you’re building and how far along your plans are.</p><div className="mt-3 grid gap-4 sm:grid-cols-2">
+                  <ReviewSelect name="projectStage" label="Project stage" value={config.projectStage} onChange={event=>{updateField('projectStage',event.target.value);clearReviewError('projectStage')}} options={PROJECT_STAGE_OPTIONS} placeholder="Select project stage" required error={reviewErrors.projectStage}/>
+                  <ContactField name="location" label="Project town or site area" value={config.location} onChange={event=>{updateField('location',event.target.value);clearReviewError('location')}} placeholder="Town, suburb or farm area" required error={reviewErrors.location}/>
+                  {applyingForShowcase && <>
+                    <ContactField name="projectUse" label="What will the building be used for?" maxLength={1000} value={showcaseProjectUse} onChange={event=>{setShowcaseProjectUse(event.target.value);clearReviewError('projectUse')}} placeholder="For example: grain or farm equipment storage" required error={reviewErrors.projectUse}/>
+                    <ReviewSelect name="photographyPreference" label="Open to photography and agreed marketing use?" value={photographyPreference} onChange={event=>{setPhotographyPreference(event.target.value);clearReviewError('photographyPreference')}} options={Object.entries(SHOWCASE_PHOTOGRAPHY_LABELS)} placeholder="Select your preference" required error={reviewErrors.photographyPreference}/>
+                  </>}
                 </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">{[['installationInterest','Installation support'],['deliveryRequired','Delivery support']].map(([key,label])=><label key={key} className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700"><input type="checkbox" checked={config[key]} onChange={event=>updateField(key,event.target.checked)} className="h-4 w-4 accent-[#0043f3]"/>{label}</label>)}</div><p className="mt-2 text-xs text-slate-500">Optional. Delivery and installation are quoted separately from the supply guide.</p>
+                </section>
+                <details className="rounded-xl border border-slate-200 p-3"><summary className="cursor-pointer text-sm font-semibold text-slate-600">Add use, timing or project notes <span className="font-normal text-slate-400">(optional)</span></summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {!applyingForShowcase && <ReviewSelect name="intendedUse" label="Intended use" value={config.intendedUse} onChange={event=>updateField('intendedUse',event.target.value)} options={INTENDED_USE_OPTIONS} placeholder="Select intended use"/>}
+                  <ReviewSelect name="targetTimeline" label="Target timeline" value={config.targetTimeline} onChange={event=>updateField('targetTimeline',event.target.value)} options={TARGET_TIMELINE_OPTIONS} placeholder="Select timeline"/>
+                  <ReviewSelect name="province" label="Province" value={config.province} onChange={event=>updateField('province',event.target.value)} options={PROVINCES} placeholder="Select province"/>
+                  <label className="block sm:col-span-2"><span className="mb-2 block text-xs font-semibold uppercase tracking-[.12em] text-slate-500">Project notes</span><textarea name="notes" rows={3} value={config.notes} onChange={event=>updateField('notes',event.target.value)} placeholder="Access, site conditions or anything else we should know" className="w-full rounded-xl border border-slate-300 px-3 py-3 text-sm"/></label>
+                </div></details>
+                <div><button type="submit" disabled={submitting} className={`w-full rounded-xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isAtlasWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>{submitting ? "Saving your project..." : applyingForShowcase ? "Submit my project for assessment" : submissionIntent === "whatsapp" ? "Save and continue to WhatsApp" : "Send for review"}</button><p className="mt-3 text-center text-xs leading-5 text-slate-500">Your design and project details are sent together. No payment or commitment is required.</p></div>
               </form>
             )}
-          </section>
+          </Dialog.Panel>
         </div>
+       </Dialog>
       ) : null}
       {!isSceneVisible && !submitted ? (
         <div className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 xl:hidden">
@@ -2164,6 +1951,7 @@ export default function WarehouseBuilderClient() {
               type="button"
               onClick={() => {
                 setApplyingForShowcase(false)
+                setSubmissionIntent("review")
                 setShowLeadForm(true)
                 trackBuilderEvent("warehouse_builder_review_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
               }}
