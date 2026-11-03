@@ -4,6 +4,7 @@ import { ArrowRight, Check, ClipboardCheck, FileText, MapPin, ShieldCheck, Piggy
 import { agriculturalCategories } from "../../app/agricultural-buildings/agriculturalStructureData"
 import AgriculturalQuoteForm from "./AgriculturalQuoteForm"
 import PoultryPlanningSection from "./PoultryPlanningSection"
+import PoultryBuildingGuide from "./PoultryBuildingGuide"
 
 const CATEGORY_ICONS = {
   "/agricultural-buildings/20-sow-piggery": PiggyBank,
@@ -123,7 +124,7 @@ export default function AgriculturalStructurePage({ content }) {
 
     <nav aria-label="Page sections" className="sticky top-20 z-30 border-b border-[#b8cdd7] bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-[1500px] items-center gap-5 overflow-x-auto px-5 sm:px-8 lg:px-12">
-        {[["#overview", "Overview"], ...(content.poultryPlanning ? [["#poultry-planning", "Poultry planning"]] : []), ["#scope", "Building package"], ["#agricultural-quote", "Your project"], ["#responsibilities", "Who does what"], ["#project-inputs", "Project inputs"], ["#faqs", "FAQs"]].map(([href, label]) => <a key={href} href={href} className="shrink-0 whitespace-nowrap border-b-2 border-transparent px-2 py-4 text-sm font-semibold text-[#526c79] transition hover:border-[#0043f3] hover:text-[#0043f3] first:pl-0">{label}</a>)}
+        {[["#overview", "Overview"], ...(content.poultryGuide ? [["#poultry-house-types", "House types"], ["#poultry-house-size", "Sizes & plans"], ["#poultry-house-cost", "Pricing"]] : []), ...(content.poultryPlanning ? [["#poultry-planning", "Ventilation & shell"]] : []), ["#scope", "Building package"], ["#agricultural-quote", "Your project"], ["#responsibilities", "Who does what"], ["#project-inputs", "Project inputs"], ["#faqs", "FAQs"]].map(([href, label]) => <a key={href} href={href} className="shrink-0 whitespace-nowrap border-b-2 border-transparent px-2 py-4 text-sm font-semibold text-[#526c79] transition hover:border-[#0043f3] hover:text-[#0043f3] first:pl-0">{label}</a>)}
         <a href="#agricultural-quote" className="ml-auto hidden min-h-10 shrink-0 items-center gap-2 bg-[#0043f3] px-4 text-xs font-bold text-white transition hover:bg-[#001d2e] 2xl:inline-flex">Request quote <ArrowRight className="h-3.5 w-3.5" /></a>
       </div>
     </nav>
@@ -135,7 +136,11 @@ export default function AgriculturalStructurePage({ content }) {
       </div>
     </section>
 
+    {content.poultryGuide && <><PoultryBuildingGuide content={content.poultryGuide} section="types" /><PoultryBuildingGuide content={content.poultryGuide} section="sizes" /></>}
+
     {content.poultryPlanning ? <PoultryPlanningSection content={content.poultryPlanning} /> : null}
+
+    {content.poultryGuide && <PoultryBuildingGuide content={content.poultryGuide} section="costs" />}
 
     {!content.poultryPlanning ? <section className="border-b border-[#b8cdd7] bg-white">
       <details className="group mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">

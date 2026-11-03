@@ -1,3 +1,4 @@
+import { PoultryWallOptions } from "./PoultryBuildingGuide"
 import { ArrowRight, Fan, Layers, Wind } from "lucide-react"
 
 function PoultryShellSection() {
@@ -50,6 +51,7 @@ export default function PoultryPlanningSection({ content }) {
           </article>
         })}
       </div>
+      {content.wallOptions && <PoultryWallOptions options={content.wallOptions} />}
       <div className="mt-5 flex gap-4 border-l-4 border-[#ffcf1a] bg-[#001d2e] px-6 py-6 text-white sm:px-8"><Layers className="mt-1 h-5 w-5 shrink-0 text-[#ffcf1a]" aria-hidden="true" /><div><h3 className="font-black">Choose the ventilation approach before the span</h3><p className="mt-2 max-w-5xl text-sm leading-7 text-[#c1d9e5]">{content.widthNote}</p></div></div>
       <div className="mt-14 grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
         <PoultryShellSection />
