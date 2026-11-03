@@ -1144,7 +1144,7 @@ export default function WarehouseBuilderClient() {
       : `${budgetDelta > 0 ? "+" : "-"}${formatCurrency(Math.abs(budgetDelta))} on your last change`
 
   const priceChangeTone =
-    budgetDelta === 0 ? "text-slate-300" : budgetDelta > 0 ? "text-amber-300" : "text-emerald-300"
+    budgetDelta === 0 ? "text-slate-600" : budgetDelta > 0 ? "text-amber-800" : "text-emerald-800"
 
   const reviewCtaLabel = "Get my quote"
 
@@ -1227,7 +1227,7 @@ export default function WarehouseBuilderClient() {
           <div className="flex items-center gap-2">
             {offerAvailable && isAtlasWarehouse && <AtlasShowcaseOfferTrigger onClick={() => setShowShowcaseOffer(true)} />}
             <button type="button" onClick={handleSaveDesign} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-              {saveStatus || "Save design"}
+              {saveStatus || "Share design link"}
             </button>
             <button
               type="button"
@@ -1329,8 +1329,9 @@ export default function WarehouseBuilderClient() {
                       </div>
                       <div>
                         <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                          {isAtlasWarehouse ? "Wall height" : "Eave height"}
+                          Eave height
                         </label>
+                        <p className="mt-1 text-[11px] leading-4 text-slate-500">Height at the roof edge, not the ridge.</p>
                         <div className="mt-1.5 grid grid-cols-4 gap-2">
                           {ATLAS_HEIGHT_OPTIONS.map((option) => (
                             <button
@@ -1764,23 +1765,19 @@ export default function WarehouseBuilderClient() {
 
             </div>
 
-            <section id="review-summary" aria-labelledby="warehouse-budget-title" className="scroll-mt-28 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-              <div className="bg-[#001d2e] p-5 text-white sm:p-7">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">2 · Review your warehouse</p>
+            <section id="review-summary" aria-labelledby="warehouse-budget-title" className="scroll-mt-28 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="bg-[#f3f7fa] p-5 text-[#001d2e] sm:p-7">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0043f3]">Your warehouse at a glance</p>
                 <h2 id="warehouse-budget-title" className="mt-3 text-2xl font-semibold sm:text-3xl">{config.width}m × {config.length}m warehouse</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-300">{config.wallHeight}m eave height · {config.width * config.length} m² floor area · {isAtlasWarehouse ? gableModeLabel : enclosureLabel}</p>
-                <div className="mt-6 border-t border-white/15 pt-5">
-                  <p className="text-xs font-semibold text-slate-300">Estimated supply-only price · excl. VAT</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{config.wallHeight}m eave height · {config.width * config.length} m² floor area · {isAtlasWarehouse ? gableModeLabel : enclosureLabel}</p>
+                <div className="mt-6 border-t border-[#dce6ed] pt-5">
+                  <p className="text-xs font-semibold text-slate-600">Estimated supply-only price · excl. VAT</p>
                   <p className={`mt-2 text-4xl font-semibold tracking-tight transition sm:text-5xl ${budgetPulse ? "scale-[1.015]" : "scale-100"}`}>{formatCurrency(budgetValue)}</p>
                   {budgetDelta !== 0 ? <p aria-live="polite" className={`mt-2 text-xs ${priceChangeTone}`}>{priceChangeLabel}</p> : null}
-                  <p className="mt-3 text-sm leading-6 text-slate-300">Indicative price for your selections. We’ll confirm the scope and final price in your quote.</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">Supply estimate for these selections. Final scope and price confirmed in your quote.</p>
                   {offerAvailable && isAtlasWarehouse && <div className="mt-4"><AtlasShowcaseOfferTrigger onClick={() => setShowShowcaseOffer(true)} /></div>}
                 </div>
-              <div className="mt-5">
-                <p className="text-sm font-semibold text-white">Not sure about every detail? We’ll help you refine it.</p>
-                <p className="mt-1 text-sm leading-6 text-slate-300">Your design is a starting point. Our team will confirm the scope with you.</p>
-              </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-[1.4fr_1fr]">
+              <div className="mt-5 grid gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -1795,27 +1792,23 @@ export default function WarehouseBuilderClient() {
                 >
                   {showLeadForm ? "Hide review form" : reviewCtaLabel}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleWhatsAppDesign}
-                  className="inline-flex items-center justify-center rounded-2xl border border-white/25 bg-transparent px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-                >
-                  Send via WhatsApp
-                </button>
+
               </div>
-              <div className="mt-3 flex flex-wrap justify-center gap-x-6 gap-y-1">
+              <p className="mt-3 text-center text-xs leading-5 text-slate-600">Not sure about a detail? Send your design and we’ll help you refine it.</p>
+              <div className="mt-2 flex flex-wrap justify-center gap-x-6 gap-y-1">
+                <button type="button" onClick={handleWhatsAppDesign} className="inline-flex min-h-11 items-center justify-center text-xs font-medium text-slate-600 underline-offset-4 hover:text-[#0043f3] hover:underline">Continue via WhatsApp</button>
                 <button
                   type="button"
                   onClick={handleSaveDesign}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 text-xs font-medium text-slate-300 underline-offset-4 transition hover:text-white hover:underline"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 text-xs font-medium text-slate-600 underline-offset-4 transition hover:text-[#0043f3] hover:underline"
                 >
                   {saveStatus ? <CheckIcon className="h-4 w-4" /> : <ShareIcon className="h-4 w-4" />}
-                  {saveStatus || "Save design"}
+                  {saveStatus || "Share design link"}
                 </button>
                 <button
                   type="button"
                   onClick={handleOpenDesignSummary}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 text-xs font-medium text-slate-300 underline-offset-4 transition hover:text-white hover:underline"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 text-xs font-medium text-slate-600 underline-offset-4 transition hover:text-[#0043f3] hover:underline"
                 >
                   <DocumentTextIcon className="h-4 w-4" />
                   Design summary
@@ -1831,11 +1824,11 @@ export default function WarehouseBuilderClient() {
                 <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">Delivery, installation and foundations are not included. Delivery and installation can be quoted separately on request.</p>
                 <div className="mt-6 border-t border-slate-200 pt-5">
                   <h3 className="text-base font-semibold text-slate-900">What happens next?</h3>
-                  <ol className="mt-4 space-y-4">
+                  <ol className="mt-4 space-y-3">
                     {[
-                      ["Send your design", "Add your contact details and site location. Your selections come through with your enquiry."],
-                      ["We check the details", "Our team reviews your layout, site requirements and any delivery or installation requests."],
-                      ["Receive your reviewed quote", "We confirm the scope and pricing with you before you decide to proceed."],
+                      ["Send your design", "Your configuration comes through with your contact and site details."],
+                      ["We check the details", "We check the scope, site and requested services."],
+                      ["Receive your reviewed quote", "Review the confirmed scope and price before deciding."],
                     ].map(([title, description], index) => <li key={title} className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">{index + 1}</span><div><p className="text-sm font-semibold text-slate-900">{title}</p><p className="mt-1 text-sm leading-6 text-slate-500">{description}</p></div></li>)}
                   </ol>
                   <p className="mt-4 text-xs font-medium text-slate-500">Requesting a quote doesn’t commit you to an order.</p>
