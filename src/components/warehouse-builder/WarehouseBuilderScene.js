@@ -359,10 +359,29 @@ function createWallShape({ span, height, garagePositions, pedestrianPositions, g
   return shape
 }
 
-function CameraRig({ position, target, controlsRef }) {
-  const { camera } = useThree()
+function CameraRig({ position, target, bounds, controlsRef }) {
+  const { camera, size } = useThree()
   const movingRef = useRef(true)
-  const destination = useMemo(() => new Vector3(...position), [position])
+  const destination = useMemo(() => {
+    const centre = new Vector3(...target)
+    const direction = new Vector3(...position).sub(centre).normalize()
+    const right = new Vector3().crossVectors(new Vector3(0, 1, 0), direction).normalize()
+    const up = new Vector3().crossVectors(direction, right).normalize()
+    const tanV = Math.tan(camera.fov * Math.PI / 360)
+    const tanH = tanV * size.width / size.height
+    let distance = 0
+    // Fit every bounding-box corner with room for the view controls.
+    for (const x of [-bounds[0] / 2, bounds[0] / 2])
+      for (const y of [-bounds[1] / 2, bounds[1] / 2])
+        for (const z of [-bounds[2] / 2, bounds[2] / 2]) {
+          const corner = new Vector3(x, y, z)
+          distance = Math.max(distance, corner.dot(direction) + Math.max(
+            Math.abs(corner.dot(right)) / (tanH * 0.8),
+            Math.abs(corner.dot(up)) / (tanV * 0.72),
+          ))
+        }
+    return centre.addScaledVector(direction, distance)
+  }, [position, target, bounds, camera.fov, size.width, size.height])
   const targetDestination = useMemo(() => new Vector3(...target), [target])
 
   useEffect(() => {
@@ -406,7 +425,6 @@ function WarehouseMesh({
   const w = width * scale
   const l = length * scale
   const h = wallHeight * scale
-  const ground = getGroundDimensions(width, length)
   const ridgeRise = Math.tan((roofPitch * Math.PI) / 180) * (w / 2)
   const isAtlas = systemVariant === "atlas"
   const atlasProfiles = ATLAS_PROFILES_BY_SPAN[Number(width)] || ATLAS_W08_PROFILES
@@ -557,12 +575,6 @@ function WarehouseMesh({
     sheetingSurfaceMaps.roofRoughnessMap.dispose()
   }, [sheetingSurfaceMaps])
 
-  const concreteMaterialProps = {
-    color: "#d9e1e8",
-    roughness: 0.96,
-    metalness: 0.02,
-  }
-
   const slabMaterialProps = {
     color: "#eef3f7",
     roughness: 0.9,
@@ -633,11 +645,7 @@ function WarehouseMesh({
 
   return (
     <group position={[0, -0.55, 0]}>
-      <mesh position={[0, -0.035, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[ground.width, ground.length]} />
-        <meshPhysicalMaterial {...concreteMaterialProps} />
-      </mesh>
-
+      {/* Seamless studio background; ContactShadows grounds the slab below. */}
       <mesh position={[0, 0.016, 0]} receiveShadow>
         <boxGeometry args={[w + 0.25, 0.032, l + 0.25]} />
         <meshPhysicalMaterial {...slabMaterialProps} />
@@ -950,10 +958,13 @@ export default function WarehouseBuilderScene(props) {
       front: [0, Math.max(1.7, h * 1.35), distance],
     }
   }, [h, l, w])
-  const orbitTarget = useMemo(() => [0, Math.max(0.3, h * 0.58), 0], [h])
-  const cameraPosition = cameraPositions[cameraView]
+  const modelHeight = h + Math.tan((Number(props.roofPitch) || 0) * Math.PI / 180) * w / 2 + 0.12
+  const orbitTarget = useMemo(() => [0, -0.55 + modelHeight / 2, 0], [modelHeight])
+  const modelBounds = useMemo(() => [w + 0.6, modelHeight + 0.1, l + 0.6], [w, modelHeight, l])
+  const frontPosition = useMemo(() => [0, orbitTarget[1], Math.max(4.4, l)], [orbitTarget, l])
+  const cameraPosition = cameraView === "front" ? frontPosition : cameraPositions[cameraView]
   const minDistance = Math.max(3.4, Math.sqrt(w ** 2 + l ** 2) * 0.62)
-  const maxDistance = Math.max(8.5, Math.sqrt(w ** 2 + l ** 2) * 1.55)
+  const maxDistance = Math.max(8.5, Math.sqrt(w ** 2 + l ** 2) * 8)
 
   useEffect(() => {
     if (previousSystemRef.current === props.systemVariant) return
@@ -1024,7 +1035,7 @@ export default function WarehouseBuilderScene(props) {
         />
         <directionalLight position={[-4.5, 4.5, -3.2]} intensity={0.48} />
         <spotLight position={[0, 6.4, 2.6]} angle={0.42} penumbra={0.6} intensity={0.46} />
-        <CameraRig position={cameraPosition} target={orbitTarget} controlsRef={controlsRef} />
+        <CameraRig position={cameraPosition} target={orbitTarget} bounds={modelBounds} controlsRef={controlsRef} />
         <WarehouseMesh {...props} structureView={cameraView === "structure"} />
         <ContactShadows
           position={[0, -0.53, 0]}
@@ -1042,7 +1053,7 @@ export default function WarehouseBuilderScene(props) {
           minDistance={minDistance}
           maxDistance={maxDistance}
           minPolarAngle={Math.PI / 5}
-          maxPolarAngle={Math.PI / 2.1}
+          maxPolarAngle={Math.PI / 2}
         />
       </Canvas>}
     </div>
