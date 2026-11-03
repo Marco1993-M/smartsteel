@@ -82,7 +82,7 @@ export default function AgriculturalStructurePage({ content }) {
   return <main className="bg-white pt-20 text-[#001d2e] [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-4 [&_a:focus-visible]:outline-[#0043f3] [&_summary:focus-visible]:outline-2 [&_summary:focus-visible]:outline-offset-4 [&_summary:focus-visible]:outline-[#0043f3]">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 
-    <section className="relative isolate overflow-hidden border-b border-[#dce6ed] bg-gradient-to-b from-[#f7f9fb] to-[#edf3f8] text-[#001d2e]">
+    <section className="relative isolate overflow-hidden border-b border-[#dce6ed] bg-white text-[#001d2e]">
       <div className="relative mx-auto flex max-w-7xl flex-col justify-between px-5 py-8 sm:px-8 lg:px-8 lg:py-12">
         <div className="flex items-center justify-between gap-4 pb-2">
           <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas System developed by Smart Steel" width={238} height={44} className="max-w-full" />
@@ -107,12 +107,18 @@ export default function AgriculturalStructurePage({ content }) {
           </dl>
         </div> : (
         <div className="min-w-0 rounded-3xl border border-[#dce6ed] bg-white p-6 shadow-[0_12px_40px_-24px_#001d2e40] sm:p-8">
+          {content.heroSummary ? <>
+            <h2 className="text-xl font-bold tracking-tight">{content.heroSummary.title}</h2>
+            <ul className="mt-5 space-y-4">{content.heroSummary.items.map(item => <li key={item} className="flex items-start gap-3 text-sm font-semibold"><Check aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#0043f3]" />{item}</li>)}</ul>
+            <p className="mt-6 border-t border-[#e5edf2] pt-4 text-sm leading-6 text-[#526a78]">{content.heroSummary.note}</p>
+          </> : <>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0043f3]">Your building brief</p>
           <p className="mt-4 text-4xl font-bold tracking-tight text-[#001d2e]">{content.heroMetric}</p>
           <p className="mt-2 text-sm font-semibold text-[#526a78]">{content.heroMetricLabel}</p>
           <dl className="mt-6 divide-y divide-[#e5edf2] border-t border-[#e5edf2] text-sm">
             {content.heroFacts.map(([label, value]) => <div key={label} className="flex flex-wrap justify-between gap-x-4 gap-y-1 py-3"><dt className="text-[#526a78]">{label}</dt><dd className="font-semibold">{value}</dd></div>)}
           </dl>
+          </>}
         </div>
         )}
         </div>
