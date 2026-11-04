@@ -14,7 +14,6 @@ import {
   PanelsTopLeft,
   Ruler,
   ShieldCheck,
-  SunMedium,
   Truck,
 } from "lucide-react";
 
@@ -61,7 +60,7 @@ const comparisonRows = [
   ["Best suited to", "Existing or planned parking areas", "Open ground with good solar exposure"],
   ["Primary benefit", "Solar support plus covered parking", "Dedicated, scalable panel support"],
   ["Layout starts with", "Parking bays, circulation and panel count", "Available land, row spacing and panel count"],
-  ["Typical users", "Businesses, schools, retail and fleets", "Farms, businesses and utility-scale sites"],
+  ["Typical users", "Businesses, schools, retail and fleets", "Farms and commercial sites"],
 ];
 
 const projectFactors = [
@@ -146,47 +145,32 @@ const faqSchema = {
 
 export default function SolarClient() {
   return (
-    <main className="bg-white text-[#001d2e]">
+    <main className="bg-white text-[#001d2e] [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-4 [&_a:focus-visible]:outline-[#0043f3]">
       <Script id="solar-service-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
       <Script id="solar-breadcrumb-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <Script id="solar-faq-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <section className="relative overflow-hidden bg-[#001d2e] text-white">
-        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(193,217,229,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(193,217,229,.22)_1px,transparent_1px)] [background-size:48px_48px]" />
-        <div className="relative mx-auto grid max-w-[1440px] lg:grid-cols-[0.92fr_1.08fr]">
-          <div className="flex flex-col justify-center px-6 py-16 sm:px-10 sm:py-20 lg:px-16 lg:py-24 xl:px-24">
-            <p className="mb-5 text-xs font-bold uppercase tracking-[0.22em] text-[#79a9ff]">Atlas solar structures by Smart Steel</p>
-            <h1 className="max-w-3xl text-4xl font-black leading-[1.04] tracking-normal sm:text-5xl lg:text-5xl xl:text-6xl">
-              Solar carports and ground mounts in South Africa
-            </h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-[#d8e7ee] sm:text-lg">
-              Purpose-designed steel support systems for parking-based and ground-mounted solar projects. Start with the structure that fits your site, then plan the layout with our team.
-            </p>
-            <div className="mt-9 grid gap-3 sm:grid-cols-2">
-              <Link href="/tools/solar-carport-estimator" className="inline-flex min-h-14 items-center justify-between gap-4 bg-[#ffcf1a] px-5 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-white">
-                <span><span className="block text-[10px] uppercase tracking-[0.16em] opacity-70">Parking-based system</span><span className="mt-1 block">Build a solar carport in 3D</span></span>
-                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-              </Link>
-              <Link href="/products/cflc-ground-mounts#ground-mount-estimator" className="inline-flex min-h-14 items-center justify-between gap-4 border border-[#86a5b4] bg-[#082b3d]/80 px-5 py-3 text-sm font-bold text-white transition hover:border-white hover:bg-white/10">
-                <span><span className="block text-[10px] uppercase tracking-[0.16em] text-[#9eb8c5]">Open-land system</span><span className="mt-1 block">Build a ground mount in 3D</span></span>
-                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-              </Link>
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-10 sm:px-8 lg:grid-cols-2 lg:gap-14 lg:py-16">
+          <div>
+            <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas System developed by Smart Steel" width={238} height={44} className="mb-8 h-auto w-52" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0043f3]">Steel structures for solar</p>
+            <h1 className="mt-4 text-4xl font-bold leading-[1.08] tracking-[-0.035em] sm:text-5xl">Solar carports and ground mounts in South Africa.</h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-[#526a78]">Make more of your parking or open land. Atlas provides the steel support structure for your solar array, with layouts you can explore and price online.</p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link href="/tools/solar-carport-estimator" className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-[#0043f3] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0036c4]">Plan a solar carport <ArrowRight className="h-4 w-4" /></Link>
+              <Link href="/products/cflc-ground-mounts#ground-mount-estimator" className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl border border-[#dce6ed] px-5 py-3 text-sm font-semibold transition hover:bg-[#f3f7fa]">Plan a ground mount <ArrowRight className="h-4 w-4" /></Link>
             </div>
-            <p className="mt-5 text-xs leading-5 text-[#9eb8c5]">Structure-focused guidance. PV panels and electrical equipment are quoted separately unless stated otherwise.</p>
+            <p className="mt-4 max-w-lg text-xs leading-6 text-[#526a78]">Steel structure supply. Panels and electrical systems are arranged with your solar contractor unless expressly quoted.</p>
           </div>
-
-          <div className="relative min-h-[390px] sm:min-h-[480px] lg:min-h-[650px]">
-            <Image src="/solar_carport_hero.webp" alt="Atlas solar carport steel structure installed in South Africa" fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 54vw" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#001d2e]/45 via-transparent to-transparent lg:from-[#001d2e]/25" />
-            <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between border border-white/35 bg-[#001d2e]/85 px-5 py-4 backdrop-blur-sm sm:bottom-8 sm:left-8 sm:right-8">
-              <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#79a9ff]">Featured system</p><p className="mt-1 font-bold">Atlas solar carport</p></div>
-              <SunMedium className="h-7 w-7 text-[#ffcf1a]" aria-hidden="true" />
-            </div>
+          <div className="overflow-hidden rounded-3xl border border-[#dce6ed] bg-[#f3f7fa]">
+            <div className="relative aspect-[4/3]"><Image src="/solar_carport_hero.webp" alt="Atlas solar carport steel structure installed in South Africa" fill priority className="object-cover" sizes="(min-width:1024px) 600px, 100vw" /></div>
+            <div className="flex items-center gap-3 px-5 py-4"><CarFront aria-hidden="true" className="h-5 w-5 shrink-0 text-[#0043f3]" /><p className="text-sm font-semibold">Covered parking. A platform for solar.</p></div>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-[#c1d9e5] bg-[#eef5f8]">
+      <section className="border-b border-[#c1d9e5] bg-[#f3f7fa]">
         <div className="mx-auto grid max-w-7xl gap-4 px-6 py-6 text-sm font-semibold text-[#264554] sm:grid-cols-3 sm:px-10 lg:px-12">
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-[#0043f3]" /> South African project support</span>
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-[#0043f3]" /> Engineered steel systems</span>
@@ -194,19 +178,19 @@ export default function SolarClient() {
         </div>
       </section>
 
-      <section id="solutions" className="scroll-mt-24 py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
+      <section id="solutions" className="scroll-mt-24 bg-[#f3f7fa] py-12 lg:py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Choose by site</p>
-            <h2 className="mt-4 text-3xl font-black tracking-normal sm:text-5xl">Two practical ways to support a solar array</h2>
-            <p className="mt-5 text-base leading-7 text-[#486472] sm:text-lg">The right structure starts with how your property is used. A carport makes parking work harder; a ground mount turns available land into a dedicated solar platform.</p>
+            <h2 className="mt-4 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Two practical ways to support a solar array</h2>
+            <p className="mt-5 text-base leading-7 text-[#526a78] sm:text-lg">The right structure starts with how your property is used. A carport makes parking work harder; a ground mount turns available land into a dedicated solar platform.</p>
           </div>
 
-          <div className="mt-12 grid gap-8 lg:grid-cols-2">
+          <div className="mt-8 grid gap-6 lg:grid-cols-2">
             {solutions.map((solution) => {
               const Icon = solution.icon;
               return (
-                <article key={solution.title} className="overflow-hidden border border-[#b8cdd7] bg-white">
+                <article key={solution.title} className="overflow-hidden rounded-3xl border border-[#dce6ed] bg-white">
                   <div className="bg-white p-2 sm:p-3">
                     <Image
                       src={solution.image}
@@ -219,15 +203,15 @@ export default function SolarClient() {
                   </div>
                   <div className="p-6 sm:p-8">
                     <div className="flex items-start justify-between gap-5">
-                      <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0043f3]">{solution.eyebrow}</p><h3 className="mt-3 text-2xl font-black tracking-normal sm:text-3xl">{solution.title}</h3></div>
-                      <span className="grid h-11 w-11 shrink-0 place-items-center bg-[#e5f0f5] text-[#0043f3]"><Icon className="h-5 w-5" /></span>
+                      <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0043f3]">{solution.eyebrow}</p><h3 className="mt-3 text-2xl font-bold tracking-[-0.035em] sm:text-3xl">{solution.title}</h3></div>
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#edf3ff] text-[#0043f3]"><Icon className="h-5 w-5" /></span>
                     </div>
-                    <p className="mt-5 leading-7 text-[#486472]">{solution.description}</p>
+                    <p className="mt-5 leading-7 text-[#526a78]">{solution.description}</p>
                     <ul className="mt-6 space-y-3 text-sm text-[#264554]">
                       {solution.points.map((point) => <li key={point} className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#0043f3]" />{point}</li>)}
                     </ul>
-                    <div className="mt-8 flex flex-wrap items-center gap-5">
-                      <Link href={solution.builderHref} className="inline-flex min-h-12 items-center gap-2 bg-[#0043f3] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#001d2e]"><Calculator className="h-4 w-4" />{solution.builderCta}</Link>
+                    <div className="mt-6 flex flex-col items-start gap-3">
+                      <Link href={solution.builderHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#001d2e]"><Calculator className="h-4 w-4" />{solution.builderCta}</Link>
                       <Link href={solution.href} className="inline-flex items-center gap-2 text-sm font-bold text-[#264554] transition hover:text-[#0043f3]">{solution.detailsCta} <ArrowRight className="h-4 w-4" /></Link>
                     </div>
                   </div>
@@ -238,93 +222,94 @@ export default function SolarClient() {
         </div>
       </section>
 
-      <section className="bg-[#001d2e] py-20 text-white sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
+      <section className="bg-white py-12 lg:py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#79a9ff]">Quick comparison</p>
-              <h2 className="mt-4 text-3xl font-black tracking-normal sm:text-4xl">Which solar structure fits your property?</h2>
-              <p className="mt-5 leading-7 text-[#b8cfda]">Both systems support PV panels. The useful difference is the space they put to work.</p>
-              <Link href="/contact" className="mt-8 inline-flex items-center gap-2 font-bold text-[#ffcf1a] hover:text-white">Discuss your site <ArrowRight className="h-4 w-4" /></Link>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Quick comparison</p>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Which solar structure fits your property?</h2>
+              <p className="mt-5 leading-7 text-[#526a78]">Both systems support PV panels. The useful difference is the space they put to work.</p>
+              <Link href="/contact" className="mt-8 inline-flex items-center gap-2 font-bold text-[#0043f3] hover:underline">Discuss your site <ArrowRight className="h-4 w-4" /></Link>
             </div>
-            <div className="overflow-x-auto border border-[#315061]">
-              <table className="w-full min-w-[650px] border-collapse text-left text-sm">
-                <thead><tr className="bg-[#082b3d]"><th className="p-5 font-semibold text-[#9eb8c5]">Consideration</th><th className="p-5 text-base font-bold">Solar carport</th><th className="p-5 text-base font-bold">Ground mount</th></tr></thead>
-                <tbody>{comparisonRows.map(([label, carport, ground]) => <tr key={label} className="border-t border-[#315061]"><th className="p-5 font-semibold text-[#9eb8c5]">{label}</th><td className="p-5 text-[#e3eef3]">{carport}</td><td className="p-5 text-[#e3eef3]">{ground}</td></tr>)}</tbody>
+            <div className="overflow-hidden rounded-2xl border border-[#dce6ed]">
+              <table className="hidden sm:table w-full table-fixed border-collapse text-left text-sm">
+                <thead><tr className="bg-[#f3f7fa]"><th className="p-3 sm:p-5 font-semibold text-[#526a78]">Consideration</th><th className="p-3 sm:p-5 text-sm font-bold">Solar carport</th><th className="p-3 sm:p-5 text-sm font-bold">Ground mount</th></tr></thead>
+                <tbody>{comparisonRows.map(([label, carport, ground]) => <tr key={label} className="border-t border-[#dce6ed]"><th className="p-3 sm:p-5 font-semibold text-[#526a78]">{label}</th><td className="p-3 sm:p-5 text-[#001d2e]">{carport}</td><td className="p-3 sm:p-5 text-[#001d2e]">{ground}</td></tr>)}</tbody>
               </table>
+              <dl className="divide-y divide-[#dce6ed] sm:hidden">{comparisonRows.map(([label, carport, ground]) => <div key={label} className="p-4"><dt className="text-xs font-bold uppercase tracking-wide text-[#526a78]">{label}</dt><dd className="mt-3 space-y-2 text-sm leading-6"><p><strong>Carport: </strong>{carport}</p><p><strong>Ground mount: </strong>{ground}</p></dd></div>)}</dl>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
+      <section className="py-12 lg:py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <div className="grid grid-cols-2 gap-3">
-              <div className="relative col-span-2 aspect-[16/9] overflow-hidden bg-[#dce9ef]"><Image src="/solar_car_port_1.jpg" alt="Completed commercial solar carport project at Centurion Golf Club" fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" /></div>
-              <div className="relative aspect-[4/3] overflow-hidden bg-[#dce9ef]"><Image src="/solar_car_port_2.jpg" alt="Solar carport steel columns and covered parking bays" fill className="object-cover" sizes="25vw" /></div>
-              <div className="relative aspect-[4/3] overflow-hidden bg-[#dce9ef]"><Image src="/solar_car_port_3.jpg" alt="Atlas solar carport structure supporting a PV array" fill className="object-cover" sizes="25vw" /></div>
+              <div className="relative col-span-2 aspect-[16/9] overflow-hidden rounded-3xl bg-[#dce9ef]"><Image src="/solar_car_port_1.jpg" alt="Completed commercial solar carport project at Centurion Golf Club" fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" /></div>
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#dce9ef]"><Image src="/solar_car_port_2.jpg" alt="Solar carport steel columns and covered parking bays" fill className="object-cover" sizes="25vw" /></div>
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#dce9ef]"><Image src="/solar_car_port_3.jpg" alt="Atlas solar carport structure supporting a PV array" fill className="object-cover" sizes="25vw" /></div>
             </div>
             <div className="lg:pl-8">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Built example</p>
-              <h2 className="mt-4 text-3xl font-black tracking-normal sm:text-5xl">Solar parking at Centurion Golf Club</h2>
-              <p className="mt-6 text-lg leading-8 text-[#486472]">A solar carport needs to work as both infrastructure and usable parking. This installation shows how the steel structure creates clear parking bays while supporting the PV array above.</p>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Solar parking at Centurion Golf Club</h2>
+              <p className="mt-6 text-lg leading-8 text-[#526a78]">A solar carport needs to work as both infrastructure and usable parking. This installation shows how the steel structure creates clear parking bays while supporting the PV array above.</p>
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <div className="border-l-4 border-[#0043f3] pl-4"><Building2 className="h-5 w-5 text-[#0043f3]" /><p className="mt-2 font-bold">Commercial application</p><p className="mt-1 text-sm leading-6 text-[#607b88]">Designed around daily site use and vehicle access.</p></div>
-                <div className="border-l-4 border-[#ffcf1a] pl-4"><PanelsTopLeft className="h-5 w-5 text-[#0043f3]" /><p className="mt-2 font-bold">PV-ready support</p><p className="mt-1 text-sm leading-6 text-[#607b88]">A dedicated steel platform for the solar array.</p></div>
+                <div className="border-l-4 border-[#0043f3] pl-4"><Building2 className="h-5 w-5 text-[#0043f3]" /><p className="mt-2 font-bold">Commercial application</p><p className="mt-1 text-sm leading-6 text-[#526a78]">Designed around daily site use and vehicle access.</p></div>
+                <div className="border-l-4 border-[#dce6ed] pl-4"><PanelsTopLeft className="h-5 w-5 text-[#0043f3]" /><p className="mt-2 font-bold">PV-ready support</p><p className="mt-1 text-sm leading-6 text-[#526a78]">A dedicated steel platform for the solar array.</p></div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-[#c1d9e5] bg-[#eef5f8] py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
+      <section className="border-y border-[#c1d9e5] bg-[#f3f7fa] py-12 lg:py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Budget planning</p>
-              <h2 className="mt-4 text-3xl font-black tracking-normal sm:text-4xl">What determines the structure price?</h2>
-              <p className="mt-5 leading-7 text-[#486472]">There is no useful one-price-fits-all figure for a solar structure. A credible estimate starts with the intended array, site and project scope.</p>
-              <Link href="/tools/solar-carport-estimator" className="mt-7 inline-flex min-h-11 items-center gap-2 bg-[#ffcf1a] px-5 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-[#001d2e] hover:text-white"><Calculator className="h-4 w-4" /> Estimate a solar carport</Link>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">What determines the structure price?</h2>
+              <p className="mt-5 leading-7 text-[#526a78]">There is no useful one-price-fits-all figure for a solar structure. A credible estimate starts with the intended array, site and project scope.</p>
+              <Link href="/tools/solar-carport-estimator" className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0043f3] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#001d2e] hover:text-white"><Calculator className="h-4 w-4" /> Estimate a solar carport</Link>
             </div>
-            <div className="grid gap-px bg-[#b8cdd7] sm:grid-cols-2">
-              {projectFactors.map(({ icon: Icon, title, text }) => <div key={title} className="bg-white p-6 sm:p-7"><Icon className="h-6 w-6 text-[#0043f3]" /><h3 className="mt-4 text-lg font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-[#607b88]">{text}</p></div>)}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {projectFactors.map(({ icon: Icon, title, text }) => <div key={title} className="rounded-2xl border border-[#dce6ed] bg-white p-6 sm:p-7"><Icon className="h-6 w-6 text-[#0043f3]" /><h3 className="mt-4 text-lg font-bold">{title}</h3><p className="mt-2 text-sm leading-6 text-[#526a78]">{text}</p></div>)}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
+      <section className="py-12 lg:py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr]">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">South Africa</p>
-              <h2 className="mt-4 text-3xl font-black tracking-normal sm:text-4xl">Local solar structure support</h2>
-              <p className="mt-5 leading-7 text-[#486472]">Smart Steel works with homeowners, contractors and commercial project teams. Share the site location early so delivery, installation and local conditions can be considered from the start.</p>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Local solar structure support</h2>
+              <p className="mt-5 leading-7 text-[#526a78]">Smart Steel works with homeowners, contractors and commercial project teams. Share the site location early so delivery, installation and local conditions can be considered from the start.</p>
               <div className="mt-6 flex items-center gap-3 text-sm font-semibold text-[#264554]"><MapPin className="h-5 w-5 text-[#0043f3]" /> Projects supported across South Africa</div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Link href="/gauteng/solar" className="group border border-[#b8cdd7] p-6 transition hover:border-[#0043f3]"><span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">Regional guide</span><h3 className="mt-3 text-xl font-black">Solar structures in Gauteng</h3><span className="mt-6 inline-flex items-center gap-2 text-sm font-bold">View Gauteng options <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></Link>
-              <Link href="/pretoria-solar-carports" className="group border border-[#b8cdd7] p-6 transition hover:border-[#0043f3]"><span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">Local guide</span><h3 className="mt-3 text-xl font-black">Solar carports in Pretoria</h3><span className="mt-6 inline-flex items-center gap-2 text-sm font-bold">View Pretoria options <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></Link>
+              <Link href="/gauteng/solar" className="group rounded-2xl border border-[#dce6ed] bg-[#f7f9fb] p-6 transition hover:border-[#0043f3]"><span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">Regional guide</span><h3 className="mt-3 text-xl font-bold">Solar structures in Gauteng</h3><span className="mt-6 inline-flex items-center gap-2 text-sm font-bold">View Gauteng options <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></Link>
+              <Link href="/pretoria-solar-carports" className="group rounded-2xl border border-[#dce6ed] bg-[#f7f9fb] p-6 transition hover:border-[#0043f3]"><span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">Local guide</span><h3 className="mt-3 text-xl font-bold">Solar carports in Pretoria</h3><span className="mt-6 inline-flex items-center gap-2 text-sm font-bold">View Pretoria options <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-[#f4f8fa] py-20 sm:py-24">
+      <section className="bg-[#f4f8fa] py-12 lg:py-20">
         <div className="mx-auto max-w-4xl px-6 sm:px-10">
           <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Common questions</p>
-          <h2 className="mt-4 text-center text-3xl font-black tracking-normal sm:text-4xl">Planning a solar support structure</h2>
-          <div className="mt-10 divide-y divide-[#b8cdd7] border-y border-[#b8cdd7]">
-            {faqs.map((faq) => <details key={faq.question} className="group py-6"><summary className="flex cursor-pointer list-none items-center justify-between gap-5 text-lg font-bold marker:hidden">{faq.question}<span className="text-2xl font-light text-[#0043f3] transition group-open:rotate-45">+</span></summary><p className="mt-4 max-w-3xl leading-7 text-[#486472]">{faq.answer}</p></details>)}
+          <h2 className="mt-4 text-center text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Planning a solar support structure</h2>
+          <div className="mt-8 space-y-3">
+            {faqs.map((faq) => <details key={faq.question} className="group rounded-2xl border border-[#dce6ed] bg-white p-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-5 text-sm font-semibold marker:hidden [&::-webkit-details-marker]:hidden">{faq.question}<span className="text-2xl font-light text-[#0043f3] transition group-open:rotate-45">+</span></summary><p className="mt-4 max-w-3xl leading-7 text-[#526a78]">{faq.answer}</p></details>)}
           </div>
         </div>
       </section>
 
-      <section className="bg-[#0043f3] py-16 text-white sm:py-20">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:px-12">
-          <div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c9d8ff]">Start with your site</p><h2 className="mt-3 text-3xl font-black tracking-normal sm:text-4xl">Plan the steel structure behind your solar project</h2><p className="mt-4 leading-7 text-[#e3eaff]">Tell us whether you are working with parking or open land, where the project is located and how many panels or bays you have in mind.</p></div>
-          <Link href="/contact" className="inline-flex min-h-12 shrink-0 items-center gap-2 bg-white px-6 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-[#ffcf1a]">Request project guidance <ArrowRight className="h-4 w-4" /></Link>
+      <section className="px-5 py-12 sm:px-8 lg:py-20">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 rounded-3xl bg-[#001d2e] p-7 text-white sm:p-10 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c9d8ff]">Start with your site</p><h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Plan the steel structure behind your solar project</h2><p className="mt-4 leading-7 text-[#e3eaff]">Tell us whether you are working with parking or open land, where the project is located and how many panels or bays you have in mind.</p></div>
+          <Link href="/contact" className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl bg-[#0043f3] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#0036c4]">Request project guidance <ArrowRight className="h-4 w-4" /></Link>
         </div>
       </section>
     </main>
