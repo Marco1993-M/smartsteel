@@ -1,455 +1,110 @@
-"use client";
+import Image from "next/image"
+import { notFound } from "next/navigation"
+import { getSolarRegionConfig, getSolarRegionConfigs, regionalPlanning } from "./solarRegionData"
+import Link from "next/link"
+import { readSolarPricing } from "lib/solarCarportPricingServer"
+import { calculateAtlasSolarCarportEstimate } from "lib/estimates/atlasSolarCarportEstimate"
+import { getAtlasSolarCarportWidth, getAtlasSolarCarportPanelCount } from "lib/atlasSolarCarportLayouts"
+import { ArrowRight, Box, Check, MapPin, MessageCircle, MoveHorizontal, Sun, CarFront, Plus } from "lucide-react"
 
-import { useMemo, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import {
-  SOLAR_CARPORT_LENGTHS,
-  SOLAR_CARPORT_WIDTHS,
-  buildSolarRegionContent,
-  getSolarRegionConfigs,
-} from "./solarRegionData";
+const origin = "https://www.smartsteel.co.za"
 
-export default function SolarRegionPageClient({ citySlug }) {
-  const content = buildSolarRegionContent(citySlug);
-  const [selectedWidth, setSelectedWidth] = useState(SOLAR_CARPORT_WIDTHS[0]);
-  const galleryImages = [
-    { src: "/solar_carport_hero.webp", alt: `Smart Steel solar carport in ${content.name}` },
-    { src: "/solar_carport_1.webp", alt: `Solar carport parking view in ${content.name}` },
-    { src: "/solar_carport_2.webp", alt: `Solar carport structure detail in ${content.name}` },
-  ];
+const builderUrl = "/tools/solar-carport-estimator"
+const container = "mx-auto max-w-7xl px-5 sm:px-8"
+const primary = "inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-[#0043f3] px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#0036c4] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0043f3]"
 
-  const regionLinks = useMemo(
-    () =>
-      getSolarRegionConfigs()
-        .filter((region) => region.citySlug !== citySlug)
-        .map((region) => ({
-          href: `/${region.legacySlug}`,
-          label: `Solar Carports ${region.name}`,
-        })),
-    [citySlug]
-  );
+const faqs = [
+  { question: "What does a solar carport cost in Pretoria?", answer: "The structural price depends on the parking layout, number of bays and configuration. Use the Atlas 3D builder for a current structure-only, supply-only guide excluding VAT. Delivery, installation, foundations and the solar electrical system require separate scope confirmation before a final project quotation." },
+  { question: "Are solar panels, batteries and inverters included?", answer: "The online starting budget is for the steel structure. Do not treat it as a complete installed solar-system price. Panels, inverters, batteries, cabling and electrical work must be specified and quoted separately. The panel layout shown in the preview illustrates the configuration." },
+  { question: "Can I plan single-row and double-row parking?", answer: "Yes. The Atlas builder offers single-row cantilever and double-row butterfly arrangements. You can compare parking counts and arrange runs before sending your configuration for review. Final column positions, clearances and suitability depend on the site." },
+  { question: "Can you review a project in Menlyn, Montana, Silverton or Rosslyn?", answer: "Yes. Send the Pretoria-area site location and your intended parking layout to Smart Steel. Delivery access, installation requirements and the structural scope are reviewed for the specific property." },
+  { question: "Do I need drawings before asking for a quote?", answer: "No. Start with the address, approximate parking count, available space and a few site photographs. An existing parking plan is useful if you have one. The team will identify what further information is needed to confirm the structure." },
+  { question: "Does a solar carport provide backup power during outages?", answer: "The steel structure alone does not provide electricity or backup power. Generation and backup depend on the separately specified panels, inverter, batteries and electrical design. Confirm those requirements with your solar installer." },
+  { question: "Are foundations and approvals part of the builder price?", answer: "The starting guide is for structural supply. Foundations, ground conditions, drainage, site works and any approval requirements must be reviewed separately by the relevant project professionals. Confirm all inclusions in the final quotation." },
+]
 
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: content.faqItems.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  };
-
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "https://www.smartsteel.co.za/",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Solar Carports",
-        item: "https://www.smartsteel.co.za/solar-carports",
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: `Solar Carports ${content.name}`,
-        item: `https://www.smartsteel.co.za/${content.legacySlug}`,
-      },
-    ],
-  };
-
-  const serviceSchema = {
-    "@context": "https://schema.org",
-    "@type": "Service",
-    name: `Solar Carports ${content.name}`,
-    description: `Solar carports in ${content.name} designed for covered parking, solar-ready layouts, and long-term site value.`,
-    provider: {
-      "@type": "Organization",
-      name: "Smart Steel",
-      url: "https://www.smartsteel.co.za",
-    },
-    areaServed: {
-      "@type": "City",
-      name: content.name,
-    },
-    serviceType: "Solar carport design, steel structure supply, and regional installation support",
-    url: `https://www.smartsteel.co.za/${content.legacySlug}`,
-  };
-
-  return (
-    <main className="font-sans text-gray-800">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
-
-      <section className="relative overflow-hidden bg-[linear-gradient(180deg,_#f8fafc,_#ffffff_24%,_#fff7f5)] px-6 py-10">
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white via-white/90 to-transparent" />
-        <div className="mx-auto max-w-6xl">
-          <div className="relative mt-6 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white/90 px-6 py-10 shadow-sm backdrop-blur sm:px-8 lg:px-10">
-        <Image
-          src={content.heroImage}
-          alt={`Solar carports in ${content.name}`}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center opacity-[0.98]"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.88),rgba(255,255,255,0.72))]" />
-
-        <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center text-center">
-          <div className="mb-6 w-full max-w-[90vw] rounded-full border border-slate-300/80 bg-white/70 backdrop-blur sm:max-w-md md:max-w-3xl">
-            <div className="px-4 py-2">
-              <p className="text-xs font-semibold leading-snug text-slate-700 sm:text-sm md:text-base">
-                {content.heroLabel}
-              </p>
-            </div>
-          </div>
-
-          <h1 className="max-w-5xl text-4xl font-bold leading-tight text-slate-950 sm:text-5xl md:text-6xl">
-            Solar Carports in {content.name}
-          </h1>
-          <p className="mt-4 max-w-3xl text-base text-slate-600 sm:text-lg md:text-xl">
-            Covered parking structures designed to add solar value, improve site usability, and
-            create stronger long-term energy infrastructure in {content.name}.
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href={content.pricePath}
-              className="inline-flex items-center justify-center rounded-full bg-[#da1a33] px-6 py-3 font-semibold text-white transition hover:bg-[#bf172d]"
-            >
-              Estimate your solar carport
-            </Link>
-            <a
-              href={`https://wa.me/27828464555?text=Hi%20Smart%20Steel%2C%20I%E2%80%99d%20like%20a%20quote%20for%20a%20solar%20carport%20in%20${encodeURIComponent(
-                content.name
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-transparent bg-green-500 text-white transition hover:border-green-500 hover:bg-white hover:text-green-500"
-              title="Chat with us on WhatsApp"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="size-6 fill-current">
-                <path d="M16 .396c-8.837 0-16 7.163-16 16 0 2.823.737 5.574 2.141 7.998L0 32l7.792-2.098A15.9 15.9 0 0 0 16 32c8.837 0 16-7.163 16-16s-7.163-15.604-16-15.604zm0 29.205a13.15 13.15 0 0 1-6.69-1.822l-.48-.283-4.633 1.248 1.24-4.518-.312-.495A13.123 13.123 0 0 1 2.875 16c0-7.244 5.881-13.125 13.125-13.125S29.125 8.756 29.125 16 23.244 29.6 16 29.6zm7.194-9.727c-.393-.197-2.326-1.151-2.686-1.283-.36-.132-.623-.197-.886.197s-1.017 1.283-1.248 1.546c-.229.262-.459.295-.852.098-.393-.197-1.66-.611-3.162-1.947-1.168-1.041-1.954-2.326-2.184-2.72-.229-.393-.025-.606.172-.803.177-.176.393-.459.59-.688.197-.229.262-.393.393-.656.131-.262.066-.492-.033-.689-.098-.197-.886-2.142-1.214-2.935-.32-.769-.646-.663-.886-.674l-.754-.014c-.229 0-.6.086-.916.418s-1.2 1.171-1.2 2.854c0 1.683 1.229 3.309 1.4 3.536.172.229 2.416 3.686 5.854 5.165.818.353 1.455.564 1.953.722.821.262 1.568.225 2.16.137.659-.098 2.326-.951 2.654-1.87.328-.918.328-1.705.229-1.87-.098-.164-.36-.262-.754-.459z" />
-              </svg>
-            </a>
-          </div>
-
-          <div className="mt-4 rounded-full border border-slate-300 bg-white/70 px-4 py-1 backdrop-blur">
-            <p className="text-sm text-slate-600">{content.lastUpdated}</p>
-          </div>
-
-          <div className="mt-16 grid w-full gap-4 md:grid-cols-3">
-            {content.proofStats.map((stat) => (
-              <div key={stat.label} className="rounded-3xl border border-slate-200 bg-white/80 p-5 text-left backdrop-blur">
-                <p className="text-2xl font-bold text-slate-950 sm:text-3xl">{stat.value}</p>
-                <p className="mt-2 text-sm text-slate-600">{stat.label}</p>
-              </div>
-            ))}
-          </div>
+export default async function SolarRegionPageClient({ citySlug }) {
+  const config = getSolarRegionConfig(citySlug)
+  if (!config) notFound()
+  const city = config.name
+  const pageUrl = `${origin}/${config.legacySlug}`
+  const title = `Solar Carports ${city} | Atlas 3D Builder & Pricing`
+  const description = `Plan an Atlas solar carport in ${city}. Compare parking layouts in 3D, see a structure-only guide price and request a reviewed quote.`
+  const whatsappUrl = `https://wa.me/27828464555?text=${encodeURIComponent(`Hi Smart Steel, I would like help planning an Atlas solar carport in ${city}.`)}`
+  const regionFaqs = faqs.map(item => item.question.includes('Menlyn')
+    ? { question: `Can you review a site in ${config.localZones.slice(0, 3).join(', ')}?`, answer: `Send the ${city}-area address and intended parking layout to Smart Steel. Delivery access, installation requirements and the structural scope are reviewed for the specific property before quotation.` }
+    : { question: item.question.replaceAll('Pretoria', city), answer: item.answer.replaceAll('Pretoria', city) })
+  const nearbyRegions = getSolarRegionConfigs().filter(region => region.citySlug !== citySlug && (config.nearby.includes(region.name) || region.nearby.includes(city)))
+  const showProject = ['pretoria', 'centurion'].includes(citySlug)
+  const exampleWidth = getAtlasSolarCarportWidth(6)
+  let examplePrice = null
+  try {
+    const release = await readSolarPricing()
+    if (release) {
+      const estimate = calculateAtlasSolarCarportEstimate({ width: exampleWidth, length: 6, moduleCount: getAtlasSolarCarportPanelCount(exampleWidth, 6), quantity: 1, scope: "supply_only", deliveryDistance: 0 }, release)
+      if (estimate.meta.pricingReady && Number.isFinite(estimate.pricing.estimatedTotal)) examplePrice = estimate.pricing.estimatedTotal
+    }
+  } catch {
+    // Keep the enquiry path available if the approved pricing source is unavailable.
+  }
+  const schema = { "@context": "https://schema.org", "@graph": [
+    { "@type": "WebPage", name: title, description, url: pageUrl, inLanguage: "en-ZA" },
+    { "@type": "Service", name: `Atlas solar carport structures in ${city}`, description, url: pageUrl, serviceType: "Solar carport steel structure supply", areaServed: { "@type": "City", name: city }, provider: { "@type": "Organization", name: "Smart Steel", url: origin } },
+    { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: origin }, { "@type": "ListItem", position: 2, name: "Solar carports", item: `${origin}/solar-carports` }, { "@type": "ListItem", position: 3, name: "Pretoria", item: pageUrl }] },
+    { "@type": "FAQPage", mainEntity: regionFaqs.map(({ question, answer }) => ({ "@type": "Question", name: question, acceptedAnswer: { "@type": "Answer", text: answer } })) },
+  ] }
+  return <main className="pretoria-solar bg-white pt-20 text-[#001d2e]">
+    <style>{`
+      .pretoria-solar .font-black { font-weight: 700; }
+      .pretoria-solar #pricing { background: #f3f7fa; color: #001d2e; }
+      .pretoria-solar #pricing p, .pretoria-solar #pricing dd { color: #526a78; }
+      .pretoria-solar #pricing dt { color: #001d2e; }
+      .pretoria-solar #pricing dl, .pretoria-solar #pricing dl > div { border-color: #dce6ed; }
+      .pretoria-solar #pricing a { background: #0043f3; color: white; border-radius: 12px; }
+      .pretoria-solar #pricing a:hover { background: #0036c4; }
+      .pretoria-solar #layouts article { border: 1px solid #dce6ed; border-radius: 16px; padding: 24px; background: white; }
+      .pretoria-solar #builder figure > a { overflow: hidden; border-radius: 16px; }
+      .pretoria-solar #questions details { padding: 20px 0; }
+      .pretoria-solar > section:last-child { background: #001d2e; }
+      .pretoria-solar > section:last-child a { border-radius: 12px; }
+    `}</style>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+    <section className="relative isolate overflow-hidden bg-white text-[#001d2e]">
+      <div className={`${container} relative py-6 lg:py-10`}>
+        <div className="flex items-center justify-between gap-4"><Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas System developed by Smart Steel" width={238} height={44} className="h-auto w-[190px] sm:w-[210px]" /><span className="flex items-center gap-2 text-xs font-semibold"><MapPin className="h-4 w-4" />{city}</span></div>
+        <div className="max-w-3xl py-7 sm:py-9"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#0043f3]">Parking space. Solar potential.</p><h1 className="mt-3 text-[32px] font-bold leading-[1.08] sm:text-5xl lg:text-[56px]">Atlas solar carports in {city}</h1><p className="mt-4 max-w-2xl text-base leading-7 text-[#526a78]">Smart Steel supplies Atlas steel solar carport structures for {city} projects, from office parking and schools to estates and fleet yards. Choose single-row or double-row parking, explore your layout in 3D and see a supply-only structural guide price before requesting a reviewed quote.</p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap"><Link href={builderUrl} className={primary}>Build &amp; price in 3D <ArrowRight className="h-4 w-4" /></Link><a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl border border-[#dce6ed] bg-white px-6 py-3 text-sm font-semibold transition hover:border-[#0043f3] hover:text-[#0043f3]"><MessageCircle className="h-4 w-4" />Discuss your {city} site</a></div>
+          <p className="mt-4 text-xs leading-6 text-[#647b89]">Structure-only guide, excluding VAT. Delivery, installation and solar equipment quoted separately.</p>
         </div>
-          </div>
-        </div>
-      </section>
+        <Image src="/solar_carport_hero.webp" alt="Vehicles parked beneath a steel solar-panel carport" width={1280} height={720} priority sizes="(min-width: 1280px) 1216px, 100vw" className="h-auto max-h-60 w-full rounded-2xl object-cover sm:max-h-72" />
+      </div>
+    </section>
+    <nav aria-label="Page sections" className="border-b border-[#b8cdd7] bg-white"><div className={`${container} flex gap-6 overflow-x-auto py-4 text-sm font-bold`}>{[["#builder", "Explore in 3D"], ["#layouts", "Parking layouts"], ["#pricing", "Price & scope"], ["#pretoria", `Your ${city} site`], ["#questions", "Questions"]].map(([href, label]) => <a key={href} href={href} className="shrink-0 py-2 hover:text-[#0043f3]">{label}</a>)}</div></nav>
 
-      <section className="bg-[#0b0b0b] px-6 py-16 text-white">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#f0a1ab]">
-              Local Solar Carport Delivery
-            </p>
-            <h2 className="mt-4 text-3xl font-semibold md:text-4xl">
-              Solar parking that fits the reality of {content.name}
-            </h2>
-            <p className="mt-5 max-w-3xl text-lg text-white/80">
-              {content.description} {content.intro}
-            </p>
-            <p className="mt-4 max-w-3xl text-base text-white/70">{content.marketFocus}</p>
-          </div>
+    <section id="builder" className={`${container} scroll-mt-24 py-14 lg:py-20`}><div className="grid items-center gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
+      <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#0043f3]">From parking count to a practical plan</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">See your next solar carport take shape.</h2><p className="mt-5 text-base leading-8 text-[#526c79]">Choose your parking arrangement, compare runs and inspect the Atlas structure in 3D. The builder gives you a supply-only guide before you send the configuration for a reviewed quotation.</p><ol className="mt-6 divide-y divide-[#b8cdd7] border-y border-[#b8cdd7]">{["Choose the parking count and row layout", "Position the runs and review the structure", "Send your plan with the site requirements"].map((text, index) => <li key={text} className="flex gap-4 py-4 text-sm font-semibold"><span className="font-mono text-[#0043f3]">0{index + 1}</span>{text}</li>)}</ol><Link href={builderUrl} className={`${primary} mt-7`}><Box className="h-4 w-4" />Open the solar carport builder</Link></div>
+      <figure className="min-w-0"><Link href={builderUrl} aria-label="Open the interactive Atlas solar carport builder" className="block border border-[#b8cdd7] transition hover:border-[#0043f3]"><Image src="/solar_carport_model.webp" alt="Static Atlas builder preview of a six-car single-row cantilever configuration" width={2480} height={1624} sizes="(min-width: 1024px) 58vw, 100vw" className="h-auto w-full" /></Link><figcaption className="mt-3 flex flex-wrap justify-between gap-2 text-xs leading-6 text-[#526c79]"><span>Illustrative configuration; final layout is site-specific.</span><Link href={builderUrl} className="inline-flex items-center gap-2 font-bold text-[#0043f3]">Explore in 3D <ArrowRight className="h-4 w-4" /></Link></figcaption></figure>
+    </div></section>
 
-          <div className="rounded-[2rem] bg-[#151515] p-8 shadow-2xl shadow-black/30">
-            <h3 className="text-xl font-semibold">Areas we commonly support</h3>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {content.localZones.map((zone) => (
-                <span key={zone} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/85">
-                  {zone}
-                </span>
-              ))}
-            </div>
-            <div className="mt-8 space-y-3">
-              {content.trustPoints.map((point) => (
-                <div key={point} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
-                  {point}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+    {showProject && <section className="border-t border-[#dce6ed]"><div className={`${container} grid items-center gap-8 py-14 lg:grid-cols-2 lg:py-20`}>
+      <Image src="/projects/Solar Carports_Centurion Golf Club/7.webp" alt="Completed Smart Steel solar carports at Centurion Golf Club in Gauteng" width={1200} height={800} sizes="(min-width: 1024px) 600px, 100vw" className="h-auto w-full rounded-2xl" />
+      <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#0043f3]">Gauteng project · Centurion Golf Club</p><h2 className="mt-4 text-3xl font-bold">Solar parking, on a real Gauteng site.</h2><p className="mt-4 text-base leading-7 text-[#526a78]">This completed Smart Steel project at Centurion Golf Club shows covered parking beneath a steel structure supporting a solar array. The photographed installation is in Centurion.</p><p className="mt-4 text-sm leading-7 text-[#526a78]">Use it as a visual reference for your {city} brief: identify the bays to cover, the vehicle routes to retain and the space available for columns. Your own structure, foundations and solar equipment require a site-specific review.</p><Link href="/recent" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#0043f3]">See more Smart Steel projects <ArrowRight className="h-4 w-4" /></Link></div>
+    </div></section>}
+    <section id="layouts" className="scroll-mt-24 border-y border-[#b8cdd7] bg-[#f7fafb]"><div className={`${container} py-14 lg:py-20`}><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#0043f3]">Keep the parking working</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">A layout that fits the way vehicles move.</h2><p className="mt-5 text-base leading-8 text-[#526c79]">A solar-panel carport needs to accommodate vehicles as well as panels. Compare row arrangements before fixing column positions, drive aisles and pedestrian routes.</p></div>
+      <div className="mt-9 grid gap-8 md:grid-cols-3">{[{ Icon: CarFront, title: "Single-row cantilever", text: "Explore cover over one row of vehicles. Review bay access, vehicle heights and the relationship to existing buildings and boundaries." }, { Icon: MoveHorizontal, title: "Double-row butterfly", text: "Compare a two-row arrangement for a broader parking area. Check the central support line, drainage and routes through the site." }, { Icon: Sun, title: "Multiple parking runs", text: "Arrange separate runs around your parking plan. Allow for turning space, entrances, pedestrian access and the solar installer’s cable routes." }].map(({ Icon, title: heading, text }) => <article key={heading} className="border-t-2 border-[#0043f3] pt-6"><Icon className="h-7 w-7 text-[#0043f3]" /><h3 className="mt-5 text-xl font-black">{heading}</h3><p className="mt-3 text-sm leading-7 text-[#526c79]">{text}</p></article>)}</div><p className="mt-8 text-sm leading-7 text-[#526c79]">For offices, schools, estates and commercial parking, start with the bays you need to retain. Panel capacity and energy output must then be confirmed against the selected modules, orientation, shading and electrical design.</p>
+    </div></section>
 
-      <section className="bg-white px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-10 max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#da1a33]">
-              Recent Solar Carport Photos
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
-              Real project images help show the product clearly
-            </h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {galleryImages.map((image) => (
-              <div
-                key={image.src}
-                className="relative h-56 overflow-hidden rounded-[1.75rem] border border-gray-200 bg-white shadow-sm"
-              >
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  sizes="33vw"
-                  className="object-cover object-center"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+    <section id="pricing" className="scroll-mt-24 bg-[#001d2e] text-white"><div className={`${container} py-14 lg:py-20`}><div className="grid gap-8 lg:grid-cols-2 lg:gap-16"><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#ffcf1a]">Solar carport pricing in {city}</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">Know what your starting price covers.</h2><p className="mt-5 text-base leading-8 text-[#c1d9e5]">A steel structure price and a complete solar installation budget cover different work. Use the live builder for the structural starting point, then confirm the remaining costs for your property.</p><Link href={builderUrl} className="mt-7 inline-flex min-h-12 items-center gap-3 bg-[#ffcf1a] px-6 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-white">Calculate your structure guide <ArrowRight className="h-4 w-4" /></Link></div>
+      <dl className="divide-y divide-[#315364] border-y border-[#315364]">{[["Online starting budget", "Configured steel structure supply, excluding VAT. Your final quotation records the component inclusions and specification."], ["Delivery and installation", "Requested and quoted separately, with the site location, access and programme confirmed."], ["Foundations and site works", "Ground conditions, underground services, drainage and concrete works require project-specific review."], ["Solar and electrical system", "Panels, inverters, batteries, cabling and electrical installation are separate from the structural starting budget."]].map(([label, text]) => <div key={label} className="py-5"><dt className="font-bold text-[#ffcf1a]">{label}</dt><dd className="mt-2 text-sm leading-7 text-[#c1d9e5]">{text}</dd></div>)}</dl>
+    </div></div></section>
 
-      <section className="bg-white px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-10 max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#da1a33]">
-              Why Buyers Choose Solar Carports
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
-              Better parking, better energy positioning, better long-term site value
-            </h2>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {content.benefits.map((benefit) => (
-              <div key={benefit} className="rounded-[1.75rem] border border-gray-200 bg-gradient-to-b from-white to-gray-50 p-6 shadow-sm">
-                <div className="mb-4 h-10 w-10 rounded-2xl bg-[#ffe8eb]" />
-                <p className="text-base font-medium text-gray-900">{benefit}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+    <section className="border-b border-[#dce6ed]"><div className={`${container} py-12`}><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#0043f3]">A worked starting point</p><h2 className="mt-3 text-2xl font-bold">Six-car, single-row solar carport example</h2><p className="mt-4 text-3xl font-bold text-[#0043f3]">{examplePrice === null ? "Current price on request" : new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(examplePrice)}</p><p className="mt-3 text-sm leading-7 text-[#526a78]">One {exampleWidth}m × 6m nominal parking run, single-row cantilever, ZAM steel. {examplePrice === null ? "Open the builder to check current availability or request a reviewed price." : "Supply-only guide excluding VAT, calculated from the same approved pricing source as the builder."} The nominal parking envelope is not a final roof, slab or foundation dimension.</p><p className="mt-3 text-sm leading-7 text-[#526a78]">The guide covers the configured steel structure and module-support interfaces. Solar panels, electrical equipment, foundations, delivery and installation are excluded. Final inclusions and project-specific requirements are confirmed in your quotation.</p><Link href={`${builderUrl}?width=${exampleWidth}&length=6&quantity=1`} className={`${primary} mt-5`}>Explore this six-car configuration <ArrowRight className="h-4 w-4" /></Link></div></section>
+    <section id="pretoria" className={`${container} scroll-mt-24 py-14 lg:py-20`}><div className="grid gap-10 lg:grid-cols-2 lg:gap-16"><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#0043f3]">{city} &amp; surrounding areas</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">Start with the realities of your site.</h2><p className="mt-5 text-base leading-8 text-[#526c79]">Planning solar parking in {config.localZones.join(', ')}? Send the address, parking count and a marked-up site plan so Smart Steel can review the structural scope and delivery requirements.</p><p className="mt-4 text-sm leading-7 text-[#526c79]">{regionalPlanning[citySlug]}</p><p className="mt-4 text-sm leading-7 text-[#526c79]">Include gate dimensions, permitted delivery hours, slopes, stormwater routes and known buried services. Coordinate panel layout and cable routes with your solar installer; the structural quotation is not an electrical-system design.</p>{nearbyRegions.length > 0 && <div className="mt-4 flex flex-wrap gap-4">{nearbyRegions.map(region => <Link key={region.citySlug} href={`/${region.legacySlug}`} className="text-sm font-semibold text-[#0043f3] underline">{region.name} solar carports</Link>)}</div>}<a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={`${primary} mt-6`}><MessageCircle className="h-4 w-4" />Discuss your site on WhatsApp</a></div>
+      <div><h3 className="text-xl font-black">What to send for a useful quotation</h3><ul className="mt-5 divide-y divide-[#b8cdd7] border-y border-[#b8cdd7]">{["Site address and approximate number of parking bays", "Photographs or a parking plan, if available", "Vehicle heights, access routes and site obstructions", "Existing paving, drainage and known underground services", "Solar installer details or proposed panel specification, if known", "Whether you need delivery or an installation quotation"].map(text => <li key={text} className="flex gap-3 py-4 text-sm leading-6"><Check className="mt-1 h-4 w-4 shrink-0 text-[#0043f3]" />{text}</li>)}</ul><p className="mt-4 text-sm leading-7 text-[#526c79]">You can enquire before the design is complete. Final foundations, structural checks and approval requirements are confirmed with the relevant project professionals.</p></div>
+    </div></section>
 
-      <section className="bg-gray-100 px-6 py-20">
-        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-4">
-          {content.useCases.map((useCase) => (
-            <div key={useCase.title} className="rounded-[1.75rem] bg-white p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#da1a33]">Use Case</p>
-              <h3 className="mt-3 text-xl font-semibold text-gray-900">{useCase.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-gray-600">{useCase.description}</p>
-            </div>
-          ))}
-          <div className="rounded-[1.75rem] bg-[#111111] p-6 text-white shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#f0a1ab]">Buyer Questions</p>
-            <div className="mt-4 space-y-3">
-              {content.buyerQuestions.map((question) => (
-                <p key={question} className="text-sm leading-6 text-white/80">
-                  {question}
-                </p>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-8 max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#da1a33]">
-              Size Planning
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">
-              Compare solar carport sizes for {content.name}
-            </h2>
-            <p className="mt-3 text-lg text-gray-600">{content.sizeBlurb}</p>
-          </div>
-
-          <div className="mb-10 flex flex-wrap gap-4">
-            {SOLAR_CARPORT_WIDTHS.map((width) => (
-              <button
-                key={width}
-                onClick={() => setSelectedWidth(width)}
-                className={`rounded-full px-6 py-3 font-semibold transition ${
-                  selectedWidth === width
-                    ? "border border-[#da1a33] bg-[#da1a33] text-white shadow-sm shadow-[#da1a33]/25"
-                    : "border border-gray-300 bg-white text-gray-800 hover:bg-gray-100"
-                }`}
-              >
-                {width}m Width
-              </button>
-            ))}
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {SOLAR_CARPORT_LENGTHS.map((length) => (
-              <div key={length} className="rounded-[1.5rem] border border-gray-200 bg-white p-5 shadow-sm">
-                <p className="text-lg font-semibold text-gray-900">
-                  {selectedWidth}m x {length}m
-                </p>
-                <p className="mt-1 text-sm text-gray-500">{selectedWidth * length} m² covered parking</p>
-                <div className="mt-4 flex items-center justify-between text-sm">
-                  <Link
-                    href={`/tools/solar-carport-estimator?width=${selectedWidth}&length=${length}`}
-                    className="font-semibold text-[#da1a33]"
-                  >
-                    Estimate this size
-                  </Link>
-                  <Link href="/solar" className="text-gray-500 underline">
-                    Solar overview
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#da1a33]">
-              Pricing Context
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
-              Solar carport pricing guidance in {content.name}
-            </h2>
-            <p className="mt-4 text-lg text-gray-700">
-              Solar carport pricing in {content.name} depends on structure size, parking layout,
-              panel count, electrical scope, foundations, and whether the final project is
-              structure-only or turnkey.
-            </p>
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {content.pricingBands.map((band) => (
-                <div key={band.title} className="rounded-[1.5rem] bg-gray-100 p-5">
-                  <p className="text-sm font-semibold text-gray-900">{band.title}</p>
-                  <p className="mt-2 text-sm font-medium text-[#da1a33]">{band.value}</p>
-                  <p className="mt-2 text-sm text-gray-600">{band.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] bg-[#111111] p-8 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#f0a1ab]">
-              Delivery Area Fit
-            </p>
-            <h3 className="mt-4 text-2xl font-semibold">
-              Built for real parking and energy requirements in {content.name}
-            </h3>
-            <div className="mt-6 flex flex-wrap gap-3">
-              {content.applications.map((application) => (
-                <span key={application} className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/85">
-                  {application}
-                </span>
-              ))}
-            </div>
-            <div className="mt-8 space-y-4">
-              {content.processSteps.map((step, index) => (
-                <div key={step.title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#f0a1ab]">
-                    Step {index + 1}
-                  </p>
-                  <h4 className="mt-2 text-lg font-semibold">{step.title}</h4>
-                  <p className="mt-2 text-sm leading-6 text-white/75">{step.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-gray-100 px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-8 max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#da1a33]">
-              Useful Pages
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">Compare related solar and steel pages</h2>
-            <p className="mt-3 text-lg text-gray-600">
-              Use these pages to compare solar carports, explore related structures, and move into
-              the right next step for your project.
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-4">
-            {content.internalLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="rounded-[1.5rem] bg-white p-5 text-sm font-semibold text-gray-800 shadow-sm transition hover:shadow-md">
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white px-6 py-20 text-gray-900">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="mb-10 text-center text-3xl font-bold text-gray-900">Frequently asked questions</h2>
-          {content.faqItems.map((faq) => (
-            <details key={faq.question} className="mb-4 rounded-[1.5rem] border border-gray-200 bg-white p-5 shadow-sm">
-              <summary className="cursor-pointer text-lg font-semibold text-gray-900">{faq.question}</summary>
-              <p className="mt-3 text-gray-700">{faq.answer}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-[#f6f7f9] px-6 py-20 text-gray-900">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-8 max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#da1a33]">
-              Nearby Regions
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">Compare nearby solar carport regions</h2>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {regionLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="rounded-[1.5rem] border border-gray-200 bg-white p-5 text-sm font-semibold text-gray-800 shadow-sm transition hover:shadow-md">
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-black px-6 py-20 text-center text-white">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#f0a1ab]">
-          Ready To Price Your Project
-        </p>
-        <h2 className="mb-4 mt-4 text-3xl font-bold md:text-4xl">
-          Estimate your solar carport in {content.name}
-        </h2>
-        <p className="mx-auto mb-8 max-w-2xl text-white/75">
-          Start with a clearer budget, then send your details through if you would like help with
-          the next step.
-        </p>
-        <div className="flex justify-center gap-4">
-          <Link
-            href="/tools/solar-carport-estimator"
-            className="rounded-full bg-white px-6 py-3 font-semibold text-black"
-          >
-            Estimate your solar carport
-          </Link>
-          <a href="tel:+27828464555" className="rounded-full border border-white px-6 py-3">
-            Call Us
-          </a>
-        </div>
-      </section>
-    </main>
-  );
+    <section id="questions" className="scroll-mt-24 border-y border-[#b8cdd7] bg-[#f7fafb]"><div className={`${container} py-14 lg:py-20`}><h2 className="text-3xl font-black sm:text-4xl">Solar carport questions, answered.</h2><div className="mt-8 divide-y divide-[#b8cdd7] border-y border-[#b8cdd7]">{regionFaqs.map(({ question, answer }) => <details key={question} className="group py-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-5 font-bold"><span>{question}</span><Plus className="h-5 w-5 shrink-0 text-[#0043f3] group-open:rotate-45" /></summary><p className="mt-4 max-w-4xl text-sm leading-7 text-[#526c79]">{answer}</p></details>)}</div></div></section>
+    <section className="bg-white"><div className={`${container} grid gap-8 py-12 md:grid-cols-2`}><div><h2 className="text-xl font-black">Have open land instead of parking?</h2><p className="mt-3 text-sm leading-7 text-[#526c79]">A ground-mounted array may suit a site where covered parking is not needed. Compare the structural options before choosing.</p><Link href="/products/cflc-ground-mounts" className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#0043f3]">Explore solar ground mounts <ArrowRight className="h-4 w-4" /></Link></div><div><h2 className="text-xl font-black">Explore the Atlas solar range</h2><div className="mt-3 flex flex-col items-start">{[["/products/cflc-solar-carports", "Atlas solar carport structures"], ["/solar", "Compare carports and ground mounts"], ["/solar-carports", "Solar carport service areas"]].map(([href, label]) => <Link key={href} href={href} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#0043f3]">{label}<ArrowRight className="h-4 w-4" /></Link>)}</div></div></div></section>
+    <section className="bg-[#0043f3] text-white"><div className={`${container} flex flex-col gap-6 py-12 lg:flex-row lg:items-center lg:justify-between`}><div><p className="text-sm font-semibold">Your {city} solar carport starts here.</p><h2 className="mt-3 text-3xl font-black">Turn your parking plan into a quote.</h2></div><Link href={builderUrl} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-3 bg-white px-6 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-[#ffcf1a]">Build &amp; price in 3D <ArrowRight className="h-4 w-4" /></Link></div></section>
+  </main>
 }

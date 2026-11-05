@@ -1,5 +1,16 @@
 const SITE_URL = "https://www.smartsteel.co.za";
 
+export const regionalPlanning = {
+  pretoria: "For office and school parking, mark visitor access, accessible bays, drop-off queues and pedestrian routes. For fleet yards, confirm the tallest vehicle and turning space rather than sizing only for passenger cars.",
+  centurion: "For a business park or campus brief, show how staff, visitors and service vehicles share the parking area. Identify separate runs around entrances and pedestrian links, and confirm delivery restrictions with the property manager.",
+  johannesburg: "For retail, office and fleet sites, mark customer circulation, loading areas and the bays that must remain usable during works. Check vehicle heights and service access before deciding where columns and separate parking runs should go.",
+  midrand: "For business parks and mixed-use sites, distinguish visitor parking from staff, loading and delivery routes. Show entrances and connections between parking areas so separate runs can be reviewed without blocking site circulation.",
+  "cape-town": "For office, retail or hospitality parking, identify guest routes, service access and nearby obstructions that could shade panels. Tell the project team about coastal exposure so the steel specification, connections and maintenance requirements can be reviewed for the actual site.",
+  durban: "For hospitality, retail or logistics parking, separate guest and customer routes from service vehicles. Flag coastal exposure and existing drainage routes for review; confirm the structural finish and foundation requirements rather than assuming one specification suits every property.",
+  bloemfontein: "For school, office and institutional parking, mark arrival queues, pedestrian crossings and visitor access. If vehicles must keep using the site during works, identify which bays can be released and when deliveries can enter.",
+  polokwane: "For commercial, institutional or fleet parking, confirm whether the structure must accommodate passenger cars, minibuses or taller vehicles. Include turning space, delivery access and the location of the intended electrical connection in your site brief.",
+};
+
 export const SOLAR_CARPORT_WIDTHS = [2.75, 5.5, 11, 16.5, 22];
 export const SOLAR_CARPORT_LENGTHS = [6, 12];
 
@@ -193,11 +204,11 @@ export function buildSolarRegionMetadata(citySlug) {
   if (!config) return {};
 
   const canonicalPath = `/${config.legacySlug}`;
-  const title = `Solar Carports ${config.name} | Smart Steel`;
-  const description = `Solar carports in ${config.name}. Compare covered parking options, pricing guidance, delivery areas, and regional solar carport planning with Smart Steel.`;
+  const title = `Solar Carports ${config.name} | Atlas 3D Builder & Pricing`;
+  const description = `Plan an Atlas solar carport in ${config.name}. Compare parking layouts in 3D, see a structure-only guide price and request a reviewed quote for your site.`;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: {
       canonical: canonicalPath,
@@ -210,7 +221,7 @@ export function buildSolarRegionMetadata(citySlug) {
       images: [
         {
           url: config.heroImage,
-          alt: `Solar carports in ${config.name}`,
+          alt: "Smart Steel solar carport structures",
         },
       ],
     },
@@ -220,115 +231,5 @@ export function buildSolarRegionMetadata(citySlug) {
       description,
       images: [config.heroImage],
     },
-  };
-}
-
-export function buildSolarRegionContent(citySlug) {
-  const config = getSolarRegionConfig(citySlug);
-  if (!config) return null;
-
-  const faqItems = [
-    {
-      question: `How long does it take to install a solar carport in ${config.name}?`,
-      answer: `Most solar carport projects in ${config.name} move from approval to installation within a few weeks, depending on structure size, solar scope, foundations, and electrical integration.`,
-    },
-    {
-      question: `What does a solar carport cost in ${config.name}?`,
-      answer: `Solar carport pricing in ${config.name} depends on the covered area, steel scope, number of solar panels, electrical equipment, foundations, and whether the project is structure-only or turnkey.`,
-    },
-    {
-      question: `Do you handle structure and solar integration?`,
-      answer: `Yes. Smart Steel can support the steel structure, solar-ready layout, and broader project planning so the final system is coordinated properly.`,
-    },
-    {
-      question: `Do you install outside ${config.name}?`,
-      answer: `Yes. We support solar carport projects in ${config.name} as well as nearby areas such as ${config.nearby.join(", ")} and other South African regions.`,
-    },
-  ];
-
-  return {
-    ...config,
-    pricePath: "/tools/solar-carport-estimator",
-    lastUpdated: "Updated April 20, 2026",
-    faqItems,
-    proofStats: [
-      { value: "Dual purpose", label: "covered parking plus solar generation in one structure" },
-      { value: "Modular steel", label: "layouts that scale from small parking zones to larger commercial bays" },
-      { value: "South Africa", label: "engineered for local site conditions and practical installation" },
-    ],
-    benefits: [
-      "Covered parking that also supports long-term solar generation",
-      "Lightweight galvanized steel structures suited to cleaner installation and expansion",
-      "A stronger commercial proposition for schools, offices, retail, and business parks",
-      "Layouts that can be adapted around parking counts, power goals, and site movement",
-    ],
-    trustPoints: [
-      "Smart Steel focuses on lightweight steel systems designed for practical installation, durability, and scalable parking coverage.",
-      `We support solar carport enquiries in ${config.name} and nearby zones such as ${config.localZones.join(", ")}.`,
-      "Our structures are planned around parking use, solar coverage, and long-term site value rather than treated as generic shade canopies.",
-    ],
-    useCases: [
-      {
-        title: `${config.name} office parking`,
-        description: "A strong option for office sites that want shaded parking and visible clean-energy infrastructure for staff and visitors.",
-      },
-      {
-        title: "Retail and customer parking",
-        description: "Useful for shopping, service, and public-facing sites that want parking value plus better energy positioning.",
-      },
-      {
-        title: "Schools, campuses, and institutions",
-        description: "Practical for education and institutional sites that need structured parking, solar value, and long-term durability.",
-      },
-    ],
-    buyerQuestions: [
-      `How many parking bays do we want to cover in ${config.name}?`,
-      "Are we prioritising parking shade, solar output, or both equally?",
-      "Do we want a structure-only carport or a fuller turnkey solar package?",
-      "What site conditions, electrical scope, and approvals will affect the final price?",
-    ],
-    processSteps: [
-      {
-        title: "Define the parking requirement",
-        description: `We scope the bay count, span, parking layout, and solar intent for your ${config.name} project.`,
-      },
-      {
-        title: "Refine the structure and solar scope",
-        description: "We compare structure-only, solar-ready, and fuller turnkey options based on your commercial and technical goals.",
-      },
-      {
-        title: "Manufacture and prepare delivery",
-        description: "Once approved, the steel structure moves into production and we plan delivery and installation around the site.",
-      },
-      {
-        title: "Install and coordinate handover",
-        description: "The finished solar carport structure is installed and prepared for the required solar integration and final project closeout.",
-      },
-    ],
-    pricingBands: [
-      {
-        title: "Structure only",
-        value: "From about R6,500 to R9,500 per bay",
-        description: "A planning range for steel-only parking cover before final structural and site details are confirmed.",
-      },
-      {
-        title: "Solar-ready structure",
-        value: "Project specific",
-        description: "Depends on structural span, solar loading assumptions, electrical intent, and finish level.",
-      },
-      {
-        title: "Turnkey solar carport",
-        value: "Quoted per project",
-        description: "Includes the steel structure plus the broader solar and electrical scope required for the site.",
-      },
-    ],
-    internalLinks: [
-      { href: "/solar-carports", label: "Solar carport regions hub" },
-      { href: "/solar", label: "Main solar page" },
-      { href: "/warehouse-regions", label: "Warehouse regions hub" },
-      { href: "/warehouses", label: "Warehouse systems" },
-      { href: "/tools/solar-carport-estimator", label: "Estimate your solar carport" },
-    ],
-    sizeBlurb: `Typical solar carport layouts in ${config.name} range from compact single-bay coverage to wider multi-bay parking structures depending on the site and power goals.`,
   };
 }
