@@ -863,7 +863,12 @@ export default function WarehouseBuilderClient() {
     trackBuilderEvent("warehouse_builder_summary_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
   }
 
-  const clearReviewError = (field) => { setReviewErrors(current=>({...current,[field]:undefined})); setSubmitError("") }
+  const trackReviewStart = () => trackBuilderFunnelEvent(
+    BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.formStarted,
+    { channel: applyingForShowcase ? "showcase" : submissionIntent },
+  )
+
+  const clearReviewError = (field) => { trackReviewStart(); setReviewErrors(current=>({...current,[field]:undefined})); setSubmitError("") }
   useEffect(() => { if (showLeadForm) { setReviewErrors({}); setSubmitError("") } }, [showLeadForm, applyingForShowcase])
 
   const handleSubmit = async (event) => {
@@ -874,6 +879,10 @@ export default function WarehouseBuilderClient() {
     setReviewErrors(errors)
     if (Object.keys(errors).length) {
       setSubmitError("Please complete the highlighted fields below.")
+      for (const field of Object.keys(errors)) {
+        trackBuilderFunnelEvent(BUILDER_TYPES.warehouse, BUILDER_FUNNEL_EVENTS.validationBlocked,
+          { field, channel: applyingForShowcase ? "showcase" : submissionIntent }, { once: false })
+      }
       const first = Object.keys(errors)[0]
       window.requestAnimationFrame(() => reviewFormRef.current?.querySelector(`[data-review-field="${first}"]`)?.focus())
       return
@@ -1901,7 +1910,7 @@ export default function WarehouseBuilderClient() {
                 <button type="button" onClick={() => setShowLeadForm(false)} className="mt-6 w-full rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white">Return to my design</button>
               </div>
             ) : (
-              <form ref={reviewFormRef} noValidate onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-7">
+              <form ref={reviewFormRef} noValidate onInput={trackReviewStart} onChange={trackReviewStart} onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-7">
                 {submitError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700">{submitError}</div>}
                 {applyingForShowcase && <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs leading-5 text-blue-900"><strong>Atlas Showcase Offer · Project assessment</strong><p>We’ll review your project before confirming eligibility. Applying does not reserve a place or change your supply price. Photography access and marketing usage will be agreed separately.</p></div>}
                 <section aria-labelledby="review-contact-heading"><div className="mb-3 flex items-center justify-between gap-2"><h3 id="review-contact-heading" className="text-sm font-semibold text-[#001d2e]">Your details</h3><p className="text-xs text-slate-500">* Required</p></div><div className="grid gap-4 sm:grid-cols-2">
@@ -1921,9 +1930,9 @@ export default function WarehouseBuilderClient() {
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">{[['installationInterest','Installation support'],['deliveryRequired','Delivery support']].map(([key,label])=><label key={key} className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700"><input type="checkbox" checked={config[key]} onChange={event=>updateField(key,event.target.checked)} className="h-4 w-4 accent-[#0043f3]"/>{label}</label>)}</div><p className="mt-2 text-xs text-slate-500">Optional. Delivery and installation are quoted separately from the supply guide.</p>
                 </section>
                 <details className="rounded-xl border border-slate-200 p-3"><summary className="cursor-pointer text-sm font-semibold text-slate-600">Add use, timing or project notes <span className="font-normal text-slate-400">(optional)</span></summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {!applyingForShowcase && <ReviewSelect name="intendedUse" label="Intended use" value={config.intendedUse} onChange={event=>updateField('intendedUse',event.target.value)} options={INTENDED_USE_OPTIONS} placeholder="Select intended use"/>}
-                  <ReviewSelect name="targetTimeline" label="Target timeline" value={config.targetTimeline} onChange={event=>updateField('targetTimeline',event.target.value)} options={TARGET_TIMELINE_OPTIONS} placeholder="Select timeline"/>
-                  <ReviewSelect name="province" label="Province" value={config.province} onChange={event=>updateField('province',event.target.value)} options={PROVINCES} placeholder="Select province"/>
+                  {!applyingForShowcase && <ReviewSelect name="intendedUse" label="Intended use" value={config.intendedUse} onChange={event=>{ trackReviewStart(); updateField('intendedUse',event.target.value) }} options={INTENDED_USE_OPTIONS} placeholder="Select intended use"/>}
+                  <ReviewSelect name="targetTimeline" label="Target timeline" value={config.targetTimeline} onChange={event=>{ trackReviewStart(); updateField('targetTimeline',event.target.value) }} options={TARGET_TIMELINE_OPTIONS} placeholder="Select timeline"/>
+                  <ReviewSelect name="province" label="Province" value={config.province} onChange={event=>{ trackReviewStart(); updateField('province',event.target.value) }} options={PROVINCES} placeholder="Select province"/>
                   <label className="block sm:col-span-2"><span className="mb-2 block text-xs font-semibold uppercase tracking-[.12em] text-slate-500">Project notes</span><textarea name="notes" rows={3} value={config.notes} onChange={event=>updateField('notes',event.target.value)} placeholder="Access, site conditions or anything else we should know" className="w-full rounded-xl border border-slate-300 px-3 py-3 text-sm"/></label>
                 </div></details>
                 <div><button type="submit" disabled={submitting} className={`w-full rounded-xl px-5 py-3.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${isAtlasWarehouse ? "bg-[#0043f3] hover:bg-[#0036c7]" : "bg-slate-950 hover:bg-slate-800"}`}>{submitting ? "Saving your project..." : applyingForShowcase ? "Submit my project for assessment" : submissionIntent === "whatsapp" ? "Save and continue to WhatsApp" : "Send for review"}</button><p className="mt-3 text-center text-xs leading-5 text-slate-500">Your design and project details are sent together. No payment or commitment is required.</p></div>

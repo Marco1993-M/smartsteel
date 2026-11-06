@@ -193,7 +193,20 @@ function buildBuilderFunnelPeriod(records, start, end) {
       const value = new Set(events.filter((event) => event.event_name === key).map((event) => event.journey_id)).size
       return { key, label, value, rate: percentage(value, viewed) }
     })
+    const countJourneys = (name) => new Set(events.filter((event) => event.event_name === name).map((event) => event.journey_id)).size
+    const blockers = new Map()
+    for (const event of events) {
+      if (event.event_name !== "lead_validation_blocked" || !event.properties?.field) continue
+      const field = event.properties.field
+      if (!blockers.has(field)) blockers.set(field, new Set())
+      blockers.get(field).add(event.journey_id)
+    }
     return {
+      formStarts: countJourneys("lead_form_started"),
+      blockedJourneys: countJourneys("lead_validation_blocked"),
+      submittedJourneys: countJourneys("lead_submit_started"),
+      blockers: Array.from(blockers, ([field, journeys]) => ({ field, journeys: journeys.size }))
+        .sort((a, b) => b.journeys - a.journeys),
       journeys: viewed,
       stages,
       submitAttempts: events.filter((event) => event.event_name === "lead_submit_started").length,
@@ -311,7 +324,7 @@ export async function GET(request) {
       .order("sent_at", { ascending: true }).order("id", { ascending: true })),
     fetchAll(() => supabaseServer
       .from("builder_funnel_events")
-      .select("occurred_at, journey_id, builder, event_name, source_page, entry_page, device_category")
+      .select("occurred_at, journey_id, builder, event_name, source_page, entry_page, device_category, properties")
       .gte("occurred_at", previousStart.toISOString())
       .lt("occurred_at", end.toISOString())
       .order("occurred_at", { ascending: true })),

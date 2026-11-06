@@ -10,6 +10,8 @@ const EVENTS = new Set([
   "configuration_started",
   "pricing_displayed",
   "lead_form_viewed",
+  "lead_form_started",
+  "lead_validation_blocked",
   "lead_submit_started",
   "lead_submit_succeeded",
   "lead_submit_failed",
@@ -48,6 +50,17 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid event identifiers." }, { status: 400 })
   }
 
+  const formEvent = ["lead_form_started", "lead_validation_blocked"].includes(body.eventName)
+  const allowedFields = ["name", "email", "phone", "projectStage", "location", "projectUse", "photographyPreference"]
+  const { field, channel } = cleanProperties(body.properties)
+  if (body.eventName === "lead_validation_blocked" && !allowedFields.includes(field)) {
+    return NextResponse.json({ error: "Invalid validation field." }, { status: 400 })
+  }
+  const properties = formEvent ? {
+    ...(["review", "whatsapp", "showcase"].includes(channel) ? { channel } : {}),
+    ...(body.eventName === "lead_validation_blocked" ? { field } : {}),
+  } : cleanProperties(body.properties)
+
   const { error } = await supabaseServer.from("builder_funnel_events").insert({
     event_id: body.eventId,
     session_id: body.sessionId,
@@ -58,7 +71,7 @@ export async function POST(request) {
     entry_page: safeText(body.entryPage) || null,
     configuration_id: safeText(body.configurationId, 120) || null,
     device_category: ["desktop", "tablet", "mobile"].includes(body.deviceCategory) ? body.deviceCategory : "unknown",
-    properties: cleanProperties(body.properties),
+    properties,
   })
 
   if (error?.code === "23505") return NextResponse.json({ accepted: true, duplicate: true })
