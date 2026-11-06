@@ -35,6 +35,38 @@ function PerformanceTable({ rows, label }) {
   </section>
 }
 
+function BuilderDeviceBreakdown({ builders }) {
+  const [selected, setSelected] = useState('warehouse')
+  const builder = builders.find((item) => item.key === selected) ?? builders[0]
+  const devices = builder?.devices ?? []
+  return <section className={panel}>
+    <Heading eyebrow="Device breakdown" title="How visitors progress by device"
+      detail="Device is based on browser width at the first recorded view in this period. Rates use journeys viewed in the selected period. Small counts can swing percentages."
+      aside={<label className="text-xs text-slate-500">Builder
+        <select className="ml-2 rounded-lg border border-slate-200 p-2 text-slate-800" value={builder?.key ?? ''} onChange={(event) => setSelected(event.target.value)}>
+          {builders.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+        </select>
+      </label>} />
+    {!devices.length ? <Empty>No device journeys for this builder in the selected period.</Empty> :
+      <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm">
+        <thead className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500">
+          <tr>{['Device', 'Views', 'Form reached', 'Leads', 'View → lead'].map((label) => <th key={label} scope="col" className="px-3 py-3 first:pl-0">{label}</th>)}</tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">{devices.map((row) => {
+          const stages = Object.fromEntries(row.stages.map((stage) => [stage.key, stage]))
+          const form = stages.lead_form_viewed
+          return <tr key={row.device} className="tabular-nums">
+            <th scope="row" className="py-4 pr-3 font-semibold capitalize">{row.device}</th>
+            <td className="px-3">{formatNumber(row.journeys)}</td>
+            <td className="px-3">{formatNumber(form?.value ?? 0)} <span className="text-slate-500">({percent(form?.rate ?? 0)})</span></td>
+            <td className="px-3">{formatNumber(stages.lead_submit_succeeded?.value ?? 0)}</td>
+            <td className="px-3">{percent(row.conversionRate)}</td>
+          </tr>
+        })}</tbody>
+      </table></div>}
+  </section>
+}
+
 function BuilderFunnel({ data }) {
   if (!data?.available) return <section className={panel}><Heading eyebrow="Builder analytics" title="Builder funnel tracking is ready" detail="Apply the builder funnel database migration to begin collecting anonymous journey events." /><Empty>No builder journey data is available yet. Run supabase/smart_steel_builder_funnel_analytics.sql, then publish the site.</Empty></section>
 
@@ -67,6 +99,7 @@ function BuilderFunnel({ data }) {
           return <tr key={builder.key} className="hover:bg-slate-50"><th scope="row" className="py-4 pr-3 font-semibold text-slate-900">{builder.label}</th><td className="px-3 tabular-nums">{builder.journeys}</td><td className="px-3 tabular-nums">{stage.configuration_started || 0}</td><td className="px-3 tabular-nums">{stage.pricing_displayed || 0}</td><td className="px-3 tabular-nums">{stage.lead_form_viewed || 0}</td><td className="px-3 font-semibold tabular-nums">{stage.lead_submit_succeeded || 0}</td><td className="px-3"><span className="rounded-md bg-sky-50 px-2 py-1 font-semibold text-sky-800">{percent(builder.conversionRate)}</span></td><td className={`px-3 font-semibold tabular-nums ${builder.submissionFailures ? 'text-rose-700' : 'text-slate-500'}`}>{builder.submissionFailures}</td></tr>
         })}</tbody></table></div>
       </section>
+      <BuilderDeviceBreakdown builders={data.builders} />
     </>}
   </div>
 }
