@@ -203,10 +203,33 @@ function buildBuilderFunnelPeriod(records, start, end) {
     }
   }
 
+  const summarizeDevices = (events) => {
+    const firstViews = new Map()
+    for (const event of events) {
+      if (event.event_name !== "builder_viewed") continue
+      const first = firstViews.get(event.journey_id)
+      if (!first || Date.parse(event.occurred_at) < Date.parse(first.occurred_at)) {
+        firstViews.set(event.journey_id, event)
+      }
+    }
+    const groups = { mobile: [], tablet: [], desktop: [], unknown: [] }
+    for (const event of events) {
+      const view = firstViews.get(event.journey_id)
+      if (!view) continue
+      const device = ["mobile", "tablet", "desktop"].includes(view.device_category)
+        ? view.device_category : "unknown"
+      groups[device].push(event)
+    }
+    return Object.entries(groups)
+      .filter(([, events]) => events.length)
+      .map(([device, events]) => ({ device, ...summarize(events) }))
+  }
+
   const builders = Object.entries(BUILDER_LABELS).map(([key, label]) => ({
     key,
     label,
     ...summarize(inPeriod.filter((event) => event.builder === key)),
+    devices: summarizeDevices(inPeriod.filter((event) => event.builder === key)),
   }))
   return { ...summarize(inPeriod), builders }
 }
