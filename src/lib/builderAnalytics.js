@@ -15,6 +15,8 @@ export const BUILDER_FUNNEL_EVENTS = {
   configurationStarted: "configuration_started",
   pricingDisplayed: "pricing_displayed",
   leadFormViewed: "lead_form_viewed",
+  formStarted: "lead_form_started",
+  validationBlocked: "lead_validation_blocked",
   submitStarted: "lead_submit_started",
   submitSucceeded: "lead_submit_succeeded",
   submitFailed: "lead_submit_failed",
