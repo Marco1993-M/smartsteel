@@ -1,5 +1,6 @@
 "use client"
 
+import { poultrySizingFromBrief } from "../lib/poultrySizing.mjs";
 import AtlasShowcaseReview from "./crm/AtlasShowcaseReview"
 import QuoteRevisionGroups from "./crm/QuoteRevisionGroups"
 import QuoteWinsPanel from "./crm/QuoteWinsPanel"
@@ -1014,6 +1015,7 @@ export default function LeadEditorDrawer({
     ["Project stage", briefInput.projectStage || builderConfiguration.projectStage],
     ["Target timeline", briefInput.targetTimeline || builderConfiguration.targetTimeline],
   ].filter(([, value]) => String(value || "").trim())
+  const poultrySizing = poultrySizingFromBrief(formData.estimate_request, lead?.notes)
   const briefOutline = briefInput.projectScope || formData.estimate_request || ""
   const briefClientNotes = briefInput.clientNotes || builderConfiguration.notes || ""
   const hasClientBrief = briefFacts.length > 0 || Boolean(briefOutline.trim() || briefClientNotes.trim())
@@ -2346,6 +2348,18 @@ export default function LeadEditorDrawer({
           </summary>
           <div className="border-t border-slate-100 px-4 py-4">
           <p className="mb-4 text-sm leading-6 text-slate-600">{scopeConfig.note}</p>
+          {/^Agricultural Structure\s*-/i.test(formData.product_type || "") && (
+            <div className="mb-4 rounded-xl border border-slate-200 p-3">
+              <p className="mb-2 text-sm text-slate-600">Use the Atlas warehouse options to size and quote this agricultural building. The original enquiry and notes stay on the lead.</p>
+              <button
+                type="button"
+                className="rounded-lg bg-[#0043f3] px-3 py-2 text-sm font-semibold text-white"
+                onClick={() => handleChange("product_type", "Atlas Warehouse")}
+              >
+                Configure Atlas warehouse
+              </button>
+            </div>
+          )}
           {scopeConfig.showSizeSelectors ? (
             <>
               <label className={`${fieldLabelClass} mb-2`}>{scopeConfig.sizeLabel}</label>
@@ -2470,6 +2484,11 @@ export default function LeadEditorDrawer({
             onChange={(e) => handleChange("estimate_request", e.target.value)}
             className={`${inputClass} mt-3 min-h-[110px]`}
           />
+          {poultrySizing && <p className="mt-2 text-xs leading-5 text-slate-600">
+            Indicative if indoor broilers at 10 birds/m²: {poultrySizing.usable} m² usable floor area.
+            {poultrySizing.footprint && ` Illustrative Atlas shell: ${poultrySizing.footprint.width} m × ${poultrySizing.footprint.length} m (${poultrySizing.footprint.area} m² gross).`}
+            {' '}Confirm production system, equipment and ventilation.
+          </p>}
           </div>
         </details>
 
