@@ -39,6 +39,11 @@ function BuilderDeviceBreakdown({ builders }) {
   const [selected, setSelected] = useState('warehouse')
   const builder = builders.find((item) => item.key === selected) ?? builders[0]
   const devices = builder?.devices ?? []
+  const showFormDetail = builder?.key === 'warehouse'
+  const fieldLabels = {
+    name: 'First name', email: 'Email', phone: 'Phone', projectStage: 'Project stage',
+    location: 'Site location', projectUse: 'Project use', photographyPreference: 'Photography preference',
+  }
   return <section className={panel}>
     <Heading eyebrow="Device breakdown" title="How visitors progress by device"
       detail="Device is based on browser width at the first recorded view in this period. Rates use journeys viewed in the selected period. Small counts can swing percentages."
@@ -50,7 +55,7 @@ function BuilderDeviceBreakdown({ builders }) {
     {!devices.length ? <Empty>No device journeys for this builder in the selected period.</Empty> :
       <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm">
         <thead className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500">
-          <tr>{['Device', 'Views', 'Form reached', 'Leads', 'View → lead'].map((label) => <th key={label} scope="col" className="px-3 py-3 first:pl-0">{label}</th>)}</tr>
+          <tr>{['Device', 'Views', 'Form reached', ...(showFormDetail ? ['Form started', 'Blocked', 'Submitted', 'Fields flagged'] : []), 'Leads', 'View → lead'].map((label) => <th key={label} scope="col" className="px-3 py-3 first:pl-0">{label}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-slate-100">{devices.map((row) => {
           const stages = Object.fromEntries(row.stages.map((stage) => [stage.key, stage]))
@@ -59,11 +64,22 @@ function BuilderDeviceBreakdown({ builders }) {
             <th scope="row" className="py-4 pr-3 font-semibold capitalize">{row.device}</th>
             <td className="px-3">{formatNumber(row.journeys)}</td>
             <td className="px-3">{formatNumber(form?.value ?? 0)} <span className="text-slate-500">({percent(form?.rate ?? 0)})</span></td>
+            {showFormDetail && <>
+              <td className="px-3">{row.formStarts ?? '—'}</td>
+              <td className="px-3">{row.blockedJourneys ?? '—'}</td>
+              <td className="px-3">{row.submittedJourneys ?? '—'}</td>
+              <td className="min-w-36 px-3 text-xs text-slate-600">
+                {row.blockers?.length ? <ul className="space-y-1">{row.blockers.map(({ field, journeys }) =>
+                  <li key={field}>{fieldLabels[field] ?? field} · {journeys}</li>
+                )}</ul> : '—'}
+              </td>
+            </>}
             <td className="px-3">{formatNumber(stages.lead_submit_succeeded?.value ?? 0)}</td>
             <td className="px-3">{percent(row.conversionRate)}</td>
           </tr>
         })}</tbody>
       </table></div>}
+    {showFormDetail && <p className="mt-4 text-xs leading-5 text-slate-500">Form starts and validation are counted from the tracking update onward. Blocked counts unique journeys, including visitors who later submitted. A journey can flag more than one field. Submitted counts journeys that passed validation and attempted to send.</p>}
   </section>
 }
 
