@@ -48,13 +48,29 @@ export default function AgriculturalQuoteForm({ content, projectOptions = defaul
     successRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [status])
 
+  useEffect(() => {
+    if (!poultryBrief) return
+    function applyPlannerBrief({ detail }) {
+      setForm(current => ({
+        ...current,
+        projectNeed: detail.projectNeed,
+        birdCapacity: detail.birds,
+        plannerHousing: [detail.production, detail.housing].filter(Boolean).join(' · '),
+      }))
+      setStep(0)
+      setError('')
+    }
+    window.addEventListener('poultry-planner-brief', applyPlannerBrief)
+    return () => window.removeEventListener('poultry-planner-brief', applyPlannerBrief)
+  }, [poultryBrief])
+
   function update(event) {
     const { name, value } = event.target
     setError('')
     setForm(current => {
       // Changing application starts a fresh application brief while keeping contact/site details.
       if (name === 'projectNeed' && value !== current.projectNeed) return { ...current, ...{
-        capacity: '', birdCapacity: '', ventilation: 'Not sure yet', ventilationLayout: 'Not sure yet',
+        capacity: '', birdCapacity: '', plannerHousing: '', ventilation: 'Not sure yet', ventilationLayout: 'Not sure yet',
         proposedSize: '', insulation: 'Not sure yet', insulationSpecification: '', equipment: 'Not sure yet',
         briefStatus: 'Not sure yet',
       }, projectNeed: value }
@@ -115,6 +131,7 @@ export default function AgriculturalQuoteForm({ content, projectOptions = defaul
       {step === 0 ? <div className="space-y-6">
         <fieldset><legend className="text-sm font-black">What are you planning?</legend><div className="mt-3 grid gap-2 sm:grid-cols-2">{projectOptions.map(item => <label key={item} className={choiceClass(form.projectNeed === item)}><input type="radio" name="projectNeed" value={item} checked={form.projectNeed === item} onChange={update} className="h-4 w-4 shrink-0 accent-[#0043f3]" />{item}</label>)}</div></fieldset>
         <label className="block text-sm font-bold">Farm or project location *<input required name="location" value={form.location} onChange={update} placeholder="Town, province or farm area" className={fieldClass} /></label>
+        {isPoultry && form.plannerHousing && <p className="text-sm text-[#526c79]">From your planner: {form.plannerHousing}</p>}
         <label className="block text-sm font-bold">{profile.capacityLabel} <span className="font-normal text-[#526c79]">(optional)</span><input type={isPoultry ? 'number' : 'text'} min={isPoultry ? 1 : undefined} max={isPoultry ? 10000000 : undefined} step={isPoultry ? 1 : undefined} name={isPoultry ? 'birdCapacity' : 'capacity'} value={capacity} onChange={update} placeholder={profile.capacityPlaceholder} className={fieldClass} /></label>
         <p className="border-l-2 border-[#0043f3] pl-3 text-xs leading-6 text-[#526c79]">Capacity helps us understand the operation. Building dimensions are confirmed from the layout, site and specialist requirements.</p>
       </div> : null}

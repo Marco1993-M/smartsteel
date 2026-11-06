@@ -1,3 +1,4 @@
+import PoultrySizePlanner from './PoultrySizePlanner'
 import Link from 'next/link'
 import { ArrowRight, Bird, Egg, Ruler, Sprout } from 'lucide-react'
 const wrap = 'mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-8 lg:py-16'
@@ -22,6 +23,7 @@ export default function PoultryBuildingGuide({ content, section }) {
 
   return <section id="poultry-house-size" className="scroll-mt-44 border-b border-[#dce6ed] bg-white"><div className={wrap}>
     <div className="grid gap-5 lg:grid-cols-2 lg:gap-14"><div><p className={label}>Capacity, dimensions and layout</p><h2 className={heading}>{content.capacity.title}</h2></div><p className={`${text} lg:self-end`}>{content.capacity.description}</p></div>
+    <PoultrySizePlanner />
     <ol className="mt-7 grid gap-5 md:grid-cols-3">{content.capacity.steps.map(([title,body],i)=><li key={title} className="rounded-2xl border border-[#dce6ed] p-5"><span className="text-xs font-bold text-[#0043f3]">0{i+1}</span><h3 className="mt-3 text-lg font-bold">{title}</h3><p className={`${text} mt-2`}>{body}</p></li>)}</ol>
     <details className="group mt-5 rounded-2xl border border-[#dce6ed] bg-[#f5f8fb] p-5"><summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold [&::-webkit-details-marker]:hidden"><span className="inline-flex items-center gap-2"><Ruler aria-hidden="true" className="h-5 w-5 text-[#0043f3]" />Understand footprint versus bird capacity</span><span aria-hidden="true" className="text-xl text-[#0043f3] group-open:rotate-45">+</span></summary><div className="mt-4 grid gap-4 sm:grid-cols-2">{content.capacity.examples.map(example=><div key={example.width} className="rounded-xl border border-[#dce6ed] bg-white p-4"><p className="text-xs text-[#526a78]">{example.title}</p><p className="mt-2 text-xl font-bold">{example.width}m × {example.length}m = {example.area}m²</p><p className="mt-2 text-xs leading-6 text-[#526a78]">Gross structural footprint only. No bird capacity assigned.</p></div>)}</div><p className="mt-4 text-xs leading-6 text-[#526a78]">{content.capacity.note}</p></details>
     <div className="mt-9"><p className={label}>Poultry building plans and construction</p><h3 className="mt-3 text-2xl font-bold tracking-tight">New house, expansion or replacement?</h3><div className="mt-5 grid gap-4 md:grid-cols-2">{content.projects.map(([title,body])=><div key={title} className="rounded-2xl border border-[#dce6ed] p-5"><h4 className="text-base font-bold">{title}</h4><p className={`${text} mt-2`}>{body}</p></div>)}</div></div>
