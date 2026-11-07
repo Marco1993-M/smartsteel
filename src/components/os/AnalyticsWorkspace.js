@@ -5,7 +5,7 @@ import Link from "next/link"
 import { ArrowUpRight, Banknote, CircleCheck, Eye, Megaphone, MousePointerClick, Search, Users, RefreshCw, ArrowDownToLine, Clock3, MessageSquare, Layers3, BarChart3, Workflow } from "lucide-react"
 import AnalyticsPeriodPicker from "./AnalyticsPeriodPicker"
 import AnalyticsActivityChart from "./AnalyticsActivityChart"
-import { currentAnalyticsMonth, analyticsPeriodQuery } from "../../lib/analyticsPeriods.mjs"
+import { analyticsPeriodQuery } from "../../lib/analyticsPeriods.mjs"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 
@@ -97,13 +97,13 @@ function BuilderFunnel({ data }) {
 
     {!hasData ? <section className={panel}><Heading eyebrow="Collection started" title="Waiting for the first complete journeys" detail="Events will appear here as visitors use the three builders." /><Empty>The tracker is connected. Select a later reporting period after production traffic begins flowing.</Empty></section> : <>
       <section className={panel}>
-        <Heading eyebrow="All builders · unique journeys" title="Where visitors leave the builder journey" detail="Each stage counts a journey once. Rates use builder views as the baseline, so repeated interactions do not inflate progress." />
-        <div className="space-y-4">{data.stages.map((stage, index) => {
+        <Heading eyebrow="All builders · unique journeys" title="From builder visit to enquiry" detail="Each stage counts a journey once. Rates use builder views as the baseline, so repeated interactions do not inflate progress." />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{data.stages.map((stage, index) => {
           const previousValue = index === 0 ? stage.value : data.stages[index - 1].value
           const stepRate = index === 0 ? 100 : previousValue > 0 ? Math.round(stage.value / previousValue * 1000) / 10 : 0
-          return <div key={stage.key}>
-            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 text-sm"><span className="font-medium text-slate-700">{stage.label}</span><span className="tabular-nums text-slate-500"><strong className="text-slate-950">{formatNumber(stage.value)}</strong> · {percent(stage.rate)} of views{index ? ` · ${percent(stepRate)} from prior stage` : ''}</span></div>
-            <div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-sky-500 transition-[width]" style={{ width: `${Math.min(100, stage.rate)}%` }} /></div>
+          return <div key={stage.key} className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+            <div className="mb-3 flex flex-col items-start gap-2 text-sm"><span className="font-semibold text-slate-700">{stage.label}</span><span className="tabular-nums text-slate-500"><strong className="text-slate-950">{formatNumber(stage.value)}</strong> · {percent(stage.rate)} of views{index ? ` · ${percent(stepRate)} from prior stage` : ''}</span></div>
+            <div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#0043f3] transition-[width]" style={{ width: `${Math.min(100, stage.rate)}%` }} /></div>
           </div>
         })}</div>
       </section>
@@ -244,7 +244,7 @@ function exportPerformance(data) {
 }
 
 export default function AnalyticsWorkspace() {
-  const [selection, setSelection] = useState(() => ({range:'month',month:currentAnalyticsMonth()}))
+  const [selection, setSelection] = useState(() => ({ range: 'last3months' }))
   const periodQuery = analyticsPeriodQuery(selection)
   const [tab, setTab] = useState('overview')
   const [data, setData] = useState(null)
@@ -293,7 +293,7 @@ export default function AnalyticsWorkspace() {
     <div className="mx-auto max-w-[1500px] space-y-6">
       <header className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-[#0043f3]" />Smart Steel / Commercial intelligence</div><h1 className="text-3xl font-semibold tracking-tight text-[#001d2e] sm:text-4xl">Business performance</h1><p className="mt-2 text-sm text-slate-500">Track growth, conversion and commercial performance.</p></div>
+          <div><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-[#0043f3]" />Smart Steel / Commercial intelligence</div><h1 className="text-3xl font-semibold tracking-tight text-[#001d2e] sm:text-4xl">{tab === "builders" ? "Builder performance" : "Business performance"}</h1><p className="mt-2 text-sm text-slate-500">{tab === "builders" ? "Follow visitors from their first configuration to a submitted enquiry." : "Track growth, conversion and commercial performance."}</p></div>
           <Link href="/os/analytics/annual" className={`${button} min-h-10 shrink-0`}>Annual plan & projection<ArrowUpRight size={14} aria-hidden="true" /></Link>
         </div>
         <div className="flex flex-wrap items-end justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:px-4">

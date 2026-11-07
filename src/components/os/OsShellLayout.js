@@ -220,7 +220,7 @@ export default function OsShellLayout({ children }) {
                   {activeSection.description}
                 </p>
               </div>
-              {activeSection.status ? (
+              {activeSection.status && activeSection.key !== "analytics" ? (
                 <span
                   className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${OS_STATUS_META[activeSection.status]?.badgeClassName}`}
                 >
