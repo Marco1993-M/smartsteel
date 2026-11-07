@@ -1,5 +1,7 @@
 "use client"
+import { createPortal } from "react-dom"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { Type, Heading2, Heading3, Bold, Italic, Highlighter, List, ListOrdered, RemoveFormatting } from "lucide-react"
 
 // Deliberately limited formatting: text is always rendered through React, never HTML.
 function Inline({ text }) {
@@ -30,7 +32,7 @@ function LegacyText({ value }) {
   return <div className="break-words">{blocks}</div>
 }
 const PREFIX = "@memo-rich-v1:"
-const TAGS = new Set(["div", "p", "br", "strong", "em", "mark", "ul", "ol", "li"])
+const TAGS = new Set(["div", "p", "br", "strong", "em", "mark", "ul", "ol", "li", "h2", "h3"])
 function readRich(value) {
   if (!String(value || "").startsWith(PREFIX)) return null
   try {
@@ -47,7 +49,7 @@ function RichNodes({ nodes }) {
     return <Tag key={index}><RichNodes nodes={node.children} /></Tag>
   })
 }
-const textStyles = "break-words whitespace-pre-wrap [&_mark]:bg-yellow-100 [&_mark]:text-inherit [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_p]:min-h-[1em] [&_div]:min-h-[1em]"
+const textStyles = "[&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold break-words whitespace-pre-wrap [&_mark]:bg-yellow-100 [&_mark]:text-inherit [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_p]:min-h-[1em] [&_div]:min-h-[1em]"
 export function MemoText({ value }) {
   const nodes = readRich(value)
   return nodes ? <div className={textStyles}><RichNodes nodes={nodes} /></div> : <LegacyText value={value} />
@@ -73,7 +75,7 @@ export function serializeMemoEditor(root) {
   }
   return root.textContent.trim() ? PREFIX + JSON.stringify(children(root)) : ""
 }
-export function MemoTextEditor({ value, onChange, label, rows = 3, disabled = false }) {
+export function MemoTextEditor({ value, onChange, label, rows = 3, disabled = false, documentHeader = null, toolbarTarget = null }) {
   const ref = useRef(null)
   const selection = useRef(null)
   const lastEmitted = useRef(value)
@@ -108,13 +110,43 @@ export function MemoTextEditor({ value, onChange, label, rows = 3, disabled = fa
     const sel = window.getSelection()
     if (selection.current && ref.current.contains(selection.current.commonAncestorContainer)) { sel.removeAllRanges(); sel.addRange(selection.current) }
     const commands = { bold: "bold", italic: "italic", bullets: "insertUnorderedList", numbers: "insertOrderedList", clear: "removeFormat" }
+    if (["paragraph", "heading", "subheading"].includes(kind)) {
+      document.execCommand("formatBlock", false, { paragraph: "p", heading: "h2", subheading: "h3" }[kind])
+      publish()
+      return
+    }
     document.execCommand(kind === "highlight" ? "hiliteColor" : commands[kind], false, kind === "highlight" ? "#fef9c3" : null)
     publish()
   }
   return <div className="font-normal">
-    <div role="toolbar" aria-label={`${label} formatting`} className="mb-3 flex flex-wrap gap-1">
-      {[["bold", "Bold"], ["italic", "Italic"], ["highlight", "Highlight"], ["bullets", "Bullets"], ["numbers", "Numbered list"], ["clear", "Clear formatting"]].map(([key, title]) => <button key={key} type="button" aria-pressed={active[key] || false} disabled={disabled} onMouseDown={event => event.preventDefault()} onClick={() => format(key)} className={`rounded-md px-2 py-1 text-xs font-semibold focus-visible:outline-blue-600 disabled:opacity-50 ${active[key] ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-50 hover:text-blue-700"}`}>{title}</button>)}
-    </div>
+    {(() => { const toolbar = <div role="toolbar" aria-label={`${label} formatting`} className="mb-0 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-2.5">
+      {[
+        { label: "Text style", controls: [["paragraph", "Text", Type], ["heading", "Heading", Heading2], ["subheading", "Subheading", Heading3]] },
+        { label: "Emphasis", controls: [["bold", "Bold", Bold], ["italic", "Italic", Italic], ["highlight", "Highlight", Highlighter]] },
+        { label: "Lists and formatting", controls: [["bullets", "Bulleted list", List], ["numbers", "Numbered list", ListOrdered], ["clear", "Clear formatting", RemoveFormatting]] },
+      ].map(group => (
+        <div key={group.label} role="group" aria-label={group.label} className="flex items-center gap-0.5 border-r border-slate-200 pr-3 last:border-r-0 last:pr-0">
+          {group.controls.map(([key, title, Icon]) => (
+            <button
+              key={key}
+              type="button"
+              title={title}
+              aria-label={title}
+              aria-pressed={["bold", "italic", "bullets", "numbers"].includes(key) ? Boolean(active[key]) : undefined}
+              disabled={disabled}
+              onMouseDown={event => event.preventDefault()}
+              onClick={() => format(key)}
+              className={`inline-flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-40 ${active[key] ? "bg-blue-100 text-blue-800" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}
+            >
+              <Icon aria-hidden="true" size={17} strokeWidth={2} />
+              {group.label === "Text style" && <span>{title}</span>}
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>;
+    return toolbarTarget ? createPortal(toolbar, toolbarTarget) : toolbar })()}
+    {documentHeader}
     <div key={generation} ref={ref} role="textbox" aria-label={label} aria-multiline="true" aria-disabled={disabled} contentEditable={!disabled} suppressContentEditableWarning onInput={publish} onKeyUp={capture} onMouseUp={capture} onBlur={capture}
       onPaste={event => { event.preventDefault(); document.execCommand("insertText", false, event.clipboardData.getData("text/plain")); publish() }}
       onDrop={event => event.preventDefault()}
