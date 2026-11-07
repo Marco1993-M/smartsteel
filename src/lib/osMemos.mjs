@@ -10,4 +10,6 @@ export const MEMO_STATUSES = { draft: "Draft", discussion: "In discussion", deci
 export const MEMO_DECISIONS = { approved: "Proceed", deferred: "Deferred", not_proceeding: "Not proceeding" }
 export function emptyMemo() { return { title: "", content: Object.fromEntries(MEMO_FIELDS.map(([key]) => [key, ""])), editor_emails: [], decision_owner_email: "" } }
 export function canEditMemo(memo, email) { return ["draft", "discussion"].includes(memo.status) && (memo.author_email === email || email === "info@smartsteel.co.za" || memo.editor_emails.includes(email)) }
-export function validateMemoContent(content) { return content && typeof content === "object" && !Array.isArray(content) && Object.keys(content).every((key) => MEMO_FIELDS.some(([name]) => name === key)) && Object.values(content).every((value) => typeof value === "string" && value.length <= 12000) }
+export function validateMemoContent(content) { return content && typeof content === "object" && !Array.isArray(content) && Object.keys(content).every((key) => (key === "body" || MEMO_FIELDS.some(([name]) => name === key))) && Object.values(content).every((value) => typeof value === "string" && value.length <= 12000) }
+
+export function memoFields(content) { return Object.hasOwn(content || {}, "body") ? [["body", "Note", "Capture your notes, ideas or procedure."]] : MEMO_FIELDS }
