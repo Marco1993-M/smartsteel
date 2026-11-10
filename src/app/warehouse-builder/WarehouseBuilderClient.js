@@ -1626,6 +1626,18 @@ export default function WarehouseBuilderClient() {
                         <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />
                         <p className="truncate text-xs text-slate-500">{mobileSceneSummary}</p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setApplyingForShowcase(false)
+                          setSubmissionIntent("review")
+                          setShowLeadForm(true)
+                          trackBuilderEvent("warehouse_builder_review_opened", { system: isAtlasWarehouse ? "atlas" : "lsf" })
+                        }}
+                        className="mt-2 w-full rounded-full bg-[var(--builder-accent)] px-3 py-2 text-xs font-semibold text-white"
+                      >
+                        Get my quote
+                      </button>
                       {budgetPulse && budgetDelta !== 0 ? (
                         <div className="pointer-events-none absolute left-2 top-full mt-1.5 inline-flex items-center gap-1 rounded-full bg-slate-950 px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm">
                           <span className="text-slate-300">Updated</span>
@@ -1942,7 +1954,7 @@ export default function WarehouseBuilderClient() {
         </div>
        </Dialog>
       ) : null}
-      {!isSceneVisible && !submitted ? (
+      {!isSceneVisible && !submitted && !showLeadForm ? (
         <div className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 xl:hidden">
           <div className="mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/95 p-2.5 pl-4 shadow-[0_20px_55px_-20px_rgba(15,23,42,0.5)] backdrop-blur">
             <div className="min-w-0">
