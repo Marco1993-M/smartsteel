@@ -94,9 +94,10 @@ export default function AgriculturalStructurePage({ content }) {
           <h1 className="mt-4 max-w-4xl text-4xl font-bold leading-[1.06] tracking-tight text-balance sm:mt-5 sm:text-5xl lg:text-5xl xl:text-6xl">{content.title}</h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[#526a78] sm:mt-6 sm:text-lg">{content.summary}</p>
           <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
-            <a href="#agricultural-quote" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#001d2e]">{content.primaryCta} <ArrowRight className="h-4 w-4" /></a>
-            <Link href={primaryBuilderUrl} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#dce6ed] bg-white px-6 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-[#f3f7fa]">{content.heroBuilderLabel}</Link>
+            <a href="#agricultural-quote" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#001d2e]">Request a building quote <ArrowRight className="h-4 w-4" /></a>
+            <Link href={primaryBuilderUrl} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#dce6ed] bg-white px-6 py-3 text-sm font-bold text-[#001d2e] transition hover:bg-[#f3f7fa]">Explore in 3D</Link>
           </div>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[#526a78]">Tell us what you need and where you plan to build. We will review your requirements and confirm the scope before preparing your quote.</p>
         </div>
         {content.heroImage ? <div className="min-w-0">
           <div className="relative aspect-video overflow-hidden rounded-3xl bg-[#f3f7fa]">
@@ -144,6 +145,7 @@ export default function AgriculturalStructurePage({ content }) {
 
     {content.poultryGuide && <><PoultryBuildingGuide content={content.poultryGuide} section="types" /><PoultryBuildingGuide content={content.poultryGuide} section="sizes" /></>}
 
+
     {content.poultryPlanning ? <PoultryPlanningSection content={content.poultryPlanning} /> : null}
 
     {content.poultryGuide && <PoultryBuildingGuide content={content.poultryGuide} section="costs" />}
@@ -158,11 +160,11 @@ export default function AgriculturalStructurePage({ content }) {
       </details>
     </section> : null}
 
-    <section className="bg-[#001d2e] text-white">
-      <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:px-8 lg:py-20">
-        <div className="max-w-4xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#73a8ff]">Atlas building pathway</p><h2 className="mt-3 text-2xl font-bold sm:text-3xl">{content.builderSectionTitle}</h2><p className="mt-3 text-sm leading-7 text-[#c1d9e5]">{content.builderSectionDescription}</p></div>
-        <div className="mt-9 border-y border-[#315364]">
-          {hasBuilderConfigurations ? content.builderConfigurations.map((configuration, index) => <div key={configuration.code} className="grid gap-5 border-b border-[#315364] py-6 last:border-b-0 md:grid-cols-[80px_1fr_auto] md:items-center md:gap-8"><span className="font-mono text-sm font-bold text-[#94b9ff]">0{index + 1}</span><div><div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><h3 className="text-lg font-bold">{configuration.title}</h3><span className="font-mono text-sm font-bold text-[#73a8ff]">{configuration.width}m × {configuration.length}m × {configuration.height}m</span></div><p className="mt-2 max-w-3xl text-sm leading-6 text-[#9fbbc8]">{configuration.note}</p><p className="mt-2 max-w-3xl text-xs leading-5 text-white/55">Sizing basis: {configuration.basis}</p></div><Link href={builderHref(configuration)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-white/30 px-5 text-sm font-bold text-white transition hover:border-white hover:bg-white/10">View in 3D <ArrowRight className="h-4 w-4" /></Link></div>) : <div className="grid gap-6 py-7 md:grid-cols-[1fr_auto] md:items-center"><div><h3 className="text-lg font-bold">Let’s find a building size that works for your plans</h3><p className="mt-2 max-w-3xl text-sm leading-7 text-[#9fbbc8]">{content.sizingGuidance}</p></div><a href="#agricultural-quote" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/30 px-5 text-sm font-bold text-[#94b9ff] transition hover:bg-[#edf3ff] hover:text-[#001d2e]">Tell us what you have in mind <ArrowRight className="h-4 w-4" /></a></div>}
+    <section className="border-y border-[#dce6ed] bg-[#f7f9fb] text-[#001d2e]">
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-8 lg:py-12">
+        <div className="max-w-4xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Building sizes and 3D options</p><h2 className="mt-3 text-2xl font-bold sm:text-3xl">{content.builderSectionTitle}</h2><p className="mt-3 text-sm leading-7 text-[#526a78]">{content.builderSectionDescription}</p></div>
+        <div className="mt-6 border-y border-[#dce6ed]">
+          {hasBuilderConfigurations ? content.builderConfigurations.map((configuration, index) => <div key={configuration.code} className="grid gap-5 border-b border-[#dce6ed] py-6 last:border-b-0 md:grid-cols-[80px_1fr_auto] md:items-center md:gap-8"><span className="font-mono text-sm font-bold text-[#0043f3]">0{index + 1}</span><div><div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><h3 className="text-lg font-bold">{configuration.title}</h3><span className="font-mono text-sm font-bold text-[#0043f3]">{configuration.width}m × {configuration.length}m × {configuration.height}m</span></div><p className="mt-2 max-w-3xl text-sm leading-6 text-[#526a78]">{configuration.note}</p><p className="mt-2 max-w-3xl text-xs leading-5 text-[#647b89]">Sizing basis: {configuration.basis}</p></div><Link href={builderHref(configuration)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[#dce6ed] px-5 text-sm font-bold text-[#0043f3] transition hover:border-[#0043f3] hover:bg-white">View in 3D <ArrowRight className="h-4 w-4" /></Link></div>) : <div className="grid gap-6 py-7 md:grid-cols-[1fr_auto] md:items-center"><div><h3 className="text-lg font-bold">Let’s find a building size that works for your plans</h3><p className="mt-2 max-w-3xl text-sm leading-7 text-[#526a78]">{content.sizingGuidance}</p></div><a href="#agricultural-quote" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#dce6ed] px-5 text-sm font-bold text-[#0043f3] transition hover:bg-[#edf3ff] hover:text-[#001d2e]">Request a building quote <ArrowRight className="h-4 w-4" /></a></div>}
         </div>
       </div>
     </section>
