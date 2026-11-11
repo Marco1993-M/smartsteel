@@ -4,7 +4,7 @@ import { ATLAS_M10_COMPLETE_SET } from '../atlasConnectionStandards.js'
 export const SOLAR_COST_DEFAULTS = {
   zamRatePerTon: 28840, wastePercent: 0, fabricationPerKg: 0,
   anchorBracketEach: 350, armBracketEach: 175, purlinBracketEach: 40,
-  anchorBoltEach: 0, connectionBoltSetEach: ATLAS_M10_COMPLETE_SET.costRate, moduleSupportEach: 145,
+  anchorBoltEach: 25, connectionBoltSetEach: ATLAS_M10_COMPLETE_SET.costRate, moduleSupportEach: 145,
   installationSellPerSquareMetre: 280, stripFootingSellEach: 5500,
   deliveryPerKm: 19, deliveryMinimum: 1350,
   upliftPercent: 40,
@@ -88,8 +88,8 @@ export function calculateAtlasSolarCarportEstimate(input, release = null) {
     const c = release.costs
     geometry.members.forEach(m => add(m.code, `${m.label} · ${m.profile.section} · ${m.cutLengthM.toFixed(3)}m`, m.totalMassKg * quantity, 'kg', c.zamRatePerTon / 1000))
     const kg = geometry.totalSteelKg * quantity
-    add('SC-WASTE', 'Steel waste allowance', kg, 'kg', c.zamRatePerTon / 1000 * c.wastePercent / 100)
-    add('SC-FAB', 'Fabrication allowance', kg, 'kg', c.fabricationPerKg)
+    if (c.wastePercent > 0) add('SC-WASTE', 'Steel waste allowance', kg, 'kg', c.zamRatePerTon / 1000 * c.wastePercent / 100)
+    if (c.fabricationPerKg > 0) add('SC-FAB', 'Fabrication allowance', kg, 'kg', c.fabricationPerKg)
     const connectionRates = {
       'SC-BRK-BASE': c.anchorBracketEach,
       'SC-BRK-ARM': c.armBracketEach,
