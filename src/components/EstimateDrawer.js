@@ -548,6 +548,14 @@ function buildEditableLineItemsFromEstimate(previewLineItems, estimate, markupMu
   })
 }
 
+function estimatePricingSpecificationKey(input) {
+  if (input.productType !== "Solar carport") return warehousePricingSpecificationKey(input)
+  return JSON.stringify([
+    input.productType, Number(input.width), Number(input.length), input.parkingRuns,
+    input.scope, Number(input.deliveryDistance),
+  ])
+}
+
 function hasLineItemOverrides(item, previewLabel) {
   if (!item.userEdited) return false
 
@@ -687,7 +695,7 @@ export default function EstimateDrawer({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [revisionMode, setRevisionMode] = useState("new")
   const previousProductTypeRef = useRef(buildInitialState(lead, latestEstimate).productType)
-  const previousPricingSpecificationRef = useRef(warehousePricingSpecificationKey(formState))
+  const previousPricingSpecificationRef = useRef(estimatePricingSpecificationKey(formState))
   const isSolarEstimate = isSolarEstimateProduct(formState.productType)
   const isSolarCarportEstimate = formState.productType === "Solar carport"
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
@@ -717,7 +725,7 @@ export default function EstimateDrawer({
       summary: quantitySummary,
     }
   }, [formState, solarPricing.estimate])
-  const pricingSpecificationKey = warehousePricingSpecificationKey(formState)
+  const pricingSpecificationKey = estimatePricingSpecificationKey(formState)
   const [editableLineItems, setEditableLineItems] = useState(() =>
     buildEditableLineItemsFromEstimate(
       preview.lineItems,
@@ -734,7 +742,7 @@ export default function EstimateDrawer({
     const nextFormState = buildInitialState(lead, loadedEstimate)
     setFormState(nextFormState)
     previousProductTypeRef.current = nextFormState.productType
-    previousPricingSpecificationRef.current = warehousePricingSpecificationKey(nextFormState)
+    previousPricingSpecificationRef.current = estimatePricingSpecificationKey(nextFormState)
 
     const nextPreview = calculateEstimateByProductType(nextFormState.productType, {
       ...nextFormState,
@@ -752,8 +760,9 @@ export default function EstimateDrawer({
   }, [lead, loadedEstimate])
 
   useEffect(() => {
+    if (solarPricingPending) return
     const specificationKey = pricingSpecificationKey
-    const reprice = isAtlasWarehouseEstimateProduct(formState.productType)
+    const reprice = (isAtlasWarehouseEstimateProduct(formState.productType) || isSolarCarportEstimate)
       && previousPricingSpecificationRef.current !== specificationKey
     previousPricingSpecificationRef.current = specificationKey
     setEditableLineItems((currentItems) => {
@@ -773,10 +782,10 @@ export default function EstimateDrawer({
           buildItem: buildEditableLineItem,
           hasOverrides: hasLineItemOverrides,
           reprice,
-          addMissing: isAtlasWarehouseEstimateProduct(formState.productType) || formState.productType === "Solar ground mount",
+          addMissing: isSolarCarportEstimate || isAtlasWarehouseEstimateProduct(formState.productType) || formState.productType === "Solar ground mount",
         })
     })
-  }, [formState.productType, formState.groundMountRuns, pricingSpecificationKey, preview.lineItems, preview.pricing.markupMultiplier])
+  }, [formState.productType, formState.groundMountRuns, isSolarCarportEstimate, solarPricingPending, pricingSpecificationKey, preview.lineItems, preview.pricing.markupMultiplier])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -841,6 +850,8 @@ export default function EstimateDrawer({
       }
 
       if (nextState.productType === "Solar carport" && (field === "width" || field === "length")) {
+        // The size controls describe one run and supersede the copied layout.
+        delete nextState.parkingRuns
         nextState.moduleCount = getSolarCarportPanelCount(nextState.width, nextState.length)
       }
 
