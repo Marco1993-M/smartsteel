@@ -777,7 +777,15 @@ export default function EstimateDrawer({
         )
       }
 
-      return reconcileEstimateItems(currentItems,
+      const items = isSolarCarportEstimate
+        ? currentItems.filter(item => {
+            const isAllowance = item.code === "SC-WASTE" || item.code === "SC-FAB"
+            const isUnpricedAnchor = item.code === "SC-ANC" && Number(item.unitRate) === 0
+              && preview.lineItems.some(line => line.code === "SC-ANC" && line.unitRate > 0)
+            return !(isAllowance && Number(item.unitRate) === 0) && !isUnpricedAnchor
+          })
+        : currentItems
+      return reconcileEstimateItems(items,
         preview.lineItems.map(item => applyMarkupToLineItem(item, preview.pricing.markupMultiplier)), {
           buildItem: buildEditableLineItem,
           hasOverrides: hasLineItemOverrides,
