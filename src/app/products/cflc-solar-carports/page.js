@@ -99,7 +99,6 @@ const faqs = [
 ]
 
 const relatedPages = [
-  ["Atlas carports", "Explore non-solar parking cover for projects that do not need panel support.", "/products/cflc-carport-kits", "View Atlas carports"],
   ["Atlas ground mounts", "Price a standalone solar structure when the array does not need to sit over parking.", "/products/cflc-ground-mounts", "View ground mounts"],
   ["Atlas warehouse system", "Explore the wider Atlas platform for modular warehouse and infrastructure structures.", "/warehouses/cflc", "Explore Atlas W-Series"],
 ]

@@ -126,11 +126,6 @@ const supportLinks = [
     href: "/products/cflc-solar-carports",
   },
   {
-    title: "Explore Atlas carports",
-    description: "See the carport page if you need a parking structure without the solar element.",
-    href: "/products/cflc-carport-kits",
-  },
-  {
     title: "Talk to Smart Steel",
     description: "If you already know your panel count or site location, send it through and we can help with the next step.",
     href: "/contact",

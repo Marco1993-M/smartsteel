@@ -7,13 +7,12 @@ const PAGE_PATH = "/products"
 export const metadata = {
   title: "Steel Building Products South Africa | Smart Steel",
   description:
-    "Find the right steel structure for your project: LSF warehouses, Atlas modular warehouse systems, lip channel carports, solar carports, ground mounts, and lightweight steel trusses.",
+    "Find the right steel structure for your project: LSF warehouses, Atlas modular warehouse systems, solar carports, ground mounts, and lightweight steel trusses.",
   keywords: [
     "steel building products south africa",
     "steel warehouses",
     "Atlas warehouse system",
     "lip channel warehouse kits",
-    "steel carports",
     "solar carports",
     "solar ground mounts",
     "lightweight steel trusses",
@@ -22,7 +21,7 @@ export const metadata = {
   openGraph: {
     title: "Steel Building Products | Smart Steel",
     description:
-      "Choose a warehouse, carport, solar structure, or truss system and continue into the right Smart Steel product page.",
+      "Choose a warehouse, solar structure, or truss system and continue into the right Smart Steel product page.",
     url: `${SITE_URL}${PAGE_PATH}`,
     siteName: "Smart Steel",
     locale: "en_ZA",
@@ -67,16 +66,6 @@ const warehouseOptions = [
 ]
 
 const structureOptions = [
-  {
-    eyebrow: "Parking cover",
-    system: "Atlas System",
-    title: "Lip Channel Carports",
-    description: "Practical steel carports for single, double, and larger parking cover projects.",
-    href: "/products/cflc-carport-kits",
-    cta: "Explore carports",
-    image: "/CFLC_carport.webp",
-    imageAlt: "Smart Steel lip channel carport",
-  },
   {
     eyebrow: "Solar parking",
     system: "Atlas System",
@@ -152,7 +141,7 @@ export default function ProductsHubPage() {
             <a href="#structures" className="group border-b border-[#121a20]/15 px-5 py-5 transition hover:bg-white sm:border-b-0 sm:border-r">
               <p className="font-mono text-xs text-[#d21f35]">02</p>
               <p className="mt-2 font-semibold">Cover and solar</p>
-              <p className="mt-1 text-sm text-[#121a20]/60">Carports and solar structures</p>
+              <p className="mt-1 text-sm text-[#121a20]/60">Solar carports and ground mounts</p>
             </a>
             <Link href="/products/lightweight-steel-trusses" className="group px-5 py-5 transition hover:bg-white">
               <p className="font-mono text-xs text-[#d21f35]">03</p>
