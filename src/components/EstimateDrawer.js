@@ -867,6 +867,22 @@ export default function EstimateDrawer({
     })
   }
 
+  const startAdditionalQuote = () => {
+    if (revisionMode === "alternative") return
+    setRevisionMode("alternative")
+    setHasUnsavedChanges(true)
+
+    if (isAtlasWarehouseEstimateProduct(formState.productType)) {
+      // A separate warehouse quote starts at the catalogue price for its scope.
+      setFormState(current => ({ ...current, quantity: 1, discountPercent: 0 }))
+      setEditableLineItems(preview.lineItems.map(item =>
+        buildEditableLineItem(applyMarkupToLineItem(item, preview.pricing.markupMultiplier), {
+          priceIncludesMarkup: true,
+        })
+      ))
+    }
+  }
+
   const toggleStructuralSystem = (system) => {
     const current = Array.isArray(formState.structuralSystems) ? formState.structuralSystems : []
     handleChange(
@@ -1110,7 +1126,7 @@ export default function EstimateDrawer({
                     {canUpdateLoadedEstimate ? (
                       <div className="flex flex-wrap gap-2">
                         <button type="button" aria-pressed={revisionMode === "new"} onClick={() => { setRevisionMode("new"); setHasUnsavedChanges(true) }} className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold ${revisionMode === "new" ? "border-[#0043f3] bg-blue-50 text-[#0043f3]" : "border-slate-200 text-slate-600"}`}>Revise this quote</button>
-                        <button type="button" aria-pressed={revisionMode === "alternative"} onClick={() => { setRevisionMode("alternative"); setHasUnsavedChanges(true) }} className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold ${revisionMode === "alternative" ? "border-[#0043f3] bg-blue-50 text-[#0043f3]" : "border-slate-200 text-slate-600"}`}>Create an additional quote</button>
+                        <button type="button" aria-pressed={revisionMode === "alternative"} onClick={startAdditionalQuote} className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold ${revisionMode === "alternative" ? "border-[#0043f3] bg-blue-50 text-[#0043f3]" : "border-slate-200 text-slate-600"}`}>Create an additional quote</button>
                         {canEditLoadedDraft && <button type="button" aria-pressed={revisionMode === "update"} onClick={() => setRevisionMode("update")} className={`min-h-11 rounded-xl px-3 py-2 text-xs font-semibold ${revisionMode === "update" ? "bg-slate-100 text-slate-950" : "text-slate-500"}`}>Edit draft V{loadedEstimate.version_no}</button>}
                       </div>
                     ) : null}
@@ -1118,7 +1134,7 @@ export default function EstimateDrawer({
                 </div>
               </div>
 
-              {loadedEstimate && <p role="status" className="border-b border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900 sm:px-6">{revisionMode === "alternative" ? "Additional work: starts a separate quote using the loaded scope as a starting point. Give it a distinct title. Both quotes can be accepted independently." : revisionMode === "update" ? `Editing unsent draft V${loadedEstimate.version_no}. This updates the draft without creating a revision.` : `Revising V${loadedEstimate.version_no}: saves a new version of this quote. The previous version stays in history. An accepted order changes only when you confirm the new won version in Commercial.`}</p>}
+              {loadedEstimate && <p role="status" className="border-b border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900 sm:px-6">{revisionMode === "alternative" ? (isAtlasWarehouseEstimateProduct(formState.productType) ? "Additional quote starts with standard pricing for one warehouse. Add any services or discounts for this quote separately." : "Additional work: starts a separate quote using the loaded scope as a starting point. Give it a distinct title. Both quotes can be accepted independently.") : revisionMode === "update" ? `Editing unsent draft V${loadedEstimate.version_no}. This updates the draft without creating a revision.` : `Revising V${loadedEstimate.version_no}: saves a new version of this quote. The previous version stays in history. An accepted order changes only when you confirm the new won version in Commercial.`}</p>}
               <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex gap-2 overflow-x-auto">
