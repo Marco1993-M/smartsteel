@@ -2,7 +2,7 @@ import { supabaseServer } from "./supabase-server"
 import { buildPartnerSafeAtlasRelease } from "./partnerAtlasRelease"
 
 function widthFromProductCode(productCode) {
-  const match = String(productCode || "").match(/W(06|08|10|12)/i)
+  const match = String(productCode || "").match(/W(06|08|10|12|15)/i)
   return match ? Number(match[1]) : null
 }
 
