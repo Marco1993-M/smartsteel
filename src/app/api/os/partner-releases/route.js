@@ -89,6 +89,7 @@ export async function POST(request) {
   const approvedBy = String(body.approvedBy || "").trim()
   const validFrom = body.validFrom || new Date().toISOString().slice(0, 10)
   const validUntil = body.validUntil || null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(validFrom) || !Number.isFinite(Date.parse(validFrom)) || (validUntil && (!/^\d{4}-\d{2}-\d{2}$/.test(validUntil) || !Number.isFinite(Date.parse(validUntil)) || validUntil < validFrom))) return NextResponse.json({ error: "Choose a valid release period; the end date cannot precede the start." }, { status: 400 })
   if (!approvedBy) return NextResponse.json({ error: "Record who approved this partner release." }, { status: 400 })
 
   let safeRelease

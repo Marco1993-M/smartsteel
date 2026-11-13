@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getPartnerRequestContext } from "lib/partnerRouteAuth"
 import { supabaseServer } from "lib/supabase-server"
+import { ATLAS_WAREHOUSE_PRICING_RELEASE } from "lib/estimates/atlasWarehouseEstimate"
 
 export const runtime = "nodejs"
 
@@ -17,7 +18,7 @@ export async function GET(request) {
     .eq("status", "active")
     .lte("valid_from", today)
     .or(`valid_until.is.null,valid_until.gte.${today}`)
-    .order("name")
+    .order("created_at", { ascending: false })
 
   if (productError) return NextResponse.json({ error: productError.message }, { status: 500 })
 
@@ -28,6 +29,7 @@ export async function GET(request) {
         .select("id, product_release_id, configuration_key, currency, amount_ex_vat, valid_until")
         .in("product_release_id", productIds)
         .eq("status", "active")
+        .eq("source_pricing_release", ATLAS_WAREHOUSE_PRICING_RELEASE)
         .lte("valid_from", today)
         .or(`valid_until.is.null,valid_until.gte.${today}`)
     : { data: [], error: null }
@@ -36,7 +38,10 @@ export async function GET(request) {
   const pricesByProduct = new Map((prices || []).map((price) => [price.product_release_id, price]))
 
   return NextResponse.json({
-    products: (products || []).map((product) => ({
+    products: (products || []).filter(product => pricesByProduct.has(product.id)).filter((product, index, items) => {
+      const family = product.product_code.match(/W(06|08|10|12|15)/i)?.[0]
+      return family && items.findIndex(item => item.product_code.match(/W(06|08|10|12|15)/i)?.[0] === family) === index
+    }).map((product) => ({
       id: product.id,
       productCode: product.product_code,
       sku: product.release_payload?.sku || product.product_code,
