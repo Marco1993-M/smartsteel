@@ -217,6 +217,29 @@ export async function GET(request) {
   return NextResponse.json({ schemaReady: true, records: (data || []).map((row) => normalizeOpportunity(row, latestBomByOpportunity.get(row.id))) })
 }
 
+export async function DELETE(request) {
+  const authResponse = await requireOsAuth(request)
+  if (authResponse) return authResponse
+
+  const id = new URL(request.url).searchParams.get("id")
+  if (!id || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) {
+    return NextResponse.json({ error: "Select a valid opportunity." }, { status: 400 })
+  }
+
+  const { data, error } = await supabaseServer.from("partner_opportunities")
+    .delete()
+    .eq("id", id)
+    .neq("status", "closed")
+    .in("partner_order_status", ["not_ready", "ready_for_order"])
+    .is("internal_project_id", null)
+    .select("id")
+    .maybeSingle()
+
+  if (error) return NextResponse.json({ error: "Could not delete the opportunity." }, { status: 500 })
+  if (!data) return NextResponse.json({ error: "The opportunity is unavailable or has already progressed to an order." }, { status: 409 })
+  return NextResponse.json({ id: data.id })
+}
+
 export async function PATCH(request) {
   const authResponse = await requireOsAuth(request)
   if (authResponse) return authResponse
