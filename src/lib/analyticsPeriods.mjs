@@ -57,7 +57,8 @@ export function buildAnalyticsSelection(params, now = new Date()) {
   if (range === 'month') return {...buildAnalyticsPeriod(params.get('month'), now),kind:'month',range:'month'}
   const today = analyticsDateKey(now)
   let from, to = today
-  if (range === 'last7') from = shiftAnalyticsDay(today, -6)
+  if (range === 'ytd') from = `${today.slice(0, 4)}-01-01`
+  else if (range === 'last7') from = shiftAnalyticsDay(today, -6)
   else if (range === 'last30') from = shiftAnalyticsDay(today, -29)
   else if (range === 'last3months') {
     const previous = shiftMonth(today.slice(0,7), -3)
@@ -74,6 +75,22 @@ export function buildAnalyticsSelection(params, now = new Date()) {
   const previousStart = new Date(start.getTime() - days * DAY)
   const previousEnd = new Date(previousStart.getTime() + (end - start))
   const fmt = value => new Date(value).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric',timeZone:'Africa/Johannesburg'})
+  if (range === 'ytd') {
+    const year = Number(today.slice(0, 4))
+    const previousYearStart = monthStart(`${year - 1}-01`)
+    const previousDay = today.endsWith('-02-29') ? '02-28' : today.slice(5)
+    const elapsedToday = now - new Date(`${today}T00:00:00+02:00`)
+    const previousYearEnd = new Date(Date.parse(`${year - 1}-${previousDay}T00:00:00+02:00`) + elapsedToday)
+    return {
+      kind: 'range', range, from, to, days, month: to.slice(0, 7),
+      start: start.toISOString(), end: end.toISOString(),
+      previousStart: previousYearStart.toISOString(), previousEnd: previousYearEnd.toISOString(),
+      label: `${year} year to date · through ${fmt(now)}`,
+      isCurrent: true, comparisonLabel: `${year - 1} year to date`,
+      comparisonDetail: `Compared with ${fmt(previousYearStart)} through ${fmt(previousYearEnd)} at the same South African time of day.`,
+      asOf: now.toISOString(),
+    }
+  }
   return {
     kind:'range',range,from,to,days,month:to.slice(0,7),start:start.toISOString(),end:end.toISOString(),previousStart:previousStart.toISOString(),previousEnd:previousEnd.toISOString(),
     label:`${fmt(start)} – ${fmt(new Date(`${to}T12:00:00+02:00`))}${to === today ? ' · to date' : ''}`,
