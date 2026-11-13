@@ -7,6 +7,7 @@ import { useEffect, useState } from "react"
 import {
   BarChart3,
   Boxes,
+  ContactRound,
   Factory,
   FileText,
   FolderKanban,
@@ -30,6 +31,7 @@ const SECTION_ICONS = {
   atlas: Boxes,
   lsf: PanelsTopLeft,
   partners: Handshake,
+  rolodex: ContactRound,
   manufacturing: Factory,
   analytics: BarChart3,
   settings: Settings,
@@ -220,7 +222,7 @@ export default function OsShellLayout({ children }) {
                   {activeSection.description}
                 </p>
               </div>
-              {activeSection.status && activeSection.key !== "analytics" ? (
+              {activeSection.status && !["analytics", "partners"].includes(activeSection.key) ? (
                 <span
                   className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${OS_STATUS_META[activeSection.status]?.badgeClassName}`}
                 >
