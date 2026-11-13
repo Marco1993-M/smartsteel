@@ -51,6 +51,8 @@ export default function PartnerOpportunityReviewDrawer({
   setQuoteResponse,
   saving,
   onClose,
+  onDelete,
+  deleteError,
   onAdvance,
   onFulfilmentUpdate,
 }) {
@@ -331,6 +333,14 @@ export default function PartnerOpportunityReviewDrawer({
               {record.orderDocuments?.length ? <div className="rounded-2xl border border-slate-200 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Order documents</p><div className="mt-3 space-y-2">{record.orderDocuments.map((document) => <div key={document.id} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700"><Paperclip className="h-4 w-4 text-[#0043f3]" /><span className="min-w-0 truncate">{document.name}</span><span className="ml-auto shrink-0 text-[10px] uppercase text-slate-400">{document.type.replaceAll("_", " ")}</span></div>)}</div></div> : null}
               <button type="button" disabled={preparingDocument} onClick={openPriceConfirmation} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#0043f3] bg-white px-5 text-sm font-black text-[#0043f3] disabled:cursor-wait disabled:opacity-65">
                 {preparingDocument ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {preparingDocument ? "Preparing document..." : "Preview Partner price confirmation"}
+              </button>
+            </section>
+          ) : null}
+          {onDelete && record.status !== "closed" && !record.internalProjectId && ["not_ready", "ready_for_order"].includes(record.partnerOrderStatus) ? (
+            <section className="rounded-2xl border border-slate-200 p-5">
+              {deleteError ? <p role="alert" className="mb-3 text-sm text-red-700">{deleteError}</p> : null}
+              <button type="button" disabled={saving} onClick={onDelete} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">
+                Delete opportunity
               </button>
             </section>
           ) : null}

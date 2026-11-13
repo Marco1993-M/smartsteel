@@ -65,6 +65,26 @@ export default function PartnerOpportunityWorkspace({ partnerKey = "afgri" }) {
     })
   }
 
+  async function deleteOpportunity() {
+    if (saving || !selected || !window.confirm(`Permanently delete opportunity ${selected.reference}? Its review and handoff history will also be removed.`)) return
+    setSaving(true)
+    setError("")
+    try {
+      const response = await fetch(`/api/os/partner-opportunities?id=${encodeURIComponent(selected.id)}`, {
+        method: "DELETE",
+        headers: await getOsAuthHeaders(),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "Could not delete the opportunity.")
+      setRecords(current => current.filter(record => record.id !== payload.id))
+      setSelected(null)
+    } catch (deleteError) {
+      setError(deleteError.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function advanceRecord(status, extra = {}) {
     setSaving(true)
     setError("")
@@ -140,7 +160,7 @@ export default function PartnerOpportunityWorkspace({ partnerKey = "afgri" }) {
         </div>
       </section>
 
-      {selected ? <PartnerOpportunityReviewDrawer record={selected} notes={reviewNotes} setNotes={setReviewNotes} quoteResponse={quoteResponse} setQuoteResponse={setQuoteResponse} saving={saving} onClose={() => setSelected(null)} onAdvance={advanceRecord} onFulfilmentUpdate={updateFulfilment} /> : null}
+      {selected ? <PartnerOpportunityReviewDrawer record={selected} notes={reviewNotes} setNotes={setReviewNotes} quoteResponse={quoteResponse} setQuoteResponse={setQuoteResponse} saving={saving} onClose={() => setSelected(null)} onAdvance={advanceRecord} onFulfilmentUpdate={updateFulfilment} onDelete={deleteOpportunity} deleteError={error} /> : null}
     </div>
   )
 }
