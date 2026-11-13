@@ -12,7 +12,7 @@ import {
   MapPin,
   Navigation,
   Search,
-  Store,
+  RefreshCw,
   Truck,
   X,
 } from "lucide-react"
@@ -131,7 +131,7 @@ export default function PartnerBranchesWorkspace() {
   const [error, setError] = useState("")
   const [query, setQuery] = useState("")
   const [filter, setFilter] = useState("all")
-  const [view, setView] = useState("network")
+  const [view, setView] = useState("list")
   const [selectedId, setSelectedId] = useState("")
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(EMPTY_BRANCH)
@@ -175,7 +175,7 @@ export default function PartnerBranchesWorkspace() {
   const filteredRecords = records.filter((branch) => {
     const matchesQuery =
       !deferredQuery ||
-      `${branch.name} ${branch.branchCode} ${branch.address} ${branch.territory} ${branch.deliveryZone}`
+      `${branch.name} ${branch.branchCode} ${branch.address} ${branch.territory} ${branch.deliveryZone} ${branch.contactName} ${branch.contactEmail} ${branch.contactPhone}`
         .toLowerCase()
         .includes(deferredQuery)
     const matchesFilter =
@@ -228,40 +228,10 @@ export default function PartnerBranchesWorkspace() {
 
   return (
     <div className="min-w-0 space-y-5 px-4 py-5 sm:px-6 sm:py-6">
-      <section className="overflow-hidden rounded-[28px] border border-slate-800 bg-[radial-gradient(circle_at_80%_10%,_rgba(56,189,248,0.18),_transparent_30%),linear-gradient(135deg,_#07111f_0%,_#0f2740_55%,_#102033_100%)] text-white shadow-xl">
-        <div className="relative grid gap-6 p-5 sm:p-7 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] xl:items-end">
-          <div className="absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-sky-300/50 to-transparent" />
-          <div className="relative">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-sky-300/30 bg-sky-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-100">
-                Strategic partner network
-              </span>
-              <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-200">
-                AFGRI Retail
-              </span>
-            </div>
-            <h3 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
-              Turn branch reach into a working delivery network.
-            </h3>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-              One operational view for AFGRI locations, pilot branches, branch contacts, territories,
-              and the delivery planning data we will use as the partnership grows.
-            </p>
-          </div>
-          <div className="relative grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-white/10 bg-white/7 p-4 backdrop-blur">
-              <Store className="h-5 w-5 text-sky-200" aria-hidden="true" />
-              <p className="mt-3 text-3xl font-bold">{records.length || "—"}</p>
-              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-300">Retail branches</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/7 p-4 backdrop-blur">
-              <LocateFixed className="h-5 w-5 text-amber-300" aria-hidden="true" />
-              <p className="mt-3 text-3xl font-bold">{mappedRecords.length || "—"}</p>
-              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-300">Route-ready</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 className="text-xl font-bold tracking-tight text-[#001d2e]">AFGRI branch network</h2><p className="mt-1 text-sm text-slate-500">Find branch contacts, manage rollout status and plan coverage.</p></div>
+        <button type="button" disabled={loading} onClick={loadRecords} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</button>
+      </header>
 
       {!schemaReady ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
@@ -277,23 +247,23 @@ export default function PartnerBranchesWorkspace() {
       ) : null}
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <Metric label="Network" value={records.length} detail="AFGRI retail locations" icon={Building2} />
-        <Metric label="Mapped" value={mappedRecords.length} detail="Coordinates available" tone="blue" icon={MapPin} />
-        <Metric label="Pilot branches" value={pilotCount} detail="Selected for Atlas rollout" icon={CircleDot} />
+        <Metric label="Network" value={loading ? "—" : records.length} detail="AFGRI retail locations" icon={Building2} />
+        <Metric label="Mapped" value={loading ? "—" : mappedRecords.length} detail="Coordinates available" tone="blue" icon={MapPin} />
+        <Metric label="Pilot branches" value={loading ? "—" : pilotCount} detail="Selected for Atlas rollout" icon={CircleDot} />
         <Metric
           label="Territories"
-          value={territoryCount}
+          value={loading ? "—" : territoryCount}
           detail={territoryCount ? "Delivery areas assigned" : "Ready to be assigned"}
           tone={territoryCount ? "blue" : "amber"}
           icon={Truck}
         />
       </section>
 
-      <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Branch directory</p>
-            <h3 className="mt-1 text-xl font-bold text-slate-950">AFGRI network</h3>
+            <h3 className="mt-1 text-base font-bold text-[#001d2e]">{loading ? "Loading branches…" : `${filteredRecords.length} branches`}</h3>
           </div>
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
             <label className="relative min-w-0 sm:w-72">
@@ -302,35 +272,40 @@ export default function PartnerBranchesWorkspace() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Branch, number, address..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-base text-slate-900 outline-none transition focus:border-sky-400 focus:bg-white sm:text-sm"
+                placeholder="Branch, contact or location…"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-base text-slate-900 outline-none transition focus:border-[#0043f3] focus:bg-white sm:text-sm"
               />
             </label>
             <select
+              aria-label="Filter branches"
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
-              className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-sky-400"
+              className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#0043f3]"
             >
               <option value="all">All locations</option>
+              <option value="active">Active branches</option>
               <option value="pilot">Atlas pilot</option>
-              <option value="mapped">Mapped</option>
+              <option value="inactive">Inactive branches</option>
+              <option value="mapped">Verified coordinates</option>
               <option value="needs_review">Needs location review</option>
               <option value="paused">Paused</option>
             </select>
             <div className="grid grid-cols-2 rounded-xl bg-slate-100 p-1">
               <button
                 type="button"
+                aria-pressed={view === "network"}
                 onClick={() => setView("network")}
                 className={`rounded-lg px-3 py-2 text-xs font-semibold ${view === "network" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}
               >
-                Network
+                Coverage
               </button>
               <button
                 type="button"
+                aria-pressed={view === "list"}
                 onClick={() => setView("list")}
                 className={`rounded-lg px-3 py-2 text-xs font-semibold ${view === "list" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"}`}
               >
-                List
+                Directory
               </button>
             </div>
           </div>
@@ -346,9 +321,9 @@ export default function PartnerBranchesWorkspace() {
                 <div className="absolute left-4 top-4 rounded-xl border border-white/80 bg-white/90 px-3 py-2 shadow-sm backdrop-blur">
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
                     <Map className="h-4 w-4 text-sky-600" />
-                    Pretoria planning radii
+                    Indicative coverage
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-500">Straight-line distance, not driving distance</p>
+                  <p className="mt-1 text-[11px] text-slate-500">Schematic only · distances are straight-line estimates</p>
                 </div>
                 {PLANNING_RADII_KM.slice().reverse().map((radius) => (
                   <div
@@ -415,7 +390,7 @@ export default function PartnerBranchesWorkspace() {
                 <div>
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0043f3]">
                         Branch {selected.branchCode}
                       </p>
                       <h4 className="mt-2 text-2xl font-bold text-slate-950">{selected.name}</h4>
@@ -432,14 +407,14 @@ export default function PartnerBranchesWorkspace() {
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-4 rounded-2xl border border-sky-200 bg-sky-50 p-4">
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#0043f3]">
                         From Waverley, Pretoria
                       </p>
                       <p className="mt-1 text-2xl font-bold text-slate-950">
                         {selectedDistance === null ? "Not mapped" : `~${selectedDistance} km`}
                       </p>
                     </div>
-                    <Navigation className="h-5 w-5 text-sky-700" aria-hidden="true" />
+                    <Navigation className="h-5 w-5 text-[#0043f3]" aria-hidden="true" />
                   </div>
                   <dl className="mt-5 grid grid-cols-2 gap-3">
                     <div className="rounded-xl border border-slate-200 p-3">
@@ -466,6 +441,9 @@ export default function PartnerBranchesWorkspace() {
                       Confirm this branch’s coordinates before route planning.
                     </div>
                   ) : null}
+                  {selected.contactEmail ? <a href={`mailto:${selected.contactEmail}`} className="mt-3 block break-all text-sm font-semibold text-[#0043f3]">{selected.contactEmail}</a> : null}
+                  {selected.contactPhone ? <a href={`tel:${selected.contactPhone}`} className="mt-2 block text-sm font-semibold text-[#0043f3]">{selected.contactPhone}</a> : null}
+                  {selected.notes ? <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-600">{selected.notes}</p> : null}
                   <button
                     type="button"
                     onClick={() => openEditor(selected)}
@@ -486,13 +464,14 @@ export default function PartnerBranchesWorkspace() {
                 key={branch.id}
                 type="button"
                 onClick={() => openEditor(branch)}
-                className="grid w-full gap-3 p-4 text-left transition hover:bg-slate-50 sm:grid-cols-[80px_minmax(0,1fr)_180px_32px] sm:items-center sm:px-5"
+                className="grid w-full gap-3 p-4 text-left transition hover:bg-slate-50 lg:grid-cols-[70px_minmax(0,1fr)_minmax(0,0.8fr)_150px_24px] sm:items-center sm:px-5"
               >
-                <span className="text-xs font-bold uppercase tracking-[0.16em] text-sky-700">{branch.branchCode}</span>
+                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">{branch.branchCode}</span>
                 <span className="min-w-0">
                   <span className="block font-semibold text-slate-950">{branch.name}</span>
                   <span className="mt-1 block truncate text-sm text-slate-500">{branch.address}</span>
                 </span>
+                <span className="min-w-0 text-sm"><span className="block font-medium text-slate-700">{branch.contactName || "Contact not captured"}</span><span className="mt-1 block truncate text-xs text-slate-500">{branch.contactEmail || branch.contactPhone || "Add a branch contact"}</span></span>
                 <span className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${statusTone(branch.status)}`}>
                   {statusLabel(branch.status)}
                 </span>
@@ -504,32 +483,6 @@ export default function PartnerBranchesWorkspace() {
             ) : null}
           </div>
         )}
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-3">
-        {[
-          {
-            icon: CircleDot,
-            title: "Choose the pilot",
-            copy: "Mark the branches that will introduce Atlas first, then keep rollout ownership visible.",
-          },
-          {
-            icon: Navigation,
-            title: "Build delivery territories",
-            copy: "Group branches into practical delivery zones before we calculate depot-to-branch and branch-to-site routes.",
-          },
-          {
-            icon: Truck,
-            title: "Connect commercial activity",
-            copy: "The same branch IDs can later connect leads, estimates, projects, stock, training, and deliveries.",
-          },
-        ].map(({ icon: Icon, title, copy }) => (
-          <div key={title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <Icon className="h-5 w-5 text-sky-700" />
-            <h4 className="mt-4 font-bold text-slate-950">{title}</h4>
-            <p className="mt-2 text-sm leading-6 text-slate-600">{copy}</p>
-          </div>
-        ))}
       </section>
 
       {editing && selected ? (
@@ -546,7 +499,7 @@ export default function PartnerBranchesWorkspace() {
           >
             <div className="flex items-start justify-between border-b border-slate-200 p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0043f3]">
                   Branch {selected.branchCode}
                 </p>
                 <h3 className="mt-1 text-2xl font-bold text-slate-950">{selected.name}</h3>
@@ -560,12 +513,13 @@ export default function PartnerBranchesWorkspace() {
               </button>
             </div>
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+              {error ? <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : null}
               <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Network status</span>
                 <select
                   value={form.status}
                   onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
-                  className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base text-slate-900 outline-none focus:border-sky-400"
+                  className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base text-slate-900 outline-none focus:border-[#0043f3]"
                 >
                   {STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
@@ -573,11 +527,11 @@ export default function PartnerBranchesWorkspace() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label>
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Territory</span>
-                  <input value={form.territory} onChange={(event) => setForm((current) => ({ ...current, territory: event.target.value }))} placeholder="e.g. Highveld East" className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
+                  <input value={form.territory} onChange={(event) => setForm((current) => ({ ...current, territory: event.target.value }))} placeholder="e.g. Highveld East" className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-[#0043f3]" />
                 </label>
                 <label>
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Planning-zone override</span>
-                  <input value={form.deliveryZone} onChange={(event) => setForm((current) => ({ ...current, deliveryZone: event.target.value }))} placeholder={automaticPlanningZone(selected).label} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
+                  <input value={form.deliveryZone} onChange={(event) => setForm((current) => ({ ...current, deliveryZone: event.target.value }))} placeholder={automaticPlanningZone(selected).label} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-[#0043f3]" />
                   <span className="mt-1 block text-xs text-slate-500">
                     Leave blank to use {automaticPlanningZone(selected).label} automatically.
                   </span>
@@ -585,31 +539,31 @@ export default function PartnerBranchesWorkspace() {
               </div>
               <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Branch contact</span>
-                <input value={form.contactName} onChange={(event) => setForm((current) => ({ ...current, contactName: event.target.value }))} placeholder="Contact name" className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
+                <input value={form.contactName} onChange={(event) => setForm((current) => ({ ...current, contactName: event.target.value }))} placeholder="Contact name" className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-[#0043f3]" />
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label>
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Email</span>
-                  <input type="email" value={form.contactEmail} onChange={(event) => setForm((current) => ({ ...current, contactEmail: event.target.value }))} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
+                  <input type="email" value={form.contactEmail} onChange={(event) => setForm((current) => ({ ...current, contactEmail: event.target.value }))} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-[#0043f3]" />
                 </label>
                 <label>
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Phone</span>
-                  <input value={form.contactPhone} onChange={(event) => setForm((current) => ({ ...current, contactPhone: event.target.value }))} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
+                  <input value={form.contactPhone} onChange={(event) => setForm((current) => ({ ...current, contactPhone: event.target.value }))} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-[#0043f3]" />
                 </label>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label>
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Latitude</span>
-                  <input type="number" step="any" value={form.latitude} onChange={(event) => setForm((current) => ({ ...current, latitude: event.target.value }))} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
+                  <input type="number" step="any" value={form.latitude} onChange={(event) => setForm((current) => ({ ...current, latitude: event.target.value }))} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-[#0043f3]" />
                 </label>
                 <label>
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Longitude</span>
-                  <input type="number" step="any" value={form.longitude} onChange={(event) => setForm((current) => ({ ...current, longitude: event.target.value }))} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-sky-400" />
+                  <input type="number" step="any" value={form.longitude} onChange={(event) => setForm((current) => ({ ...current, longitude: event.target.value }))} className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-base outline-none focus:border-[#0043f3]" />
                 </label>
               </div>
               <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Operational notes</span>
-                <textarea value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} rows={4} placeholder="Pilot readiness, delivery access, local opportunities..." className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-base outline-none focus:border-sky-400" />
+                <textarea value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} rows={4} placeholder="Pilot readiness, delivery access, local opportunities..." className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-base outline-none focus:border-[#0043f3]" />
               </label>
             </div>
             <div className="flex gap-3 border-t border-slate-200 bg-white p-4">

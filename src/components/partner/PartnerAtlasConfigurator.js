@@ -7,10 +7,9 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, ArrowRight, Check, PackageCheck, RotateCcw, Send, X } from "lucide-react"
 import WarehouseBuilderScene from "../warehouse-builder/WarehouseBuilderScene"
 import { getPartnerAuthHeaders } from "../../lib/partnerClientAuth"
-import { normalizeAtlasConfiguration } from "../../lib/atlasConfiguration"
+import { ATLAS_LENGTH_OPTIONS, ATLAS_HEIGHT_OPTIONS, normalizeAtlasConfiguration } from "../../lib/atlasConfiguration"
 
-const PILOT_LENGTHS = [4, 8, 12, 16, 20]
-const HEIGHTS = [3, 4, 5]
+const HEIGHTS = ATLAS_HEIGHT_OPTIONS
 const FINISHES = ["Mild", "ZAM", "Galv"]
 const SHEETING = [
   ["structure_only", "Structure only"],
@@ -21,11 +20,14 @@ const SHEETING = [
 const money = new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 })
 
 function getReleasedWidth(product) {
-  return Number(String(product?.productCode || "").match(/W(06|08|10|12)/i)?.[1] || 8)
+  return Number(String(product?.productCode || "").match(/W(06|08|10|12|15)/i)?.[1] || 8)
 }
 
-export default function PartnerAtlasConfigurator({ product, initialOpportunity = null, onClose, onCreated }) {
+export default function PartnerAtlasConfigurator({ product: defaultProduct, products = [], initialOpportunity = null, onClose, onCreated }) {
   const portal = usePartnerPortal()
+  const availableProducts = (products.length ? products : [defaultProduct]).filter(item => item?.price)
+  const [productId, setProductId] = useState(() => availableProducts.find(item => getReleasedWidth(item) === Number(initialOpportunity?.configuration?.width))?.id || defaultProduct?.id)
+  const product = availableProducts.find(item => item.id === productId) || defaultProduct
   const width = getReleasedWidth(product)
   const [step, setStep] = useState(1)
   const [configuration, setConfiguration] = useState(() => normalizeAtlasConfiguration(initialOpportunity?.configuration || { width, length: 20, wallHeight: 3 }))
@@ -147,7 +149,7 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
           <section className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <div className="grid grid-cols-3 border-b border-slate-200">{["Size", "Finish", "Customer"].map((label, index) => <button key={label} type="button" onClick={() => index + 1 <= step && setStep(index + 1)} className={`min-h-14 border-r border-slate-200 px-2 text-xs font-black last:border-r-0 ${step === index + 1 ? "bg-[#c1d9e5] text-[#0043f3]" : index + 1 < step ? "text-[#0043f3]" : "text-slate-400"}`}>{index + 1 < step ? <Check className="mx-auto h-4 w-4" /> : label}</button>)}</div>
             <div className="p-5 sm:p-6">
-              {step === 1 ? <SizeStep configuration={configuration} update={update} /> : null}
+              {step === 1 ? <><OptionGroup label="Warehouse span">{availableProducts.filter((item, index, items) => items.findIndex(other => getReleasedWidth(other) === getReleasedWidth(item)) === index).map(item => <Option key={item.id} active={width === getReleasedWidth(item)} onClick={() => { setProductId(item.id); update("width", getReleasedWidth(item)) }}>{getReleasedWidth(item)}m</Option>)}</OptionGroup><SizeStep configuration={configuration} update={update} /></> : null}
               {step === 2 ? <FinishStep configuration={configuration} update={update} /> : null}
               {step === 3 ? <CustomerStep customer={customer} setCustomer={setCustomer} preview={preview} /> : null}
               {error ? <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
@@ -165,7 +167,7 @@ export default function PartnerAtlasConfigurator({ product, initialOpportunity =
 }
 
 function SizeStep({ configuration, update }) {
-  return <div><StepHeading number="1" title="Set the warehouse size" /><OptionGroup label="Length">{PILOT_LENGTHS.map((value) => <Option key={value} active={configuration.length === value} onClick={() => update("length", value)}>{value}m</Option>)}</OptionGroup><OptionGroup label="Eave height">{HEIGHTS.map((value) => <Option key={value} active={configuration.wallHeight === value} onClick={() => update("wallHeight", value)}>{value}m</Option>)}</OptionGroup><div className="mt-6 rounded-xl bg-[#eef4f8] p-4"><p className="text-xs font-bold text-slate-500">Current footprint</p><p className="mt-1 text-xl font-black">{configuration.width}m × {configuration.length}m × {configuration.wallHeight}m</p></div></div>
+  return <div><StepHeading number="1" title="Set the warehouse size" /><label className="mt-5 block text-sm font-bold">Length<select value={configuration.length} onChange={event => update("length", Number(event.target.value))} className="mt-2 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3">{ATLAS_LENGTH_OPTIONS.map(value => <option key={value} value={value}>{value}m · {value / 4} bays</option>)}</select></label><OptionGroup label="Eave height">{HEIGHTS.map((value) => <Option key={value} active={configuration.wallHeight === value} onClick={() => update("wallHeight", value)}>{value}m</Option>)}</OptionGroup><div className="mt-6 rounded-xl bg-[#eef4f8] p-4"><p className="text-xs font-bold text-slate-500">Current footprint</p><p className="mt-1 text-xl font-black">{configuration.width}m × {configuration.length}m × {configuration.wallHeight}m</p></div></div>
 }
 
 function FinishStep({ configuration, update }) {

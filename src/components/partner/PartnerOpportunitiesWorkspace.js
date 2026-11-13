@@ -121,7 +121,7 @@ export default function PartnerOpportunitiesWorkspace() {
       <div className="mt-5 flex items-center justify-between"><p className="text-sm font-bold text-slate-500">{shown.length} {shown.length === 1 ? "opportunity" : "opportunities"}</p><Link href="/partner" className="text-sm font-black text-[#0043f3]">Dashboard</Link></div>
       <section className="mt-3 space-y-3">{shown.length ? shown.map((record) => <OpportunityCard key={record.id} record={record} product={products[0]} onEdit={() => setEditing(record)} onDocument={() => openPriceConfirmation(record)} preparing={preparingId === record.id} onUpdated={load} />) : <div className="grid min-h-52 place-items-center rounded-[1.5rem] border border-dashed border-slate-300 bg-white text-sm font-bold text-slate-500">No opportunities match this view.</div>}</section>
     </div>
-    {editing && products[0]?.price ? <PartnerAtlasConfigurator product={products[0]} initialOpportunity={editing} onClose={() => setEditing(null)} onCreated={async () => { setEditing(null); await load() }} /> : null}
+    {editing && products[0]?.price ? <PartnerAtlasConfigurator products={products} product={products[0]} initialOpportunity={editing} onClose={() => setEditing(null)} onCreated={async () => { setEditing(null); await load() }} /> : null}
   </main>
 }
 
