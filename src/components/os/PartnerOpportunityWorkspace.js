@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowRight, Building2, CheckCircle2, Clock3, FileCheck2, Inbox, Mail, MapPin, PackageCheck, Phone, RefreshCw, UserRound, X } from "lucide-react"
+import { ArrowRight, Building2, CheckCircle2, Clock3, FileCheck2, Inbox, Mail, MapPin, PackageCheck, Phone, RefreshCw, Search, UserRound, X } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import PartnerOpportunityReviewDrawer from "./PartnerOpportunityReviewDrawer"
 
@@ -31,6 +31,7 @@ export default function PartnerOpportunityWorkspace({ partnerKey = "afgri" }) {
   const [records, setRecords] = useState([])
   const [selected, setSelected] = useState(null)
   const [filter, setFilter] = useState("active")
+  const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -126,13 +127,14 @@ export default function PartnerOpportunityWorkspace({ partnerKey = "afgri" }) {
   }
 
   const opportunities = records.filter((record) => record.status !== "closed")
-  const shown = filter === "active"
+  const filtered = filter === "active"
     ? opportunities
     : filter === "orders"
       ? records.filter(isActiveOrder)
       : filter === "complete"
         ? records.filter((record) => record.status === "closed" && record.fulfilmentStatus === "complete")
         : records.filter((record) => record.status === filter)
+  const shown = filtered.filter(record => [record.customerName, record.reference, record.partner?.name, record.siteLocation, record.afgriOrderReference].some(value => String(value || "").toLowerCase().includes(search.trim().toLowerCase())))
   const newCount = records.filter((record) => record.status === "submitted").length
   const reviewingCount = records.filter((record) => record.status === "in_review").length
   const changesCount = records.filter((record) => record.status === "changes_requested").length
@@ -141,22 +143,44 @@ export default function PartnerOpportunityWorkspace({ partnerKey = "afgri" }) {
 
   return (
     <div className="min-w-0 space-y-5 px-4 py-5 sm:px-6 sm:py-6">
-      <section className="overflow-hidden rounded-[28px] border border-[#0043f3] bg-[linear-gradient(130deg,#001d2e_0%,#063379_54%,#0043f3_100%)] p-5 text-white shadow-xl sm:p-7">
-        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          <div><p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c1d9e5]">Partner opportunity desk</p><h2 className="mt-3 max-w-3xl text-3xl font-black tracking-[-0.04em] sm:text-4xl">Turn partner interest into a reviewed quote.</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">Only submitted requests appear here. Open one, confirm the project detail and move it to the next clear step.</p></div>
-          <button type="button" onClick={loadRecords} className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 bg-white/10 px-4 text-sm font-bold transition hover:bg-white/15"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh</button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-[#001d2e]">Project pipeline</h2>
+          <p className="mt-1 text-sm text-slate-500">Select a stage to review its projects.</p>
         </div>
-        <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden bg-white/15 sm:grid-cols-5">
-          {[["New", newCount], ["In review", reviewingCount], ["Partner update", changesCount], ["Price approved", quotedCount], ["Active orders", orderCount]].map(([label, count]) => <div key={label} className="bg-[#063379]/75 p-4"><p className="text-2xl font-black sm:text-3xl">{count}</p><p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-blue-100 sm:text-[10px]">{label}</p></div>)}
+        <button type="button" onClick={loadRecords} disabled={loading} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh</button>
+      </div>
+
+      {error ? <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{error}</p> : null}
+
+      <nav aria-label="Pipeline stages" className="grid grid-cols-2 gap-2 lg:grid-cols-5">
+        {[
+          ["submitted", "New requests", newCount, "Ready for your review"],
+          ["in_review", "In review", reviewingCount, "Confirm scope and pricing"],
+          ["changes_requested", "With partner", changesCount, "Awaiting project updates"],
+          ["quoted", "Price approved", quotedCount, "Awaiting order instruction"],
+          ["orders", "Active orders", orderCount, "Track production and delivery"],
+        ].map(([value, label, count, hint]) => (
+          <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(filter === value ? "active" : value)} className={`rounded-2xl border p-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0043f3] ${filter === value ? "border-[#0043f3] bg-blue-50 ring-1 ring-[#0043f3]" : "border-slate-200 bg-white hover:border-blue-300"}`}>
+            <div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-slate-600">{label}</span><ArrowRight className={`h-3.5 w-3.5 ${filter === value ? "text-[#0043f3]" : "text-slate-300"}`} /></div>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-[#001d2e]">{loading ? "—" : count}</p>
+            <p className="mt-2 text-xs text-slate-500">{hint}</p>
+          </button>
+        ))}
+      </nav>
+
+      <section aria-busy={loading} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
+          <div className="flex flex-wrap gap-1">
+            {[["active", "All opportunities", opportunities.length], ["orders", "Orders", orderCount], ["complete", "Completed", records.filter(record => record.status === "closed" && record.fulfilmentStatus === "complete").length]].map(([value, label, count]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${filter === value ? "bg-[#001d2e] text-white" : "text-slate-500 hover:bg-slate-100"}`}>{label}<span className="ml-2 opacity-60">{loading ? "—" : count}</span></button>)}
+          </div>
+          <label className="flex min-h-10 w-full items-center gap-2 rounded-xl border border-slate-200 px-3 sm:w-64"><Search className="h-4 w-4 shrink-0 text-slate-400" /><input aria-label="Search partner projects" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search name or reference…" className="min-w-0 w-full bg-transparent py-2 text-sm outline-none" /></label>
         </div>
-      </section>
-
-      {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{error}</p> : null}
-
-      <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-slate-500">Partner workflow</p><h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Opportunities and orders</h3></div><div className="flex gap-2 overflow-x-auto">{[["active", "Opportunities"], ["submitted", "New"], ["in_review", "In review"], ["changes_requested", "With Partner"], ["quoted", "Price approved"], ["orders", "Orders"], ["complete", "Complete"]].map(([value, label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold ${filter === value ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600"}`}>{label}</button>)}</div></div>
-        <div className="mt-5 space-y-3">
-          {loading ? <p className="py-10 text-center text-sm text-slate-500">Loading opportunities...</p> : shown.length === 0 ? <div className="grid min-h-48 place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-center"><div><Inbox className="mx-auto h-7 w-7 text-slate-300" /><p className="mt-3 text-sm font-bold text-slate-600">No opportunities in this view.</p></div></div> : shown.map((record) => <OpportunityRow key={record.id} record={record} onOpen={() => openRecord(record)} />)}
+        <div className="p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3"><h3 className="text-sm font-bold text-[#001d2e]">{filter === "active" ? "Open opportunities" : filter === "orders" ? "Active orders" : filter === "complete" ? "Completed projects" : filter === "changes_requested" ? "With partner" : STATUS_META[filter]?.label}</h3><span className="text-xs text-slate-500" aria-live="polite">{loading ? "Loading…" : `${shown.length} project${shown.length === 1 ? "" : "s"}`}</span></div>
+          <div className="space-y-3">
+            {loading ? <p className="py-10 text-center text-sm text-slate-500">Loading opportunities...</p> : shown.length === 0 ? <div className="grid min-h-40 place-items-center rounded-xl bg-slate-50 p-5 text-center"><div><Inbox className="mx-auto h-6 w-6 text-slate-300" /><p className="mt-3 text-sm font-semibold text-slate-600">{search ? "No projects match your search." : "No projects at this stage yet."}</p><p className="mt-1 text-xs text-slate-500">{search ? "Try a customer name or opportunity reference." : "Submitted partner requests will appear here."}</p></div></div> : shown.map(record => <OpportunityRow key={record.id} record={record} onOpen={() => openRecord(record)} />)}
+          </div>
         </div>
       </section>
 
