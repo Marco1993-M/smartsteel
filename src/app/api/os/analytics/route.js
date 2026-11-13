@@ -280,7 +280,7 @@ export async function GET(request) {
   const previousStart = new Date(period.previousStart)
   const previousEnd = new Date(period.previousEnd)
 
-  const [leadsResult, estimatesResult, connectionsResult, marketingResult, responsesResult, emailsResult, builderEventsResult] = await Promise.all([
+  const [leadsResult, estimatesResult, connectionsResult, marketingResult, responsesResult, emailsResult, builderEventsResult, ordersResult] = await Promise.all([
     fetchAll(() =>
       supabaseServer
         .from("leads")
@@ -328,6 +328,9 @@ export async function GET(request) {
       .gte("occurred_at", previousStart.toISOString())
       .lt("occurred_at", end.toISOString())
       .order("occurred_at", { ascending: true })),
+    fetchAll(() => supabaseServer.from("sales_orders")
+      .select("lead_id, status, order_total:quote_snapshot->>total")
+      .order("id", { ascending: true })),
   ])
 
   if (leadsResult.error) {
@@ -341,7 +344,17 @@ export async function GET(request) {
   if (marketingResult.error && !analyticsSchemaMissing(marketingResult.error)) warnings.push("Marketing performance is temporarily unavailable.")
   if (builderEventsResult.error && !analyticsSchemaMissing(builderEventsResult.error)) warnings.push("Builder funnel activity is temporarily unavailable.")
 
-  const leads = leadsResult.data || []
+  if (ordersResult.error) warnings.push("Accepted order values could not be loaded; won values are using CRM lead totals.")
+  const orderTotalsByLead = new Map()
+  for (const order of ordersResult.error ? [] : ordersResult.data || []) {
+    const total = orderTotalsByLead.get(order.lead_id) || 0
+    orderTotalsByLead.set(order.lead_id, total + (order.status === "cancelled" ? 0 : parseNumber(order.order_total)))
+  }
+  const leads = (leadsResult.data || []).map(lead =>
+    String(lead.status || "").toLowerCase() === "won" && orderTotalsByLead.has(lead.id)
+      ? { ...lead, quote_value: orderTotalsByLead.get(lead.id) }
+      : lead
+  )
   const estimates = estimatesResult.error ? [] : estimatesResult.data || []
   const current = buildPeriodSummary(leads, estimates, start, end)
   const previous = buildPeriodSummary(leads, estimates, previousStart, previousEnd)
