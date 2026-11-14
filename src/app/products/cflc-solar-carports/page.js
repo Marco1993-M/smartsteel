@@ -111,10 +111,10 @@ function BuilderButton({ children, className = "" }) {
 
 export default function AtlasSolarCarportsPage() {
   return (
-    <main className="atlas-brand bg-white pb-24 pt-24 text-[#001d2e] sm:pb-16 sm:pt-28">
+    <main className="atlas-brand bg-white pb-24 pt-16 text-[#001d2e] sm:pb-16 sm:pt-20">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <section className={`${section} grid items-center gap-8 pb-12 pt-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12 lg:py-14`}>
+      <section className={`${section} grid items-center gap-8 pb-12 pt-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12 lg:pb-14 lg:pt-10`}>
         <div>
           <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas by Smart Steel" width={190} height={45} className="h-8 w-auto object-contain" />
           <h1 className="mt-5 text-4xl font-bold leading-[1.07] tracking-tight sm:text-5xl lg:text-6xl">Solar carports for South Africa</h1>
