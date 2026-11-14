@@ -37,12 +37,6 @@ export const metadata = {
   },
 }
 
-const proofPoints = [
-  ["Modular parking bays", "Build the layout around practical parking requirements, then extend the structure around the way the site needs to work."],
-  ["Bolted system", "Atlas uses repeatable components and bolted assembly principles for a clearer structural route from planning into site review."],
-  ["Solar-ready by design", "Plan the steel structure around panel support from the start, then use the online estimator for a clearer first budget."],
-]
-
 const applications = [
   {
     title: "Commercial parking",
@@ -64,12 +58,6 @@ const applications = [
   },
 ]
 
-const processSteps = [
-  ["01", "Choose the parking layout", "Start with the number of parking spaces and whether the bays need a single or double row."],
-  ["02", "See a starting budget", "The estimator gives you a practical structure-only guide before delivery, foundations, and site conditions are reviewed."],
-  ["03", "Send a stronger enquiry", "Continue with your layout already defined, so the Smart Steel team can review the real project requirements with you."],
-]
-
 const faqs = [
   {
     question: "What is an Atlas solar carport?",
@@ -82,9 +70,9 @@ const faqs = [
       "Atlas is built around repeatable components, practical parking layouts, and bolted assembly principles. This creates a clearer structural starting point before Smart Steel reviews the specific site, foundations, delivery, installation, and final project scope.",
   },
   {
-    question: "Can I get an estimate before I enquire?",
+    question: "How much does a solar carport cost in South Africa?",
     answer:
-      "Yes. Use the Atlas solar carport 3D builder to choose parking bays and row layouts, preview the structure and see a supply-only guide price excluding VAT before requesting a reviewed quote.",
+      "The steel structure price depends on how many parking bays you need and how you arrange them. Use the Atlas 3D builder to see a supply-only guide price excluding VAT for your layout before requesting a reviewed quote.",
   },
   {
     question: "Are the solar panels included?",
@@ -113,163 +101,112 @@ const faqSchema = {
   })),
 }
 
-function Arrow() {
-  return <span aria-hidden="true" className="text-lg leading-none">↗</span>
+const BUILDER_PATH = "/tools/solar-carport-estimator"
+const primaryButton = "inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-[#0043f3] px-5 py-3 font-semibold text-white transition hover:bg-[#0035c7] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0043f3]"
+const section = "mx-auto max-w-7xl px-5 sm:px-8 lg:px-10"
+
+function BuilderButton({ children, className = "" }) {
+  return <Link href={BUILDER_PATH} className={`${primaryButton} ${className}`}>{children}<span aria-hidden="true">→</span></Link>
 }
 
 export default function AtlasSolarCarportsPage() {
   return (
-    <main className="atlas-brand min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_7rem,#eef6fa_17rem,#eef6fa_100%)] pb-16 pt-24 text-[#001d2e] sm:pt-28">
+    <main className="atlas-brand bg-white pb-24 pt-24 text-[#001d2e] sm:pb-16 sm:pt-28">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <section className="atlas-public-hero atlas-solar-hero mx-4 overflow-hidden border shadow-sm sm:mx-6 lg:mx-8">
-        <div className="relative mx-auto max-w-7xl px-5 py-9 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
-          <div className="relative grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-14">
-            <div className="max-w-3xl">
-              <Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas by Smart Steel" width={280} height={44} className="h-8 w-auto max-w-full object-contain object-left sm:h-9" priority />
-              <p className="mt-8 text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Atlas Solar Carports</p>
-              <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl lg:text-[3.5rem]">
-                Build and price your solar carport in 3D.
-              </h1>
-              <p className="mt-5 max-w-xl text-base leading-7 text-[#121a20]/70 sm:text-lg">
-                Plan covered parking for your South African site. Build single or multi-row layouts, check panel capacity and see a live steel structure guide price excluding VAT.
-              </p>
-              <div className="mt-7 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-                <Link href="/tools/solar-carport-estimator" className="group inline-flex min-h-16 w-full items-center justify-between gap-6 rounded-xl bg-[#ffcf1a] px-5 py-3.5 text-left text-[#001d2e] shadow-[0_18px_36px_-22px_rgba(0,0,0,0.75)] transition hover:-translate-y-0.5 hover:bg-[#ffda4d] sm:w-auto sm:min-w-[340px]">
-                  <span>
-                    <span className="block text-base font-bold">Build my solar carport in 3D</span>
-                    <span className="mt-0.5 block text-xs font-semibold text-[#001d2e]/65">Plan the layout and see a live price</span>
-                  </span>
-                  <span className="text-2xl transition group-hover:translate-x-1">→</span>
-                </Link>
-                <a href="#how-it-works" className="inline-flex items-center border-b border-white/30 pb-1 text-sm font-semibold text-white/75 transition hover:border-white hover:text-white">
-                  See how the process works
-                </a>
-              </div>
-              <p className="mt-4 text-xs font-medium text-white/55">No contact details required to start building.</p>
-            </div>
+      <section className={`${section} grid items-center gap-8 pb-12 pt-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12 lg:py-14`}>
+        <div>
+          <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas by Smart Steel" width={190} height={45} className="h-8 w-auto object-contain" />
+          <h1 className="mt-5 text-4xl font-bold leading-[1.07] tracking-tight sm:text-5xl lg:text-6xl">Solar carports for South Africa</h1>
+          <p className="mt-4 max-w-lg text-base leading-7 text-slate-600 sm:text-lg">Plan covered parking with a modular steel structure designed to support solar panels. Lay out your bays, check indicative panel capacity and see a structure-only guide price in 3D.</p>
+          <BuilderButton className="mt-6 w-full sm:w-auto">Build my solar carport in 3D</BuilderButton>
+          <p className="mt-3 text-sm text-slate-600">No contact details required to start.</p>
+        </div>
 
-            <div className="relative min-h-[300px] overflow-hidden rounded-[1.5rem] border border-white/15 bg-[#001d2e] shadow-[0_28px_60px_-38px_rgba(0,0,0,0.9)] sm:min-h-[380px]">
-              <Image src="/solar_carport_hero.webp" alt="Atlas solar carport structure by Smart Steel" fill priority sizes="(min-width: 1024px) 44vw, 100vw" className="object-cover" />
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(0,29,46,0.02),rgba(0,29,46,0.24))]" />
-            </div>
+        <Link href={BUILDER_PATH} className="group block overflow-hidden rounded-3xl border border-[#d6e4ec] bg-[#eef4f8] shadow-sm transition hover:border-[#0043f3] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0043f3]">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#d6e4ec] bg-white px-5 py-4">
+            <span className="font-semibold">Atlas Solar Carport Builder</span>
+            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-[#0043f3]">3D preview</span>
+          </div>
+          <div className="relative aspect-[16/9]">
+            <Image src="/solar_carport_model.webp" alt="3D model of an Atlas steel solar carport" fill priority sizes="(min-width: 1024px) 54vw, 100vw" className="object-contain p-3" />
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t border-[#d6e4ec] bg-white px-5 py-4">
+            <span className="text-sm font-semibold text-[#0043f3]">Open the 3D builder</span>
+            <span aria-hidden="true" className="text-xl text-[#0043f3] transition motion-safe:group-hover:translate-x-1">→</span>
+          </div>
+        </Link>
+      </section>
+
+      <section className="border-y border-[#d6e4ec] bg-[#f2f7fa] py-10 sm:py-14">
+        <div className={section}>
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">From parking layout to guide price</h2>
+          <ol className="mt-6 grid gap-5 md:grid-cols-3">
+            {[
+              ["Lay out your parking", "Choose the number of bays and configure single- or double-sided runs to suit your site."],
+              ["Explore in 3D", "Rotate the model, check the top view and see the indicative solar panel capacity."],
+              ["Price the steel structure", "See the guide price excluding VAT, then send your layout to Smart Steel for a reviewed quote."],
+            ].map(([title, description], index) => (
+              <li key={title} className="rounded-2xl border border-[#d6e4ec] bg-white p-5">
+                <span className="inline-grid size-8 place-items-center rounded-full bg-blue-50 text-sm font-bold text-[#0043f3]">{index + 1}</span>
+                <h3 className="mt-3 text-lg font-semibold">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className={`${section} py-12 sm:py-16`}>
+        <div className="grid overflow-hidden rounded-3xl border border-[#d6e4ec] bg-[#f2f7fa] md:grid-cols-2">
+          <div className="relative min-h-64">
+            <Image src="/projects/Solar Carports_Centurion Golf Club/7.webp" alt="Completed solar carport parking at Centurion Golf Club in Gauteng" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+          </div>
+          <div className="self-center p-6 sm:p-10">
+            <p className="text-sm font-semibold text-[#0043f3]">Completed Smart Steel project · Gauteng</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight">Solar carports at Centurion Golf Club</h2>
+            <p className="mt-3 leading-7 text-slate-600">See how covered parking and a solar array come together on a completed site. Use the 3D builder to explore what could fit your own parking area.</p>
+            <BuilderButton className="mt-5">Plan my parking layout</BuilderButton>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 pt-8 sm:px-8 lg:px-10">
-        <div className="grid overflow-hidden border border-[#121a20]/15 bg-white sm:grid-cols-3">
-          {proofPoints.map(([title, description], index) => (
-            <div key={title} className="border-b border-[#121a20]/10 px-5 py-6 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 sm:px-7">
-              <p className="font-mono text-xs text-[#1c5b57]">0{index + 1}</p>
-              <h2 className="mt-4 text-lg font-semibold tracking-[-0.025em]">{title}</h2>
-              <p className="mt-2 text-sm leading-6 text-[#121a20]/65">{description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="how-it-works" className="mx-auto max-w-7xl scroll-mt-24 px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
-        <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">A clearer route to enquiry</p>
-            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.045em] sm:text-4xl">Start with the parking layout, not a generic form.</h2>
-          </div>
-          <p className="max-w-2xl text-base leading-7 text-[#121a20]/65">The Atlas estimator is designed to make the first commercial conversation more useful. Pick the parking requirement, see the structural direction, then send an enquiry with stronger project context already in place.</p>
-        </div>
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {processSteps.map(([number, title, description]) => (
-            <div key={number} className="border border-[#121a20]/15 bg-white p-6 shadow-[0_22px_44px_-42px_rgba(18,26,32,0.75)] sm:p-7">
-              <p className="font-mono text-xs text-[#d9a441]">{number}</p>
-              <h3 className="mt-8 text-2xl font-semibold tracking-[-0.04em]">{title}</h3>
-              <p className="mt-4 text-sm leading-6 text-[#121a20]/65">{description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Where Atlas fits</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Built around how the parking area needs to work.</h2>
-          </div>
-          <Link href="/tools/solar-carport-estimator" className="inline-flex items-center gap-2 text-sm font-semibold text-[#1c5b57] hover:text-[#121a20]">Start my estimate <Arrow /></Link>
-        </div>
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {applications.map((item) => (
-            <article key={item.title} className="overflow-hidden border border-[#121a20]/15 bg-white shadow-[0_22px_44px_-42px_rgba(18,26,32,0.75)]">
-              <div className="relative h-60 overflow-hidden bg-[#1c5b57]">
+      <section className={`${section} pb-12 sm:pb-16`}>
+        <h2 className="text-3xl font-bold tracking-tight">Where solar carports fit</h2>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {applications.map(item => (
+            <article key={item.title} className="overflow-hidden rounded-2xl border border-[#d6e4ec]">
+              <div className="relative aspect-[2/1] bg-[#eef4f8]">
                 <Image src={item.image} alt={item.alt} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,26,32,0.03),rgba(18,26,32,0.55))]" />
               </div>
-              <div className="p-6">
-                <h3 className="text-2xl font-semibold tracking-[-0.04em]">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#121a20]/65">{item.description}</p>
-              </div>
+              <div className="p-5"><h3 className="text-lg font-semibold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p></div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
-        <div className="grid gap-6 border border-[#121a20]/15 bg-[#121a20] p-6 text-[#f3f0e9] sm:p-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#d9a441]">Designed as an Atlas system</p>
-            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.045em] sm:text-4xl">A better starting point than a standard carport with panels added later.</h2>
-          </div>
-          <div>
-            <p className="max-w-2xl text-base leading-7 text-white/68">Atlas brings the parking layout, modular structural system, bolted assembly method, and solar-ready purpose into one clearer conversation. You start with a practical estimate, then Smart Steel reviews the site, foundations, delivery, installation, and final requirements with you.</p>
-            <Link href="/tools/solar-carport-estimator" className="mt-7 inline-flex items-center justify-center bg-[#d9a441] px-6 py-3.5 text-sm font-semibold text-[#121a20] transition hover:bg-[#ebbd5f]">Price my Atlas solar carport <span className="ml-2 text-lg leading-none">→</span></Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 pt-16 sm:px-8 sm:pt-24 lg:px-10">
-        <div className="grid gap-8 border-t border-[#121a20]/15 py-12 lg:grid-cols-[0.7fr_1.3fr]">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#1c5b57]">Questions before you price</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em]">The practical details buyers ask first.</h2>
-          </div>
-          <div className="divide-y divide-[#121a20]/15 border-y border-[#121a20]/15">
-            {faqs.map((item) => (
-              <details key={item.question} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-5 text-base font-semibold marker:content-none">
-                  {item.question}<span className="text-xl text-[#1c5b57] transition group-open:rotate-45">+</span>
+      <section className={`${section} pb-12 sm:pb-16`}>
+        <div className="grid gap-5 border-t border-[#d6e4ec] pt-8 lg:grid-cols-[0.65fr_1.35fr]">
+          <h2 className="text-3xl font-bold tracking-tight">Solar carport FAQs</h2>
+          <div className="divide-y divide-[#d6e4ec]">
+            {faqs.map(item => (
+              <details key={item.question} className="group py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold marker:content-none">
+                  {item.question}<span aria-hidden="true" className="text-xl text-[#0043f3] transition group-open:rotate-45">+</span>
                 </summary>
-                <p className="max-w-2xl pt-3 text-sm leading-6 text-[#121a20]/65">{item.answer}</p>
+                <p className="pt-2 leading-7 text-slate-600">{item.answer}</p>
               </details>
             ))}
+            <BuilderButton className="mt-4">Build and price my solar carport</BuilderButton>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-10">
-        <div className="grid overflow-hidden border border-[#cad9e2] bg-white md:grid-cols-2">
-          <div className="relative min-h-72">
-            <Image src="/projects/Solar Carports_Centurion Golf Club/7.webp" alt="Completed solar carport parking at Centurion Golf Club in Gauteng" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
-          </div>
-          <div className="p-7 sm:p-10">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#0043f3]">Completed Smart Steel project · Gauteng</p>
-            <h2 className="mt-4 text-3xl font-semibold">Solar carport parking at Centurion Golf Club</h2>
-            <p className="mt-4 leading-7 text-[#4d6170]">See a completed steel parking structure supporting a solar array. Use the Atlas 3D builder to explore a layout for your own site, then request a review of the structure and installation requirements.</p>
-            <Link href="/tools/solar-carport-estimator" className="mt-6 inline-flex min-h-12 items-center bg-[#0043f3] px-6 py-3 font-semibold text-white">Plan my solar carport in 3D →</Link>
-            <Link href="/recent" className="mt-5 block font-semibold text-[#0043f3]">View more completed projects →</Link>
-          </div>
-        </div>
-      </section>
+      <nav aria-label="Related Atlas products" className={`${section} flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-[#0043f3]`}>
+        {relatedPages.map(([title, , href]) => <Link key={href} href={href} className="hover:underline">{title} <span aria-hidden="true">↗</span></Link>)}
+        <Link href="/recent" className="hover:underline">More completed projects <span aria-hidden="true">↗</span></Link>
+      </nav>
 
-      <section className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-        <div className="grid gap-px overflow-hidden border border-[#121a20]/15 bg-[#121a20]/15 md:grid-cols-3">
-          {relatedPages.map(([title, description, href, cta]) => (
-            <Link key={title} href={href} className="group bg-white p-6 transition hover:bg-[#f3f0e9] sm:p-7">
-              <p className="text-lg font-semibold tracking-[-0.025em]">{title}</p>
-              <p className="mt-3 min-h-[72px] text-sm leading-6 text-[#121a20]/65">{description}</p>
-              <p className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#1c5b57]">{cta} <Arrow /></p>
-            </Link>
-          ))}
-        </div>
-      </section>
     </main>
   )
 }
