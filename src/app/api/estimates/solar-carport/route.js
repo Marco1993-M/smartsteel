@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { readSolarPricing } from 'lib/solarCarportPricingServer'
 import { calculateAtlasSolarCarportEstimate } from 'lib/estimates/atlasSolarCarportEstimate'
 import { validateSolarEstimateInput } from 'lib/estimates/solarEstimate'
+import { calculateSolarCarportASpecEstimate } from 'lib/atlasSolarCarportASpec'
 import { requireOsAuth } from 'lib/osRouteAuth'
 
 export async function POST(request) {
@@ -10,11 +11,15 @@ export async function POST(request) {
     const input = validateSolarEstimateInput({ ...body.input, productType: 'Solar carport' })
     const release = await readSolarPricing()
     if (!release) return NextResponse.json({ error: 'Solar pricing is awaiting OS confirmation.' }, { status: 503 })
-    const estimate = calculateAtlasSolarCarportEstimate({ ...input, parkingRuns: body.input?.parkingRuns }, release)
     if (body.internal) {
       const auth = await requireOsAuth(request)
       if (auth) return auth
-    } else {
+    }
+    const configuration = { ...input, parkingRuns: body.input?.parkingRuns }
+    const estimate = body.internal && body.input?.solarCarportSpec === 'A'
+      ? calculateSolarCarportASpecEstimate(configuration, release)
+      : calculateAtlasSolarCarportEstimate(configuration, release)
+    if (!body.internal) {
       estimate.lineItems = estimate.lineItems.map(({ code, label }) => ({ code, label }))
       delete estimate.pricing.baseTotal
       delete estimate.pricing.markupMultiplier
