@@ -321,6 +321,7 @@ function buildInitialState(lead, estimate) {
       productType,
     preparedFor: latestInput.preparedFor || getDefaultPreparedFor(lead),
     pricingRelease: latestInput.pricingRelease ?? null,
+    solarCarportSpec: latestInput.solarCarportSpec === "A" ? "A" : "B",
     width,
     length,
     useCustomSize,
@@ -514,7 +515,7 @@ function applyMarkupToLineItem(item, markupMultiplier) {
 function buildEditableLineItemsFromEstimate(previewLineItems, estimate, markupMultiplier) {
   const savedItems = Array.isArray(estimate?.line_items) ? estimate.line_items : []
 
-  if (savedItems.length === 0) {
+  if (!Array.isArray(estimate?.line_items)) {
     return previewLineItems.map((item) =>
       buildEditableLineItem(applyMarkupToLineItem(item, markupMultiplier), {
         priceIncludesMarkup: true,
@@ -552,7 +553,7 @@ function estimatePricingSpecificationKey(input) {
   if (input.productType !== "Solar carport") return warehousePricingSpecificationKey(input)
   return JSON.stringify([
     input.productType, Number(input.width), Number(input.length), input.parkingRuns,
-    input.scope, Number(input.deliveryDistance),
+    input.scope, Number(input.deliveryDistance), Number(input.moduleCount), input.solarCarportSpec,
   ])
 }
 
@@ -645,6 +646,7 @@ function buildEstimateDraft({
           : preview.meta?.pricingRevision ?? preview.meta?.pricingRelease ?? null,
       useCustomSize: formState.useCustomSize,
       productType: formState.productType,
+      ...(formState.productType === "Solar carport" ? { solarCarportSpec: formState.solarCarportSpec } : {}),
       productTypeLabel: formState.productTypeLabel?.trim() || formState.productType,
       preparedFor: formState.preparedFor?.trim() || getDefaultPreparedFor(lead),
       discountPercent: Math.min(100, Math.max(0, Number(formState.discountPercent) || 0)),
@@ -701,8 +703,22 @@ export default function EstimateDrawer({
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
   const isTrussEstimate = isTrussEstimateProduct(formState.productType)
   const isCustomProject = formState.productType === CUSTOM_ENGINEERED_PROJECT_TYPE
-  const solarPricing = useSolarCarportEstimate({ ...formState, quantity: 1 }, true)
-  const solarPricingPending = formState.productType === "Solar carport" && !solarPricing.estimate
+  const isManualSolarSpec = isSolarCarportEstimate && formState.solarCarportSpec === "A"
+  const solarPricing = useSolarCarportEstimate({
+    productType: isSolarCarportEstimate && !isManualSolarSpec ? "Solar carport" : null,
+    width: formState.width,
+    length: formState.length,
+    parkingRuns: formState.parkingRuns,
+    scope: formState.scope,
+    deliveryDistance: formState.deliveryDistance,
+    moduleCount: formState.moduleCount,
+    quantity: 1,
+  }, true)
+  const needsSolarSchedule = !Array.isArray(loadedEstimate?.line_items)
+    || estimatePricingSpecificationKey(buildInitialState(lead, loadedEstimate)) !== estimatePricingSpecificationKey(formState)
+  const solarPricingPending = isSolarCarportEstimate && !isManualSolarSpec && needsSolarSchedule && !solarPricing.estimate
+  const appliedSolarScheduleRef = useRef(null)
+  const loadingFormRef = useRef(null)
   const preview = useMemo(() => {
     // Line items describe one priced unit. The estimate quantity is applied only
     // to the final sell total so changing it never rewrites edited line items.
@@ -723,8 +739,9 @@ export default function EstimateDrawer({
         quantity,
       },
       summary: quantitySummary,
+      ...(isManualSolarSpec ? { lineItems: [] } : {}),
     }
-  }, [formState, solarPricing.estimate])
+  }, [formState, solarPricing.estimate, isManualSolarSpec])
   const pricingSpecificationKey = estimatePricingSpecificationKey(formState)
   const [editableLineItems, setEditableLineItems] = useState(() =>
     buildEditableLineItemsFromEstimate(
@@ -740,9 +757,13 @@ export default function EstimateDrawer({
 
   useEffect(() => {
     const nextFormState = buildInitialState(lead, loadedEstimate)
+    loadingFormRef.current = nextFormState
     setFormState(nextFormState)
     previousProductTypeRef.current = nextFormState.productType
     previousPricingSpecificationRef.current = estimatePricingSpecificationKey(nextFormState)
+    appliedSolarScheduleRef.current = Array.isArray(loadedEstimate?.line_items)
+      ? previousPricingSpecificationRef.current
+      : null
 
     const nextPreview = calculateEstimateByProductType(nextFormState.productType, {
       ...nextFormState,
@@ -750,7 +771,7 @@ export default function EstimateDrawer({
     })
     setEditableLineItems(
       buildEditableLineItemsFromEstimate(
-        nextPreview.lineItems,
+        nextFormState.productType === "Solar carport" && nextFormState.solarCarportSpec === "A" ? [] : nextPreview.lineItems,
         loadedEstimate,
         nextPreview.pricing.markupMultiplier
       )
@@ -760,8 +781,17 @@ export default function EstimateDrawer({
   }, [lead, loadedEstimate])
 
   useEffect(() => {
-    if (solarPricingPending) return
+    if (loadingFormRef.current && loadingFormRef.current !== formState) return
+    loadingFormRef.current = null
+    if (isManualSolarSpec) {
+      appliedSolarScheduleRef.current = null
+      previousPricingSpecificationRef.current = pricingSpecificationKey
+      return
+    }
+    if (isSolarCarportEstimate && !solarPricing.estimate) return
     const specificationKey = pricingSpecificationKey
+    if (isSolarCarportEstimate && appliedSolarScheduleRef.current === specificationKey) return
+    appliedSolarScheduleRef.current = isSolarCarportEstimate ? specificationKey : null
     const reprice = (isAtlasWarehouseEstimateProduct(formState.productType) || isSolarCarportEstimate)
       && previousPricingSpecificationRef.current !== specificationKey
     previousPricingSpecificationRef.current = specificationKey
@@ -793,7 +823,7 @@ export default function EstimateDrawer({
           addMissing: isSolarCarportEstimate || isAtlasWarehouseEstimateProduct(formState.productType) || formState.productType === "Solar ground mount",
         })
     })
-  }, [formState.productType, formState.groundMountRuns, isSolarCarportEstimate, solarPricingPending, pricingSpecificationKey, preview.lineItems, preview.pricing.markupMultiplier])
+  }, [formState, isSolarCarportEstimate, isManualSolarSpec, solarPricing.estimate, pricingSpecificationKey, preview.lineItems, preview.pricing.markupMultiplier])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -1097,14 +1127,14 @@ export default function EstimateDrawer({
             leaveTo="translate-x-full"
           >
             <Dialog.Panel className="flex h-full w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl sm:w-[min(96vw,1120px)] sm:max-w-[1120px]">
-              <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
+              <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 sm:px-6">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex min-w-0 items-center gap-3">
-                    <button onClick={requestClose} className="shrink-0 rounded-full p-2 transition hover:bg-gray-100">
+                    <button type="button" aria-label="Close estimate workspace" onClick={requestClose} className="shrink-0 rounded-full p-2 transition hover:bg-gray-100">
                       <ArrowLeft size={20} />
                     </button>
                     <div className="min-w-0">
-                      <Dialog.Title className="text-lg font-bold tracking-tight text-slate-950 sm:text-2xl">
+                      <Dialog.Title className="text-base font-bold tracking-tight text-slate-950 sm:text-lg">
                         Estimate workspace
                       </Dialog.Title>
                       <p className="truncate text-sm text-slate-500">
@@ -1112,42 +1142,22 @@ export default function EstimateDrawer({
                       </p>
                     </div>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:flex lg:items-center">
-                    {sortedEstimates.length ? (
-                      <select
-                        value={loadedEstimate?.id || ""}
-                        onChange={(event) => loadEstimateVersion(event.target.value)}
-                        className="min-h-10 min-w-0 max-w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700"
-                        aria-label="Loaded estimate version"
-                      >
-                        {groupEstimateQuotes(sortedEstimates).map(group => <optgroup key={group.id} label={group.latest.title.replace(/\s+V\d+$/i, "")}>{group.versions.map(estimate => <option key={estimate.id} value={estimate.id}>V{estimate.version_no} · {estimate.title}{estimate.won_superseded_by ? " · Superseded" : estimate.status === "accepted" ? " · Accepted" : ""}</option>)}</optgroup>)}
-                      </select>
-                    ) : null}
-                    {canUpdateLoadedEstimate ? (
-                      <div className="flex flex-wrap gap-2">
-                        <button type="button" aria-pressed={revisionMode === "new"} onClick={() => { setRevisionMode("new"); setHasUnsavedChanges(true) }} className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold ${revisionMode === "new" ? "border-[#0043f3] bg-blue-50 text-[#0043f3]" : "border-slate-200 text-slate-600"}`}>Revise this quote</button>
-                        <button type="button" aria-pressed={revisionMode === "alternative"} onClick={startAdditionalQuote} className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold ${revisionMode === "alternative" ? "border-[#0043f3] bg-blue-50 text-[#0043f3]" : "border-slate-200 text-slate-600"}`}>Create an additional quote</button>
-                        {canEditLoadedDraft && <button type="button" aria-pressed={revisionMode === "update"} onClick={() => setRevisionMode("update")} className={`min-h-11 rounded-xl px-3 py-2 text-xs font-semibold ${revisionMode === "update" ? "bg-slate-100 text-slate-950" : "text-slate-500"}`}>Edit draft V{loadedEstimate.version_no}</button>}
-                      </div>
-                    ) : null}
-                  </div>
                 </div>
               </div>
 
-              {loadedEstimate && <p role="status" className="border-b border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900 sm:px-6">{revisionMode === "alternative" ? (isAtlasWarehouseEstimateProduct(formState.productType) ? "Additional quote starts with standard pricing for one warehouse. Add any services or discounts for this quote separately." : "Additional work: starts a separate quote using the loaded scope as a starting point. Give it a distinct title. Both quotes can be accepted independently.") : revisionMode === "update" ? `Editing unsent draft V${loadedEstimate.version_no}. This updates the draft without creating a revision.` : `Revising V${loadedEstimate.version_no}: saves a new version of this quote. The previous version stays in history. An accepted order changes only when you confirm the new won version in Commercial.`}</p>}
-              <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 sm:px-6">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex gap-2 overflow-x-auto">
                     {[
                       ["estimate-scope", "1. Scope"],
                       ["estimate-pricing", "2. Pricing"],
                       ...(sortedEstimates.length ? [["estimate-history", "3. History"]] : []),
                     ].map(([id, label]) => (
-                      <button key={id} type="button" onClick={() => scrollToEstimateSection(id)} className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400">{label}</button>
+                      <button key={id} type="button" onClick={() => scrollToEstimateSection(id)} className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-400">{label}</button>
                     ))}
                   </div>
-                  <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-950 px-4 py-2.5 text-white sm:min-w-[250px]">
-                    <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Estimate excl. VAT</p><p className="mt-0.5 text-xl font-bold">{formatCurrency(estimatedTotal)}</p></div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-slate-950 px-3 py-1.5 text-white">
+                    <p className="text-xs text-slate-300">Excl. VAT</p><p className="text-sm font-bold tabular-nums">{formatCurrency(estimatedTotal)}</p>
                     {hasOverrides ? <span className="rounded-full bg-amber-400/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-amber-200">Adjusted</span> : null}
                   </div>
                 </div>
@@ -1155,7 +1165,31 @@ export default function EstimateDrawer({
 
               <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
                 <div className="mx-auto max-w-5xl space-y-6">
-                  <div id="estimate-scope" className="scroll-mt-36">
+                  {loadedEstimate ? (
+                    <section aria-label="Quote version and editing options" className="rounded-xl border border-slate-200 bg-white p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {sortedEstimates.length ? (
+                      <select
+                        value={loadedEstimate?.id || ""}
+                        onChange={(event) => loadEstimateVersion(event.target.value)}
+                        className="min-h-10 w-full min-w-0 sm:w-80 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700"
+                        aria-label="Loaded estimate version"
+                      >
+                        {groupEstimateQuotes(sortedEstimates).map(group => <optgroup key={group.id} label={group.latest.title.replace(/\s+V\d+$/i, "")}>{group.versions.map(estimate => <option key={estimate.id} value={estimate.id}>V{estimate.version_no} · {estimate.title}{estimate.won_superseded_by ? " · Superseded" : estimate.status === "accepted" ? " · Accepted" : ""}</option>)}</optgroup>)}
+                      </select>
+                    ) : null}
+                    {canUpdateLoadedEstimate ? (
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" aria-pressed={revisionMode === "new"} onClick={() => { setRevisionMode("new"); setHasUnsavedChanges(true) }} className={`min-h-9 rounded-xl border px-3 py-2 text-xs font-semibold ${revisionMode === "new" ? "border-[#0043f3] bg-blue-50 text-[#0043f3]" : "border-slate-200 text-slate-600"}`}>Revise this quote</button>
+                        <button type="button" aria-pressed={revisionMode === "alternative"} onClick={startAdditionalQuote} className={`min-h-9 rounded-xl border px-3 py-2 text-xs font-semibold ${revisionMode === "alternative" ? "border-[#0043f3] bg-blue-50 text-[#0043f3]" : "border-slate-200 text-slate-600"}`}>Create an additional quote</button>
+                        {canEditLoadedDraft && <button type="button" aria-pressed={revisionMode === "update"} onClick={() => setRevisionMode("update")} className={`min-h-9 rounded-xl px-3 py-2 text-xs font-semibold ${revisionMode === "update" ? "bg-slate-100 text-slate-950" : "text-slate-500"}`}>Edit draft V{loadedEstimate.version_no}</button>}
+                      </div>
+                    ) : null}
+                  </div>
+              {loadedEstimate && <p role="status" className="mt-2 text-xs leading-5 text-slate-600">{revisionMode === "alternative" ? (isAtlasWarehouseEstimateProduct(formState.productType) ? "Additional quote starts with standard pricing for one warehouse. Add any services or discounts for this quote separately." : "Additional work: starts a separate quote using the loaded scope as a starting point. Give it a distinct title. Both quotes can be accepted independently.") : revisionMode === "update" ? `Editing unsent draft V${loadedEstimate.version_no}. This updates the draft without creating a revision.` : `Revising V${loadedEstimate.version_no}: saves a new version of this quote. The previous version stays in history. An accepted order changes only when you confirm the new won version in Commercial.`}</p>}
+                    </section>
+                  ) : null}
+                  <div id="estimate-scope" className="scroll-mt-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Scope</p>
                     <h2 className="mt-1 text-xl font-bold text-slate-950">Define what we are pricing</h2>
                   </div>
@@ -1637,7 +1671,20 @@ export default function EstimateDrawer({
 
                   {isSolarCarportEstimate ? (
                     <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-slate-700">
-                      This estimate follows the controlled Atlas solar-carport layouts and live OS pricing. Custom heights or pitches require an engineering review and should be recorded in the estimate notes.
+                      <label className="block font-semibold text-slate-900">
+                        Solar carport specification
+                        <select className="mt-1 block w-full rounded-md border-slate-300 bg-white" value={formState.solarCarportSpec}
+                          onChange={event => {
+                            if (event.target.value === "B" && !window.confirm("Apply the B-spec schedule? Calculated rows will be repriced.")) return
+                            handleChange("solarCarportSpec", event.target.value)
+                          }}>
+                          <option value="B">B-spec · Atlas builder pricing</option>
+                          <option value="A">A-spec · Manual pricing</option>
+                        </select>
+                      </label>
+                      <p className="mt-2">{isManualSolarSpec
+                        ? "Existing line items are retained. Review the quantities, descriptions and prices against the A-spec before saving."
+                        : "B-spec uses the Atlas builder schedule. Changing the priced layout recalculates standard rows."}</p>
                     </div>
                   ) : null}
 
@@ -1757,7 +1804,7 @@ export default function EstimateDrawer({
                     </div>
                   </details>
 
-                  <div id="estimate-pricing" className="scroll-mt-36 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                  <div id="estimate-pricing" className="scroll-mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Sell total excl. VAT</p>
@@ -1802,17 +1849,7 @@ export default function EstimateDrawer({
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-sm font-medium text-slate-900">Line items</p>
-                      <button
-                        type="button"
-                        onClick={() => addManualItem()}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
-                      >
-                        <Plus size={16} />
-                        Add manual item
-                      </button>
-                    </div>
+                    <p className="mt-4 text-sm font-medium text-slate-900">Line items</p>
 
                     {isAtlasWarehouseEstimateProduct(formState.productType) ? (
                       <p className="mt-3 text-xs leading-5 text-slate-500">Changing the size, steel or sheeting automatically refreshes standard quantities and prices, including any edited standard rows. Separate manual items and your discount are retained. Save the estimate to keep your changes.</p>
@@ -1934,6 +1971,16 @@ export default function EstimateDrawer({
                         )
                       })}
                     </div>
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => addManualItem()}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:w-auto"
+                      >
+                        <Plus size={16} />
+                        Add manual item
+                      </button>
+                    </div>
                   </div>
 
                   <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">
@@ -1948,7 +1995,7 @@ export default function EstimateDrawer({
                   </div>
 
                   {sortedEstimates.length > 0 && (
-                    <div id="estimate-history" className="scroll-mt-36 rounded-2xl border border-slate-200 bg-white p-5">
+                    <div id="estimate-history" className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-5">
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="text-sm font-medium text-slate-900">Saved estimate versions</p>
