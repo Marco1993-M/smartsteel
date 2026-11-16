@@ -322,6 +322,8 @@ function buildInitialState(lead, estimate) {
     preparedFor: latestInput.preparedFor || getDefaultPreparedFor(lead),
     pricingRelease: latestInput.pricingRelease ?? null,
     solarCarportSpec: latestInput.solarCarportSpec === "A" ? "A" : "B",
+    scope: latestInput.scope,
+    parkingRuns: latestInput.parkingRuns ?? (estimate ? undefined : builderConfiguration.parkingRuns),
     width,
     length,
     useCustomSize,
@@ -553,7 +555,7 @@ function estimatePricingSpecificationKey(input) {
   if (input.productType !== "Solar carport") return warehousePricingSpecificationKey(input)
   return JSON.stringify([
     input.productType, Number(input.width), Number(input.length), input.parkingRuns,
-    input.scope, Number(input.deliveryDistance), Number(input.moduleCount), input.solarCarportSpec,
+    input.scope, Number(input.deliveryDistance), Number(input.moduleCount), input.solarCarportSpec, input.applyStandardSchedule,
   ])
 }
 
@@ -703,9 +705,10 @@ export default function EstimateDrawer({
   const isGroundMountEstimate = formState.productType === "Solar ground mount"
   const isTrussEstimate = isTrussEstimateProduct(formState.productType)
   const isCustomProject = formState.productType === CUSTOM_ENGINEERED_PROJECT_TYPE
-  const isManualSolarSpec = isSolarCarportEstimate && formState.solarCarportSpec === "A"
+  const isASpec = isSolarCarportEstimate && formState.solarCarportSpec === "A"
   const solarPricing = useSolarCarportEstimate({
-    productType: isSolarCarportEstimate && !isManualSolarSpec ? "Solar carport" : null,
+    productType: isSolarCarportEstimate ? "Solar carport" : null,
+    solarCarportSpec: formState.solarCarportSpec,
     width: formState.width,
     length: formState.length,
     parkingRuns: formState.parkingRuns,
@@ -716,7 +719,12 @@ export default function EstimateDrawer({
   }, true)
   const needsSolarSchedule = !Array.isArray(loadedEstimate?.line_items)
     || estimatePricingSpecificationKey(buildInitialState(lead, loadedEstimate)) !== estimatePricingSpecificationKey(formState)
-  const solarPricingPending = isSolarCarportEstimate && !isManualSolarSpec && needsSolarSchedule && !solarPricing.estimate
+  const hasLegacyASchedule = isASpec && loadedEstimate?.input_data?.solarCarportSpec === "A"
+    && loadedEstimate.line_items?.length > 0
+    && !loadedEstimate.line_items.some(item => item.code?.startsWith("SC-A-"))
+    && !formState.applyStandardSchedule
+  const solarPricingPending = isSolarCarportEstimate && needsSolarSchedule
+    && (hasLegacyASchedule || !solarPricing.estimate)
   const appliedSolarScheduleRef = useRef(null)
   const loadingFormRef = useRef(null)
   const preview = useMemo(() => {
@@ -728,7 +736,7 @@ export default function EstimateDrawer({
     })
     const quantity = Math.max(1, Number(formState.quantity) || 1)
     const quantitySummary =
-      quantity > 1
+      quantity > 1 && !(isSolarCarportEstimate && formState.solarCarportSpec === "A")
         ? calculateEstimateByProductType(formState.productType, formState).summary
         : unitPreview.summary
 
@@ -739,9 +747,8 @@ export default function EstimateDrawer({
         quantity,
       },
       summary: quantitySummary,
-      ...(isManualSolarSpec ? { lineItems: [] } : {}),
     }
-  }, [formState, solarPricing.estimate, isManualSolarSpec])
+  }, [formState, isSolarCarportEstimate, solarPricing.estimate])
   const pricingSpecificationKey = estimatePricingSpecificationKey(formState)
   const [editableLineItems, setEditableLineItems] = useState(() =>
     buildEditableLineItemsFromEstimate(
@@ -783,15 +790,12 @@ export default function EstimateDrawer({
   useEffect(() => {
     if (loadingFormRef.current && loadingFormRef.current !== formState) return
     loadingFormRef.current = null
-    if (isManualSolarSpec) {
-      appliedSolarScheduleRef.current = null
-      previousPricingSpecificationRef.current = pricingSpecificationKey
-      return
-    }
-    if (isSolarCarportEstimate && !solarPricing.estimate) return
+    if (isSolarCarportEstimate && (hasLegacyASchedule || !solarPricing.estimate)) return
     const specificationKey = pricingSpecificationKey
     if (isSolarCarportEstimate && appliedSolarScheduleRef.current === specificationKey) return
     appliedSolarScheduleRef.current = isSolarCarportEstimate ? specificationKey : null
+    const replaceSchedule = isSolarCarportEstimate && Boolean(formState.applyStandardSchedule)
+      && JSON.parse(previousPricingSpecificationRef.current).at(-1) !== formState.applyStandardSchedule
     const reprice = (isAtlasWarehouseEstimateProduct(formState.productType) || isSolarCarportEstimate)
       && previousPricingSpecificationRef.current !== specificationKey
     previousPricingSpecificationRef.current = specificationKey
@@ -799,7 +803,7 @@ export default function EstimateDrawer({
       const productTypeChanged = previousProductTypeRef.current !== formState.productType
       previousProductTypeRef.current = formState.productType
 
-      if (productTypeChanged || currentItems.length === 0) {
+      if (productTypeChanged || replaceSchedule || currentItems.length === 0) {
         return preview.lineItems.map((item) =>
           buildEditableLineItem(applyMarkupToLineItem(item, preview.pricing.markupMultiplier), {
             priceIncludesMarkup: true,
@@ -823,7 +827,7 @@ export default function EstimateDrawer({
           addMissing: isSolarCarportEstimate || isAtlasWarehouseEstimateProduct(formState.productType) || formState.productType === "Solar ground mount",
         })
     })
-  }, [formState, isSolarCarportEstimate, isManualSolarSpec, solarPricing.estimate, pricingSpecificationKey, preview.lineItems, preview.pricing.markupMultiplier])
+  }, [formState, isSolarCarportEstimate, hasLegacyASchedule, solarPricing.estimate, pricingSpecificationKey, preview.lineItems, preview.pricing.markupMultiplier])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -1675,22 +1679,33 @@ export default function EstimateDrawer({
                         Solar carport specification
                         <select className="mt-1 block w-full rounded-md border-slate-300 bg-white" value={formState.solarCarportSpec}
                           onChange={event => {
-                            if (event.target.value === "B" && !window.confirm("Apply the B-spec schedule? Calculated rows will be repriced.")) return
-                            handleChange("solarCarportSpec", event.target.value)
+                            if (editableLineItems.length && !window.confirm("Replace the current line items with the selected specification’s schedule?")) return
+                            setHasUnsavedChanges(true)
+                            setFormState(current => ({
+                              ...current,
+                              solarCarportSpec: event.target.value,
+                              applyStandardSchedule: (current.applyStandardSchedule || 0) + 1,
+                            }))
                           }}>
                           <option value="B">B-spec · Atlas builder pricing</option>
-                          <option value="A">A-spec · Manual pricing</option>
+                          <option value="A">A-spec · Planted columns</option>
                         </select>
                       </label>
-                      <p className="mt-2">{isManualSolarSpec
-                        ? "Existing line items are retained. Review the quantities, descriptions and prices against the A-spec before saving."
-                        : "B-spec uses the Atlas builder schedule. Changing the priced layout recalculates standard rows."}</p>
+                      {isASpec ? (
+                        <>
+                          <p className="mt-2">A-spec prices single-sided runs in two-space bays.</p>
+                          <button type="button" className="mt-2 font-semibold text-blue-700 underline" onClick={() => {
+                            if (editableLineItems.length && !window.confirm("Replace the current line items with the standard A-spec schedule?")) return
+                            handleChange("applyStandardSchedule", (formState.applyStandardSchedule || 0) + 1)
+                          }}>Apply standard A-spec schedule</button>
+                        </>
+                      ) : <p className="mt-2">B-spec uses the Atlas builder schedule. Changing the priced layout recalculates standard rows.</p>}
                     </div>
                   ) : null}
 
                   {isSolarCarportEstimate && solarPricingPending ? (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
-                      {solarPricing.error || "Loading current OS solar-carport pricing…"}
+                      {hasLegacyASchedule ? "Apply the standard A-spec schedule before saving a pricing change to this manual quote." : solarPricing.error || "Loading current OS solar-carport pricing…"}
                     </div>
                   ) : null}
 
@@ -1772,10 +1787,10 @@ export default function EstimateDrawer({
                     <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                       <input
                         type="checkbox"
-                        checked={formState.claddingInstalled}
-                        onChange={(event) =>
-                          handleChange("claddingInstalled", event.target.checked)
-                        }
+                        checked={isASpec ? formState.scope === "supply_install" : formState.claddingInstalled}
+                        onChange={(event) => isASpec
+                          ? handleChange("scope", event.target.checked ? "supply_install" : "supply_only")
+                          : handleChange("claddingInstalled", event.target.checked)}
                       />
                       {isTrussEstimate
                         ? "Include installation"
