@@ -8,7 +8,7 @@ const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
 const control='min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
 const dateLabel=day=>day ? new Date(`${day}T12:00:00+02:00`).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric',timeZone:'Africa/Johannesburg'}) : 'Choose date'
 
-export default function AnalyticsPeriodPicker({ value, onChange }) {
+export default function AnalyticsPeriodPicker({ value, onChange, align = "start" }) {
  const [open,setOpen]=useState(false)
  const [from,setFrom]=useState('')
  const [to,setTo]=useState('')
@@ -51,7 +51,7 @@ export default function AnalyticsPeriodPicker({ value, onChange }) {
   </select><ChevronDown size={14} aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" /></div>
   {value.range==='month' && !open ? <AnalyticsMonthPicker value={value.month} onChange={month=>onChange({range:'month',month})} /> : null}
   {value.range==='custom' || open ? <button ref={trigger} type="button" onClick={()=>open?close():begin()} aria-label="Choose custom reporting dates" aria-haspopup="dialog" aria-expanded={open} aria-controls={open?id:undefined} className={`${control} inline-flex items-center gap-2`}><CalendarDays size={15} className="text-[#0043f3]" aria-hidden="true" />{value.range==='custom'?`${dateLabel(value.from)} – ${dateLabel(value.to)}`:'Choose dates'}</button> : null}
-  {open && <div id={id} role="dialog" aria-label="Custom reporting range" className="absolute left-0 top-full z-50 mt-2 w-[min(23rem,calc(100vw-2.5rem))] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+  {open && <div id={id} role="dialog" aria-label="Custom reporting range" className={`absolute left-0 top-full z-50 mt-2 w-[min(23rem,calc(100vw-2.5rem))] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl ${align === "end" ? "sm:left-auto sm:right-0" : ""}`}>
    <p className="text-sm font-bold text-slate-900">Choose your reporting dates</p>
    <div className="mt-3 grid grid-cols-2 gap-2">{[['from','Start date',from],['to','End date',to]].map(([key,label,date])=><button key={key} type="button" onClick={()=>setPhase(key)} aria-pressed={phase===key} className={`rounded-lg border p-3 text-left ${phase===key?'border-sky-600 bg-sky-50':'border-slate-200'}`}><span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</span><span className="mt-1 block text-xs font-semibold text-slate-900">{dateLabel(date)}</span></button>)}</div>
    <div className="mt-4 flex items-center justify-between gap-2">

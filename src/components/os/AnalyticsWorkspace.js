@@ -295,22 +295,29 @@ export default function AnalyticsWorkspace() {
   const metrics = data?.metrics
   const connections = Object.fromEntries((data?.marketing?.connections || []).map((item) => [item.source, item]))
 
+  const showHeaderStats = !loading && !error && Boolean(metrics)
   const headerTools = (
     <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2">
-      <div className="min-w-0">
-        <AnalyticsPeriodPicker value={selection} onChange={setSelection} />
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Link href="/os/analytics/annual" className={`${button} min-h-10`}>
-          Annual plan & projection <ArrowUpRight size={14} aria-hidden="true" />
-        </Link>
-        <button type="button" className={`${button} min-h-10 min-w-10`} disabled={loading}
+      <dl aria-label="Activity in the selected reporting period" className="flex flex-wrap items-center gap-x-4 gap-y-1 py-1">
+        <div className="flex items-baseline gap-2">
+          <dt className="text-xs text-slate-600">New enquiries</dt>
+          <dd className="font-mono text-base font-semibold tabular-nums text-[#0043f3]">{showHeaderStats ? metrics.leadCount : "—"}</dd>
+        </div>
+        <div className="flex items-baseline gap-2 border-l border-slate-200 pl-4">
+          <dt className="text-xs text-slate-600">Quote sends</dt>
+          <dd className="font-mono text-base font-semibold tabular-nums text-slate-950">{showHeaderStats && insights?.estimatesAvailable ? metrics.sentCount : "—"}</dd>
+        </div>
+      </dl>
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:justify-end">
+        <AnalyticsPeriodPicker value={selection} onChange={setSelection} align="end" />
+        <button type="button" className={`${button} size-10 px-0`} disabled={loading}
           onClick={() => setRefreshKey(value => value + 1)} aria-label="Refresh analytics" title="Refresh analytics">
           <RefreshCw size={15} aria-hidden="true" className={loading ? "animate-spin" : ""} />
         </button>
-        <button type="button" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#001d2e] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#0043f3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0043f3] disabled:opacity-50"
-          disabled={loading || Boolean(error) || !insights} onClick={() => exportPerformance(data)}>
-          <ArrowDownToLine size={15} aria-hidden="true" /> Export performance
+        <button type="button" className="grid size-10 place-items-center rounded-lg bg-[#001d2e] text-white transition hover:bg-[#0043f3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0043f3] disabled:opacity-50"
+          disabled={loading || Boolean(error) || !insights} onClick={() => exportPerformance(data)}
+          aria-label="Export performance" title="Export performance">
+          <ArrowDownToLine size={16} aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -319,7 +326,9 @@ export default function AnalyticsWorkspace() {
   return <div className="min-h-screen min-w-0 bg-slate-50 px-4 pb-6 pt-3 text-slate-900 sm:px-6">
     <div className="mx-auto max-w-[1500px] space-y-5">
       {headerTarget ? createPortal(headerTools, headerTarget) : headerTools}
-      <nav aria-label="Analytics sections" className="flex gap-1 overflow-x-auto border-b border-slate-200">{TABS.map(({ key, label, icon: Icon }) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)} className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-3.5 text-xs font-semibold transition ${tab === key ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500 hover:text-slate-900'}`}><Icon size={15} />{label}</button>)}</nav>
+      <nav aria-label="Analytics sections" className="flex gap-1 overflow-x-auto border-b border-slate-200">{TABS.map(({ key, label, icon: Icon }) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)} className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-3.5 text-xs font-semibold transition ${tab === key ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500 hover:text-slate-900'}`}><Icon size={15} />{label}</button>)}<Link href="/os/analytics/annual" className="flex shrink-0 items-center gap-2 border-b-2 border-transparent px-4 py-3.5 text-xs font-semibold text-slate-500 transition hover:text-slate-900">
+        <ArrowUpRight size={15} aria-hidden="true" /> Annual plan & projection
+      </Link></nav>
       {loading ? <div role="status" className="space-y-5"><p className="text-sm text-slate-500">Loading business performance…</p><div className="grid animate-pulse gap-4 sm:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map((key) => <div key={key} className="h-36 rounded-2xl bg-slate-200" />)}</div><div className="h-64 animate-pulse rounded-2xl bg-slate-200" /></div> : error ? <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800"><p>{error}</p><button className={`${button} mt-4`} onClick={() => setRefreshKey((value) => value + 1)}>Try again</button></div> : insights && metrics ? <>
         {!!data.warnings?.length && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">{data.warnings.join(' ')}</p>}
         <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-500"><p><strong className="font-semibold text-slate-700">{data.period.label}</strong> · Acquisition cohorts use lead creation date; live pipeline includes all open leads.</p><p>As of {new Date(data.period.asOf).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}</p></div>
