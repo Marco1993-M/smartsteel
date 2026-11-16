@@ -12,6 +12,7 @@ import {
   getAtlasSolarCarportWidth,
   placeAtlasSolarCarportRun,
 } from "../../lib/atlasSolarCarportLayouts"
+import AtlasSolarASpecDraft from "./AtlasSolarASpecDraft"
 import AtlasSolarCarportPlan from "../atlas/AtlasSolarCarportPlan"
 
 const GROUPS = [
@@ -153,6 +154,8 @@ export default function AtlasSolarPricingWorkspace() {
     <nav aria-label="Solar pricing sections" className="sticky top-3 z-20 flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">{[["configuration", "Configure"], ["schedule", "Schedule"], ["benchmark", "Benchmark"], ["pricing", "Pricing control"]].map(([id, label]) => <a key={id} href={`#${id}`} className="rounded-lg px-3 py-2 text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-[#0043f3]">{label}</a>)}</nav>
     {error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">{error}</p> : null}
     {message ? <p role="status" className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-800">{message}</p> : null}
+    <AtlasSolarASpecDraft releasedCosts={release?.costs} />
+
     {!loading && !release ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">No published solar pricing release is available. The rates below are an internal draft until published.</p> : null}
 
     {costs && draft ? <>
