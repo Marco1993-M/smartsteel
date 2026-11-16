@@ -4,6 +4,7 @@ import ManufacturingProgress from './ManufacturingProgress'
 import ManufacturingOrderSetup from './ManufacturingOrderSetup'
 import CustomerOrders from './CustomerOrders'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, CheckCircle2, FileText, Package, Plus, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
 import { getOsAuthHeaders } from '../../lib/osClientAuth'
@@ -30,6 +31,10 @@ export default function ManufacturingOperations() {
   const [selectedId, setSelectedId] = useState('')
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('active')
+  const [headerTarget, setHeaderTarget] = useState(null)
+  useEffect(() => {
+    setHeaderTarget(document.getElementById('os-manufacturing-header-tools'))
+  }, [])
   async function load() {
     setLoading(true); setError(''); setHandoffWarning('')
     try {
@@ -62,15 +67,32 @@ export default function ManufacturingOperations() {
   const withState = records.map((order) => ({ order, summary: summarizeOperations(order, order.operations?.data || emptyOperations(order)) }))
   const active = withState.filter(({ summary }) => !['closed','delivered'].includes(summary.stage))
   const shown = withState.filter(({ order, summary }) => (filter === 'all' || filter === 'active' ? filter === 'all' || !['closed','delivered'].includes(summary.stage) : summary.stage === filter) && `${order.order_number} ${order.accepted_by_name} ${order.quote_snapshot?.title}`.toLowerCase().includes(query.toLowerCase()))
-  return <section className="space-y-5">
-    <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-blue-700">Direct customer orders</p><h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">Know what needs to move next.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Deposit, drawings, supplier progress and delivery — together with the original cost allowance.</p></div><button className={secondary} disabled={loading} onClick={load}><RefreshCw size={16} />Refresh orders</button></div>
+  const headerTools = (
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <input type="search" value={query} onChange={event => setQuery(event.target.value)}
+        placeholder="Find client, order number or structure…" aria-label="Search manufacturing orders"
+        className="min-h-9 min-w-0 flex-1 basis-52 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm" />
+      <select aria-label="Manufacturing stage" value={filter} onChange={event => setFilter(event.target.value)}
+        className="min-h-9 max-w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm">
+        <option value="active">Active orders</option>
+        <option value="all">All orders</option>
+        {Object.entries(JOB_STAGES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+      </select>
+      <button type="button" disabled={loading} onClick={load}
+        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50">
+        <RefreshCw size={14} aria-hidden="true" className={loading ? 'animate-spin' : undefined} /> Refresh orders
+      </button>
+    </div>
+  )
+
+  return <section aria-label="Direct customer orders" className="space-y-4">
+    {headerTarget ? createPortal(headerTools, headerTarget) : headerTools}
     {error && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{error} Existing commercial and AFGRI controls remain below.</p>}
     {handoffWarning && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{handoffWarning}</p>}
     {!loading && pendingHandoffs.length > 0 && <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4"><h3 className="font-bold text-amber-950">Acceptance needs attention · {pendingHandoffs.length}</h3><p className="mt-2 text-sm leading-6 text-amber-900">Accepted quotes arrive here automatically. These leads need their acceptance checked in CRM; you do not need to select won quotes again in Manufacturing.</p><div className="mt-3 flex flex-wrap gap-2">{pendingHandoffs.map(lead=><Link key={lead.id} href={`/os/crm?leadId=${lead.id}`} className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-semibold text-amber-950">{[lead.name,lead.last_name].filter(Boolean).join(' ')} → CRM</Link>)}</div></section>}
 
     {!loading && !error && filter === 'all' && historicalProjects.length > 0 && <section className={panel}><h3 className="font-bold text-slate-900">Historical projects · Completed</h3><p className="mt-2 text-sm text-slate-500">Confirmed by Marco. Detailed historic payments, costs and milestone dates have not been reconstructed.</p><div className="mt-4 grid gap-3 sm:grid-cols-2">{historicalProjects.filter(project => `${project.lead?.name || ''} ${project.lead?.last_name || ''}`.toLowerCase().includes(query.toLowerCase())).map(project => <Link key={project.lead_id} href={`/os/crm?leadId=${project.lead_id}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-sm"><span className="font-semibold">{[project.lead?.name, project.lead?.last_name].filter(Boolean).join(' ') || 'Historical project'}</span><span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700"><CheckCircle2 size={14} />Completed</span></Link>)}</div></section>}
     <div className="grid gap-3 sm:grid-cols-3"><Stat label="Active orders" value={loading || error ? '—' : active.length} /><Stat label="Awaiting engineering" value={loading || error ? '—' : active.filter(({ summary }) => summary.stage === 'engineering').length} /><Stat label="Ready for dispatch" value={loading || error ? '—' : active.filter(({ summary }) => summary.stage === 'dispatch').length} /></div>
-    <div className="flex flex-wrap gap-3"><input className={`${input} mt-0 flex-1 basis-64`} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find client, order number or structure…" aria-label="Search manufacturing orders" /><select className={`${input} mt-0 sm:w-auto`} aria-label="Manufacturing stage" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="active">Active orders</option><option value="all">All orders</option>{Object.entries(JOB_STAGES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
     {loading ? <p className="py-10 text-center text-sm text-slate-500">Loading manufacturing orders…</p> : !shown.length && !error ? <div className={`${panel} py-12 text-center`}><Package className="mx-auto text-slate-300" /><h3 className="mt-3 font-bold text-slate-800">{records.length ? 'No orders match this view' : 'Accepted orders will appear here'}</h3><p className="mt-2 text-sm text-slate-500">Each job starts with the client’s accepted quote and a 75% deposit requirement.</p></div> : <div className="grid gap-4 xl:grid-cols-2">{shown.map(({ order, summary }) => <button key={order.id} className={`${panel} text-left transition hover:border-blue-300 hover:shadow-md`} onClick={() => setSelectedId(order.id)}><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-mono text-xs text-slate-500">{order.order_number}</span><div className="flex flex-wrap gap-2">{order.status!=="cancelled" && <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Won quote</span>}<span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{JOB_STAGES[summary.stage]}</span></div></div><h3 className="mt-4 text-lg font-bold text-slate-900">{order.accepted_by_name}</h3><p className="mt-1 text-sm text-slate-500">{order.quote_snapshot?.title}</p><ManufacturingProgress order={order} compact /><div className="mt-4 flex gap-3 rounded-xl bg-slate-50 p-3"><ArrowRight className="mt-0.5 shrink-0 text-blue-600" size={16} /><p className="text-sm leading-6 text-slate-700">{summary.next}</p></div><div className="mt-4 flex flex-wrap justify-between gap-2 text-xs text-slate-500"><span>Owner: {order.operations?.data.owner || 'info@smartsteel.co.za'}</span><span>{order.operations?.data.baseline.locked ? 'Cost baseline locked' : 'Cost baseline not recorded'}</span></div></button>)}</div>}
   </section>
 }

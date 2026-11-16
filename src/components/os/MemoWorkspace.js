@@ -27,6 +27,10 @@ function Content({ content, document = false, editable = false, sectionKey, draf
 export default function MemoWorkspace({ initialId = "" }) {
   const router = useRouter()
   const [actionsTarget, setActionsTarget] = useState(null)
+  const [headerTarget, setHeaderTarget] = useState(null)
+  useEffect(() => {
+    setHeaderTarget(document.getElementById("os-memos-header-tools"))
+  }, [])
   const [toolbarTarget, setToolbarTarget] = useState(null)
   const [data, setData] = useState(null)
   const [draft, setDraft] = useState(null)
@@ -117,7 +121,29 @@ export default function MemoWorkspace({ initialId = "" }) {
   }
   const ownership = memo && [memo.author_email, "info@smartsteel.co.za"].includes(data.email)
   const records = (data?.records || []).filter((item) => (!status || item.status === status) && `${item.title} ${name(item.author_email)}`.toLowerCase().includes(search.toLowerCase()))
-  return <div className="memo-root mx-auto max-w-7xl bg-slate-50 p-4 sm:p-6 lg:p-8">
+  const headerTools = (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {data && !initialId ? (
+        <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+          <input type="search" aria-label="Search memos" placeholder="Search title or author…" value={search}
+            onChange={event => setSearch(event.target.value)}
+            className="min-h-9 min-w-0 flex-1 basis-40 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm" />
+          <select aria-label="Filter by status" value={status} onChange={event => setStatus(event.target.value)}
+            className="min-h-9 max-w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm">
+            <option value="">All statuses</option>
+            {Object.entries(MEMO_STATUSES).map(([key, label]) => <option value={key} key={key}>{label}</option>)}
+          </select>
+        </div>
+      ) : null}
+      {initialId ? (
+        <button type="button" onClick={() => navigate()} className={secondary}><ArrowLeft size={16} aria-hidden="true" />All memos</button>
+      ) : (
+        <button type="button" disabled={!data} onClick={() => navigate("new")} className={button}><Plus size={16} aria-hidden="true" />New document</button>
+      )}
+    </div>
+  )
+
+  return <div className="memo-root mx-auto max-w-7xl bg-slate-50 px-4 pb-6 pt-3 sm:px-6">
     <style>{`
       @page { size: A4; margin: 18mm; }
       @media print {
@@ -129,11 +155,11 @@ export default function MemoWorkspace({ initialId = "" }) {
         .memo-paper h2, .memo-paper h3 { break-after: avoid; }
       }
     `}</style>
-    <div className="mb-6 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-blue-700">Smart Steel workspace</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">{initialId ? initialId === "new" ? "New document" : "Document" : "Memos"}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Keep company notes, procedures and decisions together.</p></div>{initialId ? <button onClick={() => navigate()} className={secondary}><ArrowLeft size={16} />All memos</button> : <button disabled={!data} onClick={() => navigate("new")} className={button}><Plus size={16} />New document</button>}</div>
+    {headerTarget ? createPortal(headerTools, headerTarget) : headerTools}
     {error ? <div role="alert" className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}<button className="ml-3 underline" onClick={() => { if (!unsaved || window.confirm("Reload and discard unsaved memo changes?")) load().then(() => setError("")).catch((err) => setError(err.message)) }}>Reload</button></div> : null}
     {notice ? <p role="status" className="mb-4 text-sm font-semibold text-emerald-700">{notice}</p> : null}
     {!data && !error ? <p className="text-sm text-slate-500">Loading memos…</p> : null}
-    {data && !initialId ? <><div className="mb-5 flex flex-wrap gap-3"><input aria-label="Search memos" placeholder="Search title or author…" value={search} onChange={(event) => setSearch(event.target.value)} className={`${input} mt-0 flex-1 basis-64`} /><select aria-label="Filter by status" value={status} onChange={(event) => setStatus(event.target.value)} className={`${input} mt-0 w-auto`}><option value="">All statuses</option>{Object.entries(MEMO_STATUSES).map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select></div><div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">{records.map((item) => <button key={item.id} onClick={() => navigate(item.id)} className="block w-full px-5 py-4 text-left transition hover:bg-slate-50 focus-visible:bg-blue-50"><div className="flex items-center justify-between gap-3"><Badge status={item.status} /><FileText size={18} className="text-slate-300" /></div><h2 className="mt-2 break-words text-base font-semibold text-slate-900">{item.title}</h2><p className="mt-3 text-xs text-slate-500">{name(item.author_email)} · Revision {item.revision}</p><p className="mt-1 text-xs text-slate-400">Updated {stamp(item.updated_at)} SAST</p>{item.decision ? <p className="mt-3 text-sm font-semibold text-slate-600">{MEMO_DECISIONS[item.decision]}</p> : null}<ReviewDate memo={item} /></button>)}</div>{!records.length ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center"><FileText className="mx-auto text-blue-400" /><h2 className="mt-3 font-bold">{search || status ? "No matching memos" : "Start with a decision worth documenting"}</h2><p className="mt-2 text-sm text-slate-500">A proposal can begin as a rough draft. Develop it together before deciding.</p></div> : null}<p className="mt-5 text-xs text-slate-400">Showing the latest 200 memos. All memo members can read these documents; keep private financial details in the restricted annual plan.</p></> : null}
+    {data && !initialId ? <><div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">{records.map((item) => <button key={item.id} onClick={() => navigate(item.id)} className="block w-full px-5 py-4 text-left transition hover:bg-slate-50 focus-visible:bg-blue-50"><div className="flex items-center justify-between gap-3"><Badge status={item.status} /><FileText size={18} className="text-slate-300" /></div><h2 className="mt-2 break-words text-base font-semibold text-slate-900">{item.title}</h2><p className="mt-3 text-xs text-slate-500">{name(item.author_email)} · Revision {item.revision}</p><p className="mt-1 text-xs text-slate-400">Updated {stamp(item.updated_at)} SAST</p>{item.decision ? <p className="mt-3 text-sm font-semibold text-slate-600">{MEMO_DECISIONS[item.decision]}</p> : null}<ReviewDate memo={item} /></button>)}</div>{!records.length ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center"><FileText className="mx-auto text-blue-400" /><h2 className="mt-3 font-bold">{search || status ? "No matching memos" : "Start with a decision worth documenting"}</h2><p className="mt-2 text-sm text-slate-500">A proposal can begin as a rough draft. Develop it together before deciding.</p></div> : null}<p className="mt-5 text-xs text-slate-400">Showing the latest 200 memos. All memo members can read these documents; keep private financial details in the restricted annual plan.</p></> : null}
     {data && draft && initialId ? <div className="memo-workspace mx-auto max-w-5xl space-y-6">
       {editorMode && <div className="memo-controls sticky top-0 z-20 mx-auto w-full max-w-[210mm] space-y-4 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">{!memo && <fieldset><legend className="sr-only">Document format</legend><div className="mt-2 flex flex-wrap gap-3">{[["structured", "Structured memo"], ["note", "Free-form note"]].map(([value, label]) => <button key={value} type="button" className={((value === "note") === Object.hasOwn(draft.content, "body")) ? button : secondary} onClick={() => { if (Object.values(draft.content).some(text => text.trim()) && !window.confirm("Changing format clears the current document text. Continue?")) return; setDraft({ ...draft, content: value === "note" ? { body: "" } : emptyMemo().content }) }}>{label}</button>)}</div></fieldset>}<div ref={setToolbarTarget} /></div>}
 

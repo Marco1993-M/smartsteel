@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import {
   ArrowRight,
   Building2,
@@ -8,7 +9,6 @@ import {
   Check,
   ChevronRight,
   CircleUserRound,
-  ContactRound,
   Mail,
   MapPin,
   Plus,
@@ -201,31 +201,48 @@ export default function PartnerRolodexWorkspace() {
     }
   }
 
-  return <div className="min-w-0 space-y-5 px-4 py-5 sm:px-6 sm:py-6">
-    <section className="relative overflow-hidden rounded-[2rem] border border-[#0043f3] bg-[linear-gradient(125deg,#001d2e_0%,#073776_55%,#0043f3_100%)] p-6 text-white shadow-xl sm:p-8">
-      <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border border-white/10" />
-      <div className="pointer-events-none absolute -right-8 -top-10 h-52 w-52 rounded-full border border-white/10" />
-      <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-        <div><div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#c1d9e5]"><ContactRound className="h-4 w-4" /> Smart Steel strategic network</div><h2 className="mt-4 max-w-3xl text-4xl font-black tracking-[-0.05em] sm:text-5xl">Rolodex</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100 sm:text-base">Build and maintain the relationships that create, enable, supply and deliver Smart Steel opportunities.</p></div>
-        <button type="button" onClick={() => openEditor()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#0043f3] shadow-lg"><Plus className="h-4 w-4" /> Add company</button>
-      </div>
-    </section>
+  const [headerTarget, setHeaderTarget] = useState(null)
+  useEffect(() => {
+    setHeaderTarget(document.getElementById("os-rolodex-header-tools"))
+  }, [])
+
+  const headerTools = (
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <label className="relative min-w-0 flex-1 basis-52">
+        <span className="sr-only">Search Rolodex</span>
+        <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+        <input type="search" value={query} onChange={event => setQuery(event.target.value)}
+          placeholder="Search company, contact, market or location"
+          className="min-h-9 w-full rounded-lg border border-slate-300 bg-white py-1.5 pl-9 pr-3 text-sm" />
+      </label>
+      <select aria-label="Relationship view" value={filter} onChange={event => setFilter(event.target.value)}
+        className="min-h-9 max-w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm">
+        <option value="all">All relationships</option>
+        <option value="priority">Priority</option>
+        <option value="active_partner">Active partners</option>
+        <option value="conversation">Conversations</option>
+        <option value="follow_up">Follow-ups</option>
+        <option value="dormant">Dormant</option>
+      </select>
+      <button type="button" onClick={() => openEditor()}
+        className="ml-auto inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg bg-[#0043f3] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+        <Plus aria-hidden="true" className="h-4 w-4" /> Add company
+      </button>
+    </div>
+  )
+
+  return <div className="min-w-0 space-y-4 px-4 pb-6 pt-3 sm:px-6">
+    {headerTarget ? createPortal(headerTools, headerTarget) : headerTools}
 
     {!schemaReady ? <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">Previewing the Rolodex structure. Run <code>supabase/smart_steel_os_partner_rolodex.sql</code> to save shared records.</div> : null}
     {error && !formOpen ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">{error}</div> : null}
 
-    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-      <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center">
-        <label className="relative block min-w-0 flex-1"><Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#0043f3]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search company, contact, market or location" className="min-h-14 w-full rounded-xl border border-blue-200 bg-blue-50/40 pl-12 pr-4 text-base font-semibold outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#0043f3] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,67,243,0.08)]" /></label>
-        <div className="flex min-w-0 items-center overflow-x-auto rounded-xl border border-slate-100 bg-slate-50/70 py-1">
+        <div className="flex min-w-0 items-center overflow-x-auto rounded-xl border border-slate-200 bg-white py-1">
           <CompactMetric icon={Building2} label="Companies" value={metrics.total} />
           <CompactMetric icon={Target} label="Priority" value={metrics.priority} tone="blue" />
           <CompactMetric icon={UsersRound} label="Active" value={metrics.active} tone="green" />
           <CompactMetric icon={CalendarClock} label="Actions" value={metrics.followUps} />
         </div>
-        <label className="flex min-h-12 shrink-0 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4"><span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">View</span><select value={filter} onChange={(event) => setFilter(event.target.value)} className="min-w-32 bg-transparent text-sm font-black text-slate-800 outline-none"><option value="all">All relationships</option><option value="priority">Priority</option><option value="active_partner">Active partners</option><option value="conversation">Conversations</option><option value="follow_up">Follow-ups</option><option value="dormant">Dormant</option></select></label>
-      </div>
-    </section>
 
     {loading ? <div className="rounded-[1.75rem] border border-slate-200 bg-white p-10 text-center text-sm font-semibold text-slate-500">Opening the relationship network...</div> : filtered.length ? <section className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">{filtered.map((record) => <CompanyCard key={record.id} record={record} onOpen={() => openEditor(record)} />)}</section> : <section className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white p-10 text-center"><Sparkles className="mx-auto h-6 w-6 text-[#0043f3]" /><h3 className="mt-4 text-xl font-black">No relationships match this view.</h3><p className="mt-2 text-sm text-slate-500">Adjust the search or add the next company worth knowing.</p></section>}
 

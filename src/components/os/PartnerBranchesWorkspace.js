@@ -18,6 +18,9 @@ import {
 } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
+import PartnerPilotWorkspace from "./PartnerPilotWorkspace"
+import { PILOT_STAGES } from "../../lib/partnerPilotPlan"
+
 const EMPTY_BRANCH = {
   status: "active",
   territory: "",
@@ -133,6 +136,7 @@ export default function PartnerBranchesWorkspace() {
   const [filter, setFilter] = useState("all")
   const [view, setView] = useState("list")
   const [selectedId, setSelectedId] = useState("")
+  const [pilotId, setPilotId] = useState("")
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(EMPTY_BRANCH)
   const deferredQuery = useDeferredValue(query.trim().toLowerCase())
@@ -186,6 +190,11 @@ export default function PartnerBranchesWorkspace() {
     return matchesQuery && matchesFilter
   })
 
+  function openBranch(branch) {
+    if (branch.status === "pilot" || branch.pilotPlan) setPilotId(branch.id)
+    else openEditor(branch)
+  }
+
   function openEditor(branch) {
     setSelectedId(branch.id)
     setForm({
@@ -226,8 +235,15 @@ export default function PartnerBranchesWorkspace() {
     }
   }
 
+  const pilotBranch = records.find(branch => branch.id === pilotId)
   return (
     <div className="min-w-0 space-y-5 px-4 py-5 sm:px-6 sm:py-6">
+      {pilotBranch ? (
+        <PartnerPilotWorkspace key={pilotBranch.id} branch={pilotBranch}
+          onEdit={() => openEditor(pilotBranch)} onClose={() => setPilotId("")}
+          onSaved={record => setRecords(current => current.map(branch => branch.id === record.id ? record : branch))} />
+      ) : (
+      <>
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div><h2 className="text-xl font-bold tracking-tight text-[#001d2e]">AFGRI branch network</h2><p className="mt-1 text-sm text-slate-500">Find branch contacts, manage rollout status and plan coverage.</p></div>
         <button type="button" disabled={loading} onClick={loadRecords} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</button>
@@ -446,10 +462,10 @@ export default function PartnerBranchesWorkspace() {
                   {selected.notes ? <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-600">{selected.notes}</p> : null}
                   <button
                     type="button"
-                    onClick={() => openEditor(selected)}
+                    onClick={() => openBranch(selected)}
                     className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
-                    Update branch record <ChevronRight className="h-4 w-4" />
+                    Open branch <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
@@ -463,7 +479,7 @@ export default function PartnerBranchesWorkspace() {
               <button
                 key={branch.id}
                 type="button"
-                onClick={() => openEditor(branch)}
+                onClick={() => openBranch(branch)}
                 className="grid w-full gap-3 p-4 text-left transition hover:bg-slate-50 lg:grid-cols-[70px_minmax(0,1fr)_minmax(0,0.8fr)_150px_24px] sm:items-center sm:px-5"
               >
                 <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0043f3]">{branch.branchCode}</span>
@@ -472,10 +488,18 @@ export default function PartnerBranchesWorkspace() {
                   <span className="mt-1 block truncate text-sm text-slate-500">{branch.address}</span>
                 </span>
                 <span className="min-w-0 text-sm"><span className="block font-medium text-slate-700">{branch.contactName || "Contact not captured"}</span><span className="mt-1 block truncate text-xs text-slate-500">{branch.contactEmail || branch.contactPhone || "Add a branch contact"}</span></span>
-                <span className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${statusTone(branch.status)}`}>
-                  {statusLabel(branch.status)}
+                <span>
+                  <span className={`inline-block rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${statusTone(branch.status)}`}>
+                    {statusLabel(branch.status)}
+                  </span>
+                  {branch.status === "pilot" || branch.pilotPlan ? (
+                    <span className="mt-1 block text-xs font-medium text-slate-600">
+                      {PILOT_STAGES[branch.pilotPlan?.stage] || PILOT_STAGES.preparing}
+                      {branch.pilotPlan?.dueDate ? ` · Due ${branch.pilotPlan.dueDate}` : ""}
+                    </span>
+                  ) : null}
                 </span>
-                <ChevronRight className="hidden h-4 w-4 text-slate-400 sm:block" />
+                <ChevronRight className="hidden h-4 w-4 text-slate-400 lg:block" aria-hidden="true" />
               </button>
             ))}
             {!filteredRecords.length ? (
@@ -484,6 +508,9 @@ export default function PartnerBranchesWorkspace() {
           </div>
         )}
       </section>
+
+      </>
+      )}
 
       {editing && selected ? (
         <div className="fixed inset-0 z-[80] flex items-end justify-end bg-slate-950/45 p-0 backdrop-blur-sm sm:p-4">

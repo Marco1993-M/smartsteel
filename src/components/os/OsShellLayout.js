@@ -48,7 +48,14 @@ export default function OsShellLayout({ children }) {
   const activeSection = getOsSection(pathname)
   const isCrmSection = activeSection.key === "crm"
   const isAnalyticsHome = pathname === "/os/analytics"
-  const compactHeader = isCrmSection || isAnalyticsHome
+  const isMemosSection = activeSection.key === "memos"
+  const isAtlasSection = activeSection.key === "atlas"
+  const isPartnersSection = activeSection.key === "partners"
+  const isRolodexSection = activeSection.key === "rolodex"
+  const isManufacturingSection = activeSection.key === "manufacturing"
+  const isDashboard = pathname === "/os"
+  const compactHeader = isDashboard || isCrmSection || isAnalyticsHome || isMemosSection || isAtlasSection || isPartnersSection || isRolodexSection || isManufacturingSection
+  const compactTitles = { analytics: "Analytics", memos: "Memos", partners: "Partners", rolodex: "Rolodex", manufacturing: "Manufacturing", dashboard: "Dashboard" }
 
   useEffect(() => {
     setSidebarCollapsed(window.localStorage.getItem("smartsteel-os-sidebar") === "collapsed")
@@ -216,14 +223,35 @@ export default function OsShellLayout({ children }) {
             <div className={`flex min-w-0 flex-wrap justify-between ${compactHeader ? "items-center gap-x-5 gap-y-2" : "items-start gap-4"}`}>
               <div className="min-w-0">
                 {!compactHeader ? <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{activeSection.label}</p> : null}
-                <h2 className="mt-0.5 text-lg font-bold tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">
-                  {isAnalyticsHome ? "Analytics" : activeSection.label === "Dashboard" ? "Smart Steel OS Dashboard" : `${activeSection.label} Workspace`}
-                </h2>
+                {isAtlasSection ? (
+                  <h2>
+                    <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas System by Smart Steel"
+                      width={190} height={45} className="h-8 w-auto object-contain object-left" />
+                  </h2>
+                ) : (
+                  <h2 className="mt-0.5 text-lg font-bold tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">
+                    {compactHeader && compactTitles[activeSection.key] ? compactTitles[activeSection.key] : activeSection.label === "Dashboard" ? "Smart Steel OS Dashboard" : `${activeSection.label} Workspace`}
+                  </h2>
+                )}
                 {!compactHeader ? <p className="mt-1.5 hidden max-w-3xl text-sm leading-6 text-slate-600 sm:block">{activeSection.description}</p> : null}
               </div>
               {isCrmSection ? <div id="os-crm-header-tools" className="min-w-0 basis-full lg:flex-1 lg:basis-auto" /> : null}
               {isAnalyticsHome ? <div id="os-analytics-header-tools" className="min-w-0 basis-full xl:flex-1 xl:basis-auto" /> : null}
-              {activeSection.status && !["analytics", "partners", "crm"].includes(activeSection.key) ? (
+              {isMemosSection ? <div id="os-memos-header-tools" className="min-w-0 basis-full sm:flex-1 sm:basis-auto" /> : null}
+              {isAtlasSection ? <div id="os-atlas-header-tools" className="min-w-0 basis-full lg:flex-1 lg:basis-auto empty:hidden" /> : null}
+              {isPartnersSection || isRolodexSection || isManufacturingSection ? (
+                <div id={`os-${activeSection.key}-header-tools`} className="min-w-0 basis-full lg:flex-1 lg:basis-auto" />
+              ) : null}
+              {isDashboard ? <div id="os-dashboard-header-stats" className="order-last min-w-0 basis-full empty:hidden xl:order-none xl:flex-1 xl:basis-auto" /> : null}
+              {isDashboard ? (
+                <nav aria-label="Dashboard quick actions" className="ml-auto flex flex-wrap justify-end gap-2">
+                  <Link href="/os/crm" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">Open CRM</Link>
+                  <a href="#weekly-note-board" onClick={() => window.dispatchEvent(new Event("os:add-reminder"))}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">Add reminder</a>
+                  <Link href="/os/crm?newLead=1" className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700">+ New Lead</Link>
+                </nav>
+              ) : null}
+              {!isDashboard && activeSection.status && !["analytics", "partners", "crm", "memos", "atlas", "rolodex", "manufacturing"].includes(activeSection.key) ? (
                 <span
                   className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${OS_STATUS_META[activeSection.status]?.badgeClassName}`}
                 >

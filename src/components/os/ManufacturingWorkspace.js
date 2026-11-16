@@ -2,7 +2,7 @@
 
 import ManufacturingOperations from "./ManufacturingOperations"
 import { useEffect, useState } from "react"
-import { ArrowRight, CalendarDays, CheckCircle2, ChevronDown, ClipboardCheck, Factory, FileText, LockKeyhole, MapPin, PackageCheck, PauseCircle, Printer, RefreshCw, ShieldCheck, Truck, UserRound, X } from "lucide-react"
+import { ArrowRight, CalendarDays, CheckCircle2, ChevronDown, ClipboardCheck, FileText, LockKeyhole, MapPin, PackageCheck, PauseCircle, Printer, RefreshCw, ShieldCheck, Truck, UserRound, X } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 
 const STAGES = [
@@ -160,15 +160,7 @@ export default function ManufacturingWorkspace() {
 
   if (packRecord) return <ManufacturingPack record={packRecord} onClose={() => setPackRecord(null)} />
 
-  return <div className="min-w-0 space-y-5 px-4 py-5 sm:px-6 sm:py-6">
-    <section className="overflow-hidden rounded-[28px] border border-[#0043f3] bg-[linear-gradient(125deg,#001d2e_0%,#063379_58%,#0043f3_100%)] p-5 text-white shadow-xl sm:p-7">
-      <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-        <div><div className="flex items-center gap-2 text-[#c1d9e5]"><Factory className="h-4 w-4" /><p className="text-[11px] font-bold uppercase tracking-[0.2em]">Manufacturing control</p></div><h1 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">From accepted order to delivery.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">Customer quote acceptances and partner orders, from specification confirmation to delivery.</p></div>
-
-      </div>
-
-    </section>
-
+  return <div className="min-w-0 space-y-5 px-4 pb-6 pt-3 sm:px-6">
     {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">AFGRI queue: {error}</p> : null}
 
     <ManufacturingOperations />

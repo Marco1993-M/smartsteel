@@ -1,5 +1,6 @@
 "use client"
 
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
@@ -16,6 +17,11 @@ export default function OsDashboard() {
   const [dashboard, setDashboard] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [headerTarget, setHeaderTarget] = useState(null)
+
+  useEffect(() => {
+    setHeaderTarget(document.getElementById("os-dashboard-header-stats"))
+  }, [])
 
   useEffect(() => {
     async function loadDashboard() {
@@ -41,10 +47,23 @@ export default function OsDashboard() {
   }, [])
 
   const priorities = dashboard?.priorities || []
-  const pulse = dashboard?.pulse || { newLeadsThisWeek: 0, activeQuotes: 0 }
+  const pulse = dashboard?.pulse
+  const stats = (
+    <dl aria-label="Dashboard activity" className="flex w-fit max-w-full flex-wrap items-center gap-x-4 gap-y-1 py-1.5">
+      <div className="flex items-baseline gap-2">
+        <dt className="text-xs text-slate-600">New leads this week</dt>
+        <dd className="font-mono text-base font-semibold tabular-nums text-[#0043f3]">{loading || error ? "—" : pulse?.newLeadsThisWeek ?? "—"}</dd>
+      </div>
+      <div className="flex items-baseline gap-2 sm:border-l sm:border-slate-200 sm:pl-4">
+        <dt className="text-xs text-slate-600">Active quotes</dt>
+        <dd className="font-mono text-base font-semibold tabular-nums text-slate-950">{loading || error ? "—" : pulse?.activeQuotes ?? "—"}</dd>
+      </div>
+    </dl>
+  )
 
   return (
-    <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden px-4 pb-6 pt-3 sm:space-y-6 sm:px-6">
+      {headerTarget ? createPortal(stats, headerTarget) : stats}
       <WeeklySchedule />
       <QuoteReviewPanel />
 
@@ -59,7 +78,7 @@ export default function OsDashboard() {
         </section>
       ) : null}
 
-      <section className="grid w-full min-w-0 max-w-full gap-4 overflow-hidden xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section className="grid w-full min-w-0 max-w-full gap-4 overflow-hidden">
         <div className="w-full min-w-0 max-w-full overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -96,33 +115,6 @@ export default function OsDashboard() {
           </div>
         </div>
 
-        <aside className="w-full min-w-0 max-w-full overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-4 text-white shadow-sm sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Quick actions</p>
-          <div className="mt-4 grid gap-2">
-            <Link href="/os/crm?newLead=1" className="min-w-0 max-w-full rounded-2xl bg-white px-4 py-3 text-center text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
-              New lead
-            </Link>
-            <a href="#weekly-note-board" onClick={() => window.dispatchEvent(new Event("os:add-reminder"))} className="min-w-0 max-w-full rounded-2xl border border-white/25 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10">
-              Add reminder
-            </a>
-            <Link href="/os/crm" className="min-w-0 max-w-full rounded-2xl border border-white/25 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10">
-              Open CRM
-            </Link>
-          </div>
-          <div className="mt-5 border-t border-white/15 pt-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">This week</p>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-2xl font-bold tracking-tight">{loading ? "..." : pulse.newLeadsThisWeek}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-300">New leads</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold tracking-tight">{loading ? "..." : pulse.activeQuotes}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-300">Active quotes</p>
-              </div>
-            </div>
-          </div>
-        </aside>
       </section>
     </div>
   )

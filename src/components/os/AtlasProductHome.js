@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import {
@@ -123,8 +122,15 @@ function ProductOverview({ product }) {
     : [["Product", "Solar Carport", SunMedium], ["Layouts", "Single or double row", Layers3], ["Configuration", "Parking width and layout", Ruler]]
 
   return <div className="space-y-6 p-4 sm:p-6">
-    <section className="relative overflow-hidden rounded-[1.75rem] border border-[#001d2e] bg-[radial-gradient(circle_at_85%_0%,rgba(193,217,229,0.2),transparent_30%),linear-gradient(135deg,#001d2e_0%,#06308d_58%,#0043f3_100%)] p-6 text-white shadow-[0_25px_65px_-35px_rgba(0,29,46,0.9)] sm:p-9">
-      <div className="relative z-10"><p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-200">Atlas system · {product.family}</p><h1 className="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-5xl">{product.name}</h1><p className="mt-4 max-w-2xl text-sm leading-7 text-slate-200">{product.summary}</p><div className="mt-7 flex flex-wrap gap-3"><Link href={primaryHref} className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-black text-[#0043f3] shadow-lg transition hover:bg-sky-50">Open configuration <ArrowRight className="h-4 w-4" /></Link>{product.code === "W08" ? <Link href="/os/atlas/products?product=W08&view=technical" className="rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-bold backdrop-blur transition hover:bg-white/15">Controlled product sheet</Link> : null}</div></div>
+    <section className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5">
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-slate-950">{product.name}</h1>
+        <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">{product.summary}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Link href={primaryHref} className="inline-flex items-center gap-2 rounded-lg bg-[#0043f3] px-3 py-2 text-xs font-semibold text-white">Open configuration <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></Link>
+        {product.code === "W08" ? <Link href="/os/atlas/products?product=W08&view=technical" className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700">Controlled product sheet</Link> : null}
+      </div>
     </section>
     <div className="grid gap-4 sm:grid-cols-3">{metrics.map(([label, value, Icon]) => <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><Icon className="h-5 w-5 text-[#0043f3]" /><p className="mt-5 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p><p className="mt-2 text-lg font-black text-[#001d2e]">{value}</p></div>)}</div>
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex items-start gap-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><ShieldCheck className="h-5 w-5" /></span><div><h2 className="text-lg font-black text-[#001d2e]">One product, connected information</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Configuration, materials, pricing, engineering and controlled documents remain connected to this product. Its commercial availability stays separate from technical approval and manufacturing release.</p></div></div></section>
@@ -140,20 +146,8 @@ export default function AtlasProductHome() {
   }
   if (product) return <ProductOverview product={product} />
 
-  const activeProducts = ATLAS_PRODUCT_RANGE.filter((item) => item.available)
-  const warehouseProducts = activeProducts.filter((item) => /^W\d{2}$/.test(item.code))
-
-  return <div className="space-y-6 p-3 sm:p-6">
-    <header className="relative overflow-hidden rounded-[1.75rem] border border-[#001d2e] bg-[radial-gradient(circle_at_86%_4%,rgba(193,217,229,0.25),transparent_28%),linear-gradient(135deg,#001d2e_0%,#052d72_55%,#0043f3_100%)] text-white shadow-[0_30px_75px_-40px_rgba(0,29,46,0.95)]">
-      <div className="absolute inset-y-0 right-0 hidden w-[38%] opacity-25 lg:block" aria-hidden="true"><div className="absolute right-[-8%] top-[-55%] h-[340px] w-[340px] rotate-45 border border-white/20" /><div className="absolute right-[10%] top-[-30%] h-[230px] w-[230px] rotate-45 border border-white/15" /></div>
-      <div className="relative grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-end">
-        <div><Image src="/atlas/atlas-logo-horizontal-light.png" alt="Atlas System developed by Smart Steel" width={230} height={70} className="h-9 w-auto object-contain object-left" priority /><p className="mt-4 text-[10px] font-black uppercase tracking-[0.22em] text-sky-200">Product operating system</p><h1 className="mt-2 max-w-3xl text-3xl font-black leading-tight tracking-[-0.035em] sm:text-4xl">One system. Every Atlas product under control.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200">Choose a product family, open the exact configuration and keep its commercial, material and technical records together.</p></div>
-        <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-white/15 bg-white/10 backdrop-blur-sm">{[[activeProducts.length, "Active workspaces"], [warehouseProducts.length, "Warehouse spans"], [ATLAS_PRODUCT_RANGE.length, "Products in range"]].map(([value, label], index) => <div key={label} className={`p-3 text-center ${index ? "border-l border-white/10" : ""}`}><p className="text-2xl font-black">{value}</p><p className="mt-1 text-[8px] font-bold uppercase leading-3 tracking-[0.1em] text-sky-100/75">{label}</p></div>)}</div>
-      </div>
-    </header>
-
-    <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"><div className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#0043f3]"><ShieldCheck className="h-5 w-5" /></span><div><p className="text-sm font-black text-[#001d2e]">Controlled product selection</p><p className="mt-1 text-xs leading-5 text-slate-500">Available workspaces open live tools. Planned products remain visible so the full Atlas roadmap stays clear.</p></div></div><Link href="/os/atlas/products?product=W08" className="inline-flex shrink-0 items-center gap-2 text-sm font-black text-[#0043f3]">Resume with W08 <ArrowRight className="h-4 w-4" /></Link></section>
-
+  return <div className="space-y-5 px-4 pb-6 pt-3 sm:px-6">
+    <h1 className="text-lg font-bold text-slate-950">Product families</h1>
     <div className="grid gap-5 xl:grid-cols-3">{FAMILY_META.map((family) => <FamilyCard key={family.key} family={family} featured={family.key === "warehouses"} />)}</div>
   </div>
 }
