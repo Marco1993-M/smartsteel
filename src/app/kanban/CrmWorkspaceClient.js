@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { Link2 } from "lucide-react"
 import KanbanBoard from "../../components/KanbanBoard.js"
@@ -673,6 +674,11 @@ function QueueTaskRow({ task, onComplete }) {
 export default function CrmWorkspace({ mode = "legacy" }) {
   const router = useRouter()
   const isOsCrmRoute = mode === "os"
+  const [headerToolbarTarget, setHeaderToolbarTarget] = useState(null)
+
+  useEffect(() => {
+    setHeaderToolbarTarget(isOsCrmRoute ? document.getElementById("os-crm-header-tools") : null)
+  }, [isOsCrmRoute])
   const boardSectionRef = useRef(null)
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -2282,6 +2288,45 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
   if (!user) return null
 
+  const crmToolbar = (
+    <section aria-label="CRM toolbar" className="flex flex-wrap items-center gap-x-3 gap-y-2 ">
+            <nav aria-label="CRM views" className="flex shrink-0 gap-1 rounded-xl bg-slate-100 p-1">
+              {CRM_VIEW_OPTIONS.slice(0, 2).map(view => (
+                <button key={view.key} type="button" aria-pressed={crmView === view.key}
+                  onClick={() => setCrmView(view.key)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${crmView === view.key ? "bg-slate-950 text-white" : "text-slate-700 hover:bg-white"}`}>
+                  {view.label}
+                </button>
+              ))}
+            </nav>
+
+            {crmView === "pipeline" ? (
+              <div className="order-last flex min-w-0 basis-full items-center gap-2 sm:order-none sm:basis-0 sm:flex-1">
+                <label className="sr-only" htmlFor="crm-pipeline-search">Search opportunities</label>
+                <input id="crm-pipeline-search" type="search" value={searchTerm}
+                  onChange={event => setSearchTerm(event.target.value)} placeholder="Search opportunities"
+                  className="min-h-9 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-base outline-none focus:border-blue-600 sm:text-sm" />
+                {searchTerm ? <span role="status" className="shrink-0 text-xs tabular-nums text-slate-500">{filteredLeads.length} results</span> : null}
+                {[statusFilter, assigneeFilter, productLineFilter, opportunityQuickView, metricFilter, ownershipView].some(value => value !== "all") ? (
+                  <button type="button" onClick={() => {
+                    setStatusFilter("all")
+                    setAssigneeFilter("all")
+                    setProductLineFilter("all")
+                    setOpportunityQuickView("all")
+                    setMetricFilter("all")
+                    setOwnershipView("all")
+                  }} className="shrink-0 text-xs font-semibold text-blue-700 underline">Clear filters</button>
+                ) : null}
+              </div>
+            ) : null}
+
+            <button type="button" onClick={() => setIsAddingLead(true)}
+              className="ml-auto shrink-0 rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700">
+              + New Lead
+            </button>
+          </section>
+  )
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
       <div className={`mx-auto max-w-7xl space-y-5 overflow-x-hidden sm:space-y-6 ${isOsCrmRoute ? "mt-0" : "mt-12 sm:mt-16"}`}>
@@ -2290,6 +2335,9 @@ export default function CrmWorkspace({ mode = "legacy" }) {
             {crmLoadWarning}
           </div>
         ) : null}
+        {isOsCrmRoute ? (
+          headerToolbarTarget ? createPortal(crmToolbar, headerToolbarTarget) : crmToolbar
+        ) : (
         <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -2330,11 +2378,12 @@ export default function CrmWorkspace({ mode = "legacy" }) {
             </div>
           ) : null}
 
-          <div className="mt-4 flex gap-2 overflow-x-auto border-t border-slate-200 pt-4">
+          <div className="mt-3 flex gap-2 overflow-x-auto border-t border-slate-200 pt-3">
             {CRM_VIEW_OPTIONS.map((view) => (
               <button
                 key={view.key}
                 type="button"
+                aria-pressed={crmView === view.key}
                 onClick={() => setCrmView(view.key)}
                 className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
                   crmView === view.key ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -2347,7 +2396,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
 
           {crmView === "pipeline" ? (
             <>
-              <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-end">
+              <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-end">
                 <div className="flex-1">
                   <label className="sr-only" htmlFor="crm-pipeline-search">Search opportunities</label>
                   <input
@@ -2389,13 +2438,15 @@ export default function CrmWorkspace({ mode = "legacy" }) {
                     }}
                     className="font-semibold text-slate-700 underline underline-offset-4"
                   >
-                    Clear filters
+                    {searchTerm && statusFilter === "all" && productLineFilter === "all" && opportunityQuickView === "all" && metricFilter === "all" ? "Clear search" : "Clear filters"}
                   </button>
                 ) : null}
               </div>
             </>
           ) : null}
         </section>
+
+        )}
 
         {!isOsCrmRoute ? (
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-sm">
