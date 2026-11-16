@@ -6,7 +6,7 @@ import QuoteRevisionGroups from "./crm/QuoteRevisionGroups"
 import QuoteWinsPanel from "./crm/QuoteWinsPanel"
 import GroundMountRunFields from "./ground-mount/GroundMountRunFields"
 import { groundMountRunsFromNotes, withGroundMountRunNotes } from "../lib/groundMountRuns.mjs"
-import { supersededRevisionIds } from "../lib/estimateAlternatives.mjs"
+import { groupEstimateQuotes, supersededRevisionIds } from "../lib/estimateAlternatives.mjs"
 import { useState, useEffect, useMemo, Fragment } from "react"
 import { Dialog, Transition, Tab } from "@headlessui/react"
 import {
@@ -515,12 +515,16 @@ function getSuggestedFollowUpTemplate(lead) {
   return "enquiry_follow_up"
 }
 
-function buildFollowUpTemplate(templateKey, lead) {
+const commercialActionClass = "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50"
+const commercialPrimaryActionClass = `${commercialActionClass} text-[#0043f3] hover:bg-blue-50`
+
+function buildFollowUpTemplate(templateKey, lead, estimate) {
   const firstName = getLeadFirstName(lead)
   const ownerName = String(lead?.allocated_to || "Smart Steel").trim() || "Smart Steel"
-  const projectReference = getProjectReference(lead)
-  const quoteValue = String(lead?.quote_value || "").trim()
-    ? formatZar(lead.quote_value)
+  const projectReference = estimate?.title || getProjectReference(lead)
+  const value = estimate?.total ?? lead?.quote_value
+  const quoteValue = String(value ?? "").trim()
+    ? formatZar(value)
     : ""
 
   switch (templateKey) {
@@ -931,6 +935,12 @@ export default function LeadEditorDrawer({
   const [emailBody, setEmailBody] = useState("");
   const [emailComposerMode, setEmailComposerMode] = useState("follow_up");
   const [selectedEstimateEmail, setSelectedEstimateEmail] = useState(null);
+  const [followUpQuoteId, setFollowUpQuoteId] = useState("")
+  const followUpQuotes = groupEstimateQuotes(savedEstimates).map(group => group.latest)
+    .filter(estimate => !estimate.won_superseded_by && !["accepted", "declined", "cancelled", "superseded"].includes(estimate.status))
+  const followUpQuote = followUpQuotes.find(estimate => estimate.id === followUpQuoteId) || followUpQuotes[0]
+  const lastEmail = emailEvents[0]?.sent_at
+  const dateLabel = date => date ? new Date(date).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Johannesburg" }) : "—"
   const [deferInstallationForProposal, setDeferInstallationForProposal] = useState(false);
   const [deferDeliveryForProposal, setDeferDeliveryForProposal] = useState(false);
   const [emailDraftOpened, setEmailDraftOpened] = useState(false);
@@ -1508,28 +1518,28 @@ export default function LeadEditorDrawer({
   };
 
   const applyEmailTemplate = (templateKey) => {
-    const template = buildFollowUpTemplate(templateKey, formData)
+    const template = buildFollowUpTemplate(templateKey, formData, emailComposerMode === "follow_up" ? selectedEstimateEmail : null)
     setEmailTemplateKey(templateKey)
     setEmailSubject(template.subject)
     setEmailBody(template.body)
   }
 
-  const openEmailComposer = (templateOverride = "") => {
+  const openEmailComposer = (templateOverride = "", estimate = null) => {
     if (!formData.email?.trim()) {
       alert("Add an email address for this lead first.")
       return
     }
 
-    if (emailComposerMode !== "follow_up" || !emailSubject || !emailBody || templateOverride) {
+    if (emailComposerMode !== "follow_up" || !emailSubject || !emailBody || templateOverride || selectedEstimateEmail?.id !== estimate?.id) {
       const suggestedTemplate = templateOverride || getSuggestedFollowUpTemplate(formData)
-      const template = buildFollowUpTemplate(suggestedTemplate, formData)
+      const template = buildFollowUpTemplate(suggestedTemplate, formData, estimate)
       setEmailTemplateKey(suggestedTemplate)
       setEmailSubject(template.subject)
       setEmailBody(template.body)
     }
 
     setEmailComposerMode("follow_up")
-    setSelectedEstimateEmail(null)
+    setSelectedEstimateEmail(estimate)
     setEmailDraftOpened(false)
     setShowEmailComposer(true)
   }
@@ -1654,11 +1664,11 @@ export default function LeadEditorDrawer({
           : "follow_up"
 
     const emailEvent = {
-      estimate_id: isEstimateEmail && selectedEstimateEmail?.id && !String(selectedEstimateEmail.id).startsWith("local-")
+      estimate_id: selectedEstimateEmail?.id && !String(selectedEstimateEmail.id).startsWith("local-")
         ? selectedEstimateEmail.id
         : null,
       lead_id: lead.id,
-      estimate_version: isEstimateEmail ? Number(selectedEstimateEmail?.version_no || 0) || null : null,
+      estimate_version: Number(selectedEstimateEmail?.version_no || 0) || null,
       email_type: emailType,
       recipient: formData.email,
       subject: emailSubject,
@@ -2011,7 +2021,7 @@ export default function LeadEditorDrawer({
     <button
       type="button"
       className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
-      onClick={openEmailComposer}
+      onClick={() => openEmailComposer()}
       title="Create follow-up email"
     >
       <Mail size={18} />
@@ -2113,7 +2123,7 @@ export default function LeadEditorDrawer({
           <Phone size={17} />
           Call
         </button>
-        <button type="button" onClick={openEmailComposer} className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2.5 text-[11px] font-semibold text-slate-700">
+        <button type="button" onClick={() => openEmailComposer()} className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2.5 text-[11px] font-semibold text-slate-700">
           <Mail size={17} />
           Email
         </button>
@@ -2667,19 +2677,44 @@ export default function LeadEditorDrawer({
 
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
         <section aria-labelledby="commercial-follow-up" className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
             <h3 id="commercial-follow-up" className="text-base font-bold text-slate-950">Client follow-up</h3>
             {!isNew ? (
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => openEmailComposer()} className="inline-flex items-center gap-2 rounded-xl bg-[#0043f3] px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-                  <Mail size={16} aria-hidden="true" /> Follow-up email
+              <div className="ml-auto flex flex-wrap justify-end gap-1.5">
+                <button type="button" onClick={() => openEmailComposer("", followUpQuote)} className={commercialPrimaryActionClass}>
+                  <Mail size={14} aria-hidden="true" /> Follow-up email
                 </button>
-                <button type="button" onClick={handleMarkWaitingOnClient} className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-50">
+                <button type="button" onClick={handleMarkWaitingOnClient} className={commercialActionClass}>
                   Mark waiting on client
                 </button>
+                {(isUnresponsive || !["won", "lost"].includes(normalizeStatus(formData.status))) ? (
+                  <button type="button" onClick={isUnresponsive ? reopenUnresponsiveLead : markLeadUnresponsive} className={commercialActionClass}>
+                    {isUnresponsive ? "Reopen follow-up" : "Mark unresponsive"}
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>
+          <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+            <div><dt className="text-xs text-slate-500">Latest client response</dt><dd className="font-semibold">{followUpSequence?.last_response_label || "—"}</dd></div>
+            <div><dt className="text-xs text-slate-500">Last recorded email</dt><dd className="font-semibold">{dateLabel(lastEmail)}</dd></div>
+            <div><dt className="text-xs text-slate-500">Next follow-up</dt><dd className="font-semibold">{dateLabel(formData.follow_up_at)}</dd></div>
+          </dl>
+          {followUpQuotes.length > 1 ? (
+            <label className="mt-3 block text-xs font-semibold text-slate-600">
+              Quote to follow up
+              <select value={followUpQuote?.id || ""} onChange={event => setFollowUpQuoteId(event.target.value)} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm sm:max-w-md">
+                {followUpQuotes.map(estimate => <option key={estimate.id} value={estimate.id}>{estimate.title}</option>)}
+              </select>
+            </label>
+          ) : followUpQuote ? (
+            <p className="mt-3 text-xs text-slate-600">Quote to follow up <strong>{followUpQuote.title}</strong></p>
+          ) : null}
+          {isUnresponsive ? (
+            <p role="status" className="mt-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-900">
+              {isSavedUnresponsive ? "Archived as unresponsive." : "Save changes to move this lead to Lost and clear its reminder. Automatic quote follow-ups stop once the lead is Lost."}
+            </p>
+          ) : null}
           <div className="mt-3 border-t border-blue-100 pt-3">
         <div>
           <label htmlFor="commercial-follow-up-date" className={`${fieldLabelClass} mb-2`}>Follow-up date</label>
@@ -2730,7 +2765,7 @@ export default function LeadEditorDrawer({
 
         <div className="space-y-4">
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Estimate workspace
@@ -2741,30 +2776,30 @@ export default function LeadEditorDrawer({
               </p>
             </div>
             {!isNew && (
-              <div className="flex flex-wrap gap-2">
+              <div className="ml-auto flex flex-wrap justify-end gap-1.5">
                 <button
                   type="button"
                   onClick={openEstimateCreator}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+                  className={commercialPrimaryActionClass}
                 >
-                  <FileText size={16} />
+                  <FileText size={14} aria-hidden="true" />
                   Create / edit quote
                 </button>
                 <button
                   type="button"
                   onClick={() => onCreateInvoice?.({ ...lead, ...formData })}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  className={commercialActionClass}
                 >
-                  <FileText size={16} />
+                  <FileText size={14} aria-hidden="true" />
                   Create invoice
                 </button>
                 <button
                   type="button"
                   disabled={creatingProject}
                   onClick={createProjectFromLead}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-50"
+                  className={commercialActionClass}
                 >
-                  <Building2 size={16} />
+                  <Building2 size={14} aria-hidden="true" />
                   {creatingProject ? "Creating..." : "Create project"}
                 </button>
               </div>
@@ -2808,9 +2843,6 @@ export default function LeadEditorDrawer({
 
         <details open className={sectionClass}>
           <summary className="cursor-pointer text-sm font-semibold text-slate-700">Saved quotes & revisions · {savedEstimates.length}</summary>
-          <p className="mt-1 text-sm text-slate-600">
-            Preview the working document, open the PDF, or jump to the share view when you need the client-facing version.
-          </p>
 
           <div className="mt-4 space-y-3">
             {loadingEstimates ? (
@@ -2824,8 +2856,8 @@ export default function LeadEditorDrawer({
             ) : (
               <QuoteRevisionGroups estimates={savedEstimates} renderEstimate={(estimate) => (
                 <div key={estimate.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
+                  <div className="flex flex-wrap items-start justify-between gap-x-5 gap-y-3">
+                    <div className="min-w-0 flex-1 basis-56">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-semibold text-slate-900">{estimate.title}</p>
                         <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${estimate.won_superseded_by ? "bg-slate-100 text-slate-500" : getEstimateStatusClass(estimate.status)}`}>
@@ -2833,7 +2865,7 @@ export default function LeadEditorDrawer({
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-slate-600">
-                        Version {estimate.version_no} · {formatZar(estimate.total || 0)}
+                        Version {estimate.version_no} · {formatZar(estimate.total || 0)} excl. VAT
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
                         {estimate.sent_at
@@ -2844,14 +2876,22 @@ export default function LeadEditorDrawer({
                       </p>
                       {estimate.decline_reason ? <p className="mt-2 text-xs text-rose-700">Reason: {estimate.decline_reason}</p> : null}
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button type="button" onClick={() => openEstimateCreator(estimate)} className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-[#0043f3]">
+                    <div className="ml-auto flex max-w-full flex-wrap justify-end gap-1.5">
+                      <button type="button" onClick={() => openEstimateCreator(estimate)} className={commercialPrimaryActionClass}>
                         {["draft", "prepared"].includes(normalizeEstimateStatus(estimate.status)) && !estimate.won_superseded_by ? "Edit draft" : "Revise quote"}
                       </button>
+                      {!estimate.won_superseded_by && ["draft", "prepared", "sent"].includes(normalizeEstimateStatus(estimate.status)) && Number(estimate.total) > 0 && <button type="button" onClick={() => handleEstimateOutcome(estimate, "accepted")} className={commercialPrimaryActionClass}>Record as won</button>}
+                      <details className="group relative">
+                        <summary aria-label={`More actions for ${estimate.title}`} className={`${commercialActionClass} cursor-pointer list-none marker:content-none`}>
+                          More <span aria-hidden="true" className="group-open:rotate-180">⌄</span>
+                        </summary>
+                        <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-slate-200 bg-white p-1 shadow-lg" onClick={event => {
+                          if (event.target.closest("button, a")) event.currentTarget.parentElement.open = false
+                        }}>
                       <button
                         type="button"
                         onClick={() => openEstimateEmailComposer(estimate)}
-                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
                       >
                         Email draft
                       </button>
@@ -2859,7 +2899,7 @@ export default function LeadEditorDrawer({
                         href={buildEstimatePreviewUrl(estimate.id)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
                       >
                         Preview
                       </a>
@@ -2867,7 +2907,7 @@ export default function LeadEditorDrawer({
                         href={buildEstimatePdfUrl(estimate.id)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
                       >
                         PDF
                       </a>
@@ -2876,13 +2916,14 @@ export default function LeadEditorDrawer({
                           href={`/quotes/${estimate.share_token}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                          className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
                         >
                           Share view
                         </a>
                       ) : null}
-                      {!estimate.won_superseded_by && ["draft", "prepared", "sent"].includes(normalizeEstimateStatus(estimate.status)) && Number(estimate.total) > 0 && <button type="button" onClick={() => handleEstimateOutcome(estimate, "accepted")} className="rounded-xl bg-[#0043f3] px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Mark won</button>}
-                      {normalizeEstimateStatus(estimate.status) === "sent" && <button type="button" onClick={() => handleEstimateOutcome(estimate, "declined")} className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">Mark declined</button>}
+                      {normalizeEstimateStatus(estimate.status) === "sent" && <button type="button" onClick={() => handleEstimateOutcome(estimate, "declined")} className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-rose-700 hover:bg-rose-50">Mark declined</button>}
+                        </div>
+                      </details>
                     </div>
                   </div>
                 </div>
@@ -3057,36 +3098,6 @@ export default function LeadEditorDrawer({
               )}
             </div>
 
-            <div className={`rounded-2xl border p-3 ${isUnresponsive ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-white"}`}>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {isUnresponsive ? (isSavedUnresponsive ? "This lead is archived as unresponsive" : "Unresponsive selected — not saved yet") : "Has the client gone silent?"}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    {isUnresponsive
-                      ? (isSavedUnresponsive ? "The full client history is preserved and the lead no longer appears in active follow-up work." : "Select Save changes to move this lead to Lost. Its history will be preserved.")
-                      : "Use this after the planned follow-ups have been completed without a response."}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={isUnresponsive ? reopenUnresponsiveLead : markLeadUnresponsive}
-                  className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
-                    isUnresponsive
-                      ? "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                      : "bg-slate-900 text-white hover:bg-slate-700"
-                  }`}
-                >
-                  {isUnresponsive ? "Reopen follow-up" : "Mark unresponsive"}
-                </button>
-              </div>
-              {!isUnresponsive ? (
-                <p className="mt-2 text-[11px] text-slate-400">
-                  Review the change, then select Save Changes.
-                </p>
-              ) : null}
-            </div>
           </div>
         </section>
 
@@ -3422,7 +3433,7 @@ export default function LeadEditorDrawer({
 
                           <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
                             Sending to <span className="font-semibold text-slate-900">{formData.email || "No email set"}</span>
-                            {emailComposerMode === "estimate" && selectedEstimateEmail?.title ? (
+                            {selectedEstimateEmail?.title ? (
                               <p className="mt-2">
                                 Estimate: <span className="font-semibold text-slate-900">{selectedEstimateEmail.title}</span>
                               </p>
