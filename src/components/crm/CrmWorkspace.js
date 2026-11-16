@@ -568,6 +568,8 @@ export default function CrmWorkspace({ mode = "legacy" }) {
   const [leadEstimates, setLeadEstimates] = useState({})
   const [leadInvoices, setLeadInvoices] = useState({})
   const [estimatingLead, setEstimatingLead] = useState(null)
+  const [initialEstimate, setInitialEstimate] = useState(null)
+  const [estimateRefreshVersion, setEstimateRefreshVersion] = useState(0)
   const [invoicingLead, setInvoicingLead] = useState(null)
   const [dailyTasks, setDailyTasks] = useState([])
   const [tasksLoading, setTasksLoading] = useState(true)
@@ -1055,7 +1057,8 @@ export default function CrmWorkspace({ mode = "legacy" }) {
     }
   }
 
-  const handleOpenEstimate = async (lead) => {
+  const handleOpenEstimate = async (lead, estimate = null) => {
+    setInitialEstimate(estimate?.id ? estimate : null)
     if (!lead?.id || lead.builder_configuration) {
       setEstimatingLead(lead)
       return
@@ -3007,6 +3010,7 @@ export default function CrmWorkspace({ mode = "legacy" }) {
             setStoredEstimatesForLead(String(payload.lead.id), payload.estimates || [])
           }}
           onEstimateSent={fetchLeads}
+          estimateRefreshVersion={estimateRefreshVersion}
         />
       )}
 
@@ -3022,9 +3026,15 @@ export default function CrmWorkspace({ mode = "legacy" }) {
       {estimatingLead && (
         <EstimateDrawer
           lead={estimatingLead}
+          initialEstimate={initialEstimate}
+          returnToLead={editingLead?.id === estimatingLead.id}
           estimates={leadEstimates[estimatingLead.id] || []}
           onClose={() => setEstimatingLead(null)}
-          onSaveEstimate={handleSaveEstimate}
+          onSaveEstimate={async draft => {
+            const saved = await handleSaveEstimate(draft)
+            if (saved) setEstimateRefreshVersion(version => version + 1)
+            return saved
+          }}
         />
       )}
 

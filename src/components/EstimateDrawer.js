@@ -685,13 +685,19 @@ export default function EstimateDrawer({
   estimates,
   onClose,
   onSaveEstimate,
+  initialEstimate,
+  returnToLead = false,
 }) {
   const latestEstimate = useMemo(() => getLatestEstimate(estimates), [estimates])
-  const [loadedEstimateId, setLoadedEstimateId] = useState(() => latestEstimate?.id || null)
+  const initialEstimateId = initialEstimate?.id
+  const [loadedEstimateId, setLoadedEstimateId] = useState(() => initialEstimateId || latestEstimate?.id || null)
+  const initialEditRef = useRef(initialEstimateId)
   const loadedEstimate = useMemo(() => {
     if (!loadedEstimateId) return latestEstimate || null
-    return estimates.find((estimate) => estimate.id === loadedEstimateId) || latestEstimate || null
-  }, [estimates, latestEstimate, loadedEstimateId])
+    return estimates.find((estimate) => estimate.id === loadedEstimateId)
+      || (initialEstimate?.id === loadedEstimateId ? initialEstimate : latestEstimate)
+      || null
+  }, [estimates, initialEstimate, latestEstimate, loadedEstimateId])
   const [formState, setFormState] = useState(() => buildInitialState(lead, latestEstimate))
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState("")
@@ -759,8 +765,8 @@ export default function EstimateDrawer({
   )
 
   useEffect(() => {
-    setLoadedEstimateId(latestEstimate?.id || null)
-  }, [lead?.id, latestEstimate?.id])
+    setLoadedEstimateId(initialEstimateId || latestEstimate?.id || null)
+  }, [lead?.id, latestEstimate?.id, initialEstimateId])
 
   useEffect(() => {
     const nextFormState = buildInitialState(lead, loadedEstimate)
@@ -784,7 +790,10 @@ export default function EstimateDrawer({
       )
     )
     setHasUnsavedChanges(false)
-    setRevisionMode("new")
+    const editRequestedDraft = initialEditRef.current && initialEditRef.current === loadedEstimate?.id
+      && ["draft", "prepared"].includes(loadedEstimate.status) && !loadedEstimate.won_superseded_by
+    if (loadedEstimate) initialEditRef.current = null
+    setRevisionMode(editRequestedDraft ? "update" : "new")
   }, [lead, loadedEstimate])
 
   useEffect(() => {
@@ -1130,12 +1139,13 @@ export default function EstimateDrawer({
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="flex h-full w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl sm:w-[min(96vw,1120px)] sm:max-w-[1120px]">
+            <Dialog.Panel className="flex h-dvh w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl">
               <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 sm:px-6">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex min-w-0 items-center gap-3">
-                    <button type="button" aria-label="Close estimate workspace" onClick={requestClose} className="shrink-0 rounded-full p-2 transition hover:bg-gray-100">
-                      <ArrowLeft size={20} />
+                    <button type="button" aria-label={returnToLead ? "Back to lead" : "Back to CRM"} onClick={requestClose} className="flex shrink-0 items-center gap-2 rounded-lg p-2 text-sm font-semibold transition hover:bg-gray-100">
+                      <ArrowLeft size={18} />
+                      <span className="hidden sm:inline">{returnToLead ? "Back to lead" : "Back to CRM"}</span>
                     </button>
                     <div className="min-w-0">
                       <Dialog.Title className="text-base font-bold tracking-tight text-slate-950 sm:text-lg">
@@ -1167,8 +1177,9 @@ export default function EstimateDrawer({
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
-                <div className="mx-auto max-w-5xl space-y-6">
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+                <div className="mx-auto grid max-w-[1680px] gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:items-start">
+                  <section id="estimate-scope" aria-label="Estimate scope" className="min-w-0 scroll-mt-4 space-y-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                   {loadedEstimate ? (
                     <section aria-label="Quote version and editing options" className="rounded-xl border border-slate-200 bg-white p-3">
                   <div className="flex flex-wrap items-center gap-2">
@@ -1193,7 +1204,7 @@ export default function EstimateDrawer({
               {loadedEstimate && <p role="status" className="mt-2 text-xs leading-5 text-slate-600">{revisionMode === "alternative" ? (isAtlasWarehouseEstimateProduct(formState.productType) ? "Additional quote starts with standard pricing for one warehouse. Add any services or discounts for this quote separately." : "Additional work: starts a separate quote using the loaded scope as a starting point. Give it a distinct title. Both quotes can be accepted independently.") : revisionMode === "update" ? `Editing unsent draft V${loadedEstimate.version_no}. This updates the draft without creating a revision.` : `Revising V${loadedEstimate.version_no}: saves a new version of this quote. The previous version stays in history. An accepted order changes only when you confirm the new won version in Commercial.`}</p>}
                     </section>
                   ) : null}
-                  <div id="estimate-scope" className="scroll-mt-4">
+                  <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Scope</p>
                     <h2 className="mt-1 text-xl font-bold text-slate-950">Define what we are pricing</h2>
                   </div>
@@ -1819,7 +1830,9 @@ export default function EstimateDrawer({
                     </div>
                   </details>
 
-                  <div id="estimate-pricing" className="scroll-mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                  </section>
+
+                  <section id="estimate-pricing" aria-label="Estimate pricing" className="min-w-0 scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Sell total excl. VAT</p>
@@ -1881,7 +1894,7 @@ export default function EstimateDrawer({
 
                         return (
                           <div key={item.id} className="rounded-xl border border-slate-200 bg-white p-4">
-                            <div className="grid gap-3 md:grid-cols-[1.6fr_0.7fr_0.7fr_0.8fr_auto]">
+                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,0.8fr))_auto]">
                               <div>
                                 <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
                                   Item
@@ -1996,9 +2009,9 @@ export default function EstimateDrawer({
                         Add manual item
                       </button>
                     </div>
-                  </div>
+                  </section>
 
-                  <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">
+                  <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-sm text-slate-600 xl:col-span-2">
                     {canUpdateLoadedEstimate
                       ? "Choose Revise this quote for a scope change, or Create an additional quote for more work. Accepted versions remain in history."
                       : "This estimate will save as Prepared, update the lead quote value, and log the activity in the CRM. The lead moves to Quoted only after the send is recorded."}
@@ -2010,7 +2023,7 @@ export default function EstimateDrawer({
                   </div>
 
                   {sortedEstimates.length > 0 && (
-                    <div id="estimate-history" className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-5">
+                    <div id="estimate-history" className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-5 xl:col-span-2">
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="text-sm font-medium text-slate-900">Saved estimate versions</p>

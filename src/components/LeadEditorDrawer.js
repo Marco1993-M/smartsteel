@@ -913,6 +913,7 @@ export default function LeadEditorDrawer({
   onQuoteWinsRecorded,
   onShowcaseReviewed,
   onEstimateSent,
+  estimateRefreshVersion,
 }) {
   const isNew = !lead?.id;
   const backHandler = onBack || onClose;
@@ -1045,7 +1046,7 @@ export default function LeadEditorDrawer({
   const isUnresponsive = formData.client_follow_up_state === "unresponsive"
   const isSavedUnresponsive = lead?.client_follow_up_state === "unresponsive" && normalizeStatus(lead?.status) === "lost"
 
-  const openEstimateCreator = () => {
+  const openEstimateCreator = (estimate) => {
     onCreateEstimate?.({
       ...lead,
       ...formData,
@@ -1067,7 +1068,7 @@ export default function LeadEditorDrawer({
       builder_configuration: builderConfiguration,
       builder_submission_id: builderSubmission?.id || "",
       design_reference: builderDesignReference,
-    })
+    }, estimate?.id ? estimate : null)
   }
 
   const createProjectFromLead = async () => {
@@ -1321,7 +1322,7 @@ export default function LeadEditorDrawer({
     }
 
     fetchEstimates()
-  }, [lead?.id]);
+  }, [lead?.id, estimateRefreshVersion]);
 
   // Add a new activity
   const addActivity = async ({ type, description }) => {
@@ -1942,12 +1943,12 @@ export default function LeadEditorDrawer({
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="relative flex h-dvh w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl sm:h-full sm:w-[min(96vw,960px)] sm:max-w-[960px]">
+            <Dialog.Panel className="relative flex h-dvh w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl sm:h-full sm:w-[min(96vw,1120px)] sm:max-w-[1120px]">
               {/* Header */}
-<div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur sm:px-6 sm:py-4">
+<div className="shrink-0 flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-2 sm:px-5">
   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
     {/* Back Button */}
-    <button onClick={backHandler} className="shrink-0 rounded-full p-2 hover:bg-gray-100">
+    <button type="button" aria-label="Back to CRM" onClick={backHandler} className="shrink-0 rounded-full p-2 hover:bg-gray-100">
       <ArrowLeft size={20} />
     </button>
 
@@ -2149,30 +2150,37 @@ export default function LeadEditorDrawer({
       {/* Details Panel */}
       <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
         {formData.atlas_showcase_offer && <AtlasShowcaseReview leadId={lead.id} offer={formData.atlas_showcase_offer} onReviewed={updated => { setFormData(current => ({...current,atlas_showcase_offer:updated.atlas_showcase_offer})); onShowcaseReviewed?.(updated) }} />}
-        <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-sm sm:p-6">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:col-start-2 lg:row-start-1">
+            <div className="flex flex-col gap-3">
               <div className="max-w-2xl">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Best next move</p>
-                <h3 className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">{nextBestAction.title}</h3>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">{nextBestAction.reason}</p>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#0043f3]">Next action</p>
+                <h3 className="mt-1 text-lg font-bold tracking-tight text-slate-950">{nextBestAction.title}</h3>
+                <p className="mt-1 max-w-xl text-sm leading-6 text-slate-600">{nextBestAction.reason}</p>
               </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${leadSop.isComplete ? "bg-emerald-400/20 text-emerald-200" : "bg-amber-300/15 text-amber-200"}`}>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${leadSop.isComplete ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>
                   {leadSop.completionLabel}
                 </span>
                 <button
                   type="button"
                   disabled={guidedAction.type === "wait"}
                   onClick={handleGuidedAction}
-                  className="inline-flex items-center justify-center rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-amber-200 disabled:cursor-default disabled:bg-white/10 disabled:text-slate-400"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#0043f3] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500"
                 >
                   {guidedAction.label}
                 </button>
               </div>
             </div>
+            {activities[0]?.description ? (
+              <div className="mt-4 border-t border-slate-100 pt-3">
+                <p className="text-xs font-semibold text-slate-500">Latest activity</p>
+                <p className="mt-1 line-clamp-2 break-words text-sm text-slate-700">{activities[0].description}</p>
+              </div>
+            ) : null}
         </section>
 
-        <section aria-label="Client brief and timeline" className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4 sm:p-5">
+        <section aria-label="Client brief and timeline" className="rounded-2xl border border-slate-200 bg-white p-4 lg:col-start-1 lg:row-start-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-base font-bold text-slate-950">Client brief &amp; timeline</h3>
             <span className="text-xs text-slate-500">Internal project context</span>
@@ -2199,6 +2207,8 @@ export default function LeadEditorDrawer({
             </>
           ) : <p className="mt-3 text-sm text-slate-500">No client brief or timeline recorded yet. Add the project outline in Project scope below.</p>}
         </section>
+
+        </div>
 
         <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5">
@@ -2655,7 +2665,70 @@ export default function LeadEditorDrawer({
         )}
       </Tab.Panel>
 
-      <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">        <div className="border-t border-slate-200 pt-4">
+      <Tab.Panel className="w-full max-w-full space-y-4 p-4 sm:p-5">
+        <section aria-labelledby="commercial-follow-up" className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 id="commercial-follow-up" className="text-base font-bold text-slate-950">Client follow-up</h3>
+            {!isNew ? (
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => openEmailComposer()} className="inline-flex items-center gap-2 rounded-xl bg-[#0043f3] px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                  <Mail size={16} aria-hidden="true" /> Follow-up email
+                </button>
+                <button type="button" onClick={handleMarkWaitingOnClient} className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-50">
+                  Mark waiting on client
+                </button>
+              </div>
+            ) : null}
+          </div>
+          <div className="mt-3 border-t border-blue-100 pt-3">
+        <div>
+          <label htmlFor="commercial-follow-up-date" className={`${fieldLabelClass} mb-2`}>Follow-up date</label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              id="commercial-follow-up-date"
+              type="date"
+              value={formData.follow_up_at ? new Date(formData.follow_up_at).toISOString().split("T")[0] : ""}
+              onChange={(e) =>
+                handleChange(
+                  "follow_up_at",
+                  e.target.value ? new Date(e.target.value).toISOString() : null
+                )
+              }
+              className={`${inputClass} sm:w-auto`}
+            />
+            <div className="flex flex-wrap gap-1">
+              {[
+                { label: "Today", offset: 0 },
+                { label: "Tomorrow", offset: 1 },
+                { label: "In a week", offset: 7 },
+              ].map(({ label, offset }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => {
+                    handleChange("follow_up_at", getFollowUpIsoDate(offset));
+                  }}
+                  className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => handleChange("follow_up_at", null)}
+                className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+
+            <p className="mt-2 text-xs text-slate-500">Save the lead to keep changes to the follow-up date.</p>
+          </div>
+        </section>
+
+        <div className="space-y-4">
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -2733,15 +2806,8 @@ export default function LeadEditorDrawer({
           {latestEstimate && !latestEstimate.sent_at && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold text-amber-950">No quote send time recorded</p><p className="mt-1 text-xs leading-5 text-amber-900">Sent this estimate outside the branded email? Record the send here. Moving the lead to Quoted alone does not confirm it.</p></div><div className="flex flex-wrap gap-2"><button type="button" disabled={updatingEstimateStatus} onClick={() => confirmManualSend()} className="rounded-lg bg-amber-900 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-800 disabled:opacity-50">{updatingEstimateStatus ? "Saving..." : "Record sent now"}</button><button type="button" onClick={openManualSend} className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-950">Use earlier time</button></div></div>{showManualSend && <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-amber-200 pt-4"><label className="text-xs font-semibold text-amber-950">Actual date and time sent<input type="datetime-local" value={manualSentAt} onChange={(event) => setManualSentAt(event.target.value)} className="mt-1 block rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900" /></label><button type="button" disabled={updatingEstimateStatus} onClick={() => confirmManualSend(manualSentAt)} className="rounded-lg bg-[#001d2e] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{updatingEstimateStatus ? "Saving..." : "Record earlier send"}</button><button type="button" onClick={() => setShowManualSend(false)} className="px-2 py-2.5 text-xs font-semibold text-amber-900">Cancel</button>{manualSendError && <p role="alert" className="w-full text-xs text-red-700">{manualSendError}</p>}</div>}<p className="mt-2 text-[11px] leading-4 text-amber-900">Records the send in CRM; it does not email the client.</p>{manualSendError && !showManualSend && <p role="alert" className="mt-2 text-xs text-red-700">{manualSendError}</p>}</div>}
         </section>
 
-        <QuoteWinsPanel key={savedEstimates.map(estimate => `${estimate.id}:${estimate.updated_at}:${estimate.status}`).join("|")} leadId={lead.id} acceptanceRequest={acceptanceRequest} onRecorded={(payload) => {
-          setAcceptanceRequest(null)
-          setSavedEstimates(payload.estimates || [])
-          setFormData(current => ({...current,status:payload.lead.status,quote_value:payload.lead.quote_value,follow_up_at:null,next_action:payload.lead.next_action}))
-          onQuoteWinsRecorded?.(payload)
-        }} />
-
-        <details className={sectionClass}>
-          <summary className="cursor-pointer text-sm font-semibold text-slate-700">Quote documents & history · {savedEstimates.length}</summary>
+        <details open className={sectionClass}>
+          <summary className="cursor-pointer text-sm font-semibold text-slate-700">Saved quotes & revisions · {savedEstimates.length}</summary>
           <p className="mt-1 text-sm text-slate-600">
             Preview the working document, open the PDF, or jump to the share view when you need the client-facing version.
           </p>
@@ -2779,6 +2845,9 @@ export default function LeadEditorDrawer({
                       {estimate.decline_reason ? <p className="mt-2 text-xs text-rose-700">Reason: {estimate.decline_reason}</p> : null}
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => openEstimateCreator(estimate)} className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-[#0043f3]">
+                        {["draft", "prepared"].includes(normalizeEstimateStatus(estimate.status)) && !estimate.won_superseded_by ? "Edit draft" : "Revise quote"}
+                      </button>
                       <button
                         type="button"
                         onClick={() => openEstimateEmailComposer(estimate)}
@@ -2821,86 +2890,17 @@ export default function LeadEditorDrawer({
             )}
           </div>
         </details>
+
+        <QuoteWinsPanel key={savedEstimates.map(estimate => `${estimate.id}:${estimate.updated_at}:${estimate.status}`).join("|")} leadId={lead.id} acceptanceRequest={acceptanceRequest} onRecorded={(payload) => {
+          setAcceptanceRequest(null)
+          setSavedEstimates(payload.estimates || [])
+          setFormData(current => ({...current,status:payload.lead.status,quote_value:payload.lead.quote_value,follow_up_at:null,next_action:payload.lead.next_action}))
+          onQuoteWinsRecorded?.(payload)
+        }} />
+
         </div>
 
-        <details className="rounded-2xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer text-sm font-semibold text-slate-700">Follow-ups, next action & communication</summary><div className="mt-4 space-y-4">
-        <section className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,_#ffffff,_#f8fafc_55%,_#eff6ff)] p-4 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Execution workspace
-              </p>
-              <h3 className="mt-1 text-base font-semibold text-slate-900">Keep the next step obvious</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                Follow-up timing, working links, and the immediate action all live here so the team can move faster.
-              </p>
-            </div>
-            {!isNew && (
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={openEmailComposer}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-                >
-                  <Mail size={16} />
-                  Follow-up email
-                </button>
-                <button
-                  type="button"
-                  onClick={handleMarkWaitingOnClient}
-                  className="inline-flex items-center justify-center rounded-xl bg-sky-100 px-4 py-2.5 text-sm font-semibold text-sky-700 transition hover:bg-sky-200"
-                >
-                  Mark waiting on client
-                </button>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className={sectionClass}>
-          <label className={`${fieldLabelClass} mb-2`}>Follow-up Date</label>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <input
-              type="date"
-              value={formData.follow_up_at ? new Date(formData.follow_up_at).toISOString().split("T")[0] : ""}
-              onChange={(e) =>
-                handleChange(
-                  "follow_up_at",
-                  e.target.value ? new Date(e.target.value).toISOString() : null
-                )
-              }
-              className={`${inputClass} sm:w-auto`}
-            />
-            <div className="flex flex-wrap gap-1">
-              {[
-                { label: "Today", offset: 0 },
-                { label: "+1 Day", offset: 1 },
-                { label: "+1 Week", offset: 7 },
-              ].map(({ label, offset }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => {
-                    const d = new Date();
-                    d.setDate(d.getDate() + offset);
-                    handleChange("follow_up_at", d.toISOString());
-                  }}
-                  className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
-                >
-                  {label}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => handleChange("follow_up_at", null)}
-                className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </section>
-
+        <details className="rounded-2xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer text-sm font-semibold text-slate-700">Next action, reminders & communication history</summary><div className="mt-4 space-y-4">
         <section className={sectionClass}>
           <label className={fieldLabelClass}>Next Action</label>
           <textarea
