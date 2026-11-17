@@ -2,9 +2,6 @@ import { NextResponse } from "next/server"
 import { getPartnerRequestContext } from "lib/partnerRouteAuth"
 import { resolvePartnerReleasedAtlasConfiguration } from "lib/partnerReleasedAtlasConfiguration"
 
-import { buildPartnerSafeAtlasRelease } from "lib/partnerAtlasRelease"
-import { ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS } from "lib/estimates/atlasWarehouseOptions"
-
 export const runtime = "nodejs"
 
 export async function POST(request) {
@@ -18,12 +15,6 @@ export async function POST(request) {
       productReleaseId: String(body.productReleaseId || "").trim(),
       configuration: body.configuration || {},
     })
-    const steelPrices = Object.fromEntries(ATLAS_WAREHOUSE_STEEL_FINISH_OPTIONS.map(steelFinish => {
-      const option = steelFinish === resolved.safeRelease.configuration.steelFinish
-        ? resolved.safeRelease
-        : buildPartnerSafeAtlasRelease({ ...resolved.safeRelease.configuration, steelFinish })
-      return [steelFinish, option.commercial.amountExVat]
-    }))
     return NextResponse.json({
       preview: {
         configuration: resolved.safeRelease.configuration,
@@ -34,7 +25,6 @@ export async function POST(request) {
         reference: resolved.safeRelease.configurationReference,
         summary: resolved.safeRelease.summary,
         commercial: resolved.safeRelease.commercial,
-        steelPrices,
       },
     })
   } catch (error) {
