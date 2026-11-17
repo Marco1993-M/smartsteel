@@ -1,7 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { createPortal } from "react-dom"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { Printer } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
@@ -12,21 +11,11 @@ const meetingQuestions = PILOT_CONVERSATION.filter(([key]) => key !== "demand")
 
 function PilotMeetingSheet({ branch, plan }) {
   return (
-    <article id="pilot-meeting-print" className="hidden print:block">
-      <style>{`
-        @page pilot-meeting { size: A4 portrait; margin: 13mm; }
-        @media print {
-          body:has(> #pilot-meeting-print) > :not(#pilot-meeting-print) { display: none !important; }
-          #pilot-meeting-print { page: pilot-meeting; color: #001d2e; background: white; font-size: 10pt; line-height: 1.35; }
-          #pilot-meeting-print section { break-inside: avoid; }
-          #pilot-meeting-print .pilot-answer { min-height: 12mm; white-space: pre-wrap; overflow-wrap: anywhere; border-bottom: 1px solid #cbd5e1; }
-          #pilot-meeting-print .pilot-answer-filled { break-inside: auto; }
-        }
-      `}</style>
+    <article id="pilot-meeting-print">
       <header className="mb-4 border-b-2 border-[#001d2e] pb-3">
         <div className="flex items-center justify-between gap-4">
-          <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas System by Smart Steel" width={190} height={45} unoptimized className="h-9 w-auto object-contain" />
-          {branch.partnerKey === "afgri" ? <Image src="/afgri-logo-colour-cropped.png" alt="AFGRI" width={95} height={36} unoptimized className="h-7 w-auto object-contain" /> : null}
+          <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas System by Smart Steel" width={190} height={45} unoptimized loading="eager" className="h-9 w-auto object-contain" />
+          {branch.partnerKey === "afgri" ? <Image src="/afgri-logo-colour-cropped.png" alt="AFGRI" width={95} height={36} unoptimized loading="eager" className="h-7 w-auto object-contain" /> : null}
         </div>
         <h1 className="mt-3 text-2xl font-bold">{branch.name} · Pilot launch meeting</h1>
         <p className="mt-1 text-sm">Meeting date ____________________ <span className="ml-4">Branch contact {branch.contactName || "____________________"}</span></p>
@@ -67,8 +56,7 @@ const fieldClass = "mt-1 block w-full rounded-lg border border-slate-300 bg-whit
 
 export default function PartnerPilotWorkspace({ branch, onSaved, onClose, onEdit }) {
   const [plan, setPlan] = useState(() => normalizePilotPlan(branch.pilotPlan || {}))
-  const [printTarget, setPrintTarget] = useState(null)
-  useEffect(() => { setPrintTarget(document.body) }, [])
+  const printSource = useRef(null)
   const [stats, setStats] = useState(null)
   const [activityError, setActivityError] = useState("")
   const [feedback, setFeedback] = useState("")
@@ -97,6 +85,67 @@ export default function PartnerPilotWorkspace({ branch, onSaved, onClose, onEdit
     setFeedback("")
   }
 
+  function openMeetingSheet() {
+    const sheet = printSource.current?.firstElementChild
+    if (!sheet) return
+    const preview = window.open("", "_blank")
+    if (!preview) {
+      setFeedback("Allow pop-ups for this site, then try printing again.")
+      return
+    }
+
+    preview.opener = null
+    const doc = preview.document
+    doc.title = `${branch.name} · Pilot launch meeting`
+    doc.documentElement.lang = "en-ZA"
+    const styles = doc.createElement("style")
+    styles.textContent = `
+      @page { size: A4 portrait; margin: 13mm; }
+      body { margin: 0; padding: 0; color: #001d2e; font: 10pt/1.35 system-ui, sans-serif; background: #fff; }
+      main { box-sizing: border-box; max-width: 210mm; margin: auto; padding: 13mm; }
+      article header { border-bottom: 2px solid #001d2e; padding-bottom: 3mm; margin-bottom: 4mm; }
+      article header > div { display: flex; align-items: center; justify-content: space-between; gap: 8mm; }
+      article header img { width: auto; max-width: 45%; height: 9mm; object-fit: contain; }
+      article header img + img { height: 7mm; }
+      h1 { font-size: 19pt; margin: 3mm 0 1mm; }
+      h2 { font-size: 11pt; margin: 0; }
+      p { margin: 1mm 0; }
+      section { margin-bottom: 3mm; break-inside: avoid; }
+      .pilot-answer-filled { break-inside: auto; }
+      .pilot-answer { min-height: 11mm; white-space: pre-wrap; overflow-wrap: anywhere; border-bottom: 1px solid #cbd5e1; }
+      ul { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm 4mm; padding: 0; margin: 1mm 0; list-style: none; }
+      .no-print { margin: 0 0 4mm; border: 0; border-radius: 6px; background: #0043f3; color: white; padding: 8px 12px; cursor: pointer; }
+      @media print { main { padding: 0; } .no-print { display: none; } }
+    `
+    doc.head.append(styles)
+    const main = doc.createElement("main")
+    const printButton = doc.createElement("button")
+    printButton.type = "button"
+    printButton.className = "no-print"
+    printButton.disabled = true
+    printButton.textContent = "Loading logos…"
+    printButton.addEventListener("click", () => preview.print())
+    const copy = doc.importNode(sheet, true)
+    const logos = Array.from(copy.querySelectorAll("img"), async image => {
+      const source = image.getAttribute("src")
+      try {
+        image.src = new URL(source, window.location.origin).href
+        await image.decode()
+      } catch {
+        const fallback = doc.createElement("strong")
+        fallback.textContent = image.alt
+        image.replaceWith(fallback)
+      }
+    })
+    main.append(printButton, copy)
+    doc.body.replaceChildren(main)
+    Promise.all(logos).then(() => {
+      printButton.textContent = "Print / Save as PDF"
+      printButton.disabled = false
+    })
+    preview.focus()
+  }
+
   async function save(event) {
     event.preventDefault()
     setSaving(true)
@@ -120,11 +169,11 @@ export default function PartnerPilotWorkspace({ branch, onSaved, onClose, onEdit
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-      {printTarget ? createPortal(<PilotMeetingSheet branch={branch} plan={plan} />, printTarget) : null}
+      <div ref={printSource} hidden><PilotMeetingSheet branch={branch} plan={plan} /></div>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div><p className="text-sm font-semibold text-[#0043f3]">Pilot workspace</p><h3 className="text-2xl font-bold text-[#001d2e]">{branch.name}</h3></div>
         <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={() => window.print()} disabled={!printTarget}
+        <button type="button" onClick={openMeetingSheet}
           className="inline-flex items-center gap-2 rounded-lg bg-[#0043f3] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">
           <Printer size={15} aria-hidden="true" /> Print meeting sheet
         </button>
