@@ -1,13 +1,74 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
+import Image from "next/image"
+import { Printer } from "lucide-react"
 import { getOsAuthHeaders } from "../../lib/osClientAuth"
 import { normalizePilotPlan, PILOT_CHECKLIST, PILOT_CONVERSATION, PILOT_STAGES } from "../../lib/partnerPilotPlan"
+
+// Preserve any local-demand notes already saved on older pilot plans.
+const meetingQuestions = PILOT_CONVERSATION.filter(([key]) => key !== "demand")
+
+function PilotMeetingSheet({ branch, plan }) {
+  return (
+    <article id="pilot-meeting-print" className="hidden print:block">
+      <style>{`
+        @page pilot-meeting { size: A4 portrait; margin: 13mm; }
+        @media print {
+          body:has(> #pilot-meeting-print) > :not(#pilot-meeting-print) { display: none !important; }
+          #pilot-meeting-print { page: pilot-meeting; color: #001d2e; background: white; font-size: 10pt; line-height: 1.35; }
+          #pilot-meeting-print section { break-inside: avoid; }
+          #pilot-meeting-print .pilot-answer { min-height: 12mm; white-space: pre-wrap; overflow-wrap: anywhere; border-bottom: 1px solid #cbd5e1; }
+          #pilot-meeting-print .pilot-answer-filled { break-inside: auto; }
+        }
+      `}</style>
+      <header className="mb-4 border-b-2 border-[#001d2e] pb-3">
+        <div className="flex items-center justify-between gap-4">
+          <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas System by Smart Steel" width={190} height={45} unoptimized className="h-9 w-auto object-contain" />
+          {branch.partnerKey === "afgri" ? <Image src="/afgri-logo-colour-cropped.png" alt="AFGRI" width={95} height={36} unoptimized className="h-7 w-auto object-contain" /> : null}
+        </div>
+        <h1 className="mt-3 text-2xl font-bold">{branch.name} · Pilot launch meeting</h1>
+        <p className="mt-1 text-sm">Meeting date ____________________ <span className="ml-4">Branch contact {branch.contactName || "____________________"}</span></p>
+      </header>
+
+      {meetingQuestions.map(([key, label, prompt]) => {
+        const answer = plan.conversation[key]
+        return (
+          <section key={key} className={`mb-3 ${answer ? "pilot-answer-filled" : ""}`}>
+            <h2 className="font-bold">{label}</h2>
+            <p>{prompt}</p>
+            <div className="pilot-answer mt-1">{answer}</div>
+          </section>
+        )
+      })}
+      <section className="mt-3">
+        <h2 className="font-bold">Launch readiness · {PILOT_STAGES[plan.stage]}</h2>
+        <ul className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+          {Object.entries(PILOT_CHECKLIST).map(([key, label]) => (
+            <li key={key}>{plan.checks.includes(key) ? "[✓]" : "[ ]"} {label}</li>
+          ))}
+        </ul>
+      </section>
+      <section className="mt-4">
+        <h2 className="font-bold">Next agreed action</h2>
+        <div className="pilot-answer mt-1">{plan.nextAction}</div>
+        <p className="mt-2">Owner {plan.owner || "____________"} · Due {plan.dueDate || "____________"} · Launch {plan.launchDate || "____________"} · Review {plan.reviewDate || "____________"}</p>
+      </section>
+      <section className={`mt-4 ${plan.notes ? "pilot-answer-filled" : ""}`}>
+        <h2 className="font-bold">Meeting notes and decisions</h2>
+        <div className="pilot-answer mt-1">{plan.notes}</div>
+      </section>
+    </article>
+  )
+}
 
 const fieldClass = "mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
 
 export default function PartnerPilotWorkspace({ branch, onSaved, onClose, onEdit }) {
   const [plan, setPlan] = useState(() => normalizePilotPlan(branch.pilotPlan || {}))
+  const [printTarget, setPrintTarget] = useState(null)
+  useEffect(() => { setPrintTarget(document.body) }, [])
   const [stats, setStats] = useState(null)
   const [activityError, setActivityError] = useState("")
   const [feedback, setFeedback] = useState("")
@@ -59,9 +120,14 @@ export default function PartnerPilotWorkspace({ branch, onSaved, onClose, onEdit
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      {printTarget ? createPortal(<PilotMeetingSheet branch={branch} plan={plan} />, printTarget) : null}
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div><p className="text-sm font-semibold text-[#0043f3]">Pilot workspace</p><h3 className="text-2xl font-bold text-[#001d2e]">{branch.name}</h3></div>
         <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => window.print()} disabled={!printTarget}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#0043f3] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          <Printer size={15} aria-hidden="true" /> Print meeting sheet
+        </button>
         <button type="button" onClick={onEdit} disabled={saving} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold">Edit branch details</button>
         <button type="button" onClick={onClose} disabled={saving} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold">Back to network</button>
         </div>
@@ -102,7 +168,7 @@ export default function PartnerPilotWorkspace({ branch, onSaved, onClose, onEdit
           <section className="rounded-xl border border-slate-200 p-4">
             <h4 className="font-bold text-[#001d2e]">Launch conversation</h4>
             <div className="mt-4 space-y-4">
-              {PILOT_CONVERSATION.map(([key, label, prompt]) => (
+              {meetingQuestions.map(([key, label, prompt]) => (
                 <label key={key} className="block text-sm">
                   <span className="font-semibold">{label}</span>
                   <span className="mt-1 block text-slate-600">{prompt}</span>
