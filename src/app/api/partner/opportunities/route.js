@@ -164,6 +164,9 @@ export async function PATCH(request) {
     }
 
     if (action === "customer_decision") {
+      if (existing.partner_order_status !== "ready_for_order") {
+        return NextResponse.json({ error: "Only opportunities awaiting an order can change their customer decision." }, { status: 409 })
+      }
       const decision = String(body.customerDecision || "").trim()
       if (!["pending", "proceeding", "on_hold", "not_proceeding"].includes(decision)) {
         return NextResponse.json({ error: "Choose a valid customer decision." }, { status: 400 })
@@ -175,13 +178,16 @@ export async function PATCH(request) {
       detail = { decision, note: updates.customer_decision_note }
     }
 
-    const { data, error } = await supabaseServer
+    const updateQuery = supabaseServer
       .from("partner_opportunities")
       .update(updates)
       .eq("id", existing.id)
-      .select("id, reference, status, partner_order_status, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at")
-      .single()
+    if (action === "customer_decision") updateQuery.eq("status", "quoted").eq("partner_order_status", "ready_for_order")
+    const { data, error } = await updateQuery.select("id, reference, status, partner_order_status, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at")
+      .maybeSingle()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    if (!data) return NextResponse.json({ error: "The order status changed. Refresh and try again." }, { status: 409 })
 
     await supabaseServer.from("partner_handoff_events").insert([{
       partner_id: context.membership.partner_id,
@@ -243,9 +249,14 @@ export async function PATCH(request) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", existing.id)
+      .eq("status", "quoted")
+      .eq("partner_order_status", "ready_for_order")
+      .eq("customer_decision", "proceeding")
+      .eq("commercial_response_status", "acknowledged")
       .select("id, reference, status, partner_order_status, afgri_order_reference, order_submitted_at")
-      .single()
+      .maybeSingle()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!data) return NextResponse.json({ error: "The customer decision or order status changed. Refresh and try again." }, { status: 409 })
     await supabaseServer.from("partner_handoff_events").insert([{
       partner_id: context.membership.partner_id,
       opportunity_id: existing.id,
