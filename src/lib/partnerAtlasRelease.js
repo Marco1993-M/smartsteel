@@ -68,7 +68,7 @@ export function buildPartnerSafeAtlasRelease(input = {}) {
       recommendedCustomerPriceExVat: partnerTerms.recommendedCustomerPriceExVat,
       partnerAdjustmentRate: partnerTerms.partnerAdjustmentRate,
       partnerAdjustmentAmount: partnerTerms.partnerAdjustmentAmount,
-      priceType: "indicative_afgri_partner_guide",
+      priceType: "indicative_partner_guide",
       vatExcluded: true,
     },
     inclusions: ["Atlas structural system", "Released connection allowances", "Supply-only configuration"],
