@@ -31,8 +31,14 @@ export default function PartnerAtlasConfigurator({ product: defaultProduct, prod
   const width = getReleasedWidth(product)
   const [step, setStep] = useState(1)
   const [configuration, setConfiguration] = useState(() => normalizeAtlasConfiguration(initialOpportunity?.configuration || { width, length: 20, wallHeight: 3 }))
-  const [preview, setPreview] = useState(null)
-  const [previewing, setPreviewing] = useState(true)
+  const [pricing, setPricing] = useState(null)
+  const comparisonKey = JSON.stringify([product.id, { ...configuration, steelFinish: undefined }])
+  const steelPrices = pricing?.comparisonKey === comparisonKey ? pricing.preview?.steelPrices : undefined
+  const currentPrice = pricing?.comparisonKey === comparisonKey && pricing?.steelFinish === configuration.steelFinish
+  const preview = currentPrice ? pricing.preview : null
+  const previewing = !currentPrice
+  const indicativeAmount = steelPrices?.[configuration.steelFinish] ?? preview?.commercial.amountExVat
+  const adjustmentRate = pricing?.comparisonKey === comparisonKey ? pricing.preview?.commercial?.partnerAdjustmentRate : null
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
   const [customer, setCustomer] = useState({
@@ -59,7 +65,6 @@ export default function PartnerAtlasConfigurator({ product: defaultProduct, prod
   useEffect(() => {
     let cancelled = false
     const timeoutId = window.setTimeout(async () => {
-      setPreviewing(true)
       setError("")
       try {
         const response = await fetch("/api/partner/configuration-preview", {
@@ -69,15 +74,16 @@ export default function PartnerAtlasConfigurator({ product: defaultProduct, prod
         })
         const payload = await response.json()
         if (!response.ok) throw new Error(payload.error || "This configuration could not be priced.")
-        if (!cancelled) setPreview(payload.preview)
+        if (!cancelled) setPricing({ comparisonKey, steelFinish: configuration.steelFinish, preview: payload.preview })
       } catch (previewError) {
-        if (!cancelled) { setPreview(null); setError(previewError.message) }
-      } finally {
-        if (!cancelled) setPreviewing(false)
+        if (!cancelled) {
+          setPricing({ comparisonKey, steelFinish: configuration.steelFinish, preview: null })
+          setError(previewError.message)
+        }
       }
     }, 280)
     return () => { cancelled = true; window.clearTimeout(timeoutId) }
-  }, [configuration, product.id])
+  }, [comparisonKey, configuration, product.id])
 
   const sceneProps = useMemo(() => ({
     systemVariant: "atlas",
@@ -129,8 +135,21 @@ export default function PartnerAtlasConfigurator({ product: defaultProduct, prod
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-[#eef4f8]">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3"><button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-200" aria-label="Back"><ArrowLeft className="h-4 w-4" /></button><Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas" width={150} height={45} className="h-9 w-auto object-contain" /></div>
+        <div className="mx-auto grid max-w-[1500px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-200" aria-label="Back"><ArrowLeft className="h-4 w-4" /></button>
+            <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas" width={150} height={45} className="h-8 w-auto max-w-[150px] object-contain" />
+          </div>
+          <div className="order-last col-span-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl bg-[#001d2e] px-3 py-2 text-white sm:order-none sm:col-span-1 sm:px-4">
+            <div>
+              <p className="text-[10px] font-semibold text-[#c1d9e5]">Indicative price excl. VAT</p>
+              <p aria-live="polite" className="text-lg font-bold tabular-nums">{indicativeAmount != null ? money.format(indicativeAmount) : previewing ? "Updating…" : "Price unavailable"}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-semibold">{configuration.width}m × {configuration.length}m × {configuration.wallHeight}m</p>
+              {adjustmentRate ? <p className="text-[10px] text-[#c1d9e5]">Includes {Math.round(adjustmentRate * 100)}% partner adjustment</p> : null}
+            </div>
+          </div>
           <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full bg-slate-100" aria-label="Close"><X className="h-5 w-5" /></button>
         </div>
       </header>
@@ -139,10 +158,9 @@ export default function PartnerAtlasConfigurator({ product: defaultProduct, prod
         <div className="mb-5"><p className={`text-xs font-black uppercase tracking-[0.2em] ${isResubmission ? "text-orange-700" : "text-[#0043f3]"}`}>{isResubmission ? `Update ${initialOpportunity.reference}` : initialOpportunity ? `Continue ${initialOpportunity.reference}` : `New ${portal.name} opportunity`}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-[#001d2e] sm:text-4xl">Configure the Atlas W{String(width).padStart(2, "0")}</h1></div>
         {isResubmission && informationRequest ? <section className="mb-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 sm:p-5"><div className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-700"><RotateCcw className="h-4 w-4" /></span><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-700">Update requested by Smart Steel</p><p className="mt-1.5 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-800">{informationRequest.request_text || informationRequest.requestText}</p><p className="mt-2 text-xs font-bold text-orange-800">Update the configuration or customer details below, then resubmit the same opportunity.</p></div></div></section> : null}
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_440px] xl:items-start">
-          <section className="xl:sticky xl:top-20">
+          <section className="xl:sticky xl:top-24">
             <div className="rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
               <WarehouseBuilderScene {...sceneProps} className="h-[330px] sm:h-[500px] xl:h-[620px]" />
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#001d2e] px-4 py-3 text-white sm:px-5"><div><p className="text-[9px] font-bold uppercase tracking-[0.17em] text-[#c1d9e5]">Indicative price excl. VAT</p><p className="mt-1 text-2xl font-black">{previewing ? "Updating..." : preview ? money.format(preview.commercial.amountExVat) : "Review required"}</p>{preview?.commercial?.partnerAdjustmentRate ? <p className="mt-1 text-[10px] font-semibold text-white/55">Includes the agreed {Math.round(preview.commercial.partnerAdjustmentRate * 100)}% partner adjustment</p> : null}</div><p className="text-sm font-bold text-white/70">{configuration.width}m × {configuration.length}m × {configuration.wallHeight}m</p></div>
             </div>
           </section>
 
@@ -150,7 +168,7 @@ export default function PartnerAtlasConfigurator({ product: defaultProduct, prod
             <div className="grid grid-cols-3 border-b border-slate-200">{["Size", "Finish", "Customer"].map((label, index) => <button key={label} type="button" onClick={() => index + 1 <= step && setStep(index + 1)} className={`min-h-14 border-r border-slate-200 px-2 text-xs font-black last:border-r-0 ${step === index + 1 ? "bg-[#c1d9e5] text-[#0043f3]" : index + 1 < step ? "text-[#0043f3]" : "text-slate-400"}`}>{index + 1 < step ? <Check className="mx-auto h-4 w-4" /> : label}</button>)}</div>
             <div className="p-5 sm:p-6">
               {step === 1 ? <><OptionGroup label="Warehouse span">{availableProducts.filter((item, index, items) => items.findIndex(other => getReleasedWidth(other) === getReleasedWidth(item)) === index).map(item => <Option key={item.id} active={width === getReleasedWidth(item)} onClick={() => { setProductId(item.id); update("width", getReleasedWidth(item)) }}>{getReleasedWidth(item)}m</Option>)}</OptionGroup><SizeStep configuration={configuration} update={update} /></> : null}
-              {step === 2 ? <FinishStep configuration={configuration} update={update} /> : null}
+              {step === 2 ? <FinishStep configuration={configuration} update={update} steelPrices={steelPrices} /> : null}
               {step === 3 ? <CustomerStep customer={customer} setCustomer={setCustomer} preview={preview} /> : null}
               {error ? <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
               <div className="mt-7 grid grid-cols-2 gap-3">
@@ -170,8 +188,9 @@ function SizeStep({ configuration, update }) {
   return <div><StepHeading number="1" title="Set the warehouse size" /><label className="mt-5 block text-sm font-bold">Length<select value={configuration.length} onChange={event => update("length", Number(event.target.value))} className="mt-2 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3">{ATLAS_LENGTH_OPTIONS.map(value => <option key={value} value={value}>{value}m · {value / 4} bays</option>)}</select></label><OptionGroup label="Eave height">{HEIGHTS.map((value) => <Option key={value} active={configuration.wallHeight === value} onClick={() => update("wallHeight", value)}>{value}m</Option>)}</OptionGroup><div className="mt-6 rounded-xl bg-[#eef4f8] p-4"><p className="text-xs font-bold text-slate-500">Current footprint</p><p className="mt-1 text-xl font-black">{configuration.width}m × {configuration.length}m × {configuration.wallHeight}m</p></div></div>
 }
 
-function FinishStep({ configuration, update }) {
-  return <div><StepHeading number="2" title="Choose finish and cover" /><OptionGroup label="Structural steel">{FINISHES.map((value) => <Option key={value} active={configuration.steelFinish === value} onClick={() => update("steelFinish", value)}>{value === "Galv" ? "Galvanised" : value}</Option>)}</OptionGroup><OptionGroup label="Sheeting">{SHEETING.map(([value, label]) => <Option key={value} active={configuration.gableMode === value} onClick={() => update("gableMode", value)}>{label}</Option>)}</OptionGroup>{configuration.gableMode !== "structure_only" ? <><OptionGroup label="Profile">{["Corrugated", "IBR", "Concealed Fix"].map((value) => <Option key={value} active={configuration.sheetingProfile === value} onClick={() => update("sheetingProfile", value)}>{value}</Option>)}</OptionGroup><OptionGroup label="Sheet finish">{[["galvanised", "Galvanised"], ["chromadek", "Colour coated"]].map(([value, label]) => <Option key={value} active={configuration.sheetingFinish === value} onClick={() => update("sheetingFinish", value)}>{label}</Option>)}</OptionGroup></> : null}</div>
+function FinishStep({ configuration, update, steelPrices }) {
+  return <div><StepHeading number="2" title="Choose finish and cover" /><OptionGroup label="Structural steel · indicative totals excl. VAT">{FINISHES.map((value) => <Option key={value} active={configuration.steelFinish === value} onClick={() => update("steelFinish", value)}><span className="block">{value === "Galv" ? "Galvanised" : value}</span>
+      <span className="mt-1 block text-xs font-semibold tabular-nums">{steelPrices?.[value] != null ? money.format(steelPrices[value]) : "—"}</span></Option>)}</OptionGroup><OptionGroup label="Sheeting">{SHEETING.map(([value, label]) => <Option key={value} active={configuration.gableMode === value} onClick={() => update("gableMode", value)}>{label}</Option>)}</OptionGroup>{configuration.gableMode !== "structure_only" ? <><OptionGroup label="Profile">{["Corrugated", "IBR", "Concealed Fix"].map((value) => <Option key={value} active={configuration.sheetingProfile === value} onClick={() => update("sheetingProfile", value)}>{value}</Option>)}</OptionGroup><OptionGroup label="Sheet finish">{[["galvanised", "Galvanised"], ["chromadek", "Colour coated"]].map(([value, label]) => <Option key={value} active={configuration.sheetingFinish === value} onClick={() => update("sheetingFinish", value)}>{label}</Option>)}</OptionGroup></> : null}</div>
 }
 
 function CustomerStep({ customer, setCustomer, preview }) {
@@ -185,5 +204,5 @@ function CustomerStep({ customer, setCustomer, preview }) {
 
 function StepHeading({ number, title }) { return <><p className="text-xs font-black uppercase tracking-[0.17em] text-[#0043f3]">Step {number}</p><h2 className="mt-2 text-2xl font-black">{title}</h2></> }
 function OptionGroup({ label, children }) { return <div className="mt-6"><p className="mb-2 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">{label}</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{children}</div></div> }
-function Option({ active, onClick, children }) { return <button type="button" onClick={onClick} className={`min-h-12 rounded-xl border px-2 text-sm font-black transition ${active ? "border-[#0043f3] bg-[#0043f3] text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"}`}>{children}</button> }
+function Option({ active, onClick, children }) { return <button type="button" onClick={onClick} aria-pressed={active} className={`min-h-12 rounded-xl border px-2 text-sm font-black transition ${active ? "border-[#0043f3] bg-[#0043f3] text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"}`}>{children}</button> }
 function Field({ label, required, children }) { return <label className="block text-sm font-bold text-slate-800">{label}{required ? " *" : ""}<span className="mt-2 block [&>input]:min-h-12 [&>input]:w-full [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:px-4 [&>input]:text-base [&>input]:outline-none [&>textarea]:w-full [&>textarea]:rounded-xl [&>textarea]:border [&>textarea]:border-slate-300 [&>textarea]:p-4 [&>textarea]:text-base [&>textarea]:outline-none focus-within:[&>*]:border-[#0043f3]">{children}</span></label> }
