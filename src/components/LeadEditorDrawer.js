@@ -939,7 +939,10 @@ export default function LeadEditorDrawer({
   const followUpQuotes = groupEstimateQuotes(savedEstimates).map(group => group.latest)
     .filter(estimate => !estimate.won_superseded_by && !["accepted", "declined", "cancelled", "superseded"].includes(estimate.status))
   const followUpQuote = followUpQuotes.find(estimate => estimate.id === followUpQuoteId) || followUpQuotes[0]
-  const lastEmail = emailEvents[0]?.sent_at
+  const [previewedEmailId, setPreviewedEmailId] = useState(null)
+  const lastEmail = emailEvents[0]
+  const lastEmailDate = lastEmail?.sent_at || lastEmail?.created_at
+  const showLastEmail = Boolean(lastEmail?.id && previewedEmailId === lastEmail.id)
   const dateLabel = date => date ? new Date(date).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Johannesburg" }) : "—"
   const [deferInstallationForProposal, setDeferInstallationForProposal] = useState(false);
   const [deferDeliveryForProposal, setDeferDeliveryForProposal] = useState(false);
@@ -2697,9 +2700,30 @@ export default function LeadEditorDrawer({
           </div>
           <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
             <div><dt className="text-xs text-slate-500">Latest client response</dt><dd className="font-semibold">{followUpSequence?.last_response_label || "—"}</dd></div>
-            <div><dt className="text-xs text-slate-500">Last recorded email</dt><dd className="font-semibold">{dateLabel(lastEmail)}</dd></div>
+            <div>
+              <dt className="text-xs text-slate-500">Last recorded email</dt>
+              <dd className="font-semibold">
+                {lastEmail?.id ? (
+                  <button type="button" aria-expanded={showLastEmail}
+                    aria-label={`${showLastEmail ? "Hide" : "Preview"} last recorded email, ${dateLabel(lastEmailDate)}`}
+                    onClick={() => setPreviewedEmailId(showLastEmail ? null : lastEmail.id)}
+                    className="inline-flex items-center gap-1.5 rounded-sm text-[#0043f3] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2">
+                    {dateLabel(lastEmailDate)} <Mail size={13} aria-hidden="true" />
+                  </button>
+                ) : dateLabel(lastEmailDate)}
+              </dd>
+            </div>
             <div><dt className="text-xs text-slate-500">Next follow-up</dt><dd className="font-semibold">{dateLabel(formData.follow_up_at)}</dd></div>
           </dl>
+          {showLastEmail ? (
+            <section aria-label="Last recorded email preview" className="mt-3 rounded-xl border border-blue-100 bg-white p-4">
+              <h4 className="break-words text-sm font-semibold text-slate-900">{lastEmail.subject || "Email preview"}</h4>
+              {lastEmail.recipient ? <p className="mt-1 break-words text-xs text-slate-500">To {lastEmail.recipient}</p> : null}
+              <p className="mt-3 whitespace-pre-wrap break-words border-t border-slate-100 pt-3 text-sm leading-6 text-slate-700">
+                {lastEmail.body?.trim() || "The email was logged without a saved message body."}
+              </p>
+            </section>
+          ) : null}
           {followUpQuotes.length > 1 ? (
             <label className="mt-3 block text-xs font-semibold text-slate-600">
               Quote to follow up
