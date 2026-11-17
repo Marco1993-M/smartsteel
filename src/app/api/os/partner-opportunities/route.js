@@ -204,6 +204,7 @@ export async function GET(request) {
     .select("*, partner_product_releases(product_code, name, release_version), partner_organizations!inner(key, name), partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
     .eq("partner_organizations.key", partnerKey)
     .in("status", REVIEW_STATUSES)
+    .neq("fulfilment_status", "cancelled")
     .order("submitted_at", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false })
 

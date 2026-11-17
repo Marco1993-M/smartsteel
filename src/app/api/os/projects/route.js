@@ -179,6 +179,21 @@ export async function DELETE(request) {
   const projectId = new URL(request.url).searchParams.get("id")?.trim()
   if (!projectId) return NextResponse.json({ error: "Project ID is required." }, { status: 400 })
 
+  const { data: linkedOrder, error: lookupError } = await supabaseServer
+    .from("partner_opportunities")
+    .select("id")
+    .eq("internal_project_id", projectId)
+    .neq("fulfilment_status", "cancelled")
+    .limit(1)
+    .maybeSingle()
+
+  if (lookupError && !schemaMissing(lookupError)) {
+    return NextResponse.json({ error: "Could not check for linked partner orders." }, { status: 500 })
+  }
+  if (linkedOrder) {
+    return NextResponse.json({ error: "Cancel the linked partner order before deleting this project." }, { status: 409 })
+  }
+
   const { error } = await supabaseServer.from("os_projects").delete().eq("id", projectId)
   if (error) {
     if (schemaMissing(error)) return NextResponse.json({ error: "Shared Projects storage is not available." }, { status: 409 })

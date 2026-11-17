@@ -43,6 +43,7 @@ export async function GET(request) {
     .from("partner_opportunities")
     .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, installation_scope, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at, internal_project_id, handoff_acknowledged_at, fulfilment_status, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, fulfilment_updated_at, updated_at, partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at, resolved_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
     .eq("partner_id", context.membership.partner_id)
+    .neq("fulfilment_status", "cancelled")
     .order("updated_at", { ascending: false })
 
   if (context.membership.role === "salesperson") query = query.eq("membership_id", context.membership.id)
@@ -121,12 +122,13 @@ export async function PATCH(request) {
 
   const { data: existing, error: existingError } = await supabaseServer
     .from("partner_opportunities")
-    .select("id, product_release_id, status, partner_order_status, price_valid_until")
+    .select("id, product_release_id, status, partner_order_status, price_valid_until, fulfilment_status")
     .eq("id", id)
     .eq("partner_id", context.membership.partner_id)
     .eq("membership_id", context.membership.id)
     .single()
   if (existingError || !existing) return NextResponse.json({ error: "That draft could not be found." }, { status: 404 })
+  if (existing.fulfilment_status === "cancelled") return NextResponse.json({ error: "This opportunity was cancelled." }, { status: 409 })
   if (["acknowledge_commercial", "request_clarification", "customer_decision"].includes(action)) {
     if (existing.status !== "quoted") {
       return NextResponse.json({ error: "Smart Steel must approve the supplier price before this response can be recorded." }, { status: 409 })

@@ -4,6 +4,8 @@ import { supabaseServer } from "lib/supabase-server"
 import { AFGRI_BRANCHES, normalizePartnerBranch } from "lib/afgriBranches"
 import { isSchemaMissingError } from "lib/osPhase1bData"
 
+import { normalizePilotPlan } from "lib/partnerPilotPlan"
+
 export const runtime = "nodejs"
 
 const BRANCH_STATUSES = ["active", "pilot", "paused", "inactive"]
@@ -12,7 +14,26 @@ export async function GET(request) {
   const authResponse = await requireOsAuth(request)
   if (authResponse) return authResponse
 
-  const partnerKey = new URL(request.url).searchParams.get("partnerKey") || "afgri"
+  const params = new URL(request.url).searchParams
+  const partnerKey = params.get("partnerKey") || "afgri"
+  const branchId = params.get("pilotBranch")
+  if (branchId) {
+    const { data: partner, error: partnerError } = await supabaseServer
+      .from("partner_organizations").select("id").eq("key", partnerKey).single()
+    if (partnerError) return NextResponse.json({ error: partnerError.message }, { status: 500 })
+
+    const counts = await Promise.all(["open", "quoted", "orders"].map(async (stage) => {
+      let query = supabaseServer.from("partner_opportunities").select("id", { count: "exact", head: true })
+        .eq("partner_id", partner.id).eq("origin_branch_id", branchId)
+      if (stage === "open") query = query.in("status", ["submitted", "in_review", "changes_requested"])
+      else query = query.eq("status", stage === "orders" ? "closed" : "quoted")
+      return query
+    }))
+    if (counts.some(result => result.error)) {
+      return NextResponse.json({ error: "Branch activity could not be loaded. Check that the pilot migration has been applied." }, { status: 503 })
+    }
+    return NextResponse.json({ open: counts[0].count, quoted: counts[1].count, orders: counts[2].count })
+  }
   const { data, error } = await supabaseServer
     .from("os_partner_branches")
     .select("*")
@@ -39,6 +60,16 @@ export async function PATCH(request) {
 
   const body = await request.json()
   const id = String(body?.id || "").trim()
+  if (body?.pilotPlan && id) {
+    const { data, error } = await supabaseServer.from("os_partner_branches")
+      .update({ pilot_plan: normalizePilotPlan(body.pilotPlan) })
+      .eq("id", id)
+      .or("status.eq.pilot,pilot_plan.not.is.null")
+      .select("*").maybeSingle()
+    if (error) return NextResponse.json({ error: "Could not save the pilot plan. Check that the pilot migration has been applied." }, { status: 409 })
+    if (!data) return NextResponse.json({ error: "Mark this branch as a pilot first." }, { status: 404 })
+    return NextResponse.json({ record: normalizePartnerBranch(data) })
+  }
   const status = String(body?.status || "").trim()
   if (!id || !BRANCH_STATUSES.includes(status)) {
     return NextResponse.json({ error: "Choose a valid branch and status." }, { status: 400 })
