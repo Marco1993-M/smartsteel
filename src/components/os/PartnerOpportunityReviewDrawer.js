@@ -349,7 +349,7 @@ export default function PartnerOpportunityReviewDrawer({
           {record.handoffEvents?.length ? <section><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Handoff history</p><div className="mt-3 space-y-3 border-l border-slate-200 pl-4">{record.handoffEvents.slice(0, 6).map((event) => <div key={event.id}><p className="text-sm font-bold text-slate-800">{event.summary}</p><p className="mt-1 text-xs text-slate-400">{formatDateTime(event.createdAt)}</p></div>)}</div></section> : null}
         </div>
 
-        {record.status !== "closed" ? <footer className="border-t border-slate-200 bg-white p-4 sm:p-5">
+        {record.status !== "closed" && !(record.status === "quoted" && record.customerDecision === "not_proceeding") ? <footer className="border-t border-slate-200 bg-white p-4 sm:p-5">
           <button type="button" disabled={saving || record.status === "changes_requested" || (record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus))} onClick={() => onAdvance(meta.next)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0043f3] px-5 text-sm font-black text-white disabled:opacity-50">
             {record.status === "in_review" ? <FileCheck2 className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
             {saving ? "Saving..." : record.status === "changes_requested" ? "Waiting for Partner resubmission" : record.status === "quoted" && !["order_submitted", "acknowledged"].includes(record.partnerOrderStatus) ? "Waiting for Partner instruction" : record.status === "quoted" ? "Accept instruction and open project" : meta.action}

@@ -126,19 +126,21 @@ export default function PartnerOpportunityWorkspace({ partnerKey = "afgri" }) {
     }
   }
 
-  const opportunities = records.filter((record) => record.status !== "closed")
+  const notProceeding = records.filter(record => record.status === "quoted" && record.customerDecision === "not_proceeding")
+  const opportunities = records.filter(record => record.status !== "closed" && !notProceeding.includes(record))
   const filtered = filter === "active"
     ? opportunities
+    : filter === "not_proceeding" ? notProceeding
     : filter === "orders"
       ? records.filter(isActiveOrder)
       : filter === "complete"
         ? records.filter((record) => record.status === "closed" && record.fulfilmentStatus === "complete")
-        : records.filter((record) => record.status === filter)
+        : opportunities.filter((record) => record.status === filter)
   const shown = filtered.filter(record => [record.customerName, record.reference, record.partner?.name, record.siteLocation, record.afgriOrderReference].some(value => String(value || "").toLowerCase().includes(search.trim().toLowerCase())))
   const newCount = records.filter((record) => record.status === "submitted").length
   const reviewingCount = records.filter((record) => record.status === "in_review").length
   const changesCount = records.filter((record) => record.status === "changes_requested").length
-  const quotedCount = records.filter((record) => record.status === "quoted").length
+  const quotedCount = opportunities.filter((record) => record.status === "quoted").length
   const orderCount = records.filter(isActiveOrder).length
 
   return (
@@ -172,12 +174,12 @@ export default function PartnerOpportunityWorkspace({ partnerKey = "afgri" }) {
       <section aria-busy={loading} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
           <div className="flex flex-wrap gap-1">
-            {[["active", "All opportunities", opportunities.length], ["orders", "Orders", orderCount], ["complete", "Completed", records.filter(record => record.status === "closed" && record.fulfilmentStatus === "complete").length]].map(([value, label, count]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${filter === value ? "bg-[#001d2e] text-white" : "text-slate-500 hover:bg-slate-100"}`}>{label}<span className="ml-2 opacity-60">{loading ? "—" : count}</span></button>)}
+            {[["active", "Open opportunities", opportunities.length], ["not_proceeding", "Not proceeding", notProceeding.length], ["orders", "Orders", orderCount], ["complete", "Completed", records.filter(record => record.status === "closed" && record.fulfilmentStatus === "complete").length]].map(([value, label, count]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${filter === value ? "bg-[#001d2e] text-white" : "text-slate-500 hover:bg-slate-100"}`}>{label}<span className="ml-2 opacity-60">{loading ? "—" : count}</span></button>)}
           </div>
           <label className="flex min-h-10 w-full items-center gap-2 rounded-xl border border-slate-200 px-3 sm:w-64"><Search className="h-4 w-4 shrink-0 text-slate-400" /><input aria-label="Search partner projects" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search name or reference…" className="min-w-0 w-full bg-transparent py-2 text-sm outline-none" /></label>
         </div>
         <div className="p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between gap-3"><h3 className="text-sm font-bold text-[#001d2e]">{filter === "active" ? "Open opportunities" : filter === "orders" ? "Active orders" : filter === "complete" ? "Completed projects" : filter === "changes_requested" ? "With partner" : STATUS_META[filter]?.label}</h3><span className="text-xs text-slate-500" aria-live="polite">{loading ? "Loading…" : `${shown.length} project${shown.length === 1 ? "" : "s"}`}</span></div>
+          <div className="mb-4 flex items-center justify-between gap-3"><h3 className="text-sm font-bold text-[#001d2e]">{filter === "active" ? "Open opportunities" : filter === "not_proceeding" ? "Not proceeding" : filter === "orders" ? "Active orders" : filter === "complete" ? "Completed projects" : filter === "changes_requested" ? "With partner" : STATUS_META[filter]?.label}</h3><span className="text-xs text-slate-500" aria-live="polite">{loading ? "Loading…" : `${shown.length} project${shown.length === 1 ? "" : "s"}`}</span></div>
           <div className="space-y-3">
             {loading ? <p className="py-10 text-center text-sm text-slate-500">Loading opportunities...</p> : shown.length === 0 ? <div className="grid min-h-40 place-items-center rounded-xl bg-slate-50 p-5 text-center"><div><Inbox className="mx-auto h-6 w-6 text-slate-300" /><p className="mt-3 text-sm font-semibold text-slate-600">{search ? "No projects match your search." : "No projects at this stage yet."}</p><p className="mt-1 text-xs text-slate-500">{search ? "Try a customer name or opportunity reference." : "Submitted partner requests will appear here."}</p></div></div> : shown.map(record => <OpportunityRow key={record.id} record={record} onOpen={() => openRecord(record)} />)}
           </div>
@@ -190,10 +192,13 @@ export default function PartnerOpportunityWorkspace({ partnerKey = "afgri" }) {
 }
 
 function OpportunityRow({ record, onOpen }) {
-  const meta = STATUS_META[record.status] || STATUS_META.submitted
+  const parked = record.status === "quoted" && ["not_proceeding", "on_hold"].includes(record.customerDecision)
+  const meta = parked
+    ? { label: record.customerDecision === "not_proceeding" ? "Not proceeding" : "On hold", className: "bg-slate-100 text-slate-700" }
+    : STATUS_META[record.status] || STATUS_META.submitted
   const config = record.configuration || {}
   const order = record.status === "closed"
-  return <button type="button" onClick={onOpen} className="grid w-full gap-4 rounded-2xl border border-slate-200 p-4 text-left transition hover:border-[#0043f3] hover:bg-blue-50/30 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate font-black text-slate-950">{record.customerName}</p><span className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${meta.className}`}>{meta.label}</span>{record.partnerOrderStatus === "ready_for_order" ? <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-blue-800">Partner action</span> : null}{record.partnerOrderStatus === "order_submitted" ? <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-800">Order received</span> : null}</div><p className="mt-1 truncate text-xs text-slate-500">{record.reference} · {record.partner?.name || "Partner"}</p></div><div><p className="font-bold text-slate-900">W{String(config.width || "").padStart(2, "0")} · {config.width}m × {config.length}m × {config.wallHeight}m</p><p className="mt-1 text-xs text-slate-500">{config.steelFinish} · {config.gableMode === "structure_only" ? "Structure only" : "Sheeting selected"}</p>{record.afgriOrderReference ? <p className="mt-1 font-mono text-[10px] font-bold text-emerald-700">{record.afgriOrderReference}</p> : null}</div><div className="flex items-center justify-between gap-4 sm:justify-end"><p className="font-black text-[#0043f3]">{money.format(record.indicativeAmountExVat)}</p><ArrowRight className="h-4 w-4 text-slate-400" /></div>{order ? <div className="sm:col-span-3"><OrderProgress status={record.fulfilmentStatus} /></div> : null}</button>
+  return <button type="button" onClick={onOpen} className="grid w-full gap-4 rounded-2xl border border-slate-200 p-4 text-left transition hover:border-[#0043f3] hover:bg-blue-50/30 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate font-black text-slate-950">{record.customerName}</p><span className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${meta.className}`}>{meta.label}</span>{record.partnerOrderStatus === "ready_for_order" && !parked ? <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-blue-800">Partner action</span> : null}{record.partnerOrderStatus === "order_submitted" ? <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-800">Order received</span> : null}</div><p className="mt-1 truncate text-xs text-slate-500">{record.reference} · {record.partner?.name || "Partner"}</p></div><div><p className="font-bold text-slate-900">W{String(config.width || "").padStart(2, "0")} · {config.width}m × {config.length}m × {config.wallHeight}m</p><p className="mt-1 text-xs text-slate-500">{config.steelFinish} · {config.gableMode === "structure_only" ? "Structure only" : "Sheeting selected"}</p>{record.afgriOrderReference ? <p className="mt-1 font-mono text-[10px] font-bold text-emerald-700">{record.afgriOrderReference}</p> : null}</div><div className="flex items-center justify-between gap-4 sm:justify-end"><p className="font-black text-[#0043f3]">{money.format(record.indicativeAmountExVat)}</p><ArrowRight className="h-4 w-4 text-slate-400" /></div>{order ? <div className="sm:col-span-3"><OrderProgress status={record.fulfilmentStatus} /></div> : null}</button>
 }
 
 function OrderProgress({ status = "production_planning" }) {

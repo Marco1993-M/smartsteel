@@ -21,11 +21,15 @@ const FILTERS = [
   ["waiting", "With Smart Steel"],
   ["quoted", "Price approved"],
   ["orders", "Orders"],
+  ["not_proceeding", "Not proceeding"],
 ]
 
 function matchesFilter(record, filter) {
   if (filter === "all") return true
-  if (filter === "action") return ["draft", "changes_requested"].includes(record.status) || record.partner_order_status === "ready_for_order"
+  const notProceeding = record.status === "quoted" && record.customer_decision === "not_proceeding"
+  if (filter === "not_proceeding") return notProceeding
+  if (notProceeding) return false
+  if (filter === "action") return ["draft", "changes_requested"].includes(record.status) || (record.partner_order_status === "ready_for_order" && record.customer_decision !== "on_hold")
   if (filter === "waiting") return ["submitted", "in_review"].includes(record.status)
   if (filter === "quoted") return record.status === "quoted"
   if (filter === "orders") return ["order_submitted", "acknowledged"].includes(record.partner_order_status)
@@ -33,6 +37,8 @@ function matchesFilter(record, filter) {
 }
 
 function statusLabel(record) {
+  if (record.status === "quoted" && record.customer_decision === "not_proceeding") return "Not proceeding"
+  if (record.status === "quoted" && record.customer_decision === "on_hold") return "On hold"
   if (record.partner_order_status === "ready_for_order") return "Your action"
   if (record.partner_order_status === "order_submitted") return "Order submitted"
   if (record.partner_order_status === "acknowledged") return record.fulfilment_status === "complete" ? "Complete" : (record.fulfilment_status || "production planning").replaceAll("_", " ")
@@ -119,7 +125,10 @@ export default function PartnerOpportunitiesWorkspace() {
       {error ? <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
       <section className="mt-5 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:p-5"><div className="relative"><Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search customer, reference, SKU or location" className="min-h-12 w-full rounded-xl border border-slate-200 pl-11 pr-4 text-base outline-none focus:border-[#0043f3]" /></div><div className="mt-3 flex gap-2 overflow-x-auto pb-1">{FILTERS.map(([value, label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-black ${filter === value ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600"}`}>{label}</button>)}</div></section>
       <div className="mt-5 flex items-center justify-between"><p className="text-sm font-bold text-slate-500">{shown.length} {shown.length === 1 ? "opportunity" : "opportunities"}</p><Link href="/partner" className="text-sm font-black text-[#0043f3]">Dashboard</Link></div>
-      <section className="mt-3 space-y-3">{shown.length ? shown.map((record) => <OpportunityCard key={record.id} record={record} product={products[0]} onEdit={() => setEditing(record)} onDocument={() => openPriceConfirmation(record)} preparing={preparingId === record.id} onUpdated={load} />) : <div className="grid min-h-52 place-items-center rounded-[1.5rem] border border-dashed border-slate-300 bg-white text-sm font-bold text-slate-500">No opportunities match this view.</div>}</section>
+      <section className="mt-3 space-y-3">{shown.length ? shown.map((record) => <OpportunityCard key={record.id} record={record} product={products[0]} onEdit={() => setEditing(record)} onDocument={() => openPriceConfirmation(record)} preparing={preparingId === record.id} onUpdated={async updated => {
+        if (updated?.customer_decision === "not_proceeding") setFilter("not_proceeding")
+        await load()
+      }} />) : <div className="grid min-h-52 place-items-center rounded-[1.5rem] border border-dashed border-slate-300 bg-white text-sm font-bold text-slate-500">No opportunities match this view.</div>}</section>
     </div>
     {editing && products[0]?.price ? <PartnerAtlasConfigurator products={products} product={products[0]} initialOpportunity={editing} onClose={() => setEditing(null)} onCreated={async () => { setEditing(null); await load() }} /> : null}
   </main>
