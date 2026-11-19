@@ -24,8 +24,12 @@ export function costComparison(data) {
     const suppliers = data.suppliers.filter(s => s.required && categories.includes(supplierCategory(s)))
     const committed = suppliers.length && suppliers.every(s => s.quotedCost != null && ['ordered', 'manufacturing', 'ready'].includes(s.status)) ? roundMoney(suppliers.reduce((sum, s) => sum + s.quotedCost, 0)) : null
     const invoices = suppliers.flatMap(s => s.invoices)
-    const allowance = data.baseline.locked ? data.baseline[key] ?? null : null
-    return { key, label, suppliers, allowance, committed, invoiced: invoices.length ? roundMoney(invoices.reduce((sum, i) => sum + i.amount, 0)) : null, variance: allowance != null && committed != null ? roundMoney(allowance - committed) : null }
+    const allowance = data.baseline[key] ?? null
+    const quoted = suppliers.length && suppliers.every(s => s.quotedCost != null)
+      ? roundMoney(suppliers.reduce((sum, s) => sum + s.quotedCost, 0))
+      : null
+    const quoteVariance = allowance != null && quoted != null ? roundMoney(allowance - quoted) : null
+    return { key, label, suppliers, allowance, quoted, quoteVariance, committed, invoiced: invoices.length ? roundMoney(invoices.reduce((sum, i) => sum + i.amount, 0)) : null, variance: allowance != null && committed != null ? roundMoney(allowance - committed) : null }
   })
 }
 export const paymentTotal = (entries) => roundMoney(entries.reduce((total, entry) => total + (entry.kind === 'refund' ? -1 : 1) * Number(entry.amount), 0))
