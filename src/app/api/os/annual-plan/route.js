@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getAnnualPlanContext } from "lib/annualPlanAuth"
 import { supabaseServer } from "lib/supabase-server"
 import { ANNUAL_ASSUMPTION_SECTIONS, MAX_ANNUAL_ASSUMPTION_LENGTH, ANNUAL_PLAN_FIELDS, SIGNED_ANNUAL_PLAN_FIELDS, emptyAnnualPlan, normalizeAnnualPlan, sastYearMonth } from "lib/annualPlan.mjs"
+import { summarizeOutlookActivity } from "lib/annualOutlook.mjs"
 import { normalizeCommercialModel } from "lib/annualCommercialPlan.mjs"
 
 export const runtime = "nodejs"
@@ -26,13 +27,10 @@ function orderMonths(orders, year) {
   return result
 }
 
-async function allOrders(startYear, endYear) {
+async function allRows(buildQuery) {
   const rows = []
   for (let from = 0; ; from += 1000) {
-    const result = await supabaseServer.from("sales_orders").select("accepted_at,status")
-      .gte("accepted_at", `${startYear - 1}-12-31T22:00:00Z`)
-      .lt("accepted_at", `${endYear}-12-31T22:00:00Z`)
-      .order("accepted_at", { ascending: true }).range(from, from + 999)
+    const result = await buildQuery().order("id", { ascending: true }).range(from, from + 999)
     if (result.error) return result
     rows.push(...(result.data || []))
     if ((result.data || []).length < 1000) return { data: rows, error: null }
@@ -44,9 +42,16 @@ export async function GET(request) {
   if (context.response) return context.response
   const year = yearFrom(request)
   if (!year) return NextResponse.json({ error: "Choose a valid year." }, { status: 400 })
-  const [plans, orders] = await Promise.all([
+  const now = new Date()
+  const historyYear = Math.min(year - 1, sastYearMonth(now).year)
+  const historyStart = `${historyYear - 1}-12-31T22:00:00Z`
+  const [plans, orders, leads, wonLeads, estimates] = await Promise.all([
     supabaseServer.from("os_annual_plans").select("year,turnover_goal,notes,assumptions,commercial_model,months,revision,updated_at").in("year", [year - 1, year]),
-    allOrders(year - 1, year),
+    allRows(() => supabaseServer.from("sales_orders").select("id,lead_id,accepted_at,status,quote_snapshot")
+      .gte("accepted_at", historyStart).lt("accepted_at", `${year}-12-31T22:00:00Z`)),
+    allRows(() => supabaseServer.from("leads").select("id,created_at").gte("created_at", historyStart).lt("created_at", now.toISOString())),
+    allRows(() => supabaseServer.from("leads").select("id,quote_value").ilike("status", "won")),
+    allRows(() => supabaseServer.from("estimates").select("id,lead_id,sent_at").not("sent_at", "is", null).lt("sent_at", now.toISOString())),
   ])
   if (assumptionsMissing(plans.error)) return NextResponse.json({ error: "Run supabase/smart_steel_os_annual_plan_assumptions.sql in Supabase to enable the new assumptions fields." }, { status: 503 })
   if (commercialMissing(plans.error)) return NextResponse.json({ error: "Run supabase/smart_steel_os_annual_plan_v2_phase1.sql in Supabase to enable the commercial model." }, { status: 503 })
@@ -60,6 +65,10 @@ export async function GET(request) {
     plan: toPlan(year), previousPlan: toPlan(year - 1),
     orders: orders.error ? null : orderMonths(orders.data, year),
     previousOrders: orders.error ? null : orderMonths(orders.data, year - 1),
+    activity: summarizeOutlookActivity({
+      year, now, leads: leads.error ? null : leads.data, estimates: estimates.error ? null : estimates.data,
+      orders: orders.error ? null : orders.data, wonLeads: wonLeads.error ? null : wonLeads.data,
+    }),
     schemaReady: !plans.error,
     ordersAvailable: !orders.error,
     canEdit: context.accessLevel === "edit",

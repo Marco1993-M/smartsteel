@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getOsRequestContext } from 'lib/osRouteAuth'
 import { supabaseServer } from 'lib/supabase-server'
 import { pendingManufacturingHandoffs } from 'lib/manufacturingHandoff.mjs'
+import { suggestManufacturingAllowances } from 'lib/manufacturingAllowances.mjs'
 import { validateOperations } from 'lib/manufacturingOperations.mjs'
 export const dynamic = 'force-dynamic'
 const json = (body, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } })
@@ -38,7 +39,7 @@ export async function GET(request) {
     const historicalProjects = historical.map(row => ({ ...row, lead: leads.find(lead => lead.id === row.lead_id) }))
     const pendingHandoffs = pendingManufacturingHandoffs(leads, estimates, orders, historical)
     const byId = new Map(operations.map((row) => [row.order_id, row]))
-    return json({ pendingHandoffs, historicalProjects, records: orders.sort((a,b) => b.accepted_at.localeCompare(a.accepted_at)).map((order) => ({ ...order, operations: byId.get(order.id) || null })) })
+    return json({ pendingHandoffs, historicalProjects, records: orders.sort((a,b) => b.accepted_at.localeCompare(a.accepted_at)).map((order) => { const record = { ...order, operations: byId.get(order.id) || null }; return { ...record, allowanceSuggestion: suggestManufacturingAllowances(record) } }) })
   } catch (error) {
     const setup = ['42P01','PGRST205','PGRST202'].includes(error.code)
     return json({ error: setup ? 'Manufacturing needs database setup. Apply supabase/os_manufacturing_operations.sql before using the new workspace.' : 'Manufacturing orders could not be loaded. Please retry.', setupRequired: setup }, 503)
