@@ -71,13 +71,24 @@ export function validateOperations(data, order, previous) {
   if (!Array.isArray(data.suppliers) || !data.suppliers.length || data.suppliers.length > 50 || new Set(data.suppliers.map(s => s.key)).size !== data.suppliers.length || data.suppliers.some(s => !text(s.key, 100) || !s.key || !Object.hasOwn(COST_CATEGORIES, supplierCategory(s)))) fail('Check supplier categories and unique references (maximum 50 entries).')
   if (!data.suppliers.some(s => supplierCategory(s) === 'structure' && s.required)) fail('At least one structural steel supplier is required.')
   if (previous?.suppliers.some(s => !data.suppliers.some(next => next.key === s.key && supplierCategory(next) === supplierCategory(s)))) fail('Existing supplier entries and categories must be retained for the audit trail.')
+  const stages = Object.keys(SUPPLIER_STAGES)
   for (const s of data.suppliers) {
     if (typeof s.required !== 'boolean' || !text(s.name, 200) || !text(s.quoteReference, 300) || !(s.status in SUPPLIER_STAGES) || (s.quotedCost !== null && !money(s.quotedCost)) || (s.expectedDate && !date(s.expectedDate)) || !entries(s.invoices, true) || !entries(s.payments)) fail('Check supplier amounts, dates and references.')
     if (!s.required && (s.invoices.length || s.payments.length || s.status !== 'pending' || s.quotedCost !== null)) fail('Clear the unused supplier entry before marking it not required.')
     if (s.required && s.status !== 'pending' && !s.name.trim()) fail('Name the supplier before requesting a quote.')
     if (s.required && ['quoted','ordered','manufacturing','ready'].includes(s.status) && (s.quotedCost === null || !s.quoteReference.trim())) fail('Record the supplier quotation and cost before progressing.')
     if (paymentTotal(s.payments) < 0) fail('Supplier refunds cannot exceed payments.')
-    if (isDispatchSupplier(s) && ['ordered','manufacturing','ready'].includes(s.status) && (!order.specifications_confirmed_at || !order.invoice_id || e.status !== 'approved')) fail('Confirm the client specification, link the invoice and approve drawings before placing supplier orders.')
+    const savedSupplier = previous?.suppliers.find(supplier => supplier.key === s.key)
+    const advancesOrder = stages.indexOf(s.status) >= stages.indexOf('ordered') &&
+      stages.indexOf(s.status) > stages.indexOf(savedSupplier?.status)
+    if (isDispatchSupplier(s) && advancesOrder) {
+      const missing = [
+        !order.specifications_confirmed_at && 'confirm the client specification',
+        !order.invoice_id && 'link the client invoice',
+        e.status !== 'approved' && 'approve drawings',
+      ].filter(Boolean)
+      if (missing.length) fail(`Before moving ${s.name} to “${SUPPLIER_STAGES[s.status]}”, ${missing.join('; ')}.`)
+    }
     if (isDispatchSupplier(s) && ['manufacturing','ready'].includes(s.status) && paymentTotal(s.payments) <= 0) fail('Record supplier payment before marking manufacture started.')
   }
   if (typeof data.qualityChecked !== 'boolean' || typeof data.packed !== 'boolean' || !text(data.deliveryReference, 1000) || (data.deliveryDate && (!date(data.deliveryDate) || data.deliveryDate > todaySast()))) fail('Check dispatch details and delivery date.')
