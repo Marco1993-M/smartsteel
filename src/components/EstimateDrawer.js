@@ -1,5 +1,7 @@
 "use client"
 
+import { createWarehouseAllowanceSnapshot } from "../lib/manufacturingAllowanceSnapshot.mjs"
+
 import { quoteCreationContext, groupEstimateQuotes } from "../lib/estimateAlternatives.mjs"
 import { reconcileEstimateItems, warehousePricingSpecificationKey } from "../lib/reconcileEstimateItems.mjs"
 import { compactEstimateNumber, cleanSolarCarportLineLabel } from "../lib/estimateLineItemPresentation.mjs"
@@ -638,6 +640,7 @@ function buildEstimateDraft({
     design_reference: formState.designReference || null,
     input_data: {
       ...preview.input,
+      manufacturingCostSnapshot: createWarehouseAllowanceSnapshot(preview),
       quoteFamilyId,
       ...quoteContext,
       sku: preview.meta?.sku || null,
