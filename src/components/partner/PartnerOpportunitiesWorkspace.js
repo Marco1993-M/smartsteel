@@ -5,7 +5,7 @@ import { usePartnerPortal } from "./PartnerPortalContext"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Download, LoaderCircle, LogOut, RotateCcw, Search } from "lucide-react"
 import { getPartnerAuthHeaders } from "../../lib/partnerClientAuth"
 import { partnerSupabase } from "../../lib/partnerSupabase"
@@ -49,23 +49,27 @@ export default function PartnerOpportunitiesWorkspace() {
   const portal = usePartnerPortal()
   const router = useRouter()
   const [session, setSession] = useState(null)
+  const [scope, setScope] = useState("branch")
+  const [branches, setBranches] = useState(null)
+  const isAfgri = portal.key === "afgri"
   const [products, setProducts] = useState([])
   const [records, setRecords] = useState([])
-  const [filter, setFilter] = useState("action")
+  const [filter, setFilter] = useState(portal.key === "afgri" ? "all" : "action")
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [editing, setEditing] = useState(null)
   const [preparingId, setPreparingId] = useState("")
 
-  async function load() {
+  const load = useCallback(async (nextScope) => {
     setError("")
+    setLoading(true)
     try {
       const headers = await getPartnerAuthHeaders()
       const responses = await Promise.all([
         fetch("/api/partner/session", { cache: "no-store", headers }),
         fetch("/api/partner/catalogue", { cache: "no-store", headers }),
-        fetch("/api/partner/opportunities", { cache: "no-store", headers }),
+        fetch(`/api/partner/opportunities?scope=${nextScope}`, { cache: "no-store", headers }),
       ])
       if ([401, 403].includes(responses[0].status)) return router.replace("/partner/login")
       const payloads = await Promise.all(responses.map((response) => response.json()))
@@ -73,14 +77,15 @@ export default function PartnerOpportunitiesWorkspace() {
       setSession(payloads[0])
       setProducts(payloads[1].products || [])
       setRecords(payloads[2].opportunities || [])
+      setBranches(payloads[2].branches ?? null)
     } catch (loadError) {
       setError(loadError.message)
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(scope) }, [load, scope])
 
   const shown = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -123,14 +128,33 @@ export default function PartnerOpportunitiesWorkspace() {
     <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 sm:py-8 lg:px-10">
       <section className="rounded-[1.75rem] bg-[linear-gradient(130deg,#001d2e,#063783_55%,#0043f3)] p-6 text-white sm:p-8"><p className="text-xs font-black uppercase tracking-[0.2em] text-[#c1d9e5]">{portal.name} opportunities</p><h1 className="mt-2 text-4xl font-black tracking-[-0.05em]">Every opportunity, one clear next step.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-white/70">Search the complete history while keeping records requiring your action at the top.</p></section>
       {error ? <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+      {isAfgri && <nav aria-label="AFGRI opportunity views" className="mt-4 flex flex-wrap gap-2">
+        {[...(session?.membership?.primaryBranchId ? [["branch", "My Branch"]] : []), ["all", session?.membership?.role === "salesperson" ? "My opportunities" : "All AFGRI"], ["performance", "Branch Performance"]].map(([value, label]) => (
+          <button key={value} type="button" aria-pressed={scope === value || (value === "all" && scope === "branch" && !session?.membership?.primaryBranchId)}
+            className={`rounded-full px-4 py-2 text-sm font-bold ${scope === value || (value === "all" && scope === "branch" && !session?.membership?.primaryBranchId) ? "bg-[#001d2e] text-white" : "bg-white text-slate-700"}`}
+            onClick={() => setScope(value)}>{label}</button>
+        ))}
+      </nav>}
+      {isAfgri && scope === "performance" ? <section className="mt-4 overflow-x-auto rounded-2xl bg-white p-4">
+        <h2 className="font-bold">This month</h2>
+        <p className="mt-1 text-xs text-slate-500">Opportunities opened this month and how many reached order submission.</p>
+        {branches?.length ? <table className="mt-3 w-full text-left text-sm">
+          <thead><tr className="border-b"><th className="py-2 pr-3">Branch</th><th>Logged</th><th>Orders</th><th>Conversion</th></tr></thead>
+          <tbody>{branches.map(branch => <tr key={branch.id} className="border-b border-slate-100">
+            <th scope="row" className="py-2 pr-3 font-semibold">{branch.name}</th><td>{branch.logged}</td><td>{branch.orders}</td>
+            <td>{Math.round(100 * branch.orders / branch.logged)}%</td>
+          </tr>)}</tbody>
+        </table> : branches && <p className="mt-3 text-sm text-slate-500">No branch activity recorded this month.</p>}
+      </section> : <>
       <section className="mt-5 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:p-5"><div className="relative"><Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search customer, reference, SKU or location" className="min-h-12 w-full rounded-xl border border-slate-200 pl-11 pr-4 text-base outline-none focus:border-[#0043f3]" /></div><div className="mt-3 flex gap-2 overflow-x-auto pb-1">{FILTERS.map(([value, label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-black ${filter === value ? "bg-[#001d2e] text-white" : "bg-slate-100 text-slate-600"}`}>{label}</button>)}</div></section>
       <div className="mt-5 flex items-center justify-between"><p className="text-sm font-bold text-slate-500">{shown.length} {shown.length === 1 ? "opportunity" : "opportunities"}</p><Link href="/partner" className="text-sm font-black text-[#0043f3]">Dashboard</Link></div>
       <section className="mt-3 space-y-3">{shown.length ? shown.map((record) => <OpportunityCard key={record.id} record={record} product={products[0]} onEdit={() => setEditing(record)} onDocument={() => openPriceConfirmation(record)} preparing={preparingId === record.id} onUpdated={async updated => {
         if (updated?.customer_decision === "not_proceeding") setFilter("not_proceeding")
-        await load()
+        await load(scope)
       }} />) : <div className="grid min-h-52 place-items-center rounded-[1.5rem] border border-dashed border-slate-300 bg-white text-sm font-bold text-slate-500">No opportunities match this view.</div>}</section>
+      </>}
     </div>
-    {editing && products[0]?.price ? <PartnerAtlasConfigurator products={products} product={products[0]} initialOpportunity={editing} onClose={() => setEditing(null)} onCreated={async () => { setEditing(null); await load() }} /> : null}
+    {editing && products[0]?.price ? <PartnerAtlasConfigurator products={products} product={products[0]} initialOpportunity={editing} onClose={() => setEditing(null)} onCreated={async () => { setEditing(null); await load(scope) }} /> : null}
   </main>
 }
 
