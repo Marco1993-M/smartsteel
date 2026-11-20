@@ -23,7 +23,7 @@ const CONNECTION_RATES = {
   spliceBracket: 350,
   bracingBracket: 40,
   m10CompleteSet: ATLAS_M10_COMPLETE_SET.costRate,
-  m12AnchorBolt: 0,
+  m12AnchorBolt: 25,
 }
 const GEOMETRY_BY_WIDTH = {
   6: calculateAtlasW06Geometry,
@@ -164,7 +164,7 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     ...(spliceBracketCount > 0 ? [buildLineItem({ code: `${geometry.productCode}-SPL`, label: "Purlin splice brackets", quantity: spliceBracketCount, unit: "each", unitRate: CONNECTION_RATES.spliceBracket, total: spliceBracketCount * CONNECTION_RATES.spliceBracket, provisional: true })] : []),
     buildLineItem({ code: `${geometry.productCode}-XBR-BRK`, label: "Bracing connection brackets", quantity: bracingBracketCount, unit: "each", unitRate: CONNECTION_RATES.bracingBracket, total: bracingBracketCount * CONNECTION_RATES.bracingBracket, provisional: true }),
     buildLineItem({ code: `${geometry.productCode}-M10-SET`, label: `Complete M10 connection sets · ${ATLAS_M10_COMPLETE_SET.specification}`, quantity: m10CompleteSetCount, unit: "set", unitRate: CONNECTION_RATES.m10CompleteSet, total: m10CompleteSetCount * CONNECTION_RATES.m10CompleteSet }),
-    buildLineItem({ code: `${geometry.productCode}-ANC`, label: "M12 anchor bolts (price to confirm)", quantity: anchorBoltCount, unit: "each", unitRate: CONNECTION_RATES.m12AnchorBolt, total: anchorBoltCount * CONNECTION_RATES.m12AnchorBolt, provisional: true }),
+    buildLineItem({ code: `${geometry.productCode}-ANC`, label: "M12 anchor sets · bolt, nut and washer", quantity: anchorBoltCount, unit: "each", unitRate: CONNECTION_RATES.m12AnchorBolt, total: anchorBoltCount * CONNECTION_RATES.m12AnchorBolt, provisional: true, priceIncludesMarkup: true }),
   ]
   const connectionLines = width <= 12 ? [
     ...getAtlasStandardQuotedBracketCosts(geometry).map((item) => buildLineItem({
@@ -206,7 +206,8 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
   const structuralAndConnectionCost = [...structuralLines, ...gableFramingLines, ...connectionLines]
     .reduce((total, item) => total + item.total, 0)
   const subTotalBeforeMarkup = structuralAndConnectionCost
-  const markupValue = structuralAndConnectionCost * COMMERCIAL_UPLIFT_RATE
+  const markupValue = lineItems.filter(item => !item.priceIncludesMarkup)
+    .reduce((total, item) => total + item.total, 0) * COMMERCIAL_UPLIFT_RATE
   const totalExclVat = structuralAndConnectionCost + markupValue + sheetingCost
   const vatValue = totalExclVat * VAT_RATE
   const totalInclVat = totalExclVat + vatValue
@@ -225,6 +226,6 @@ export function calculateAtlasWarehouseEstimate(input = {}) {
     lineItems,
     summary: { title: `${quantity > 1 ? `${quantity} x ` : ""}${width}m x ${length}m ${systemName}`, shortDescription: `${systemName}, ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}${includesGableEnds ? `, centred ${gableOpeningWidth}m x ${gableOpeningHeight}m opening on one gable end` : ""}, supply only`, estimateRequest: `${systemName}: ${width}m x ${length}m x ${wallHeight}m, ${steelFinish} steel, ${sheetingDescription}${includesGableEnds ? `, centred ${gableOpeningWidth}m x ${gableOpeningHeight}m opening on one gable end with the opposite gable enclosed` : ""}, supply only. Installation and delivery quoted separately.`, layoutNote: includesGableEnds ? `Standard fully enclosed scope includes one centred ${gableOpeningWidth}m wide x ${gableOpeningHeight}m high opening; the opposite gable remains enclosed.` : "" },
     labels: { steelFinish, cladding: sheetingModeLabel(gableMode), sheetingProfile, sheetingFinish: sheetingFinish === "chromadek" ? "Chromadek" : "Galvanised", installation: "Quoted separately", delivery: "Quoted separately", gableMode: sheetingModeLabel(gableMode) },
-    meta: { productType: "Atlas Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, sku, provisionalItems: ["Gable-end framing specifications", "Bracket fabrication specifications", "W12/W15 purlin splice-bracket specification", "M12 anchor-bolt price"] },
+    meta: { productType: "Atlas Warehouse", productGroup: "warehouse", sourceModel: "Atlas OS geometry v1", pricingRelease: ATLAS_WAREHOUSE_PRICING_RELEASE, productCode: geometry.productCode, sku, provisionalItems: ["Gable-end framing specifications", "Bracket fabrication specifications", "W12/W15 purlin splice-bracket specification", "M12 anchor specification and quantity"] },
   }
 }
