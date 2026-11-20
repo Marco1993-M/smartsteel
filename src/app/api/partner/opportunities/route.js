@@ -39,6 +39,35 @@ export async function GET(request) {
   const context = await getPartnerRequestContext(request)
   if (context.response) return context.response
 
+  const scope = new URL(request.url).searchParams.get("scope")
+  const isAfgri = context.membership.partner_organizations.key === "afgri"
+  if (isAfgri && scope === "performance") {
+    const now = new Date(Date.now() + 2 * 60 * 60 * 1000)
+    const start = `${now.toISOString().slice(0, 7)}-01T00:00:00+02:00`
+    const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1) - 2 * 60 * 60 * 1000).toISOString()
+    const totals = new Map()
+    for (let offset = 0; ; offset += 500) {
+      const { data, error } = await supabaseServer.from("partner_opportunities")
+        .select("origin_branch_id,order_submitted_at,os_partner_branches(name)")
+        .eq("partner_id", context.membership.partner_id)
+        .gte("created_at", start).lt("created_at", end)
+        .neq("status", "draft").neq("fulfilment_status", "cancelled")
+        .not("origin_branch_id", "is", null)
+        .order("id").range(offset, offset + 499)
+      if (error) return NextResponse.json({ error: "Branch performance could not be loaded." }, { status: 500 })
+      for (const record of data) {
+        const branch = totals.get(record.origin_branch_id) || {
+          id: record.origin_branch_id, name: record.os_partner_branches?.name || record.origin_branch_id, logged: 0, orders: 0,
+        }
+        branch.logged++
+        if (record.order_submitted_at) branch.orders++
+        totals.set(branch.id, branch)
+      }
+      if (data.length < 500) break
+    }
+    return NextResponse.json({ branches: [...totals.values()].sort((a, b) => b.orders - a.orders || b.logged - a.logged || a.name.localeCompare(b.name)) })
+  }
+
   let query = supabaseServer
     .from("partner_opportunities")
     .select("id, reference, status, customer_name, customer_phone, customer_email, site_location, installation_scope, configuration, indicative_amount_ex_vat, notes, product_release_id, final_quote_amount_ex_vat, quote_url, partner_quote_message, quoted_at, partner_order_status, price_valid_until, ready_for_order_at, afgri_order_reference, partner_order_notes, order_submitted_at, commercial_response_status, commercial_response_note, commercial_responded_at, customer_decision, customer_decision_note, customer_decision_at, internal_project_id, handoff_acknowledged_at, fulfilment_status, estimated_dispatch_date, estimated_delivery_date, fulfilment_note, fulfilment_updated_at, updated_at, partner_submissions(id, version, review_status, indicative_amount_ex_vat, submitted_at), partner_information_requests(id, request_text, requested_fields, status, due_at, created_at, resolved_at), partner_order_documents(id, document_type, file_name, mime_type, file_size, created_at), partner_handoff_events(id, event_type, actor_scope, summary, detail, created_at)")
@@ -47,6 +76,9 @@ export async function GET(request) {
     .order("updated_at", { ascending: false })
 
   if (context.membership.role === "salesperson") query = query.eq("membership_id", context.membership.id)
+  if (isAfgri && scope === "branch" && context.membership.primary_branch_id) {
+    query = query.eq("origin_branch_id", context.membership.primary_branch_id)
+  }
   const { data, error } = await query.limit(100)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ opportunities: data || [] })
