@@ -271,8 +271,8 @@ function W08SpecificationSheet({
       specification: "M10 x 30mm · Class 8.8 · zinc plated · matching nut and washer", basis: "Bracket, bracing and secondary-member connection schedule", status: "Controlled allowance",
     },
     {
-      code: "W08-ANC", component: "M12 anchor bolts", quantity: baseBracketCount * 4, unit: "each",
-      specification: "M12 anchor bolt · final type and price to confirm", basis: `Existing allowance: ${baseBracketCount} column positions × 4 anchors; verify against PC45`, status: "Foundation review",
+      code: "W08-ANC", component: "M12 anchor sets", quantity: baseBracketCount * 4, unit: "each",
+      specification: "M12 anchor bolt, nut and washer · final type to confirm", basis: `Existing allowance: ${baseBracketCount} column positions × 4 anchors; verify against PC45`, status: "Foundation review",
     },
   ]
   const selectedSize = `8m x ${selectedLength}m x ${selectedHeight}m`
