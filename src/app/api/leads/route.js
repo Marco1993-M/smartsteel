@@ -445,6 +445,10 @@ export async function POST(request) {
         }
       : buildGenericLeadPayload(body)
 
+    if (isAtlasWarehouseProductType(insertPayload.product_type) && !String(insertPayload.allocated_to || "").trim()) {
+      insertPayload.allocated_to = "Marco"
+    }
+
     const { data, error } = await supabaseServer.from("leads").insert([insertPayload]).select()
 
     if (error) {
