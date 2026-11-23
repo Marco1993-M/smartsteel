@@ -1,5 +1,7 @@
 "use client"
 
+import AtlasWarehousePlan from "components/atlas/AtlasWarehousePlan"
+import { getAtlasWarehousePlan } from "lib/atlasWarehousePlan"
 import Image from "next/image"
 import { useMemo } from "react"
 import { useSearchParams } from "next/navigation"
@@ -48,6 +50,7 @@ export default function WarehouseBuilderSummaryClient() {
   }, [searchParams])
 
   const isAtlas = configuration.productType === "Atlas Warehouse"
+  const printPlan = isAtlas ? getAtlasWarehousePlan(configuration) : null
   const createdDate = new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "long", year: "numeric" }).format(new Date())
   const reference = createDesignReference({
     productType: configuration.productType,
@@ -118,9 +121,10 @@ export default function WarehouseBuilderSummaryClient() {
         </header>
 
         <div className="grid gap-6 p-8 sm:grid-cols-[1.1fr_0.9fr]">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 print:hidden">
             <WarehouseBuilderScene {...sceneProps} className="h-[330px]" />
           </div>
+          <div className="hidden print:block">{printPlan ? <AtlasWarehousePlan plan={printPlan} className="h-auto w-full" /> : <p className="text-sm">Layout drawing unavailable for this configuration.</p>}</div>
           <div className="flex flex-col justify-between rounded-2xl bg-slate-950 p-6 text-white">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Configuration overview</p>
@@ -160,8 +164,9 @@ export default function WarehouseBuilderSummaryClient() {
       <style jsx global>{`
         @media print {
           body > header, body > footer, .no-print { display: none !important; }
-          @page { size: A4 portrait; margin: 0; }
-          .summary-sheet { width: 210mm; min-height: 297mm; max-width: none; }
+          .summary-sheet header, .summary-sheet svg, .summary-sheet dl > div { break-inside: avoid; }
+          @page { size: A4 portrait; margin: 10mm; }
+          .summary-sheet { width: 100%; max-width: none; overflow: visible; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
         }
       `}</style>
     </main>
