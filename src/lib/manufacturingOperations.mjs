@@ -24,7 +24,7 @@ export function costComparison(data) {
     const suppliers = data.suppliers.filter(s => s.required && categories.includes(supplierCategory(s)))
     const committed = suppliers.length && suppliers.every(s => s.quotedCost != null && ['ordered', 'manufacturing', 'ready'].includes(s.status)) ? roundMoney(suppliers.reduce((sum, s) => sum + s.quotedCost, 0)) : null
     const invoices = suppliers.flatMap(s => s.invoices)
-    const allowance = data.baseline[key] ?? null
+    const allowance = data.baseline[key] ?? (legacy && key === "fasteners" ? data.additionalFastenersAllowance ?? null : null)
     const quoted = suppliers.length && suppliers.every(s => s.quotedCost != null)
       ? roundMoney(suppliers.reduce((sum, s) => sum + s.quotedCost, 0))
       : null
@@ -65,7 +65,8 @@ export function summarizeOperations(order, data) {
   const suppliers = data.suppliers.filter((s) => s.required)
   const dispatchSuppliers = suppliers.filter(isDispatchSupplier)
   const ready = dispatchSuppliers.length > 0 && dispatchSuppliers.every((s) => s.status === 'ready')
-  const baseline = baselineTotal(data.baseline)
+  const originalBaseline = baselineTotal(data.baseline)
+  const baseline = originalBaseline == null ? null : roundMoney(originalBaseline + (legacyBaseline(data.baseline) ? data.additionalFastenersAllowance ?? 0 : 0))
   const committed = suppliers.length > 0 && suppliers.every((s) => s.quotedCost != null && ['ordered','manufacturing','ready'].includes(s.status)) ? roundMoney(suppliers.reduce((sum, s) => sum + s.quotedCost, 0)) : null
   const invoiced = suppliers.reduce((sum, s) => sum + s.invoices.reduce((t, i) => t + i.amount, 0), 0)
   const invoicesComplete = suppliers.length > 0 && suppliers.every((s) => s.invoices.length > 0)
@@ -94,6 +95,7 @@ export function validateOperations(data, order, previous) {
   if (!b || typeof b.locked !== 'boolean' || !text(b.source) || !baselineKeys.every((k) => b[k] === null || money(b[k]))) fail('Cost allowances must be positive amounts or blank.')
   if (b.locked && (!baselineKeys.every((k) => money(b[k])) || !b.source.trim())) fail('Record all category allowances (zero where not applicable) and the source before locking.')
   if (previous?.baseline?.locked && [...new Set([...Object.keys(previous.baseline), ...Object.keys(b)])].some(key => previous.baseline[key] !== b[key])) fail('The original cost baseline is locked. It cannot be overwritten.')
+  if (data.additionalFastenersAllowance !== previous?.additionalFastenersAllowance) fail('The recorded supplemental fastener allowance is fixed.')
   if (!entries(data.payments)) fail('Client payments require an amount, valid date and reference. Refunds must be recorded separately.')
   if (paymentTotal(data.payments) < 0) fail('Refunds cannot exceed recorded payments.')
   if (!e || !['pending', 'drafting', 'approved'].includes(e.status) || !['owner','reference','revision','url','applicability','reusedFrom'].every((k) => text(e[k])) || typeof e.matchConfirmed !== 'boolean') fail('Check the drawing information.')
