@@ -905,7 +905,7 @@ function NewLeadIntake({ formData, handleChange, validationErrors, inputClass, f
   )
 }
 
-const leadToolButton = "inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-lg px-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-600 disabled:opacity-40"
+const leadToolButton = "inline-flex min-h-11 min-w-0 items-center sm:min-w-10 justify-center gap-2 rounded-lg px-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-600 disabled:opacity-40"
 
 function AtlasLeadDocumentButtons({ lead, estimate, submission }) {
   const [busy, setBusy] = useState("")
@@ -955,7 +955,7 @@ function AtlasLeadDocumentButtons({ lead, estimate, submission }) {
     }
   }
 
-  return <div role="group" aria-label="Documents" className="relative flex gap-1 border-l border-slate-200 pl-2">
+  return <div role="group" aria-label="Documents" className="relative grid min-w-0 flex-[2] grid-cols-2 border-l border-slate-200 sm:flex sm:flex-none sm:gap-1 sm:pl-2">
     {documents.map(({ icon: Icon, ...item }) => <button key={item.label} type="button"
       disabled={Boolean(busy) || !item.enabled} aria-label={item.label} aria-busy={busy === item.label}
       title={item.enabled ? item.label : "Review the steel and sheeting specification in Atlas Documents"}
@@ -2038,11 +2038,11 @@ export default function LeadEditorDrawer({
                     </div>
                   </div>
 
-                  {!isNew && <div role="group" aria-label="Lead tools" className="flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5">
-                    <button type="button" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#001d2e] px-3 text-sm font-semibold text-white hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" onClick={openEstimateCreator}>
-                      <FileText size={16} aria-hidden="true" /> Create estimate
+                  {!isNew && <div role="group" aria-label="Lead tools" className="flex w-full min-w-0 items-stretch rounded-xl border border-slate-200 bg-white p-1 sm:w-auto sm:items-center sm:gap-2 sm:p-1.5">
+                    <button type="button" aria-label="Create estimate" title="Create estimate" className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[#001d2e] text-sm font-semibold text-white hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:min-h-10 sm:flex-none sm:px-3" onClick={openEstimateCreator}>
+                      <FileText size={17} aria-hidden="true" /><span className="hidden sm:inline">Create estimate</span>
                     </button>
-                    <div role="group" aria-label="Contact" className="flex gap-1 border-l border-slate-200 pl-2">
+                    <div role="group" aria-label="Contact" className="grid min-w-0 flex-[3] grid-cols-3 border-l border-slate-200 sm:flex sm:flex-none sm:gap-1 sm:pl-2">
                       <button type="button" aria-label="Call client" title="Call client" disabled={!formData.phone?.trim()} className={leadToolButton} onClick={() => {
                         addActivity({ type: "call", description: `Called ${formData.name}` })
                         window.location.href = `tel:${formData.phone}`
