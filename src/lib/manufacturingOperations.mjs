@@ -32,6 +32,32 @@ export function costComparison(data) {
     return { key, label, suppliers, allowance, quoted, quoteVariance, committed, invoiced: invoices.length ? roundMoney(invoices.reduce((sum, i) => sum + i.amount, 0)) : null, variance: allowance != null && committed != null ? roundMoney(allowance - committed) : null }
   })
 }
+export function projectOrderProfit(order, rows) {
+  const acceptedTotal = order.quote_snapshot?.total
+  const revenue = acceptedTotal == null || acceptedTotal === '' ? NaN : Number(acceptedTotal)
+  let totalCost = 0
+  const missing = []
+  for (const row of rows) {
+    const estimate = row.quoted ?? row.allowance
+    if (estimate == null) {
+      missing.push(row.label)
+      continue
+    }
+    const recordedCosts = row.suppliers.reduce((sum, supplier) => {
+      const invoiced = supplier.invoices.reduce((total, invoice) => total + invoice.amount, 0)
+      return sum + Math.max(supplier.quotedCost ?? 0, invoiced)
+    }, 0)
+    totalCost += Math.max(estimate, recordedCosts)
+  }
+  const cost = missing.length ? null : roundMoney(totalCost)
+  return {
+    revenue: Number.isFinite(revenue) ? revenue : null,
+    cost,
+    profit: cost != null && Number.isFinite(revenue) ? roundMoney(revenue - cost) : null,
+    missing,
+  }
+}
+
 export const paymentTotal = (entries) => roundMoney(entries.reduce((total, entry) => total + (entry.kind === 'refund' ? -1 : 1) * Number(entry.amount), 0))
 export function summarizeOperations(order, data) {
   const sell = Number(order.quote_snapshot?.total || 0)
