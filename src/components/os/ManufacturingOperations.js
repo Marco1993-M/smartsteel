@@ -177,10 +177,12 @@ function OrderWorkspace({ order, records, onBack, onSaved, onOrderUpdated }) {
   const original = order.operations?.data.baseline
   return <div className="space-y-5">
     <button type="button" disabled={busy} className={secondary} onClick={() => { if (!dirty || window.confirm('Leave without saving your changes?')) onBack() }}><ArrowLeft size={16} />All manufacturing orders</button>
-    <section className="rounded-2xl bg-[#001d2e] p-5 text-white sm:p-7"><div className="flex flex-wrap justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-widest text-sky-200">{order.order_number} · Accepted quote V{order.quote_snapshot?.version_no}</p><h2 className="mt-3 text-2xl font-bold">{order.accepted_by_name}</h2><p className="mt-2 text-sm text-slate-300">{order.quote_snapshot?.title}</p></div><span className="h-fit rounded-full bg-white/10 px-3 py-2 text-xs font-semibold">{JOB_STAGES[state.stage]}{dirty ? ' · unsaved preview' : ''}</span></div><p className="mt-5 border-t border-white/15 pt-4 text-sm leading-6 text-sky-100">{state.next}</p></section>
-    <ManufacturingProgress order={order} data={draft} preview={dirty} />
+    <section className="rounded-3xl bg-[radial-gradient(ellipse_at_top_right,#164569_0%,#001d2e_65%)] p-5 text-white shadow-lg shadow-slate-900/10 sm:p-7"><div className="flex flex-wrap justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-widest text-sky-200">{order.order_number} · Accepted quote V{order.quote_snapshot?.version_no}</p><h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{order.accepted_by_name}</h2><p className="mt-2 text-sm text-slate-300">{order.quote_snapshot?.title}</p></div><span className="inline-flex h-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold"><span aria-hidden="true" className="size-1.5 rounded-full bg-sky-300" />{JOB_STAGES[state.stage]}{dirty ? ' · unsaved preview' : ''}</span></div>
+      <ManufacturingProgress order={order} data={draft} preview={dirty} embedded />
+      <p className="mt-4 flex items-start gap-2 text-sm leading-5 text-sky-100"><ArrowRight aria-hidden="true" size={16} className="mt-0.5 shrink-0 text-sky-300" />{state.next}</p>
+    </section>
     {draft.allowanceBasis && !draft.baseline.locked && <button type="button" className="text-left text-sm font-semibold text-blue-700" onClick={()=>setTab('costs')}>Atlas allowances prepared · review cost comparison →</button>}
-    <nav className="flex flex-wrap gap-2" aria-label="Manufacturing order sections">{[['overview','Project'],['suppliers','Supplier quotes & orders'],['dispatch','Delivery'],['costs','Cost comparison'],['history','History']].map(([key,label]) => <button type="button" key={key} onClick={() => key === 'history' ? history() : setTab(key)} className={`rounded-full px-4 py-2.5 text-xs font-semibold ${(tab === key || key === 'overview' && ['payments','engineering'].includes(tab)) ? 'bg-[#001d2e] text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>{label}</button>)}</nav>
+    <nav className="flex w-fit max-w-full flex-wrap gap-1 rounded-2xl border border-slate-200 bg-slate-100/80 p-1" aria-label="Manufacturing order sections">{[['overview','Project'],['suppliers','Supplier quotes & orders'],['dispatch','Delivery'],['costs','Cost comparison'],['history','History']].map(([key,label]) => <button type="button" key={key} onClick={() => key === 'history' ? history() : setTab(key)} className={`rounded-full px-4 py-2.5 text-xs font-semibold ${(tab === key || key === 'overview' && ['payments','engineering'].includes(tab)) ? 'bg-white text-[#001d2e] shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:bg-white/70'}`}>{label}</button>)}</nav>
     {['payments','engineering'].includes(tab) && <button type="button" className="text-sm font-semibold text-blue-700" onClick={()=>setTab('overview')}>← Back to project</button>}
     {error && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-sm text-rose-800">{error}</p>}{notice && <p role="status" className="text-sm font-semibold text-emerald-700">{notice}</p>}
     {draft.quoteRevisionReview?.required && <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">Won quote updated to V{draft.quoteRevisionReview.version}. Review the invoice, specifications, drawings and supplier scope. Existing payments and supplier records have been retained.</p>}
@@ -213,12 +215,12 @@ function OrderWorkspace({ order, records, onBack, onSaved, onOrderUpdated }) {
     {tab === 'costs' && <>
       <section className={panel}>
         <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
-          <div className="rounded-2xl bg-gradient-to-br from-[#001d2e] to-[#12436b] p-5 text-white sm:p-6">
-            <p className="text-sm font-semibold text-sky-100">Projected job profit · excl. VAT</p>
-            <p className="mt-2 break-words text-3xl font-bold tracking-tight tabular-nums sm:text-4xl">
+          <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 text-[#001d2e] sm:p-6">
+            <p className="text-sm font-semibold text-slate-600">Projected job profit · excl. VAT</p>
+            <p className="mt-2 break-words text-3xl font-bold tracking-tight tabular-nums sm:text-5xl">
               {projection.profit == null ? 'Awaiting figures' : money(projection.profit)}
             </p>
-            {margin != null && <p className={`mt-3 text-sm font-semibold ${margin < 0 ? 'text-rose-200' : 'text-emerald-200'}`}>
+            {margin != null && <p className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-xs font-bold tabular-nums ${margin < 0 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}`}>
               {margin.toLocaleString('en-ZA', { maximumFractionDigits: 1 })}% projected margin
             </p>}
           </div>
@@ -235,9 +237,13 @@ function OrderWorkspace({ order, records, onBack, onSaved, onOrderUpdated }) {
               <div aria-hidden="true" className={`h-2.5 overflow-hidden rounded-full ${margin < 0 ? 'bg-rose-500' : 'bg-emerald-400'}`}>
                 {margin >= 0 && <div className="h-full bg-[#0043f3]" style={{ width: `${Math.max(0, Math.min(100, 100 - margin))}%` }} />}
               </div>
-              <p className="mt-2 text-xs text-slate-600">
-                {margin < 0 ? 'Projected costs exceed the accepted order value' : 'Blue · projected costs    Green · projected profit'}
-              </p>
+              {margin < 0
+                ? <p className="mt-2 text-xs text-rose-800">Projected costs exceed the accepted order value</p>
+                : <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="size-2 rounded-full bg-[#0043f3]" />Costs</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="size-2 rounded-full bg-emerald-400" />Projected profit</span>
+                  </div>}
+
             </div>}
           </div>
         </div>
