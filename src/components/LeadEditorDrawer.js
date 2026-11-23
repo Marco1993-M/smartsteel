@@ -3527,7 +3527,7 @@ export default function LeadEditorDrawer({
                   )}
 
                   {/* Footer */}
-                  <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur sm:p-4 sm:px-6">
+                  <div className="sticky bottom-0 z-20 bg-slate-50/90 px-5 pt-2 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] backdrop-blur-lg sm:border-t sm:border-slate-200 sm:bg-white/95 sm:p-4 sm:px-6">
                     {(saveError || Object.values(validationErrors).some(Boolean)) && (
                       <div role="alert" className="mx-auto mb-3 max-h-32 max-w-5xl overflow-y-auto rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                         <p className="font-semibold">Changes have not been saved.</p>
@@ -3549,7 +3549,7 @@ export default function LeadEditorDrawer({
                       <button
                         onClick={handleSaveClick}
                         disabled={savingLead}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
+                        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-slate-950/15 transition hover:bg-slate-800 active:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:rounded-xl sm:shadow-none"
                       >
                         <Save size={16} /> {savingLead ? "Saving..." : isNew ? "Add lead" : "Save changes"}
                       </button>
