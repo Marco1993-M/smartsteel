@@ -29,6 +29,7 @@ import {
   HardHat,
 } from "lucide-react"
 import { supabase } from "../lib/supabase" 
+import { getAtlasWarehousePlan } from "../lib/atlasWarehousePlan"
 import { getOsAuthHeaders } from "../lib/osClientAuth"
 import QuoteReviewPanel from "./os/QuoteReviewPanel"
 import { quoteReviewUrl } from "../lib/quoteReview.mjs"
@@ -902,6 +903,66 @@ function NewLeadIntake({ formData, handleChange, validationErrors, inputClass, f
       </div>
     </div>
   )
+}
+
+const leadToolButton = "inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-lg px-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-600 disabled:opacity-40"
+
+function AtlasLeadDocumentButtons({ lead, estimate, submission }) {
+  const [busy, setBusy] = useState("")
+  const [error, setError] = useState("")
+  const input = estimate ? estimate.input_data : submission?.configuration
+  const product = estimate ? estimate.product_type : lead.product_type
+  const sheeting = input?.gableMode || input?.sheetingMode
+  const material = input?.steelFinish
+  const plan = input && sheeting && isAtlasWarehouseProductType(lead.product_type)
+    && isAtlasWarehouseProductType(product) && !input.useCustomSize
+    && Number(input.quantity ?? 1) === 1
+    ? getAtlasWarehousePlan({ ...input, gableMode: sheeting }) : null
+  if (!plan) return null
+
+  const common = { product: plan.familyCode, length: String(plan.lengthM), height: String(plan.eaveHeightM), sheeting }
+  const sheeted = sheeting !== "structure_only"
+  const hasTransportSpec = ["Mild", "ZAM", "Galv"].includes(material) && (!sheeted ||
+    (["IBR", "Corrugated", "Concealed Fix"].includes(input.sheetingProfile) && ["galvanised", "chromadek"].includes(input.sheetingFinish)))
+  const documents = [
+    { label: "Transport & profile data sheet", icon: Truck, enabled: hasTransportSpec, url: "/api/os/atlas-pricing/datasheet?" + new URLSearchParams({
+      ...common, material: material || "", profile: input.sheetingProfile || "IBR", finish: input.sheetingFinish || "galvanised",
+    }) },
+    { label: "Preliminary foundation guide", icon: HardHat, enabled: true, url: "/api/os/atlas-foundation-guide?" + new URLSearchParams(common) },
+  ]
+
+  async function download(item) {
+    setBusy(item.label)
+    setError("")
+    try {
+      const response = await fetch(item.url, { headers: await getOsAuthHeaders(), cache: "no-store" })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        throw new Error(payload.error || "Could not generate the Atlas document.")
+      }
+      const url = URL.createObjectURL(await response.blob())
+      const link = document.createElement("a")
+      link.href = url
+      link.download = response.headers.get("content-disposition")?.match(/filename="([^"]+)"/)?.[1] || "atlas-document.pdf"
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch (failure) {
+      setError(failure.message)
+    } finally {
+      setBusy("")
+    }
+  }
+
+  return <div role="group" aria-label="Documents" className="relative flex gap-1 border-l border-slate-200 pl-2">
+    {documents.map(({ icon: Icon, ...item }) => <button key={item.label} type="button"
+      disabled={Boolean(busy) || !item.enabled} aria-label={item.label} aria-busy={busy === item.label}
+      title={item.enabled ? item.label : "Review the steel and sheeting specification in Atlas Documents"}
+      className={leadToolButton}
+      onClick={() => download(item)}><Icon size={18} /></button>)}
+    {error && <p role="alert" className="absolute right-0 top-full z-20 mt-2 w-64 rounded-lg border border-rose-200 bg-white p-3 text-xs text-rose-800 shadow">{error}</p>}
+  </div>
 }
 
 export default function LeadEditorDrawer({
@@ -1957,98 +2018,52 @@ export default function LeadEditorDrawer({
             leaveTo="translate-x-full"
           >
             <Dialog.Panel className="relative flex h-dvh w-screen max-w-full flex-col overflow-hidden bg-slate-50 shadow-2xl sm:h-full sm:w-[min(96vw,1120px)] sm:max-w-[1120px]">
-              {/* Header */}
-<div className="shrink-0 flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-2 sm:px-5">
-  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-    {/* Back Button */}
-    <button type="button" aria-label="Back to CRM" onClick={backHandler} className="shrink-0 rounded-full p-2 hover:bg-gray-100">
-      <ArrowLeft size={20} />
-    </button>
+              <header className="shrink-0 border-b border-slate-200 bg-slate-50 px-3 py-3 sm:px-5">
+                <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3">
+                  <div className="flex min-w-0 flex-1 basis-56 items-center gap-2 sm:gap-3">
+                    <button type="button" aria-label="Back to CRM" title="Back to CRM" onClick={backHandler} className={leadToolButton}>
+                      <ArrowLeft size={20} aria-hidden="true" />
+                    </button>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <Dialog.Title className="min-w-0 break-words text-lg font-bold tracking-tight text-slate-950 sm:text-2xl">
+                          {isNew ? "Add New Lead" : [formData.name, formData.last_name].filter(Boolean).join(" ")}
+                        </Dialog.Title>
+                        {!isNew && <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(formData.status)}`}>
+                          {formatStatusLabel(formData.status)}
+                        </span>}
+                        {clientFollowUpStateLabel && <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">{clientFollowUpStateLabel}</span>}
+                      </div>
+                      {!isNew && <p className="mt-1 text-xs text-slate-500">Added {createdAtLabel}</p>}
+                    </div>
+                  </div>
 
-    {/* Lead Name + Status */}
-    <div className="min-w-0">
-      <p className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:block">
-        Lead workspace
-      </p>
-      <div className="flex min-w-0 items-center gap-2 sm:mt-1 sm:flex-wrap">
-        <Dialog.Title className="truncate text-base font-bold tracking-tight text-slate-950 sm:text-2xl">
-          {isNew ? "Add New Lead" : `${formData.name} ${formData.last_name}`}
-        </Dialog.Title>
-        {!isNew && (
-          <span
-            className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(formData.status)}`}
-          >
-            {formatStatusLabel(formData.status)}
-          </span>
-        )}
-        {clientFollowUpStateLabel && (
-          <span className="hidden shrink-0 items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 sm:inline-flex">
-            {clientFollowUpStateLabel}
-          </span>
-        )}
-      </div>
-      {!isNew && (
-        <p className="mt-1 hidden text-xs text-slate-500 sm:block">
-          Added {createdAtLabel}
-        </p>
-      )}
-    </div>
-  </div>
-
-{/* Action Buttons */}
-	{!isNew && (
-	  <div className="hidden flex-wrap gap-2 sm:flex sm:flex-nowrap">
-      <button
-        type="button"
-        className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
-        onClick={openEstimateCreator}
-        title="Create estimate"
-      >
-        <FileText size={18} />
-      </button>
-	    {/* Call */}
-    <button
-      type="button"
-      className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
-      onClick={async () => {
-        const description = `Called ${formData.name}`;
-        addActivity({ type: "call", description });
-        // Optional: open phone dialer
-        window.location.href = `tel:${formData.phone}`;
-      }}
-    >
-      <Phone size={18} />
-    </button>
-
-    {/* Email */}
-    <button
-      type="button"
-      className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
-      onClick={() => openEmailComposer()}
-      title="Create follow-up email"
-    >
-      <Mail size={18} />
-    </button>
-
-    {/* WhatsApp */}
-    <button
-      type="button"
-      className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-100"
-      onClick={async () => {
-        const description = `Messaged ${formData.name} on WhatsApp`;
-        addActivity({ type: "whatsapp", description });
-        // Open WhatsApp chat in new tab
-        window.open(`https://wa.me/${formData.phone?.replace(/\D/g, "")}`, "_blank");
-      }}
-    >
-      <MessageSquare size={18} />
-    </button>
-  </div>
-)}
-
-
-
-</div>
+                  {!isNew && <div role="group" aria-label="Lead tools" className="flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5">
+                    <button type="button" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#001d2e] px-3 text-sm font-semibold text-white hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" onClick={openEstimateCreator}>
+                      <FileText size={16} aria-hidden="true" /> Create estimate
+                    </button>
+                    <div role="group" aria-label="Contact" className="flex gap-1 border-l border-slate-200 pl-2">
+                      <button type="button" aria-label="Call client" title="Call client" disabled={!formData.phone?.trim()} className={leadToolButton} onClick={() => {
+                        addActivity({ type: "call", description: `Called ${formData.name}` })
+                        window.location.href = `tel:${formData.phone}`
+                      }}><Phone size={17} aria-hidden="true" /></button>
+                      <button type="button" aria-label="Create follow-up email" title="Create follow-up email" className={leadToolButton} onClick={() => openEmailComposer()}>
+                        <Mail size={17} aria-hidden="true" />
+                      </button>
+                      <button type="button" aria-label="Open WhatsApp" title="Open WhatsApp" disabled={!formData.phone?.replace(/\D/g, "")} className={leadToolButton} onClick={() => {
+                        addActivity({ type: "whatsapp", description: `Messaged ${formData.name} on WhatsApp` })
+                        window.open(`https://wa.me/${formData.phone.replace(/\D/g, "")}`, "_blank", "noopener,noreferrer")
+                      }}><MessageSquare size={17} aria-hidden="true" /></button>
+                    </div>
+                    {(() => {
+                      const eligible = savedEstimates.filter(item => !item.won_superseded_by && !["declined", "superseded"].includes(normalizeEstimateStatus(item.status)))
+                      const accepted = eligible.filter(item => normalizeEstimateStatus(item.status) === "accepted")
+                      if (accepted.length > 1 || (!accepted.length && groupEstimateQuotes(eligible).length > 1)) return null
+                      return <AtlasLeadDocumentButtons key={formData.id} lead={formData} estimate={accepted[0] || eligible[0]} submission={builderSubmission} />
+                    })()}
+                  </div>}
+                </div>
+              </header>
 
               {isNew ? (
                 <NewLeadIntake
@@ -2083,20 +2098,11 @@ export default function LeadEditorDrawer({
           {deliveryRequested ? (
             <p className="mt-2 text-xs leading-5 text-amber-900">
               {submittedProjectLocation
-                ? `Submitted project location: ${submittedProjectLocation}. Confirm the full delivery address or Maps pin before pricing transport.`
-                : "Confirm the full delivery address or Google Maps pin before pricing transport."}
+                ? `Submitted project location: ${submittedProjectLocation}. Use this area for an indicative delivery estimate.`
+                : "Confirm the town or area for an indicative delivery estimate."}
             </p>
           ) : null}
         </div>
-        {deliveryRequested ? (
-          <button
-            type="button"
-            onClick={() => openEmailComposer("delivery_address")}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-900 px-4 text-sm font-bold text-white transition hover:bg-amber-800"
-          >
-            <Mail size={16} /> Request delivery address
-          </button>
-        ) : null}
       </div>
     </section>
   ) : null}
