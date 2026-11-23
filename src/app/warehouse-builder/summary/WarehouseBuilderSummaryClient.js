@@ -1,9 +1,8 @@
 "use client"
 
-import AtlasWarehousePlan from "components/atlas/AtlasWarehousePlan"
-import { getAtlasWarehousePlan } from "lib/atlasWarehousePlan"
 import Image from "next/image"
-import { useMemo } from "react"
+import { printConfiguration } from "lib/printConfiguration"
+import { useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import WarehouseBuilderScene from "../../../components/warehouse-builder/WarehouseBuilderScene"
 import { WAREHOUSE_SHEETING_COLORS } from "../../../lib/warehouseBuilderStore"
@@ -24,6 +23,23 @@ function createDesignReference(configuration) {
 }
 
 export default function WarehouseBuilderSummaryClient() {
+  const scene = useRef(null)
+  const printImage = useRef(null)
+  const [printError, setPrintError] = useState("")
+  const [printing, setPrinting] = useState(false)
+
+  async function handlePrint() {
+    setPrintError("")
+    setPrinting(true)
+    try {
+      await printConfiguration(scene, printImage)
+    } catch (error) {
+      setPrintError(error.message || "Could not capture the 3D view. Please try again.")
+    } finally {
+      setPrinting(false)
+    }
+  }
+
   const searchParams = useSearchParams()
   const configuration = useMemo(() => {
     const productType = "Atlas Warehouse"
@@ -50,7 +66,6 @@ export default function WarehouseBuilderSummaryClient() {
   }, [searchParams])
 
   const isAtlas = configuration.productType === "Atlas Warehouse"
-  const printPlan = isAtlas ? getAtlasWarehousePlan(configuration) : null
   const createdDate = new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "long", year: "numeric" }).format(new Date())
   const reference = createDesignReference({
     productType: configuration.productType,
@@ -104,8 +119,9 @@ export default function WarehouseBuilderSummaryClient() {
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950 print:bg-white print:p-0">
       <div className="no-print mx-auto mb-4 flex max-w-[900px] items-center justify-between gap-4">
         <p className="text-sm font-semibold text-slate-500">Read-only submitted configuration</p>
-        <button type="button" onClick={() => window.print()} className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white">Print / Save PDF</button>
+        <button type="button" onClick={handlePrint} disabled={printing} className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white">{printing ? "Preparing…" : "Print / Save PDF"}</button>
       </div>
+      {printError && <p role="alert" className="no-print mx-auto mb-3 max-w-[900px] text-sm text-rose-700">{printError}</p>}
       <article className="summary-sheet mx-auto max-w-[900px] overflow-hidden bg-white shadow-xl print:shadow-none">
         <header className={`grid gap-6 px-8 py-7 text-white sm:grid-cols-[1fr_auto] ${isAtlas ? "bg-[linear-gradient(120deg,#001d2e,#0043f3)]" : "bg-[linear-gradient(120deg,#020617,#172033)]"}`}>
           <div>
@@ -121,10 +137,11 @@ export default function WarehouseBuilderSummaryClient() {
         </header>
 
         <div className="grid gap-6 p-8 sm:grid-cols-[1.1fr_0.9fr]">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 print:hidden">
+          <div ref={scene} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 print:hidden">
             <WarehouseBuilderScene {...sceneProps} className="h-[330px]" />
           </div>
-          <div className="hidden print:block">{printPlan ? <AtlasWarehousePlan plan={printPlan} className="h-auto w-full" /> : <p className="text-sm">Layout drawing unavailable for this configuration.</p>}</div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- the print image is a local canvas capture. */}
+          <img ref={printImage} alt="3D view of the submitted structure" className="hidden h-auto max-h-[88mm] w-full break-inside-avoid rounded-xl bg-slate-100 object-contain print:block" />
           <div className="flex flex-col justify-between rounded-2xl bg-slate-950 p-6 text-white">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Configuration overview</p>
