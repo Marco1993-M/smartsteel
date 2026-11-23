@@ -211,7 +211,7 @@ function SolarCarportModel({ parkingCount, rowLength, structureView, modelScale 
   )
 }
 
-export default function SolarCarportPreview({ parkingCount, rowLength, parkingRuns, selectedRunId, onSelectRun, onPlaceRun }) {
+export default function SolarCarportPreview({ parkingCount, rowLength, parkingRuns, selectedRunId, onSelectRun, onPlaceRun, printReady = false }) {
   const controlsRef = useRef(null)
   const [cameraView, setCameraView] = useState("overview")
   const [planResetSignal, setPlanResetSignal] = useState(0)
@@ -264,7 +264,7 @@ export default function SolarCarportPreview({ parkingCount, rowLength, parkingRu
       onViewChange={setCameraView}
       onReset={resetView}
     >
-      {cameraView === "plan" ? <SolarCarportPlan runs={siteLayout.runs} selectedRunId={selectedRunId} onSelectRun={onSelectRun} onPlaceRun={onPlaceRun} resetSignal={planResetSignal} /> : <Canvas camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
+      {cameraView === "plan" ? <SolarCarportPlan runs={siteLayout.runs} selectedRunId={selectedRunId} onSelectRun={onSelectRun} onPlaceRun={onPlaceRun} resetSignal={planResetSignal} /> : <Canvas gl={printReady ? { preserveDrawingBuffer: true } : undefined} camera={{ position: [7.4, 4.6, -7.8], fov: 39 }} dpr={[1, 1.35]} performance={{ min: 0.6 }} shadows style={{ touchAction: "none" }}>
         <color attach="background" args={["#edf3f7"]} />
         <ambientLight intensity={1.35} />
         <directionalLight position={[5, 8, 6]} intensity={1.8} castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} />
