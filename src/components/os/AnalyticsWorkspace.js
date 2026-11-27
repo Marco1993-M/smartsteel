@@ -56,14 +56,16 @@ function BuilderDeviceBreakdown({ builders }) {
     {!devices.length ? <Empty>No device journeys for this builder in the selected period.</Empty> :
       <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm">
         <thead className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500">
-          <tr>{['Device', 'Views', 'Form reached', ...(showFormDetail ? ['Form started', 'Blocked', 'Submitted', 'Fields flagged'] : []), 'Leads', 'View → lead'].map((label) => <th key={label} scope="col" className="px-3 py-3 first:pl-0">{label}</th>)}</tr>
+          <tr>{['Device', 'Views', 'Configuration started', 'Form reached', ...(showFormDetail ? ['Form started', 'Blocked', 'Submitted', 'Fields flagged'] : []), 'Leads', 'View → lead'].map((label) => <th key={label} scope="col" className="px-3 py-3 first:pl-0">{label}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-slate-100">{devices.map((row) => {
           const stages = Object.fromEntries(row.stages.map((stage) => [stage.key, stage]))
+          const started = stages.configuration_started
           const form = stages.lead_form_viewed
           return <tr key={row.device} className="tabular-nums">
             <th scope="row" className="py-4 pr-3 font-semibold capitalize">{row.device}</th>
             <td className="px-3">{formatNumber(row.journeys)}</td>
+            <td className="px-3">{started ? <>{formatNumber(started.value)} <span className="text-slate-500">({percent(started.rate)})</span></> : "—"}</td>
             <td className="px-3">{formatNumber(form?.value ?? 0)} <span className="text-slate-500">({percent(form?.rate ?? 0)})</span></td>
             {showFormDetail && <>
               <td className="px-3">{row.formStarts ?? '—'}</td>
