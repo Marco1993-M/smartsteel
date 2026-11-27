@@ -241,8 +241,8 @@ export default function AtlasGroundMountsPage() {
               <p className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] text-white/65 sm:block">Live configuration</p>
             </div>
             <p className="hidden text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c1d9e5] sm:block">Atlas ground mount estimator</p>
-            <h1 className="text-xl font-semibold tracking-tight text-white sm:mt-2 sm:text-3xl lg:text-[2rem]">Build and price your Atlas ground mount</h1>
-            <p className="mt-2 hidden max-w-2xl text-sm leading-6 text-white/70 sm:block">Set the panel count, inspect the indicative structure in 3D, and see the structure-only budget update.</p>
+            <h1 className="text-xl font-semibold tracking-tight text-white sm:mt-2 sm:text-3xl lg:text-[2rem]">Solar ground mount structures in South Africa</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">Plan an array on open land. Set the panel count, inspect the indicative steel structure in 3D and check the structure-only budget. Panels, electrical systems and site-specific foundations are separate.</p>
           </div>
           <div className="hidden flex-wrap gap-2 sm:flex lg:max-w-[460px] lg:justify-end">
             {["Interactive 3D preview", "Budget guide excl. VAT", "ZAM steel system"].map((item) => (

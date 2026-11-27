@@ -156,7 +156,7 @@ export default function SolarClient() {
             <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas System developed by Smart Steel" width={238} height={44} className="mb-8 h-auto w-52" />
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0043f3]">Steel structures for solar</p>
             <h1 className="mt-4 text-4xl font-bold leading-[1.08] tracking-[-0.035em] sm:text-5xl">Solar carports and ground mounts in South Africa.</h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-[#526a78]">Make more of your parking or open land. Atlas provides the steel support structure for your solar array, with layouts you can explore and price online.</p>
+            <p className="mt-5 max-w-xl text-base leading-7 text-[#526a78]">Compare steel solar carports for covered parking with ground mounts for open land. Choose the structure that fits your site, then configure it in 3D and review a structure-only guide price.</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link href="/tools/solar-carport-estimator" className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-[#0043f3] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0036c4]">Plan a solar carport <ArrowRight className="h-4 w-4" /></Link>
               <Link href="/products/cflc-ground-mounts#ground-mount-estimator" className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl border border-[#dce6ed] px-5 py-3 text-sm font-semibold transition hover:bg-[#f3f7fa]">Plan a ground mount <ArrowRight className="h-4 w-4" /></Link>
@@ -228,7 +228,7 @@ export default function SolarClient() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Quick comparison</p>
               <h2 className="mt-4 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Which solar structure fits your property?</h2>
-              <p className="mt-5 leading-7 text-[#526a78]">Both systems support PV panels. The useful difference is the space they put to work.</p>
+              <p className="mt-5 leading-7 text-[#526a78]">Choose a solar carport to retain parking beneath the array. Choose a ground mount for land dedicated to panels, without vehicle clearance beneath them. Confirm shading, access and site conditions before choosing the final layout.</p>
               <Link href="/contact" className="mt-8 inline-flex items-center gap-2 font-bold text-[#0043f3] hover:underline">Discuss your site <ArrowRight className="h-4 w-4" /></Link>
             </div>
             <div className="overflow-hidden rounded-2xl border border-[#dce6ed]">

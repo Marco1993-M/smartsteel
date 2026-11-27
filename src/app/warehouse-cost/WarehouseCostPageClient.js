@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "../../components/BuilderEntryLink"
 import { useState } from "react"
 import { getWarehouseCostPageConfig, getWarehouseCostSlugs } from "./warehouseCostData"
 

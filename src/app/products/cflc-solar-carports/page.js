@@ -117,8 +117,8 @@ export default function AtlasSolarCarportsPage() {
       <section className={`${section} grid items-center gap-8 pb-12 pt-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12 lg:pb-14 lg:pt-10`}>
         <div>
           <Image src="/atlas/atlas-logo-horizontal-dark.png" alt="Atlas by Smart Steel" width={190} height={45} className="h-8 w-auto object-contain" />
-          <h1 className="mt-5 text-4xl font-bold leading-[1.07] tracking-tight sm:text-5xl lg:text-6xl">Solar carports for South Africa</h1>
-          <p className="mt-4 max-w-lg text-base leading-7 text-slate-600 sm:text-lg">Plan covered parking with a modular steel structure designed to support solar panels. Lay out your bays, check indicative panel capacity and see a structure-only guide price in 3D.</p>
+          <h1 className="mt-5 text-4xl font-bold leading-[1.07] tracking-tight sm:text-5xl lg:text-6xl">Steel solar carport structures in South Africa</h1>
+          <p className="mt-4 max-w-lg text-base leading-7 text-slate-600 sm:text-lg">Configure single-row or double-row solar parking with Atlas. Choose parking bays, arrange runs and check indicative panel capacity in 3D. The guide price covers structural supply excluding VAT; panels, electrical work, foundations, delivery and installation are separate.</p>
           <BuilderButton className="mt-6 w-full sm:w-auto">Build my solar carport in 3D</BuilderButton>
           <p className="mt-3 text-sm text-slate-600">No contact details required to start.</p>
         </div>
