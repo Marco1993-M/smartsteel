@@ -277,7 +277,7 @@ function PrimaryFinishControls({
                 onClick={() => updateField("steelFinish", option)}
                 className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
                   steelFinish === option
-                    ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
+                    ? "border-[var(--builder-accent)] bg-white text-slate-950 ring-1 ring-inset ring-[var(--builder-accent)]"
                     : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                 }`}
               >
@@ -298,14 +298,17 @@ function PrimaryFinishControls({
                   updateField("gableMode", option.value)
                   if (option.value !== "structure_only" && cladding === "None") updateField("cladding", "IBR")
                 }}
-                className={`flex min-h-16 items-center gap-2 rounded-xl border p-2 text-left text-xs font-semibold leading-4 transition ${gableMode === option.value
-                  ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"}`}
+                className={`relative flex min-h-16 items-center gap-2 rounded-xl border bg-white py-2 pl-2 pr-6 text-left text-xs font-semibold leading-4 transition ${gableMode === option.value
+                  ? "border-[var(--builder-accent)] bg-white text-slate-950 ring-1 ring-inset ring-[var(--builder-accent)]"
+                  : "border-slate-200 text-slate-700 hover:border-slate-400"}`}
               >
-                <span className="relative h-11 w-14 shrink-0 overflow-hidden rounded-lg bg-white">
+                <span className="relative h-11 w-14 shrink-0 overflow-hidden">
                   <Image src={ENCLOSURE_IMAGE_MAP[option.value === "fully_enclosed" ? "side_walls" : option.value]} alt="" fill sizes="56px" className="object-contain p-1" />
                 </span>
                 <span>{option.label}</span>
+                {gableMode === option.value && (
+                  <CheckIcon aria-hidden="true" className="absolute right-1.5 top-1.5 size-3.5 stroke-[2.5] text-blue-700" />
+                )}
               </button>
             ))}
           </div>
@@ -326,7 +329,7 @@ function PrimaryFinishControls({
               onClick={() => updateField("cladding", option)}
               className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
                 cladding === option
-                  ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
+                  ? "border-[var(--builder-accent)] bg-white text-slate-950 ring-1 ring-inset ring-[var(--builder-accent)]"
                   : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
               }`}
             >
@@ -393,6 +396,12 @@ function getClientFacingLineItemLabel(label) {
 
 export default function WarehouseBuilderClient() {
   const searchParams = useSearchParams()
+  const [hasClickedPage, setHasClickedPage] = useState(false)
+  useEffect(() => {
+    const acknowledgeCue = () => setHasClickedPage(true)
+    document.addEventListener("click", acknowledgeCue, { capture: true, once: true })
+    return () => document.removeEventListener("click", acknowledgeCue, true)
+  }, [])
   const [offerAvailable, setOfferAvailable] = useState(false)
   useEffect(() => {
     const refresh = () => setOfferAvailable(showcaseOfferOpen())
@@ -1167,73 +1176,32 @@ export default function WarehouseBuilderClient() {
       }`}
       style={{
         "--builder-accent": builderTheme.accent,
-        "--builder-selection": builderTheme.selection,
         "--builder-shadow": builderTheme.shadow,
       }}
     >
       <div className="mx-auto min-w-0 max-w-[1540px]">
-        <section
-          className={`relative overflow-hidden rounded-[1.3rem] border px-4 py-3 shadow-sm transition-all duration-500 sm:rounded-[1.6rem] sm:px-6 sm:py-5 ${
-            isAtlasWarehouse
-              ? "border-[#0043f3]/25 bg-[linear-gradient(120deg,#001d2e_0%,#073584_58%,#0043f3_100%)] text-white"
-              : "border-slate-200 bg-[linear-gradient(120deg,#020617,#172033)] text-white"
-          }`}
-        >
-          <div className="pointer-events-none absolute -right-24 -top-36 h-72 w-72 rotate-45 border-[28px] border-white/[0.07]" />
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <div className="mb-2 flex items-center gap-3 sm:mb-4">
-                <Image
-                  src={builderTheme.logo}
-                  alt={builderTheme.name}
-                  width={isAtlasWarehouse ? 240 : 150}
-                  height={48}
-                  className={isAtlasWarehouse ? "h-6 max-w-[190px] object-contain object-left sm:h-8 sm:max-w-none" : "h-7 w-auto object-contain object-left sm:h-9"}
-                  priority
-                />
-                <span className="hidden h-7 w-px bg-white/20 sm:block" />
-                <p className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] text-white/65 sm:block">Live configuration</p>
-              </div>
-              <p className={`hidden text-[11px] font-semibold uppercase tracking-[0.26em] sm:block ${isAtlasWarehouse ? "text-[#c1d9e5]" : "text-red-300"}`}>
-                {builderTheme.eyebrow}
-              </p>
-              <h1 className="text-xl font-semibold tracking-tight text-white sm:mt-2 sm:text-3xl lg:text-[2rem]">
+        <header className="z-30 flex items-center justify-between gap-4 py-3 xl:sticky xl:top-3 xl:backdrop-blur">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+            <Image
+              src={isAtlasWarehouse ? "/atlas/atlas-logo-horizontal-dark.png" : builderTheme.logo}
+              alt={builderTheme.name}
+              width={isAtlasWarehouse ? 240 : 150}
+              height={48}
+              className={isAtlasWarehouse ? "h-6 w-auto shrink-0 object-contain sm:h-7" : "hidden h-7 w-auto shrink-0 rounded bg-slate-950 px-2 object-contain 2xl:block"}
+              priority
+            />
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold leading-tight tracking-tight text-[#001d2e] sm:text-xl">
                 {builderTheme.title}
               </h1>
-              <p className="mt-2 hidden max-w-2xl text-sm leading-6 text-white/70 sm:block">
-                {builderTheme.description}
-              </p>
-            </div>
-            <div className="hidden flex-wrap gap-2 sm:flex lg:max-w-[460px] lg:justify-end">
-              {["Live 3D preview", "Budget guide excl. VAT", "Built for South African projects"].map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75 backdrop-blur"
-                >
-                  {item}
-                </span>
-              ))}
+              <p className="mt-1 text-xs font-medium text-slate-600">{config.width}m × {config.length}m × {config.wallHeight}m</p>
             </div>
           </div>
-        </section>
-
-        {offerAvailable && isAtlasWarehouse && <div className="mt-3 flex justify-end xl:hidden"><AtlasShowcaseOfferTrigger onClick={() => setShowShowcaseOffer(true)} /></div>}
-
-        <div className="sticky top-3 z-30 mt-3 hidden items-center justify-between gap-5 rounded-2xl border border-slate-200 bg-white/95 px-5 py-3 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.55)] backdrop-blur xl:flex">
-          <div className="flex min-w-0 items-center gap-5">
-            <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-slate-500">
-                {systemLabel} · {isAtlasWarehouse ? estimate.meta.sku : designReference}
-              </p>
-              <p className="mt-0.5 text-sm font-semibold text-slate-950">{config.width}m × {config.length}m × {config.wallHeight}m</p>
-            </div>
-            <span className="h-9 w-px bg-slate-200" />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Live guide excl. VAT</p>
-              <p className="mt-0.5 text-lg font-semibold text-slate-950">{formatCurrency(budgetValue)}</p>
-            </div>
+          <div className="hidden shrink-0 border-l border-slate-200 pl-4 xl:block">
+            <p className="text-xs font-medium text-slate-600">Live guide excl. VAT</p>
+            <p className="text-lg font-bold tabular-nums text-[#001d2e]">{formatCurrency(budgetValue)}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="hidden shrink-0 items-center gap-2 xl:flex">
             {offerAvailable && isAtlasWarehouse && <AtlasShowcaseOfferTrigger onClick={() => setShowShowcaseOffer(true)} />}
             <button type="button" onClick={handleSaveDesign} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
               {saveStatus || "Share design link"}
@@ -1251,9 +1219,11 @@ export default function WarehouseBuilderClient() {
               Get my quote
             </button>
           </div>
-        </div>
+        </header>
 
-        <div className="mt-8 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[440px_minmax(0,1.4fr)] xl:items-start">
+        {offerAvailable && isAtlasWarehouse && <div className="mt-3 flex justify-end xl:hidden"><AtlasShowcaseOfferTrigger onClick={() => setShowShowcaseOffer(true)} /></div>}
+
+        <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[440px_minmax(0,1.4fr)] xl:items-start">
           <div className="relative order-2 min-w-0 xl:order-1">
           <section
             className="min-w-0 space-y-4"
@@ -1301,17 +1271,40 @@ export default function WarehouseBuilderClient() {
               <div className="space-y-4">
                 <div id="size-style" className="scroll-mt-28">
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Width</label>
+                    <div role="group" aria-labelledby="warehouse-width-label" className={isAtlasWarehouse && !hasClickedPage
+                      ? "relative rounded-xl bg-white p-2.5 ring-1 ring-blue-200 shadow-[inset_0_0_12px_rgba(0,67,243,0.13)]"
+                      : "rounded-xl p-2.5"}>
+                      {isAtlasWarehouse && !hasClickedPage && (
+                        <svg aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full overflow-hidden motion-reduce:hidden">
+                          <rect x="1.5" y="1.5" rx="10" pathLength="100" fill="none" stroke="#1649b8" strokeWidth="2"
+                            strokeLinecap="round" strokeDasharray="14 86" className="warehouse-width-highlight" />
+                        </svg>
+                      )}
+                      <style jsx>{`
+                        .warehouse-width-highlight {
+                          width: calc(100% - 3px);
+                          height: calc(100% - 3px);
+                          animation: warehouse-width-trace 3.25s ease-in-out infinite;
+                        }
+                        @keyframes warehouse-width-trace {
+                          from { stroke-dashoffset: 0; opacity: 0; }
+                          15%, 75% { opacity: 0.8; }
+                          to { stroke-dashoffset: -100; opacity: 0; }
+                        }
+                      `}</style>
+                      <span id="warehouse-width-label" className="text-xs font-semibold text-slate-700">
+                        {isAtlasWarehouse && !hasClickedPage ? "Start by choosing your warehouse width" : "Width"}
+                      </span>
                       <div className="mt-1.5 flex gap-2 ">
                         {widthOptions.map((option) => (
                           <button
                             key={option}
                             type="button"
+                            aria-pressed={config.width === option}
                             onClick={() => updateField("width", option)}
                             className={`min-w-0 flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
                               config.width === option
-                                ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
+                                ? "border-[var(--builder-accent)] bg-white text-slate-950 ring-1 ring-inset ring-[var(--builder-accent)]"
                                 : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                             }`}
                           >
@@ -1338,7 +1331,7 @@ export default function WarehouseBuilderClient() {
                       </div>
                       <div>
                         <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                          Eave height
+                          Eave height (m)
                         </label>
                         <p className="mt-1 text-[11px] leading-4 text-slate-500">Height at the roof edge, not the ridge.</p>
                         <div className="mt-1.5 grid grid-cols-4 gap-2">
@@ -1346,14 +1339,16 @@ export default function WarehouseBuilderClient() {
                             <button
                               key={option}
                               type="button"
+                              aria-label={`${option} metres eave height`}
+                              aria-pressed={config.wallHeight === option}
                               onClick={() => updateField("wallHeight", option)}
-                              className={`rounded-xl border px-2 py-2.5 text-sm font-semibold transition ${
+                              className={`min-w-0 rounded-xl border px-1 py-2.5 text-sm font-semibold transition ${
                                 config.wallHeight === option
-                                  ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white"
+                                  ? "border-[var(--builder-accent)] bg-white text-slate-950 ring-1 ring-inset ring-[var(--builder-accent)]"
                                   : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                               }`}
                             >
-                              {option}m
+                              {option}
                             </button>
                           ))}
                         </div>
@@ -1480,7 +1475,7 @@ export default function WarehouseBuilderClient() {
                             <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Main opening wall</label>
                             <div className="mt-1 grid grid-cols-4 gap-2">
                               {WAREHOUSE_OPENING_FACE_OPTIONS.map((option) => (
-                                <button key={option.value} type="button" onClick={() => updateField("rollerDoorFace", option.value)} className={`rounded-xl border px-2 py-2 text-xs font-semibold transition ${config.rollerDoorFace === option.value ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white" : "border-slate-200 bg-white text-slate-600"}`}>{option.label}</button>
+                                <button key={option.value} type="button" onClick={() => updateField("rollerDoorFace", option.value)} className={`rounded-xl border px-2 py-2 text-xs font-semibold transition ${config.rollerDoorFace === option.value ? "border-[var(--builder-accent)] bg-white text-slate-950 ring-1 ring-inset ring-[var(--builder-accent)]" : "border-slate-200 bg-white text-slate-600"}`}>{option.label}</button>
                               ))}
                             </div>
                           </div>
@@ -1491,7 +1486,7 @@ export default function WarehouseBuilderClient() {
                           <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Personnel opening wall</label>
                           <div className="mt-1 grid grid-cols-4 gap-2">
                             {WAREHOUSE_OPENING_FACE_OPTIONS.map((option) => (
-                              <button key={option.value} type="button" onClick={() => updateField("pedestrianDoorFace", option.value)} className={`rounded-xl border px-2 py-2 text-xs font-semibold transition ${config.pedestrianDoorFace === option.value ? "border-[var(--builder-accent)] bg-[var(--builder-selection)] text-white" : "border-slate-200 bg-white text-slate-600"}`}>{option.label}</button>
+                              <button key={option.value} type="button" onClick={() => updateField("pedestrianDoorFace", option.value)} className={`rounded-xl border px-2 py-2 text-xs font-semibold transition ${config.pedestrianDoorFace === option.value ? "border-[var(--builder-accent)] bg-white text-slate-950 ring-1 ring-inset ring-[var(--builder-accent)]" : "border-slate-200 bg-white text-slate-600"}`}>{option.label}</button>
                             ))}
                           </div>
                         </div>
