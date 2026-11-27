@@ -136,6 +136,11 @@ export default function AgriculturalStructurePage({ content }) {
       </div>
     </nav>
 
+    {content.buyerGuide && <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-14">
+      <h2 className="text-2xl font-bold sm:text-3xl">{content.buyerGuide.title}</h2>
+      <div className="mt-6 grid gap-6 md:grid-cols-3">{content.buyerGuide.items.map(item => <article key={item.title} className="border-t border-[#dce6ed] pt-5"><h3 className="text-lg font-bold">{item.title}</h3><p className="mt-3 text-sm leading-7 text-[#526a78]">{item.text}</p></article>)}</div>
+      <a href="#agricultural-quote" className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#0043f3]">Request a building quote <ArrowRight className="h-4 w-4" /></a>
+    </section>}
     <section id="overview" className="scroll-mt-44 border-b border-[#dce6ed] bg-[#f3f7fa]">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-20">
         <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0043f3]">Built around your plans</p><h2 className="mt-4 text-3xl font-bold leading-[1.12] tracking-[-0.035em] sm:text-4xl">{content.introTitle}</h2></div>
